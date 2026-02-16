@@ -14,8 +14,9 @@ router.get('/', verifyToken, async (req, res) => {
 
     if (search) {
       where.OR = [
-        { name: { contains: search,  } },
-        { code: { contains: search,  } },
+        { nameEn: { contains: search } },
+        { nameAr: { contains: search } },
+        { code: { contains: search } },
       ];
     }
 
@@ -28,7 +29,7 @@ router.get('/', verifyToken, async (req, res) => {
         take: parseInt(limit),
         include: {
           _count: {
-            select: { companies: true },
+            select: { entities: true },
           },
         },
         orderBy: { createdAt: 'desc' },
@@ -54,8 +55,8 @@ router.get('/:id', verifyToken, async (req, res) => {
     const sector = await prisma.sector.findUnique({
       where: { id: req.params.id },
       include: {
-        companies: {
-          select: { id: true, name: true, nameAr: true, code: true, status: true },
+        entities: {
+          select: { id: true, legalName: true, displayName: true },
         },
       },
     });
@@ -73,10 +74,10 @@ router.get('/:id', verifyToken, async (req, res) => {
 // Create sector
 router.post('/', verifyToken, async (req, res) => {
   try {
-    const { name, nameAr, code } = req.body;
+    const { nameEn, nameAr, code } = req.body;
 
-    if (!name || !code) {
-      return res.status(400).json({ message: 'Name and code are required' });
+    if (!nameEn || !nameAr || !code) {
+      return res.status(400).json({ message: 'nameEn, nameAr and code are required' });
     }
 
     // Check if code already exists
@@ -90,7 +91,7 @@ router.post('/', verifyToken, async (req, res) => {
 
     const sector = await prisma.sector.create({
       data: {
-        name,
+        nameEn,
         nameAr,
         code,
       },
@@ -105,7 +106,7 @@ router.post('/', verifyToken, async (req, res) => {
 // Update sector
 router.patch('/:id', verifyToken, async (req, res) => {
   try {
-    const { name, nameAr, code } = req.body;
+    const { nameEn, nameAr, code } = req.body;
 
     // Check if code is being changed and if new code already exists
     if (code) {
@@ -124,7 +125,7 @@ router.patch('/:id', verifyToken, async (req, res) => {
     const updatedSector = await prisma.sector.update({
       where: { id: req.params.id },
       data: {
-        ...(name && { name }),
+        ...(nameEn && { nameEn }),
         ...(nameAr && { nameAr }),
         ...(code && { code }),
       },
@@ -142,14 +143,14 @@ router.patch('/:id', verifyToken, async (req, res) => {
 // Delete sector
 router.delete('/:id', verifyToken, async (req, res) => {
   try {
-    // Check if sector has companies
-    const companiesCount = await prisma.company.count({
+    // Check if sector has entities
+    const entitiesCount = await prisma.entity.count({
       where: { sectorId: req.params.id },
     });
 
-    if (companiesCount > 0) {
-      return res.status(400).json({ 
-        message: 'Cannot delete sector with companies. Please reassign or delete companies first.' 
+    if (entitiesCount > 0) {
+      return res.status(400).json({
+        message: 'Cannot delete sector with entities. Please reassign or delete entities first.'
       });
     }
 

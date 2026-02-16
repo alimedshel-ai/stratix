@@ -8,7 +8,7 @@ const router = express.Router();
 // ============ REVIEWS ============
 
 // Get all reviews
-router.get('/reviews', verifyToken, async (req, res) => {
+router.get('/', verifyToken, async (req, res) => {
   try {
     const { page = 1, limit = 10, search, versionId, status } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -62,7 +62,7 @@ router.get('/reviews', verifyToken, async (req, res) => {
 });
 
 // Create review
-router.post('/reviews', verifyToken, async (req, res) => {
+router.post('/', verifyToken, async (req, res) => {
   try {
     const { title, reviewDate, versionId, notes, status } = req.body;
 
@@ -91,7 +91,7 @@ router.post('/reviews', verifyToken, async (req, res) => {
 });
 
 // Update review
-router.patch('/reviews/:id', verifyToken, async (req, res) => {
+router.patch('/:id', verifyToken, async (req, res) => {
   try {
     const { title, reviewDate, notes, status } = req.body;
 
@@ -117,7 +117,7 @@ router.patch('/reviews/:id', verifyToken, async (req, res) => {
 });
 
 // Delete review
-router.delete('/reviews/:id', verifyToken, async (req, res) => {
+router.delete('/:id', verifyToken, async (req, res) => {
   try {
     await prisma.strategicReview.delete({ where: { id: req.params.id } });
     res.json({ message: 'Review deleted successfully' });
