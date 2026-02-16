@@ -4,7 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('./lib/prisma');
 const { verifyToken } = require('./middleware/auth');
 const authRoutes = require('./routes/auth');
 const sectorsRoutes = require('./routes/sectors');
@@ -16,7 +16,6 @@ const strategicRoutes = require('./routes/strategic');
 const reviewsRoutes = require('./routes/reviews');
 
 const app = express();
-const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
 
 // Security Middleware
@@ -75,7 +74,7 @@ app.use('/api/entities', entitiesRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/assessments', assessmentsRoutes);
 app.use('/api/strategic', strategicRoutes);
-app.use('/api/reviews', reviewsRoutes);
+app.use('/api/strategic/reviews', reviewsRoutes);
 
 // Protected route - Get profile
 app.get('/api/user/profile', verifyToken, async (req, res) => {

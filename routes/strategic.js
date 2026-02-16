@@ -1,9 +1,9 @@
 const express = require('express');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { verifyToken } = require('../middleware/auth');
 
 const router = express.Router();
-const prisma = new PrismaClient();
+
 
 // ============ OBJECTIVES ============
 
@@ -17,8 +17,8 @@ router.get('/objectives', verifyToken, async (req, res) => {
     
     if (search) {
       where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } }
+        { title: { contains: search,  } },
+        { description: { contains: search,  } }
       ];
     }
     
@@ -201,9 +201,9 @@ router.get('/kpis', verifyToken, async (req, res) => {
     
     if (search) {
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { nameAr: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } }
+        { name: { contains: search,  } },
+        { nameAr: { contains: search,  } },
+        { description: { contains: search,  } }
       ];
     }
     
@@ -387,8 +387,8 @@ router.get('/initiatives', verifyToken, async (req, res) => {
     
     if (search) {
       where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } }
+        { title: { contains: search,  } },
+        { description: { contains: search,  } }
       ];
     }
     

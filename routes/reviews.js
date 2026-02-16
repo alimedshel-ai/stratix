@@ -1,9 +1,9 @@
 const express = require('express');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { verifyToken } = require('../middleware/auth');
 
 const router = express.Router();
-const prisma = new PrismaClient();
+
 
 // ============ REVIEWS ============
 
@@ -17,8 +17,8 @@ router.get('/reviews', verifyToken, async (req, res) => {
     
     if (search) {
       where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { notes: { contains: search, mode: 'insensitive' } }
+        { title: { contains: search,  } },
+        { notes: { contains: search,  } }
       ];
     }
     

@@ -1,9 +1,10 @@
 const express = require('express');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { verifyToken } = require('../middleware/auth');
+const { validateEntity } = require('../middleware/validation');
 
 const router = express.Router();
-const prisma = new PrismaClient();
+
 
 // Get all entities
 router.get('/', verifyToken, async (req, res) => {
@@ -14,8 +15,8 @@ router.get('/', verifyToken, async (req, res) => {
 
     if (search) {
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { code: { contains: search, mode: 'insensitive' } },
+        { name: { contains: search,  } },
+        { code: { contains: search,  } },
       ];
     }
 
@@ -81,7 +82,7 @@ router.get('/:id', verifyToken, async (req, res) => {
 });
 
 // Create entity
-router.post('/', verifyToken, async (req, res) => {
+router.post('/', verifyToken, validateEntity, async (req, res) => {
   try {
     const { name, nameAr, code, type, description, industryId } = req.body;
 

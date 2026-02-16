@@ -1,9 +1,9 @@
 const express = require('express');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { verifyToken } = require('../middleware/auth');
 
 const router = express.Router();
-const prisma = new PrismaClient();
+
 
 // Middleware to check SUPER_ADMIN role
 const checkSuperAdmin = (req, res, next) => {
@@ -22,8 +22,8 @@ router.get('/', verifyToken, async (req, res) => {
 
     if (search) {
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { code: { contains: search, mode: 'insensitive' } },
+        { name: { contains: search,  } },
+        { code: { contains: search,  } },
       ];
     }
 
