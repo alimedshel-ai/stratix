@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إدارة الكيانات</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.0/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      margin-top: 60px;
+    }
+    .nav-link.active { color: #667eea !important; border-bottom: 3px solid #667eea; }
+    .input-group { background: white; border-radius: 8px; overflow: hidden; }
+    .table { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .table thead { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .badge { padding: 6px 12px; font-size: 12px; }
+    .btn-sm { padding: 4px 8px; font-size: 12px; }
+    .modal-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/dashboard">
+        <i class="bi bi-rocket"></i> Stratix
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <span class="nav-link" id="userName"></span>
+          </li>
+          <li class="nav-item">
+            <button class="btn btn-outline-light btn-sm" onclick="logout()">تسجيل الخروج</button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid py-4">
+    <div class="row">
+      <!-- Sidebar -->
+      <div class="col-md-3">
+        <div class="list-group bg-white rounded-3 shadow-sm">
+          <a href="/dashboard" class="list-group-item list-group-item-action">
+            <i class="bi bi-house"></i> لوحة التحكم
+          </a>
+          <a href="/sectors" class="list-group-item list-group-item-action">
+            <i class="bi bi-diagram-3"></i> القطاعات
+          </a>
+          <a href="/industries" class="list-group-item list-group-item-action">
+            <i class="bi bi-building"></i> الأنشطة
+          </a>
+          <a href="/entities" class="list-group-item list-group-item-action active">
+            <i class="bi bi-diagram-2"></i> الكيانات
+          </a>
+          <a href="/users" class="list-group-item list-group-item-action">
+            <i class="bi bi-people"></i> المستخدمون
+          </a>
+          <a href="/settings" class="list-group-item list-group-item-action">
+            <i class="bi bi-gear"></i> الإعدادات
+          </a>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="col-md-9">
+        <div class="card shadow-lg border-0 rounded-3">
+          <div class="card-header bg-white border-bottom">
+            <div class="row align-items-center">
+              <div class="col">
+                <h4 class="mb-0"><i class="bi bi-diagram-2"></i> إدارة الكيانات</h4>
+              </div>
+              <div class="col-auto">
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#entityModal" onclick="openAddModal()">
+                  <i class="bi bi-plus"></i> إضافة كيان
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <!-- Search & Filter -->
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <div class="input-group">
+                  <span class="input-group-text bg-white border-0">
+                    <i class="bi bi-search"></i>
+                  </span>
+                  <input type="text" class="form-control border-0" id="searchInput" placeholder="ابحث بالاسم أو الرمز...">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <select class="form-select" id="industryFilter" onchange="loadEntities(1)">
+                  <option value="">-- اختر نشاط --</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead>
+                  <tr>
+                    <th>الاسم</th>
+                    <th>الاسم بالعربية</th>
+                    <th>الرمز</th>
+                    <th>النشاط</th>
+                    <th>المستخدمون</th>
+                    <th>الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody id="entitiesTableBody">
+                  <tr>
+                    <td colspan="6" class="text-center py-4">جاري التحميل...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            <nav aria-label="Page navigation" class="mt-4">
+              <ul class="pagination justify-content-center" id="pagination"></ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal fade" id="entityModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalTitle">إضافة كيان جديد</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="entityForm">
+            <div class="mb-3">
+              <label for="entityName" class="form-label">الاسم بالإنجليزية</label>
+              <input type="text" class="form-control" id="entityName" required>
+            </div>
+            <div class="mb-3">
+              <label for="entityNameAr" class="form-label">الاسم بالعربية</label>
+              <input type="text" class="form-control" id="entityNameAr" required>
+            </div>
+            <div class="mb-3">
+              <label for="entityCode" class="form-label">الرمز</label>
+              <input type="text" class="form-control" id="entityCode" required>
+            </div>
+            <div class="mb-3">
+              <label for="entityType" class="form-label">النوع</label>
+              <select class="form-select" id="entityType">
+                <option value="ORGANIZATION">منظمة</option>
+                <option value="FACTORY">مصنع</option>
+                <option value="OFFICE">مكتب</option>
+                <option value="BRANCH">فرع</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="entityIndustry" class="form-label">النشاط</label>
+              <select class="form-select" id="entityIndustry" required>
+                <option value="">-- اختر نشاط --</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="entityDescription" class="form-label">الوصف</label>
+              <textarea class="form-control" id="entityDescription" rows="3"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+          <button type="button" class="btn btn-primary" onclick="saveEntity()">حفظ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const token = localStorage.getItem('token');
+    let currentPage = 1;
+    let editingId = null;
+    let industries = [];
+
+    if (!token) {
+      window.location.href = '/login';
+    }
+
+    // Load user info
+    fetch('/api/auth/profile', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('userName').textContent = data.user.name;
+      });
+
+    // Load industries
+    function loadIndustriesData() {
+      fetch('/api/industries?limit=100', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(r => r.json())
+        .then(data => {
+          industries = data.industries;
+          const filterSelect = document.getElementById('industryFilter');
+          const modalSelect = document.getElementById('entityIndustry');
+          
+          industries.forEach(ind => {
+            const opt1 = document.createElement('option');
+            opt1.value = ind.id;
+            opt1.textContent = ind.name;
+            filterSelect.appendChild(opt1);
+            
+            const opt2 = document.createElement('option');
+            opt2.value = ind.id;
+            opt2.textContent = ind.name;
+            modalSelect.appendChild(opt2);
+          });
+        });
+    }
+
+    // Load entities
+    function loadEntities(page = 1) {
+      const search = document.getElementById('searchInput').value;
+      const industryId = document.getElementById('industryFilter').value;
+      const url = new URL('/api/entities', window.location.origin);
+      url.searchParams.append('page', page);
+      url.searchParams.append('limit', 10);
+      if (search) url.searchParams.append('search', search);
+      if (industryId) url.searchParams.append('industryId', industryId);
+
+      fetch(url, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(r => r.json())
+        .then(data => {
+          renderTable(data.entities);
+          renderPagination(data.totalPages, page);
+          currentPage = page;
+        })
+        .catch(e => alert('خطأ في تحميل البيانات: ' + e.message));
+    }
+
+    function renderTable(entities) {
+      const tbody = document.getElementById('entitiesTableBody');
+      if (entities.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">لا توجد كيانات</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = entities.map(ent => `
+        <tr>
+          <td>${ent.name}</td>
+          <td>${ent.nameAr || '-'}</td>
+          <td><code>${ent.code}</code></td>
+          <td>${ent.industry.name}</td>
+          <td><span class="badge bg-success">${ent._count.users} مستخدمين</span></td>
+          <td>
+            <button class="btn btn-warning btn-sm" onclick="openEditModal('${ent.id}', '${ent.name}', '${ent.nameAr}', '${ent.code}', '${ent.type}', '${ent.industryId}', '${ent.description}')">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="deleteEntity('${ent.id}')">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderPagination(totalPages, currentPage) {
+      const pagination = document.getElementById('pagination');
+      pagination.innerHTML = '';
+
+      if (totalPages <= 1) return;
+
+      for (let i = 1; i <= totalPages; i++) {
+        const li = document.createElement('li');
+        li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+        li.innerHTML = `<a class="page-link" href="#" onclick="loadEntities(${i}); return false;">${i}</a>`;
+        pagination.appendChild(li);
+      }
+    }
+
+    function openAddModal() {
+      editingId = null;
+      document.getElementById('modalTitle').textContent = 'إضافة كيان جديد';
+      document.getElementById('entityForm').reset();
+    }
+
+    function openEditModal(id, name, nameAr, code, type, industryId, description) {
+      editingId = id;
+      document.getElementById('modalTitle').textContent = 'تعديل الكيان';
+      document.getElementById('entityName').value = name;
+      document.getElementById('entityNameAr').value = nameAr || '';
+      document.getElementById('entityCode').value = code;
+      document.getElementById('entityType').value = type;
+      document.getElementById('entityIndustry').value = industryId;
+      document.getElementById('entityDescription').value = description || '';
+      new bootstrap.Modal(document.getElementById('entityModal')).show();
+    }
+
+    function saveEntity() {
+      const name = document.getElementById('entityName').value;
+      const nameAr = document.getElementById('entityNameAr').value;
+      const code = document.getElementById('entityCode').value;
+      const type = document.getElementById('entityType').value;
+      const industryId = document.getElementById('entityIndustry').value;
+      const description = document.getElementById('entityDescription').value;
+
+      if (!name || !nameAr || !code || !industryId) {
+        alert('الرجاء ملء الحقول المطلوبة');
+        return;
+      }
+
+      const method = editingId ? 'PATCH' : 'POST';
+      const url = editingId ? `/api/entities/${editingId}` : '/api/entities';
+
+      const body = { name, nameAr, code, type, description };
+      if (!editingId) body.industryId = industryId;
+
+      fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.message) {
+            bootstrap.Modal.getInstance(document.getElementById('entityModal')).hide();
+            loadEntities(currentPage);
+          } else {
+            alert(data.message || 'خطأ في العملية');
+          }
+        })
+        .catch(e => alert('خطأ: ' + e.message));
+    }
+
+    function deleteEntity(id) {
+      if (!confirm('هل أنت متأكد من حذف هذا الكيان؟')) return;
+
+      fetch(`/api/entities/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(r => r.json())
+        .then(data => {
+          loadEntities(currentPage);
+        })
+        .catch(e => alert('خطأ: ' + e.message));
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+
+    // Search
+    document.getElementById('searchInput').addEventListener('keyup', () => loadEntities(1));
+
+    // Initial load
+    loadIndustriesData();
+    loadEntities();
+  </script>
+</body>
+</html>

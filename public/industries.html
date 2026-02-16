@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إدارة الأنشطة</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.0/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      margin-top: 60px;
+    }
+    .nav-link.active { color: #667eea !important; border-bottom: 3px solid #667eea; }
+    .input-group { background: white; border-radius: 8px; overflow: hidden; }
+    .table { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .table thead { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .badge { padding: 6px 12px; font-size: 12px; }
+    .btn-sm { padding: 4px 8px; font-size: 12px; }
+    .modal-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/dashboard">
+        <i class="bi bi-rocket"></i> Stratix
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <span class="nav-link" id="userName"></span>
+          </li>
+          <li class="nav-item">
+            <button class="btn btn-outline-light btn-sm" onclick="logout()">تسجيل الخروج</button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid py-4">
+    <div class="row">
+      <!-- Sidebar -->
+      <div class="col-md-3">
+        <div class="list-group bg-white rounded-3 shadow-sm">
+          <a href="/dashboard" class="list-group-item list-group-item-action">
+            <i class="bi bi-house"></i> لوحة التحكم
+          </a>
+          <a href="/sectors" class="list-group-item list-group-item-action">
+            <i class="bi bi-diagram-3"></i> القطاعات
+          </a>
+          <a href="/industries" class="list-group-item list-group-item-action active">
+            <i class="bi bi-building"></i> الأنشطة
+          </a>
+          <a href="/entities" class="list-group-item list-group-item-action">
+            <i class="bi bi-diagram-2"></i> الكيانات
+          </a>
+          <a href="/users" class="list-group-item list-group-item-action">
+            <i class="bi bi-people"></i> المستخدمون
+          </a>
+          <a href="/settings" class="list-group-item list-group-item-action">
+            <i class="bi bi-gear"></i> الإعدادات
+          </a>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="col-md-9">
+        <div class="card shadow-lg border-0 rounded-3">
+          <div class="card-header bg-white border-bottom">
+            <div class="row align-items-center">
+              <div class="col">
+                <h4 class="mb-0"><i class="bi bi-building"></i> إدارة الأنشطة (Industries)</h4>
+              </div>
+              <div class="col-auto">
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#industryModal" onclick="openAddModal()">
+                  <i class="bi bi-plus"></i> إضافة نشاط
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <!-- Search & Filter -->
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <div class="input-group">
+                  <span class="input-group-text bg-white border-0">
+                    <i class="bi bi-search"></i>
+                  </span>
+                  <input type="text" class="form-control border-0" id="searchInput" placeholder="ابحث بالاسم أو الرمز...">
+                </div>
+              </div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead>
+                  <tr>
+                    <th>الاسم</th>
+                    <th>الاسم بالعربية</th>
+                    <th>الرمز</th>
+                    <th>الوصف</th>
+                    <th>عدد الكيانات</th>
+                    <th>الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody id="industriesTableBody">
+                  <tr>
+                    <td colspan="6" class="text-center py-4">جاري التحميل...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            <nav aria-label="Page navigation" class="mt-4">
+              <ul class="pagination justify-content-center" id="pagination"></ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal fade" id="industryModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalTitle">إضافة نشاط جديد</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="industryForm">
+            <div class="mb-3">
+              <label for="industryName" class="form-label">الاسم بالإنجليزية</label>
+              <input type="text" class="form-control" id="industryName" required>
+            </div>
+            <div class="mb-3">
+              <label for="industryNameAr" class="form-label">الاسم بالعربية</label>
+              <input type="text" class="form-control" id="industryNameAr" required>
+            </div>
+            <div class="mb-3">
+              <label for="industryCode" class="form-label">الرمز</label>
+              <input type="text" class="form-control" id="industryCode" required>
+            </div>
+            <div class="mb-3">
+              <label for="industryDescription" class="form-label">الوصف</label>
+              <textarea class="form-control" id="industryDescription" rows="3"></textarea>
+            </div>
+            <input type="hidden" id="sectorId">
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+          <button type="button" class="btn btn-primary" onclick="saveIndustry()">حفظ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const token = localStorage.getItem('token');
+    let currentPage = 1;
+    let editingId = null;
+    let sectorId = null;
+
+    if (!token) {
+      window.location.href = '/login';
+    }
+
+    // Load user info
+    fetch('/api/auth/profile', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('userName').textContent = data.user.name;
+      });
+
+    // Get sector ID (assuming first sector)
+    function loadSectorId() {
+      fetch('/api/sectors?limit=1', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.sectors.length > 0) {
+            sectorId = data.sectors[0].id;
+            document.getElementById('sectorId').value = sectorId;
+          }
+        });
+    }
+
+    // Load industries
+    function loadIndustries(page = 1) {
+      const search = document.getElementById('searchInput').value;
+      const url = new URL('/api/industries', window.location.origin);
+      url.searchParams.append('page', page);
+      url.searchParams.append('limit', 10);
+      if (search) url.searchParams.append('search', search);
+
+      fetch(url, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(r => r.json())
+        .then(data => {
+          renderTable(data.industries);
+          renderPagination(data.totalPages, page);
+          currentPage = page;
+        })
+        .catch(e => alert('خطأ في تحميل البيانات: ' + e.message));
+    }
+
+    function renderTable(industries) {
+      const tbody = document.getElementById('industriesTableBody');
+      if (industries.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">لا توجد أنشطة</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = industries.map(ind => `
+        <tr>
+          <td>${ind.name}</td>
+          <td>${ind.nameAr || '-'}</td>
+          <td><code>${ind.code}</code></td>
+          <td>${ind.description || '-'}</td>
+          <td><span class="badge bg-info">${ind._count.entities} كيانات</span></td>
+          <td>
+            <button class="btn btn-warning btn-sm" onclick="openEditModal('${ind.id}', '${ind.name}', '${ind.nameAr}', '${ind.code}', '${ind.description}')">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="deleteIndustry('${ind.id}')">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderPagination(totalPages, currentPage) {
+      const pagination = document.getElementById('pagination');
+      pagination.innerHTML = '';
+
+      if (totalPages <= 1) return;
+
+      for (let i = 1; i <= totalPages; i++) {
+        const li = document.createElement('li');
+        li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+        li.innerHTML = `<a class="page-link" href="#" onclick="loadIndustries(${i}); return false;">${i}</a>`;
+        pagination.appendChild(li);
+      }
+    }
+
+    function openAddModal() {
+      editingId = null;
+      document.getElementById('modalTitle').textContent = 'إضافة نشاط جديد';
+      document.getElementById('industryForm').reset();
+    }
+
+    function openEditModal(id, name, nameAr, code, description) {
+      editingId = id;
+      document.getElementById('modalTitle').textContent = 'تعديل النشاط';
+      document.getElementById('industryName').value = name;
+      document.getElementById('industryNameAr').value = nameAr || '';
+      document.getElementById('industryCode').value = code;
+      document.getElementById('industryDescription').value = description || '';
+      new bootstrap.Modal(document.getElementById('industryModal')).show();
+    }
+
+    function saveIndustry() {
+      const name = document.getElementById('industryName').value;
+      const nameAr = document.getElementById('industryNameAr').value;
+      const code = document.getElementById('industryCode').value;
+      const description = document.getElementById('industryDescription').value;
+      const secId = document.getElementById('sectorId').value;
+
+      if (!name || !nameAr || !code) {
+        alert('الرجاء ملء الحقول المطلوبة');
+        return;
+      }
+
+      const method = editingId ? 'PATCH' : 'POST';
+      const url = editingId ? `/api/industries/${editingId}` : '/api/industries';
+
+      const body = { name, nameAr, code, description };
+      if (!editingId) body.sectorId = secId;
+
+      fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.message) {
+            bootstrap.Modal.getInstance(document.getElementById('industryModal')).hide();
+            loadIndustries(currentPage);
+          } else {
+            alert(data.message || 'خطأ في العملية');
+          }
+        })
+        .catch(e => alert('خطأ: ' + e.message));
+    }
+
+    function deleteIndustry(id) {
+      if (!confirm('هل أنت متأكد من حذف هذا النشاط؟')) return;
+
+      fetch(`/api/industries/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(r => r.json())
+        .then(data => {
+          loadIndustries(currentPage);
+        })
+        .catch(e => alert('خطأ: ' + e.message));
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+
+    // Search
+    document.getElementById('searchInput').addEventListener('keyup', () => loadIndustries(1));
+
+    // Initial load
+    loadSectorId();
+    loadIndustries();
+  </script>
+</body>
+</html>
