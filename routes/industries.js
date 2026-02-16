@@ -14,8 +14,9 @@ router.get('/', verifyToken, async (req, res) => {
 
     if (search) {
       where.OR = [
-        { name: { contains: search,  } },
-        { code: { contains: search,  } },
+        { nameEn: { contains: search } },
+        { nameAr: { contains: search } },
+        { code: { contains: search } },
       ];
     }
 
@@ -55,7 +56,7 @@ router.get('/:id', verifyToken, async (req, res) => {
       where: { id: req.params.id },
       include: {
         entities: {
-          select: { id: true, name: true, nameAr: true, code: true, type: true },
+          select: { id: true, legalName: true, displayName: true },
         },
       },
     });
@@ -73,10 +74,10 @@ router.get('/:id', verifyToken, async (req, res) => {
 // Create industry
 router.post('/', verifyToken, async (req, res) => {
   try {
-    const { name, nameAr, code, description, sectorId } = req.body;
+    const { nameEn, nameAr, code } = req.body;
 
-    if (!name || !code || !sectorId) {
-      return res.status(400).json({ message: 'Name, code and sector are required' });
+    if (!nameEn || !nameAr || !code) {
+      return res.status(400).json({ message: 'nameEn, nameAr and code are required' });
     }
 
     // Check if code already exists
@@ -90,11 +91,9 @@ router.post('/', verifyToken, async (req, res) => {
 
     const industry = await prisma.industry.create({
       data: {
-        name,
+        nameEn,
         nameAr,
         code,
-        description,
-        sectorId,
       },
     });
 
@@ -107,15 +106,28 @@ router.post('/', verifyToken, async (req, res) => {
 // Update industry
 router.patch('/:id', verifyToken, async (req, res) => {
   try {
-    const { name, nameAr, code, description } = req.body;
+    const { nameEn, nameAr, code } = req.body;
+
+    // Check if code is being changed and if new code already exists
+    if (code) {
+      const existingIndustry = await prisma.industry.findFirst({
+        where: {
+          code,
+          NOT: { id: req.params.id },
+        },
+      });
+
+      if (existingIndustry) {
+        return res.status(400).json({ message: 'Industry code already exists' });
+      }
+    }
 
     const updatedIndustry = await prisma.industry.update({
       where: { id: req.params.id },
       data: {
-        ...(name && { name }),
+        ...(nameEn && { nameEn }),
         ...(nameAr && { nameAr }),
         ...(code && { code }),
-        ...(description && { description }),
       },
     });
 
@@ -131,6 +143,17 @@ router.patch('/:id', verifyToken, async (req, res) => {
 // Delete industry
 router.delete('/:id', verifyToken, async (req, res) => {
   try {
+    // Check if industry has entities
+    const entitiesCount = await prisma.entity.count({
+      where: { industryId: req.params.id },
+    });
+
+    if (entitiesCount > 0) {
+      return res.status(400).json({
+        message: 'Cannot delete industry with entities. Please reassign or delete entities first.'
+      });
+    }
+
     await prisma.industry.delete({
       where: { id: req.params.id },
     });

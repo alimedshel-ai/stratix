@@ -9,19 +9,27 @@ const router = express.Router();
 // Get all entities
 router.get('/', verifyToken, async (req, res) => {
   try {
-    const { search, industryId, page = 1, limit = 10 } = req.query;
+    const { search, industryId, sectorId, typeId, page = 1, limit = 10 } = req.query;
 
     let where = {};
 
     if (search) {
       where.OR = [
-        { name: { contains: search,  } },
-        { code: { contains: search,  } },
+        { legalName: { contains: search } },
+        { displayName: { contains: search } },
       ];
     }
 
     if (industryId) {
       where.industryId = industryId;
+    }
+
+    if (sectorId) {
+      where.sectorId = sectorId;
+    }
+
+    if (typeId) {
+      where.typeId = typeId;
     }
 
     const skip = (page - 1) * limit;
@@ -32,11 +40,17 @@ router.get('/', verifyToken, async (req, res) => {
         skip,
         take: parseInt(limit),
         include: {
+          sector: {
+            select: { id: true, nameEn: true, nameAr: true },
+          },
           industry: {
-            select: { id: true, name: true, code: true },
+            select: { id: true, nameEn: true, nameAr: true },
+          },
+          entityType: {
+            select: { id: true, nameEn: true, nameAr: true },
           },
           _count: {
-            select: { users: true, strategyVersions: true },
+            select: { members: true, strategyVersions: true },
           },
         },
         orderBy: { createdAt: 'desc' },
@@ -62,9 +76,15 @@ router.get('/:id', verifyToken, async (req, res) => {
     const entity = await prisma.entity.findUnique({
       where: { id: req.params.id },
       include: {
+        sector: true,
         industry: true,
-        users: {
-          select: { id: true, name: true, email: true, role: true },
+        entityType: true,
+        members: {
+          include: {
+            user: {
+              select: { id: true, name: true, email: true },
+            },
+          },
         },
         strategyVersions: true,
         assessments: true,
@@ -84,20 +104,25 @@ router.get('/:id', verifyToken, async (req, res) => {
 // Create entity
 router.post('/', verifyToken, validateEntity, async (req, res) => {
   try {
-    const { name, nameAr, code, type, description, industryId } = req.body;
+    const { legalName, displayName, sectorId, industryId, typeId, logoUrl } = req.body;
 
-    if (!name || !code || !industryId) {
-      return res.status(400).json({ message: 'Name, code and industry are required' });
+    if (!legalName) {
+      return res.status(400).json({ message: 'legalName is required' });
     }
 
     const entity = await prisma.entity.create({
       data: {
-        name,
-        nameAr,
-        code,
-        type,
-        description,
+        legalName,
+        displayName,
+        sectorId,
         industryId,
+        typeId,
+        logoUrl,
+      },
+      include: {
+        sector: true,
+        industry: true,
+        entityType: true,
       },
     });
 
@@ -110,20 +135,28 @@ router.post('/', verifyToken, validateEntity, async (req, res) => {
 // Update entity
 router.patch('/:id', verifyToken, async (req, res) => {
   try {
-    const { name, nameAr, code, type, description } = req.body;
+    const { legalName, displayName, sectorId, industryId, typeId, logoUrl, isActive } = req.body;
 
-    const updatedEntity = await prisma.entity.update({
+    const updateData = {};
+    if (legalName !== undefined) updateData.legalName = legalName;
+    if (displayName !== undefined) updateData.displayName = displayName;
+    if (sectorId !== undefined) updateData.sectorId = sectorId;
+    if (industryId !== undefined) updateData.industryId = industryId;
+    if (typeId !== undefined) updateData.typeId = typeId;
+    if (logoUrl !== undefined) updateData.logoUrl = logoUrl;
+    if (isActive !== undefined) updateData.isActive = isActive;
+
+    const entity = await prisma.entity.update({
       where: { id: req.params.id },
-      data: {
-        ...(name && { name }),
-        ...(nameAr && { nameAr }),
-        ...(code && { code }),
-        ...(type && { type }),
-        ...(description && { description }),
+      data: updateData,
+      include: {
+        sector: true,
+        industry: true,
+        entityType: true,
       },
     });
 
-    res.json({ message: 'Entity updated successfully', entity: updatedEntity });
+    res.json({ message: 'Entity updated successfully', entity });
   } catch (error) {
     if (error.code === 'P2025') {
       return res.status(404).json({ message: 'Entity not found' });
@@ -135,14 +168,14 @@ router.patch('/:id', verifyToken, async (req, res) => {
 // Delete entity
 router.delete('/:id', verifyToken, async (req, res) => {
   try {
-    // Check if entity has users
-    const usersCount = await prisma.user.count({
+    // Check if entity has members
+    const membersCount = await prisma.member.count({
       where: { entityId: req.params.id },
     });
 
-    if (usersCount > 0) {
-      return res.status(400).json({ 
-        message: 'Cannot delete entity with users. Please reassign or delete users first.' 
+    if (membersCount > 0) {
+      return res.status(400).json({
+        message: 'Cannot delete entity with members. Please remove members first.'
       });
     }
 
