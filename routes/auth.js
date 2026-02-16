@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 // Register new user
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name, role = 'VIEWER', companyId } = req.body;
+    const { email, password, name } = req.body;
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -29,8 +29,6 @@ router.post('/register', async (req, res) => {
         email,
         password: hashedPassword,
         name,
-        role,
-        companyId,
       },
     });
 
@@ -40,7 +38,6 @@ router.post('/register', async (req, res) => {
         id: user.id,
         email: user.email,
         name: user.name,
-        role: user.role,
       },
     });
   } catch (error) {
@@ -53,9 +50,16 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find user
+    // Find user with memberships
     const user = await prisma.user.findUnique({
       where: { email },
+      include: {
+        memberships: {
+          include: {
+            entity: true,
+          },
+        },
+      },
     });
 
     if (!user) {
@@ -69,13 +73,17 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    // Get primary role (first membership or default)
+    const primaryRole = user.memberships[0]?.role || 'VIEWER';
+    const primaryEntity = user.memberships[0]?.entity || null;
+
     // Generate JWT token
     const token = jwt.sign(
       {
         id: user.id,
         email: user.email,
         name: user.name,
-        role: user.role,
+        role: primaryRole,
       },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
@@ -88,7 +96,9 @@ router.post('/login', async (req, res) => {
         id: user.id,
         email: user.email,
         name: user.name,
-        role: user.role,
+        role: primaryRole,
+        entity: primaryEntity,
+        memberships: user.memberships,
       },
     });
   } catch (error) {
@@ -101,18 +111,28 @@ router.get('/profile', async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
+      include: {
+        memberships: {
+          include: {
+            entity: true,
+          },
+        },
+      },
     });
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    const primaryRole = user.memberships[0]?.role || 'VIEWER';
+
     res.json({
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
-        role: user.role,
+        role: primaryRole,
+        memberships: user.memberships,
       },
     });
   } catch (error) {

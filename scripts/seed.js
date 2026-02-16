@@ -5,286 +5,372 @@ const prisma = new PrismaClient();
 
 async function seed() {
   try {
-    console.log('🌱 Seeding database with complete hierarchy...');
+    console.log('🌱 Starting database seed...');
 
-    // Create Sector
-    const sector = await prisma.sector.create({
+    // Clear existing data
+    console.log('🗑️  Cleaning existing data...');
+    await prisma.auditLog.deleteMany();
+    await prisma.criterion.deleteMany();
+    await prisma.dimension.deleteMany();
+    await prisma.assessment.deleteMany();
+    await prisma.kPI.deleteMany();
+    await prisma.strategicReview.deleteMany();
+    await prisma.strategicInitiative.deleteMany();
+    await prisma.strategicObjective.deleteMany();
+    await prisma.strategyVersion.deleteMany();
+    await prisma.member.deleteMany();
+    await prisma.entity.deleteMany();
+    await prisma.user.deleteMany();
+    await prisma.entityType.deleteMany();
+    await prisma.industry.deleteMany();
+    await prisma.sector.deleteMany();
+
+    // 1. Create Reference Tables (Sectors)
+    console.log('📊 Creating Sectors...');
+    const sectorGov = await prisma.sector.create({
       data: {
-        name: 'Private Sector',
-        nameAr: 'القطاع الخاص',
-        code: 'PVT_SECTOR',
+        nameAr: 'القطاع الحكومي',
+        nameEn: 'Government Sector',
+        code: 'GOV',
       },
     });
-    console.log('✅ Created Sector:', sector.name);
 
-    // Create Industries
+    const sectorPrivate = await prisma.sector.create({
+      data: {
+        nameAr: 'القطاع الخاص',
+        nameEn: 'Private Sector',
+        code: 'PVT',
+      },
+    });
+
+    const sectorNonProfit = await prisma.sector.create({
+      data: {
+        nameAr: 'القطاع غير الربحي',
+        nameEn: 'Non-Profit Sector',
+        code: 'NPO',
+      },
+    });
+
+    console.log('✅ Created 3 Sectors');
+
+    // 2. Create Industries
+    console.log('🏭 Creating Industries...');
+    const industryHealth = await prisma.industry.create({
+      data: {
+        nameAr: 'الصحة',
+        nameEn: 'Healthcare',
+        code: 'HEALTH',
+      },
+    });
+
+    const industryEducation = await prisma.industry.create({
+      data: {
+        nameAr: 'التعليم',
+        nameEn: 'Education',
+        code: 'EDU',
+      },
+    });
+
     const industryTech = await prisma.industry.create({
       data: {
-        name: 'Technology',
-        nameAr: 'تكنولوجيا',
-        code: 'TECH_IND',
-        description: 'Information Technology and Software Development',
-        sectorId: sector.id,
+        nameAr: 'التقنية',
+        nameEn: 'Technology',
+        code: 'TECH',
       },
     });
-    console.log('✅ Created Industry:', industryTech.name);
 
-    const industryMfg = await prisma.industry.create({
+    console.log('✅ Created 3 Industries');
+
+    // 3. Create Entity Types
+    console.log('🏢 Creating Entity Types...');
+    const typeMinistry = await prisma.entityType.create({
       data: {
-        name: 'Manufacturing',
-        nameAr: 'التصنيع',
-        code: 'MFG_IND',
-        description: 'Industrial Manufacturing and Production',
-        sectorId: sector.id,
+        nameAr: 'وزارة',
+        nameEn: 'Ministry',
+        code: 'MIN',
       },
     });
-    console.log('✅ Created Industry:', industryMfg.name);
 
-    // Create Entities
-    const entityTech = await prisma.entity.create({
+    const typeHospital = await prisma.entityType.create({
       data: {
-        name: 'Future Solutions',
-        nameAr: 'حلول المستقبل',
-        code: 'FUTURE001',
-        type: 'ORGANIZATION',
-        description: 'Software development and consulting company',
-        industryId: industryTech.id,
+        nameAr: 'مستشفى',
+        nameEn: 'Hospital',
+        code: 'HOSP',
       },
     });
-    console.log('✅ Created Entity:', entityTech.name);
 
-    const entityMfg = await prisma.entity.create({
+    const typeCompany = await prisma.entityType.create({
       data: {
-        name: 'Horizon Factory',
-        nameAr: 'مصنع الأفق',
-        code: 'HORIZON001',
-        type: 'ORGANIZATION',
-        description: 'Advanced manufacturing facility',
-        industryId: industryMfg.id,
+        nameAr: 'شركة',
+        nameEn: 'Company',
+        code: 'COMP',
       },
     });
-    console.log('✅ Created Entity:', entityMfg.name);
 
-    // Create Strategic Version
-    const stratVersion = await prisma.strategicVersion.create({
+    console.log('✅ Created 3 Entity Types');
+
+    // 4. Create Users
+    console.log('👥 Creating Users...');
+    const hashedPassword1 = await bcrypt.hash('Admin123!', 10);
+    const hashedPassword2 = await bcrypt.hash('User123!', 10);
+
+    const adminUser = await prisma.user.create({
       data: {
-        name: '2026 Strategic Plan',
-        description: 'Annual strategic initiative for 2026',
+        email: 'admin@stratix.com',
+        password: hashedPassword1,
+        name: 'مدير النظام',
+      },
+    });
+
+    const managerUser = await prisma.user.create({
+      data: {
+        email: 'manager@stratix.com',
+        password: hashedPassword2,
+        name: 'مدير الاستراتيجية',
+      },
+    });
+
+    const editorUser = await prisma.user.create({
+      data: {
+        email: 'editor@stratix.com',
+        password: hashedPassword2,
+        name: 'محرر المحتوى',
+      },
+    });
+
+    const viewerUser = await prisma.user.create({
+      data: {
+        email: 'viewer@stratix.com',
+        password: hashedPassword2,
+        name: 'مستخدم عادي',
+      },
+    });
+
+    console.log('✅ Created 4 Users');
+
+    // 5. Create Entities
+    console.log('🏛️  Creating Entities...');
+    const entity1 = await prisma.entity.create({
+      data: {
+        legalName: 'وزارة الصحة',
+        displayName: 'الصحة',
+        sectorId: sectorGov.id,
+        industryId: industryHealth.id,
+        typeId: typeMinistry.id,
+      },
+    });
+
+    const entity2 = await prisma.entity.create({
+      data: {
+        legalName: 'مستشفى الملك فيصل التخصصي',
+        displayName: 'التخصصي',
+        sectorId: sectorGov.id,
+        industryId: industryHealth.id,
+        typeId: typeHospital.id,
+      },
+    });
+
+    console.log('✅ Created 2 Entities');
+
+    // 6. Create Members (User-Entity relationships with roles)
+    console.log('🔗 Creating Member relationships...');
+    await prisma.member.create({
+      data: {
+        userId: adminUser.id,
+        entityId: entity1.id,
+        role: 'OWNER',
+      },
+    });
+
+    await prisma.member.create({
+      data: {
+        userId: managerUser.id,
+        entityId: entity1.id,
+        role: 'ADMIN',
+      },
+    });
+
+    await prisma.member.create({
+      data: {
+        userId: editorUser.id,
+        entityId: entity2.id,
+        role: 'EDITOR',
+      },
+    });
+
+    await prisma.member.create({
+      data: {
+        userId: viewerUser.id,
+        entityId: entity2.id,
+        role: 'VIEWER',
+      },
+    });
+
+    console.log('✅ Created 4 Member relationships');
+
+    // 7. Create Strategy Version
+    console.log('📋 Creating Strategy Versions...');
+    const strategy1 = await prisma.strategyVersion.create({
+      data: {
+        entityId: entity1.id,
         versionNumber: 1,
-        entityId: entityTech.id,
-        isActive: true,
+        status: 'ACTIVE',
+        activatedAt: new Date(),
       },
     });
-    console.log('✅ Created Strategic Version:', stratVersion.name);
 
-    // Create SWOT Analysis
-    const swotItems = [
-      { type: 'SWOT', category: 'STRENGTH', title: 'Strong team expertise', description: 'Highly skilled technical team' },
-      { type: 'SWOT', category: 'WEAKNESS', title: 'Limited resources', description: 'Budget constraints' },
-      { type: 'SWOT', category: 'OPPORTUNITY', title: 'Cloud market growth', description: 'Growing demand for cloud solutions' },
-      { type: 'SWOT', category: 'THREAT', title: 'Market competition', description: 'Increasing competition from larger firms' },
-    ];
+    console.log('✅ Created Strategy Version');
 
-    for (const item of swotItems) {
-      await prisma.strategicAnalysis.create({
-        data: {
-          ...item,
-          versionId: stratVersion.id,
-        },
-      });
-    }
-    console.log('✅ Created SWOT Analysis (4 points)');
-
-    // Create Objectives
-    const obj1 = await prisma.strategicObjective.create({
+    // 8. Create Strategic Objectives
+    console.log('🎯 Creating Strategic Objectives...');
+    const objective1 = await prisma.strategicObjective.create({
       data: {
-        title: 'Increase market share by 25%',
-        description: 'Expand our customer base and market presence',
-        status: 'IN_PROGRESS',
-        versionId: stratVersion.id,
+        versionId: strategy1.id,
+        title: 'تحسين جودة الخدمات الصحية',
+        description: 'رفع مستوى جودة الرعاية الصحية المقدمة للمواطنين',
+        status: 'ACTIVE',
       },
     });
 
-    const obj2 = await prisma.strategicObjective.create({
+    const objective2 = await prisma.strategicObjective.create({
       data: {
-        title: 'Improve product quality',
-        description: 'Reduce bugs and improve customer satisfaction',
-        status: 'IN_PROGRESS',
-        versionId: stratVersion.id,
+        versionId: strategy1.id,
+        title: 'زيادة كفاءة العمليات',
+        description: 'تحسين كفاءة العمليات التشغيلية بنسبة 20%',
+        status: 'ACTIVE',
       },
     });
-    console.log('✅ Created Strategic Objectives (2)');
 
-    // Create KPIs
+    console.log('✅ Created 2 Strategic Objectives');
+
+    // 9. Create KPIs
+    console.log('📊 Creating KPIs...');
     await prisma.kPI.create({
       data: {
-        name: 'Revenue Growth',
-        nameAr: 'نمو الإيرادات',
-        description: 'Quarterly revenue increase',
-        target: 1000000,
-        actual: 750000,
-        unit: '$',
-        status: 'AT_RISK',
-        versionId: stratVersion.id,
-        objectiveId: obj1.id,
-      },
-    });
-
-    await prisma.kPI.create({
-      data: {
-        name: 'Customer Satisfaction',
-        nameAr: 'رضا العملاء',
-        description: 'Customer satisfaction score',
+        versionId: strategy1.id,
+        objectiveId: objective1.id,
+        name: 'Patient Satisfaction Rate',
+        nameAr: 'معدل رضا المرضى',
+        description: 'نسبة رضا المرضى عن الخدمات المقدمة',
         target: 90,
         actual: 85,
         unit: '%',
         status: 'ON_TRACK',
-        versionId: stratVersion.id,
-        objectiveId: obj2.id,
       },
     });
 
     await prisma.kPI.create({
       data: {
-        name: 'Bug Resolution Rate',
-        nameAr: 'معدل حل الأخطاء',
-        target: 95,
-        actual: 92,
+        versionId: strategy1.id,
+        objectiveId: objective1.id,
+        name: 'Average Wait Time',
+        nameAr: 'متوسط وقت الانتظار',
+        description: 'متوسط وقت انتظار المريض',
+        target: 30,
+        actual: 35,
+        unit: 'دقيقة',
+        status: 'AT_RISK',
+      },
+    });
+
+    await prisma.kPI.create({
+      data: {
+        versionId: strategy1.id,
+        objectiveId: objective2.id,
+        name: 'Operational Efficiency',
+        nameAr: 'كفاءة العمليات',
+        description: 'نسبة تحسين كفاءة العمليات',
+        target: 20,
+        actual: 18,
         unit: '%',
         status: 'ON_TRACK',
-        versionId: stratVersion.id,
-        objectiveId: obj2.id,
       },
     });
-    console.log('✅ Created KPIs (3)');
 
-    // Create Initiatives
-    await prisma.strategicInitiative.create({
+    console.log('✅ Created 3 KPIs');
+
+    // 10. Create Assessment
+    console.log('📝 Creating Assessments...');
+    const assessment1 = await prisma.assessment.create({
       data: {
-        title: 'Cloud Migration Project',
-        description: 'Migrate existing systems to cloud infrastructure',
+        entityId: entity1.id,
+        title: 'تقييم الأداء الربع سنوي',
+        description: 'تقييم شامل للأداء المؤسسي',
         status: 'IN_PROGRESS',
-        owner: 'Ali Ahmed',
-        versionId: stratVersion.id,
       },
     });
 
-    await prisma.strategicInitiative.create({
-      data: {
-        title: 'AI Integration Initiative',
-        description: 'Integrate AI capabilities into our products',
-        status: 'PLANNED',
-        owner: 'Sara Mohammad',
-        versionId: stratVersion.id,
-      },
-    });
-    console.log('✅ Created Strategic Initiatives (2)');
+    console.log('✅ Created Assessment');
 
-    // Create Reviews
-    await prisma.strategicReview.create({
+    // 11. Create Dimensions
+    console.log('📐 Creating Dimensions...');
+    const dimension1 = await prisma.dimension.create({
       data: {
-        title: 'Q1 2026 Review',
-        reviewDate: new Date('2026-03-31'),
-        status: 'COMPLETED',
-        notes: 'Good progress on most initiatives',
-        versionId: stratVersion.id,
-      },
-    });
-    console.log('✅ Created Strategic Reviews');
-
-    // Create Assessment
-    const assessment = await prisma.assessment.create({
-      data: {
-        title: 'Engineering Capability Assessment',
-        description: 'Assessment of current engineering capabilities',
-        status: 'IN_PROGRESS',
-        entityId: entityTech.id,
+        assessmentId: assessment1.id,
+        name: 'الجودة',
+        description: 'بُعد الجودة في الخدمات',
       },
     });
 
-    const dimension = await prisma.dimension.create({
+    const dimension2 = await prisma.dimension.create({
       data: {
-        name: 'Technical Skills',
-        assessmentId: assessment.id,
+        assessmentId: assessment1.id,
+        name: 'الكفاءة',
+        description: 'بُعد كفاءة العمليات',
+      },
+    });
+
+    console.log('✅ Created 2 Dimensions');
+
+    // 12. Create Criteria
+    console.log('✅ Creating Criteria...');
+    await prisma.criterion.create({
+      data: {
+        dimensionId: dimension1.id,
+        name: 'رضا العملاء',
+        description: 'مدى رضا العملاء عن الخدمات',
+        score: 4.2,
       },
     });
 
     await prisma.criterion.create({
       data: {
-        name: 'Coding Standards',
-        score: 85,
-        maxScore: 100,
-        dimensionId: dimension.id,
-      },
-    });
-    console.log('✅ Created Assessments');
-
-    // Create Users
-    const adminPassword = await bcrypt.hash('Admin123!', 10);
-    const userPassword = await bcrypt.hash('User123!', 10);
-
-    await prisma.user.create({
-      data: {
-        email: 'ceo@future.com',
-        password: adminPassword,
-        name: 'محمد العتيبي (CEO)',
-        role: 'ENTITY_ADMIN',
-        entityId: entityTech.id,
+        dimensionId: dimension2.id,
+        name: 'سرعة الإنجاز',
+        description: 'سرعة إنجاز المعاملات',
+        score: 3.8,
       },
     });
 
-    await prisma.user.create({
-      data: {
-        email: 'strategy@future.com',
-        password: userPassword,
-        name: 'سارة أحمد (Strategy Manager)',
-        role: 'STRATEGY_MANAGER',
-        entityId: entityTech.id,
-      },
-    });
+    console.log('✅ Created 2 Criteria');
 
-    await prisma.user.create({
-      data: {
-        email: 'admin@stratix.com',
-        password: adminPassword,
-        name: 'مدير النظام',
-        role: 'SUPER_ADMIN',
-        entityId: entityTech.id,
-      },
-    });
+    console.log('\n🎉 Database seeded successfully!');
+    console.log('\n📌 Login credentials:');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('Admin (OWNER):');
+    console.log('  Email: admin@stratix.com');
+    console.log('  Password: Admin123!');
+    console.log('\nManager (ADMIN):');
+    console.log('  Email: manager@stratix.com');
+    console.log('  Password: User123!');
+    console.log('\nEditor (EDITOR):');
+    console.log('  Email: editor@stratix.com');
+    console.log('  Password: User123!');
+    console.log('\nViewer (VIEWER):');
+    console.log('  Email: viewer@stratix.com');
+    console.log('  Password: User123!');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
-    await prisma.user.create({
-      data: {
-        email: 'user@stratix.com',
-        password: userPassword,
-        name: 'مستخدم عادي',
-        role: 'VIEWER',
-        entityId: entityTech.id,
-      },
-    });
-    console.log('✅ Created Users');
-
-    console.log('\n✅ Database seeded successfully!');
-    console.log('\n📊 Data Hierarchy:');
-    console.log('  Platform');
-    console.log('    └─ Sector: Private Sector');
-    console.log('        ├─ Industry: Technology');
-    console.log('        │   └─ Entity: Future Solutions');
-    console.log('        │       ├─ Users (CEO, Strategy Manager, Admin, User)');
-    console.log('        │       └─ Strategic Version with SWOT, Objectives, KPIs, Initiatives, Reviews');
-    console.log('        └─ Industry: Manufacturing');
-    console.log('            └─ Entity: Horizon Factory');
-    console.log('\n📋 Demo Credentials:');
-    console.log('   Admin: admin@stratix.com / Admin123!');
-    console.log('   User: user@stratix.com / User123!');
-    console.log('   CEO: ceo@future.com / Admin123!');
-    console.log('   Strategy: strategy@future.com / User123!');
   } catch (error) {
-    console.error('❌ Seeding error:', error.message);
-    process.exit(1);
+    console.error('❌ Error seeding database:', error);
+    throw error;
   } finally {
     await prisma.$disconnect();
   }
 }
 
-seed();
+seed()
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
