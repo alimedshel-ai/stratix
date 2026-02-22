@@ -2,6 +2,7 @@ const express = require('express');
 const prisma = require('../lib/prisma');
 const { verifyToken } = require('../middleware/auth');
 const { validateEntity } = require('../middleware/validation');
+const { checkPermission } = require('../middleware/permission');
 
 const router = express.Router();
 
@@ -12,6 +13,11 @@ router.get('/', verifyToken, async (req, res) => {
     const { search, industryId, sectorId, typeId, page = 1, limit = 10 } = req.query;
 
     let where = {};
+
+    // Auto-filter by user's entity for non-admin users
+    if (req.user.activeEntityId) {
+      where.id = req.user.activeEntityId;
+    }
 
     if (search) {
       where.OR = [
@@ -40,6 +46,9 @@ router.get('/', verifyToken, async (req, res) => {
         skip,
         take: parseInt(limit),
         include: {
+          company: {
+            select: { id: true, nameAr: true, nameEn: true },
+          },
           sector: {
             select: { id: true, nameEn: true, nameAr: true },
           },
@@ -101,10 +110,10 @@ router.get('/:id', verifyToken, async (req, res) => {
   }
 });
 
-// Create entity
-router.post('/', verifyToken, validateEntity, async (req, res) => {
+// Create entity (ADMIN only)
+router.post('/', verifyToken, checkPermission('ADMIN'), validateEntity, async (req, res) => {
   try {
-    const { legalName, displayName, sectorId, industryId, typeId, logoUrl } = req.body;
+    const { legalName, displayName, sectorId, industryId, typeId, logoUrl, size, school } = req.body;
 
     if (!legalName) {
       return res.status(400).json({ message: 'legalName is required' });
@@ -118,6 +127,8 @@ router.post('/', verifyToken, validateEntity, async (req, res) => {
         industryId,
         typeId,
         logoUrl,
+        size: size || null,
+        school: school || null,
       },
       include: {
         sector: true,
@@ -132,10 +143,10 @@ router.post('/', verifyToken, validateEntity, async (req, res) => {
   }
 });
 
-// Update entity
-router.patch('/:id', verifyToken, async (req, res) => {
+// Update entity (ADMIN only)
+router.patch('/:id', verifyToken, checkPermission('ADMIN'), async (req, res) => {
   try {
-    const { legalName, displayName, sectorId, industryId, typeId, logoUrl, isActive } = req.body;
+    const { legalName, displayName, sectorId, industryId, typeId, logoUrl, isActive, size, school } = req.body;
 
     const updateData = {};
     if (legalName !== undefined) updateData.legalName = legalName;
@@ -145,6 +156,8 @@ router.patch('/:id', verifyToken, async (req, res) => {
     if (typeId !== undefined) updateData.typeId = typeId;
     if (logoUrl !== undefined) updateData.logoUrl = logoUrl;
     if (isActive !== undefined) updateData.isActive = isActive;
+    if (size !== undefined) updateData.size = size;
+    if (school !== undefined) updateData.school = school;
 
     const entity = await prisma.entity.update({
       where: { id: req.params.id },
@@ -165,8 +178,8 @@ router.patch('/:id', verifyToken, async (req, res) => {
   }
 });
 
-// Delete entity
-router.delete('/:id', verifyToken, async (req, res) => {
+// Delete entity (ADMIN only)
+router.delete('/:id', verifyToken, checkPermission('ADMIN'), async (req, res) => {
   try {
     // Check if entity has members
     const membersCount = await prisma.member.count({

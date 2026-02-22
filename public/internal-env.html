@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكيس - تحليل البيئة الداخلية</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --bg: #0f1117;
+            --bg-card: #1a1d2e;
+            --bg-card-hover: #232640;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --teal: #0D9488;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .top-nav {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 14px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .top-nav .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .layout {
+            display: flex;
+            min-height: calc(100vh - 64px);
+        }
+
+        .sidebar {
+            width: 280px;
+            flex-shrink: 0;
+        }
+
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        /* WIZARD CONTAINER */
+        .wizard-container {
+            position: relative;
+        }
+
+        .wizard-screen {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .wizard-screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* HERO */
+        .hero {
+            background: linear-gradient(135deg, rgba(13, 148, 136, 0.12), rgba(13, 148, 136, 0.04));
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #0D9488, #14B8A6, #2DD4BF);
+        }
+
+        .hero h1 {
+            font-size: 26px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .hero p {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.8;
+        }
+
+        /* PROGRESS STEPS */
+        .wizard-steps {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 28px;
+        }
+
+        .wiz-step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+            color: var(--text-muted);
+        }
+
+        .wiz-step.active {
+            background: rgba(13, 148, 136, 0.1);
+            border-color: rgba(13, 148, 136, 0.3);
+            color: var(--teal);
+        }
+
+        .wiz-step.done {
+            background: rgba(34, 197, 94, 0.08);
+            border-color: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .wiz-step-num {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 800;
+            background: var(--border);
+        }
+
+        .wiz-step.active .wiz-step-num {
+            background: rgba(13, 148, 136, 0.2);
+            color: var(--teal);
+        }
+
+        .wiz-step.done .wiz-step-num {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+        }
+
+        .wiz-arrow {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* DEPARTMENT CARDS */
+        .dept-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .dept-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 22px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .dept-card:hover {
+            border-color: rgba(13, 148, 136, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .dept-card.selected {
+            border-color: var(--teal);
+            background: rgba(13, 148, 136, 0.08);
+            box-shadow: 0 0 0 1px var(--teal), 0 8px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .dept-card.selected::after {
+            content: '✅';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 16px;
+        }
+
+        .dept-card.disabled {
+            opacity: 0.35;
+            pointer-events: none;
+        }
+
+        .dept-card .dept-emoji {
+            font-size: 36px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .dept-card .dept-name {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .dept-card .dept-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .dept-counter {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 18px;
+            color: var(--teal);
+        }
+
+        /* QUESTION SCREEN */
+        .q-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 36px;
+            margin-bottom: 20px;
+        }
+
+        .q-dept-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 18px;
+        }
+
+        .q-number {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .q-text {
+            font-size: 20px;
+            font-weight: 800;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .q-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .q-option {
+            background: rgba(255, 255, 255, 0.02);
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .q-option:hover {
+            border-color: rgba(13, 148, 136, 0.3);
+            background: rgba(13, 148, 136, 0.04);
+        }
+
+        .q-option.selected {
+            border-color: var(--teal);
+            background: rgba(13, 148, 136, 0.08);
+        }
+
+        .q-option .radio {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.3s;
+        }
+
+        .q-option.selected .radio {
+            border-color: var(--teal);
+            background: var(--teal);
+        }
+
+        .q-option.selected .radio::after {
+            content: '✓';
+            color: white;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .q-progress {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .q-progress-track {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.06);
+            overflow: hidden;
+        }
+
+        .q-progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, #0D9488, #14B8A6);
+            transition: width 0.5s ease;
+        }
+
+        .q-progress-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .q-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .btn-q {
+            padding: 12px 28px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-q.prev {
+            background: var(--bg-card);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+
+        .btn-q.next {
+            background: linear-gradient(135deg, #0D9488, #14B8A6);
+            color: white;
+        }
+
+        .btn-q:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* RESULT SCREEN */
+        .result-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 22px;
+            margin-bottom: 14px;
+            transition: all 0.3s;
+        }
+
+        .result-card:hover {
+            border-color: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .result-emoji {
+            font-size: 32px;
+        }
+
+        .result-name {
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .result-score-label {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .result-bar-track {
+            height: 14px;
+            border-radius: 7px;
+            background: rgba(255, 255, 255, 0.06);
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .result-bar-fill {
+            height: 100%;
+            border-radius: 7px;
+            transition: width 1.5s ease;
+        }
+
+        .result-verdict {
+            font-size: 13px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            line-height: 1.6;
+        }
+
+        .result-answers {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .result-answer-chip {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .smart-rec {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(102, 126, 234, 0.05));
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 18px;
+            padding: 24px;
+            margin-top: 20px;
+            position: relative;
+        }
+
+        .smart-rec::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #8b5cf6, #667eea);
+        }
+
+        .btn-main {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 28px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        /* REMINDER BANNER */
+        .reminder-banner {
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .reminder-banner .rb-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .reminder-banner .rb-content {
+            flex: 1;
+        }
+
+        .reminder-banner .rb-title {
+            font-size: 15px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .reminder-banner .rb-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .reminder-banner .rb-btn {
+            padding: 8px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            color: white;
+            white-space: nowrap;
+        }
+
+        /* HISTORY COMPARISON */
+        .history-comparison {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.06), rgba(14, 165, 233, 0.03));
+            border: 1px solid rgba(56, 189, 248, 0.15);
+            border-radius: 16px;
+            padding: 22px;
+            margin-bottom: 20px;
+        }
+
+        .history-comparison h3 {
+            font-size: 16px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .history-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+
+        .history-row .hr-emoji {
+            font-size: 22px;
+        }
+
+        .history-row .hr-name {
+            font-size: 13px;
+            font-weight: 700;
+            flex: 1;
+        }
+
+        .history-row .hr-old {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .history-row .hr-arrow {
+            font-size: 16px;
+        }
+
+        .history-row .hr-new {
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .history-row .hr-diff {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+
+        /* SMART LINKING */
+        .smart-link-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .smart-link-card:hover {
+            border-color: rgba(13, 148, 136, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .smart-link-card .sl-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .smart-link-card .sl-content {
+            flex: 1;
+        }
+
+        .smart-link-card .sl-title {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .smart-link-card .sl-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .smart-link-card .sl-arrow {
+            font-size: 16px;
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 16px;
+            }
+
+            .dept-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .wizard-steps {
+                flex-wrap: wrap;
+            }
+
+            .reminder-banner {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="top-nav">
+        <a href="/dashboard.html" class="brand"><i class="bi bi-gem"></i> ستارتكيس</a>
+        <div class="user-area">
+            <div class="user-avatar">م</div>
+            <button class="btn-logout" onclick="localStorage.clear(); location.href='/login.html'">
+                <i class="bi bi-box-arrow-right"></i> خروج
+            </button>
+        </div>
+    </nav>
+
+    <div class="layout">
+        <aside class="sidebar"></aside>
+        <div class="main-content">
+            <!-- Reminder Banner (dynamically shown) -->
+            <div id="reminderBanner" style="display:none"></div>
+
+            <!-- Hero -->
+            <div class="hero">
+                <h1>🏢 تحليل البيئة الداخلية</h1>
+                <p id="heroDesc">حلل أداء إداراتك بعمق — اكتشف أين القوة وأين الضعف في كل إدارة. اختر من ٣ إلى ٦ إدارات
+                    وأجب ٤ أسئلة لكل واحدة.
+                </p>
+            </div>
+
+            <!-- Wizard Steps -->
+            <div class="wizard-steps">
+                <div class="wiz-step active" id="wizStep1">
+                    <div class="wiz-step-num">١</div>
+                    اختر الإدارات
+                </div>
+                <div class="wiz-arrow">←</div>
+                <div class="wiz-step" id="wizStep2">
+                    <div class="wiz-step-num">٢</div>
+                    أجب الأسئلة
+                </div>
+                <div class="wiz-arrow">←</div>
+                <div class="wiz-step" id="wizStep3">
+                    <div class="wiz-step-num">٣</div>
+                    النتائج
+                </div>
+            </div>
+
+            <div class="wizard-container">
+                <!-- SCREEN 1: Select Departments -->
+                <div class="wizard-screen active" id="screen1">
+                    <div class="dept-counter" id="deptCounter">اختر من ٣ إلى ٦ إدارات — <span
+                            id="selectedCount">٠</span> مختارة</div>
+                    <div class="dept-grid" id="deptGrid"></div>
+
+                    <!-- Custom Department -->
+                    <div style="margin:16px 0;display:flex;align-items:center;gap:10px">
+                        <input type="text" id="customDeptName" placeholder="أضف إدارة مخصصة..." maxlength="30"
+                            style="flex:1;padding:12px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg-card);color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:border-color .3s"
+                            onfocus="this.style.borderColor='rgba(13,148,136,0.4)'"
+                            onblur="this.style.borderColor='var(--border)'">
+                        <button onclick="addCustomDept()"
+                            style="padding:12px 20px;border-radius:12px;border:none;background:linear-gradient(135deg,#0D9488,#14B8A6);color:white;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">
+                            <i class="bi bi-plus-lg"></i> أضف
+                        </button>
+                    </div>
+
+                    <div style="text-align:center">
+                        <button class="btn-q next" id="btnStartQuestions" disabled onclick="startQuestions()">
+                            <span id="btnStartText">اختر ٣ إدارات على الأقل</span> <i class="bi bi-arrow-left"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SCREEN 2: Questions -->
+                <div class="wizard-screen" id="screen2">
+                    <div id="questionArea"></div>
+                </div>
+
+                <!-- SCREEN 3: Results -->
+                <div class="wizard-screen" id="screen3">
+                    <div id="resultsArea"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script src="/js/ai-advisor.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+
+        // ============================================================
+        //  DATA — الإدارات والأسئلة
+        // ============================================================
+
+        const DEPARTMENTS = [
+            {
+                id: 'hr', nameAr: 'الموارد البشرية', emoji: '👥', color: '#8B5CF6',
+                desc: 'التوظيف، التدريب، الأداء، الثقافة',
+                questions: [
+                    { text: 'هل كل موظف عنده وصف وظيفي واضح ومحدّث؟', hint: 'الوضوح الوظيفي يقلل الصراعات ويرفع الإنتاجية' },
+                    { text: 'هل يوجد نظام تقييم أداء دوري (ربعي أو سنوي)؟', hint: 'التقييم المنتظم يكشف الفجوات مبكراً' },
+                    { text: 'هل تتوفر خطط تطوير وتدريب واضحة للموظفين؟', hint: 'الاستثمار في التطوير يرفع الولاء ويقلل الدوران' },
+                    { text: 'هل مستوى رضا الموظفين مُقاس ومتابع؟', hint: 'رضا الموظف = رضا العميل' }
+                ]
+            },
+            {
+                id: 'finance', nameAr: 'المالية', emoji: '💰', color: '#16A34A',
+                desc: 'الميزانية، التقارير، التدفقات',
+                questions: [
+                    { text: 'هل التقارير المالية تصدر بشكل دوري ودقيق؟', hint: 'التقارير المنتظمة تدعم اتخاذ القرار' },
+                    { text: 'هل يوجد نظام محاسبي/ERP محدّث؟', hint: 'الأنظمة الحديثة تقلل الأخطاء وتسرّع العمل' },
+                    { text: 'هل التدفقات النقدية مراقبة ومتوقعة؟', hint: 'إدارة النقد تحمي من أزمات السيولة' },
+                    { text: 'هل الميزانيات محددة لكل إدارة ومتابعة؟', hint: 'التحكم في الإنفاق يحسّن الربحية' }
+                ]
+            },
+            {
+                id: 'operations', nameAr: 'العمليات', emoji: '⚙️', color: '#EA580C',
+                desc: 'الإنتاج، الجودة، التحسين المستمر',
+                questions: [
+                    { text: 'هل العمليات الأساسية موثقة ومعيارية (SOPs)؟', hint: 'التوثيق يضمن الاتساق حتى مع تغيّر الفريق' },
+                    { text: 'هل تُقاس مؤشرات الأداء التشغيلي بشكل يومي؟', hint: 'القياس اليومي يكشف المشاكل قبل تفاقمها' },
+                    { text: 'هل يوجد برنامج تحسين مستمر (Kaizen/Lean)؟', hint: 'التحسين المستمر ميزة تنافسية مستدامة' },
+                    { text: 'هل جودة المنتج/الخدمة ثابتة ومضبوطة؟', hint: 'الجودة الثابتة تبني ثقة العملاء' }
+                ]
+            },
+            {
+                id: 'sales', nameAr: 'المبيعات', emoji: '📈', color: '#DC2626',
+                desc: 'الأهداف، العملاء، التحويل',
+                questions: [
+                    { text: 'هل كل مندوب عنده هدف مبيعات واضح وشهري؟', hint: 'الأهداف الواضحة تزيد الأداء بنسبة 25%' },
+                    { text: 'هل تستخدمون نظام CRM لتتبع العملاء؟', hint: 'CRM ينظّم العلاقات ويمنع فقدان الفرص' },
+                    { text: 'هل pipeline المبيعات واضح ومتابع أسبوعياً؟', hint: 'المتابعة الأسبوعية تكشف الفرص المتأخرة' },
+                    { text: 'هل نسبة تحويل العملاء المحتملين مُقاسة؟', hint: 'قياس التحويل يكشف أين تفقد العملاء' }
+                ]
+            },
+            {
+                id: 'it', nameAr: 'تقنية المعلومات', emoji: '💻', color: '#2563EB',
+                desc: 'البنية التحتية، الأنظمة، الأمان',
+                questions: [
+                    { text: 'هل البنية التحتية التقنية حديثة وموثوقة؟', hint: 'البنية القديمة تكلف أكثر من التحديث' },
+                    { text: 'هل الأنظمة متكاملة ومترابطة أم جزر منعزلة؟', hint: 'التكامل يقلل التكرار ويسرّع العمل' },
+                    { text: 'هل أمن المعلومات والبيانات محمي بسياسات واضحة؟', hint: 'خرق واحد قد يكلف ملايين' },
+                    { text: 'هل يتوفر دعم تقني سريع للمستخدمين الداخليين؟', hint: 'تأخر الدعم = ساعات إنتاجية ضائعة' }
+                ]
+            },
+            {
+                id: 'marketing', nameAr: 'التسويق', emoji: '📣', color: '#7C3AED',
+                desc: 'العلامة التجارية، المحتوى، الحملات',
+                questions: [
+                    { text: 'هل استراتيجية التسويق واضحة ومكتوبة؟', hint: 'بدون استراتيجية التسويق يصبح عشوائياً' },
+                    { text: 'هل تُقاس نتائج الحملات بـ ROI واضح؟', hint: 'قياس العائد يوجّه الإنفاق للأكثر فعالية' },
+                    { text: 'هل الحضور الرقمي (موقع + سوشل ميديا) فعّال؟', hint: 'الحضور الرقمي الآن هو الواجهة الأولى' },
+                    { text: 'هل العلامة التجارية متسقة عبر كل القنوات؟', hint: 'الاتساق يبني الثقة والتميز' }
+                ]
+            },
+            {
+                id: 'cs', nameAr: 'خدمة العملاء', emoji: '🎧', color: '#0891B2',
+                desc: 'الدعم، الشكاوى، الرضا',
+                questions: [
+                    { text: 'هل زمن الاستجابة لطلبات العملاء مُقاس ومقبول؟', hint: 'السرعة = رضا العميل = ولاء طويل' },
+                    { text: 'هل يوجد نظام لتتبع وحل الشكاوى بشكل منظم؟', hint: 'الشكوى فرصة — التجاهل كارثة' },
+                    { text: 'هل يُقاس رضا العملاء بشكل دوري (NPS/CSAT)؟', hint: 'القياس المنتظم يكشف الاتجاهات السلبية مبكراً' },
+                    { text: 'هل الفريق مدرب على معايير خدمة واضحة؟', hint: 'التدريب يحوّل الخدمة من ردة فعل إلى تجربة' }
+                ]
+            },
+            {
+                id: 'quality', nameAr: 'الجودة والامتثال', emoji: '📋', color: '#B45309',
+                desc: 'المعايير، ISO، التدقيق',
+                questions: [
+                    { text: 'هل يوجد نظام إدارة جودة معتمد (ISO أو ما يعادله)؟', hint: 'الشهادات تفتح أبواب عملاء وأسواق جديدة' },
+                    { text: 'هل تُجرى تدقيقات داخلية بشكل دوري؟', hint: 'التدقيق الدوري يمنع المفاجآت' },
+                    { text: 'هل الامتثال للأنظمة والقوانين مراقب ومحدّث؟', hint: 'عدم الامتثال = غرامات ومخاطر قانونية' },
+                    { text: 'هل يوجد نظام لإدارة المخاطر التشغيلية؟', hint: 'إدارة المخاطر تحمي الاستمرارية' }
+                ]
+            },
+            {
+                id: 'projects', nameAr: 'إدارة المشاريع', emoji: '🏗️', color: '#6D28D9',
+                desc: 'التخطيط، التنفيذ، التسليم',
+                questions: [
+                    { text: 'هل المشاريع تُنفذ ضمن الميزانية والجدول المحدد؟', hint: 'التجاوز المتكرر يشير لضعف في التخطيط' },
+                    { text: 'هل تستخدمون منهجية إدارة مشاريع واضحة؟', hint: 'المنهجية تقلل الفوضى وتزيد التنبؤية' },
+                    { text: 'هل يتم توثيق الدروس المستفادة بعد كل مشروع؟', hint: 'التعلم من التجربة يحسّن المشاريع القادمة' },
+                    { text: 'هل يوجد مكتب إدارة مشاريع (PMO) أو مسؤول واضح؟', hint: 'المسؤولية الواضحة = متابعة فعّالة' }
+                ]
+            }
+        ];
+
+        const ANSWERS = [
+            { key: 'yes', label: 'نعم — محقق بشكل كامل', emoji: '✅', points: 25, color: '#22c55e' },
+            { key: 'partial', label: 'جزئياً — نحتاج تحسين', emoji: '🟡', points: 15, color: '#f59e0b' },
+            { key: 'no', label: 'لا — غير متوفر حالياً', emoji: '❌', points: 5, color: '#ef4444' }
+        ];
+
+        // ============================================================
+        //  STATE
+        // ============================================================
+        const state = {
+            selectedDepts: [],
+            currentQuestion: 0,
+            answers: {},
+            versionId: localStorage.getItem('selectedVersionId') || null,
+            existingAnalysis: null,    // Previous analysis data (for history)
+            previousScores: null,      // Previous scores (for comparison)
+            analysisId: null           // ID for PATCH
+        };
+
+        // ============================================================
+        //  SCREEN 1: Department Selection
+        // ============================================================
+        function renderDepartments() {
+            const grid = document.getElementById('deptGrid');
+            grid.innerHTML = DEPARTMENTS.map(d => `
+                <div class="dept-card" id="dept-${d.id}" onclick="toggleDept('${d.id}')">
+                    <span class="dept-emoji">${d.emoji}</span>
+                    <div class="dept-name">${d.nameAr}</div>
+                    <div class="dept-desc">${d.desc}</div>
+                </div>
+            `).join('');
+        }
+
+        function toggleDept(id) {
+            const idx = state.selectedDepts.indexOf(id);
+            if (idx >= 0) {
+                state.selectedDepts.splice(idx, 1);
+            } else if (state.selectedDepts.length < 6) {
+                state.selectedDepts.push(id);
+            }
+            updateDeptUI();
+        }
+
+        function updateDeptUI() {
+            const count = state.selectedDepts.length;
+            const arabicCount = ['٠', '١', '٢', '٣', '٤', '٥', '٦'][count] || count;
+            document.getElementById('selectedCount').textContent = arabicCount;
+            document.getElementById('btnStartQuestions').disabled = count < 3;
+
+            // Update button text dynamically
+            const totalQ = count * 4;
+            const minutes = Math.ceil(totalQ / 4);
+            const btnText = document.getElementById('btnStartText');
+            if (count < 3) {
+                btnText.textContent = `اختر ${3 - count === 1 ? 'إدارة واحدة' : (3 - count) + ' إدارات'} أخرى`;
+            } else {
+                btnText.textContent = `ابدأ التحليل — ${totalQ} سؤال (${minutes} دقائق)`;
+            }
+
+            DEPARTMENTS.forEach(d => {
+                const el = document.getElementById(`dept-${d.id}`);
+                if (!el) return;
+                el.classList.remove('selected', 'disabled');
+                if (state.selectedDepts.includes(d.id)) {
+                    el.classList.add('selected');
+                } else if (count >= 6) {
+                    el.classList.add('disabled');
+                }
+            });
+        }
+
+        // ============================================================
+        //  CUSTOM DEPARTMENT
+        // ============================================================
+        let customDeptCounter = 0;
+        function addCustomDept() {
+            const input = document.getElementById('customDeptName');
+            const name = input.value.trim();
+            if (!name) { input.focus(); return; }
+            if (DEPARTMENTS.some(d => d.nameAr === name)) { input.value = ''; input.focus(); return; }
+
+            customDeptCounter++;
+            const customId = `custom_${customDeptCounter}`;
+            const colors = ['#6366F1', '#EC4899', '#14B8A6', '#F97316', '#8B5CF6', '#06B6D4'];
+            const color = colors[customDeptCounter % colors.length];
+
+            DEPARTMENTS.push({
+                id: customId, nameAr: name, emoji: '🏷️', color,
+                desc: 'إدارة مخصصة',
+                questions: [
+                    { text: `هل أهداف ${name} واضحة ومحددة؟`, hint: 'الأهداف الواضحة أساس الأداء الجيد' },
+                    { text: `هل يوجد تقييم أداء دوري لفريق ${name}؟`, hint: 'التقييم المنتظم يكشف الفجوات مبكراً' },
+                    { text: `هل الموارد المتاحة لـ${name} كافية؟`, hint: 'نقص الموارد يعيق التنفيذ' },
+                    { text: `هل ${name} تعمل بتنسيق جيد مع الإدارات الأخرى؟`, hint: 'التنسيق يمنع الازدواجية ويسرّع النتائج' }
+                ]
+            });
+
+            input.value = '';
+            renderDepartments();
+            // Auto-select the new department
+            if (state.selectedDepts.length < 6) {
+                state.selectedDepts.push(customId);
+            }
+            updateDeptUI();
+        }
+
+        // ============================================================
+        //  SCREEN 2: Questions
+        // ============================================================
+        function startQuestions() {
+            state.currentQuestion = 0;
+            state.answers = {};
+            switchScreen(2);
+            renderQuestion();
+        }
+
+        function getQuestionsList() {
+            const list = [];
+            state.selectedDepts.forEach(deptId => {
+                const dept = DEPARTMENTS.find(d => d.id === deptId);
+                dept.questions.forEach((q, i) => {
+                    list.push({ dept, questionIndex: i, ...q });
+                });
+            });
+            return list;
+        }
+
+        function renderQuestion() {
+            const questions = getQuestionsList();
+            const total = questions.length;
+            const idx = state.currentQuestion;
+            const q = questions[idx];
+            const currentAnswer = state.answers[`${q.dept.id}_q${q.questionIndex}`];
+
+            const deptQNum = q.questionIndex + 1;
+            const globalNum = idx + 1;
+
+            document.getElementById('questionArea').innerHTML = `
+                <div class="q-card">
+                    <div class="q-dept-badge" style="background:${q.dept.color}15;color:${q.dept.color};border:1px solid ${q.dept.color}30">
+                        ${q.dept.emoji} ${q.dept.nameAr} — السؤال ${deptQNum}/٤
+                    </div>
+                    <div class="q-text">"${q.text}"</div>
+                    <div style="font-size:12px;color:var(--text-muted);margin-bottom:20px;padding:10px 14px;border-radius:8px;background:rgba(255,255,255,0.02);border-right:3px solid ${q.dept.color}40">
+                        💡 ${q.hint}
+                    </div>
+                    <div class="q-options">
+                        ${ANSWERS.map(a => `
+                            <div class="q-option ${currentAnswer === a.key ? 'selected' : ''}"
+                                 onclick="selectAnswer('${q.dept.id}', ${q.questionIndex}, '${a.key}')">
+                                <div class="radio"></div>
+                                <span>${a.emoji} ${a.label}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="q-progress">
+                        <div class="q-progress-track">
+                            <div class="q-progress-fill" style="width:${Math.round((globalNum / total) * 100)}%"></div>
+                        </div>
+                        <div class="q-progress-text">${globalNum} / ${total}</div>
+                    </div>
+                    <div class="q-nav">
+                        <button class="btn-q prev" onclick="prevQuestion()" ${idx === 0 ? 'disabled' : ''}>
+                            <i class="bi bi-arrow-right"></i> السابق
+                        </button>
+                        ${idx < total - 1 ? `
+                            <button class="btn-q next" id="btnNext" onclick="nextQuestion()" ${!currentAnswer ? 'disabled' : ''}>
+                                التالي <i class="bi bi-arrow-left"></i>
+                            </button>
+                        ` : `
+                            <button class="btn-q next" id="btnNext" onclick="showResults()" ${!currentAnswer ? 'disabled' : ''}
+                                    style="background:linear-gradient(135deg,#22c55e,#16a34a)">
+                                🎯 شوف النتائج <i class="bi bi-arrow-left"></i>
+                            </button>
+                        `}
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectAnswer(deptId, qIdx, ansKey) {
+            state.answers[`${deptId}_q${qIdx}`] = ansKey;
+            renderQuestion();
+        }
+
+        function nextQuestion() {
+            const questions = getQuestionsList();
+            if (state.currentQuestion < questions.length - 1) {
+                state.currentQuestion++;
+                renderQuestion();
+            }
+        }
+
+        function prevQuestion() {
+            if (state.currentQuestion > 0) {
+                state.currentQuestion--;
+                renderQuestion();
+            }
+        }
+
+        // ============================================================
+        //  SCREEN 3: Results
+        // ============================================================
+        function calculateScores() {
+            const scores = {};
+            state.selectedDepts.forEach(deptId => {
+                let total = 0;
+                for (let i = 0; i < 4; i++) {
+                    const ansKey = state.answers[`${deptId}_q${i}`];
+                    const ans = ANSWERS.find(a => a.key === ansKey);
+                    total += ans ? ans.points : 0;
+                }
+                scores[deptId] = total;
+            });
+            return scores;
+        }
+
+        function getVerdict(score) {
+            if (score >= 85) return { label: '🟢 قوي — أداء ممتاز', color: '#22c55e', bg: 'rgba(34,197,94,0.06)', border: 'rgba(34,197,94,0.15)' };
+            if (score >= 60) return { label: '🟡 متوسط — يحتاج تحسين', color: '#f59e0b', bg: 'rgba(245,158,11,0.06)', border: 'rgba(245,158,11,0.15)' };
+            return { label: '🔴 ضعيف — يحتاج تركيز عاجل', color: '#ef4444', bg: 'rgba(239,68,68,0.06)', border: 'rgba(239,68,68,0.15)' };
+        }
+
+        function showResults() {
+            switchScreen(3);
+            const scores = calculateScores();
+            const sorted = state.selectedDepts
+                .map(id => ({ dept: DEPARTMENTS.find(d => d.id === id), score: scores[id] }))
+                .sort((a, b) => a.score - b.score);
+
+            const weakest = sorted[0];
+            const strongest = sorted[sorted.length - 1];
+            const avgScore = Math.round(sorted.reduce((s, d) => s + d.score, 0) / sorted.length);
+            const prevScores = state.previousScores;
+
+            let html = '';
+
+            // Overall score
+            const overallVerdict = getVerdict(avgScore);
+            let overallTrend = '';
+            if (prevScores) {
+                const prevAvg = Math.round(
+                    Object.values(prevScores).reduce((s, v) => s + v, 0) / Object.values(prevScores).length
+                );
+                const diff = avgScore - prevAvg;
+                if (diff > 0) overallTrend = `<div style="font-size:13px;color:#22c55e;margin-top:6px">📈 تحسّن +${diff}% مقارنة بآخر تحليل</div>`;
+                else if (diff < 0) overallTrend = `<div style="font-size:13px;color:#ef4444;margin-top:6px">📉 تراجع ${diff}% مقارنة بآخر تحليل</div>`;
+                else overallTrend = `<div style="font-size:13px;color:#f59e0b;margin-top:6px">⏸️ نفس المستوى كآخر تحليل</div>`;
+            }
+
+            html += `
+                <div style="text-align:center;margin-bottom:24px;padding:24px;background:${overallVerdict.bg};border:1px solid ${overallVerdict.border};border-radius:16px">
+                    <div style="font-size:42px;font-weight:900;color:${overallVerdict.color}">${avgScore}%</div>
+                    <div style="font-size:14px;font-weight:700;color:${overallVerdict.color};margin-top:4px">${overallVerdict.label}</div>
+                    <div style="font-size:12px;color:var(--text-muted);margin-top:6px">المتوسط العام لصحة إداراتك</div>
+                    ${overallTrend}
+                </div>
+            `;
+
+            // ===== HISTORY COMPARISON (if previous data exists) =====
+            if (prevScores) {
+                html += `<div class="history-comparison"><h3>📊 مقارنة مع التحليل السابق</h3>`;
+                state.selectedDepts.forEach(id => {
+                    const dept = DEPARTMENTS.find(d => d.id === id);
+                    const newScore = scores[id];
+                    const oldScore = prevScores[id];
+
+                    if (oldScore !== undefined) {
+                        const diff = newScore - oldScore;
+                        let diffHtml, arrowEmoji;
+                        if (diff > 0) {
+                            arrowEmoji = '📈';
+                            diffHtml = `<span class="hr-diff" style="background:rgba(34,197,94,0.1);color:#22c55e">+${diff}%</span>`;
+                        } else if (diff < 0) {
+                            arrowEmoji = '📉';
+                            diffHtml = `<span class="hr-diff" style="background:rgba(239,68,68,0.1);color:#ef4444">${diff}%</span>`;
+                        } else {
+                            arrowEmoji = '⏸️';
+                            diffHtml = `<span class="hr-diff" style="background:rgba(245,158,11,0.1);color:#f59e0b">±0</span>`;
+                        }
+                        html += `
+                            <div class="history-row">
+                                <span class="hr-emoji">${dept.emoji}</span>
+                                <span class="hr-name">${dept.nameAr}</span>
+                                <span class="hr-old">${oldScore}%</span>
+                                <span class="hr-arrow">${arrowEmoji}</span>
+                                <span class="hr-new" style="color:${getVerdict(newScore).color}">${newScore}%</span>
+                                ${diffHtml}
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <div class="history-row">
+                                <span class="hr-emoji">${dept.emoji}</span>
+                                <span class="hr-name">${dept.nameAr}</span>
+                                <span class="hr-old">—</span>
+                                <span class="hr-arrow">🆕</span>
+                                <span class="hr-new" style="color:${getVerdict(scores[id]).color}">${scores[id]}%</span>
+                                <span class="hr-diff" style="background:rgba(56,189,248,0.1);color:#38bdf8">جديد</span>
+                            </div>
+                        `;
+                    }
+                });
+                html += `</div>`;
+            }
+
+            // Department results
+            sorted.forEach(({ dept, score }) => {
+                const v = getVerdict(score);
+                const barColor = v.color;
+
+                // Build answer chips
+                let chipsHtml = '';
+                for (let i = 0; i < 4; i++) {
+                    const ansKey = state.answers[`${dept.id}_q${i}`];
+                    const ans = ANSWERS.find(a => a.key === ansKey);
+                    if (ans) {
+                        const shortQ = dept.questions[i].text.substring(0, 30) + '...';
+                        chipsHtml += `<span class="result-answer-chip" style="background:${ans.color}12;color:${ans.color};border:1px solid ${ans.color}25">${ans.emoji} ${shortQ}</span>`;
+                    }
+                }
+
+                // Previous score for this dept
+                let deptTrendHtml = '';
+                if (prevScores && prevScores[dept.id] !== undefined) {
+                    const diff = score - prevScores[dept.id];
+                    if (diff > 0) deptTrendHtml = `<span style="font-size:12px;color:#22c55e;font-weight:700">📈 +${diff}% من آخر مرة</span>`;
+                    else if (diff < 0) deptTrendHtml = `<span style="font-size:12px;color:#ef4444;font-weight:700">📉 ${diff}% من آخر مرة</span>`;
+                }
+
+                html += `
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-emoji">${dept.emoji}</div>
+                            <div style="flex:1">
+                                <div class="result-name">${dept.nameAr}</div>
+                                <div class="result-score-label">${dept.desc}</div>
+                                ${deptTrendHtml}
+                            </div>
+                            <div style="font-size:24px;font-weight:900;color:${barColor}">${score}%</div>
+                        </div>
+                        <div class="result-bar-track">
+                            <div class="result-bar-fill" style="width:${score}%;background:${barColor}"></div>
+                        </div>
+                        <div class="result-verdict" style="background:${v.bg};border:1px solid ${v.border};color:${v.color}">
+                            ${v.label}
+                        </div>
+                        <div class="result-answers">${chipsHtml}</div>
+                    </div>
+                `;
+            });
+
+            // ===== SMART RECOMMENDATIONS =====
+            html += `
+                <div class="smart-rec">
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+                        <div style="width:42px;height:42px;border-radius:12px;background:rgba(139,92,246,0.15);display:flex;align-items:center;justify-content:center;font-size:20px">🤖</div>
+                        <div>
+                            <div style="font-size:16px;font-weight:800;color:var(--text)">التوصية الذكية</div>
+                            <div style="font-size:12px;color:var(--text-muted)">بناءً على نتائج تحليلك</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">
+                        <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 16px;background:rgba(239,68,68,0.04);border-radius:10px;border:1px solid rgba(239,68,68,0.12)">
+                            <span style="font-size:18px">⚡</span>
+                            <div>
+                                <div style="font-size:13px;font-weight:700;color:#ef4444">${weakest.dept.emoji} ${weakest.dept.nameAr} — أضعف إدارة (${weakest.score}%)</div>
+                                <div style="font-size:12px;color:var(--text-muted);margin-top:4px">ركّز ٨٠% من جهودك التحسينية هنا. حسّن هالإدارة أولاً — ستنعكس على كل المنظمة.</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 16px;background:rgba(34,197,94,0.04);border-radius:10px;border:1px solid rgba(34,197,94,0.12)">
+                            <span style="font-size:18px">🏆</span>
+                            <div>
+                                <div style="font-size:13px;font-weight:700;color:#22c55e">${strongest.dept.emoji} ${strongest.dept.nameAr} — أقوى إدارة (${strongest.score}%)</div>
+                                <div style="font-size:12px;color:var(--text-muted);margin-top:4px">حافظ على هالمستوى وانقل أفضل ممارساتها للإدارات الأضعف.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== SMART LINKING: الربط الذكي ===== -->
+                    <div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:16px;margin-bottom:16px">
+                        <div style="font-size:14px;font-weight:800;margin-bottom:12px;color:var(--text)">🔗 خطواتك القادمة — مخصصة لنتائجك</div>
+                        ${buildSmartLinks(sorted, scores)}
+                    </div>
+
+                    <div style="display:flex;gap:10px;flex-wrap:wrap">
+                        <a href="/swot.html" class="btn-main" style="background:linear-gradient(135deg,#4F46E5,#667eea)">📊 انتقل لتحليل SWOT</a>
+                        <button class="btn-main" style="background:linear-gradient(135deg,#0D9488,#14B8A6)" onclick="resetWizard()">🔄 حلل إدارات أخرى</button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('resultsArea').innerHTML = html;
+
+            // Animate bars
+            setTimeout(() => {
+                document.querySelectorAll('.result-bar-fill').forEach(el => {
+                    el.style.width = el.style.width; // trigger animation
+                });
+            }, 100);
+
+            // Save to backend
+            saveAnalysis(scores);
+        }
+
+        // ============================================================
+        //  SMART LINKING — الربط الذكي
+        // ============================================================
+        function buildSmartLinks(sorted, scores) {
+            const links = [];
+            const weakDepts = sorted.filter(s => s.score < 60).map(s => s.dept.id);
+            const allDepts = sorted.map(s => s.dept.id);
+
+            // 1. Always suggest SWOT
+            links.push({
+                icon: '📊', color: '#22c55e', bg: 'rgba(34,197,94,0.08)',
+                href: '/swot.html',
+                title: 'انقل النتائج لتحليل SWOT',
+                desc: `نقاط ضعف الإدارات → Weaknesses | نقاط قوتها → Strengths`
+            });
+
+            // 2. If operations or quality is weak → Value Chain
+            if (weakDepts.includes('operations') || weakDepts.includes('quality')) {
+                links.push({
+                    icon: '🔗', color: '#0891B2', bg: 'rgba(8,145,178,0.08)',
+                    href: '/tool-detail.html?code=VALUE_CHAIN',
+                    title: 'حلل سلسلة القيمة — عملياتك تحتاج تشريح',
+                    desc: 'العمليات ضعيفة → اكتشف أين بالضبط يُهدر الجهد والموارد'
+                });
+            }
+
+            // 3. If HR or sales weak → Core Competency
+            if (weakDepts.includes('hr') || weakDepts.includes('sales')) {
+                links.push({
+                    icon: '🏆', color: '#D97706', bg: 'rgba(217,119,6,0.08)',
+                    href: '/tool-detail.html?code=CORE_COMPETENCY',
+                    title: 'حدد قدراتك الجوهرية — وين ميزتك؟',
+                    desc: 'الكوادر والمبيعات ضعيفة → لازم تعرف أي قدرة تبني عليها'
+                });
+            }
+
+            // 4. If cs (customer service) weak → Customer Journey
+            if (weakDepts.includes('cs')) {
+                links.push({
+                    icon: '🚶', color: '#DB2777', bg: 'rgba(219,39,119,0.08)',
+                    href: '/tool-detail.html?code=CUSTOMER_JOURNEY',
+                    title: 'ارسم رحلة العميل — الخدمة تحتاج إعادة تصميم',
+                    desc: 'خدمة العملاء ضعيفة → افهم أين ينزعج العميل بالضبط'
+                });
+            }
+
+            // 5. If marketing weak → PESTEL external analysis
+            if (weakDepts.includes('marketing')) {
+                links.push({
+                    icon: '🌍', color: '#0891b2', bg: 'rgba(8,145,178,0.08)',
+                    href: '/tool-detail.html?code=PESTEL',
+                    title: 'ادرس البيئة الخارجية — التسويق يحتاج سياق',
+                    desc: 'التسويق ضعيف → قد يكون السبب تغيّر في السوق أو المنافسة'
+                });
+            }
+
+            // 6. If all strong → suggest strategic direction
+            if (weakDepts.length === 0) {
+                links.push({
+                    icon: '🧭', color: '#8b5cf6', bg: 'rgba(139,92,246,0.08)',
+                    href: '/directions.html',
+                    title: 'إداراتك قوية! حدد التوجه الاستراتيجي',
+                    desc: 'أساسك متين — انتقل لرسم الرؤية والرسالة والأهداف الكبرى'
+                });
+            }
+
+            return links.map(l => `
+                <a href="${l.href}" class="smart-link-card">
+                    <div class="sl-icon" style="background:${l.bg}">${l.icon}</div>
+                    <div class="sl-content">
+                        <div class="sl-title">${l.title}</div>
+                        <div class="sl-desc">${l.desc}</div>
+                    </div>
+                    <div class="sl-arrow"><i class="bi bi-arrow-left"></i></div>
+                </a>
+            `).join('');
+        }
+
+        // ============================================================
+        //  SAVE TO BACKEND (with History)
+        // ============================================================
+        async function saveAnalysis(scores) {
+            if (!state.versionId) {
+                try {
+                    const vData = await fetch('/api/versions', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }).then(r => r.json());
+                    const versions = vData.versions || vData || [];
+                    if (versions.length > 0) {
+                        state.versionId = versions[0].id;
+                        localStorage.setItem('selectedVersionId', state.versionId);
+                    }
+                } catch (e) { console.warn('Could not load versions'); return; }
+            }
+
+            if (!state.versionId) return;
+
+            // Build history: keep old snapshots + add previous result
+            let history = [];
+            if (state.existingAnalysis) {
+                history = state.existingAnalysis.history || [];
+                // Push the previous result as a snapshot
+                if (state.existingAnalysis.scores && state.existingAnalysis.completedAt) {
+                    history.push({
+                        date: state.existingAnalysis.completedAt,
+                        departments: state.existingAnalysis.departments || [],
+                        scores: state.existingAnalysis.scores
+                    });
+                }
+                // Keep max 10 snapshots
+                if (history.length > 10) history = history.slice(-10);
+            }
+
+            const analysisData = {
+                departments: state.selectedDepts,
+                scores,
+                answers: state.answers,
+                completedAt: new Date().toISOString(),
+                history
+            };
+
+            const avgScore = Math.round(
+                state.selectedDepts.reduce((s, id) => s + scores[id], 0) / state.selectedDepts.length
+            );
+
+            try {
+                if (state.analysisId) {
+                    // Update existing
+                    await fetch(`/api/company-analysis/${state.analysisId}`, {
+                        method: 'PATCH',
+                        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            data: JSON.stringify(analysisData),
+                            status: 'COMPLETED',
+                            progress: 100,
+                            score: avgScore,
+                            summary: `تحليل ${state.selectedDepts.length} إدارات — المتوسط: ${avgScore}%`
+                        })
+                    });
+                } else {
+                    // Check if analysis exists (fallback)
+                    const existing = await fetch(`/api/company-analysis/version/${state.versionId}/INTERNAL_ENV`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }).then(r => r.ok ? r.json() : null);
+
+                    if (existing && existing.id) {
+                        await fetch(`/api/company-analysis/${existing.id}`, {
+                            method: 'PATCH',
+                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                data: JSON.stringify(analysisData),
+                                status: 'COMPLETED',
+                                progress: 100,
+                                score: avgScore,
+                                summary: `تحليل ${state.selectedDepts.length} إدارات — المتوسط: ${avgScore}%`
+                            })
+                        });
+                    } else {
+                        await fetch('/api/company-analysis', {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                versionId: state.versionId,
+                                toolCode: 'INTERNAL_ENV',
+                                data: JSON.stringify(analysisData),
+                                status: 'COMPLETED',
+                                progress: 100,
+                                score: avgScore,
+                                summary: `تحليل ${state.selectedDepts.length} إدارات — المتوسط: ${avgScore}%`
+                            })
+                        });
+                    }
+                }
+                console.log('✅ Analysis saved with history');
+            } catch (e) {
+                console.error('Failed to save analysis:', e);
+            }
+        }
+
+        // ============================================================
+        //  NAVIGATION
+        // ============================================================
+        function switchScreen(num) {
+            document.querySelectorAll('.wizard-screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(`screen${num}`).classList.add('active');
+
+            // Update steps
+            for (let i = 1; i <= 3; i++) {
+                const el = document.getElementById(`wizStep${i}`);
+                el.classList.remove('active', 'done');
+                if (i < num) el.classList.add('done');
+                if (i === num) el.classList.add('active');
+            }
+        }
+
+        function resetWizard() {
+            state.selectedDepts = [];
+            state.currentQuestion = 0;
+            state.answers = {};
+            updateDeptUI();
+            switchScreen(1);
+        }
+
+        // ============================================================
+        //  REMINDER BANNER — تنبيه ٩٠ يوم
+        // ============================================================
+        function showReminderBanner(existingData) {
+            const banner = document.getElementById('reminderBanner');
+            if (!existingData || !existingData.completedAt) return;
+
+            const lastDate = new Date(existingData.completedAt);
+            const now = new Date();
+            const daysPassed = Math.floor((now - lastDate) / (1000 * 60 * 60 * 24));
+            const lastDateStr = lastDate.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
+
+            // Calculate previous average
+            const prevAvg = existingData.scores
+                ? Math.round(Object.values(existingData.scores).reduce((s, v) => s + v, 0) / Object.values(existingData.scores).length)
+                : null;
+
+            // Previous departments
+            const prevDepts = (existingData.departments || []).map(id => {
+                const dept = DEPARTMENTS.find(d => d.id === id);
+                return dept ? dept.emoji + ' ' + dept.nameAr : id;
+            }).join('، ');
+
+            if (daysPassed >= 90) {
+                // 🔴 Time to re-assess!
+                banner.style.display = 'flex';
+                banner.className = 'reminder-banner';
+                banner.style.background = 'linear-gradient(135deg, rgba(239,68,68,0.08), rgba(220,38,38,0.04))';
+                banner.style.border = '1px solid rgba(239,68,68,0.2)';
+                banner.innerHTML = `
+                    <div class="rb-icon" style="background:rgba(239,68,68,0.12)">🔔</div>
+                    <div class="rb-content">
+                        <div class="rb-title" style="color:#ef4444">حان وقت إعادة التقييم! (${daysPassed} يوم مضى)</div>
+                        <div class="rb-desc">آخر تحليل: ${lastDateStr} | ${prevDepts}${prevAvg ? ` | المتوسط: ${prevAvg}%` : ''}</div>
+                    </div>
+                    <button class="rb-btn" style="background:linear-gradient(135deg,#ef4444,#dc2626)" onclick="document.getElementById('reminderBanner').style.display='none'">🔄 أعد التحليل الآن</button>
+                `;
+            } else if (daysPassed >= 60) {
+                // 🟡 Coming up soon
+                banner.style.display = 'flex';
+                banner.className = 'reminder-banner';
+                banner.style.background = 'linear-gradient(135deg, rgba(245,158,11,0.06), rgba(234,138,0,0.03))';
+                banner.style.border = '1px solid rgba(245,158,11,0.15)';
+                banner.innerHTML = `
+                    <div class="rb-icon" style="background:rgba(245,158,11,0.12)">⏰</div>
+                    <div class="rb-content">
+                        <div class="rb-title" style="color:#f59e0b">بعد ${90 - daysPassed} يوم يحين موعد إعادة التقييم</div>
+                        <div class="rb-desc">آخر تحليل: ${lastDateStr}${prevAvg ? ` | المتوسط: ${prevAvg}%` : ''}</div>
+                    </div>
+                `;
+            } else {
+                // 🟢 Recent analysis — show summary
+                banner.style.display = 'flex';
+                banner.className = 'reminder-banner';
+                banner.style.background = 'linear-gradient(135deg, rgba(34,197,94,0.06), rgba(22,163,74,0.03))';
+                banner.style.border = '1px solid rgba(34,197,94,0.15)';
+                banner.innerHTML = `
+                    <div class="rb-icon" style="background:rgba(34,197,94,0.12)">✅</div>
+                    <div class="rb-content">
+                        <div class="rb-title" style="color:#22c55e">تم التحليل — قبل ${daysPassed} يوم</div>
+                        <div class="rb-desc">${prevDepts}${prevAvg ? ` | المتوسط: ${prevAvg}%` : ''} — أعد التحليل لمتابعة التقدم</div>
+                    </div>
+                    <button class="rb-btn" style="background:linear-gradient(135deg,#0D9488,#14B8A6)" onclick="viewPreviousResults()">📊 شوف النتائج</button>
+                `;
+            }
+        }
+
+        // ============================================================
+        //  VIEW PREVIOUS RESULTS — عرض نتائج سابقة
+        // ============================================================
+        function viewPreviousResults() {
+            if (!state.existingAnalysis) return;
+            const data = state.existingAnalysis;
+
+            // Re-populate state from previous data
+            state.selectedDepts = data.departments || [];
+            state.answers = data.answers || {};
+
+            // No previous comparison for viewing old results
+            state.previousScores = null;
+
+            // Show results directly
+            showResults();
+        }
+
+        // ============================================================
+        //  INIT — Check for existing analysis
+        // ============================================================
+        async function init() {
+            renderDepartments();
+
+            // Try to load existing analysis
+            if (!state.versionId) {
+                try {
+                    const vData = await fetch('/api/versions', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }).then(r => r.json());
+                    const versions = vData.versions || vData || [];
+                    if (versions.length > 0) {
+                        state.versionId = versions[0].id;
+                        localStorage.setItem('selectedVersionId', state.versionId);
+                    }
+                } catch (e) { console.warn('No versions'); }
+            }
+
+            if (state.versionId) {
+                try {
+                    const existing = await fetch(`/api/company-analysis/version/${state.versionId}/INTERNAL_ENV`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }).then(r => r.ok ? r.json() : null);
+
+                    if (existing && existing.id) {
+                        state.analysisId = existing.id;
+
+                        // Parse data
+                        let data = existing.data;
+                        if (typeof data === 'string') {
+                            try { data = JSON.parse(data); } catch (e) { data = null; }
+                        }
+
+                        if (data && data.completedAt) {
+                            state.existingAnalysis = data;
+                            state.previousScores = data.scores || null;
+
+                            // Show reminder banner
+                            showReminderBanner(data);
+
+                            // Update hero description
+                            document.getElementById('heroDesc').innerHTML = `
+                                لديك تحليل سابق. يمكنك <strong>إعادة التحليل</strong> لنفس الإدارات أو إدارات مختلفة — وسنعرض لك <span style="color:var(--teal)">المقارنة مع آخر تحليل تلقائياً</span>.
+                            `;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Could not check existing analysis:', e);
+                }
+            }
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

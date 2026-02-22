@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكيس - القرارات المالية</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --secondary: #764ba2;
+            --bg: #0f1117;
+            --bg-card: #1a1d2e;
+            --bg-card-hover: #232640;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --success: #22c55e;
+            --warning: #facc15;
+            --danger: #ef4444;
+            --info: #38bdf8;
+            --purple: #a78bfa;
+            --accent: #818cf8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .top-nav {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 14px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .3);
+        }
+
+        .top-nav .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .top-nav .nav-links {
+            display: flex;
+            gap: 6px;
+        }
+
+        .top-nav .nav-links a {
+            color: rgba(255, 255, 255, .85);
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            transition: .2s;
+        }
+
+        .top-nav .nav-links a:hover {
+            background: rgba(255, 255, 255, .15);
+            color: #fff;
+        }
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .btn-logout {
+            background: rgba(239, 68, 68, .3);
+            color: #fff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .layout {
+            display: flex;
+            min-height: calc(100vh - 60px);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            max-width: calc(100% - 220px);
+            overflow-y: auto;
+        }
+
+        .page-header {
+            margin-bottom: 20px;
+        }
+
+        .page-header h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-header p {
+            color: var(--text-muted);
+            font-size: .95rem;
+            margin-top: 4px;
+        }
+
+        /* Purpose Banner */
+        .purpose-banner {
+            background: linear-gradient(135deg, rgba(102, 126, 234, .08), rgba(118, 75, 162, .08));
+            border: 1px solid rgba(102, 126, 234, .15);
+            border-radius: 14px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .purpose-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .purpose-text h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .purpose-text p {
+            font-size: .85rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .purpose-text .tags {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .purpose-tag {
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: .72rem;
+            font-weight: 600;
+        }
+
+        .purpose-tag.invest {
+            background: rgba(139, 92, 246, .15);
+            color: #a78bfa;
+        }
+
+        .purpose-tag.cut {
+            background: rgba(250, 204, 21, .15);
+            color: #facc15;
+        }
+
+        .purpose-tag.move {
+            background: rgba(6, 182, 212, .15);
+            color: #22d3ee;
+        }
+
+        .purpose-tag.track {
+            background: rgba(34, 197, 94, .15);
+            color: #22c55e;
+        }
+
+        /* Stats */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: .3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+        .stat-card:nth-child(1)::before {
+            background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+        }
+
+        .stat-card:nth-child(2)::before {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        }
+
+        .stat-card:nth-child(3)::before {
+            background: linear-gradient(90deg, #22c55e, #4ade80);
+        }
+
+        .stat-card:nth-child(4)::before {
+            background: linear-gradient(90deg, #38bdf8, #7dd3fc);
+        }
+
+        .stat-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #fff;
+        }
+
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 800;
+        }
+
+        .stat-label {
+            font-size: .78rem;
+            color: var(--text-muted);
+        }
+
+        /* Chart Section */
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+        }
+
+        .chart-card h3 {
+            font-size: .95rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Data Card */
+        .data-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .card-toolbar {
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-toolbar h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filters-row {
+            display: flex;
+            gap: 10px;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .filter-input {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 7px 12px;
+            border-radius: 8px;
+            font-size: .8rem;
+            font-family: 'Tajawal', sans-serif;
+            min-width: 140px;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .filter-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 10px;
+            font-size: .85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: .2s;
+            font-family: 'Tajawal', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, .4);
+        }
+
+        /* Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            padding: 12px 18px;
+            text-align: right;
+            font-size: .8rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, .02);
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 12px 18px;
+            border-bottom: 1px solid var(--border);
+            font-size: .85rem;
+            vertical-align: middle;
+        }
+
+        .data-table tr:hover td {
+            background: var(--bg-card-hover);
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .row-title {
+            font-weight: 600;
+        }
+
+        .row-desc {
+            color: var(--text-muted);
+            font-size: .78rem;
+            margin-top: 2px;
+        }
+
+        .entity-name {
+            color: var(--text-muted);
+            font-size: .8rem;
+        }
+
+        .amount-value {
+            font-weight: 700;
+            font-size: .9rem;
+        }
+
+        .badge-type {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: .72rem;
+            font-weight: 600;
+        }
+
+        .badge-INVESTMENT {
+            background: rgba(139, 92, 246, .15);
+            color: #a78bfa;
+        }
+
+        .badge-COST_REDUCTION {
+            background: rgba(250, 204, 21, .15);
+            color: #facc15;
+        }
+
+        .badge-REALLOCATION {
+            background: rgba(6, 182, 212, .15);
+            color: #22d3ee;
+        }
+
+        .badge-OTHER {
+            background: rgba(148, 163, 184, .15);
+            color: #94a3b8;
+        }
+
+        .badge-status {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: .72rem;
+            font-weight: 600;
+        }
+
+        .badge-PROPOSED {
+            background: rgba(250, 204, 21, .15);
+            color: #facc15;
+        }
+
+        .badge-APPROVED {
+            background: rgba(34, 197, 94, .15);
+            color: #4ade80;
+        }
+
+        .badge-REJECTED {
+            background: rgba(239, 68, 68, .15);
+            color: #f87171;
+        }
+
+        .badge-IMPLEMENTED {
+            background: rgba(56, 189, 248, .15);
+            color: #7dd3fc;
+        }
+
+        .btn-action {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: .2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-action:hover {
+            background: var(--bg-card-hover);
+            color: var(--text);
+        }
+
+        .btn-action.danger:hover {
+            background: rgba(239, 68, 68, .15);
+            color: #ef4444;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: var(--text-muted);
+        }
+
+        .empty-state .emoji {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .6);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            width: 650px;
+            max-height: 85vh;
+            overflow-y: auto;
+            animation: slideUp .3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1
+            }
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, rgba(102, 126, 234, .08), rgba(118, 75, 162, .08));
+        }
+
+        .modal-header h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 20px 24px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: .85rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .form-group label .req {
+            color: var(--danger);
+            font-size: .7rem;
+        }
+
+        .form-input {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: .9rem;
+            font-family: 'Tajawal', sans-serif;
+            transition: .2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, .15);
+        }
+
+        .form-row {
+            display: grid;
+            gap: 12px;
+        }
+
+        .form-row.c2 {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .form-row.c3 {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .form-row.c4 {
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+        }
+
+        .section-divider {
+            font-size: .8rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 18px 0 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Tajawal', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-cancel {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        @media(max-width:900px) {
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+
+            .main-content {
+                max-width: 100%;
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="top-nav">
+        <a href="/dashboard" class="brand"><i class="bi bi-rocket-takeoff-fill"></i> ستارتكيس</a>
+        <div class="nav-links">
+            <a href="/dashboard"><i class="bi bi-house"></i> الرئيسية</a>
+            <a href="/kpis"><i class="bi bi-graph-up"></i> المؤشرات</a>
+            <a href="/intelligence"><i class="bi bi-bell"></i> التنبيهات</a>
+        </div>
+        <div class="user-area">
+            <span style="color:#fff;font-size:13px" id="userName">مدير النظام</span>
+            <div class="user-avatar" id="userAvatar">م</div>
+            <button class="btn-logout" onclick="logout()">خروج</button>
+        </div>
+    </nav>
+
+    <div class="layout">
+        <nav class="sidebar"></nav>
+        <main class="main-content">
+            <div class="page-header">
+                <h1>💰 القرارات المالية الاستراتيجية</h1>
+                <p>وثّق وتابع القرارات المالية المرتبطة بتنفيذ الاستراتيجية</p>
+            </div>
+
+            <!-- Purpose Banner — Explains what this page does -->
+            <div class="purpose-banner">
+                <div class="purpose-icon"><i class="bi bi-cash-stack"></i></div>
+                <div class="purpose-text">
+                    <h3>ما دور هذه الصفحة؟</h3>
+                    <p>
+                        القرارات المالية هي الأداة لتوثيق ومتابعة كل قرار مالي مرتبط بتنفيذ استراتيجيتك. سواء كان
+                        استثماراً في مشروع جديد،
+                        أو إعادة تخصيص موارد، أو خفض تكاليف — كل قرار يُسجّل هنا مع مبلغه وأثره المتوقع وحالة اعتماده.
+                        هذا يساعد في:
+                        <strong>الشفافية المالية</strong>، و<strong>تتبع الميزانيات</strong>، و<strong>ربط المال
+                            بالأهداف الاستراتيجية</strong>.
+                    </p>
+                    <div class="tags">
+                        <span class="purpose-tag invest">📊 استثمار</span>
+                        <span class="purpose-tag cut">✂️ خفض تكاليف</span>
+                        <span class="purpose-tag move">🔄 إعادة تخصيص</span>
+                        <span class="purpose-tag track">📋 تتبع الاعتماد</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:linear-gradient(135deg,#8b5cf6,#a78bfa)"><i
+                            class="bi bi-currency-dollar"></i></div>
+                    <div>
+                        <div class="stat-value" id="totalAmount">0 ر.س</div>
+                        <div class="stat-label">إجمالي المبالغ</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:linear-gradient(135deg,#f59e0b,#fbbf24)"><i
+                            class="bi bi-hourglass-split"></i></div>
+                    <div>
+                        <div class="stat-value" id="proposedCount">0</div>
+                        <div class="stat-label">قرارات مقترحة</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:linear-gradient(135deg,#22c55e,#4ade80)"><i
+                            class="bi bi-check-circle"></i></div>
+                    <div>
+                        <div class="stat-value" id="approvedCount">0</div>
+                        <div class="stat-label">قرارات معتمدة</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:linear-gradient(135deg,#38bdf8,#7dd3fc)"><i
+                            class="bi bi-rocket-takeoff"></i></div>
+                    <div>
+                        <div class="stat-value" id="implementedCount">0</div>
+                        <div class="stat-label">قرارات منفّذة</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-row">
+                <div class="chart-card">
+                    <h3><i class="bi bi-pie-chart"></i> توزيع القرارات حسب النوع</h3>
+                    <canvas id="typeChart" height="200"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3><i class="bi bi-bar-chart"></i> المبالغ حسب الحالة</h3>
+                    <canvas id="statusChart" height="200"></canvas>
+                </div>
+            </div>
+
+            <!-- Decisions Table -->
+            <div class="data-card">
+                <div class="card-toolbar">
+                    <h3><i class="bi bi-table"></i> سجل القرارات المالية</h3>
+                    <button class="btn-add" onclick="showModal()"><i class="bi bi-plus-lg"></i> قرار جديد</button>
+                </div>
+                <div class="filters-row">
+                    <input type="text" class="filter-input" id="searchInput" placeholder="🔍 بحث بالعنوان..."
+                        oninput="loadDecisions()" style="flex:1">
+                    <select class="filter-input" id="entityFilter" onchange="loadDecisions()">
+                        <option value="">كل الكيانات</option>
+                    </select>
+                    <select class="filter-input" id="typeFilter" onchange="loadDecisions()">
+                        <option value="">كل الأنواع</option>
+                        <option value="INVESTMENT">📊 استثمار</option>
+                        <option value="COST_REDUCTION">✂️ خفض تكاليف</option>
+                        <option value="REALLOCATION">🔄 إعادة تخصيص</option>
+                        <option value="OTHER">📌 أخرى</option>
+                    </select>
+                    <select class="filter-input" id="statusFilter" onchange="loadDecisions()">
+                        <option value="">كل الحالات</option>
+                        <option value="PROPOSED">⏳ مقترح</option>
+                        <option value="APPROVED">✅ معتمد</option>
+                        <option value="REJECTED">❌ مرفوض</option>
+                        <option value="IMPLEMENTED">🚀 منفّذ</option>
+                    </select>
+                </div>
+                <div style="overflow-x:auto">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>العنوان</th>
+                                <th>الكيان</th>
+                                <th>النوع</th>
+                                <th>المبلغ</th>
+                                <th>الحالة</th>
+                                <th>التاريخ</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="decisionsTable">
+                            <tr>
+                                <td colspan="7" class="text-center" style="padding:40px;color:var(--text-muted)">⏳ جاري
+                                    التحميل...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="decisionModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="bi bi-cash-stack" style="color:var(--primary)"></i> <span id="decModalTitle">قرار مالي
+                        جديد</span></h3><button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="decId">
+                <div class="section-divider"><i class="bi bi-info-circle"></i> المعلومات الأساسية</div>
+                <div class="form-row c2">
+                    <div class="form-group"><label><i class="bi bi-pencil" style="color:var(--primary)"></i> العنوان
+                            <span class="req">*</span></label><input type="text" id="decTitle" class="form-input"
+                            placeholder="عنوان القرار المالي"></div>
+                    <div class="form-group"><label><i class="bi bi-building" style="color:var(--info)"></i> الكيان <span
+                                class="req">*</span></label><select id="decEntity" class="form-input">
+                            <option value="">-- اختر كيان --</option>
+                        </select></div>
+                </div>
+                <div class="form-group"><label>الوصف</label><textarea id="decDesc" class="form-input" rows="2"
+                        placeholder="وصف تفصيلي للقرار وارتباطه بالاستراتيجية..."></textarea></div>
+
+                <div class="section-divider"><i class="bi bi-currency-dollar"></i> التفاصيل المالية</div>
+                <div class="form-row c4">
+                    <div class="form-group"><label><i class="bi bi-cash" style="color:var(--success)"></i>
+                            المبلغ</label><input type="number" id="decAmount" class="form-input" step="0.01"
+                            placeholder="0.00"></div>
+                    <div class="form-group"><label>العملة</label><select id="decCurrency" class="form-input">
+                            <option value="SAR">🇸🇦 ر.س</option>
+                            <option value="USD">🇺🇸 $</option>
+                            <option value="EUR">🇪🇺 €</option>
+                        </select></div>
+                    <div class="form-group"><label>النوع</label><select id="decType" class="form-input">
+                            <option value="INVESTMENT">📊 استثمار</option>
+                            <option value="COST_REDUCTION">✂️ خفض</option>
+                            <option value="REALLOCATION">🔄 تخصيص</option>
+                            <option value="OTHER">📌 أخرى</option>
+                        </select></div>
+                    <div class="form-group"><label>الحالة</label><select id="decStatus" class="form-input">
+                            <option value="PROPOSED">⏳ مقترح</option>
+                            <option value="APPROVED">✅ معتمد</option>
+                            <option value="REJECTED">❌ مرفوض</option>
+                            <option value="IMPLEMENTED">🚀 منفّذ</option>
+                        </select></div>
+                </div>
+
+                <div class="section-divider"><i class="bi bi-lightning"></i> الأثر والتوقيت</div>
+                <div class="form-row c2">
+                    <div class="form-group"><label><i class="bi bi-calendar3" style="color:var(--info)"></i> تاريخ
+                            القرار</label><input type="date" id="decDate" class="form-input"></div>
+                    <div class="form-group"><label><i class="bi bi-bar-chart" style="color:var(--warning)"></i> تقييم
+                            الأثر</label><textarea id="decImpact" class="form-input" rows="1"
+                            placeholder="ما الأثر المتوقع؟"></textarea></div>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn-cancel" onclick="closeModal()">إلغاء</button><button
+                    class="btn-save" onclick="saveDecision()"><i class="bi bi-check-lg"></i> حفظ القرار</button></div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script src="/js/ai-advisor.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+        const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.name || 'مستخدم';
+        document.getElementById('userAvatar').textContent = (user.name || 'م')[0];
+
+        const typeLabel = { INVESTMENT: 'استثمار', COST_REDUCTION: 'خفض تكاليف', REALLOCATION: 'إعادة تخصيص', OTHER: 'أخرى' };
+        const statusLabel = { PROPOSED: 'مقترح', APPROVED: 'معتمد', REJECTED: 'مرفوض', IMPLEMENTED: 'منفّذ' };
+        const currSymbol = { SAR: 'ر.س', USD: '$', EUR: '€' };
+        let typeChartObj, statusChartObj;
+
+        function closeModal() { document.getElementById('decisionModal').classList.remove('show'); }
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+        document.addEventListener('DOMContentLoaded', () => { loadEntities(); loadDecisions(); });
+
+        async function loadEntities() {
+            try {
+                const res = await fetch('/api/entities?limit=100', { headers: { Authorization: `Bearer ${token}` } });
+                const data = await res.json();
+                const entities = data.entities || [];
+                const filterSel = document.getElementById('entityFilter');
+                const modalSel = document.getElementById('decEntity');
+                entities.forEach(e => {
+                    const name = e.displayName || e.legalName;
+                    filterSel.innerHTML += `<option value="${e.id}">${name}</option>`;
+                    modalSel.innerHTML += `<option value="${e.id}">${name}</option>`;
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadDecisions() {
+            try {
+                const search = document.getElementById('searchInput').value;
+                const entityId = document.getElementById('entityFilter').value;
+                const type = document.getElementById('typeFilter').value;
+                const status = document.getElementById('statusFilter').value;
+                let url = '/api/financial?limit=50';
+                if (search) url += `&search=${encodeURIComponent(search)}`;
+                if (entityId) url += `&entityId=${entityId}`;
+                if (type) url += `&type=${type}`;
+                if (status) url += `&status=${status}`;
+
+                const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+                const data = await res.json();
+
+                document.getElementById('totalAmount').textContent = formatAmount(data.totalAmount || 0) + ' ر.س';
+                const summary = data.summary || {};
+                document.getElementById('proposedCount').textContent = summary.PROPOSED?.count || 0;
+                document.getElementById('approvedCount').textContent = summary.APPROVED?.count || 0;
+                document.getElementById('implementedCount').textContent = summary.IMPLEMENTED?.count || 0;
+
+                renderDecisions(data.decisions || []);
+                updateCharts(data.decisions || [], summary);
+            } catch (e) {
+                console.error(e);
+                document.getElementById('decisionsTable').innerHTML = '<tr><td colspan="7" class="text-center" style="padding:40px;color:var(--danger)">❌ فشل التحميل</td></tr>';
+            }
+        }
+
+        function formatAmount(a) { return new Intl.NumberFormat('ar-SA').format(a); }
+
+        function updateCharts(decisions, summary) {
+            // Type distribution chart
+            const typeCounts = { INVESTMENT: 0, COST_REDUCTION: 0, REALLOCATION: 0, OTHER: 0 };
+            decisions.forEach(d => { if (typeCounts[d.type] !== undefined) typeCounts[d.type]++; });
+            const typeData = { labels: Object.keys(typeCounts).map(k => typeLabel[k]), datasets: [{ data: Object.values(typeCounts), backgroundColor: ['rgba(139,92,246,.7)', 'rgba(250,204,21,.7)', 'rgba(6,182,212,.7)', 'rgba(148,163,184,.7)'], borderColor: ['#8b5cf6', '#facc15', '#06b6d4', '#94a3b8'], borderWidth: 1 }] };
+            if (typeChartObj) typeChartObj.destroy();
+            typeChartObj = new Chart(document.getElementById('typeChart'), { type: 'doughnut', data: typeData, options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { family: 'Tajawal' } } } } } });
+
+            // Status amounts chart
+            const statuses = ['PROPOSED', 'APPROVED', 'REJECTED', 'IMPLEMENTED'];
+            const amounts = statuses.map(s => summary[s]?.amount || 0);
+            const counts = statuses.map(s => summary[s]?.count || 0);
+            if (statusChartObj) statusChartObj.destroy();
+            statusChartObj = new Chart(document.getElementById('statusChart'), { type: 'bar', data: { labels: statuses.map(s => statusLabel[s]), datasets: [{ label: 'المبالغ (ر.س)', data: amounts, backgroundColor: ['rgba(250,204,21,.5)', 'rgba(34,197,94,.5)', 'rgba(239,68,68,.5)', 'rgba(56,189,248,.5)'], borderColor: ['#facc15', '#22c55e', '#ef4444', '#38bdf8'], borderWidth: 1, borderRadius: 6 }] }, options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#94a3b8', font: { family: 'Tajawal' } }, grid: { color: 'rgba(255,255,255,.05)' } }, y: { ticks: { color: '#94a3b8', font: { family: 'Tajawal' } }, grid: { color: 'rgba(255,255,255,.05)' } } } } });
+        }
+
+        function renderDecisions(decisions) {
+            const tbody = document.getElementById('decisionsTable');
+            if (!decisions.length) { tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="emoji">💰</div><h4>لا توجد قرارات مالية</h4><p>ابدأ بإضافة قرار مالي جديد لتوثيق تخصيص الموارد</p></div></td></tr>`; return; }
+            tbody.innerHTML = decisions.map(d => {
+                const date = d.decisionDate ? new Date(d.decisionDate).toLocaleDateString('ar-SA') : '-';
+                const amt = d.amount ? `${formatAmount(d.amount)} ${currSymbol[d.currency] || d.currency}` : '-';
+                return `<tr>
+                    <td><div class="row-title">${d.title}</div>${d.description ? `<div class="row-desc">${d.description.substring(0, 60)}${d.description.length > 60 ? '...' : ''}</div>` : ''}</td>
+                    <td><span class="entity-name">${d.entity?.displayName || d.entity?.legalName || '-'}</span></td>
+                    <td><span class="badge-type badge-${d.type}">${typeLabel[d.type] || d.type}</span></td>
+                    <td><span class="amount-value">${amt}</span></td>
+                    <td><span class="badge-status badge-${d.status}">${statusLabel[d.status] || d.status}</span></td>
+                    <td style="color:var(--text-muted);font-size:.8rem">${date}</td>
+                    <td><div style="display:flex;gap:4px"><button class="btn-action" onclick="editDecision('${d.id}')"><i class="bi bi-pencil"></i></button><button class="btn-action danger" onclick="deleteDecision('${d.id}')"><i class="bi bi-trash"></i></button></div></td>
+                </tr>`;
+            }).join('');
+        }
+
+        function showModal() {
+            ['decId', 'decTitle', 'decDesc', 'decAmount', 'decDate', 'decImpact'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('decEntity').value = ''; document.getElementById('decCurrency').value = 'SAR';
+            document.getElementById('decType').value = 'INVESTMENT'; document.getElementById('decStatus').value = 'PROPOSED';
+            document.getElementById('decModalTitle').textContent = 'قرار مالي جديد';
+            document.getElementById('decisionModal').classList.add('show');
+        }
+
+        async function editDecision(id) {
+            try {
+                const res = await fetch(`/api/financial/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+                const d = await res.json();
+                document.getElementById('decId').value = d.id; document.getElementById('decTitle').value = d.title;
+                document.getElementById('decEntity').value = d.entityId; document.getElementById('decDesc').value = d.description || '';
+                document.getElementById('decAmount').value = d.amount || ''; document.getElementById('decCurrency').value = d.currency;
+                document.getElementById('decType').value = d.type; document.getElementById('decStatus').value = d.status;
+                document.getElementById('decDate').value = d.decisionDate ? d.decisionDate.split('T')[0] : '';
+                document.getElementById('decImpact').value = d.impact || '';
+                document.getElementById('decModalTitle').textContent = 'تعديل القرار';
+                document.getElementById('decisionModal').classList.add('show');
+            } catch (e) { alert('فشل تحميل البيانات'); }
+        }
+
+        async function saveDecision() {
+            const editId = document.getElementById('decId').value;
+            const entityId = document.getElementById('decEntity').value;
+            const title = document.getElementById('decTitle').value.trim();
+            if (!title || (!editId && !entityId)) { alert('الكيان والعنوان مطلوبان'); return; }
+            const body = { title, description: document.getElementById('decDesc').value.trim(), amount: document.getElementById('decAmount').value || null, currency: document.getElementById('decCurrency').value, type: document.getElementById('decType').value, status: document.getElementById('decStatus').value, decisionDate: document.getElementById('decDate').value || null, impact: document.getElementById('decImpact').value.trim() };
+            if (!editId) body.entityId = entityId;
+            try {
+                const res = await fetch(editId ? `/api/financial/${editId}` : '/api/financial', { method: editId ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(body) });
+                if (!res.ok) throw new Error('Failed');
+                closeModal(); loadDecisions();
+            } catch (e) { alert('خطأ في الحفظ'); }
+        }
+
+        async function deleteDecision(id) { if (!confirm('حذف هذا القرار المالي؟')) return; try { await fetch(`/api/financial/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }); loadDecisions(); } catch (e) { alert('فشل الحذف'); } }
+        function logout() { localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.href = '/login.html'; }
+    </script>
+    <script src="/js/impersonation.js"></script>
+</body>
+
+</html>

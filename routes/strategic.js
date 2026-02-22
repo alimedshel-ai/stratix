@@ -1,6 +1,7 @@
 const express = require('express');
 const prisma = require('../lib/prisma');
 const { verifyToken } = require('../middleware/auth');
+const { checkPermission, checkDataEntryPermission } = require('../middleware/permission');
 
 const router = express.Router();
 
@@ -14,18 +15,23 @@ router.get('/objectives', verifyToken, async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     let where = {};
-    
+
+    // Auto-filter by user's entity
+    if (req.user.activeEntityId) {
+      where.version = { entityId: req.user.activeEntityId };
+    }
+
     if (search) {
       where.OR = [
-        { title: { contains: search,  } },
-        { description: { contains: search,  } }
+        { title: { contains: search, } },
+        { description: { contains: search, } }
       ];
     }
-    
+
     if (versionId) {
       where.versionId = versionId;
     }
-    
+
     if (status) {
       where.status = status;
     }
@@ -36,17 +42,21 @@ router.get('/objectives', verifyToken, async (req, res) => {
         version: {
           select: {
             id: true,
+            versionNumber: true,
             name: true,
+            status: true,
             entity: {
               select: {
                 id: true,
-                name: true
+                legalName: true,
+                displayName: true
               }
             }
           }
         },
+        parent: { select: { id: true, title: true } },
         _count: {
-          select: { kpis: true }
+          select: { kpis: true, children: true }
         }
       },
       skip,
@@ -78,10 +88,12 @@ router.get('/objectives/:id', verifyToken, async (req, res) => {
         version: {
           include: {
             entity: {
-              select: { id: true, name: true, code: true }
+              select: { id: true, legalName: true, displayName: true }
             }
           }
         },
+        parent: { select: { id: true, title: true } },
+        children: { select: { id: true, title: true, status: true, perspective: true } },
         kpis: {
           orderBy: [{ createdAt: 'asc' }]
         }
@@ -100,16 +112,16 @@ router.get('/objectives/:id', verifyToken, async (req, res) => {
 });
 
 // Create objective
-router.post('/objectives', verifyToken, async (req, res) => {
+router.post('/objectives', verifyToken, checkPermission('EDITOR'), async (req, res) => {
   try {
-    const { title, description, versionId, status } = req.body;
+    const { title, description, versionId, status, parentId, perspective, weight, baselineValue, targetValue, deadline, ownerId } = req.body;
 
     if (!title || !versionId) {
       return res.status(400).json({ error: 'Title and versionId are required' });
     }
 
     // Verify version exists
-    const version = await prisma.strategicVersion.findUnique({ where: { id: versionId } });
+    const version = await prisma.strategyVersion.findUnique({ where: { id: versionId } });
     if (!version) {
       return res.status(404).json({ error: 'Version not found' });
     }
@@ -119,16 +131,25 @@ router.post('/objectives', verifyToken, async (req, res) => {
         title,
         description: description || null,
         versionId,
-        status: status || 'DRAFT'
+        status: status || 'DRAFT',
+        parentId: parentId || null,
+        perspective: perspective || null,
+        weight: weight ? parseFloat(weight) : null,
+        baselineValue: baselineValue ? parseFloat(baselineValue) : null,
+        targetValue: targetValue ? parseFloat(targetValue) : null,
+        deadline: deadline ? new Date(deadline) : null,
+        ownerId: ownerId || null,
       },
       include: {
         version: {
           select: {
             id: true,
-            name: true,
-            entity: { select: { id: true, name: true } }
+            versionNumber: true,
+            status: true,
+            entity: { select: { id: true, legalName: true, displayName: true } }
           }
         },
+        parent: { select: { id: true, title: true } },
         kpis: true
       }
     });
@@ -141,9 +162,9 @@ router.post('/objectives', verifyToken, async (req, res) => {
 });
 
 // Update objective
-router.patch('/objectives/:id', verifyToken, async (req, res) => {
+router.patch('/objectives/:id', verifyToken, checkPermission('EDITOR'), async (req, res) => {
   try {
-    const { title, description, status } = req.body;
+    const { title, description, status, parentId, perspective, weight, baselineValue, targetValue, deadline, ownerId } = req.body;
 
     const existing = await prisma.strategicObjective.findUnique({ where: { id: req.params.id } });
     if (!existing) {
@@ -154,12 +175,20 @@ router.patch('/objectives/:id', verifyToken, async (req, res) => {
     if (title) updateData.title = title;
     if (description !== undefined) updateData.description = description;
     if (status) updateData.status = status;
+    if (parentId !== undefined) updateData.parentId = parentId || null;
+    if (perspective !== undefined) updateData.perspective = perspective;
+    if (weight !== undefined) updateData.weight = weight ? parseFloat(weight) : null;
+    if (baselineValue !== undefined) updateData.baselineValue = baselineValue ? parseFloat(baselineValue) : null;
+    if (targetValue !== undefined) updateData.targetValue = targetValue ? parseFloat(targetValue) : null;
+    if (deadline !== undefined) updateData.deadline = deadline ? new Date(deadline) : null;
+    if (ownerId !== undefined) updateData.ownerId = ownerId || null;
 
     const objective = await prisma.strategicObjective.update({
       where: { id: req.params.id },
       data: updateData,
       include: {
-        version: { select: { id: true, name: true } },
+        version: { select: { id: true, versionNumber: true, status: true } },
+        parent: { select: { id: true, title: true } },
         kpis: true
       }
     });
@@ -172,7 +201,7 @@ router.patch('/objectives/:id', verifyToken, async (req, res) => {
 });
 
 // Delete objective
-router.delete('/objectives/:id', verifyToken, async (req, res) => {
+router.delete('/objectives/:id', verifyToken, checkPermission('EDITOR'), async (req, res) => {
   try {
     const objective = await prisma.strategicObjective.findUnique({ where: { id: req.params.id } });
     if (!objective) {
@@ -194,54 +223,71 @@ router.delete('/objectives/:id', verifyToken, async (req, res) => {
 // Get all KPIs with pagination
 router.get('/kpis', verifyToken, async (req, res) => {
   try {
-    const { page = 1, limit = 10, search, versionId, objectiveId, status } = req.query;
+    const { page = 1, limit = 10, search, versionId, objectiveId, status, kpiType, bscPerspective } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     let where = {};
-    
+
+    // Auto-filter by user's entity
+    if (req.user.activeEntityId) {
+      where.version = { entityId: req.user.activeEntityId };
+    }
+
     if (search) {
       where.OR = [
-        { name: { contains: search,  } },
-        { nameAr: { contains: search,  } },
-        { description: { contains: search,  } }
+        { name: { contains: search, } },
+        { nameAr: { contains: search, } },
+        { description: { contains: search, } }
       ];
     }
-    
+
     if (versionId) {
       where.versionId = versionId;
     }
-    
+
     if (objectiveId) {
       where.objectiveId = objectiveId;
     }
-    
+
     if (status) {
       where.status = status;
     }
 
-    const kpis = await prisma.kpi.findMany({
+    if (kpiType) {
+      where.kpiType = kpiType;
+    }
+
+    if (bscPerspective) {
+      where.bscPerspective = bscPerspective;
+    }
+
+    const kpis = await prisma.kPI.findMany({
       where,
       include: {
         version: {
           select: {
             id: true,
+            versionNumber: true,
             name: true,
-            entity: { select: { id: true, name: true } }
+            status: true,
+            entity: { select: { id: true, legalName: true, displayName: true } }
           }
         },
         objective: {
           select: {
             id: true,
-            title: true
+            title: true,
+            perspective: true
           }
-        }
+        },
+        _count: { select: { entries: true } }
       },
       skip,
       take: parseInt(limit),
       orderBy: [{ createdAt: 'desc' }]
     });
 
-    const total = await prisma.kpi.count({ where });
+    const total = await prisma.kPI.count({ where });
 
     res.json({
       kpis,
@@ -259,15 +305,17 @@ router.get('/kpis', verifyToken, async (req, res) => {
 // Get single KPI
 router.get('/kpis/:id', verifyToken, async (req, res) => {
   try {
-    const kpi = await prisma.kpi.findUnique({
+    const kpi = await prisma.kPI.findUnique({
       where: { id: req.params.id },
       include: {
         version: {
           include: {
-            entity: { select: { id: true, name: true, code: true } }
+            entity: { select: { id: true, legalName: true, displayName: true } }
           }
         },
-        objective: true
+        objective: { select: { id: true, title: true, perspective: true } },
+        entries: { orderBy: { periodStart: 'desc' }, take: 12 },
+        diagnoses: { include: { corrections: true } }
       }
     });
 
@@ -283,21 +331,22 @@ router.get('/kpis/:id', verifyToken, async (req, res) => {
 });
 
 // Create KPI
-router.post('/kpis', verifyToken, async (req, res) => {
+router.post('/kpis', verifyToken, checkPermission('EDITOR'), async (req, res) => {
   try {
-    const { name, nameAr, description, target, unit, versionId, objectiveId, status } = req.body;
+    const { name, nameAr, description, target, unit, versionId, objectiveId, status,
+      formula, dataSource, frequency, warningThreshold, criticalThreshold, kpiType, bscPerspective } = req.body;
 
     if (!name || !versionId || target === undefined) {
       return res.status(400).json({ error: 'Name, versionId, and target are required' });
     }
 
     // Verify version exists
-    const version = await prisma.strategicVersion.findUnique({ where: { id: versionId } });
+    const version = await prisma.strategyVersion.findUnique({ where: { id: versionId } });
     if (!version) {
       return res.status(404).json({ error: 'Version not found' });
     }
 
-    const kpi = await prisma.kpi.create({
+    const kpi = await prisma.kPI.create({
       data: {
         name,
         nameAr: nameAr || null,
@@ -307,11 +356,18 @@ router.post('/kpis', verifyToken, async (req, res) => {
         unit: unit || '%',
         versionId,
         objectiveId: objectiveId || null,
-        status: status || 'ON_TRACK'
+        status: status || 'ON_TRACK',
+        formula: formula || null,
+        dataSource: dataSource || null,
+        frequency: frequency || 'MONTHLY',
+        warningThreshold: warningThreshold ? parseFloat(warningThreshold) : null,
+        criticalThreshold: criticalThreshold ? parseFloat(criticalThreshold) : null,
+        kpiType: kpiType || null,
+        bscPerspective: bscPerspective || null,
       },
       include: {
-        version: { select: { id: true, name: true } },
-        objective: true
+        version: { select: { id: true, versionNumber: true, status: true } },
+        objective: { select: { id: true, title: true, perspective: true } }
       }
     });
 
@@ -323,11 +379,12 @@ router.post('/kpis', verifyToken, async (req, res) => {
 });
 
 // Update KPI
-router.patch('/kpis/:id', verifyToken, async (req, res) => {
+router.patch('/kpis/:id', verifyToken, checkPermission('EDITOR'), async (req, res) => {
   try {
-    const { name, nameAr, description, target, actual, unit, status, objectiveId } = req.body;
+    const { name, nameAr, description, target, actual, unit, status, objectiveId,
+      formula, dataSource, frequency, warningThreshold, criticalThreshold, kpiType, bscPerspective } = req.body;
 
-    const existing = await prisma.kpi.findUnique({ where: { id: req.params.id } });
+    const existing = await prisma.kPI.findUnique({ where: { id: req.params.id } });
     if (!existing) {
       return res.status(404).json({ error: 'KPI not found' });
     }
@@ -341,13 +398,20 @@ router.patch('/kpis/:id', verifyToken, async (req, res) => {
     if (unit) updateData.unit = unit;
     if (status) updateData.status = status;
     if (objectiveId !== undefined) updateData.objectiveId = objectiveId || null;
+    if (formula !== undefined) updateData.formula = formula;
+    if (dataSource !== undefined) updateData.dataSource = dataSource;
+    if (frequency !== undefined) updateData.frequency = frequency;
+    if (warningThreshold !== undefined) updateData.warningThreshold = warningThreshold ? parseFloat(warningThreshold) : null;
+    if (criticalThreshold !== undefined) updateData.criticalThreshold = criticalThreshold ? parseFloat(criticalThreshold) : null;
+    if (kpiType !== undefined) updateData.kpiType = kpiType || null;
+    if (bscPerspective !== undefined) updateData.bscPerspective = bscPerspective || null;
 
-    const kpi = await prisma.kpi.update({
+    const kpi = await prisma.kPI.update({
       where: { id: req.params.id },
       data: updateData,
       include: {
-        version: { select: { id: true, name: true } },
-        objective: true
+        version: { select: { id: true, versionNumber: true, status: true } },
+        objective: { select: { id: true, title: true, perspective: true } }
       }
     });
 
@@ -359,14 +423,14 @@ router.patch('/kpis/:id', verifyToken, async (req, res) => {
 });
 
 // Delete KPI
-router.delete('/kpis/:id', verifyToken, async (req, res) => {
+router.delete('/kpis/:id', verifyToken, checkPermission('EDITOR'), async (req, res) => {
   try {
-    const kpi = await prisma.kpi.findUnique({ where: { id: req.params.id } });
+    const kpi = await prisma.kPI.findUnique({ where: { id: req.params.id } });
     if (!kpi) {
       return res.status(404).json({ error: 'KPI not found' });
     }
 
-    await prisma.kpi.delete({ where: { id: req.params.id } });
+    await prisma.kPI.delete({ where: { id: req.params.id } });
 
     res.json({ message: 'KPI deleted successfully' });
   } catch (error) {
@@ -384,18 +448,23 @@ router.get('/initiatives', verifyToken, async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     let where = {};
-    
+
+    // Auto-filter by user's entity
+    if (req.user.activeEntityId) {
+      where.version = { entityId: req.user.activeEntityId };
+    }
+
     if (search) {
       where.OR = [
-        { title: { contains: search,  } },
-        { description: { contains: search,  } }
+        { title: { contains: search, } },
+        { description: { contains: search, } }
       ];
     }
-    
+
     if (versionId) {
       where.versionId = versionId;
     }
-    
+
     if (status) {
       where.status = status;
     }
@@ -406,8 +475,9 @@ router.get('/initiatives', verifyToken, async (req, res) => {
         version: {
           select: {
             id: true,
-            name: true,
-            entity: { select: { id: true, name: true } }
+            versionNumber: true,
+            status: true,
+            entity: { select: { id: true, legalName: true, displayName: true } }
           }
         }
       },
@@ -432,9 +502,9 @@ router.get('/initiatives', verifyToken, async (req, res) => {
 });
 
 // Create initiative
-router.post('/initiatives', verifyToken, async (req, res) => {
+router.post('/initiatives', verifyToken, checkPermission('EDITOR'), async (req, res) => {
   try {
-    const { title, description, versionId, owner, status } = req.body;
+    const { title, description, versionId, owner, status, startDate, endDate, progress, budget, priority, kpiId } = req.body;
 
     if (!title || !versionId) {
       return res.status(400).json({ error: 'Title and versionId are required' });
@@ -446,10 +516,16 @@ router.post('/initiatives', verifyToken, async (req, res) => {
         description: description || null,
         versionId,
         owner: owner || null,
-        status: status || 'PLANNED'
+        status: status || 'PLANNED',
+        startDate: startDate ? new Date(startDate) : null,
+        endDate: endDate ? new Date(endDate) : null,
+        progress: progress ? parseFloat(progress) : 0,
+        budget: budget ? parseFloat(budget) : null,
+        priority: priority || 'MEDIUM',
+        kpiId: kpiId || null,
       },
       include: {
-        version: { select: { id: true, name: true } }
+        version: { select: { id: true, versionNumber: true, name: true, status: true } }
       }
     });
 
@@ -460,10 +536,38 @@ router.post('/initiatives', verifyToken, async (req, res) => {
   }
 });
 
-// Update initiative
-router.patch('/initiatives/:id', verifyToken, async (req, res) => {
+// Update initiative progress (DATA_ENTRY can update progress only)
+router.patch('/initiatives/:id/progress', verifyToken, checkDataEntryPermission('canEnterKPI'), async (req, res) => {
   try {
-    const { title, description, status, owner } = req.body;
+    const { progress, status, notes } = req.body;
+
+    const existing = await prisma.strategicInitiative.findUnique({ where: { id: req.params.id } });
+    if (!existing) {
+      return res.status(404).json({ error: 'Initiative not found' });
+    }
+
+    const updateData = {};
+    if (progress !== undefined) updateData.progress = Math.min(100, Math.max(0, parseFloat(progress)));
+    if (status && ['PLANNED', 'IN_PROGRESS', 'ON_HOLD'].includes(status)) updateData.status = status;
+    // auto-complete at 100%
+    if (updateData.progress === 100) updateData.status = 'COMPLETED';
+
+    const initiative = await prisma.strategicInitiative.update({
+      where: { id: req.params.id },
+      data: updateData,
+    });
+
+    res.json({ message: 'تم تحديث التقدم', initiative });
+  } catch (error) {
+    console.error('Error updating initiative progress:', error);
+    res.status(500).json({ error: 'Failed to update progress' });
+  }
+});
+
+// Update initiative (EDITOR+)
+router.patch('/initiatives/:id', verifyToken, checkPermission('EDITOR'), async (req, res) => {
+  try {
+    const { title, description, status, owner, startDate, endDate, progress, budget, priority, kpiId } = req.body;
 
     const existing = await prisma.strategicInitiative.findUnique({ where: { id: req.params.id } });
     if (!existing) {
@@ -475,12 +579,18 @@ router.patch('/initiatives/:id', verifyToken, async (req, res) => {
     if (description !== undefined) updateData.description = description;
     if (status) updateData.status = status;
     if (owner !== undefined) updateData.owner = owner;
+    if (startDate !== undefined) updateData.startDate = startDate ? new Date(startDate) : null;
+    if (endDate !== undefined) updateData.endDate = endDate ? new Date(endDate) : null;
+    if (progress !== undefined) updateData.progress = parseFloat(progress);
+    if (budget !== undefined) updateData.budget = budget ? parseFloat(budget) : null;
+    if (priority !== undefined) updateData.priority = priority;
+    if (kpiId !== undefined) updateData.kpiId = kpiId || null;
 
     const initiative = await prisma.strategicInitiative.update({
       where: { id: req.params.id },
       data: updateData,
       include: {
-        version: { select: { id: true, name: true } }
+        version: { select: { id: true, versionNumber: true, name: true, status: true } }
       }
     });
 
@@ -492,7 +602,7 @@ router.patch('/initiatives/:id', verifyToken, async (req, res) => {
 });
 
 // Delete initiative
-router.delete('/initiatives/:id', verifyToken, async (req, res) => {
+router.delete('/initiatives/:id', verifyToken, checkPermission('EDITOR'), async (req, res) => {
   try {
     const initiative = await prisma.strategicInitiative.findUnique({ where: { id: req.params.id } });
     if (!initiative) {

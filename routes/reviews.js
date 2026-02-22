@@ -1,34 +1,39 @@
 const express = require('express');
 const prisma = require('../lib/prisma');
 const { verifyToken } = require('../middleware/auth');
+const { checkPermission } = require('../middleware/permission');
 
 const router = express.Router();
 
 
-// ============ REVIEWS ============
+// ============ STRATEGIC REVIEWS — Enhanced with Decision Engine ============
 
 // Get all reviews
 router.get('/', verifyToken, async (req, res) => {
   try {
-    const { page = 1, limit = 10, search, versionId, status } = req.query;
+    const { page = 1, limit = 10, search, versionId, status, decision, type } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     let where = {};
-    
+
+    // Auto-filter by user's entity
+    if (req.user.activeEntityId) {
+      where.version = { entityId: req.user.activeEntityId };
+    }
+
     if (search) {
       where.OR = [
-        { title: { contains: search,  } },
-        { notes: { contains: search,  } }
+        { title: { contains: search } },
+        { notes: { contains: search } },
+        { summary: { contains: search } },
+        { findings: { contains: search } },
       ];
     }
-    
-    if (versionId) {
-      where.versionId = versionId;
-    }
-    
-    if (status) {
-      where.status = status;
-    }
+
+    if (versionId) where.versionId = versionId;
+    if (status) where.status = status;
+    if (decision) where.decision = decision;
+    if (type) where.type = type;
 
     const reviews = await prisma.strategicReview.findMany({
       where,
@@ -36,8 +41,10 @@ router.get('/', verifyToken, async (req, res) => {
         version: {
           select: {
             id: true,
+            versionNumber: true,
             name: true,
-            entity: { select: { id: true, name: true } }
+            status: true,
+            entity: { select: { id: true, legalName: true, displayName: true } }
           }
         }
       },
@@ -48,8 +55,18 @@ router.get('/', verifyToken, async (req, res) => {
 
     const total = await prisma.strategicReview.count({ where });
 
+    // Stats summary
+    const stats = {
+      total,
+      completed: await prisma.strategicReview.count({ where: { ...where, status: 'COMPLETED' } }),
+      byContinue: await prisma.strategicReview.count({ where: { ...where, decision: 'CONTINUE' } }),
+      byAdjust: await prisma.strategicReview.count({ where: { ...where, decision: 'ADJUST' } }),
+      byPivot: await prisma.strategicReview.count({ where: { ...where, decision: 'PIVOT' } }),
+    };
+
     res.json({
       reviews,
+      stats,
       total,
       page: parseInt(page),
       limit: parseInt(limit),
@@ -61,27 +78,97 @@ router.get('/', verifyToken, async (req, res) => {
   }
 });
 
-// Create review
-router.post('/', verifyToken, async (req, res) => {
+// Get single review
+router.get('/:id', verifyToken, async (req, res) => {
   try {
-    const { title, reviewDate, versionId, notes, status } = req.body;
+    const review = await prisma.strategicReview.findUnique({
+      where: { id: req.params.id },
+      include: {
+        version: {
+          include: {
+            entity: { select: { id: true, legalName: true, displayName: true } },
+            objectives: {
+              include: { kpis: true }
+            }
+          }
+        }
+      }
+    });
+
+    if (!review) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
+
+    res.json(review);
+  } catch (error) {
+    console.error('Error fetching review:', error);
+    res.status(500).json({ error: 'Failed to fetch review' });
+  }
+});
+
+// Create review — with full decision engine support
+router.post('/', verifyToken, checkPermission('EDITOR'), async (req, res) => {
+  try {
+    const { title, reviewDate, versionId, notes, status,
+      type, decision, summary, findings, recommendations, overallScore, conductedBy } = req.body;
 
     if (!title || !versionId) {
       return res.status(400).json({ error: 'Title and versionId are required' });
     }
 
+    // Verify version exists
+    const version = await prisma.strategyVersion.findUnique({ where: { id: versionId } });
+    if (!version) {
+      return res.status(404).json({ error: 'Version not found' });
+    }
+
     const review = await prisma.strategicReview.create({
       data: {
         title,
-        reviewDate: new Date(reviewDate),
+        reviewDate: reviewDate ? new Date(reviewDate) : new Date(),
         versionId,
         notes: notes || null,
-        status: status || 'PENDING'
+        status: status || 'PENDING',
+        type: type || 'QUARTERLY_REVIEW',
+        decision: decision || null,
+        summary: summary || null,
+        findings: findings || null,
+        recommendations: recommendations || null,
+        overallScore: overallScore ? parseFloat(overallScore) : null,
+        conductedBy: conductedBy || null,
       },
       include: {
-        version: { select: { id: true, name: true } }
+        version: {
+          select: {
+            id: true,
+            versionNumber: true,
+            name: true,
+            status: true,
+            entity: { select: { id: true, legalName: true, displayName: true } }
+          }
+        }
       }
     });
+
+    // If decision is PIVOT, auto-create new version
+    if (decision === 'PIVOT') {
+      const lastVersion = await prisma.strategyVersion.findFirst({
+        where: { entityId: version.entityId },
+        orderBy: { versionNumber: 'desc' }
+      });
+      const newVersionNumber = lastVersion ? lastVersion.versionNumber + 1 : 1;
+
+      await prisma.strategyVersion.create({
+        data: {
+          entityId: version.entityId,
+          versionNumber: newVersionNumber,
+          status: 'DRAFT',
+          name: `نسخة بعد Pivot — مراجعة: ${title}`,
+          pivotedFromId: versionId,
+          createdBy: conductedBy || null,
+        }
+      });
+    }
 
     res.status(201).json(review);
   } catch (error) {
@@ -91,21 +178,42 @@ router.post('/', verifyToken, async (req, res) => {
 });
 
 // Update review
-router.patch('/:id', verifyToken, async (req, res) => {
+router.patch('/:id', verifyToken, checkPermission('EDITOR'), async (req, res) => {
   try {
-    const { title, reviewDate, notes, status } = req.body;
+    const { title, reviewDate, notes, status,
+      type, decision, summary, findings, recommendations, overallScore, conductedBy } = req.body;
+
+    const existing = await prisma.strategicReview.findUnique({ where: { id: req.params.id } });
+    if (!existing) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
 
     const updateData = {};
     if (title) updateData.title = title;
     if (reviewDate) updateData.reviewDate = new Date(reviewDate);
     if (notes !== undefined) updateData.notes = notes;
     if (status) updateData.status = status;
+    if (type !== undefined) updateData.type = type;
+    if (decision !== undefined) updateData.decision = decision;
+    if (summary !== undefined) updateData.summary = summary;
+    if (findings !== undefined) updateData.findings = findings;
+    if (recommendations !== undefined) updateData.recommendations = recommendations;
+    if (overallScore !== undefined) updateData.overallScore = overallScore ? parseFloat(overallScore) : null;
+    if (conductedBy !== undefined) updateData.conductedBy = conductedBy;
 
     const review = await prisma.strategicReview.update({
       where: { id: req.params.id },
       data: updateData,
       include: {
-        version: { select: { id: true, name: true } }
+        version: {
+          select: {
+            id: true,
+            versionNumber: true,
+            name: true,
+            status: true,
+            entity: { select: { id: true, legalName: true, displayName: true } }
+          }
+        }
       }
     });
 
@@ -117,8 +225,13 @@ router.patch('/:id', verifyToken, async (req, res) => {
 });
 
 // Delete review
-router.delete('/:id', verifyToken, async (req, res) => {
+router.delete('/:id', verifyToken, checkPermission('EDITOR'), async (req, res) => {
   try {
+    const review = await prisma.strategicReview.findUnique({ where: { id: req.params.id } });
+    if (!review) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
+
     await prisma.strategicReview.delete({ where: { id: req.params.id } });
     res.json({ message: 'Review deleted successfully' });
   } catch (error) {

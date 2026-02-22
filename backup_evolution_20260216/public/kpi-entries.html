@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدخال بيانات المؤشرات - Stratix</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/custom.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        .main-content {
+            margin-right: 250px;
+            padding: 20px;
+        }
+
+        .sidebar {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background: #fff;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+            padding-top: 60px;
+            z-index: 100;
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 12px 20px;
+            color: #555;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: #667eea;
+            color: #fff;
+        }
+
+        .sidebar a i {
+            margin-left: 8px;
+        }
+
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 200;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .content-area {
+            margin-top: 60px;
+        }
+
+        .kpi-selector {
+            border: 2px solid #eee;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .kpi-selector:hover,
+        .kpi-selector.selected {
+            border-color: #667eea;
+            background: #667eea08;
+        }
+
+        .kpi-selector .name {
+            font-weight: 600;
+            font-size: 1rem;
+            color: #333;
+        }
+
+        .kpi-selector .meta {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .entry-row {
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
+        }
+
+        .status-DRAFT {
+            background: #ffeaa7;
+            color: #d68910;
+        }
+
+        .status-CONFIRMED {
+            background: #55efc4;
+            color: #00b894;
+        }
+
+        .trend-up {
+            color: #00b894;
+        }
+
+        .trend-down {
+            color: #d63031;
+        }
+
+        .trend-same {
+            color: #636e72;
+        }
+
+        .stats-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stats-card .num {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stats-card .lbl {
+            font-size: 0.75rem;
+            color: #888;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="top-bar">
+        <div><strong>Stratix</strong> <i class="bi bi-rocket-takeoff"></i></div>
+        <div>
+            <span id="userName" class="me-2">مدير النظام</span>
+            <button class="btn btn-sm btn-outline-secondary" onclick="logout()"><i class="bi bi-box-arrow-left"></i>
+                خروج</button>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <a href="/sectors"><i class="bi bi-diagram-3"></i> القطاعات</a>
+        <a href="/industries"><i class="bi bi-grid"></i> الأنشطة</a>
+        <a href="/entities"><i class="bi bi-building"></i> الكيانات</a>
+        <a href="/assessments"><i class="bi bi-clipboard-check"></i> التقييمات</a>
+        <a href="/kpis"><i class="bi bi-graph-up"></i> المؤشرات</a>
+        <hr style="margin:8px 16px;border-color:rgba(0,0,0,0.1);">
+        <a href="/versions"><i class="bi bi-clock-history"></i> إصدارات الاستراتيجية</a>
+        <a href="/choices"><i class="bi bi-signpost-split"></i> الخيارات والمخاطر</a>
+        <a href="/corrections"><i class="bi bi-tools"></i> التصحيحات</a>
+        <a href="/analysis"><i class="bi bi-lightbulb"></i> التحليل الاستراتيجي</a>
+        <a href="/financial"><i class="bi bi-cash-stack"></i> القرارات المالية</a>
+        <hr style="margin:8px 16px;border-color:rgba(0,0,0,0.1);">
+        <a href="/directions"><i class="bi bi-compass"></i> التوجه الاستراتيجي</a>
+        <a href="/objectives"><i class="bi bi-bullseye"></i> الأهداف</a>
+        <a href="/initiatives"><i class="bi bi-kanban"></i> المبادرات</a>
+        <a href="/reviews"><i class="bi bi-journal-check"></i> المراجعات</a>
+        <a href="/alerts"><i class="bi bi-bell"></i> التنبيهات</a>
+        <a href="/kpi-entries" class="active"><i class="bi bi-input-cursor-text"></i> إدخال المؤشرات</a>
+        <hr style="margin:8px 16px;border-color:rgba(0,0,0,0.1);">
+        <a href="/dashboard"><i class="bi bi-speedometer2"></i> لوحة التحكم</a>
+        <a href="/users"><i class="bi bi-people"></i> المستخدمون</a>
+        <a href="/integrations"><i class="bi bi-plug"></i> التكاملات</a>
+        <a href="/settings"><i class="bi bi-gear"></i> الإعدادات</a>
+    </div>
+
+    <div class="main-content content-area">
+        <div class="row g-4">
+            <!-- KPI List -->
+            <div class="col-md-4">
+                <div class="card p-3">
+                    <h5><i class="bi bi-list-check"></i> المؤشرات</h5>
+                    <div class="mb-2">
+                        <select id="versionFilter" class="form-select form-select-sm" onchange="loadKPIs()">
+                            <option value="">-- كل الإصدارات --</option>
+                        </select>
+                    </div>
+                    <div id="kpiList">
+                        <div class="text-center text-muted p-3">جاري التحميل...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Entries Area -->
+            <div class="col-md-8">
+                <div class="card p-4" id="entriesArea">
+                    <div class="text-center text-muted p-5">
+                        <i class="bi bi-hand-index" style="font-size:3rem;color:#ddd"></i>
+                        <p class="mt-3">اختر مؤشراً من القائمة لعرض وإدخال البيانات</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="entryModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">إدخال قيمة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editId">
+                    <input type="hidden" id="selectedKpiId">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label">القيمة الفعلية</label>
+                            <input type="number" id="entryValue" class="form-control" step="0.01">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">بداية الفترة</label>
+                            <input type="date" id="entryStart" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">نهاية الفترة</label>
+                            <input type="date" id="entryEnd" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">الحالة</label>
+                            <select id="entryStatus" class="form-select">
+                                <option value="DRAFT">مسودة</option>
+                                <option value="CONFIRMED">مؤكد</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">ملاحظات</label>
+                            <textarea id="entryNotes" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-primary" onclick="saveEntry()">حفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login';
+        const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.name || 'مستخدم';
+
+        let modal, currentKpiId = null;
+        const freqLabel = { MONTHLY: 'شهري', QUARTERLY: 'ربع سنوي', SEMI_ANNUAL: 'نصف سنوي', ANNUAL: 'سنوي' };
+
+        async function init() {
+            modal = new bootstrap.Modal(document.getElementById('entryModal'));
+            await loadVersions();
+            await loadKPIs();
+        }
+
+        async function loadVersions() {
+            try {
+                const res = await fetch('/api/versions', { headers });
+                const data = await res.json();
+                const sel = document.getElementById('versionFilter');
+                (data.versions || []).forEach(v => {
+                    const opt = document.createElement('option');
+                    opt.value = v.id;
+                    opt.textContent = `V${v.versionNumber} — ${v.entity?.legalName || ''}`;
+                    sel.appendChild(opt);
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadKPIs() {
+            const container = document.getElementById('kpiList');
+            try {
+                let url = '/api/strategic/kpis?';
+                const vId = document.getElementById('versionFilter').value;
+                if (vId) url += `versionId=${vId}&`;
+
+                const res = await fetch(url, { headers });
+                const data = await res.json();
+                const list = data.kpis || data || [];
+
+                if (list.length === 0) {
+                    container.innerHTML = '<div class="text-center text-muted p-3">لا توجد مؤشرات</div>';
+                    return;
+                }
+
+                container.innerHTML = list.map(k => `
+                    <div class="kpi-selector ${currentKpiId === k.id ? 'selected' : ''}" onclick="selectKPI('${k.id}', '${k.name}')">
+                        <div class="name">${k.name}</div>
+                        <div class="meta">
+                            ${freqLabel[k.frequency] || k.frequency || 'شهري'} · 
+                            المستهدف: ${k.targetValue != null ? k.targetValue : '-'} · 
+                            <span class="badge bg-info">${k._count?.entries || 0} إدخال</span>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = '<div class="text-center text-danger p-3">خطأ</div>';
+            }
+        }
+
+        async function selectKPI(kpiId, kpiName) {
+            currentKpiId = kpiId;
+            document.getElementById('selectedKpiId').value = kpiId;
+
+            // Highlight selected
+            document.querySelectorAll('.kpi-selector').forEach(el => el.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+
+            await loadEntries(kpiId, kpiName);
+        }
+
+        async function loadEntries(kpiId, kpiName) {
+            const area = document.getElementById('entriesArea');
+            try {
+                const [entriesRes, statsRes] = await Promise.all([
+                    fetch(`/api/kpi-entries?kpiId=${kpiId}`, { headers }),
+                    fetch(`/api/kpi-entries/stats/${kpiId}`, { headers })
+                ]);
+                const entriesData = await entriesRes.json();
+                const stats = await statsRes.json();
+                const entries = entriesData.entries || [];
+
+                const fmt = d => d ? new Date(d).toLocaleDateString('ar-SA') : '-';
+                const trendIcon = stats.trend === 'UP' ? '<i class="bi bi-arrow-up-short trend-up"></i>' :
+                    stats.trend === 'DOWN' ? '<i class="bi bi-arrow-down-short trend-down"></i>' :
+                        '<i class="bi bi-dash trend-same"></i>';
+
+                let html = `
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5><i class="bi bi-graph-up"></i> ${kpiName || 'المؤشر'}</h5>
+                        <button class="btn btn-primary btn-sm" onclick="showEntryModal()"><i class="bi bi-plus"></i> إدخال قيمة</button>
+                    </div>
+
+                    <div class="row g-2 mb-4">
+                        <div class="col-3"><div class="stats-card"><div class="num">${stats.latest != null ? stats.latest : '-'}</div><div class="lbl">آخر قيمة</div></div></div>
+                        <div class="col-3"><div class="stats-card"><div class="num">${stats.average != null ? Number(stats.average).toFixed(1) : '-'}</div><div class="lbl">المتوسط</div></div></div>
+                        <div class="col-3"><div class="stats-card"><div class="num">${stats.max != null ? stats.max : '-'} / ${stats.min != null ? stats.min : '-'}</div><div class="lbl">أعلى / أدنى</div></div></div>
+                        <div class="col-3"><div class="stats-card"><div class="num">${trendIcon} ${stats.count || 0}</div><div class="lbl">الاتجاه · عدد</div></div></div>
+                    </div>
+
+                    <h6>سجل الإدخالات <span class="badge bg-secondary">${entries.length}</span></h6>
+                `;
+
+                if (entries.length === 0) {
+                    html += '<div class="text-center text-muted p-4">لا توجد إدخالات بعد</div>';
+                } else {
+                    html += '<div class="table-responsive"><table class="table table-sm"><thead class="table-light"><tr><th>القيمة</th><th>بداية الفترة</th><th>نهاية الفترة</th><th>الحالة</th><th>ملاحظات</th><th>إجراءات</th></tr></thead><tbody>';
+                    entries.forEach(e => {
+                        html += `<tr>
+                            <td><strong>${e.value}</strong></td>
+                            <td><small>${fmt(e.periodStart)}</small></td>
+                            <td><small>${fmt(e.periodEnd)}</small></td>
+                            <td><span class="badge status-${e.status}">${e.status === 'DRAFT' ? 'مسودة' : 'مؤكد'}</span></td>
+                            <td><small class="text-muted">${e.notes || '-'}</small></td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" onclick="editEntry('${e.id}')"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn btn-outline-danger" onclick="delEntry('${e.id}')"><i class="bi bi-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table></div>';
+                }
+
+                area.innerHTML = html;
+            } catch (e) {
+                console.error(e);
+                area.innerHTML = '<div class="text-center text-danger p-4">خطأ في التحميل</div>';
+            }
+        }
+
+        function showEntryModal() {
+            if (!currentKpiId) return alert('الرجاء اختيار مؤشر أولاً');
+            document.getElementById('editId').value = '';
+            document.getElementById('entryValue').value = '';
+            document.getElementById('entryStart').value = '';
+            document.getElementById('entryEnd').value = '';
+            document.getElementById('entryStatus').value = 'DRAFT';
+            document.getElementById('entryNotes').value = '';
+            document.getElementById('modalTitle').textContent = 'إدخال قيمة جديدة';
+            modal.show();
+        }
+
+        async function editEntry(id) {
+            try {
+                const res = await fetch(`/api/kpi-entries/${id}`, { headers });
+                const e = await res.json();
+                document.getElementById('editId').value = e.id;
+                document.getElementById('entryValue').value = e.value;
+                document.getElementById('entryStart').value = e.periodStart ? e.periodStart.split('T')[0] : '';
+                document.getElementById('entryEnd').value = e.periodEnd ? e.periodEnd.split('T')[0] : '';
+                document.getElementById('entryStatus').value = e.status;
+                document.getElementById('entryNotes').value = e.notes || '';
+                document.getElementById('modalTitle').textContent = 'تعديل القيمة';
+                modal.show();
+            } catch (e) { alert('خطأ'); }
+        }
+
+        async function saveEntry() {
+            const editId = document.getElementById('editId').value;
+            const value = document.getElementById('entryValue').value;
+            if (!value) return alert('الرجاء إدخال القيمة');
+
+            const body = {
+                value: parseFloat(value),
+                periodStart: document.getElementById('entryStart').value || new Date().toISOString(),
+                periodEnd: document.getElementById('entryEnd').value || new Date().toISOString(),
+                status: document.getElementById('entryStatus').value,
+                notes: document.getElementById('entryNotes').value.trim() || null,
+            };
+            if (!editId) body.kpiId = currentKpiId;
+
+            try {
+                const url = editId ? `/api/kpi-entries/${editId}` : '/api/kpi-entries';
+                const method = editId ? 'PATCH' : 'POST';
+                const res = await fetch(url, { method, headers, body: JSON.stringify(body) });
+                if (!res.ok) throw new Error('Failed');
+                modal.hide();
+                selectKPI(currentKpiId, '');
+                loadKPIs();
+            } catch (e) { alert('خطأ في الحفظ'); }
+        }
+
+        async function delEntry(id) {
+            if (!confirm('حذف هذا الإدخال؟')) return;
+            try {
+                await fetch(`/api/kpi-entries/${id}`, { method: 'DELETE', headers });
+                selectKPI(currentKpiId, '');
+                loadKPIs();
+            } catch (e) { alert('خطأ'); }
+        }
+
+        function logout() { localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.href = '/login'; }
+
+        init();
+    </script>
+</body>
+
+</html>

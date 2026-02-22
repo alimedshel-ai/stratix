@@ -1,380 +1,1407 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>إدارة الكيانات</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.rtl.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.0/font/bootstrap-icons.min.css" rel="stylesheet">
+  <title>ستارتكيس - إدارة الكيانات</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
   <style>
-    body {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      margin-top: 60px;
+    :root {
+      --primary: #667eea;
+      --primary-dark: #5a67d8;
+      --secondary: #764ba2;
+      --bg: #0f1117;
+      --bg-card: #1a1d2e;
+      --bg-card-hover: #232640;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.08);
+      --success: #22c55e;
+      --warning: #facc15;
+      --danger: #ef4444;
     }
-    .nav-link.active { color: #667eea !important; border-bottom: 3px solid #667eea; }
-    .input-group { background: white; border-radius: 8px; overflow: hidden; }
-    .table { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    .table thead { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-    .badge { padding: 6px 12px; font-size: 12px; }
-    .btn-sm { padding: 4px 8px; font-size: 12px; }
-    .modal-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      font-family: 'Tajawal', 'Segoe UI', sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ===== NAVBAR ===== */
+    .top-nav {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      padding: 14px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .top-nav .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: white;
+      text-decoration: none;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .top-nav .nav-links {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .top-nav .nav-links a {
+      color: rgba(255, 255, 255, 0.85);
+      text-decoration: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .top-nav .nav-links a:hover,
+    .top-nav .nav-links a.active {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+    }
+
+    .user-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+      font-size: 14px;
+    }
+
+    .user-info {
+      text-align: left;
+      color: white;
+    }
+
+    .user-info .name {
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .user-info .role {
+      font-size: 11px;
+      opacity: 0.75;
+    }
+
+    .btn-logout {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-logout:hover {
+      background: rgba(239, 68, 68, 0.6);
+    }
+
+    /* ===== LAYOUT ===== */
+    .layout {
+      display: flex;
+      min-height: calc(100vh - 60px);
+    }
+
+    /* ===== SIDEBAR — managed by sidebar.js ===== */
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content {
+      flex: 1;
+      padding: 30px;
+      max-width: calc(100% - 220px);
+    }
+
+    /* ===== PAGE HEADER ===== */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .page-header h1 {
+      font-size: 24px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .page-header h1 i {
+      color: var(--primary);
+    }
+
+    .btn-add {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-add:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    /* ===== STATS ROW ===== */
+    .mini-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .mini-stat {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      transition: all 0.25s;
+    }
+
+    .mini-stat.clickable {
+      cursor: pointer;
+    }
+
+    .mini-stat.clickable:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.15);
+    }
+
+    .mini-stat .ms-icon {
+      font-size: 18px;
+      margin-bottom: 4px;
+      opacity: 0.7;
+    }
+
+    .mini-stat .ms-value {
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .mini-stat .ms-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .mini-stat .ms-hint {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      opacity: 0.6;
+    }
+
+    .mini-stat.warning {
+      border-color: rgba(250, 204, 21, 0.3);
+    }
+
+    .mini-stat.warning .ms-value {
+      color: #facc15;
+    }
+
+    /* ===== SEARCH & FILTER ===== */
+    .controls-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 250px;
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 16px 10px 40px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .search-box input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .search-box i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+
+    .filter-select {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 16px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      min-width: 180px;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .filter-select option {
+      background: var(--bg-card);
+      color: var(--text);
+    }
+
+    /* ===== ENTITY CARDS ===== */
+    .entities-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .entity-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      transition: all 0.3s;
+      position: relative;
+    }
+
+    .entity-card:hover {
+      border-color: rgba(255, 255, 255, 0.12);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .entity-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .entity-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 800;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .entity-name h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .entity-name .display-name {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .entity-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .entity-detail {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .entity-detail .ed-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 3px;
+    }
+
+    .entity-detail .ed-value {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .entity-badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .entity-badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-size {
+      background: rgba(34, 197, 94, 0.12);
+      color: #22c55e;
+    }
+
+    .badge-school {
+      background: rgba(167, 139, 250, 0.12);
+      color: #a78bfa;
+    }
+
+    .badge-members {
+      background: rgba(250, 204, 21, 0.12);
+      color: #facc15;
+    }
+
+    .badge-versions {
+      background: rgba(102, 126, 234, 0.12);
+      color: #667eea;
+    }
+
+    .entity-actions {
+      display: flex;
+      gap: 8px;
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+    }
+
+    .entity-actions .btn-action {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .entity-actions .btn-action:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+    }
+
+    .entity-actions .btn-action.btn-edit:hover {
+      border-color: var(--warning);
+      color: var(--warning);
+    }
+
+    .entity-actions .btn-action.btn-delete:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .entity-actions .btn-action.btn-view:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* ===== EMPTY STATE ===== */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    .empty-state i {
+      font-size: 48px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .empty-state h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .empty-state p {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* ===== PAGINATION ===== */
+    .pagination-bar {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .page-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .page-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .page-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    /* ===== MODAL ===== */
+    .modal-backdrop {
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    .modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      color: var(--text);
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border-radius: 16px 16px 0 0;
+      padding: 18px 24px;
+      border-bottom: none;
+    }
+
+    .modal-header .modal-title {
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    .form-group label i {
+      color: var(--primary);
+      font-size: 14px;
+    }
+
+    .field-hint {
+      display: block;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      padding-right: 22px;
+      line-height: 1.6;
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .form-input option {
+      background: var(--bg-card);
+      color: var(--text);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .form-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 20px 0 16px;
+    }
+
+    .form-section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-modal-save {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-modal-save:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-modal-cancel {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-modal-cancel:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Sector chips on entity cards */
+    .entity-sector-chip {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .entity-sector-chip.pvt {
+      background: rgba(34, 197, 94, 0.12);
+      color: #4ade80;
+    }
+
+    .entity-sector-chip.gov {
+      background: rgba(56, 189, 248, 0.12);
+      color: #38bdf8;
+    }
+
+    .entity-sector-chip.npo {
+      background: rgba(250, 204, 21, 0.12);
+      color: #facc15;
+    }
+
+    .entity-sector-chip.default {
+      background: rgba(148, 163, 184, 0.12);
+      color: #94a3b8;
+    }
+
+    /* Industry hint in filter */
+    .filter-info {
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 4px 0;
+      display: none;
+    }
+
+    .filter-info.show {
+      display: block;
+    }
+
+    .form-error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #fca5a5;
+      font-size: 13px;
+      display: none;
+      margin-bottom: 10px;
+    }
+
+    /* ===== LOADING ===== */
+    .loading-skeleton {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+    }
+
+    .skeleton-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      animation: pulse 1.5s infinite;
+    }
+
+    .skeleton-line {
+      height: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+
+    .skeleton-line.short {
+      width: 60%;
+    }
+
+    .skeleton-line.medium {
+      width: 80%;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+
+      .main-content {
+        max-width: 100%;
+        padding: 15px;
+      }
+
+      .entities-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .mini-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .top-nav .nav-links {
+        display: none;
+      }
+    }
   </style>
 </head>
+
 <body>
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="/dashboard">
-        <i class="bi bi-rocket"></i> Stratix
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <span class="nav-link" id="userName"></span>
-          </li>
-          <li class="nav-item">
-            <button class="btn btn-outline-light btn-sm" onclick="logout()">تسجيل الخروج</button>
-          </li>
-        </ul>
+  <!-- ===== NAVBAR ===== -->
+  <nav class="top-nav">
+    <a href="/dashboard" class="brand">
+      <i class="bi bi-graph-up-arrow"></i> ستارتكيس
+    </a>
+    <div class="nav-links">
+      <a href="/dashboard"><i class="bi bi-house"></i> الرئيسية</a>
+      <a href="/kpis"><i class="bi bi-graph-up"></i> المؤشرات</a>
+      <a href="/intelligence"><i class="bi bi-bell"></i> التنبيهات</a>
+    </div>
+    <div class="user-area">
+      <div class="user-info">
+        <div class="name" id="userName">—</div>
+        <div class="role" id="userRole">—</div>
       </div>
+      <div class="user-avatar" id="userInitial">—</div>
+      <button class="btn-logout" id="logoutBtn">خروج</button>
     </div>
   </nav>
 
-  <div class="container-fluid py-4">
-    <div class="row">
-      <!-- Sidebar -->
-      <div class="col-md-3">
-        <div class="list-group bg-white rounded-3 shadow-sm">
-          <a href="/dashboard" class="list-group-item list-group-item-action">
-            <i class="bi bi-house"></i> لوحة التحكم
-          </a>
-          <a href="/sectors" class="list-group-item list-group-item-action">
-            <i class="bi bi-diagram-3"></i> القطاعات
-          </a>
-          <a href="/industries" class="list-group-item list-group-item-action">
-            <i class="bi bi-building"></i> الأنشطة
-          </a>
-          <a href="/entities" class="list-group-item list-group-item-action active">
-            <i class="bi bi-diagram-2"></i> الكيانات
-          </a>
-          <a href="/users" class="list-group-item list-group-item-action">
-            <i class="bi bi-people"></i> المستخدمون
-          </a>
-          <a href="/settings" class="list-group-item list-group-item-action">
-            <i class="bi bi-gear"></i> الإعدادات
-          </a>
+  <div class="layout">
+    <!-- ===== SIDEBAR — يُدار بواسطة sidebar.js ===== -->
+    <nav class="sidebar"></nav>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-content">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div>
+          <h1><i class="bi bi-building"></i> إدارة الكيانات</h1>
+          <p style="color:var(--text-muted);font-size:13px;margin-top:4px">🏢 أضف شركاتك وفروعك وكياناتك — الأساس لكل
+            عملية استراتيجية</p>
+        </div>
+        <button class="btn-add" id="addEntityBtn">
+          <i class="bi bi-plus-circle"></i> إضافة كيان
+        </button>
+      </div>
+
+      <!-- Mini Stats -->
+      <div class="mini-stats">
+        <div class="mini-stat">
+          <div class="ms-icon">🏢</div>
+          <div class="ms-value" id="totalEntities" style="color: var(--primary);">--</div>
+          <div class="ms-label">إجمالي الكيانات</div>
+        </div>
+        <div class="mini-stat clickable" onclick="window.location.href='/versions'"
+          title="اضغط للانتقال لصفحة الخطط الاستراتيجية">
+          <div class="ms-icon">📋</div>
+          <div class="ms-value" id="withPlansCount" style="color: var(--success);">--</div>
+          <div class="ms-label">كيانات لها خطط</div>
+          <div class="ms-hint">اضغط لعرض الخطط ←</div>
+        </div>
+        <div class="mini-stat">
+          <div class="ms-icon">🏷️</div>
+          <div class="ms-value" id="coveredSectors" style="color: #a78bfa;">--</div>
+          <div class="ms-label">قطاعات مغطاة</div>
+        </div>
+        <div class="mini-stat warning" id="noPlansStat">
+          <div class="ms-icon">⚠️</div>
+          <div class="ms-value" id="noPlansCount">--</div>
+          <div class="ms-label">بدون خطة استراتيجية</div>
+          <div class="ms-hint">تحتاج إنشاء خطة</div>
         </div>
       </div>
 
-      <!-- Main Content -->
-      <div class="col-md-9">
-        <div class="card shadow-lg border-0 rounded-3">
-          <div class="card-header bg-white border-bottom">
-            <div class="row align-items-center">
-              <div class="col">
-                <h4 class="mb-0"><i class="bi bi-diagram-2"></i> إدارة الكيانات</h4>
-              </div>
-              <div class="col-auto">
-                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#entityModal" onclick="openAddModal()">
-                  <i class="bi bi-plus"></i> إضافة كيان
-                </button>
-              </div>
-            </div>
+      <!-- Search & Filter -->
+      <div class="controls-bar">
+        <select class="filter-select" id="sectorFilter">
+          <option value="">كل القطاعات</option>
+        </select>
+        <select class="filter-select" id="industryFilter">
+          <option value="">كل الأنشطة</option>
+        </select>
+        <div class="search-box">
+          <i class="bi bi-search"></i>
+          <input type="text" id="searchInput" placeholder="ابحث بالاسم...">
+        </div>
+      </div>
+      <div class="filter-info" id="filterInfo"></div>
+
+      <!-- Entities Grid -->
+      <div id="entitiesContainer">
+        <div class="loading-skeleton">
+          <div class="skeleton-card">
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line"></div>
           </div>
-
-          <div class="card-body">
-            <!-- Search & Filter -->
-            <div class="row mb-4">
-              <div class="col-md-6">
-                <div class="input-group">
-                  <span class="input-group-text bg-white border-0">
-                    <i class="bi bi-search"></i>
-                  </span>
-                  <input type="text" class="form-control border-0" id="searchInput" placeholder="ابحث بالاسم أو الرمز...">
-                </div>
-              </div>
-              <div class="col-md-6">
-                <select class="form-select" id="industryFilter" onchange="loadEntities(1)">
-                  <option value="">-- اختر نشاط --</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Table -->
-            <div class="table-responsive">
-              <table class="table table-hover mb-0">
-                <thead>
-                  <tr>
-                    <th>الاسم</th>
-                    <th>الاسم بالعربية</th>
-                    <th>الرمز</th>
-                    <th>النشاط</th>
-                    <th>المستخدمون</th>
-                    <th>الإجراءات</th>
-                  </tr>
-                </thead>
-                <tbody id="entitiesTableBody">
-                  <tr>
-                    <td colspan="6" class="text-center py-4">جاري التحميل...</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Pagination -->
-            <nav aria-label="Page navigation" class="mt-4">
-              <ul class="pagination justify-content-center" id="pagination"></ul>
-            </nav>
+          <div class="skeleton-card">
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line"></div>
+          </div>
+          <div class="skeleton-card">
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line"></div>
           </div>
         </div>
       </div>
-    </div>
+
+      <!-- Pagination -->
+      <div class="pagination-bar" id="pagination"></div>
+
+    </main>
   </div>
 
-  <!-- Modal -->
+  <!-- ===== ADD/EDIT MODAL ===== -->
   <div class="modal fade" id="entityModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="modalTitle">إضافة كيان جديد</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
+          <div class="form-error" id="formError"></div>
           <form id="entityForm">
-            <div class="mb-3">
-              <label for="entityName" class="form-label">الاسم بالإنجليزية</label>
-              <input type="text" class="form-control" id="entityName" required>
+
+            <!-- القسم 1: المعلومات الأساسية -->
+            <div class="form-section-title"><i class="bi bi-info-circle"></i> المعلومات الأساسية</div>
+
+            <div class="form-group">
+              <label><i class="bi bi-building"></i> الاسم الرسمي *</label>
+              <span class="field-hint">الاسم القانوني المسجل رسمياً للشركة أو المنظمة كما يظهر في السجل التجاري</span>
+              <input type="text" class="form-input" id="entityLegalName"
+                placeholder="مثال: شركة التقنية المتقدمة المحدودة" required>
             </div>
-            <div class="mb-3">
-              <label for="entityNameAr" class="form-label">الاسم بالعربية</label>
-              <input type="text" class="form-control" id="entityNameAr" required>
+            <div class="form-group">
+              <label><i class="bi bi-tag"></i> الاسم المختصر</label>
+              <span class="field-hint">اسم مختصر يظهر في الواجهة والتقارير بدلاً من الاسم الطويل (اختياري)</span>
+              <input type="text" class="form-input" id="entityDisplayName" placeholder="مثال: التقنية المتقدمة">
             </div>
-            <div class="mb-3">
-              <label for="entityCode" class="form-label">الرمز</label>
-              <input type="text" class="form-control" id="entityCode" required>
+
+            <hr class="form-divider">
+
+            <!-- القسم 2: التصنيف -->
+            <div class="form-section-title"><i class="bi bi-diagram-3"></i> التصنيف والقطاع</div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label><i class="bi bi-layers"></i> القطاع *</label>
+                <span class="field-hint">اختر القطاع أولاً وسيتم عرض الأنشطة المرتبطة به تلقائياً</span>
+                <select class="form-input" id="entitySector">
+                  <option value="">-- اختر القطاع --</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label><i class="bi bi-grid"></i> النشاط</label>
+                <span class="field-hint">النشاط التجاري الرئيسي للكيان (يتم تصفيته حسب القطاع المختار)</span>
+                <select class="form-input" id="entityIndustry">
+                  <option value="">-- اختر القطاع أولاً --</option>
+                </select>
+              </div>
             </div>
-            <div class="mb-3">
-              <label for="entityType" class="form-label">النوع</label>
-              <select class="form-select" id="entityType">
-                <option value="ORGANIZATION">منظمة</option>
-                <option value="FACTORY">مصنع</option>
-                <option value="OFFICE">مكتب</option>
-                <option value="BRANCH">فرع</option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="entityIndustry" class="form-label">النشاط</label>
-              <select class="form-select" id="entityIndustry" required>
-                <option value="">-- اختر نشاط --</option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="entityDescription" class="form-label">الوصف</label>
-              <textarea class="form-control" id="entityDescription" rows="3"></textarea>
+            <div id="industryInfo" class="filter-info"></div>
+
+            <hr class="form-divider">
+
+            <!-- القسم 3: خصائص الكيان -->
+            <div class="form-section-title"><i class="bi bi-sliders"></i> خصائص الكيان</div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label><i class="bi bi-bar-chart-steps"></i> حجم الكيان</label>
+                <span class="field-hint">حجم المنظمة حسب عدد الموظفين والإيرادات</span>
+                <select class="form-input" id="entitySize">
+                  <option value="">غير محدد</option>
+                  <option value="STARTUP">🚀 ناشئة (أقل من 10 موظفين)</option>
+                  <option value="SME">🏢 صغيرة (10-49 موظف)</option>
+                  <option value="MEDIUM">🏙️ متوسطة (50-249 موظف)</option>
+                  <option value="LARGE">🏛️ كبيرة (250-999 موظف)</option>
+                  <option value="ENTERPRISE">🌐 عملاقة (+1000 موظف)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label><i class="bi bi-mortarboard"></i> المدرسة الاستراتيجية</label>
+                <span class="field-hint">المنهج الاستراتيجي المتبع في التخطيط والتنفيذ (اختياري)</span>
+                <select class="form-input" id="entitySchool">
+                  <option value="">غير محدد</option>
+                  <option value="DESIGN">🎨 التصميم - بناء رؤية من القيادة</option>
+                  <option value="PLANNING">📊 التخطيط - تحليل منهجي رسمي</option>
+                  <option value="POSITIONING">📍 التموضع - تحليل الصناعة والمنافسة</option>
+                  <option value="ENTREPRENEURIAL">💡 الريادية - رؤية القائد المبدع</option>
+                  <option value="COGNITIVE">🧠 المعرفية - فهم الخرائط الذهنية</option>
+                  <option value="LEARNING">📚 التعلم - التطور التدريجي</option>
+                  <option value="POWER">⚡ القوة - التفاوض والتأثير</option>
+                  <option value="CULTURAL">🌍 الثقافية - القيم المشتركة</option>
+                  <option value="ENVIRONMENTAL">🌿 البيئية - الاستجابة للمحيط</option>
+                  <option value="CONFIGURATION">🔧 التشكيل - إعادة الهيكلة</option>
+                </select>
+              </div>
             </div>
           </form>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
-          <button type="button" class="btn btn-primary" onclick="saveEntity()">حفظ</button>
+          <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">إلغاء</button>
+          <button type="button" class="btn-modal-save" id="saveEntityBtn">حفظ</button>
         </div>
       </div>
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    // ===== AUTH =====
     const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    if (!token || !user) { window.location.href = '/login'; }
+
+    const userData = JSON.parse(user);
+    document.getElementById('userName').textContent = userData.name;
+    document.getElementById('userRole').textContent = userData.role;
+    document.getElementById('userInitial').textContent = (userData.name || 'U').charAt(0).toUpperCase();
+
     let currentPage = 1;
     let editingId = null;
-    let industries = [];
+    let allIndustries = [];
+    let allSectors = [];
+    let modalInstance = null;
 
-    if (!token) {
-      window.location.href = '/login';
-    }
-
-    // Load user info
-    fetch('/api/auth/profile', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-      .then(r => r.json())
-      .then(data => {
-        document.getElementById('userName').textContent = data.user.name;
+    // ===== API =====
+    async function api(url, options = {}) {
+      const res = await fetch(url, {
+        ...options,
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...(options.headers || {}) }
       });
-
-    // Load industries
-    function loadIndustriesData() {
-      fetch('/api/industries?limit=100', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-        .then(r => r.json())
-        .then(data => {
-          industries = data.industries;
-          const filterSelect = document.getElementById('industryFilter');
-          const modalSelect = document.getElementById('entityIndustry');
-          
-          industries.forEach(ind => {
-            const opt1 = document.createElement('option');
-            opt1.value = ind.id;
-            opt1.textContent = ind.name;
-            filterSelect.appendChild(opt1);
-            
-            const opt2 = document.createElement('option');
-            opt2.value = ind.id;
-            opt2.textContent = ind.name;
-            modalSelect.appendChild(opt2);
-          });
-        });
+      if (res.status === 401) { logout(); return null; }
+      return res.json();
     }
 
-    // Load entities
-    function loadEntities(page = 1) {
-      const search = document.getElementById('searchInput').value;
-      const industryId = document.getElementById('industryFilter').value;
-      const url = new URL('/api/entities', window.location.origin);
-      url.searchParams.append('page', page);
-      url.searchParams.append('limit', 10);
-      if (search) url.searchParams.append('search', search);
-      if (industryId) url.searchParams.append('industryId', industryId);
+    // ===== LABELS =====
+    const sizeLabels = {
+      STARTUP: 'ناشئة', SME: 'صغيرة', MEDIUM: 'متوسطة', LARGE: 'كبيرة', ENTERPRISE: 'عملاقة'
+    };
+    const sizeIcons = {
+      STARTUP: '🚀', SME: '🏢', MEDIUM: '🏙️', LARGE: '🏛️', ENTERPRISE: '🌐'
+    };
+    const schoolLabels = {
+      DESIGN: 'التصميم', PLANNING: 'التخطيط', POSITIONING: 'التموضع',
+      ENTREPRENEURIAL: 'الريادية', COGNITIVE: 'المعرفية', LEARNING: 'التعلم',
+      POWER: 'القوة', CULTURAL: 'الثقافية', ENVIRONMENTAL: 'البيئية', CONFIGURATION: 'التشكيل'
+    };
+    const sectorCodeMap = {};
 
-      fetch(url, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-        .then(r => r.json())
-        .then(data => {
-          renderTable(data.entities);
-          renderPagination(data.totalPages, page);
-          currentPage = page;
-        })
-        .catch(e => alert('خطأ في تحميل البيانات: ' + e.message));
+    // ===== LOAD INDUSTRIES =====
+    async function loadIndustries() {
+      const data = await api('/api/industries?limit=200');
+      if (!data) return;
+      allIndustries = data.industries || [];
+      // Populate filter dropdown with all industries
+      const filterSelect = document.getElementById('industryFilter');
+      allIndustries.forEach(ind => {
+        const name = ind.nameAr || ind.nameEn;
+        filterSelect.add(new Option(name, ind.id));
+      });
     }
 
-    function renderTable(entities) {
-      const tbody = document.getElementById('entitiesTableBody');
-      if (entities.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">لا توجد كيانات</td></tr>';
+    // ===== LOAD SECTORS =====
+    async function loadSectors() {
+      const data = await api('/api/sectors?limit=100');
+      if (!data) return;
+      allSectors = data.sectors || [];
+      const filterSelect = document.getElementById('sectorFilter');
+      const modalSelect = document.getElementById('entitySector');
+      allSectors.forEach(sec => {
+        const name = sec.nameAr || sec.nameEn;
+        filterSelect.add(new Option(name, sec.id));
+        modalSelect.add(new Option(name, sec.id));
+        sectorCodeMap[sec.id] = sec.code || '';
+      });
+    }
+
+    // ===== SECTOR → INDUSTRY CASCADING (in modal) =====
+    function updateModalIndustries(selectedSectorId, preselectedIndustryId) {
+      const industrySelect = document.getElementById('entityIndustry');
+      const infoDiv = document.getElementById('industryInfo');
+      industrySelect.innerHTML = '';
+
+      if (!selectedSectorId) {
+        industrySelect.add(new Option('-- اختر القطاع أولاً --', ''));
+        infoDiv.textContent = '';
+        infoDiv.classList.remove('show');
         return;
       }
 
-      tbody.innerHTML = entities.map(ent => `
-        <tr>
-          <td>${ent.name}</td>
-          <td>${ent.nameAr || '-'}</td>
-          <td><code>${ent.code}</code></td>
-          <td>${ent.industry.name}</td>
-          <td><span class="badge bg-success">${ent._count.users} مستخدمين</span></td>
-          <td>
-            <button class="btn btn-warning btn-sm" onclick="openEditModal('${ent.id}', '${ent.name}', '${ent.nameAr}', '${ent.code}', '${ent.type}', '${ent.industryId}', '${ent.description}')">
-              <i class="bi bi-pencil"></i>
-            </button>
-            <button class="btn btn-danger btn-sm" onclick="deleteEntity('${ent.id}')">
-              <i class="bi bi-trash"></i>
-            </button>
-          </td>
-        </tr>
-      `).join('');
-    }
+      // Filter industries that belong to this sector
+      const filtered = allIndustries.filter(ind => {
+        return (ind.sectors || []).some(s => s.id === selectedSectorId);
+      });
 
-    function renderPagination(totalPages, currentPage) {
-      const pagination = document.getElementById('pagination');
-      pagination.innerHTML = '';
+      industrySelect.add(new Option('-- اختر نشاط --', ''));
+      filtered.forEach(ind => {
+        const name = ind.nameAr || ind.nameEn;
+        const opt = new Option(name, ind.id);
+        industrySelect.add(opt);
+      });
 
-      if (totalPages <= 1) return;
+      // Show info
+      const sectorObj = allSectors.find(s => s.id === selectedSectorId);
+      const sectorName = sectorObj ? (sectorObj.nameAr || sectorObj.nameEn) : '';
+      infoDiv.textContent = `عدد الأنشطة في ${sectorName}: ${filtered.length} نشاط`;
+      infoDiv.classList.add('show');
 
-      for (let i = 1; i <= totalPages; i++) {
-        const li = document.createElement('li');
-        li.className = `page-item ${i === currentPage ? 'active' : ''}`;
-        li.innerHTML = `<a class="page-link" href="#" onclick="loadEntities(${i}); return false;">${i}</a>`;
-        pagination.appendChild(li);
+      // Preselect if editing
+      if (preselectedIndustryId) {
+        industrySelect.value = preselectedIndustryId;
       }
     }
 
+    // ===== FILTER: When sector changes in page filter, also filter industries =====
+    function updateFilterIndustries() {
+      const sectorId = document.getElementById('sectorFilter').value;
+      const industryFilter = document.getElementById('industryFilter');
+      const currentVal = industryFilter.value;
+      industryFilter.innerHTML = '<option value="">كل الأنشطة</option>';
+
+      const filtered = sectorId
+        ? allIndustries.filter(ind => (ind.sectors || []).some(s => s.id === sectorId))
+        : allIndustries;
+
+      filtered.forEach(ind => {
+        const name = ind.nameAr || ind.nameEn;
+        industryFilter.add(new Option(name, ind.id));
+      });
+
+      // Show filter info
+      const infoDiv = document.getElementById('filterInfo');
+      if (sectorId) {
+        const sectorObj = allSectors.find(s => s.id === sectorId);
+        infoDiv.textContent = `⚡ تم تصفية الأنشطة حسب: ${sectorObj?.nameAr || ''} (${filtered.length} نشاط)`;
+        infoDiv.classList.add('show');
+      } else {
+        infoDiv.classList.remove('show');
+      }
+
+      // Reset industry filter if current value no longer valid
+      if (currentVal && !filtered.find(i => i.id === currentVal)) {
+        industryFilter.value = '';
+      }
+    }
+
+    // ===== LOAD ENTITIES =====
+    async function loadEntities(page = 1) {
+      const search = document.getElementById('searchInput').value;
+      const industryId = document.getElementById('industryFilter').value;
+      const sectorId = document.getElementById('sectorFilter').value;
+
+      const params = new URLSearchParams({ page, limit: 12 });
+      if (search) params.append('search', search);
+      if (industryId) params.append('industryId', industryId);
+      if (sectorId) params.append('sectorId', sectorId);
+
+      const data = await api(`/api/entities?${params}`);
+      if (!data) return;
+
+      const entities = data.entities || [];
+      const total = data.total || 0;
+      const totalPages = data.totalPages || 1;
+      currentPage = page;
+
+      // Update stats
+      const withPlans = entities.filter(e => (e._count?.strategyVersions || 0) > 0).length;
+      const noPlans = entities.filter(e => (e._count?.strategyVersions || 0) === 0).length;
+      const coveredSectorsSet = new Set();
+      entities.forEach(e => { if (e.sectorId) coveredSectorsSet.add(e.sectorId); });
+
+      document.getElementById('totalEntities').textContent = total;
+      document.getElementById('withPlansCount').textContent = withPlans;
+      document.getElementById('coveredSectors').textContent = coveredSectorsSet.size;
+      document.getElementById('noPlansCount').textContent = noPlans;
+
+      // Hide warning styling if all have plans
+      const noPlansStat = document.getElementById('noPlansStat');
+      if (noPlans === 0) {
+        noPlansStat.classList.remove('warning');
+        noPlansStat.querySelector('.ms-hint').textContent = '✅ جميع الكيانات مغطاة';
+      } else {
+        noPlansStat.classList.add('warning');
+        noPlansStat.querySelector('.ms-hint').textContent = 'تحتاج إنشاء خطة';
+      }
+
+      renderEntities(entities);
+      renderPagination(totalPages, page);
+    }
+
+    // ===== RENDER ENTITIES =====
+    function renderEntities(entities) {
+      const container = document.getElementById('entitiesContainer');
+
+      if (entities.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="bi bi-building"></i>
+            <h3>لا توجد كيانات</h3>
+            <p>أضف كيانك الأول للبدء في إدارة الاستراتيجية</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `<div class="entities-grid">` + entities.map(ent => {
+        const initial = (ent.legalName || '?').charAt(0).toUpperCase();
+        const industryName = ent.industry ? (ent.industry.nameAr || ent.industry.nameEn) : null;
+        const sectorName = ent.sector ? (ent.sector.nameAr || ent.sector.nameEn) : null;
+        const sectorCode = ent.sector?.code || '';
+        const sectorCls = sectorCode === 'PVT' ? 'pvt' : sectorCode === 'GOV' ? 'gov' : sectorCode === 'NPO' ? 'npo' : 'default';
+        const sectorChip = sectorName ? `<span class="entity-sector-chip ${sectorCls}">${sectorName}</span>` : '';
+        const sizeBadge = ent.size ? `<span class="entity-badge badge-size">${sizeIcons[ent.size] || ''} ${sizeLabels[ent.size] || ent.size}</span>` : '';
+        const schoolBadge = ent.school ? `<span class="entity-badge badge-school">🎓 ${schoolLabels[ent.school] || ent.school}</span>` : '';
+        const membersBadge = `<span class="entity-badge badge-members">👤 ${ent._count?.members || 0} عضو</span>`;
+        const versionsBadge = `<span class="entity-badge badge-versions">📋 ${ent._count?.strategyVersions || 0} نسخة</span>`;
+
+        return `
+          <div class="entity-card">
+            <div class="entity-header">
+              <div class="entity-avatar">${initial}</div>
+              <div class="entity-name">
+                <h3>${ent.legalName}</h3>
+                <div class="display-name">${ent.displayName || 'بدون اسم مختصر'} ${sectorChip}</div>
+              </div>
+            </div>
+
+            <div class="entity-details">
+              <div class="entity-detail">
+                <div class="ed-label"><i class="bi bi-grid" style="font-size:10px"></i> النشاط</div>
+                <div class="ed-value">${industryName || '—'}</div>
+              </div>
+              <div class="entity-detail">
+                <div class="ed-label"><i class="bi bi-layers" style="font-size:10px"></i> القطاع</div>
+                <div class="ed-value">${sectorName || '—'}</div>
+              </div>
+            </div>
+
+            <div class="entity-badges">
+              ${sizeBadge}${schoolBadge}${membersBadge}${versionsBadge}
+            </div>
+
+            <div class="entity-actions">
+              <button class="btn-action btn-view" onclick="viewEntity('${ent.id}')">
+                <i class="bi bi-eye"></i> عرض
+              </button>
+              <button class="btn-action btn-edit" onclick="openEditModal('${ent.id}')">
+                <i class="bi bi-pencil"></i> تعديل
+              </button>
+              <button class="btn-action btn-delete" onclick="deleteEntity('${ent.id}')">
+                <i class="bi bi-trash"></i> حذف
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('') + `</div>`;
+    }
+
+    // ===== RENDER PAGINATION =====
+    function renderPagination(totalPages, current) {
+      const pagination = document.getElementById('pagination');
+      if (totalPages <= 1) { pagination.innerHTML = ''; return; }
+
+      pagination.innerHTML = Array.from({ length: totalPages }, (_, i) => i + 1)
+        .map(p => `<button class="page-btn ${p === current ? 'active' : ''}" onclick="loadEntities(${p})">${p}</button>`)
+        .join('');
+    }
+
+    // ===== MODAL =====
     function openAddModal() {
       editingId = null;
       document.getElementById('modalTitle').textContent = 'إضافة كيان جديد';
       document.getElementById('entityForm').reset();
+      document.getElementById('formError').style.display = 'none';
+      updateModalIndustries('', '');
+      if (!modalInstance) modalInstance = new bootstrap.Modal(document.getElementById('entityModal'));
+      modalInstance.show();
     }
 
-    function openEditModal(id, name, nameAr, code, type, industryId, description) {
+    async function openEditModal(id) {
       editingId = id;
       document.getElementById('modalTitle').textContent = 'تعديل الكيان';
-      document.getElementById('entityName').value = name;
-      document.getElementById('entityNameAr').value = nameAr || '';
-      document.getElementById('entityCode').value = code;
-      document.getElementById('entityType').value = type;
-      document.getElementById('entityIndustry').value = industryId;
-      document.getElementById('entityDescription').value = description || '';
-      new bootstrap.Modal(document.getElementById('entityModal')).show();
+      document.getElementById('formError').style.display = 'none';
+
+      // Fetch fresh data from API
+      const data = await api(`/api/entities/${id}`);
+      if (!data?.entity) return;
+      const ent = data.entity;
+
+      document.getElementById('entityLegalName').value = ent.legalName || '';
+      document.getElementById('entityDisplayName').value = ent.displayName || '';
+      document.getElementById('entitySector').value = ent.sectorId || '';
+      // Update industries based on selected sector, then preselect industry
+      updateModalIndustries(ent.sectorId || '', ent.industryId || '');
+      document.getElementById('entitySize').value = ent.size || '';
+      document.getElementById('entitySchool').value = ent.school || '';
+
+      if (!modalInstance) modalInstance = new bootstrap.Modal(document.getElementById('entityModal'));
+      modalInstance.show();
     }
 
-    function saveEntity() {
-      const name = document.getElementById('entityName').value;
-      const nameAr = document.getElementById('entityNameAr').value;
-      const code = document.getElementById('entityCode').value;
-      const type = document.getElementById('entityType').value;
-      const industryId = document.getElementById('entityIndustry').value;
-      const description = document.getElementById('entityDescription').value;
+    async function saveEntity() {
+      const legalName = document.getElementById('entityLegalName').value.trim();
+      const err = document.getElementById('formError');
 
-      if (!name || !nameAr || !code || !industryId) {
-        alert('الرجاء ملء الحقول المطلوبة');
+      if (!legalName) {
+        err.textContent = 'الرجاء إدخال الاسم الرسمي للكيان';
+        err.style.display = 'block';
         return;
       }
+
+      const body = { legalName };
+      const displayName = document.getElementById('entityDisplayName').value.trim();
+      const industryId = document.getElementById('entityIndustry').value;
+      const sectorId = document.getElementById('entitySector').value;
+      const size = document.getElementById('entitySize').value;
+      const school = document.getElementById('entitySchool').value;
+
+      if (displayName) body.displayName = displayName;
+      if (industryId) body.industryId = industryId;
+      if (sectorId) body.sectorId = sectorId;
+      if (size) body.size = size;
+      if (school) body.school = school;
 
       const method = editingId ? 'PATCH' : 'POST';
       const url = editingId ? `/api/entities/${editingId}` : '/api/entities';
 
-      const body = { name, nameAr, code, type, description };
-      if (!editingId) body.industryId = industryId;
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'خطأ في العملية');
 
-      fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
-      })
-        .then(r => r.json())
-        .then(data => {
-          if (data.message) {
-            bootstrap.Modal.getInstance(document.getElementById('entityModal')).hide();
-            loadEntities(currentPage);
-          } else {
-            alert(data.message || 'خطأ في العملية');
-          }
-        })
-        .catch(e => alert('خطأ: ' + e.message));
+        if (modalInstance) modalInstance.hide();
+        loadEntities(currentPage);
+      } catch (e) {
+        err.textContent = e.message;
+        err.style.display = 'block';
+      }
     }
 
-    function deleteEntity(id) {
-      if (!confirm('هل أنت متأكد من حذف هذا الكيان؟')) return;
+    async function viewEntity(id) {
+      const d = await api(`/api/entities/${id}`);
+      if (!d?.entity) return;
+      const ent = d.entity;
+      const sectorName = ent.sector ? (ent.sector.nameAr || ent.sector.nameEn) : '—';
+      const industryName = ent.industry ? (ent.industry.nameAr || ent.industry.nameEn) : '—';
+      const sizeName = ent.size ? `${sizeIcons[ent.size] || ''} ${sizeLabels[ent.size] || ent.size}` : '—';
+      const schoolName = ent.school ? `🎓 ${schoolLabels[ent.school] || ent.school}` : '—';
+      const membersCount = ent.members?.length || 0;
+      const versionsCount = ent.strategyVersions?.length || 0;
 
-      fetch(`/api/entities/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-        .then(r => r.json())
-        .then(data => {
-          loadEntities(currentPage);
-        })
-        .catch(e => alert('خطأ: ' + e.message));
+      alert(
+        `📋 ${ent.legalName}\n` +
+        `${ent.displayName ? '(' + ent.displayName + ')' : ''}\n\n` +
+        `🏢 القطاع: ${sectorName}\n` +
+        `📊 النشاط: ${industryName}\n` +
+        `📏 الحجم: ${sizeName}\n` +
+        `🎓 المدرسة: ${schoolName}\n\n` +
+        `👥 الأعضاء: ${membersCount}\n` +
+        `📑 النسخ الاستراتيجية: ${versionsCount}`
+      );
     }
 
+    async function deleteEntity(id) {
+      if (!confirm('هل أنت متأكد من حذف هذا الكيان؟\nسيتم حذف جميع البيانات المرتبطة.')) return;
+      try {
+        const res = await fetch(`/api/entities/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await res.json();
+        if (!res.ok) { alert(data.message || 'خطأ في الحذف'); return; }
+        loadEntities(currentPage);
+      } catch (e) { alert('خطأ: ' + e.message); }
+    }
+
+    // ===== LOGOUT =====
     function logout() {
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
       window.location.href = '/login';
     }
 
-    // Search
-    document.getElementById('searchInput').addEventListener('keyup', () => loadEntities(1));
+    // ===== EVENTS =====
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+    document.getElementById('addEntityBtn').addEventListener('click', openAddModal);
+    document.getElementById('saveEntityBtn').addEventListener('click', saveEntity);
 
-    // Initial load
-    loadIndustriesData();
-    loadEntities();
+    let searchTimer;
+    document.getElementById('searchInput').addEventListener('input', () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => loadEntities(1), 300);
+    });
+    document.getElementById('industryFilter').addEventListener('change', () => loadEntities(1));
+    document.getElementById('sectorFilter').addEventListener('change', () => {
+      updateFilterIndustries();
+      loadEntities(1);
+    });
+
+    // Modal: sector change → update industries
+    document.getElementById('entitySector').addEventListener('change', (e) => {
+      updateModalIndustries(e.target.value, '');
+    });
+
+    // ===== INIT =====
+    async function init() {
+      await Promise.all([loadIndustries(), loadSectors()]);
+      loadEntities();
+    }
+
+    init();
   </script>
+  <script src="/js/api.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script src="/js/ai-advisor.js"></script>
 </body>
+
 </html>

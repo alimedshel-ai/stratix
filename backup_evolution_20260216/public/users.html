@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إدارة المستخدمين - Stratix</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/sidebar.css">
+  <link rel="stylesheet" href="/css/custom.css">
+  <style>
+    .role-badge {
+      padding: 0.35rem 0.65rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .role-super-admin {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .role-entity-admin {
+      background-color: #0d6efd;
+      color: white;
+    }
+
+    .role-strategy-manager {
+      background-color: #0dcaf0;
+      color: white;
+    }
+
+    .role-viewer {
+      background-color: #6c757d;
+      color: white;
+    }
+
+    .search-bar {
+      margin-bottom: 1rem;
+    }
+
+    .entity-cell {
+      max-width: 200px;
+    }
+
+    .action-buttons {
+      white-space: nowrap;
+    }
+
+    .table-responsive {
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container-fluid">
+    <!-- Top Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+      <div class="container-fluid">
+        <span class="navbar-brand mb-0 h1">Stratix | إدارة المستخدمين</span>
+        <button class="btn btn-sm btn-outline-secondary" onclick="logout()">
+          <i class="bi bi-box-arrow-right"></i> خروج
+        </button>
+      </div>
+    </nav>
+
+    <div class="row g-0 flex-grow-1">
+      <!-- Sidebar -->
+      <nav class="col-md-2 bg-light sidebar p-3">
+        <div class="list-group list-group-flush">
+          <a href="/sectors" class="list-group-item list-group-item-action">
+            <i class="bi bi-diagram-3"></i> القطاعات
+          </a>
+          <a href="/industries" class="list-group-item list-group-item-action">
+            <i class="bi bi-grid"></i> الأنشطة
+          </a>
+          <a href="/entities" class="list-group-item list-group-item-action">
+            <i class="bi bi-building"></i> الكيانات
+          </a>
+          <a href="/assessments" class="list-group-item list-group-item-action">
+            <i class="bi bi-clipboard-check"></i> التقييمات
+          </a>
+          <a href="/kpis" class="list-group-item list-group-item-action">
+            <i class="bi bi-graph-up"></i> المؤشرات
+          </a>
+          <div class="list-group-item bg-light py-1"></div>
+          <a href="/versions" class="list-group-item list-group-item-action">
+            <i class="bi bi-clock-history"></i> إصدارات الاستراتيجية
+          </a>
+          <a href="/choices" class="list-group-item list-group-item-action">
+            <i class="bi bi-signpost-split"></i> الخيارات والمخاطر
+          </a>
+          <a href="/corrections" class="list-group-item list-group-item-action">
+            <i class="bi bi-tools"></i> التصحيحات
+          </a>
+          <a href="/analysis" class="list-group-item list-group-item-action">
+            <i class="bi bi-lightbulb"></i> التحليل الاستراتيجي
+          </a>
+          <a href="/financial" class="list-group-item list-group-item-action">
+            <i class="bi bi-cash-stack"></i> القرارات المالية
+          </a>
+          <div class="list-group-item bg-light py-1"></div>
+          <a href="/directions" class="list-group-item list-group-item-action">
+            <i class="bi bi-compass"></i> التوجه الاستراتيجي
+          </a>
+          <a href="/objectives" class="list-group-item list-group-item-action">
+            <i class="bi bi-bullseye"></i> الأهداف
+          </a>
+          <a href="/initiatives" class="list-group-item list-group-item-action">
+            <i class="bi bi-kanban"></i> المبادرات
+          </a>
+          <a href="/reviews" class="list-group-item list-group-item-action">
+            <i class="bi bi-journal-check"></i> المراجعات
+          </a>
+          <a href="/alerts" class="list-group-item list-group-item-action">
+            <i class="bi bi-bell"></i> التنبيهات
+          </a>
+          <a href="/kpi-entries" class="list-group-item list-group-item-action">
+            <i class="bi bi-input-cursor-text"></i> إدخال المؤشرات
+          </a>
+          <div class="list-group-item bg-light py-1"></div>
+          <a href="/dashboard" class="list-group-item list-group-item-action">
+            <i class="bi bi-speedometer2"></i> لوحة التحكم
+          </a>
+          <a href="/users" class="list-group-item list-group-item-action active">
+            <i class="bi bi-people"></i> المستخدمون
+          </a>
+          <a href="/integrations" class="list-group-item list-group-item-action">
+            <i class="bi bi-plug"></i> التكاملات
+          </a>
+          <a href="/settings" class="list-group-item list-group-item-action">
+            <i class="bi bi-gear"></i> الإعدادات
+          </a>
+            <i class="bi bi-gear"></i> الإعدادات
+          </a>
+        </div>
+      </nav>
+
+      <!-- Main Content -->
+      <main class="col-md-10 p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h2><i class="bi bi-people"></i> المستخدمون</h2>
+          <button class="btn btn-primary" onclick="openCreateModal()">
+            <i class="bi bi-plus-lg"></i> مستخدم جديد
+          </button>
+        </div>
+
+        <!-- Filters -->
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <input type="text" class="form-control" id="searchInput" placeholder="بحث بالاسم أو البريد..."
+              onkeyup="searchUsers()">
+          </div>
+          <div class="col-md-4">
+            <select class="form-select" id="entityFilter" onchange="filterUsers()">
+              <option value="">الكيان - الكل</option>
+              <option value="no-entity">بدون كيان</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <select class="form-select" id="roleFilter" onchange="filterUsers()">
+              <option value="">الدور - الكل</option>
+              <option value="SUPER_ADMIN">مسؤول عام</option>
+              <option value="ENTITY_ADMIN">مسؤول كيان</option>
+              <option value="STRATEGY_MANAGER">مدير استراتيجية</option>
+              <option value="VIEWER">عارض</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>الاسم</th>
+                <th>البريد الإلكتروني</th>
+                <th>الدور</th>
+                <th>الكيان</th>
+                <th>تاريخ الإنشاء</th>
+                <th>الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody">
+              <tr>
+                <td colspan="6" class="text-center text-muted">جاري التحميل...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <div>
+            <small class="text-muted" id="paginationInfo">جاري التحميل...</small>
+          </div>
+          <nav>
+            <ul class="pagination mb-0" id="paginationControls">
+              <!-- Pagination buttons will be added here -->
+            </ul>
+          </nav>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Create/Edit Modal -->
+  <div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="userModalTitle">مستخدم جديد</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="userForm">
+            <input type="hidden" id="userId">
+
+            <div class="mb-3">
+              <label class="form-label">الاسم <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="userName" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">البريد الإلكتروني <span class="text-danger">*</span></label>
+              <input type="email" class="form-control" id="userEmail" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" id="passwordLabel">كلمة المرور <span class="text-danger">*</span></label>
+              <input type="password" class="form-control" id="userPassword" required>
+              <small class="text-muted" id="passwordHint">اتركه فارغاً للاحتفاظ بكلمة المرور الحالية</small>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">الدور</label>
+              <select class="form-select" id="userRole">
+                <option value="VIEWER">عارض</option>
+                <option value="STRATEGY_MANAGER">مدير استراتيجية</option>
+                <option value="ENTITY_ADMIN">مسؤول كيان</option>
+                <option value="SUPER_ADMIN">مسؤول عام</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">الكيان</label>
+              <select class="form-select" id="userEntity">
+                <option value="">حدد كيان...</option>
+              </select>
+            </div>
+
+            <div id="formError" class="alert alert-danger d-none" role="alert"></div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">الغاء</button>
+          <button type="button" class="btn btn-primary" onclick="saveUser()">حفظ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    const API_BASE = '/api';
+    let currentPage = 1;
+    const PAGE_SIZE = 10;
+    let userModal;
+    let allEntities = [];
+
+    // Initialize modal
+    document.addEventListener('DOMContentLoaded', () => {
+      userModal = new bootstrap.Modal(document.getElementById('userModal'));
+      loadEntities();
+      loadUsers();
+    });
+
+    async function loadEntities() {
+      try {
+        const response = await fetch(`${API_BASE}/entities?limit=1000`, {
+          headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+        if (!response.ok) throw new Error('Failed to load entities');
+        const data = await response.json();
+        allEntities = Array.isArray(data.entities) ? data.entities : [];
+
+        // Populate entity dropdowns
+        const entitySelect = document.getElementById('userEntity');
+        entitySelect.innerHTML = '<option value="">بدون كيان</option>';
+        if (allEntities.length > 0) {
+          allEntities.forEach(entity => {
+            const option = document.createElement('option');
+            option.value = entity.id;
+            option.textContent = entity.legalName || entity.displayName;
+            entitySelect.appendChild(option);
+          });
+        }
+
+        // Populate entity filter
+        const entityFilter = document.getElementById('entityFilter');
+        const currentFilter = entityFilter.value;
+        entityFilter.innerHTML = '<option value="">الكيان - الكل</option><option value="no-entity">بدون كيان</option>';
+        if (allEntities.length > 0) {
+          allEntities.forEach(entity => {
+            const option = document.createElement('option');
+            option.value = entity.id;
+            option.textContent = entity.legalName || entity.displayName;
+            entityFilter.appendChild(option);
+          });
+        }
+        entityFilter.value = currentFilter;
+      } catch (error) {
+        console.error('Error loading entities:', error);
+      }
+    }
+
+    async function loadUsers(page = 1) {
+      try {
+        currentPage = page;
+        const search = document.getElementById('searchInput').value;
+        const entityId = document.getElementById('entityFilter').value;
+        const role = document.getElementById('roleFilter').value;
+
+        let url = `${API_BASE}/users?page=${page}&limit=${PAGE_SIZE}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        if (entityId && entityId !== 'no-entity') url += `&entityId=${entityId}`;
+        if (entityId === 'no-entity') {
+          url = `${API_BASE}/users?page=${page}&limit=${PAGE_SIZE}&entityId=null`;
+        }
+        if (role) url += `&role=${role}`;
+
+        const response = await fetch(url, {
+          headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+
+        if (!response.ok) throw new Error('Failed to load users');
+
+        const data = await response.json();
+        renderUsers(data.users || []);
+        renderPagination(data.totalPages || 1, page);
+        updatePaginationInfo(data.total || 0, page, PAGE_SIZE);
+      } catch (error) {
+        showError('خطأ في تحميل المستخدمين: ' + error.message);
+      }
+    }
+
+    function renderUsers(users) {
+      const tbody = document.getElementById('usersTableBody');
+      // Ensure users is an array
+      if (!Array.isArray(users) || users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">لا توجد بيانات</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = users.map(user => {
+        const membership = user.memberships && user.memberships[0];
+        const role = membership ? membership.role : 'N/A';
+        const entityName = membership && membership.entity ? (membership.entity.legalName || membership.entity.displayName) : '-';
+        return `
+        <tr>
+          <td><strong>${user.name || '-'}</strong></td>
+          <td>${user.email}</td>
+          <td><span class="role-badge role-${role.toLowerCase()}">${getRoleLabel(role)}</span></td>
+          <td><small>${entityName}</small></td>
+          <td><small>${new Date(user.createdAt).toLocaleDateString('ar-SA')}</small></td>
+          <td>
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-outline-primary" onclick="editUser('${user.id}')" title="تعديل">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button class="btn btn-outline-danger" onclick="deleteUser('${user.id}', '${user.name}')" title="حذف">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+      }).join('');
+    }
+
+    function renderPagination(totalPages, currentPage) {
+      const controls = document.getElementById('paginationControls');
+      controls.innerHTML = '';
+
+      if (currentPage > 1) {
+        controls.innerHTML += `<li class="page-item"><a class="page-link" href="#" onclick="loadUsers(${currentPage - 1}); return false;">السابق</a></li>`;
+      }
+
+      for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+        controls.innerHTML += `<li class="page-item ${i === currentPage ? 'active' : ''}"><a class="page-link" href="#" onclick="loadUsers(${i}); return false;">${i}</a></li>`;
+      }
+
+      if (currentPage < totalPages) {
+        controls.innerHTML += `<li class="page-item"><a class="page-link" href="#" onclick="loadUsers(${currentPage + 1}); return false;">التالي</a></li>`;
+      }
+    }
+
+    function updatePaginationInfo(total, page, pageSize) {
+      const start = (page - 1) * pageSize + 1;
+      const end = Math.min(page * pageSize, total);
+      document.getElementById('paginationInfo').textContent = `${start}-${end} من ${total}`;
+    }
+
+    function getRoleLabel(role) {
+      const labels = {
+        'SUPER_ADMIN': 'مسؤول عام',
+        'ENTITY_ADMIN': 'مسؤول كيان',
+        'STRATEGY_MANAGER': 'مدير استراتيجية',
+        'VIEWER': 'عارض'
+      };
+      return labels[role] || role;
+    }
+
+    function openCreateModal() {
+      document.getElementById('userId').value = '';
+      document.getElementById('userForm').reset();
+      document.getElementById('userModalTitle').textContent = 'مستخدم جديد';
+      document.getElementById('passwordLabel').innerHTML = 'كلمة المرور <span class="text-danger">*</span>';
+      document.getElementById('passwordHint').style.display = 'none';
+      document.getElementById('userPassword').required = true;
+      document.getElementById('formError').classList.add('d-none');
+      userModal.show();
+    }
+
+    async function editUser(userId) {
+      try {
+        const response = await fetch(`${API_BASE}/users/${userId}`, {
+          headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+
+        if (!response.ok) throw new Error('Failed to load user');
+
+        const user = await response.json();
+        const membership = user.memberships && user.memberships[0];
+        document.getElementById('userId').value = user.id;
+        document.getElementById('userName').value = user.name;
+        document.getElementById('userEmail').value = user.email;
+        document.getElementById('userPassword').value = '';
+        document.getElementById('userPassword').required = false;
+        document.getElementById('userRole').value = membership ? membership.role : 'VIEWER';
+        document.getElementById('userEntity').value = membership ? membership.entityId : '';
+
+        document.getElementById('userModalTitle').textContent = 'تعديل مستخدم';
+        document.getElementById('passwordLabel').innerHTML = 'كلمة المرور (اتركها فارغة للاحتفاظ بالحالية)';
+        document.getElementById('passwordHint').style.display = 'block';
+        document.getElementById('formError').classList.add('d-none');
+
+        userModal.show();
+      } catch (error) {
+        showError('خطأ في تحميل بيانات المستخدم: ' + error.message);
+      }
+    }
+
+    async function saveUser() {
+      const userId = document.getElementById('userId').value;
+      const name = document.getElementById('userName').value.trim();
+      const email = document.getElementById('userEmail').value.trim();
+      const password = document.getElementById('userPassword').value.trim();
+      const role = document.getElementById('userRole').value;
+      const entityId = document.getElementById('userEntity').value;
+
+      const formError = document.getElementById('formError');
+
+      if (!name || !email) {
+        formError.textContent = 'جميع الحقول المطلوبة يجب ملؤها';
+        formError.classList.remove('d-none');
+        return;
+      }
+
+      if (!userId && !password) {
+        formError.textContent = 'كلمة المرور مطلوبة للمستخدمين الجدد';
+        formError.classList.remove('d-none');
+        return;
+      }
+
+      try {
+        const data = { name, email, role, entityId: entityId || null };
+        if (password) data.password = password;
+
+        const url = userId ? `${API_BASE}/users/${userId}` : `${API_BASE}/users`;
+        const method = userId ? 'PATCH' : 'POST';
+
+        const response = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${getToken()}`
+          },
+          body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'خطأ في الحفظ');
+        }
+
+        userModal.hide();
+        loadUsers(currentPage);
+      } catch (error) {
+        formError.textContent = error.message;
+        formError.classList.remove('d-none');
+      }
+    }
+
+    async function deleteUser(userId, userName) {
+      if (!confirm(`هل تريد حذف المستخدم "${userName}"؟`)) return;
+
+      try {
+        const response = await fetch(`${API_BASE}/users/${userId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+
+        if (!response.ok) throw new Error('Failed to delete user');
+
+        loadUsers(currentPage);
+      } catch (error) {
+        showError('خطأ في حذف المستخدم: ' + error.message);
+      }
+    }
+
+    function searchUsers() {
+      currentPage = 1;
+      loadUsers();
+    }
+
+    function filterUsers() {
+      currentPage = 1;
+      loadUsers();
+    }
+
+    function showError(message) {
+      alert(message);
+    }
+  </script>
+</body>
+
+</html>

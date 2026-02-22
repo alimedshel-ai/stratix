@@ -1,317 +1,1128 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>إدارة القطاعات</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.rtl.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.0/font/bootstrap-icons.min.css" rel="stylesheet">
+  <title>ستارتكيس - إدارة القطاعات</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
   <style>
-    body {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      margin-top: 60px;
+    :root {
+      --primary: #667eea;
+      --primary-dark: #5a67d8;
+      --secondary: #764ba2;
+      --bg: #0f1117;
+      --bg-card: #1a1d2e;
+      --bg-card-hover: #232640;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.08);
+      --success: #22c55e;
+      --warning: #facc15;
+      --danger: #ef4444;
+      --info: #38bdf8;
     }
-    .nav-link.active { color: #667eea !important; border-bottom: 3px solid #667eea; }
-    .input-group { background: white; border-radius: 8px; overflow: hidden; }
-    .table { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    .table thead { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-    .badge { padding: 6px 12px; font-size: 12px; }
-    .btn-sm { padding: 4px 8px; font-size: 12px; }
-    .modal-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      font-family: 'Tajawal', 'Segoe UI', sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ===== NAVBAR ===== */
+    .top-nav {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      padding: 14px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .top-nav .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: white;
+      text-decoration: none;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .top-nav .nav-links {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .top-nav .nav-links a {
+      color: rgba(255, 255, 255, 0.85);
+      text-decoration: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .top-nav .nav-links a:hover,
+    .top-nav .nav-links a.active {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+    }
+
+    .user-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+      font-size: 14px;
+    }
+
+    .user-info {
+      text-align: left;
+      color: white;
+    }
+
+    .user-info .name {
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .user-info .role {
+      font-size: 11px;
+      opacity: 0.75;
+    }
+
+    .btn-logout {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-logout:hover {
+      background: rgba(239, 68, 68, 0.6);
+    }
+
+    /* ===== LAYOUT ===== */
+    .layout {
+      display: flex;
+      min-height: calc(100vh - 60px);
+    }
+
+    /* ===== SIDEBAR — managed by sidebar.js ===== */
+
+    /* ===== MAIN ===== */
+    .main-content {
+      flex: 1;
+      padding: 30px;
+      max-width: calc(100% - 220px);
+    }
+
+    /* ===== PAGE HEADER ===== */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .page-header h1 {
+      font-size: 24px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .page-header h1 i {
+      color: var(--primary);
+    }
+
+    .btn-add {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-add:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    /* ===== MINI STATS ===== */
+    .mini-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .mini-stat {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .mini-stat .ms-value {
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .mini-stat .ms-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ===== SEARCH ===== */
+    .search-bar {
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .search-bar input {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px 12px 44px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .search-bar input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .search-bar input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .search-bar i {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 16px;
+    }
+
+    /* ===== SECTOR CARDS ===== */
+    .sectors-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .sector-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sector-card:hover {
+      border-color: rgba(255, 255, 255, 0.12);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .sector-card .accent-bar {
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+    }
+
+    .sc-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .sc-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+
+    .sc-title h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .sc-title .sc-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .sc-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .sc-detail {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .sc-detail-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .sc-detail-value {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .sc-badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .sc-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .badge-code {
+      background: rgba(102, 126, 234, 0.12);
+      color: var(--primary);
+    }
+
+    .badge-entities {
+      background: rgba(34, 197, 94, 0.12);
+      color: var(--success);
+    }
+
+    .sc-actions {
+      display: flex;
+      gap: 8px;
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+    }
+
+    .sc-actions .btn-action {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .sc-actions .btn-action:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+    }
+
+    .sc-actions .btn-action.btn-view:hover {
+      border-color: var(--info);
+      color: var(--info);
+    }
+
+    .sc-actions .btn-action.btn-edit:hover {
+      border-color: var(--warning);
+      color: var(--warning);
+    }
+
+    .sc-actions .btn-action.btn-delete:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    /* ===== EMPTY STATE ===== */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    .empty-state i {
+      font-size: 48px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .empty-state h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .empty-state p {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* ===== PAGINATION ===== */
+    .pagination-bar {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .page-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .page-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .page-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    .pagination-info {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-right: 12px;
+    }
+
+    /* ===== MODAL ===== */
+    .modal-backdrop {
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    .modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      color: var(--text);
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border-radius: 16px 16px 0 0;
+      padding: 18px 24px;
+      border-bottom: none;
+    }
+
+    .modal-header .modal-title {
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .btn-modal-save {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-modal-save:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-modal-cancel {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-modal-cancel:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .form-error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: var(--danger);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      margin-top: 12px;
+      display: none;
+    }
+
+    /* Details Panel */
+    .details-panel {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .details-panel h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .entity-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .entity-list li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      font-size: 13px;
+      background: rgba(255, 255, 255, 0.02);
+      transition: background 0.2s;
+    }
+
+    .entity-list li:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .entity-list li i {
+      color: var(--primary);
+    }
+
+    /* ===== LOADING ===== */
+    .loading-skeleton {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .skeleton-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      animation: pulse 1.5s infinite;
+    }
+
+    .skeleton-line {
+      height: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+
+    .skeleton-line.short {
+      width: 60%;
+    }
+
+    .skeleton-line.medium {
+      width: 80%;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+
+      .main-content {
+        max-width: 100%;
+        padding: 15px;
+      }
+
+      .sectors-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .mini-stats {
+        grid-template-columns: 1fr;
+      }
+
+      .top-nav .nav-links {
+        display: none;
+      }
+    }
   </style>
 </head>
+
 <body>
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="/dashboard">
-        <i class="bi bi-rocket"></i> Stratix
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <span class="nav-link" id="userName"></span>
-          </li>
-          <li class="nav-item">
-            <button class="btn btn-outline-light btn-sm" onclick="logout()">تسجيل الخروج</button>
-          </li>
-        </ul>
+  <!-- ===== NAVBAR ===== -->
+  <nav class="top-nav">
+    <a href="/dashboard" class="brand"><i class="bi bi-graph-up-arrow"></i> ستارتكيس</a>
+    <div class="nav-links">
+      <a href="/dashboard"><i class="bi bi-house"></i> الرئيسية</a>
+      <a href="/kpis"><i class="bi bi-graph-up"></i> المؤشرات</a>
+      <a href="/intelligence"><i class="bi bi-bell"></i> التنبيهات</a>
+    </div>
+    <div class="user-area">
+      <div class="user-info">
+        <div class="name" id="userName">—</div>
+        <div class="role" id="userRole">—</div>
       </div>
+      <div class="user-avatar" id="userInitial">—</div>
+      <button class="btn-logout" id="logoutBtn">خروج</button>
     </div>
   </nav>
 
-  <div class="container-fluid py-4">
-    <div class="row">
-      <!-- Sidebar -->
-      <div class="col-md-3">
-        <div class="list-group bg-white rounded-3 shadow-sm">
-          <a href="/dashboard" class="list-group-item list-group-item-action">
-            <i class="bi bi-house"></i> لوحة التحكم
-          </a>
-          <a href="/companies" class="list-group-item list-group-item-action">
-            <i class="bi bi-building"></i> الشركات
-          </a>
-          <a href="/sectors" class="list-group-item list-group-item-action active">
-            <i class="bi bi-diagram-3"></i> القطاعات
-          </a>
-          <a href="/entities" class="list-group-item list-group-item-action">
-            <i class="bi bi-diagram-2"></i> الكيانات
-          </a>
-          <a href="/users" class="list-group-item list-group-item-action">
-            <i class="bi bi-people"></i> المستخدمون
-          </a>
-          <a href="/settings" class="list-group-item list-group-item-action">
-            <i class="bi bi-gear"></i> الإعدادات
-          </a>
+  <div class="layout">
+    <!-- ===== SIDEBAR — يُدار بواسطة sidebar.js ===== -->
+    <nav class="sidebar"></nav>
+
+    <!-- ===== MAIN ===== -->
+    <main class="main-content">
+      <div class="page-header">
+        <h1><i class="bi bi-diagram-3"></i> إدارة القطاعات</h1>
+        <button class="btn-add" id="addSectorBtn">
+          <i class="bi bi-plus-circle"></i> قطاع جديد
+        </button>
+      </div>
+
+      <!-- Mini Stats -->
+      <div class="mini-stats">
+        <div class="mini-stat">
+          <div class="ms-value" id="statTotal" style="color: var(--primary);">--</div>
+          <div class="ms-label">إجمالي القطاعات</div>
+        </div>
+        <div class="mini-stat">
+          <div class="ms-value" id="statEntities" style="color: var(--success);">--</div>
+          <div class="ms-label">إجمالي الكيانات</div>
+        </div>
+        <div class="mini-stat">
+          <div class="ms-value" id="statActive" style="color: var(--info);">--</div>
+          <div class="ms-label">قطاعات نشطة</div>
         </div>
       </div>
 
-      <!-- Main Content -->
-      <div class="col-md-9">
-        <div class="card shadow-lg border-0 rounded-3">
-          <div class="card-header bg-white border-bottom">
-            <div class="row align-items-center">
-              <div class="col">
-                <h4 class="mb-0"><i class="bi bi-diagram-3"></i> إدارة القطاعات</h4>
-              </div>
-              <div class="col-auto">
-                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#sectorModal" onclick="openAddModal()">
-                  <i class="bi bi-plus"></i> إضافة قطاع
-                </button>
-              </div>
-            </div>
+      <!-- Search -->
+      <div class="search-bar">
+        <i class="bi bi-search"></i>
+        <input type="text" id="searchInput" placeholder="ابحث بالاسم أو الرمز...">
+      </div>
+
+      <!-- Sectors Container -->
+      <div id="sectorsContainer">
+        <div class="loading-skeleton">
+          <div class="skeleton-card">
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line"></div>
           </div>
-
-          <div class="card-body">
-            <!-- Search & Filter -->
-            <div class="row mb-4">
-              <div class="col-md-6">
-                <div class="input-group">
-                  <span class="input-group-text bg-white border-0">
-                    <i class="bi bi-search"></i>
-                  </span>
-                  <input type="text" class="form-control border-0" id="searchInput" placeholder="ابحث بالاسم أو الرمز...">
-                </div>
-              </div>
-            </div>
-
-            <!-- Table -->
-            <div class="table-responsive">
-              <table class="table table-hover mb-0">
-                <thead>
-                  <tr>
-                    <th>الاسم</th>
-                    <th>الاسم بالعربية</th>
-                    <th>الرمز</th>
-                    <th>عدد الشركات</th>
-                    <th>الإجراءات</th>
-                  </tr>
-                </thead>
-                <tbody id="sectorsTableBody">
-                  <tr>
-                    <td colspan="5" class="text-center py-4">جاري التحميل...</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Pagination -->
-            <nav aria-label="Page navigation" class="mt-4">
-              <ul class="pagination justify-content-center" id="pagination"></ul>
-            </nav>
+          <div class="skeleton-card">
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line"></div>
+          </div>
+          <div class="skeleton-card">
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line"></div>
           </div>
         </div>
       </div>
-    </div>
+
+      <!-- Pagination -->
+      <div class="pagination-bar" id="pagination"></div>
+    </main>
   </div>
 
-  <!-- Modal -->
+  <!-- ===== CREATE/EDIT MODAL ===== -->
   <div class="modal fade" id="sectorModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="modalTitle">إضافة قطاع جديد</h5>
+          <h5 class="modal-title" id="modalTitle">قطاع جديد</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <form id="sectorForm">
-            <div class="mb-3">
-              <label for="sectorName" class="form-label">الاسم بالإنجليزية</label>
-              <input type="text" class="form-control" id="sectorName" required>
+            <input type="hidden" id="sectorId">
+            <div class="form-group">
+              <label>الاسم بالإنجليزية *</label>
+              <input type="text" class="form-input" id="sectorNameEn" placeholder="مثال: Technology" required>
             </div>
-            <div class="mb-3">
-              <label for="sectorNameAr" class="form-label">الاسم بالعربية</label>
-              <input type="text" class="form-control" id="sectorNameAr" required>
+            <div class="form-group">
+              <label>الاسم بالعربية *</label>
+              <input type="text" class="form-input" id="sectorNameAr" placeholder="مثال: التقنية" required>
             </div>
-            <div class="mb-3">
-              <label for="sectorCode" class="form-label">الرمز</label>
-              <input type="text" class="form-control" id="sectorCode" required>
+            <div class="form-group">
+              <label>الرمز *</label>
+              <input type="text" class="form-input" id="sectorCode" placeholder="مثال: TECH" required>
             </div>
+            <div class="form-error" id="formError"></div>
           </form>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
-          <button type="button" class="btn btn-primary" onclick="saveSector()">حفظ</button>
+          <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">إلغاء</button>
+          <button type="button" class="btn-modal-save" id="saveSectorBtn">حفظ</button>
         </div>
       </div>
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+  <!-- ===== DETAILS MODAL ===== -->
+  <div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="detailsModalTitle">تفاصيل القطاع</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="detailsBody">
+          <!-- Dynamic content -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    // ===== AUTH =====
     const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    if (!token || !user) { window.location.href = '/login'; }
+
+    const userData = JSON.parse(user);
+    document.getElementById('userName').textContent = userData.name;
+    document.getElementById('userRole').textContent = userData.role;
+    document.getElementById('userInitial').textContent = (userData.name || 'U').charAt(0).toUpperCase();
+
     let currentPage = 1;
     let editingId = null;
+    let sectorModalInstance, detailsModalInstance;
 
-    // Check auth
-    if (!token) {
-      window.location.href = '/login';
+    // ===== API =====
+    async function api(url, options = {}) {
+      const res = await fetch(url, {
+        ...options,
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...(options.headers || {}) }
+      });
+      if (res.status === 401) { logout(); return null; }
+      return res.json();
     }
 
-    // Load user info
-    fetch('/api/auth/profile', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-      .then(r => r.json())
-      .then(data => {
-        document.getElementById('userName').textContent = data.user.name;
+    // ===== LOAD SECTORS =====
+    async function loadSectors(page = 1) {
+      currentPage = page;
+      const search = document.getElementById('searchInput').value;
+
+      const params = new URLSearchParams({ page, limit: 12 });
+      if (search) params.append('search', search);
+
+      const data = await api(`/api/sectors?${params}`);
+      if (!data) return;
+
+      const sectors = data.sectors || [];
+      const total = data.total || 0;
+      const totalPages = data.totalPages || 1;
+
+      // Stats
+      let totalEntities = 0;
+      let activeSectors = 0;
+      sectors.forEach(s => {
+        const count = s._count?.entities || 0;
+        totalEntities += count;
+        if (count > 0) activeSectors++;
       });
 
-    // Load sectors
-    function loadSectors(page = 1) {
-      const search = document.getElementById('searchInput').value;
-      const url = new URL('/api/sectors', window.location.origin);
-      url.searchParams.append('page', page);
-      url.searchParams.append('limit', 10);
-      if (search) url.searchParams.append('search', search);
+      document.getElementById('statTotal').textContent = total;
+      document.getElementById('statEntities').textContent = totalEntities;
+      document.getElementById('statActive').textContent = activeSectors;
 
-      fetch(url, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-        .then(r => r.json())
-        .then(data => {
-          renderTable(data.sectors);
-          renderPagination(data.totalPages, page);
-          currentPage = page;
-        })
-        .catch(e => alert('خطأ في تحميل البيانات: ' + e.message));
+      renderSectors(sectors);
+      renderPagination(totalPages, page, total);
     }
 
-    function renderTable(sectors) {
-      const tbody = document.getElementById('sectorsTableBody');
-      if (sectors.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">لا توجد قطاعات</td></tr>';
+    // ===== RENDER SECTORS =====
+    function renderSectors(sectors) {
+      const container = document.getElementById('sectorsContainer');
+
+      if (!sectors.length) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="bi bi-diagram-3"></i>
+            <h3>لا توجد قطاعات</h3>
+            <p>أضف قطاعك الأول لتنظيم بياناتك الاستراتيجية</p>
+          </div>`;
         return;
       }
 
-      tbody.innerHTML = sectors.map(sector => `
-        <tr>
-          <td>${sector.name}</td>
-          <td>${sector.nameAr || '-'}</td>
-          <td><code>${sector.code}</code></td>
-          <td><span class="badge bg-info">${sector._count.companies} شركات</span></td>
-          <td>
-            <button class="btn btn-warning btn-sm" onclick="openEditModal('${sector.id}', '${sector.name}', '${sector.nameAr}', '${sector.code}')">
-              <i class="bi bi-pencil"></i>
-            </button>
-            <button class="btn btn-danger btn-sm" onclick="deleteSector('${sector.id}')">
-              <i class="bi bi-trash"></i>
-            </button>
-          </td>
-        </tr>
-      `).join('');
+      container.innerHTML = `<div class="sectors-grid">${sectors.map(s => {
+        const entityCount = s._count?.entities || 0;
+        const initial = (s.nameAr || s.nameEn || '?').charAt(0);
+
+        return `
+          <div class="sector-card">
+            <div class="accent-bar"></div>
+            <div class="sc-header">
+              <div class="sc-icon">
+                <i class="bi bi-diagram-3"></i>
+              </div>
+              <div class="sc-title">
+                <h3>${s.nameAr || s.nameEn}</h3>
+                <div class="sc-subtitle">${s.nameEn}</div>
+              </div>
+            </div>
+
+            <div class="sc-details">
+              <div class="sc-detail">
+                <div class="sc-detail-label">الرمز</div>
+                <div class="sc-detail-value" style="color:var(--primary);">${s.code || '—'}</div>
+              </div>
+              <div class="sc-detail">
+                <div class="sc-detail-label">عدد الكيانات</div>
+                <div class="sc-detail-value" style="color:var(--success);">${entityCount}</div>
+              </div>
+            </div>
+
+            <div class="sc-badges">
+              <span class="sc-badge badge-code"><i class="bi bi-hash"></i> ${s.code || '—'}</span>
+              <span class="sc-badge badge-entities"><i class="bi bi-building"></i> ${entityCount} كيان</span>
+            </div>
+
+            <div class="sc-actions">
+              <button class="btn-action btn-view" onclick="viewSector('${s.id}')">
+                <i class="bi bi-eye"></i> عرض
+              </button>
+              <button class="btn-action btn-edit" onclick="editSector('${s.id}', '${escapeAttr(s.nameEn)}', '${escapeAttr(s.nameAr || '')}', '${escapeAttr(s.code || '')}')">
+                <i class="bi bi-pencil"></i> تعديل
+              </button>
+              <button class="btn-action btn-delete" onclick="deleteSector('${s.id}', '${escapeAttr(s.nameAr || s.nameEn)}')">
+                <i class="bi bi-trash"></i> حذف
+              </button>
+            </div>
+          </div>`;
+      }).join('')}</div>`;
     }
 
-    function renderPagination(totalPages, currentPage) {
+    function escapeAttr(str) {
+      return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    // ===== PAGINATION =====
+    function renderPagination(totalPages, current, total) {
       const pagination = document.getElementById('pagination');
-      pagination.innerHTML = '';
+      if (totalPages <= 1) { pagination.innerHTML = ''; return; }
 
-      if (totalPages <= 1) return;
+      let html = `<span class="pagination-info">الصفحة ${current} من ${totalPages} (${total} قطاع)</span>`;
 
-      for (let i = 1; i <= totalPages; i++) {
-        const li = document.createElement('li');
-        li.className = `page-item ${i === currentPage ? 'active' : ''}`;
-        li.innerHTML = `<a class="page-link" href="#" onclick="loadSectors(${i}); return false;">${i}</a>`;
-        pagination.appendChild(li);
+      if (current > 1) html += `<button class="page-btn" onclick="loadSectors(${current - 1})"><i class="bi bi-chevron-right"></i></button>`;
+
+      for (let i = Math.max(1, current - 2); i <= Math.min(totalPages, current + 2); i++) {
+        html += `<button class="page-btn ${i === current ? 'active' : ''}" onclick="loadSectors(${i})">${i}</button>`;
       }
+
+      if (current < totalPages) html += `<button class="page-btn" onclick="loadSectors(${current + 1})"><i class="bi bi-chevron-left"></i></button>`;
+
+      pagination.innerHTML = html;
     }
 
-    function openAddModal() {
+    // ===== CREATE =====
+    function openCreateModal() {
       editingId = null;
-      document.getElementById('modalTitle').textContent = 'إضافة قطاع جديد';
+      document.getElementById('sectorId').value = '';
       document.getElementById('sectorForm').reset();
+      document.getElementById('modalTitle').textContent = 'قطاع جديد';
+      document.getElementById('formError').style.display = 'none';
+      sectorModalInstance.show();
     }
 
-    function openEditModal(id, name, nameAr, code) {
+    // ===== EDIT =====
+    function editSector(id, nameEn, nameAr, code) {
       editingId = id;
-      document.getElementById('modalTitle').textContent = 'تعديل القطاع';
-      document.getElementById('sectorName').value = name;
-      document.getElementById('sectorNameAr').value = nameAr || '';
+      document.getElementById('sectorId').value = id;
+      document.getElementById('sectorNameEn').value = nameEn;
+      document.getElementById('sectorNameAr').value = nameAr;
       document.getElementById('sectorCode').value = code;
-      new bootstrap.Modal(document.getElementById('sectorModal')).show();
+      document.getElementById('modalTitle').textContent = 'تعديل القطاع';
+      document.getElementById('formError').style.display = 'none';
+      sectorModalInstance.show();
     }
 
-    function saveSector() {
-      const name = document.getElementById('sectorName').value;
-      const nameAr = document.getElementById('sectorNameAr').value;
-      const code = document.getElementById('sectorCode').value;
+    // ===== SAVE =====
+    async function saveSector() {
+      const nameEn = document.getElementById('sectorNameEn').value.trim();
+      const nameAr = document.getElementById('sectorNameAr').value.trim();
+      const code = document.getElementById('sectorCode').value.trim();
+      const errorEl = document.getElementById('formError');
 
-      if (!name || !nameAr || !code) {
-        alert('الرجاء ملء جميع الحقول');
+      if (!nameEn || !nameAr || !code) {
+        errorEl.textContent = 'جميع الحقول مطلوبة';
+        errorEl.style.display = 'block';
         return;
       }
 
-      const method = editingId ? 'PATCH' : 'POST';
       const url = editingId ? `/api/sectors/${editingId}` : '/api/sectors';
+      const method = editingId ? 'PATCH' : 'POST';
 
-      fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ name, nameAr, code })
-      })
-        .then(r => r.json())
-        .then(data => {
-          if (data.message) {
-            bootstrap.Modal.getInstance(document.getElementById('sectorModal')).hide();
-            loadSectors(currentPage);
-          } else {
-            alert(data.message || 'خطأ في العملية');
-          }
-        })
-        .catch(e => alert('خطأ: ' + e.message));
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ nameEn, nameAr, code })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'خطأ في الحفظ');
+
+        sectorModalInstance.hide();
+        loadSectors(currentPage);
+      } catch (e) {
+        errorEl.textContent = e.message;
+        errorEl.style.display = 'block';
+      }
     }
 
-    function deleteSector(id) {
-      if (!confirm('هل أنت متأكد من حذف هذا القطاع؟')) return;
-
-      fetch(`/api/sectors/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-        .then(r => r.json())
-        .then(data => {
-          loadSectors(currentPage);
-        })
-        .catch(e => alert('خطأ: ' + e.message));
+    // ===== DELETE =====
+    async function deleteSector(id, name) {
+      if (!confirm(`هل تريد حذف القطاع "${name}"؟`)) return;
+      try {
+        const res = await fetch(`/api/sectors/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.message || 'خطأ في الحذف');
+          return;
+        }
+        loadSectors(currentPage);
+      } catch (e) {
+        alert('خطأ: ' + e.message);
+      }
     }
 
+    // ===== VIEW DETAILS =====
+    async function viewSector(id) {
+      const data = await api(`/api/sectors/${id}`);
+      if (!data || !data.sector) return;
+
+      const sector = data.sector;
+      document.getElementById('detailsModalTitle').textContent = sector.nameAr || sector.nameEn;
+
+      let html = `
+        <div class="details-panel">
+          <h3><i class="bi bi-diagram-3" style="color:var(--primary)"></i> ${sector.nameAr || sector.nameEn}</h3>
+          <div class="sc-details" style="margin-bottom:0">
+            <div class="sc-detail">
+              <div class="sc-detail-label">الاسم بالإنجليزية</div>
+              <div class="sc-detail-value">${sector.nameEn}</div>
+            </div>
+            <div class="sc-detail">
+              <div class="sc-detail-label">الاسم بالعربية</div>
+              <div class="sc-detail-value">${sector.nameAr || '—'}</div>
+            </div>
+            <div class="sc-detail">
+              <div class="sc-detail-label">الرمز</div>
+              <div class="sc-detail-value" style="color:var(--primary)">${sector.code || '—'}</div>
+            </div>
+            <div class="sc-detail">
+              <div class="sc-detail-label">عدد الكيانات</div>
+              <div class="sc-detail-value" style="color:var(--success)">${sector.entities?.length || 0}</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      if (sector.entities && sector.entities.length > 0) {
+        html += `
+          <h4 style="font-size:15px;font-weight:700;margin-bottom:12px;">
+            <i class="bi bi-building" style="color:var(--primary)"></i> الكيانات المرتبطة
+          </h4>
+          <ul class="entity-list">
+            ${sector.entities.map(e => `
+              <li>
+                <i class="bi bi-building"></i>
+                <span>${e.legalName || e.displayName}</span>
+              </li>
+            `).join('')}
+          </ul>`;
+      } else {
+        html += `<div style="text-align:center;padding:20px;color:var(--text-muted);">
+          <i class="bi bi-building" style="font-size:24px;display:block;margin-bottom:6px;"></i>
+          لا توجد كيانات مرتبطة بهذا القطاع
+        </div>`;
+      }
+
+      document.getElementById('detailsBody').innerHTML = html;
+      detailsModalInstance.show();
+    }
+
+    // ===== LOGOUT =====
     function logout() {
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
       window.location.href = '/login';
     }
 
-    // Search
-    document.getElementById('searchInput').addEventListener('keyup', () => loadSectors(1));
+    // ===== EVENTS =====
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+    document.getElementById('addSectorBtn').addEventListener('click', openCreateModal);
+    document.getElementById('saveSectorBtn').addEventListener('click', saveSector);
 
-    // Initial load
-    loadSectors();
+    let searchTimer;
+    document.getElementById('searchInput').addEventListener('input', () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => loadSectors(1), 300);
+    });
+
+    // ===== INIT =====
+    document.addEventListener('DOMContentLoaded', () => {
+      sectorModalInstance = new bootstrap.Modal(document.getElementById('sectorModal'));
+      detailsModalInstance = new bootstrap.Modal(document.getElementById('detailsModal'));
+      loadSectors();
+    });
   </script>
+  <script src="/js/api.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script src="/js/ai-advisor.js"></script>
 </body>
+
 </html>

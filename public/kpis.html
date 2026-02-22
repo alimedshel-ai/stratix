@@ -1,525 +1,1679 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>إدارة مؤشرات الأداء - Stratix</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-  <link rel="stylesheet" href="/css/sidebar.css">
-  <link rel="stylesheet" href="/css/custom.css">
+  <title>ستارتكيس - مؤشرات الأداء</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
   <style>
-    .status-badge {
-      padding: 0.35rem 0.65rem;
-      border-radius: 4px;
-      font-size: 0.85rem;
-      font-weight: 500;
+    :root {
+      --primary: #667eea;
+      --secondary: #764ba2;
+      --bg: #0f1117;
+      --bg-card: #1a1d2e;
+      --bg-card-hover: #232640;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.08);
+      --success: #22c55e;
+      --warning: #facc15;
+      --danger: #ef4444;
+      --info: #38bdf8;
     }
-    .status-on-track { background-color: #28a745; color: white; }
-    .status-at-risk { background-color: #ffc107; color: #333; }
-    .status-off-track { background-color: #dc3545; color: white; }
-    .progress-container { position: relative; }
-    .kpi-card { transition: all 0.3s; }
-    .kpi-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      font-family: 'Tajawal', sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .top-nav {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      padding: 14px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .top-nav .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: white;
+      text-decoration: none;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .user-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+    }
+
+    .btn-logout {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .layout {
+      display: flex;
+      min-height: calc(100vh - 60px);
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 30px;
+      max-width: calc(100% - 220px);
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+
+    .page-header h1 {
+      font-size: 26px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .page-header h1 i {
+      color: var(--primary);
+    }
+
+    .page-subtitle {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    .btn-add {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s;
+    }
+
+    .btn-add:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    /* Stats */
+    .mini-stats {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .mini-stat {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      text-align: center;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mini-stat::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+
+    .mini-stat:nth-child(1)::before {
+      background: var(--primary);
+    }
+
+    .mini-stat:nth-child(2)::before {
+      background: var(--success);
+    }
+
+    .mini-stat:nth-child(3)::before {
+      background: var(--warning);
+    }
+
+    .mini-stat:nth-child(4)::before {
+      background: var(--danger);
+    }
+
+    .mini-stat:nth-child(5)::before {
+      background: var(--info);
+    }
+
+    .mini-stat:hover {
+      transform: translateY(-3px);
+    }
+
+    .ms-value {
+      font-size: 26px;
+      font-weight: 800;
+    }
+
+    .ms-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Filter */
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .filter-chip {
+      padding: 8px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-muted);
+      transition: all 0.3s;
+    }
+
+    .filter-chip:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .filter-chip.active {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: rgba(102, 126, 234, 0.08);
+    }
+
+    /* KPI Table */
+    .kpi-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 8px;
+    }
+
+    .kpi-table thead th {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      padding: 10px 16px;
+      text-align: right;
+    }
+
+    .kpi-row {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+
+    .kpi-row:hover {
+      background: var(--bg-card-hover);
+      transform: translateX(-4px);
+    }
+
+    .kpi-row td {
+      padding: 16px;
+      vertical-align: middle;
+    }
+
+    .kpi-row td:first-child {
+      border-radius: 0 12px 12px 0;
+    }
+
+    .kpi-row td:last-child {
+      border-radius: 12px 0 0 12px;
+    }
+
+    .kpi-name-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .kpi-indicator {
+      width: 4px;
+      height: 40px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .kpi-indicator.good {
+      background: var(--success);
+    }
+
+    .kpi-indicator.warn {
+      background: var(--warning);
+    }
+
+    .kpi-indicator.bad {
+      background: var(--danger);
+    }
+
+    .kpi-name {
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .kpi-objective {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .kpi-value {
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .kpi-value.good {
+      color: var(--success);
+    }
+
+    .kpi-value.warn {
+      color: var(--warning);
+    }
+
+    .kpi-value.bad {
+      color: var(--danger);
+    }
+
+    .kpi-target {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .kpi-trend {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .kpi-trend.up {
+      color: var(--success);
+    }
+
+    .kpi-trend.down {
+      color: var(--danger);
+    }
+
+    .kpi-trend.flat {
+      color: var(--text-muted);
+    }
+
+    .kpi-bar-cell {
+      min-width: 120px;
+    }
+
+    .kpi-bar {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .kpi-bar-fill {
+      height: 100%;
+      border-radius: 8px;
+      transition: width 0.5s;
+    }
+
+    .kpi-bar-fill.good {
+      background: linear-gradient(90deg, var(--success), #4ade80);
+    }
+
+    .kpi-bar-fill.warn {
+      background: linear-gradient(90deg, var(--warning), #fde047);
+    }
+
+    .kpi-bar-fill.bad {
+      background: linear-gradient(90deg, var(--danger), #f87171);
+    }
+
+    .kpi-percent {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 3px;
+      text-align: center;
+    }
+
+    .kpi-status-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .kpi-status-badge.good {
+      background: rgba(34, 197, 94, 0.12);
+      color: var(--success);
+    }
+
+    .kpi-status-badge.warn {
+      background: rgba(250, 204, 21, 0.12);
+      color: var(--warning);
+    }
+
+    .kpi-status-badge.bad {
+      background: rgba(239, 68, 68, 0.12);
+      color: var(--danger);
+    }
+
+    .kpi-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .kpi-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .kpi-btn:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .kpi-btn.edit:hover {
+      border-color: var(--warning);
+      color: var(--warning);
+    }
+
+    .kpi-btn.del:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    /* Modal */
+    .modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      color: var(--text);
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border-radius: 16px 16px 0 0;
+      padding: 18px 24px;
+      border-bottom: none;
+    }
+
+    .modal-header .modal-title {
+      font-weight: 700;
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .form-input option {
+      background: var(--bg-card);
+      color: var(--text);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .btn-modal-save {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-modal-cancel {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 10px 24px;
+      border-radius: 10px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .toast-container {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      z-index: 9999;
+    }
+
+    .toast-msg {
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      animation: slideUp 0.3s ease;
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toast-msg.success {
+      background: rgba(34, 197, 94, 0.9);
+      color: white;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .mini-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .main-content {
+        max-width: 100%;
+        padding: 16px;
+      }
+
+      .kpi-table {
+        display: block;
+        overflow-x: auto;
+      }
+    }
+
+    @keyframes fadeSlideIn {
+      from {
+        opacity: 0;
+        max-height: 0;
+        transform: translateY(-10px);
+      }
+
+      to {
+        opacity: 1;
+        max-height: 2000px;
+        transform: translateY(0);
+      }
+    }
   </style>
 </head>
+
 <body>
-  <div class="container-fluid">
-    <!-- Top Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
-      <div class="container-fluid">
-        <span class="navbar-brand mb-0 h1">Stratix | مؤشرات الأداء الرئيسية</span>
-        <button class="btn btn-sm btn-outline-secondary" onclick="logout()">
-          <i class="bi bi-box-arrow-right"></i> خروج
-        </button>
+  <nav class="top-nav">
+    <a href="/dashboard.html" class="brand"><i class="bi bi-gem"></i> ستارتكيس</a>
+    <div class="user-area">
+      <div class="user-avatar">م</div>
+      <button class="btn-logout" onclick="localStorage.clear(); location.href='/login.html'"><i
+          class="bi bi-box-arrow-right"></i> خروج</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <aside class="sidebar"></aside>
+    <div class="main-content">
+      <div class="page-header">
+        <div>
+          <h1><i class="bi bi-speedometer2"></i> مؤشرات الأداء الرئيسية (KPIs)</h1>
+          <p class="page-subtitle">مراقبة وقياس الأداء — تتبع المستهدفات مقابل الفعلي في الزمن الحقيقي</p>
+        </div>
+        <button class="btn-add" onclick="openCreateModal()"><i class="bi bi-plus-lg"></i> مؤشر جديد</button>
       </div>
-    </nav>
 
-    <div class="row g-0 flex-grow-1">
-      <!-- Sidebar -->
-      <nav class="col-md-2 bg-light sidebar p-3">
-        <div class="list-group list-group-flush">
-          <a href="/dashboard" class="list-group-item list-group-item-action">
-            <i class="bi bi-speedometer2"></i> لوحة التحكم
+      <!-- شريط مسار التخطيط -->
+      <div
+        style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:18px 22px;margin-bottom:20px">
+        <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:12px">🗺️ مسار التخطيط</div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <a href="/directions.html"
+            style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);text-decoration:none;flex:1;min-width:100px">
+            <span style="font-size:16px">🧭</span>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:#22c55e">التوجهات ✅</div>
+            </div>
           </a>
-          <a href="/sectors" class="list-group-item list-group-item-action">
-            <i class="bi bi-diagram-3"></i> القطاعات
+          <div style="font-size:12px;color:var(--text-muted)">←</div>
+          <a href="/objectives.html"
+            style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);text-decoration:none;flex:1;min-width:100px">
+            <span style="font-size:16px">🎯</span>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:#22c55e">الأهداف ✅</div>
+            </div>
           </a>
-          <a href="/industries" class="list-group-item list-group-item-action">
-            <i class="bi bi-building"></i> الأنشطة
+          <div style="font-size:12px;color:var(--text-muted)">←</div>
+          <a href="/kpis.html"
+            style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:rgba(102,126,234,0.1);border:2px solid rgba(102,126,234,0.4);text-decoration:none;flex:1;min-width:100px;box-shadow:0 0 10px rgba(102,126,234,0.15)">
+            <span style="font-size:16px">📊</span>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:#667eea">المؤشرات 👈</div>
+            </div>
           </a>
-          <a href="/entities" class="list-group-item list-group-item-action">
-            <i class="bi bi-shop"></i> الكيانات
+          <div style="font-size:12px;color:var(--text-muted)">←</div>
+          <a href="/initiatives.html"
+            style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid var(--border);text-decoration:none;flex:1;min-width:100px">
+            <span style="font-size:16px">🚀</span>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:var(--text-muted)">المبادرات</div>
+            </div>
           </a>
-          <a href="/users" class="list-group-item list-group-item-action">
-            <i class="bi bi-people"></i> المستخدمون
-          </a>
-          <a href="/assessments" class="list-group-item list-group-item-action">
-            <i class="bi bi-clipboard-check"></i> التقييمات
-          </a>
-          <a href="/kpis" class="list-group-item list-group-item-action active">
-            <i class="bi bi-graph-up"></i> مؤشرات الأداء
-          </a>
-          <hr>
-          <a href="/settings" class="list-group-item list-group-item-action">
-            <i class="bi bi-gear"></i> الإعدادات
+          <div style="font-size:12px;color:var(--text-muted)">←</div>
+          <a href="/choices.html"
+            style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid var(--border);text-decoration:none;flex:1;min-width:100px">
+            <span style="font-size:16px">⚖️</span>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:var(--text-muted)">الخيارات</div>
+            </div>
           </a>
         </div>
-      </nav>
-
-      <!-- Main Content -->
-      <main class="col-md-10 p-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <h2><i class="bi bi-graph-up"></i> مؤشرات الأداء الرئيسية</h2>
-          <button class="btn btn-primary" onclick="openCreateModal()">
-            <i class="bi bi-plus-lg"></i> مؤشر جديد
-          </button>
+      </div>
+      <!-- Stats -->
+      <div class="mini-stats">
+        <div class="mini-stat">
+          <div class="ms-value" id="sTotal">12</div>
+          <div class="ms-label">إجمالي المؤشرات</div>
         </div>
-
-        <!-- Filters -->
-        <div class="row mb-3">
-          <div class="col-md-3">
-            <input type="text" class="form-control" id="searchInput" placeholder="بحث في المؤشرات..." onkeyup="searchKPIs()">
-          </div>
-          <div class="col-md-3">
-            <select class="form-select" id="versionFilter" onchange="filterKPIs()">
-              <option value="">الخطة الاستراتيجية - الكل</option>
-            </select>
-          </div>
-          <div class="col-md-3">
-            <select class="form-select" id="objectiveFilter" onchange="filterKPIs()">
-              <option value="">الهدف - الكل</option>
-            </select>
-          </div>
-          <div class="col-md-3">
-            <select class="form-select" id="statusFilter" onchange="filterKPIs()">
-              <option value="">الحالة - الكل</option>
-              <option value="ON_TRACK">على المسار</option>
-              <option value="AT_RISK">تحت المراقبة</option>
-              <option value="OFF_TRACK">خارج المسار</option>
-            </select>
-          </div>
+        <div class="mini-stat">
+          <div class="ms-value" id="sGood">5</div>
+          <div class="ms-label">أداء ممتاز</div>
         </div>
-
-        <!-- KPIs Grid -->
-        <div class="row" id="kpisContainer">
-          <div class="col-12 text-center text-muted">جاري التحميل...</div>
+        <div class="mini-stat">
+          <div class="ms-value" id="sWarn">4</div>
+          <div class="ms-label">يحتاج متابعة</div>
         </div>
-
-        <!-- Pagination -->
-        <div class="d-flex justify-content-between align-items-center mt-4">
-          <div>
-            <small class="text-muted" id="paginationInfo">جاري التحميل...</small>
-          </div>
-          <nav>
-            <ul class="pagination mb-0" id="paginationControls"></ul>
-          </nav>
+        <div class="mini-stat">
+          <div class="ms-value" id="sBad">3</div>
+          <div class="ms-label">أداء ضعيف</div>
         </div>
-      </main>
+        <div class="mini-stat">
+          <div class="ms-value" id="sAvg">71%</div>
+          <div class="ms-label">المعدل العام</div>
+        </div>
+      </div>
+
+      <!-- Department Filter -->
+      <div
+        style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px">
+        <div
+          style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+          <i class="bi bi-building"></i> تصفية حسب الإدارة
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap" id="deptFilterBar">
+          <div class="filter-chip active" onclick="filterByDept('all',this)">🏢 الكل</div>
+          <div class="filter-chip" onclick="filterByDept('المالية',this)">💰 المالية</div>
+          <div class="filter-chip" onclick="filterByDept('التقنية',this)">💻 التقنية</div>
+          <div class="filter-chip" onclick="filterByDept('الموارد البشرية',this)">👥 الموارد البشرية</div>
+          <div class="filter-chip" onclick="filterByDept('التسويق والعملاء',this)">📢 التسويق والعملاء</div>
+          <div class="filter-chip" onclick="filterByDept('العمليات',this)">⚙️ العمليات</div>
+          <div class="filter-chip" onclick="filterByDept('الجودة',this)">✅ الجودة</div>
+        </div>
+      </div>
+
+      <!-- Status Filter -->
+      <div class="filter-bar">
+        <div class="filter-chip active" onclick="filterKPIs('all',this)">الكل</div>
+        <div class="filter-chip" onclick="filterKPIs('good',this)">🟢 ممتاز</div>
+        <div class="filter-chip" onclick="filterKPIs('warn',this)">🟡 تحذير</div>
+        <div class="filter-chip" onclick="filterKPIs('bad',this)">🔴 ضعيف</div>
+      </div>
+
+      <!-- Table -->
+      <div id="kpiGroupedView"></div>
+
+      <!-- Readiness Banner -->
+      <div id="kpiReadinessBanner" style="margin-top:20px"></div>
     </div>
   </div>
 
-  <!-- Create/Edit Modal -->
+  <!-- Modal -->
   <div class="modal fade" id="kpiModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="kpiModalTitle">مؤشر جديد</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <h5 class="modal-title" id="modalTitle"><i class="bi bi-plus-circle"></i> مؤشر جديد</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <form id="kpiForm">
-            <input type="hidden" id="kpiId">
-            
-            <div class="mb-3">
-              <label class="form-label">الاسم <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="kpiName" required>
-            </div>
+          <input type="hidden" id="editId">
 
-            <div class="mb-3">
-              <label class="form-label">الاسم بالعربية</label>
-              <input type="text" class="form-control" id="kpiNameAr">
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">الوصف</label>
-              <textarea class="form-control" id="kpiDescription" rows="2"></textarea>
-            </div>
-
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label class="form-label">الخطة الاستراتيجية <span class="text-danger">*</span></label>
-                <select class="form-select" id="kpiVersion" required onchange="loadObjectives()">
-                  <option value="">اختر...</option>
-                </select>
+          <!-- Templates -->
+          <div id="kpiTplSection" style="margin-bottom:14px">
+            <label style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;margin-bottom:8px">
+              <i class="bi bi-lightning-charge-fill" style="color:#facc15"></i> قوالب جاهزة
+              <span style="font-size:10px;color:var(--text-muted);font-weight:400">(اضغط لتعبئة تلقائية)</span>
+            </label>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
+              <div class="kpi-tpl" onclick="fillKpiTpl(0)"
+                style="background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15);border-radius:8px;padding:8px;cursor:pointer;text-align:center;transition:all 0.2s;font-size:10px"
+                onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform=''">
+                <i class="bi bi-cash-stack"
+                  style="font-size:16px;color:var(--success);display:block;margin-bottom:2px"></i>
+                <div style="font-weight:700">نمو الإيرادات</div>
               </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">الهدف</label>
-                <select class="form-select" id="kpiObjective">
-                  <option value="">بدون هدف</option>
-                </select>
+              <div class="kpi-tpl" onclick="fillKpiTpl(1)"
+                style="background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.15);border-radius:8px;padding:8px;cursor:pointer;text-align:center;transition:all 0.2s;font-size:10px"
+                onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform=''">
+                <i class="bi bi-emoji-smile"
+                  style="font-size:16px;color:var(--info);display:block;margin-bottom:2px"></i>
+                <div style="font-weight:700">رضا العملاء</div>
               </div>
-            </div>
-
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label class="form-label">الهدف (Target) <span class="text-danger">*</span></label>
-                <input type="number" class="form-control" id="kpiTarget" step="0.01" required>
+              <div class="kpi-tpl" onclick="fillKpiTpl(2)"
+                style="background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.15);border-radius:8px;padding:8px;cursor:pointer;text-align:center;transition:all 0.2s;font-size:10px"
+                onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform=''">
+                <i class="bi bi-gear" style="font-size:16px;color:#a78bfa;display:block;margin-bottom:2px"></i>
+                <div style="font-weight:700">نسبة الأتمتة</div>
               </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">القيمة الفعلية (Actual)</label>
-                <input type="number" class="form-control" id="kpiActual" step="0.01">
+              <div class="kpi-tpl" onclick="fillKpiTpl(3)"
+                style="background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.15);border-radius:8px;padding:8px;cursor:pointer;text-align:center;transition:all 0.2s;font-size:10px"
+                onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform=''">
+                <i class="bi bi-person-check" style="font-size:16px;color:#f97316;display:block;margin-bottom:2px"></i>
+                <div style="font-weight:700">الاحتفاظ بالموظفين</div>
               </div>
-            </div>
-
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label class="form-label">الوحدة</label>
-                <select class="form-select" id="kpiUnit">
-                  <option value="%">نسبة مئوية (%)</option>
-                  <option value="$">دولار ($)</option>
-                  <option value="units">وحدات</option>
-                  <option value="hours">ساعات</option>
-                  <option value="count">عدد</option>
-                </select>
+              <div class="kpi-tpl" onclick="fillKpiTpl(4)"
+                style="background:rgba(236,72,153,0.06);border:1px solid rgba(236,72,153,0.15);border-radius:8px;padding:8px;cursor:pointer;text-align:center;transition:all 0.2s;font-size:10px"
+                onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform=''">
+                <i class="bi bi-shield-check" style="font-size:16px;color:#ec4899;display:block;margin-bottom:2px"></i>
+                <div style="font-weight:700">الامتثال والجودة</div>
               </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">الحالة</label>
-                <select class="form-select" id="kpiStatus">
-                  <option value="ON_TRACK">على المسار</option>
-                  <option value="AT_RISK">تحت المراقبة</option>
-                  <option value="OFF_TRACK">خارج المسار</option>
-                </select>
+              <div class="kpi-tpl" onclick="fillKpiTpl(5)"
+                style="background:rgba(250,204,21,0.06);border:1px solid rgba(250,204,21,0.15);border-radius:8px;padding:8px;cursor:pointer;text-align:center;transition:all 0.2s;font-size:10px"
+                onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform=''">
+                <i class="bi bi-lightbulb"
+                  style="font-size:16px;color:var(--warning);display:block;margin-bottom:2px"></i>
+                <div style="font-weight:700">الابتكار</div>
               </div>
             </div>
+          </div>
+          <hr style="border-color:var(--border);margin:10px 0">
 
-            <div id="formError" class="alert alert-danger d-none" role="alert"></div>
-          </form>
+          <!-- اسم المؤشر -->
+          <div class="form-group">
+            <label style="font-weight:700;display:flex;align-items:center;gap:6px;color:var(--text)">
+              <i class="bi bi-speedometer2" style="color:var(--primary)"></i> اسم المؤشر *
+            </label>
+            <div style="font-size:10px;color:var(--text-muted);margin:-2px 0 6px"><i class="bi bi-info-circle"
+                style="font-size:9px"></i> اسم واضح ومختصر يصف ما يقيسه هذا المؤشر</div>
+            <input type="text" class="form-input" id="formName" placeholder="مثال: نسبة رضا العملاء"
+              oninput="updateKpiPreview()">
+            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">
+              <span onclick="document.getElementById('formName').value=this.textContent;updateKpiPreview()"
+                style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(102,126,234,0.08);color:var(--primary);cursor:pointer;border:1px solid rgba(102,126,234,0.15)">نمو
+                الإيرادات</span>
+              <span onclick="document.getElementById('formName').value=this.textContent;updateKpiPreview()"
+                style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(102,126,234,0.08);color:var(--primary);cursor:pointer;border:1px solid rgba(102,126,234,0.15)">رضا
+                العملاء NPS</span>
+              <span onclick="document.getElementById('formName').value=this.textContent;updateKpiPreview()"
+                style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(102,126,234,0.08);color:var(--primary);cursor:pointer;border:1px solid rgba(102,126,234,0.15)">نسبة
+                الأتمتة</span>
+            </div>
+          </div>
+
+          <!-- الهدف المرتبط -->
+          <div class="form-group">
+            <label style="font-weight:700;display:flex;align-items:center;gap:6px;color:var(--text)">
+              <i class="bi bi-bullseye" style="color:#f97316"></i> الهدف المرتبط
+            </label>
+            <div style="font-size:10px;color:var(--text-muted);margin:-2px 0 6px"><i class="bi bi-info-circle"
+                style="font-size:9px"></i> الهدف الاستراتيجي الذي يخدمه هذا المؤشر</div>
+            <input type="text" class="form-input" id="formObj" placeholder="مثال: رفع مستوى رضا العملاء"
+              oninput="updateKpiPreview()">
+          </div>
+
+          <!-- الإدارة المسؤولة -->
+          <div class="form-group">
+            <label style="font-weight:700;display:flex;align-items:center;gap:6px;color:var(--text)">
+              <i class="bi bi-building" style="color:#8b5cf6"></i> الإدارة المسؤولة
+            </label>
+            <div style="font-size:10px;color:var(--text-muted);margin:-2px 0 6px"><i class="bi bi-info-circle"
+                style="font-size:9px"></i> الإدارة أو القسم المسؤول عن تحقيق هذا المؤشر</div>
+            <select class="form-input" id="formDept">
+              <option value="المالية">💰 المالية</option>
+              <option value="التقنية">💻 التقنية</option>
+              <option value="الموارد البشرية">👥 الموارد البشرية</option>
+              <option value="التسويق والعملاء">📢 التسويق والعملاء</option>
+              <option value="العمليات">⚙️ العمليات</option>
+              <option value="الجودة">✅ الجودة</option>
+            </select>
+          </div>
+
+          <!-- الفعلي والمستهدف -->
+          <div class="form-row">
+            <div class="form-group">
+              <label style="font-weight:700;display:flex;align-items:center;gap:6px;color:var(--text)">
+                <i class="bi bi-graph-up" style="color:var(--success)"></i> القيمة الفعلية
+              </label>
+              <div style="font-size:10px;color:var(--text-muted);margin:-2px 0 6px"><i class="bi bi-info-circle"
+                  style="font-size:9px"></i> القيمة الحالية المحققة</div>
+              <input type="text" class="form-input" id="formActual" placeholder="72%" oninput="updateKpiPreview()">
+            </div>
+            <div class="form-group">
+              <label style="font-weight:700;display:flex;align-items:center;gap:6px;color:var(--text)">
+                <i class="bi bi-flag-fill" style="color:var(--danger)"></i> المستهدف
+              </label>
+              <div style="font-size:10px;color:var(--text-muted);margin:-2px 0 6px"><i class="bi bi-info-circle"
+                  style="font-size:9px"></i> القيمة المطلوب تحقيقها</div>
+              <input type="text" class="form-input" id="formTarget" placeholder="90%" oninput="updateKpiPreview()">
+            </div>
+          </div>
+
+          <!-- الاتجاه ونسبة الإنجاز -->
+          <div class="form-row">
+            <div class="form-group">
+              <label style="font-weight:700;display:flex;align-items:center;gap:6px;color:var(--text)">
+                <i class="bi bi-arrow-up-right" style="color:var(--info)"></i> الاتجاه
+              </label>
+              <div style="font-size:10px;color:var(--text-muted);margin:-2px 0 6px"><i class="bi bi-info-circle"
+                  style="font-size:9px"></i> هل المؤشر في تحسّن أم تراجع؟</div>
+              <select class="form-input" id="formTrend" onchange="updateKpiPreview()">
+                <option value="up">📈 صاعد — في تحسّن مستمر</option>
+                <option value="flat">➡️ مستقر — ثابت بدون تغيير</option>
+                <option value="down">📉 هابط — في تراجع</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label style="font-weight:700;display:flex;align-items:center;gap:6px;color:var(--text)">
+                <i class="bi bi-percent" style="color:#a78bfa"></i> نسبة الإنجاز %
+              </label>
+              <div style="font-size:10px;color:var(--text-muted);margin:-2px 0 6px"><i class="bi bi-info-circle"
+                  style="font-size:9px"></i> نسبة تحقق الفعلي من المستهدف (0-100%)</div>
+              <input type="number" class="form-input" id="formPercent" min="0" max="100" value="0"
+                oninput="updateKpiPreview()">
+              <div style="display:flex;gap:4px;margin-top:5px">
+                <span onclick="document.getElementById('formPercent').value=25;updateKpiPreview()"
+                  style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(239,68,68,0.08);color:var(--danger);cursor:pointer;border:1px solid rgba(239,68,68,0.15);flex:1;text-align:center">25%</span>
+                <span onclick="document.getElementById('formPercent').value=50;updateKpiPreview()"
+                  style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(250,204,21,0.08);color:var(--warning);cursor:pointer;border:1px solid rgba(250,204,21,0.15);flex:1;text-align:center">50%</span>
+                <span onclick="document.getElementById('formPercent').value=75;updateKpiPreview()"
+                  style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(250,204,21,0.08);color:var(--warning);cursor:pointer;border:1px solid rgba(250,204,21,0.15);flex:1;text-align:center">75%</span>
+                <span onclick="document.getElementById('formPercent').value=100;updateKpiPreview()"
+                  style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(34,197,94,0.08);color:var(--success);cursor:pointer;border:1px solid rgba(34,197,94,0.15);flex:1;text-align:center">100%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Preview -->
+          <div
+            style="background:rgba(102,126,234,0.04);border:1px solid rgba(102,126,234,0.12);border-radius:10px;padding:12px;margin-top:4px">
+            <div
+              style="font-size:11px;font-weight:700;color:var(--primary);margin-bottom:6px;display:flex;align-items:center;gap:6px">
+              <i class="bi bi-eye-fill"></i> معاينة المؤشر
+            </div>
+            <div id="kpiPreviewContent" style="font-size:11px;color:var(--text-muted);line-height:1.8">
+              <div style="text-align:center;padding:10px;opacity:0.5"><i class="bi bi-speedometer"
+                  style="font-size:18px;display:block;margin-bottom:4px"></i>أدخل البيانات لرؤية المعاينة</div>
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">الغاء</button>
-          <button type="button" class="btn btn-primary" onclick="saveKPI()">حفظ</button>
+          <button class="btn-modal-cancel" data-bs-dismiss="modal">إلغاء</button>
+          <button class="btn-modal-save" onclick="saveKPI()"><i class="bi bi-check-lg"></i> حفظ</button>
         </div>
       </div>
     </div>
   </div>
 
+  <div class="toast-container" id="toastContainer"></div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="/js/auth.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/sidebar.js"></script>
+    <script src="/js/ai-advisor.js"></script>
   <script>
-    const API_BASE = '/api';
-    let currentPage = 1;
-    const PAGE_SIZE = 10;
-    let kpiModal;
-    let allVersions = [];
-    let allObjectives = [];
+    if (window.StartixAPI?.showEntityBanner) {
+      StartixAPI.showEntityBanner({ toolName: 'مؤشرات الأداء' });
+    }
+  </script>
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = '/login.html';
+    const apiHeaders = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
 
-    // Initialize
-    document.addEventListener('DOMContentLoaded', () => {
-      kpiModal = new bootstrap.Modal(document.getElementById('kpiModal'));
-      loadVersions();
-      loadKPIs();
-    });
+    let currentFilter = 'all';
+    let currentDept = 'all';
+    let activeVersionId = null; // سيُحمّل تلقائياً
+    let isApiMode = false; // هل البيانات من API
 
-    async function loadVersions() {
+    const deptConfig = {
+      'المالية': { icon: '💰', color: '#22c55e' },
+      'التقنية': { icon: '💻', color: '#38bdf8' },
+      'الموارد البشرية': { icon: '👥', color: '#f97316' },
+      'التسويق والعملاء': { icon: '📢', color: '#ec4899' },
+      'العمليات': { icon: '⚙️', color: '#a78bfa' },
+      'الجودة': { icon: '✅', color: '#facc15' },
+    };
+
+    // البيانات التجريبية كـ fallback فقط
+    const DEMO_KPIS = [
+      { id: 'demo-1', name: 'نمو الإيرادات', objective: 'زيادة الإيرادات 20%', actual: '18%', target: '20%', trend: 'up', percent: 90, status: 'good', dept: 'المالية' },
+      { id: 'demo-2', name: 'هامش الربح التشغيلي', objective: 'تحسين هامش الربح', actual: '33%', target: '35%', trend: 'up', percent: 94, status: 'good', dept: 'المالية' },
+      { id: 'demo-3', name: 'رضا العملاء NPS', objective: 'رفع رضا العملاء', actual: '72', target: '90', trend: 'up', percent: 80, status: 'warn', dept: 'التسويق والعملاء' },
+      { id: 'demo-4', name: 'نسبة الأتمتة', objective: 'أتمتة العمليات', actual: '78%', target: '80%', trend: 'up', percent: 97, status: 'good', dept: 'التقنية' },
+    ];
+
+    let kpis = [];
+
+    // ========= تحميل البيانات من الـ API =========
+    async function initFromAPI() {
       try {
-        // Get all entities first to find versions
-        const response = await fetch(`${API_BASE}/entities?limit=1000`, {
-          headers: { 'Authorization': `Bearer ${getToken()}` }
-        });
-        if (!response.ok) throw new Error('Failed to load entities');
-        const data = await response.json();
-        const entities = Array.isArray(data.entities) ? data.entities : [];
+        // 1. تحميل الإصدارات
+        const vRes = await fetch('/api/versions', { headers: apiHeaders });
+        const vData = await vRes.json();
+        const versions = vData.versions || vData || [];
+        const active = versions.find(v => v.isActive || v.status === 'ACTIVE') || versions[0];
+        if (active) activeVersionId = active.id;
 
-        // Collect all versions
-        allVersions = [];
-        if (entities.length > 0) {
-          for (const entity of entities) {
-            if (entity._count?.strategyVersions > 0) {
-              // Just add entity info, we'll fetch versions separately if needed
-              allVersions.push({ entityId: entity.id, entityName: entity.name });
-            }
-          }
-        }
+        // 2. تحميل المؤشرات من الـ API
+        const kRes = await fetch('/api/strategic/kpis?limit=100' + (activeVersionId ? '&versionId=' + activeVersionId : ''), { headers: apiHeaders });
+        const kData = await kRes.json();
+        const apiKpis = kData.kpis || [];
 
-        // Populate version dropdown (simplified - using entity names)
-        const versionSelect = document.getElementById('kpiVersion');
-        versionSelect.innerHTML = '<option value="">اختر...</option>';
-        if (entities.length > 0) {
-          entities.forEach(entity => {
-            if (entity._count?.strategyVersions > 0) {
-              const option = document.createElement('option');
-              option.value = entity.id;
-              option.textContent = `${entity.name}`;
-              versionSelect.appendChild(option);
-            }
+        if (apiKpis.length > 0) {
+          // حوّل بيانات الـ API لنفس الشكل المستخدم بالصفحة
+          kpis = apiKpis.map(k => {
+            const targetVal = k.target || 0;
+            const actualVal = k.actual != null ? k.actual : 0;
+            const percent = targetVal > 0 ? Math.round((actualVal / targetVal) * 100) : 0;
+            return {
+              id: k.id,
+              name: k.nameAr || k.name,
+              objective: k.objective?.title || k.description || '',
+              actual: k.actual != null ? String(k.actual) + (k.unit || '') : '-',
+              target: String(k.target) + (k.unit || ''),
+              trend: percent >= 80 ? 'up' : percent >= 50 ? 'flat' : 'down',
+              percent,
+              status: getStatus(percent),
+              dept: getBscDept(k.bscPerspective) || 'التقنية',
+              _apiId: k.id,
+              _raw: k,
+            };
           });
+          isApiMode = true;
+          console.log('[KPIs] تم تحميل', kpis.length, 'مؤشر من الـ API');
+        } else {
+          // لا توجد مؤشرات — عرض بيانات تجريبية + تنبيه
+          kpis = DEMO_KPIS;
+          isApiMode = false;
+          console.log('[KPIs] لا مؤشرات بالـ API — عرض بيانات تجريبية');
         }
-      } catch (error) {
-        console.error('Error loading versions:', error);
+      } catch (e) {
+        console.error('[KPIs] خطأ في التحميل:', e);
+        kpis = DEMO_KPIS;
+        isApiMode = false;
+      }
+      renderAll();
+      // إذا بيانات تجريبية، أظهر تنبيه
+      if (!isApiMode) {
+        setTimeout(() => showDemoBanner(), 300);
       }
     }
 
-    async function loadObjectives() {
-      const versionId = document.getElementById('kpiVersion').value;
-      if (!versionId) {
-        document.getElementById('kpiObjective').innerHTML = '<option value="">بدون هدف</option>';
-        return;
-      }
+    function getBscDept(bsc) {
+      const map = {
+        'FINANCIAL': 'المالية',
+        'CUSTOMER': 'التسويق والعملاء',
+        'INTERNAL_PROCESS': 'العمليات',
+        'LEARNING_GROWTH': 'الموارد البشرية',
+      };
+      return map[bsc] || null;
+    }
 
-      try {
-        // Get objectives for this version
-        const response = await fetch(`${API_BASE}/strategic/objectives?versionId=${versionId}&limit=1000`, {
-          headers: { 'Authorization': `Bearer ${getToken()}` }
-        });
-        if (!response.ok) throw new Error('Failed to load objectives');
-        const data = await response.json();
-        allObjectives = Array.isArray(data.objectives) ? data.objectives : [];
+    function showDemoBanner() {
+      const container = document.querySelector('.main-content');
+      if (!container || document.getElementById('demoBanner')) return;
+      const banner = document.createElement('div');
+      banner.id = 'demoBanner';
+      banner.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 20px;margin-bottom:16px;border-radius:14px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);animation:stxFadeIn .3s ease';
+      banner.innerHTML = `
+        <div style="font-size:22px">⚠️</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:800;color:#f59e0b">بيانات تجريبية — غير محفوظة</div>
+          <div style="font-size:11px;color:var(--text-muted)">هذه بيانات عرض للتوضيح. للحفظ بقاعدة البيانات: أنشئ إصدار استراتيجي أولاً ثم أضف مؤشرات حقيقية.</div>
+        </div>
+        <a href="/versions" style="padding:6px 14px;border-radius:8px;background:#f59e0b;color:#000;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap">أنشئ إصدار ←</a>
+      `;
+      const ph = container.querySelector('.page-header');
+      if (ph && ph.nextSibling) container.insertBefore(banner, ph.nextSibling);
+      else container.prepend(banner);
+    }
 
-        const objectiveSelect = document.getElementById('kpiObjective');
-        objectiveSelect.innerHTML = '<option value="">بدون هدف</option>';
-        if (allObjectives.length > 0) {
-          allObjectives.forEach(obj => {
-            const option = document.createElement('option');
-            option.value = obj.id;
-            option.textContent = obj.title;
-            objectiveSelect.appendChild(option);
-          });
+    function getStatus(p) { return p >= 80 ? 'good' : p >= 50 ? 'warn' : 'bad'; }
+    function getStatusLabel(s) { return { good: 'ممتاز', warn: 'تحذير', bad: 'ضعيف' }[s]; }
+    function getTrendIcon(t) { return { up: 'bi-arrow-up-short', down: 'bi-arrow-down-short', flat: 'bi-dash' }[t]; }
+    function getTrendLabel(t) { return { up: 'صاعد', down: 'هابط', flat: 'مستقر' }[t]; }
+
+    function getFiltered() {
+      let data = kpis;
+      if (currentDept !== 'all') data = data.filter(k => k.dept === currentDept);
+      if (currentFilter !== 'all') data = data.filter(k => k.status === currentFilter);
+      return data;
+    }
+
+    function filterKPIs(f, el) {
+      currentFilter = f;
+      document.querySelectorAll('.filter-bar .filter-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      renderAll();
+    }
+
+    function filterByDept(dept, el) {
+      currentDept = dept;
+      document.querySelectorAll('#deptFilterBar .filter-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      renderAll();
+    }
+
+    function renderStats() {
+      const data = currentDept === 'all' ? kpis : kpis.filter(k => k.dept === currentDept);
+      document.getElementById('sTotal').textContent = data.length;
+      document.getElementById('sGood').textContent = data.filter(k => k.status === 'good').length;
+      document.getElementById('sWarn').textContent = data.filter(k => k.status === 'warn').length;
+      document.getElementById('sBad').textContent = data.filter(k => k.status === 'bad').length;
+      const avg = data.length ? Math.round(data.reduce((s, k) => s + k.percent, 0) / data.length) : 0;
+      document.getElementById('sAvg').textContent = avg + '%';
+    }
+
+    // === Smart Recommendations Engine ===
+    function getDeptRecommendations(dept, items) {
+      const recs = [];
+      const strengths = items.filter(k => k.status === 'good');
+      const weaknesses = items.filter(k => k.status === 'bad');
+      const warnings = items.filter(k => k.status === 'warn');
+      const declining = items.filter(k => k.trend === 'down');
+      const improving = items.filter(k => k.trend === 'up');
+      const avg = Math.round(items.reduce((s, k) => s + k.percent, 0) / items.length);
+
+      // Declining KPIs — urgent
+      declining.forEach(k => {
+        recs.push({ type: 'danger', icon: '🚨', title: `${k.name} في تراجع!`, desc: `المؤشر حالياً ${k.actual} مقابل مستهدف ${k.target} — يحتاج تدخّل فوري وخطة تصحيحية عاجلة.`, priority: 1 });
+      });
+
+      // Bad KPIs
+      weaknesses.forEach(k => {
+        if (k.trend !== 'down') {
+          recs.push({ type: 'warning', icon: '⚠️', title: `${k.name} دون المستهدف بكثير`, desc: `الإنجاز ${k.percent}% فقط — خصص موارد إضافية أو أعد تقييم المستهدف.`, priority: 2 });
         }
-      } catch (error) {
-        console.error('Error loading objectives:', error);
+      });
+
+      // Warnings near target
+      warnings.filter(k => k.percent >= 70).forEach(k => {
+        recs.push({ type: 'info', icon: '💡', title: `${k.name} قريب من المستهدف`, desc: `الإنجاز ${k.percent}% — دفعة صغيرة كافية للوصول. ركّز الجهود هنا للفوز السريع!`, priority: 3 });
+      });
+
+      // Strengths to leverage
+      if (strengths.length > 0 && weaknesses.length > 0) {
+        recs.push({ type: 'success', icon: '🔗', title: 'استفد من نقاط القوة لمعالجة الضعف', desc: `لديك ${strengths.length} مؤشرات قوية — استخدم نفس الممارسات والفريق لتحسين المؤشرات الضعيفة.`, priority: 4 });
       }
+
+      // Overall health
+      if (avg < 50) {
+        recs.push({ type: 'danger', icon: '🔴', title: `أداء ${dept} يحتاج مراجعة شاملة`, desc: `المعدل العام ${avg}% — يُنصح بعقد اجتماع طارئ لمراجعة الاستراتيجية وإعادة توزيع الموارد.`, priority: 0 });
+      } else if (avg >= 85) {
+        recs.push({ type: 'success', icon: '🏆', title: `أداء ${dept} متميز!`, desc: `المعدل ${avg}% — حافظ على هذا المستوى وشارك أفضل الممارسات مع الإدارات الأخرى.`, priority: 5 });
+      }
+
+      // All improving
+      if (improving.length === items.length && items.length > 1) {
+        recs.push({ type: 'success', icon: '📈', title: 'جميع المؤشرات في تحسّن!', desc: 'الاتجاه إيجابي لكل المؤشرات — استمر في نفس النهج.', priority: 5 });
+      }
+
+      return recs.sort((a, b) => a.priority - b.priority);
     }
 
-    async function loadKPIs(page = 1) {
-      try {
-        currentPage = page;
-        const search = document.getElementById('searchInput').value;
-        const status = document.getElementById('statusFilter').value;
+    function renderTable() {
+      const data = getFiltered();
+      const container = document.getElementById('kpiGroupedView');
 
-        let url = `${API_BASE}/strategic/kpis?page=${page}&limit=${PAGE_SIZE}`;
-        if (search) url += `&search=${encodeURIComponent(search)}`;
-        if (status) url += `&status=${status}`;
+      // Group by department
+      const groups = {};
+      data.forEach(k => {
+        if (!groups[k.dept]) groups[k.dept] = [];
+        groups[k.dept].push(k);
+      });
 
-        const response = await fetch(url, {
-          headers: { 'Authorization': `Bearer ${getToken()}` }
-        });
+      const deptOrder = ['المالية', 'التسويق والعملاء', 'التقنية', 'العمليات', 'الموارد البشرية', 'الجودة'];
+      const sortedDepts = deptOrder.filter(d => groups[d]);
+      Object.keys(groups).forEach(d => { if (!sortedDepts.includes(d)) sortedDepts.push(d); });
 
-        if (!response.ok) throw new Error('Failed to load KPIs');
+      let html = '';
 
-        const data = await response.json();
-        renderKPIs(data.kpis || []);
-        renderPagination(data.totalPages || 1, page);
-        updatePaginationInfo(data.total || 0, page, PAGE_SIZE);
-      } catch (error) {
-        alert('خطأ: ' + error.message);
-      }
-    }
+      sortedDepts.forEach((dept, dIdx) => {
+        const items = groups[dept];
+        const cfg = deptConfig[dept] || { icon: '🏢', color: '#667eea' };
+        const deptAvg = Math.round(items.reduce((s, k) => s + k.percent, 0) / items.length);
+        const deptStatus = deptAvg >= 80 ? 'good' : deptAvg >= 50 ? 'warn' : 'bad';
+        const statusColor = { good: '#22c55e', warn: '#facc15', bad: '#ef4444' }[deptStatus];
+        const statusLabel = { good: 'ممتاز', warn: 'متوسط', bad: 'ضعيف' }[deptStatus];
 
-    function renderKPIs(kpis) {
-      const container = document.getElementById('kpisContainer');
-      // Ensure kpis is an array
-      if (!Array.isArray(kpis) || kpis.length === 0) {
-        container.innerHTML = '<div class="col-12 text-center text-muted">لا توجد مؤشرات</div>';
-        return;
-      }
+        const strengths = items.filter(k => k.status === 'good');
+        const weaknesses = items.filter(k => k.status === 'bad');
+        const warnings = items.filter(k => k.status === 'warn');
+        const declining = items.filter(k => k.trend === 'down');
+        const improving = items.filter(k => k.trend === 'up');
+        const recs = getDeptRecommendations(dept, items);
+        const panelId = 'analysis_' + dIdx;
 
-      container.innerHTML = kpis.map(kpi => {
-        const progress = kpi.actual ? Math.min((kpi.actual / kpi.target) * 100, 100) : 0;
-        const progressColor = kpi.status === 'ON_TRACK' ? 'success' : kpi.status === 'AT_RISK' ? 'warning' : 'danger';
+        // Health gauge angle (0-180)
+        const gaugeAngle = Math.round((deptAvg / 100) * 180);
 
-        return `
-          <div class="col-md-6 col-lg-4 mb-3">
-            <div class="card kpi-card h-100">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                  <h6 class="card-title mb-0">${kpi.name}</h6>
-                  <span class="status-badge status-${kpi.status.toLowerCase()}">${getStatusLabel(kpi.status)}</span>
-                </div>
-                
-                ${kpi.nameAr ? `<small class="text-muted">${kpi.nameAr}</small><br>` : ''}
-                
-                <small class="text-muted">${kpi.objective?.title || 'بدون هدف'}</small>
-                
-                <div class="mt-3">
-                  <div class="d-flex justify-content-between mb-1">
-                    <span class="small">${kpi.target} ${kpi.unit}</span>
-                    <span class="small"><strong>${kpi.actual || 0} ${kpi.unit}</strong></span>
+        html += `
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:0;margin-bottom:20px;overflow:hidden">
+            <!-- Department Header -->
+            <div style="padding:16px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.015)">
+              <div style="width:40px;height:40px;border-radius:12px;background:${cfg.color}15;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${cfg.icon}</div>
+              <div style="flex:1">
+                <div style="font-size:15px;font-weight:800;color:var(--text)">${dept}</div>
+                <div style="font-size:11px;color:var(--text-muted)">${items.length} مؤشر · معدل ${deptAvg}% · ${strengths.length} قوي · ${weaknesses.length} ضعيف</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div style="width:60px;height:6px;border-radius:3px;background:rgba(255,255,255,0.06);overflow:hidden">
+                    <div style="height:100%;width:${deptAvg}%;background:${statusColor};border-radius:3px;transition:width 0.5s"></div>
                   </div>
-                  <div class="progress" style="height: 6px;">
-                    <div class="progress-bar bg-${progressColor}" style="width: ${progress}%"></div>
-                  </div>
+                  <span style="font-size:12px;font-weight:800;color:${statusColor}">${deptAvg}%</span>
                 </div>
-
-                <div class="mt-3">
-                  <button class="btn btn-sm btn-outline-primary" onclick="editKPI('${kpi.id}')">
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <button class="btn btn-sm btn-outline-danger" onclick="deleteKPI('${kpi.id}', '${kpi.name}')">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </div>
+                <button onclick="toggleAnalysis('${panelId}')" style="padding:6px 14px;border-radius:8px;background:${cfg.color}15;border:1px solid ${cfg.color}30;color:${cfg.color};font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;transition:all 0.2s;white-space:nowrap" onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform=''">
+                  <i class="bi bi-graph-up"></i> تحليل الإدارة
+                </button>
               </div>
             </div>
+
+            <!-- Department Analysis Panel (hidden by default) -->
+            <div id="${panelId}" style="display:none;border-bottom:1px solid var(--border)">
+              <div style="padding:20px;background:linear-gradient(180deg,rgba(${cfg.color === '#22c55e' ? '34,197,94' : cfg.color === '#38bdf8' ? '56,189,248' : cfg.color === '#f97316' ? '249,115,22' : cfg.color === '#ec4899' ? '236,72,153' : cfg.color === '#a78bfa' ? '167,139,250' : cfg.color === '#facc15' ? '250,204,21' : '102,126,234'},0.03),transparent)">
+
+                <!-- Top Row: Gauge + Summary -->
+                <div style="display:grid;grid-template-columns:180px 1fr;gap:20px;margin-bottom:20px">
+                  <!-- Health Gauge -->
+                  <div style="text-align:center">
+                    <div style="position:relative;width:140px;height:80px;margin:0 auto 8px;overflow:hidden">
+                      <div style="position:absolute;bottom:0;width:140px;height:70px;border-radius:70px 70px 0 0;background:rgba(255,255,255,0.04);border:3px solid var(--border);border-bottom:none"></div>
+                      <div style="position:absolute;bottom:0;width:140px;height:70px;border-radius:70px 70px 0 0;border:4px solid transparent;border-bottom:none;border-image:conic-gradient(${statusColor} ${gaugeAngle}deg, transparent 0deg) 1;clip-path:inset(0 0 0 0)"></div>
+                      <div style="position:absolute;bottom:4px;width:100%;text-align:center">
+                        <div style="font-size:28px;font-weight:900;color:${statusColor};line-height:1">${deptAvg}%</div>
+                        <div style="font-size:10px;color:var(--text-muted);font-weight:600">${statusLabel}</div>
+                      </div>
+                    </div>
+                    <div style="font-size:11px;font-weight:700;color:var(--text-muted)">صحة الإدارة</div>
+                  </div>
+
+                  <!-- Quick Summary Cards -->
+                  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+                    <div style="padding:12px;border-radius:10px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15);text-align:center">
+                      <div style="font-size:22px;font-weight:900;color:#22c55e">${strengths.length}</div>
+                      <div style="font-size:10px;color:#22c55e;font-weight:700">💪 نقاط قوة</div>
+                    </div>
+                    <div style="padding:12px;border-radius:10px;background:rgba(250,204,21,0.06);border:1px solid rgba(250,204,21,0.15);text-align:center">
+                      <div style="font-size:22px;font-weight:900;color:#facc15">${warnings.length}</div>
+                      <div style="font-size:10px;color:#facc15;font-weight:700">⚡ تحتاج متابعة</div>
+                    </div>
+                    <div style="padding:12px;border-radius:10px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);text-align:center">
+                      <div style="font-size:22px;font-weight:900;color:#ef4444">${weaknesses.length}</div>
+                      <div style="font-size:10px;color:#ef4444;font-weight:700">🩸 نقاط ضعف</div>
+                    </div>
+                    <div style="padding:12px;border-radius:10px;background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.15);text-align:center">
+                      <div style="font-size:22px;font-weight:900;color:#38bdf8">${improving.length}/${items.length}</div>
+                      <div style="font-size:10px;color:#38bdf8;font-weight:700">📈 في تحسّن</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Strengths & Weaknesses -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+                  <!-- Strengths -->
+                  <div style="background:rgba(34,197,94,0.04);border:1px solid rgba(34,197,94,0.12);border-radius:12px;padding:14px">
+                    <div style="font-size:13px;font-weight:800;color:#22c55e;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+                      <span style="font-size:16px">💪</span> نقاط القوة
+                    </div>
+                    ${strengths.length ? strengths.map(k => `
+                      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:rgba(34,197,94,0.06);margin-bottom:6px">
+                        <div style="width:6px;height:6px;border-radius:50%;background:#22c55e;flex-shrink:0"></div>
+                        <div style="flex:1;font-size:12px;font-weight:700;color:var(--text)">${k.name}</div>
+                        <span style="font-size:11px;font-weight:800;color:#22c55e">${k.percent}%</span>
+                        <span style="font-size:10px;color:var(--text-muted)">${k.actual} / ${k.target}</span>
+                      </div>
+                    `).join('') : '<div style="font-size:11px;color:var(--text-muted);text-align:center;padding:12px;opacity:0.6">لا توجد مؤشرات في المستوى الممتاز بعد</div>'}
+                    ${strengths.length ? `<div style="font-size:10px;color:#22c55e;margin-top:8px;padding:8px;border-radius:6px;background:rgba(34,197,94,0.06)">
+                      <strong>✨ تحليل:</strong> ${strengths.length === items.length ? 'جميع المؤشرات في حالة ممتازة! الإدارة تعمل بكفاءة عالية.' : `${strengths.length} من ${items.length} مؤشرات تتجاوز 80% — أساس قوي يمكن البناء عليه.`}
+                    </div>` : ''}
+                  </div>
+
+                  <!-- Weaknesses -->
+                  <div style="background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.12);border-radius:12px;padding:14px">
+                    <div style="font-size:13px;font-weight:800;color:#ef4444;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+                      <span style="font-size:16px">🩸</span> نقاط الضعف
+                    </div>
+                    ${weaknesses.length ? weaknesses.map(k => `
+                      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:rgba(239,68,68,0.06);margin-bottom:6px">
+                        <div style="width:6px;height:6px;border-radius:50%;background:#ef4444;flex-shrink:0"></div>
+                        <div style="flex:1;font-size:12px;font-weight:700;color:var(--text)">${k.name}</div>
+                        <span style="font-size:11px;font-weight:800;color:#ef4444">${k.percent}%</span>
+                        <span style="font-size:10px;color:var(--text-muted)">${k.actual} / ${k.target}</span>
+                      </div>
+                    `).join('') : '<div style="font-size:11px;color:var(--text-muted);text-align:center;padding:12px;opacity:0.6">🎉 لا توجد نقاط ضعف — ممتاز!</div>'}
+                    ${weaknesses.length ? `<div style="font-size:10px;color:#ef4444;margin-top:8px;padding:8px;border-radius:6px;background:rgba(239,68,68,0.06)">
+                      <strong>⚠️ تحليل:</strong> ${weaknesses.length} مؤشرات أقل من 50% — تحتاج خطط تصحيحية عاجلة وتخصيص موارد إضافية.
+                    </div>` : ''}
+                  </div>
+                </div>
+
+                <!-- Warning Areas -->
+                ${warnings.length ? `
+                <div style="background:rgba(250,204,21,0.04);border:1px solid rgba(250,204,21,0.12);border-radius:12px;padding:14px;margin-bottom:16px">
+                  <div style="font-size:13px;font-weight:800;color:#facc15;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+                    <span style="font-size:16px">⚡</span> مناطق التحذير — تحتاج متابعة
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">
+                    ${warnings.map(k => `
+                      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:rgba(250,204,21,0.05);border:1px solid rgba(250,204,21,0.1)">
+                        <div style="flex:1">
+                          <div style="font-size:11px;font-weight:700;color:var(--text)">${k.name}</div>
+                          <div style="font-size:10px;color:var(--text-muted)">${k.actual} / ${k.target}</div>
+                        </div>
+                        <div style="text-align:center">
+                          <div style="font-size:13px;font-weight:800;color:#facc15">${k.percent}%</div>
+                          <div style="font-size:9px;color:var(--text-muted)">${k.trend === 'up' ? '📈' : k.trend === 'down' ? '📉' : '➡️'}</div>
+                        </div>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>` : ''}
+
+                <!-- Trend Analysis -->
+                <div style="background:rgba(56,189,248,0.04);border:1px solid rgba(56,189,248,0.12);border-radius:12px;padding:14px;margin-bottom:16px">
+                  <div style="font-size:13px;font-weight:800;color:#38bdf8;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+                    <span style="font-size:16px">📊</span> تحليل الاتجاهات
+                  </div>
+                  <div style="display:flex;gap:12px;flex-wrap:wrap">
+                    <div style="flex:1;min-width:120px;padding:10px;border-radius:8px;background:rgba(34,197,94,0.05);text-align:center">
+                      <div style="font-size:18px;font-weight:900;color:#22c55e">${improving.length}</div>
+                      <div style="font-size:10px;color:#22c55e;font-weight:600">📈 صاعد</div>
+                      <div style="font-size:9px;color:var(--text-muted);margin-top:2px">${improving.map(k => k.name).join('، ') || '—'}</div>
+                    </div>
+                    <div style="flex:1;min-width:120px;padding:10px;border-radius:8px;background:rgba(148,163,184,0.05);text-align:center">
+                      <div style="font-size:18px;font-weight:900;color:var(--text-muted)">${items.filter(k => k.trend === 'flat').length}</div>
+                      <div style="font-size:10px;color:var(--text-muted);font-weight:600">➡️ مستقر</div>
+                      <div style="font-size:9px;color:var(--text-muted);margin-top:2px">${items.filter(k => k.trend === 'flat').map(k => k.name).join('، ') || '—'}</div>
+                    </div>
+                    <div style="flex:1;min-width:120px;padding:10px;border-radius:8px;background:rgba(239,68,68,0.05);text-align:center">
+                      <div style="font-size:18px;font-weight:900;color:#ef4444">${declining.length}</div>
+                      <div style="font-size:10px;color:#ef4444;font-weight:600">📉 هابط</div>
+                      <div style="font-size:9px;color:var(--text-muted);margin-top:2px">${declining.map(k => k.name).join('، ') || '—'}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Smart Recommendations -->
+                ${recs.length ? `
+                <div style="background:rgba(167,139,250,0.04);border:1px solid rgba(167,139,250,0.12);border-radius:12px;padding:14px">
+                  <div style="font-size:13px;font-weight:800;color:#a78bfa;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+                    <span style="font-size:16px">🤖</span> توصيات ذكية
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:8px">
+                    ${recs.map(r => {
+          const recColors = { danger: { bg: 'rgba(239,68,68,0.06)', border: 'rgba(239,68,68,0.15)', color: '#ef4444' }, warning: { bg: 'rgba(250,204,21,0.06)', border: 'rgba(250,204,21,0.15)', color: '#facc15' }, info: { bg: 'rgba(56,189,248,0.06)', border: 'rgba(56,189,248,0.15)', color: '#38bdf8' }, success: { bg: 'rgba(34,197,94,0.06)', border: 'rgba(34,197,94,0.15)', color: '#22c55e' } };
+          const rc = recColors[r.type] || recColors.info;
+          return `<div style="padding:10px 14px;border-radius:10px;background:${rc.bg};border:1px solid ${rc.border};display:flex;align-items:flex-start;gap:10px">
+                        <span style="font-size:18px;flex-shrink:0;margin-top:2px">${r.icon}</span>
+                        <div>
+                          <div style="font-size:12px;font-weight:800;color:${rc.color}">${r.title}</div>
+                          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;line-height:1.6">${r.desc}</div>
+                        </div>
+                      </div>`;
+        }).join('')}
+                  </div>
+                </div>` : ''}
+
+              </div>
+            </div>
+
+            <!-- KPI Table -->
+            <table class="kpi-table" style="margin:0;border-radius:0">
+              <thead>
+                <tr>
+                  <th style="width:30%">المؤشر</th>
+                  <th>الفعلي</th>
+                  <th>المستهدف</th>
+                  <th>الاتجاه</th>
+                  <th style="width:15%">الإنجاز</th>
+                  <th>الحالة</th>
+                  <th>إجراء</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${items.map(k => `
+                  <tr class="kpi-row">
+                    <td>
+                      <div class="kpi-name-cell">
+                        <div class="kpi-indicator ${k.status}"></div>
+                        <div>
+                          <div class="kpi-name">${k.name}</div>
+                          <div class="kpi-objective"><i class="bi bi-bullseye"></i> ${k.objective}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td><span class="kpi-value ${k.status}">${k.actual}</span></td>
+                    <td><span class="kpi-target">${k.target}</span></td>
+                    <td><span class="kpi-trend ${k.trend}"><i class="bi ${getTrendIcon(k.trend)}"></i> ${getTrendLabel(k.trend)}</span></td>
+                    <td class="kpi-bar-cell">
+                      <div class="kpi-bar"><div class="kpi-bar-fill ${k.status}" style="width:${k.percent}%"></div></div>
+                      <div class="kpi-percent">${k.percent}%</div>
+                    </td>
+                    <td><span class="kpi-status-badge ${k.status}">${getStatusLabel(k.status)}</span></td>
+                    <td>
+                      <div class="kpi-actions">
+                        <button class="kpi-btn edit" onclick="openEditModal('${k.id}')"><i class="bi bi-pencil"></i></button>
+                        <button class="kpi-btn del" onclick="deleteKPI('${k.id}')"><i class="bi bi-trash3"></i></button>
+                      </div>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>`;
+      });
+
+      if (!data.length) {
+        html = `<div style="text-align:center;padding:60px;color:var(--text-muted)">
+          <i class="bi bi-speedometer2" style="font-size:48px;opacity:0.3;display:block;margin-bottom:12px"></i>
+          <div style="font-size:15px;font-weight:700">لا توجد مؤشرات</div>
+          <div style="font-size:12px;margin-top:4px">أضف مؤشرات أداء لمتابعة تقدم أهدافك الاستراتيجية</div>
+        </div>`;
+      }
+
+      container.innerHTML = html;
+    }
+
+    function toggleAnalysis(id) {
+      const panel = document.getElementById(id);
+      if (!panel) return;
+      const isVisible = panel.style.display !== 'none';
+      panel.style.display = isVisible ? 'none' : 'block';
+      if (!isVisible) {
+        panel.style.animation = 'fadeSlideIn 0.4s ease';
+        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    function renderReadiness() {
+      const banner = document.getElementById('kpiReadinessBanner');
+      if (!kpis.length) { banner.innerHTML = ''; return; }
+
+      // Check coverage
+      const depts = [...new Set(kpis.map(k => k.dept))];
+      const totalKpis = kpis.length;
+      const goodKpis = kpis.filter(k => k.status === 'good').length;
+      const avgPercent = Math.round(kpis.reduce((s, k) => s + k.percent, 0) / kpis.length);
+      const isReady = totalKpis >= 6 && depts.length >= 3;
+
+      let html = `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:22px">
+        <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px">
+          📋 جاهزية المؤشرات
+          <span style="font-size:12px;padding:3px 12px;border-radius:12px;font-weight:700;background:${isReady ? 'rgba(34,197,94,0.15);color:#22c55e' : 'rgba(245,158,11,0.15);color:#f59e0b'}">${totalKpis} مؤشر · ${depts.length} إدارات · معدل ${avgPercent}%</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px">`;
+
+      Object.keys(deptConfig).forEach(dept => {
+        const cfg = deptConfig[dept];
+        const count = kpis.filter(k => k.dept === dept).length;
+        const has = count > 0;
+        html += `<div style="padding:10px 14px;border-radius:10px;border:1px solid ${has ? cfg.color + '30' : 'var(--border)'};background:${has ? cfg.color + '08' : 'transparent'};display:flex;align-items:center;gap:8px">
+          <span style="font-size:16px">${cfg.icon}</span>
+          <div style="flex:1">
+            <div style="font-size:11px;font-weight:700;color:${has ? cfg.color : 'var(--text-muted)'}">${dept}</div>
+            <div style="font-size:10px;color:var(--text-muted)">${count} مؤشر</div>
           </div>
-        `;
-      }).join('');
-    }
+          <span style="font-size:14px">${has ? '✅' : '⭕'}</span>
+        </div>`;
+      });
 
-    function renderPagination(totalPages, currentPage) {
-      const controls = document.getElementById('paginationControls');
-      controls.innerHTML = '';
+      html += '</div>';
 
-      if (currentPage > 1) {
-        controls.innerHTML += `<li class="page-item"><a class="page-link" href="#" onclick="loadKPIs(${currentPage - 1}); return false;">السابق</a></li>`;
+      if (isReady) {
+        html += `<div style="background:linear-gradient(135deg,rgba(34,197,94,0.1),rgba(102,126,234,0.08));border:2px solid rgba(34,197,94,0.25);border-radius:14px;padding:18px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          <div style="width:44px;height:44px;border-radius:12px;background:rgba(34,197,94,0.15);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🚀</div>
+          <div style="flex:1;min-width:200px">
+            <div style="font-size:15px;font-weight:800;color:#22c55e">ممتاز! المؤشرات جاهزة 🎉</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">الآن حدد المبادرات والمشاريع التنفيذية لتحقيق هذه المؤشرات</div>
+          </div>
+          <a href="/initiatives.html" style="padding:12px 28px;border-radius:12px;background:linear-gradient(135deg,#22c55e,#059669);color:white;text-decoration:none;font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;white-space:nowrap;box-shadow:0 4px 15px rgba(34,197,94,0.3);transition:all 0.3s" onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform=''">
+            <i class="bi bi-rocket-takeoff"></i> انتقل للمبادرات ←
+          </a>
+        </div>`;
+      } else {
+        const missing = [];
+        if (totalKpis < 6) missing.push(`أضف ${6 - totalKpis} مؤشرات أخرى (الحد الأدنى 6)`);
+        if (depts.length < 3) missing.push(`غطّ ${3 - depts.length} إدارات أخرى (الحد الأدنى 3)`);
+        html += `<div style="background:rgba(245,158,11,0.04);border:2px dashed rgba(245,158,11,0.2);border-radius:14px;padding:18px 22px">
+          <div style="font-size:13px;font-weight:800;color:#f59e0b;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+            <span style="font-size:20px">⏳</span> أكمل المتطلبات للانتقال لمرحلة المبادرات:
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            ${missing.map(m => `<div style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px"><span style="color:#f59e0b">●</span> ${m}</div>`).join('')}
+          </div>
+          <button onclick="openCreateModal()" style="margin-top:12px;padding:10px 20px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--secondary));color:white;border:none;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px">
+            <i class="bi bi-plus-circle"></i> أضف مؤشر جديد
+          </button>
+        </div>`;
       }
 
-      for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
-        controls.innerHTML += `<li class="page-item ${i === currentPage ? 'active' : ''}"><a class="page-link" href="#" onclick="loadKPIs(${i}); return false;">${i}</a></li>`;
-      }
-
-      if (currentPage < totalPages) {
-        controls.innerHTML += `<li class="page-item"><a class="page-link" href="#" onclick="loadKPIs(${currentPage + 1}); return false;">التالي</a></li>`;
-      }
+      html += '</div>';
+      banner.innerHTML = html;
     }
 
-    function updatePaginationInfo(total, page, pageSize) {
-      const start = (page - 1) * pageSize + 1;
-      const end = Math.min(page * pageSize, total);
-      document.getElementById('paginationInfo').textContent = `${start}-${end} من ${total}`;
+    function renderAll() { renderStats(); renderTable(); renderReadiness(); }
+
+    // ===== KPI TEMPLATES =====
+    const kpiTemplates = [
+      { name: 'نمو الإيرادات', objective: 'زيادة الإيرادات السنوية', actual: '18%', target: '20%', trend: 'up', percent: 90 },
+      { name: 'رضا العملاء NPS', objective: 'رفع مستوى رضا العملاء', actual: '72', target: '90', trend: 'up', percent: 80 },
+      { name: 'نسبة الأتمتة', objective: 'أتمتة العمليات التشغيلية', actual: '78%', target: '80%', trend: 'up', percent: 97 },
+      { name: 'معدل الاحتفاظ بالموظفين', objective: 'تطوير وتمكين الكوادر', actual: '85%', target: '92%', trend: 'flat', percent: 92 },
+      { name: 'الامتثال لمعايير الجودة', objective: 'تطبيق معايير ISO 9001', actual: '65%', target: '100%', trend: 'up', percent: 65 },
+      { name: 'أفكار مبتكرة مقدمة', objective: 'تعزيز ثقافة الابتكار', actual: '15', target: '30', trend: 'flat', percent: 50 },
+    ];
+
+    function fillKpiTpl(i) {
+      const t = kpiTemplates[i]; if (!t) return;
+      document.getElementById('formName').value = t.name;
+      document.getElementById('formObj').value = t.objective;
+      document.getElementById('formActual').value = t.actual;
+      document.getElementById('formTarget').value = t.target;
+      document.getElementById('formTrend').value = t.trend;
+      document.getElementById('formPercent').value = t.percent;
+      document.querySelectorAll('.kpi-tpl').forEach((el, idx) => {
+        el.style.boxShadow = idx === i ? '0 0 0 2px var(--primary)' : '';
+      });
+      updateKpiPreview();
     }
 
-    function getStatusLabel(status) {
-      const labels = {
-        'ON_TRACK': 'على المسار',
-        'AT_RISK': 'تحت المراقبة',
-        'OFF_TRACK': 'خارج المسار'
-      };
-      return labels[status] || status;
+    // ===== LIVE PREVIEW =====
+    function updateKpiPreview() {
+      const name = document.getElementById('formName').value.trim();
+      const obj = document.getElementById('formObj').value.trim();
+      const actual = document.getElementById('formActual').value.trim();
+      const target = document.getElementById('formTarget').value.trim();
+      const trend = document.getElementById('formTrend').value;
+      const percent = parseInt(document.getElementById('formPercent').value) || 0;
+      const el = document.getElementById('kpiPreviewContent');
+      if (!name) { el.innerHTML = '<div style="text-align:center;padding:10px;opacity:0.5"><i class="bi bi-speedometer" style="font-size:18px;display:block;margin-bottom:4px"></i>أدخل البيانات لرؤية المعاينة</div>'; return; }
+      const st = percent >= 80 ? 'good' : percent >= 50 ? 'warn' : 'bad';
+      const stColor = { good: 'var(--success)', warn: 'var(--warning)', bad: 'var(--danger)' }[st];
+      const stLabel = { good: 'ممتاز', warn: 'تحذير', bad: 'ضعيف' }[st];
+      const trIcon = { up: 'bi-arrow-up-short', down: 'bi-arrow-down-short', flat: 'bi-dash' }[trend];
+      const trColor = { up: 'var(--success)', down: 'var(--danger)', flat: 'var(--text-muted)' }[trend];
+      const trLabel = { up: 'صاعد', down: 'هابط', flat: 'مستقر' }[trend];
+      el.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <div style="width:4px;height:36px;border-radius:4px;background:${stColor}"></div>
+          <div style="flex:1"><div style="font-weight:800;font-size:13px;color:var(--text)">${name}</div><div style="font-size:10px;color:var(--text-muted)"><i class="bi bi-bullseye"></i> ${obj || '—'}</div></div>
+          <span style="font-size:9px;padding:2px 8px;border-radius:6px;background:${stColor}12;color:${stColor};font-weight:700">${stLabel}</span>
+        </div>
+        <div style="display:flex;gap:12px;margin-bottom:6px;font-size:11px">
+          <span><span style="font-weight:800;font-size:16px;color:${stColor}">${actual || '—'}</span> <span style="color:var(--text-muted)">فعلي</span></span>
+          <span><span style="font-weight:700;color:var(--text-muted)">${target || '—'}</span> <span style="color:var(--text-muted)">مستهدف</span></span>
+          <span style="color:${trColor};font-weight:600"><i class="bi ${trIcon}"></i> ${trLabel}</span>
+        </div>
+        <div style="height:6px;border-radius:3px;background:rgba(255,255,255,0.06);overflow:hidden"><div style="height:100%;width:${percent}%;background:${stColor};border-radius:3px;transition:width 0.3s"></div></div>
+        <div style="text-align:center;font-size:10px;margin-top:3px;color:${stColor};font-weight:700">${percent}%</div>`;
     }
 
     function openCreateModal() {
-      document.getElementById('kpiId').value = '';
-      document.getElementById('kpiForm').reset();
-      document.getElementById('kpiModalTitle').textContent = 'مؤشر جديد';
-      document.getElementById('formError').classList.add('d-none');
-      loadVersions();
-      kpiModal.show();
+      document.getElementById('modalTitle').innerHTML = '<i class="bi bi-plus-circle"></i> مؤشر جديد';
+      document.getElementById('editId').value = '';
+      ['formName', 'formObj', 'formActual', 'formTarget'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('formTrend').value = 'up';
+      document.getElementById('formPercent').value = 0;
+      document.getElementById('formDept').value = 'المالية';
+      document.getElementById('kpiTplSection').style.display = '';
+      document.querySelectorAll('.kpi-tpl').forEach(el => { el.style.boxShadow = ''; });
+      updateKpiPreview();
+      new bootstrap.Modal(document.getElementById('kpiModal')).show();
     }
 
-    async function editKPI(kpiId) {
-      try {
-        const response = await fetch(`${API_BASE}/strategic/kpis/${kpiId}`, {
-          headers: { 'Authorization': `Bearer ${getToken()}` }
-        });
-
-        if (!response.ok) throw new Error('Failed to load KPI');
-
-        const kpi = await response.json();
-        document.getElementById('kpiId').value = kpi.id;
-        document.getElementById('kpiName').value = kpi.name;
-        document.getElementById('kpiNameAr').value = kpi.nameAr || '';
-        document.getElementById('kpiDescription').value = kpi.description || '';
-        document.getElementById('kpiTarget').value = kpi.target;
-        document.getElementById('kpiActual').value = kpi.actual || '';
-        document.getElementById('kpiUnit').value = kpi.unit;
-        document.getElementById('kpiStatus').value = kpi.status;
-        document.getElementById('kpiVersion').value = kpi.versionId;
-        document.getElementById('kpiObjective').value = kpi.objectiveId || '';
-
-        document.getElementById('kpiModalTitle').textContent = 'تعديل مؤشر';
-        document.getElementById('formError').classList.add('d-none');
-        
-        kpiModal.show();
-      } catch (error) {
-        alert('خطأ: ' + error.message);
-      }
+    function openEditModal(id) {
+      const k = kpis.find(x => x.id === id);
+      if (!k) return;
+      document.getElementById('modalTitle').innerHTML = '<i class="bi bi-pencil-square"></i> تعديل المؤشر';
+      document.getElementById('editId').value = k.id;
+      document.getElementById('formName').value = k.name;
+      document.getElementById('formObj').value = k.objective;
+      document.getElementById('formActual').value = k.actual;
+      document.getElementById('formTarget').value = k.target;
+      document.getElementById('formTrend').value = k.trend;
+      document.getElementById('formPercent').value = k.percent;
+      document.getElementById('formDept').value = k.dept || 'المالية';
+      document.getElementById('kpiTplSection').style.display = 'none';
+      updateKpiPreview();
+      new bootstrap.Modal(document.getElementById('kpiModal')).show();
     }
 
     async function saveKPI() {
-      const kpiId = document.getElementById('kpiId').value;
-      const name = document.getElementById('kpiName').value.trim();
-      const nameAr = document.getElementById('kpiNameAr').value.trim();
-      const description = document.getElementById('kpiDescription').value.trim();
-      const versionId = document.getElementById('kpiVersion').value;
-      const objectiveId = document.getElementById('kpiObjective').value;
-      const target = document.getElementById('kpiTarget').value;
-      const actual = document.getElementById('kpiActual').value;
-      const unit = document.getElementById('kpiUnit').value;
-      const status = document.getElementById('kpiStatus').value;
+      const id = document.getElementById('editId').value;
+      const name = document.getElementById('formName').value.trim();
+      const obj = document.getElementById('formObj').value.trim();
+      const actual = document.getElementById('formActual').value.trim();
+      const targetStr = document.getElementById('formTarget').value.trim();
+      const trend = document.getElementById('formTrend').value;
+      const percent = parseInt(document.getElementById('formPercent').value) || 0;
+      const dept = document.getElementById('formDept').value;
+      if (!name) return;
 
-      const formError = document.getElementById('formError');
+      // حوّل المستهدف لرقم
+      const targetNum = parseFloat(targetStr.replace(/[^0-9.]/g, '')) || 0;
+      const actualNum = parseFloat(actual.replace(/[^0-9.]/g, '')) || null;
 
-      if (!name || !versionId || !target) {
-        formError.textContent = 'الاسم والخطة والهدف مطلوبة';
-        formError.classList.remove('d-none');
-        return;
-      }
+      // BSC Perspective mapping (عكس getBscDept)
+      const deptToBsc = {
+        'المالية': 'FINANCIAL',
+        'التسويق والعملاء': 'CUSTOMER',
+        'العمليات': 'INTERNAL_PROCESS',
+        'التقنية': 'INTERNAL_PROCESS',
+        'الموارد البشرية': 'LEARNING_GROWTH',
+        'الجودة': 'INTERNAL_PROCESS',
+      };
 
-      try {
-        const data = {
-          name,
-          nameAr: nameAr || null,
-          description: description || null,
-          versionId,
-          objectiveId: objectiveId || null,
-          target: parseFloat(target),
-          actual: actual ? parseFloat(actual) : null,
-          unit,
-          status
-        };
-
-        const url = kpiId ? `${API_BASE}/strategic/kpis/${kpiId}` : `${API_BASE}/strategic/kpis`;
-        const method = kpiId ? 'PATCH' : 'POST';
-
-        const response = await fetch(url, {
-          method,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${getToken()}`
-          },
-          body: JSON.stringify(data)
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || 'خطأ في الحفظ');
+      if (isApiMode || activeVersionId) {
+        // ====== حفظ بالـ API ======
+        try {
+          if (id && !id.startsWith('demo-')) {
+            // تعديل
+            const res = await fetch(`/api/strategic/kpis/${id}`, {
+              method: 'PATCH',
+              headers: apiHeaders,
+              body: JSON.stringify({
+                name, nameAr: name, description: obj,
+                target: targetNum, actual: actualNum,
+                bscPerspective: deptToBsc[dept] || null,
+              })
+            });
+            if (!res.ok) throw new Error('فشل التحديث');
+            showToast('تم تحديث المؤشر في قاعدة البيانات ✓');
+          } else {
+            // إنشاء جديد
+            if (!activeVersionId) {
+              showToast('⚠️ لا يوجد إصدار استراتيجي نشط — أنشئ إصدار أولاً');
+              return;
+            }
+            const res = await fetch('/api/strategic/kpis', {
+              method: 'POST',
+              headers: apiHeaders,
+              body: JSON.stringify({
+                name, nameAr: name, description: obj,
+                target: targetNum,
+                versionId: activeVersionId,
+                bscPerspective: deptToBsc[dept] || null,
+                unit: targetStr.includes('%') ? '%' : '',
+              })
+            });
+            if (!res.ok) {
+              const err = await res.json().catch(() => ({}));
+              throw new Error(err.error || 'فشل الإنشاء');
+            }
+            showToast('✅ تم حفظ المؤشر في قاعدة البيانات');
+          }
+          // أعد التحميل من الـ API
+          bootstrap.Modal.getInstance(document.getElementById('kpiModal')).hide();
+          await initFromAPI();
+          return;
+        } catch (e) {
+          console.error('[KPIs] خطأ في الحفظ:', e);
+          showToast('❌ خطأ: ' + e.message);
+          return;
         }
-
-        kpiModal.hide();
-        loadKPIs(currentPage);
-      } catch (error) {
-        formError.textContent = error.message;
-        formError.classList.remove('d-none');
       }
-    }
 
-    async function deleteKPI(kpiId, name) {
-      if (!confirm(`هل تريد حذف "${name}"؟`)) return;
-
-      try {
-        const response = await fetch(`${API_BASE}/strategic/kpis/${kpiId}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${getToken()}` }
-        });
-
-        if (!response.ok) throw new Error('Failed to delete KPI');
-
-        loadKPIs(currentPage);
-      } catch (error) {
-        alert('خطأ: ' + error.message);
+      // ====== حفظ محلي (بيانات تجريبية) ======
+      if (id) {
+        const k = kpis.find(x => x.id === id);
+        if (k) { k.name = name; k.objective = obj; k.actual = actual; k.target = targetStr; k.trend = trend; k.percent = percent; k.status = getStatus(percent); k.dept = dept; }
+        showToast('تم تحديث المؤشر (محلي) ✓');
+      } else {
+        kpis.unshift({ id: 'demo-' + Date.now(), name, objective: obj, actual, target: targetStr, trend, percent, status: getStatus(percent), dept });
+        showToast('تم إنشاء المؤشر (محلي — غير محفوظ بالقاعدة) ✓');
       }
+      bootstrap.Modal.getInstance(document.getElementById('kpiModal')).hide();
+      renderAll();
     }
 
-    function searchKPIs() {
-      currentPage = 1;
-      loadKPIs();
+    async function deleteKPI(id) {
+      if (!confirm('حذف هذا المؤشر؟')) return;
+
+      if (isApiMode && !id.startsWith('demo-')) {
+        try {
+          const res = await fetch(`/api/strategic/kpis/${id}`, { method: 'DELETE', headers: apiHeaders });
+          if (!res.ok) throw new Error('فشل الحذف');
+          showToast('✅ تم الحذف من قاعدة البيانات');
+          await initFromAPI();
+          return;
+        } catch (e) {
+          console.error('[KPIs] خطأ في الحذف:', e);
+          showToast('❌ خطأ: ' + e.message);
+          return;
+        }
+      }
+
+      kpis = kpis.filter(x => x.id !== id);
+      renderAll(); showToast('تم الحذف ✓');
     }
 
-    function filterKPIs() {
-      currentPage = 1;
-      loadKPIs();
+    function showToast(msg) {
+      const t = document.createElement('div');
+      t.className = 'toast-msg success';
+      t.innerHTML = `<i class="bi bi-check-circle"></i> ${msg}`;
+      document.getElementById('toastContainer').appendChild(t);
+      setTimeout(() => t.remove(), 3000);
     }
+
+    // بدء التحميل من الـ API
+    initFromAPI();
   </script>
 </body>
+
 </html>

@@ -14,27 +14,49 @@ const usersRoutes = require('./routes/users');
 const assessmentsRoutes = require('./routes/assessments');
 const strategicRoutes = require('./routes/strategic');
 const reviewsRoutes = require('./routes/reviews');
+const versionsRoutes = require('./routes/versions');
+const choicesRoutes = require('./routes/choices');
+const correctionsRoutes = require('./routes/corrections');
+const analysisRoutes = require('./routes/analysis');
+const financialRoutes = require('./routes/financial');
+const integrationsRoutes = require('./routes/integrations');
+const directionsRoutes = require('./routes/directions');
+const externalAnalysisRoutes = require('./routes/external-analysis');
+const kpiEntriesRoutes = require('./routes/kpi-entries');
+const alertsRoutes = require('./routes/alerts');
+const auditRoutes = require('./routes/audit');
+const dashboardApiRoutes = require('./routes/dashboard-api');
+const companiesRoutes = require('./routes/companies');
+const toolsRoutes = require('./routes/tools');
+const companyAnalysisRoutes = require('./routes/company-analysis');
+const userProgressRoutes = require('./routes/user-progress');
+const syncRoutes = require('./routes/sync');
+const alertEngineRoutes = require('./routes/alert-engine');
+// const causalLinksRoutes = require('./routes/causal-links'); // DISABLED
+const towsRoutes = require('./routes/tows');
+const pathRoutes = require('./routes/path');
+const importRoutes = require('./routes/import');
+const okrsRoutes = require('./routes/okrs');
+const entityTypesRoutes = require('./routes/entity-types');
+const priorityMatrixRoutes = require('./routes/priority-matrix');
+const inspectorRoutes = require('./routes/system-inspector');
+const scenariosRoutes = require('./routes/scenarios');
+const commentsRoutes = require('./routes/comments');
+const activitiesRoutes = require('./routes/activities');
+const aiAdvisorRoutes = require('./routes/ai-advisor');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Security Middleware
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
-      fontSrc: ["'self'", "https://cdn.jsdelivr.net"],
-      imgSrc: ["'self'", "data:", "https:"],
-    },
-  },
+  contentSecurityPolicy: false, // Disabled for development — enable in production
 }));
 
 // Rate Limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 500, // limit each IP to 500 requests per windowMs
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -42,7 +64,7 @@ const limiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 login attempts per windowMs
+  max: process.env.NODE_ENV === 'production' ? 20 : 200,
   message: 'Too many login attempts, please try again later.',
   skipSuccessfulRequests: true,
 });
@@ -66,26 +88,140 @@ app.use(cors(corsOptions));
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// API Routes
+// =========================================
+// API Routes — مع حماية الصلاحيات (Phase 8)
+// =========================================
+const { checkPermission, checkDataEntryPermission, requireRole } = require('./middleware/permission');
+
+// 🔓 Auth — بدون حماية (login/register)
 app.use('/api/auth', authLimiter, authRoutes);
+
+// 🔓 Path — المسار الاستراتيجي
+app.use('/api/path', pathRoutes);
+
+// 📊 Dashboard — كل مستخدم مسجل
+app.use('/api/dashboard', dashboardApiRoutes);
+
+// 🔔 Alerts — كل مستخدم مسجل (قراءة)
+app.use('/api/alerts', alertsRoutes);
+
+// 📈 KPI Entries — DATA_ENTRY وأعلى
+app.use('/api/kpi-entries', kpiEntriesRoutes);
+
+// 🔧 النظام — OWNER/ADMIN فقط
 app.use('/api/sectors', sectorsRoutes);
 app.use('/api/industries', industriesRoutes);
+app.use('/api/entity-types', entityTypesRoutes);
 app.use('/api/entities', entitiesRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/api/companies', companiesRoutes);
+app.use('/api/integrations', integrationsRoutes);
+app.use('/api/audit', auditRoutes);
+
+// 🎯 الاستراتيجية — EDITOR وأعلى (القراءة متاحة للـ VIEWER)
 app.use('/api/assessments', assessmentsRoutes);
 app.use('/api/strategic', strategicRoutes);
 app.use('/api/strategic/reviews', reviewsRoutes);
+app.use('/api/versions', versionsRoutes);
+app.use('/api/choices', choicesRoutes);
+app.use('/api/corrections', correctionsRoutes);
+app.use('/api/analysis', analysisRoutes);
+app.use('/api/directions', directionsRoutes);
+app.use('/api/external-analysis', externalAnalysisRoutes);
+app.use('/api/tools', toolsRoutes);
+app.use('/api/company-analysis', companyAnalysisRoutes);
+app.use('/api/user-progress', userProgressRoutes);
+// app.use('/api/causal-links', causalLinksRoutes); // DISABLED
+app.use('/api/tows', towsRoutes);
 
-// Protected route - Get profile
-app.get('/api/user/profile', verifyToken, async (req, res) => {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: req.user.id },
-    });
-    res.json({ user });
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching profile', error: error.message });
-  }
+// ⚙️ العمليات
+app.use('/api/financial', financialRoutes);
+
+// 🤖 محرك الذكاء — EDITOR وأعلى
+app.use('/api/alert-engine', alertEngineRoutes);
+app.use('/api/sync', syncRoutes);
+
+// 📂 الاستيراد — DATA_ENTRY وأعلى  
+app.use('/api/import', importRoutes);
+
+// 📊 Excel Upload — DATA_ENTRY وأعلى
+const excelRoutes = require('./routes/excel');
+app.use('/api/excel', excelRoutes);
+
+// 📈 البيانات الإحصائية — DATA_ENTRY وأعلى
+const statsRoutes = require('./routes/stats');
+app.use('/api/stats', statsRoutes);
+
+// 🎯 OKRs
+app.use('/api/okrs', okrsRoutes);
+
+// 🎯 مصفوفة الأولويات — MCDA
+app.use('/api/priority-matrix', priorityMatrixRoutes);
+app.use('/api/inspector', inspectorRoutes);
+
+// 🔮 محاكاة السيناريوهات
+app.use('/api/scenarios', scenariosRoutes);
+
+// 💬 التعليقات والنشاطات
+app.use('/api/comments', commentsRoutes);
+app.use('/api/activities', activitiesRoutes);
+
+// 🤖 المستشار الذكي
+app.use('/api/ai-advisor', aiAdvisorRoutes);
+
+// 👥 أصحاب المصلحة + ⚠️ المخاطر (NEW — التكامل)
+const stakeholdersRoutes = require('./routes/stakeholders');
+const risksRoutes = require('./routes/risks');
+app.use('/api/stakeholders', stakeholdersRoutes);
+app.use('/api/risks', risksRoutes);
+
+// 🧩 نمط الشركة — pain & ambition
+const companyPatternRoutes = require('./routes/company-pattern');
+app.use('/api/company-pattern', companyPatternRoutes);
+
+// Serve pain-ambition page
+app.get('/pain-ambition', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'pain-ambition.html'));
+});
+
+// Serve import page
+app.get('/import', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'import.html'));
+});
+
+// Serve statistical data page
+app.get('/statistical-data', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'statistical-data.html'));
+});
+
+// Serve strategic tools page (redirected to canonical /tools)
+app.get('/strategic-tools', (req, res) => {
+  res.redirect(301, '/tools');
+});
+
+// Serve OKRs page
+app.get('/okrs', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'okrs.html'));
+});
+
+// Serve Gap Analysis page
+app.get('/gap-analysis', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'gap-analysis.html'));
+});
+
+// Serve Three Horizons page
+app.get('/three-horizons', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'three-horizons.html'));
+});
+
+// Serve OGSM page
+app.get('/ogsm', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'ogsm.html'));
+});
+
+// Serve Simulation Lab page
+app.get('/simulation-lab', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'simulation-lab.html'));
 });
 
 // Serve login page
@@ -93,9 +229,29 @@ app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
+// Serve signup page
+app.get('/signup', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'signup.html'));
+});
+
+// Serve Super Admin Dashboard (برج المراقبة)
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
 // Serve dashboard/welcome page (protected by frontend)
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+});
+
+// Serve strategic pipeline page
+app.get('/tools', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'tools.html'));
+});
+
+// Serve tool detail page
+app.get('/tool', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'tool-detail.html'));
 });
 
 // Serve sectors page
@@ -128,14 +284,222 @@ app.get('/kpis', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'kpis.html'));
 });
 
-// Serve settings page (placeholder)
+// Serve settings page
 app.get('/settings', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashboard.html')); // Placeholder
+  res.sendFile(path.join(__dirname, 'public', 'settings.html'));
 });
 
-// Root redirect
+// Serve settings-data page
+app.get('/settings-data', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'settings-data.html'));
+});
+
+// Serve onboarding wizard
+app.get('/onboarding', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'onboarding.html'));
+});
+
+// Serve versions page
+app.get('/versions', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'versions.html'));
+});
+
+// Serve choices page
+app.get('/choices', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'choices.html'));
+});
+
+// Serve corrections page
+app.get('/corrections', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'corrections.html'));
+});
+
+// Serve analysis page
+app.get('/analysis', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'analysis.html'));
+});
+
+// Serve financial page
+app.get('/financial', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'financial.html'));
+});
+
+// Serve integrations page
+app.get('/integrations', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'integrations.html'));
+});
+
+// Serve directions page
+app.get('/directions', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'directions.html'));
+});
+
+// Serve objectives page
+app.get('/objectives', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'objectives.html'));
+});
+
+// Serve initiatives page
+app.get('/initiatives', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'initiatives.html'));
+});
+
+// Serve reviews page
+app.get('/reviews', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'reviews.html'));
+});
+
+// Redirect alerts to intelligence page (alerts are shown there)
+app.get('/alerts', (req, res) => {
+  res.redirect('/intelligence');
+});
+
+// Serve TOWS Matrix page
+app.get('/tows', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'tows.html'));
+});
+
+// Serve Strategy Map / Causal Links page
+app.get('/strategy-map', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'strategy-map.html'));
+});
+
+// Serve KPI entries page
+app.get('/kpi-entries', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'kpi-entries.html'));
+});
+
+// Serve Priority Matrix page
+app.get('/priority-matrix', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'priority-matrix.html'));
+});
+app.get('/inspector', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'inspector.html'));
+});
+
+// Serve Intelligence Dashboard
+app.get('/intelligence', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'intelligence.html'));
+});
+
+// Serve Path 1 journey (moved) — redirect to landing
+app.get('/path1', (req, res) => {
+  res.redirect(302, '/');
+});
+
+// Serve Guided Journey
+app.get('/journey', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'journey.html'));
+});
+
+// Serve Pricing page
+app.get('/pricing', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'pricing.html'));
+});
+
+// Serve Projects page
+app.get('/projects', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'projects.html'));
+});
+
+// Serve Tasks page
+app.get('/tasks', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'tasks.html'));
+});
+
+// Serve Admin Decisions page
+app.get('/admin-decisions', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin-decisions.html'));
+});
+
+// Serve SWOT page (moved) — redirect to canonical tool detail
+app.get('/swot', (req, res) => {
+  res.redirect(301, '/tool?code=SWOT');
+});
+
+// Serve Operations page
+app.get('/operations', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'operations.html'));
+});
+
+// Serve CEO Executive Dashboard
+app.get('/ceo-dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'ceo-dashboard.html'));
+});
+
+// Serve Achievements page
+app.get('/achievements', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'achievements.html'));
+});
+
+// Serve Strategic Calendar
+app.get('/strategic-calendar', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'strategic-calendar.html'));
+});
+
+// Serve Activity Feed
+app.get('/activity-feed', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'activity-feed.html'));
+});
+
+// Serve Auto Reports
+app.get('/auto-reports', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'auto-reports.html'));
+});
+
+// Serve Risk Map
+app.get('/risk-map', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'risk-map.html'));
+});
+
+// Serve Org DNA
+app.get('/org-dna', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'org-dna.html'));
+});
+
+// Serve Benchmarking
+app.get('/benchmarking', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'benchmarking.html'));
+});
+
+// Serve Stakeholders
+app.get('/stakeholders', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'stakeholders.html'));
+});
+
+// Serve AI Presentation
+app.get('/ai-presentation', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'ai-presentation.html'));
+});
+
+// Serve Live Board
+app.get('/live-board', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'live-board.html'));
+});
+
+// Serve API Docs
+app.get('/api-docs-page', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'api-docs.html'));
+});
+
+// Serve Webhooks
+app.get('/webhooks', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'webhooks.html'));
+});
+
+// Serve Admin Panel
+app.get('/admin-panel', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin-panel.html'));
+});
+
+// Serve Settings
+app.get('/settings', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'settings.html'));
+});
+
+// Landing page (public homepage)
 app.get('/', (req, res) => {
-  res.redirect('/login');
+  res.sendFile(path.join(__dirname, 'public', 'landing.html'));
 });
 
 // Global Error Handler
@@ -163,4 +527,55 @@ app.use((req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Stratix server is running on http://localhost:${PORT}`);
   console.log(`📝 Login at http://localhost:${PORT}/login`);
+
+  // ============ AUTO-SCAN SCHEDULER ============
+  // Run alert engine scan every 2 hours
+  const SCAN_INTERVAL = 2 * 60 * 60 * 1000; // 2 hours
+
+  async function autoScan() {
+    try {
+      console.log('🔍 [Auto-Scan] Starting scheduled alert engine scan...');
+      const entities = await prisma.entity.findMany();
+      let totalAlerts = 0;
+
+      for (const entity of entities) {
+        const activeVersion = await prisma.strategyVersion.findFirst({
+          where: { entityId: entity.id, isActive: true }
+        });
+        if (!activeVersion) continue;
+
+        // Check KPIs
+        const kpis = await prisma.kPI.findMany({
+          where: { versionId: activeVersion.id },
+          select: { id: true, name: true, actual: true, target: true, warningThreshold: true, criticalThreshold: true, objectiveId: true }
+        });
+
+        for (const kpi of kpis) {
+          if (!kpi.target || kpi.target === 0 || kpi.actual == null) continue;
+          const ratio = kpi.actual / kpi.target;
+          if (ratio >= 0.9) continue;
+
+          const existing = await prisma.strategicAlert.findFirst({
+            where: { entityId: entity.id, referenceId: kpi.id, referenceType: 'KPI', isDismissed: false, createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } }
+          });
+          if (existing) continue;
+
+          const critThresh = kpi.criticalThreshold || 0.5;
+          if (ratio <= critThresh) {
+            await prisma.strategicAlert.create({ data: { entityId: entity.id, type: 'KPI_CRITICAL', severity: 'CRITICAL', title: `⛔ مؤشر "${kpi.name}" في وضع حرج`, message: `الأداء (${(ratio * 100).toFixed(1)}%) — ${kpi.actual} من ${kpi.target}`, referenceId: kpi.id, referenceType: 'KPI' } });
+            totalAlerts++;
+          }
+        }
+      }
+
+      console.log(`✅ [Auto-Scan] Complete — ${totalAlerts} new alerts generated`);
+    } catch (err) {
+      console.error('❌ [Auto-Scan] Error:', err.message);
+    }
+  }
+
+  // Run first scan after 30 seconds (let server warm up)
+  setTimeout(autoScan, 30000);
+  // Then every 2 hours
+  setInterval(autoScan, SCAN_INTERVAL);
 });

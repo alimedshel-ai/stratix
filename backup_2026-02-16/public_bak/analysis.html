@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>التحليل الاستراتيجي - Stratix</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/custom.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        .main-content {
+            margin-right: 250px;
+            padding: 20px;
+        }
+
+        .sidebar {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background: #fff;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+            padding-top: 60px;
+            z-index: 100;
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 12px 20px;
+            color: #555;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: #667eea;
+            color: #fff;
+        }
+
+        .sidebar a i {
+            margin-left: 8px;
+        }
+
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 200;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .content-area {
+            margin-top: 60px;
+        }
+
+        /* SWOT Grid */
+        .swot-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .swot-card {
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 200px;
+        }
+
+        .swot-card.strength {
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            border-left: 4px solid #4caf50;
+        }
+
+        .swot-card.weakness {
+            background: linear-gradient(135deg, #fce4ec, #f8bbd0);
+            border-left: 4px solid #e91e63;
+        }
+
+        .swot-card.opportunity {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border-left: 4px solid #2196f3;
+        }
+
+        .swot-card.threat {
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            border-left: 4px solid #ff9800;
+        }
+
+        .swot-card h6 {
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .swot-item {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .swot-item .title {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .swot-item .actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .impact-HIGH {
+            background: #ff7675;
+            color: #fff;
+        }
+
+        .impact-MEDIUM {
+            background: #fdcb6e;
+            color: #333;
+        }
+
+        .impact-LOW {
+            background: #81ecec;
+            color: #333;
+        }
+
+        .summary-card {
+            text-align: center;
+            padding: 16px;
+            border-radius: 10px;
+            color: #fff;
+        }
+
+        .summary-card .count {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .summary-card .label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div><strong>Stratix</strong> <i class="bi bi-rocket-takeoff"></i></div>
+        <div>
+            <span id="userName" class="me-2">مدير النظام</span>
+            <button class="btn btn-sm btn-outline-secondary" onclick="logout()"><i class="bi bi-box-arrow-left"></i>
+                خروج</button>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <a href="/dashboard"><i class="bi bi-speedometer2"></i> لوحة التحكم</a>
+        <a href="/sectors"><i class="bi bi-diagram-3"></i> القطاعات</a>
+        <a href="/industries"><i class="bi bi-grid"></i> الأنشطة</a>
+        <a href="/entities"><i class="bi bi-building"></i> الكيانات</a>
+        <a href="/users"><i class="bi bi-people"></i> المستخدمون</a>
+        <a href="/assessments"><i class="bi bi-clipboard-check"></i> التقييمات</a>
+        <a href="/kpis"><i class="bi bi-graph-up"></i> المؤشرات</a>
+        <a href="/versions"><i class="bi bi-clock-history"></i> إصدارات الاستراتيجية</a>
+        <a href="/choices"><i class="bi bi-signpost-split"></i> الخيارات والمخاطر</a>
+        <a href="/corrections"><i class="bi bi-tools"></i> التصحيحات</a>
+        <a href="/analysis" class="active"><i class="bi bi-lightbulb"></i> التحليل الاستراتيجي</a>
+        <a href="/financial"><i class="bi bi-cash-stack"></i> القرارات المالية</a>
+        <a href="/integrations"><i class="bi bi-plug"></i> التكاملات</a>
+        <a href="/settings"><i class="bi bi-gear"></i> الإعدادات</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content content-area">
+        <!-- Summary Cards -->
+        <div class="row g-3 mb-4" id="summaryCards">
+            <div class="col-md-3">
+                <div class="summary-card" style="background: linear-gradient(135deg,#4caf50,#66bb6a);">
+                    <div class="count" id="strengthCount">0</div>
+                    <div class="label"><i class="bi bi-shield-check"></i> نقاط القوة</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="summary-card" style="background: linear-gradient(135deg,#e91e63,#f06292);">
+                    <div class="count" id="weaknessCount">0</div>
+                    <div class="label"><i class="bi bi-exclamation-diamond"></i> نقاط الضعف</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="summary-card" style="background: linear-gradient(135deg,#2196f3,#64b5f6);">
+                    <div class="count" id="opportunityCount">0</div>
+                    <div class="label"><i class="bi bi-stars"></i> الفرص</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="summary-card" style="background: linear-gradient(135deg,#ff9800,#ffb74d);">
+                    <div class="count" id="threatCount">0</div>
+                    <div class="label"><i class="bi bi-shield-exclamation"></i> التهديدات</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="card p-3 mb-4">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">التقييم</label>
+                    <select id="assessmentFilter" class="form-select form-select-sm" onchange="loadSWOT()">
+                        <option value="">-- كل التقييمات --</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">الأثر</label>
+                    <select id="impactFilter" class="form-select form-select-sm" onchange="loadSWOT()">
+                        <option value="">-- الكل --</option>
+                        <option value="HIGH">عالي</option>
+                        <option value="MEDIUM">متوسط</option>
+                        <option value="LOW">منخفض</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-primary btn-sm w-100" onclick="showPointModal()"><i class="bi bi-plus"></i>
+                        نقطة تحليل جديدة</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SWOT Grid -->
+        <div class="swot-grid" id="swotGrid">
+            <div class="swot-card strength">
+                <h6><i class="bi bi-shield-check"></i> نقاط القوة (Strengths)</h6>
+                <div id="strengthList" class="swot-list">جاري التحميل...</div>
+            </div>
+            <div class="swot-card weakness">
+                <h6><i class="bi bi-exclamation-diamond"></i> نقاط الضعف (Weaknesses)</h6>
+                <div id="weaknessList" class="swot-list">جاري التحميل...</div>
+            </div>
+            <div class="swot-card opportunity">
+                <h6><i class="bi bi-stars"></i> الفرص (Opportunities)</h6>
+                <div id="opportunityList" class="swot-list">جاري التحميل...</div>
+            </div>
+            <div class="swot-card threat">
+                <h6><i class="bi bi-shield-exclamation"></i> التهديدات (Threats)</h6>
+                <div id="threatList" class="swot-list">جاري التحميل...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Point Modal -->
+    <div class="modal fade" id="pointModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="pointModalTitle">نقطة تحليل جديدة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="pointId">
+                    <div class="mb-3">
+                        <label class="form-label">التقييم *</label>
+                        <select id="pointAssessment" class="form-select" required>
+                            <option value="">-- اختر تقييم --</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">النوع *</label>
+                        <select id="pointType" class="form-select" required>
+                            <option value="STRENGTH">نقطة قوة</option>
+                            <option value="WEAKNESS">نقطة ضعف</option>
+                            <option value="OPPORTUNITY">فرصة</option>
+                            <option value="THREAT">تهديد</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">العنوان *</label>
+                        <input type="text" id="pointTitle" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الوصف</label>
+                        <textarea id="pointDesc" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">مستوى الأثر</label>
+                        <select id="pointImpact" class="form-select">
+                            <option value="HIGH">عالي</option>
+                            <option value="MEDIUM" selected>متوسط</option>
+                            <option value="LOW">منخفض</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-primary" onclick="savePoint()">حفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/auth.js"></script>
+    <script>
+        const token = getToken();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAssessments();
+            loadSWOT();
+        });
+
+        async function loadAssessments() {
+            try {
+                const res = await fetch('/api/assessments?limit=100', { headers: { Authorization: `Bearer ${token}` } });
+                const data = await res.json();
+                const assessments = data.assessments || [];
+
+                const filterSel = document.getElementById('assessmentFilter');
+                const modalSel = document.getElementById('pointAssessment');
+
+                filterSel.innerHTML = '<option value="">-- كل التقييمات --</option>';
+                modalSel.innerHTML = '<option value="">-- اختر تقييم --</option>';
+
+                assessments.forEach(a => {
+                    const optText = `${a.name} (${a.entity?.legalName || ''})`;
+                    filterSel.innerHTML += `<option value="${a.id}">${optText}</option>`;
+                    modalSel.innerHTML += `<option value="${a.id}">${optText}</option>`;
+                });
+            } catch (err) {
+                console.error('Error loading assessments:', err);
+            }
+        }
+
+        async function loadSWOT() {
+            const assessmentId = document.getElementById('assessmentFilter').value;
+            const impact = document.getElementById('impactFilter').value;
+
+            try {
+                let url = '/api/analysis/points?limit=200';
+                if (assessmentId) url += `&assessmentId=${assessmentId}`;
+                if (impact) url += `&impact=${impact}`;
+
+                const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+                const data = await res.json();
+                const points = data.points || [];
+                const summary = data.summary || {};
+
+                // Update summary counts
+                document.getElementById('strengthCount').textContent = summary.STRENGTH || 0;
+                document.getElementById('weaknessCount').textContent = summary.WEAKNESS || 0;
+                document.getElementById('opportunityCount').textContent = summary.OPPORTUNITY || 0;
+                document.getElementById('threatCount').textContent = summary.THREAT || 0;
+
+                // Group by type
+                const grouped = {
+                    STRENGTH: points.filter(p => p.type === 'STRENGTH'),
+                    WEAKNESS: points.filter(p => p.type === 'WEAKNESS'),
+                    OPPORTUNITY: points.filter(p => p.type === 'OPPORTUNITY'),
+                    THREAT: points.filter(p => p.type === 'THREAT')
+                };
+
+                renderSwotList('strengthList', grouped.STRENGTH);
+                renderSwotList('weaknessList', grouped.WEAKNESS);
+                renderSwotList('opportunityList', grouped.OPPORTUNITY);
+                renderSwotList('threatList', grouped.THREAT);
+            } catch (err) {
+                console.error('Error:', err);
+            }
+        }
+
+        const impactLabel = { HIGH: 'عالي', MEDIUM: 'متوسط', LOW: 'منخفض' };
+
+        function renderSwotList(containerId, items) {
+            const container = document.getElementById(containerId);
+            if (!items.length) {
+                container.innerHTML = '<div class="text-muted small text-center p-3">لا توجد عناصر</div>';
+                return;
+            }
+
+            container.innerHTML = items.map(item => `
+        <div class="swot-item">
+          <div>
+            <span class="title">${item.title}</span>
+            <span class="badge impact-${item.impact} ms-1" style="font-size:0.7rem;">${impactLabel[item.impact]}</span>
+            ${item.description ? `<br><small class="text-muted">${item.description.substring(0, 60)}</small>` : ''}
+          </div>
+          <div class="actions">
+            <button class="btn btn-sm btn-outline-dark" onclick="editPoint('${item.id}')" style="padding:2px 6px;"><i class="bi bi-pencil" style="font-size:0.7rem;"></i></button>
+            <button class="btn btn-sm btn-outline-danger" onclick="deletePoint('${item.id}')" style="padding:2px 6px;"><i class="bi bi-trash" style="font-size:0.7rem;"></i></button>
+          </div>
+        </div>
+      `).join('');
+        }
+
+        function showPointModal() {
+            document.getElementById('pointId').value = '';
+            document.getElementById('pointAssessment').value = document.getElementById('assessmentFilter').value || '';
+            document.getElementById('pointType').value = 'STRENGTH';
+            document.getElementById('pointTitle').value = '';
+            document.getElementById('pointDesc').value = '';
+            document.getElementById('pointImpact').value = 'MEDIUM';
+            document.getElementById('pointModalTitle').textContent = 'نقطة تحليل جديدة';
+            new bootstrap.Modal(document.getElementById('pointModal')).show();
+        }
+
+        async function editPoint(id) {
+            try {
+                const res = await fetch(`/api/analysis/points/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+                const p = await res.json();
+                document.getElementById('pointId').value = p.id;
+                document.getElementById('pointAssessment').value = p.assessmentId;
+                document.getElementById('pointType').value = p.type;
+                document.getElementById('pointTitle').value = p.title;
+                document.getElementById('pointDesc').value = p.description || '';
+                document.getElementById('pointImpact').value = p.impact;
+                document.getElementById('pointModalTitle').textContent = 'تعديل نقطة التحليل';
+                new bootstrap.Modal(document.getElementById('pointModal')).show();
+            } catch (err) {
+                alert('فشل تحميل البيانات');
+            }
+        }
+
+        async function savePoint() {
+            const editId = document.getElementById('pointId').value;
+            const assessmentId = document.getElementById('pointAssessment').value;
+            const type = document.getElementById('pointType').value;
+            const title = document.getElementById('pointTitle').value.trim();
+            const description = document.getElementById('pointDesc').value.trim();
+            const impact = document.getElementById('pointImpact').value;
+
+            if (!title || (!editId && !assessmentId)) { alert('التقييم والعنوان مطلوبان'); return; }
+
+            try {
+                const url = editId ? `/api/analysis/points/${editId}` : '/api/analysis/points';
+                const method = editId ? 'PATCH' : 'POST';
+                const body = editId ? { title, description, type, impact } : { assessmentId, type, title, description, impact };
+
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify(body)
+                });
+                if (!res.ok) throw new Error('Failed');
+
+                bootstrap.Modal.getInstance(document.getElementById('pointModal')).hide();
+                loadSWOT();
+            } catch (err) {
+                alert('خطأ في الحفظ');
+            }
+        }
+
+        async function deletePoint(id) {
+            if (!confirm('حذف هذه النقطة؟')) return;
+            try {
+                await fetch(`/api/analysis/points/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+                loadSWOT();
+            } catch (err) {
+                alert('فشل الحذف');
+            }
+        }
+    </script>
+</body>
+
+</html>

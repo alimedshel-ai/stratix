@@ -8,7 +8,7 @@ const router = express.Router();
 // Get all industries
 router.get('/', verifyToken, async (req, res) => {
   try {
-    const { search, page = 1, limit = 10 } = req.query;
+    const { search, sectorId, page = 1, limit = 10 } = req.query;
 
     let where = {};
 
@@ -20,6 +20,11 @@ router.get('/', verifyToken, async (req, res) => {
       ];
     }
 
+    // فلترة بالقطاع
+    if (sectorId) {
+      where.sectors = { some: { id: sectorId } };
+    }
+
     const skip = (page - 1) * limit;
 
     const [industries, total] = await Promise.all([
@@ -28,6 +33,7 @@ router.get('/', verifyToken, async (req, res) => {
         skip,
         take: parseInt(limit),
         include: {
+          sectors: { select: { id: true, nameAr: true, nameEn: true, code: true } },
           _count: {
             select: { entities: true },
           },
@@ -55,6 +61,7 @@ router.get('/:id', verifyToken, async (req, res) => {
     const industry = await prisma.industry.findUnique({
       where: { id: req.params.id },
       include: {
+        sectors: { select: { id: true, nameAr: true, nameEn: true, code: true } },
         entities: {
           select: { id: true, legalName: true, displayName: true },
         },
@@ -74,7 +81,7 @@ router.get('/:id', verifyToken, async (req, res) => {
 // Create industry
 router.post('/', verifyToken, async (req, res) => {
   try {
-    const { nameEn, nameAr, code } = req.body;
+    const { nameEn, nameAr, code, sectorIds } = req.body;
 
     if (!nameEn || !nameAr || !code) {
       return res.status(400).json({ message: 'nameEn, nameAr and code are required' });
@@ -94,6 +101,12 @@ router.post('/', verifyToken, async (req, res) => {
         nameEn,
         nameAr,
         code,
+        ...(sectorIds && sectorIds.length > 0 && {
+          sectors: { connect: sectorIds.map(id => ({ id })) }
+        }),
+      },
+      include: {
+        sectors: { select: { id: true, nameAr: true, nameEn: true, code: true } },
       },
     });
 
@@ -106,7 +119,7 @@ router.post('/', verifyToken, async (req, res) => {
 // Update industry
 router.patch('/:id', verifyToken, async (req, res) => {
   try {
-    const { nameEn, nameAr, code } = req.body;
+    const { nameEn, nameAr, code, sectorIds } = req.body;
 
     // Check if code is being changed and if new code already exists
     if (code) {
@@ -128,6 +141,12 @@ router.patch('/:id', verifyToken, async (req, res) => {
         ...(nameEn && { nameEn }),
         ...(nameAr && { nameAr }),
         ...(code && { code }),
+        ...(sectorIds && {
+          sectors: { set: sectorIds.map(id => ({ id })) }
+        }),
+      },
+      include: {
+        sectors: { select: { id: true, nameAr: true, nameEn: true, code: true } },
       },
     });
 

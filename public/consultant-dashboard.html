@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكيس — لوحة المستشار</title>
+    <meta name="description" content="لوحة تحكم المستشار الاستراتيجي لإدارة ومقارنة عدة شركات">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="/js/sidebar.js" defer></script>
+    <style>
+        :root {
+            --bg: #0f1219;
+            --bg-2: #161b26;
+            --bg-card: #1a1f2e;
+            --bg-card-hover: #1f2538;
+            --text: #e2e8f0;
+            --text-muted: #8b8ba7;
+            --border: rgba(255, 255, 255, 0.06);
+            --accent: #a78bfa;
+            --accent-glow: rgba(167, 139, 250, 0.1);
+            --green: #22c55e;
+            --yellow: #f59e0b;
+            --red: #ef4444;
+            --blue: #3b82f6;
+            --orange: #f97316;
+            --sidebar-w: 280px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ===== Layout ===== */
+        .main-content {
+            margin-right: var(--sidebar-w);
+            padding: 28px 32px;
+            min-height: 100vh;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-right: 0;
+                padding: 16px;
+            }
+        }
+
+        /* ===== Header ===== */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .page-header h1 {
+            font-size: 26px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-header h1 span {
+            background: linear-gradient(135deg, #a78bfa, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-header .subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text);
+            font-family: 'Tajawal', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #7c3aed, #a78bfa);
+            border-color: transparent;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(124, 58, 237, 0.3);
+        }
+
+        /* ===== Summary Cards ===== */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+
+        .summary-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 0%, var(--card-glow, transparent), transparent 70%);
+            pointer-events: none;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+        }
+
+        .summary-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--card-color, var(--accent));
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+
+        .summary-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* ===== Average Health Widget ===== */
+        .avg-health {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            flex-wrap: wrap;
+        }
+
+        .health-ring {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            flex-shrink: 0;
+        }
+
+        .health-ring svg {
+            transform: rotate(-90deg);
+        }
+
+        .health-ring-bg {
+            fill: none;
+            stroke: var(--border);
+            stroke-width: 8;
+        }
+
+        .health-ring-fill {
+            fill: none;
+            stroke-width: 8;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1.5s ease;
+        }
+
+        .health-ring-label {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .health-ring-value {
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        .health-ring-text {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .avg-health-info {
+            flex: 1;
+        }
+
+        .avg-health-info h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .avg-health-info p {
+            color: var(--text-muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .health-breakdown {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .health-badge {
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .health-badge.excellent {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--green);
+        }
+
+        .health-badge.good {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--blue);
+        }
+
+        .health-badge.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--yellow);
+        }
+
+        .health-badge.critical {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--red);
+        }
+
+        /* ===== Entities Grid ===== */
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .entities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        @media (max-width: 768px) {
+            .entities-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .entity-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 22px;
+            transition: all 0.3s;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .entity-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border-color: var(--accent);
+        }
+
+        .entity-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .entity-name {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .entity-sector {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .entity-health-badge {
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .entity-health-badge.excellent {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--green);
+        }
+
+        .entity-health-badge.good {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--blue);
+        }
+
+        .entity-health-badge.warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--yellow);
+        }
+
+        .entity-health-badge.critical {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--red);
+        }
+
+        .entity-health-badge.danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--red);
+        }
+
+        .entity-health-badge.unknown {
+            background: rgba(139, 139, 167, 0.15);
+            color: var(--text-muted);
+        }
+
+        /* Mini health bar */
+        .mini-health-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            margin-bottom: 14px;
+            overflow: hidden;
+        }
+
+        .mini-health-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1s ease;
+        }
+
+        /* Entity stats row */
+        .entity-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .entity-stat {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 8px 4px;
+            border-radius: 8px;
+        }
+
+        .entity-stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .entity-stat-label {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        /* Entity actions */
+        .entity-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .entity-alert {
+            font-size: 11px;
+            color: var(--red);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .entity-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .entity-action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .entity-action-btn:hover {
+            background: var(--accent-glow);
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* ===== Comparison Table ===== */
+        .comparison-section {
+            margin-top: 8px;
+        }
+
+        .comparison-table-wrapper {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .comparison-table th {
+            background: var(--bg-2);
+            padding: 12px 16px;
+            text-align: right;
+            font-weight: 600;
+            color: var(--text-muted);
+            white-space: nowrap;
+            font-size: 12px;
+        }
+
+        .comparison-table td {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .comparison-table tbody tr {
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        .comparison-table tbody tr:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .table-health-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 6px;
+        }
+
+        /* ===== Empty State ===== */
+        .empty-state {
+            text-align: center;
+            padding: 80px 24px;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        /* ===== Loading ===== */
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 24px;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ===== View Toggle ===== */
+        .view-toggle {
+            display: flex;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .view-toggle-btn {
+            padding: 8px 14px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .view-toggle-btn.active {
+            background: var(--accent-glow);
+            color: var(--accent);
+        }
+
+        /* ===== Animations ===== */
+        .fade-in {
+            animation: fadeIn 0.5s ease both;
+        }
+
+        .fade-in-delay {
+            animation: fadeIn 0.5s ease 0.15s both;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== No Strategy Tag ===== */
+        .no-strategy-tag {
+            font-size: 11px;
+            color: var(--text-muted);
+            background: rgba(139, 139, 167, 0.1);
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+
+        /* ===== Charts Section ===== */
+        .charts-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        @media (max-width: 900px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .chart-card-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-canvas-wrap {
+            position: relative;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Sidebar placeholder -->
+    <aside class="sidebar-placeholder" id="sidebarContainer"></aside>
+
+    <main class="main-content" id="mainContent">
+        <!-- Loading state -->
+        <div class="loading-state" id="loadingState">
+            <div class="spinner"></div>
+            <p>جاري تحميل بيانات العملاء...</p>
+        </div>
+
+        <!-- Content (hidden until loaded) -->
+        <div id="contentArea" style="display:none">
+            <!-- Header -->
+            <div class="page-header fade-in">
+                <div>
+                    <h1>🧠 <span>لوحة المستشار</span></h1>
+                    <div class="subtitle" id="welcomeMsg">مرحباً — إليك نظرة على جميع عملائك</div>
+                </div>
+                <div class="header-actions">
+                    <div class="view-toggle">
+                        <button class="view-toggle-btn active" onclick="setView('grid')" title="عرض بطاقات"><i
+                                class="bi bi-grid-3x3-gap"></i></button>
+                        <button class="view-toggle-btn" onclick="setView('table')" title="عرض جدول"><i
+                                class="bi bi-table"></i></button>
+                    </div>
+                    <button class="btn" onclick="location.reload()" title="تحديث"><i class="bi bi-arrow-clockwise"></i>
+                        تحديث</button>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="summary-grid fade-in" id="summaryGrid"></div>
+
+            <!-- Average Health -->
+            <div class="avg-health fade-in-delay" id="avgHealthSection"></div>
+
+            <!-- Comparison Charts -->
+            <div class="charts-section fade-in-delay" id="chartsSection">
+                <div class="chart-card">
+                    <div class="chart-card-title">📊 مقارنة الصحة الاستراتيجية</div>
+                    <div class="chart-canvas-wrap"><canvas id="healthBarChart"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-card-title">🎯 توزيع حالة KPIs</div>
+                    <div class="chart-canvas-wrap" style="max-width:280px;margin:0 auto"><canvas
+                            id="kpiDoughnut"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Entities Grid View -->
+            <div id="gridView">
+                <div class="section-title">🏢 عملائي <span id="entityCount"
+                        style="font-size:13px;color:var(--text-muted);font-weight:400"></span></div>
+                <div class="entities-grid" id="entitiesGrid"></div>
+            </div>
+
+            <!-- Entities Table View -->
+            <div id="tableView" style="display:none" class="comparison-section">
+                <div class="section-title">📊 مقارنة أداء العملاء</div>
+                <div class="comparison-table-wrapper">
+                    <table class="comparison-table" id="comparisonTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>الكيان / الشركة</th>
+                                <th>القطاع</th>
+                                <th>الصحة</th>
+                                <th>KPIs</th>
+                                <th>المبادرات</th>
+                                <th>تنبيهات</th>
+                                <th>الحالة</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparisonBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // === Auth ===
+        const token = localStorage.getItem('token');
+        if (!token) location.href = '/login.html';
+
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        let currentView = 'grid';
+        let entitiesData = [];
+
+        // === Init ===
+        init();
+
+        async function init() {
+            try {
+                const res = await fetch('/api/dashboard/consultant-overview', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!res.ok) throw new Error('API error');
+                const data = await res.json();
+                entitiesData = data.entities || [];
+
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('contentArea').style.display = 'block';
+
+                if (user.name) {
+                    document.getElementById('welcomeMsg').textContent =
+                        `مرحباً ${user.name} — إليك نظرة على جميع عملائك`;
+                }
+
+                renderSummary(data.summary);
+                renderAvgHealth(data.summary, data.entities);
+                renderCharts(data.entities, data.summary);
+                renderGrid(data.entities);
+                renderTable(data.entities);
+                document.getElementById('entityCount').textContent = `(${data.entities.length} كيان)`;
+
+            } catch (err) {
+                console.error('Error loading consultant data:', err);
+                document.getElementById('loadingState').innerHTML = `
+                    <i class="bi bi-exclamation-triangle" style="font-size:48px;color:var(--red);margin-bottom:16px"></i>
+                    <p>فشل في تحميل البيانات</p>
+                    <button class="btn" onclick="location.reload()" style="margin-top:16px"><i class="bi bi-arrow-clockwise"></i> إعادة المحاولة</button>
+                `;
+            }
+        }
+
+        // === Render Summary Cards ===
+        function renderSummary(summary) {
+            const grid = document.getElementById('summaryGrid');
+            const cards = [
+                { value: summary.total || 0, label: 'إجمالي الكيانات', icon: '🏢', color: '#a78bfa', glow: 'rgba(167,139,250,0.08)' },
+                { value: summary.averageScore || 0, label: 'متوسط الصحة', icon: '💚', color: getHealthColor(summary.averageScore), glow: 'rgba(34,197,94,0.08)' },
+                { value: summary.totalKpis || 0, label: 'إجمالي KPIs', icon: '📊', color: '#3b82f6', glow: 'rgba(59,130,246,0.08)' },
+                { value: summary.totalInitiatives || 0, label: 'إجمالي المبادرات', icon: '🚀', color: '#f59e0b', glow: 'rgba(245,158,11,0.08)' },
+                { value: summary.totalAlerts || 0, label: 'تنبيهات غير مقروءة', icon: '🔔', color: summary.totalAlerts > 0 ? '#ef4444' : '#22c55e', glow: summary.totalAlerts > 0 ? 'rgba(239,68,68,0.08)' : 'rgba(34,197,94,0.08)' },
+            ];
+
+            grid.innerHTML = cards.map(c => `
+                <div class="summary-card" style="--card-color:${c.color};--card-glow:${c.glow}">
+                    <div class="summary-value" style="color:${c.color}">${c.value}</div>
+                    <div class="summary-label">${c.icon} ${c.label}</div>
+                </div>
+            `).join('');
+        }
+
+        // === Render Average Health Ring ===
+        function renderAvgHealth(summary, entities) {
+            const section = document.getElementById('avgHealthSection');
+            const score = summary.averageScore || 0;
+            const color = getHealthColor(score);
+            const circumference = 2 * Math.PI * 48;
+            const offset = circumference - (score / 100) * circumference;
+
+            section.innerHTML = `
+                <div class="health-ring">
+                    <svg width="120" height="120" viewBox="0 0 120 120">
+                        <circle class="health-ring-bg" cx="60" cy="60" r="48"/>
+                        <circle class="health-ring-fill" cx="60" cy="60" r="48"
+                            stroke="${color}"
+                            stroke-dasharray="${circumference}"
+                            stroke-dashoffset="${offset}"/>
+                    </svg>
+                    <div class="health-ring-label">
+                        <span class="health-ring-value" style="color:${color}">${score}%</span>
+                        <span class="health-ring-text">الصحة الشاملة</span>
+                    </div>
+                </div>
+                <div class="avg-health-info">
+                    <h3>الصحة الاستراتيجية لعملائك</h3>
+                    <p>نظرة شاملة على صحة ${summary.total} كيان — ${getHealthMessage(score)}</p>
+                    <div class="health-breakdown">
+                        ${summary.excellent ? `<span class="health-badge excellent">✅ ${summary.excellent} ممتاز</span>` : ''}
+                        ${summary.good ? `<span class="health-badge good">🔵 ${summary.good} جيد</span>` : ''}
+                        ${summary.warning ? `<span class="health-badge warning">⚠️ ${summary.warning} يحتاج انتباه</span>` : ''}
+                        ${summary.critical ? `<span class="health-badge critical">🔴 ${summary.critical} حرج</span>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        // === Render Entity Cards (Grid View) ===
+        function renderGrid(entities) {
+            const grid = document.getElementById('entitiesGrid');
+
+            if (!entities.length) {
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column:1/-1">
+                        <i class="bi bi-building-x"></i>
+                        <h3>لا توجد كيانات</h3>
+                        <p>لم يتم ربطك بأي كيان بعد. تواصل مع مدير النظام.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = entities.map((e, i) => {
+                const healthColor = getHealthColor(e.healthScore);
+                const levelClass = (e.level || 'unknown').toLowerCase();
+                const levelText = getLevelText(e.level);
+
+                return `
+                <div class="entity-card" onclick="goToEntity('${e.entityId}')" style="animation-delay:${i * 0.08}s;animation: fadeIn 0.5s ease ${i * 0.08}s both;">
+                    <div class="entity-card-header">
+                        <div>
+                            <div class="entity-name">${e.entityName || 'بدون اسم'}</div>
+                            <div class="entity-sector">${e.sectorName || ''} ${e.companyName ? '• ' + e.companyName : ''}</div>
+                        </div>
+                        <span class="entity-health-badge ${levelClass}">${e.healthScore}% ${levelText}</span>
+                    </div>
+
+                    <div class="mini-health-bar">
+                        <div class="mini-health-fill" style="width:${e.healthScore}%;background:${healthColor}"></div>
+                    </div>
+
+                    <div class="entity-stats">
+                        <div class="entity-stat">
+                            <div class="entity-stat-value" style="color:${e.kpiSummary?.critical > 0 ? 'var(--red)' : 'var(--accent)'}">${e.kpis}</div>
+                            <div class="entity-stat-label">KPIs</div>
+                        </div>
+                        <div class="entity-stat">
+                            <div class="entity-stat-value" style="color:${e.iniSummary?.overdue > 0 ? 'var(--orange)' : 'var(--accent)'}">${e.initiatives}</div>
+                            <div class="entity-stat-label">مبادرات</div>
+                        </div>
+                        <div class="entity-stat">
+                            <div class="entity-stat-value" style="color:${e.alerts > 0 ? 'var(--red)' : 'var(--green)'}">${e.alerts}</div>
+                            <div class="entity-stat-label">تنبيهات</div>
+                        </div>
+                    </div>
+
+                    ${!e.hasStrategy ? '<div style="margin-bottom:8px"><span class="no-strategy-tag">⚪ لا توجد استراتيجية نشطة</span></div>' : ''}
+
+                    <div class="entity-footer">
+                        ${e.alerts > 0 ? `<span class="entity-alert"><i class="bi bi-exclamation-triangle-fill"></i> ${e.alerts} تنبيه</span>` : '<span></span>'}
+                        <div class="entity-actions" onclick="event.stopPropagation()">
+                            <button class="entity-action-btn" onclick="goToEntity('${e.entityId}')" title="لوحة القيادة"><i class="bi bi-speedometer2"></i></button>
+                            <button class="entity-action-btn" onclick="goToHealth('${e.entityId}')" title="الصحة"><i class="bi bi-heart-pulse"></i></button>
+                            <button class="entity-action-btn" onclick="switchToEntity('${e.entityId}', '${(e.entityName || '').replace(/'/g, "\\'")}')" title="التبديل لهذا الكيان"><i class="bi bi-box-arrow-in-left"></i></button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // === Render Comparison Table ===
+        function renderTable(entities) {
+            const body = document.getElementById('comparisonBody');
+
+            body.innerHTML = entities.map((e, i) => {
+                const healthColor = getHealthColor(e.healthScore);
+                const levelText = getLevelText(e.level);
+
+                return `
+                <tr onclick="goToEntity('${e.entityId}')">
+                    <td style="color:var(--text-muted)">${i + 1}</td>
+                    <td>
+                        <strong>${e.entityName || 'بدون اسم'}</strong>
+                        ${e.companyName ? `<br><small style="color:var(--text-muted)">${e.companyName}</small>` : ''}
+                    </td>
+                    <td style="color:var(--text-muted)">${e.sectorName || '—'}</td>
+                    <td>
+                        <span class="table-health-dot" style="background:${healthColor}"></span>
+                        <strong style="color:${healthColor}">${e.healthScore}%</strong>
+                    </td>
+                    <td>${e.kpis}</td>
+                    <td>${e.initiatives}</td>
+                    <td>${e.alerts > 0 ? `<span style="color:var(--red)">${e.alerts}</span>` : '<span style="color:var(--green)">0</span>'}</td>
+                    <td><span class="entity-health-badge ${(e.level || 'unknown').toLowerCase()}" style="font-size:10px;padding:2px 8px">${levelText}</span></td>
+                    <td>
+                        <button class="entity-action-btn" onclick="event.stopPropagation();switchToEntity('${e.entityId}', '${(e.entityName || '').replace(/'/g, "\\'")}')" title="التبديل">
+                            <i class="bi bi-box-arrow-in-left"></i>
+                        </button>
+                    </td>
+                </tr>
+                `;
+            }).join('');
+        }
+
+        // === View Toggle ===
+        function setView(view) {
+            currentView = view;
+            document.getElementById('gridView').style.display = view === 'grid' ? 'block' : 'none';
+            document.getElementById('tableView').style.display = view === 'table' ? 'block' : 'none';
+
+            document.querySelectorAll('.view-toggle-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.view-toggle-btn[onclick="setView('${view}')"]`).classList.add('active');
+        }
+
+        // === Actions ===
+        function goToEntity(entityId) {
+            // Navigate to entity dashboard
+            window.open(`/dashboard.html?entityId=${entityId}`, '_blank');
+        }
+
+        function goToHealth(entityId) {
+            window.open(`/intelligence.html?entityId=${entityId}`, '_blank');
+        }
+
+        function switchToEntity(entityId, entityName) {
+            // Switch active entity in localStorage
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.entity) {
+                user.entity.id = entityId;
+            } else {
+                user.entity = { id: entityId };
+            }
+            user.activeEntityId = entityId;
+            localStorage.setItem('user', JSON.stringify(user));
+
+            // Also update entityId and selectedVersionId
+            localStorage.removeItem('selectedVersionId');
+
+            alert(`✅ تم التبديل إلى: ${entityName}\nسيتم إعادة التحميل...`);
+            location.href = '/dashboard.html';
+        }
+
+        // === Helpers ===
+        function getHealthColor(score) {
+            if (score >= 80) return '#22c55e';
+            if (score >= 60) return '#3b82f6';
+            if (score >= 40) return '#f59e0b';
+            if (score >= 20) return '#ef4444';
+            return '#8b8ba7';
+        }
+
+        function getLevelText(level) {
+            const map = {
+                EXCELLENT: 'ممتاز',
+                GOOD: 'جيد',
+                WARNING: 'تحذير',
+                CRITICAL: 'حرج',
+                DANGER: 'خطر',
+                UNKNOWN: 'غير محدد',
+            };
+            return map[level] || 'غير محدد';
+        }
+
+        function getHealthMessage(score) {
+            if (score >= 80) return 'أداء ممتاز — استمر في المتابعة!';
+            if (score >= 60) return 'أداء جيد مع فرص للتحسين';
+            if (score >= 40) return 'يحتاج بعض الانتباه في عدة كيانات';
+            if (score >= 20) return 'وضع حرج — تدخل مطلوب';
+            return 'يحتاج إعادة تقييم شاملة';
+        }
+
+        // === Charts ===
+        function renderCharts(entities, summary) {
+            if (!entities.length) {
+                document.getElementById('chartsSection').style.display = 'none';
+                return;
+            }
+
+            // 1. Horizontal Bar Chart — Health Comparison
+            const barCtx = document.getElementById('healthBarChart').getContext('2d');
+            const labels = entities.map(e => e.entityName || 'بدون اسم');
+            const scores = entities.map(e => e.healthScore || 0);
+            const barColors = scores.map(s => getHealthColor(s));
+
+            new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'الصحة %',
+                        data: scores,
+                        backgroundColor: barColors.map(c => c + '40'),
+                        borderColor: barColors,
+                        borderWidth: 2,
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: entities.length <= 4,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1a1f2e',
+                            borderColor: 'rgba(255,255,255,0.1)',
+                            borderWidth: 1,
+                            titleFont: { family: 'Tajawal', size: 13 },
+                            bodyFont: { family: 'Tajawal', size: 12 },
+                            rtl: true,
+                            textDirection: 'rtl',
+                        }
+                    },
+                    scales: {
+                        x: {
+                            max: 100,
+                            grid: { color: 'rgba(255,255,255,0.04)' },
+                            ticks: { color: '#8b8ba7', font: { family: 'Tajawal', size: 11 } }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { color: '#e2e8f0', font: { family: 'Tajawal', size: 12, weight: 600 } }
+                        }
+                    }
+                }
+            });
+
+            // 2. Doughnut Chart — KPI Distribution
+            const doughCtx = document.getElementById('kpiDoughnut').getContext('2d');
+            let totalOnTrack = 0, totalWarning = 0, totalCritical = 0;
+            entities.forEach(e => {
+                if (e.kpiSummary) {
+                    totalOnTrack += e.kpiSummary.onTrack || 0;
+                    totalWarning += e.kpiSummary.warning || 0;
+                    totalCritical += e.kpiSummary.critical || 0;
+                }
+            });
+            const totalKpis = totalOnTrack + totalWarning + totalCritical;
+            const noData = (summary.totalKpis || 0) - totalKpis;
+
+            new Chart(doughCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['على المسار', 'تحذير', 'حرج', 'بدون بيانات'],
+                    datasets: [{
+                        data: [totalOnTrack, totalWarning, totalCritical, noData > 0 ? noData : 0],
+                        backgroundColor: ['#22c55e40', '#f59e0b40', '#ef444440', 'rgba(139,139,167,0.15)'],
+                        borderColor: ['#22c55e', '#f59e0b', '#ef4444', '#8b8ba7'],
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    cutout: '65%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            rtl: true,
+                            labels: {
+                                color: '#8b8ba7',
+                                font: { family: 'Tajawal', size: 11 },
+                                padding: 12,
+                                usePointStyle: true,
+                                pointStyleWidth: 10,
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1a1f2e',
+                            borderColor: 'rgba(255,255,255,0.1)',
+                            borderWidth: 1,
+                            titleFont: { family: 'Tajawal', size: 13 },
+                            bodyFont: { family: 'Tajawal', size: 12 },
+                            rtl: true,
+                            textDirection: 'rtl',
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

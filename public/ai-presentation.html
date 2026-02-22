@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكيس - العرض التقديمي الذكي</title>
+    <meta name="description" content="توليد عروض تقديمية استراتيجية بالذكاء الاصطناعي">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0b10;
+            --bg2: #12141f;
+            --card: #171a2a;
+            --text: #e2e8f0;
+            --muted: #7a8599;
+            --border: rgba(255, 255, 255, 0.06);
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --green: #22c55e;
+            --yellow: #facc15;
+            --red: #ef4444;
+            --blue: #38bdf8;
+            --purple: #a78bfa;
+            --orange: #f97316
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+            min-height: 100vh
+        }
+
+        .page-wrapper {
+            display: flex;
+            min-height: 100vh
+        }
+
+        .main-content {
+            flex: 1;
+            min-width: 0;
+            padding: 28px 32px
+        }
+
+        .pres-header {
+            margin-bottom: 28px
+        }
+
+        .pres-title {
+            font-size: 28px;
+            font-weight: 900
+        }
+
+        .pres-title span {
+            background: linear-gradient(135deg, var(--orange), var(--yellow));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        /* Templates */
+        .pres-templates {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px
+        }
+
+        .pres-tmpl {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            position: relative;
+            overflow: hidden
+        }
+
+        .pres-tmpl:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255, 255, 255, 0.12)
+        }
+
+        .pres-tmpl.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 1px var(--primary)
+        }
+
+        .pres-tmpl::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px
+        }
+
+        .pres-tmpl-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+            display: block
+        }
+
+        .pres-tmpl h3 {
+            font-size: 14px;
+            font-weight: 800;
+            margin-bottom: 4px
+        }
+
+        .pres-tmpl p {
+            font-size: 11px;
+            color: var(--muted)
+        }
+
+        .pres-tmpl-slides {
+            font-size: 10px;
+            color: var(--primary);
+            font-weight: 700;
+            margin-top: 6px
+        }
+
+        /* Controls */
+        .pres-controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap
+        }
+
+        .pres-select {
+            padding: 10px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 13px
+        }
+
+        .pres-gen-btn {
+            padding: 12px 32px;
+            border-radius: 14px;
+            border: none;
+            background: linear-gradient(135deg, var(--orange), var(--yellow));
+            color: #1a1a2e;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s
+        }
+
+        .pres-gen-btn:hover {
+            transform: scale(1.03);
+            box-shadow: 0 4px 20px rgba(249, 115, 22, 0.3)
+        }
+
+        .pres-gen-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none
+        }
+
+        .pres-gen-btn.generating {
+            animation: pulse 1.5s infinite
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: 0.6
+            }
+        }
+
+        /* Slideshow */
+        .pres-show {
+            display: none;
+            margin-top: 20px
+        }
+
+        .pres-show.visible {
+            display: block;
+            animation: fadeUp 0.5s
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .pres-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px
+        }
+
+        .pres-nav-btn {
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s
+        }
+
+        .pres-nav-btn:hover {
+            background: var(--card-hover);
+            border-color: rgba(255, 255, 255, 0.12)
+        }
+
+        .pres-nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed
+        }
+
+        .pres-nav-info {
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 600
+        }
+
+        .pres-nav-dots {
+            display: flex;
+            gap: 4px
+        }
+
+        .pres-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.2s
+        }
+
+        .pres-dot.active {
+            background: var(--primary);
+            width: 20px;
+            border-radius: 4px
+        }
+
+        .pres-slide {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            min-height: 480px;
+            overflow: hidden;
+            position: relative
+        }
+
+        .slide-content {
+            padding: 48px 56px;
+            min-height: 480px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center
+        }
+
+        /* Slide types */
+        .slide-cover {
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08))
+        }
+
+        .slide-cover h1 {
+            font-size: 32px;
+            font-weight: 900;
+            margin-bottom: 8px
+        }
+
+        .slide-cover h1 span {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        .slide-cover .subtitle {
+            font-size: 16px;
+            color: var(--muted);
+            margin-bottom: 20px
+        }
+
+        .slide-cover .meta {
+            font-size: 13px;
+            color: var(--muted);
+            border-top: 1px solid var(--border);
+            padding-top: 16px;
+            margin-top: 16px
+        }
+
+        .slide-h2 {
+            font-size: 24px;
+            font-weight: 900;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .slide-metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px
+        }
+
+        .slide-metric {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 14px;
+            border: 1px solid var(--border)
+        }
+
+        .slide-metric-num {
+            font-size: 32px;
+            font-weight: 900
+        }
+
+        .slide-metric-label {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px
+        }
+
+        .slide-metric-change {
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 4px
+        }
+
+        .slide-list {
+            list-style: none;
+            padding: 0
+        }
+
+        .slide-list li {
+            font-size: 15px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            line-height: 1.8
+        }
+
+        .slide-list li:last-child {
+            border-bottom: none
+        }
+
+        .slide-list li::before {
+            content: '▸';
+            color: var(--primary);
+            font-weight: 800
+        }
+
+        .slide-two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px
+        }
+
+        .slide-col h3 {
+            font-size: 16px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .slide-table {
+            width: 100%;
+            border-collapse: collapse
+        }
+
+        .slide-table th {
+            padding: 10px;
+            text-align: right;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--muted);
+            border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.02)
+        }
+
+        .slide-table td {
+            padding: 10px;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .slide-end {
+            text-align: center;
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(102, 126, 234, 0.05))
+        }
+
+        .slide-end h2 {
+            font-size: 28px;
+            font-weight: 900
+        }
+
+        .slide-end p {
+            font-size: 15px;
+            color: var(--muted);
+            margin-top: 8px;
+            line-height: 1.8
+        }
+
+        /* Toolbar */
+        .pres-toolbar {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            justify-content: center
+        }
+
+        .pres-tool {
+            padding: 7px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s
+        }
+
+        .pres-tool:hover {
+            background: rgba(255, 255, 255, 0.04)
+        }
+
+        @media(max-width:768px) {
+            .main-content {
+                padding: 16px
+            }
+
+            .slide-content {
+                padding: 28px
+            }
+
+            .slide-two-col {
+                grid-template-columns: 1fr
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <div id="sidebar-container"></div>
+        <div class="main-content">
+            <!-- Entity Badge -->
+            <div id="entityBadge" style="display:none;margin-bottom:16px"></div>
+
+            <div class="pres-header">
+                <h1 class="pres-title"><i class="bi bi-easel2"></i> العرض التقديمي <span>الذكي</span></h1>
+                <div style="font-size:13px;color:var(--muted);margin-top:4px" id="presSubtitle">توليد عروض تقديمية
+                    استراتيجية احترافية
+                    بالذكاء الاصطناعي</div>
+            </div>
+
+            <div class="pres-templates" id="presTemplates"></div>
+            <div class="pres-controls">
+                <select class="pres-select" id="presTheme">
+                    <option value="dark">🌙 ثيم داكن</option>
+                    <option value="gradient">🎨 تدرجات</option>
+                    <option value="minimal">⬜ بسيط</option>
+                </select>
+                <select class="pres-select" id="presLang">
+                    <option value="ar">🇸🇦 عربي</option>
+                    <option value="en">🇺🇸 إنجليزي</option>
+                </select>
+                <button class="pres-gen-btn" id="genBtn" onclick="generatePresentation()">
+                    <i class="bi bi-magic"></i> توليد العرض
+                </button>
+            </div>
+
+            <div class="pres-show" id="presShow">
+                <div class="pres-nav">
+                    <button class="pres-nav-btn" id="prevBtn" onclick="prevSlide()"><i class="bi bi-chevron-right"></i>
+                        السابق</button>
+                    <div>
+                        <div class="pres-nav-info" id="slideInfo"></div>
+                        <div class="pres-nav-dots" id="slideDots"></div>
+                    </div>
+                    <button class="pres-nav-btn" id="nextBtn" onclick="nextSlide()">التالي <i
+                            class="bi bi-chevron-left"></i></button>
+                </div>
+                <div class="pres-slide" id="slideContainer"></div>
+                <div class="pres-toolbar">
+                    <button class="pres-tool" onclick="enterFullscreen()"><i class="bi bi-arrows-fullscreen"></i> ملء
+                        الشاشة</button>
+                    <button class="pres-tool"><i class="bi bi-download"></i> تحميل PDF</button>
+                    <button class="pres-tool"><i class="bi bi-share"></i> مشاركة</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script src="/js/ai-advisor.js"></script>
+    <script src="/js/achievements.js"></script>
+    <script src="/js/notifications.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) { location.href = '/login.html'; }
+
+        const state = {
+            versionId: localStorage.getItem('selectedVersionId'),
+            entityName: '',
+            entityDisplayName: '',
+            companyName: '',
+            versionName: '',
+            kpis: [],
+            objectives: [],
+            initiatives: [],
+            swotData: null,
+            syncTools: []
+        };
+
+        async function api(url, opts = {}) {
+            const res = await fetch(url, {
+                ...opts,
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...opts.headers }
+            });
+            if (res.status === 401) { location.href = '/login.html'; return; }
+            if (!res.ok) throw new Error(`API ${res.status}`);
+            return res.json();
+        }
+
+        const presTemplates = [
+            { id: 'quarterly', icon: '📊', title: 'مراجعة ربعية', desc: 'أداء الربع مع KPIs', slides: 8, color: '#667eea' },
+            { id: 'board', icon: '👔', title: 'تقرير مجلس الإدارة', desc: 'ملخص تنفيذي للقيادة', slides: 6, color: '#ef4444' },
+            { id: 'strategy', icon: '🎯', title: 'الخطة الاستراتيجية', desc: 'عرض الرؤية والأهداف', slides: 10, color: '#22c55e' },
+            { id: 'initiative', icon: '🚀', title: 'عرض مبادرة', desc: 'حالة مبادرة محددة', slides: 7, color: '#f97316' },
+            { id: 'team', icon: '👥', title: 'أداء الفريق', desc: 'إنتاجية وإنجازات الفريق', slides: 6, color: '#8b5cf6' },
+        ];
+
+        let selectedPres = 'quarterly';
+        let currentSlide = 0;
+        let slides = [];
+
+        // ============ INIT ============
+        async function init() {
+            renderPresTemplates();
+            try {
+                // Load version + entity
+                const versionsRes = await api('/api/versions');
+                const versions = versionsRes?.versions || (Array.isArray(versionsRes) ? versionsRes : []);
+                if (versions.length > 0) {
+                    const version = versions.find(v => v.id === state.versionId) || versions[0];
+                    state.versionId = version.id;
+                    state.versionName = version.name || '';
+                    if (version.entity) {
+                        state.entityName = version.entity.legalName || version.entity.displayName || '';
+                        state.entityDisplayName = version.entity.displayName || '';
+                        state.companyName = version.entity.company?.nameAr || version.entity.company?.nameEn || '';
+                    }
+                    showEntityBadge();
+                }
+
+                // Load data in parallel
+                const [kpisRes, objRes, initRes, syncRes] = await Promise.all([
+                    api(`/api/strategic/kpis?versionId=${state.versionId}&limit=100`).catch(() => ({})),
+                    api(`/api/strategic/objectives?versionId=${state.versionId}&limit=100`).catch(() => ({})),
+                    api(`/api/strategic/initiatives?versionId=${state.versionId}&limit=100`).catch(() => ({})),
+                    api(`/api/sync/${state.versionId}/status`).catch(() => null),
+                ]);
+
+                state.kpis = kpisRes?.kpis || [];
+                state.objectives = objRes?.objectives || [];
+                state.initiatives = initRes?.initiatives || [];
+                state.syncTools = syncRes?.tools || [];
+
+                // Try to load SWOT data
+                const swotTool = state.syncTools.find(t => t.code === 'SWOT' && (t.status === 'COMPLETED' || t.hasData));
+                if (swotTool) {
+                    try {
+                        const analysis = await api(`/api/company-analysis/version/${state.versionId}/SWOT`);
+                        if (analysis?.data || analysis?.parsedData) {
+                            const raw = analysis.parsedData || analysis.data;
+                            state.swotData = typeof raw === 'string' ? JSON.parse(raw) : raw;
+                        }
+                    } catch (e) { }
+                }
+
+                console.log('✅ Loaded:', state.kpis.length, 'KPIs,', state.objectives.length, 'Objectives,', state.initiatives.length, 'Initiatives');
+            } catch (e) {
+                console.error('Init error:', e);
+            }
+        }
+
+        function showEntityBadge() {
+            if (!state.entityName) return;
+            const badge = document.getElementById('entityBadge');
+            const meta = [state.companyName, state.versionName].filter(Boolean).join(' • ');
+            badge.innerHTML = `
+                <div style="display:inline-flex;align-items:center;gap:12px;padding:10px 20px;border-radius:14px;background:linear-gradient(135deg,rgba(249,115,22,0.1),rgba(250,204,21,0.08));border:1px solid rgba(249,115,22,0.2)">
+                    <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--orange),var(--yellow));display:flex;align-items:center;justify-content:center;font-size:16px;color:#1a1a2e;font-weight:800">${state.entityName[0] || 'م'}</div>
+                    <div>
+                        <div style="font-size:15px;font-weight:800;color:var(--text)">${state.entityName}</div>
+                        <div style="font-size:11px;color:var(--muted)">${meta || 'العرض التقديمي الذكي'}</div>
+                    </div>
+                </div>`;
+            badge.style.display = 'block';
+
+            // Update subtitle with entity name
+            const sub = document.getElementById('presSubtitle');
+            if (sub) sub.textContent = `توليد عروض تقديمية استراتيجية لـ ${state.entityName} بالذكاء الاصطناعي`;
+        }
+
+        function renderPresTemplates() {
+            document.getElementById('presTemplates').innerHTML = presTemplates.map(t => `
+                <div class="pres-tmpl ${t.id === selectedPres ? 'active' : ''}" onclick="selectedPres='${t.id}';renderPresTemplates()">
+                    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${t.color}"></div>
+                    <span class="pres-tmpl-icon">${t.icon}</span>
+                    <h3>${t.title}</h3>
+                    <p>${t.desc}</p>
+                    <div class="pres-tmpl-slides">${t.slides} شرائح</div>
+                </div>
+            `).join('');
+        }
+
+        async function generatePresentation() {
+            const btn = document.getElementById('genBtn');
+            btn.disabled = true;
+            btn.classList.add('generating');
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> جاري التوليد...';
+
+            await new Promise(r => setTimeout(r, 1500));
+
+            slides = generateSlides();
+            currentSlide = 0;
+            renderSlide();
+            document.getElementById('presShow').classList.add('visible');
+
+            btn.disabled = false;
+            btn.classList.remove('generating');
+            btn.innerHTML = '<i class="bi bi-magic"></i> توليد العرض';
+            document.getElementById('presShow').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // ============ DYNAMIC SLIDE GENERATION ============
+        function generateSlides() {
+            const entity = state.entityName || 'المنظمة';
+            const today = new Date();
+            const quarter = Math.ceil((today.getMonth() + 1) / 3);
+            const year = today.getFullYear();
+            const dateStr = today.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long' });
+
+            // KPI stats
+            const kpiWithTarget = state.kpis.filter(k => k.target && k.target > 0);
+            const kpiAchievements = kpiWithTarget.map(k => ({
+                name: k.nameAr || k.name,
+                target: k.target,
+                actual: k.actual || 0,
+                unit: k.unit || '%',
+                pct: Math.round(((k.actual || 0) / k.target) * 100)
+            }));
+            const avgKpi = kpiAchievements.length > 0
+                ? Math.round(kpiAchievements.reduce((a, b) => a + b.pct, 0) / kpiAchievements.length)
+                : 0;
+
+            // Tools completion
+            const completedTools = state.syncTools.filter(t => t.status === 'COMPLETED').length;
+            const totalTools = state.syncTools.length || 1;
+
+            // Build slides based on template
+            let result = [];
+
+            // ===== COVER SLIDE =====
+            result.push({
+                type: 'cover',
+                content: {
+                    title: selectedPres === 'strategy' ? `الخطة الاستراتيجية` :
+                        selectedPres === 'board' ? `تقرير مجلس الإدارة` :
+                            selectedPres === 'initiative' ? `تقرير المبادرات` :
+                                selectedPres === 'team' ? `تقرير أداء الفريق` :
+                                    `المراجعة الربعية Q${quarter}`,
+                    subtitle: `${entity} — ${state.versionName || 'تقرير الأداء الاستراتيجي'}`,
+                    meta: `${state.companyName ? state.companyName + ' | ' : ''}${entity} | ${dateStr}`
+                }
+            });
+
+            // ===== KPI METRICS SLIDE =====
+            if (kpiAchievements.length > 0) {
+                const topKpis = kpiAchievements.slice(0, 4);
+                result.push({
+                    type: 'metrics',
+                    content: {
+                        title: `📊 المؤشرات الرئيسية — ${entity}`,
+                        items: topKpis.map(k => ({
+                            label: k.name,
+                            value: `${k.actual}${k.unit === '%' ? '%' : ''}`,
+                            change: `${k.pct}% من المستهدف`,
+                            color: k.pct >= 80 ? 'var(--green)' : k.pct >= 50 ? 'var(--yellow)' : 'var(--red)'
+                        }))
+                    }
+                });
+            } else {
+                result.push({
+                    type: 'list',
+                    content: {
+                        title: `📊 حالة المؤشرات — ${entity}`,
+                        items: [
+                            `إجمالي المؤشرات المسجلة: ${state.kpis.length}`,
+                            `لم يتم تحديث قيم فعلية بعد — يرجى إدخال البيانات`,
+                            `عدد الأدوات المكتملة: ${completedTools}/${totalTools}`,
+                        ]
+                    }
+                });
+            }
+
+            // ===== OBJECTIVES TABLE =====
+            if (state.objectives.length > 0) {
+                const objRows = state.objectives.slice(0, 6).map(o => [
+                    o.title,
+                    o.perspective || '—',
+                    `${o._count?.kpis || 0} مؤشرات`,
+                    o.status === 'ACTIVE' ? '✅ نشط' :
+                        o.status === 'DRAFT' ? '📝 مسودة' :
+                            o.status === 'COMPLETED' ? '🏆 مكتمل' : o.status || '—'
+                ]);
+                result.push({
+                    type: 'table',
+                    content: {
+                        title: `🎯 الأهداف الاستراتيجية — ${entity}`,
+                        headers: ['الهدف', 'المنظور', 'المؤشرات', 'الحالة'],
+                        rows: objRows
+                    }
+                });
+            }
+
+            // ===== KPI DETAILS TABLE =====
+            if (kpiAchievements.length > 0) {
+                result.push({
+                    type: 'table',
+                    content: {
+                        title: `📈 تفاصيل مؤشرات الأداء — ${entity}`,
+                        headers: ['المؤشر', 'المستهدف', 'الفعلي', 'التحقيق'],
+                        rows: kpiAchievements.slice(0, 8).map(k => [
+                            k.name,
+                            `${k.target} ${k.unit}`,
+                            `${k.actual} ${k.unit}`,
+                            `${k.pct >= 80 ? '✅' : k.pct >= 50 ? '🟡' : '🔴'} ${k.pct}%`
+                        ])
+                    }
+                });
+            }
+
+            // ===== SWOT SLIDE =====
+            if (state.swotData) {
+                const getItems = (key) => {
+                    const val = state.swotData[key];
+                    if (Array.isArray(val)) return val.map(v => typeof v === 'string' ? v : v.title || v.text || '').filter(Boolean);
+                    if (val?.factors) return val.factors.map(f => typeof f === 'string' ? f : f.title || f.text || '').filter(Boolean);
+                    return [];
+                };
+                const strengths = getItems('strengths').slice(0, 4);
+                const weaknesses = getItems('weaknesses').slice(0, 4);
+
+                if (strengths.length > 0 || weaknesses.length > 0) {
+                    result.push({
+                        type: 'twocol',
+                        content: {
+                            title: `⚖️ تحليل SWOT — ${entity}`,
+                            left: {
+                                title: '💪 نقاط القوة',
+                                icon: 'bi-check-circle',
+                                color: 'var(--green)',
+                                items: strengths.length > 0 ? strengths : ['لم يتم إدخال نقاط قوة بعد']
+                            },
+                            right: {
+                                title: '⚠️ نقاط الضعف',
+                                icon: 'bi-exclamation-circle',
+                                color: 'var(--yellow)',
+                                items: weaknesses.length > 0 ? weaknesses : ['لم يتم إدخال نقاط ضعف بعد']
+                            }
+                        }
+                    });
+                }
+            }
+
+            // ===== INITIATIVES SLIDE =====
+            if (state.initiatives.length > 0) {
+                result.push({
+                    type: 'list',
+                    content: {
+                        title: `🚀 المبادرات الاستراتيجية — ${entity}`,
+                        items: state.initiatives.slice(0, 6).map(i => {
+                            const status = i.status === 'IN_PROGRESS' ? '🔵' :
+                                i.status === 'COMPLETED' ? '✅' :
+                                    i.status === 'DELAYED' ? '🔴' : '📝';
+                            return `${status} ${i.title} — ${i.progress || 0}% إنجاز`;
+                        })
+                    }
+                });
+            }
+
+            // ===== TOOLS STATUS =====
+            if (state.syncTools.length > 0) {
+                const toolNames = {
+                    'SWOT': 'تحليل SWOT',
+                    'PESTEL': 'تحليل PESTEL',
+                    'PORTER': 'نموذج بورتر',
+                    'ANSOFF': 'مصفوفة أنسوف',
+                    'BSC': 'بطاقة الأداء',
+                    'CUSTOMER_JOURNEY': 'رحلة العميل',
+                    'VALUE_CHAIN': 'سلسلة القيمة',
+                    'CORE_COMPETENCY': 'القدرات الجوهرية'
+                };
+                result.push({
+                    type: 'table',
+                    content: {
+                        title: `🔧 حالة أدوات التحليل — ${entity}`,
+                        headers: ['الأداة', 'الحالة', 'بيانات'],
+                        rows: state.syncTools.map(t => [
+                            toolNames[t.code] || t.code,
+                            t.status === 'COMPLETED' ? '✅ مكتمل' :
+                                t.status === 'IN_PROGRESS' ? '🔵 قيد التنفيذ' :
+                                    '⬜ لم يبدأ',
+                            t.hasData ? '✅' : '❌'
+                        ])
+                    }
+                });
+            }
+
+            // ===== SUMMARY METRICS =====
+            result.push({
+                type: 'metrics',
+                content: {
+                    title: `📋 ملخص — ${entity}`,
+                    items: [
+                        { label: 'الأهداف الاستراتيجية', value: `${state.objectives.length}`, change: '', color: 'var(--primary)' },
+                        { label: 'مؤشرات الأداء', value: `${state.kpis.length}`, change: avgKpi ? `متوسط ${avgKpi}%` : '', color: avgKpi >= 70 ? 'var(--green)' : 'var(--yellow)' },
+                        { label: 'المبادرات', value: `${state.initiatives.length}`, change: '', color: 'var(--blue)' },
+                        { label: 'أدوات مكتملة', value: `${completedTools}/${totalTools}`, change: `${Math.round(completedTools / totalTools * 100)}%`, color: 'var(--purple)' },
+                    ]
+                }
+            });
+
+            // ===== END SLIDE =====
+            result.push({
+                type: 'end',
+                content: {
+                    title: 'شكراً لكم',
+                    subtitle: `${entity} — نحو التميز الاستراتيجي`,
+                    contact: `${state.companyName ? state.companyName + ' | ' : ''}${entity} | ${dateStr}`
+                }
+            });
+
+            return result;
+        }
+
+        function renderSlide() {
+            const s = slides[currentSlide];
+            const container = document.getElementById('slideContainer');
+            let html = '';
+
+            switch (s.type) {
+                case 'cover':
+                    html = `<div class="slide-content slide-cover"><div style="font-size:48px;margin-bottom:16px">📊</div><h1>${s.content.title.split(' ')[0]} <span>${s.content.title.split(' ').slice(1).join(' ')}</span></h1><div class="subtitle">${s.content.subtitle}</div><div class="meta">${s.content.meta}</div></div>`;
+                    break;
+                case 'metrics':
+                    html = `<div class="slide-content"><h2 class="slide-h2">${s.content.title}</h2><div class="slide-metric-grid">${s.content.items.map(m => `<div class="slide-metric"><div class="slide-metric-num" style="color:${m.color}">${m.value}</div><div class="slide-metric-label">${m.label}</div><div class="slide-metric-change" style="color:${m.color}">${m.change}</div></div>`).join('')}</div></div>`;
+                    break;
+                case 'list':
+                    html = `<div class="slide-content"><h2 class="slide-h2">${s.content.title}</h2><ul class="slide-list">${s.content.items.map(i => `<li>${i}</li>`).join('')}</ul></div>`;
+                    break;
+                case 'table':
+                    html = `<div class="slide-content"><h2 class="slide-h2">${s.content.title}</h2><table class="slide-table"><thead><tr>${s.content.headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${s.content.rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+                    break;
+                case 'twocol':
+                    html = `<div class="slide-content"><h2 class="slide-h2">${s.content.title}</h2><div class="slide-two-col"><div class="slide-col"><h3><i class="${s.content.left.icon}" style="color:${s.content.left.color}"></i> ${s.content.left.title}</h3><ul class="slide-list">${s.content.left.items.map(i => `<li>${i}</li>`).join('')}</ul></div><div class="slide-col"><h3><i class="${s.content.right.icon}" style="color:${s.content.right.color}"></i> ${s.content.right.title}</h3><ul class="slide-list">${s.content.right.items.map(i => `<li>${i}</li>`).join('')}</ul></div></div></div>`;
+                    break;
+                case 'end':
+                    html = `<div class="slide-content slide-end"><div style="font-size:48px;margin-bottom:16px">🎯</div><h2>${s.content.title}</h2><p>${s.content.subtitle}</p><div style="font-size:12px;color:var(--primary);margin-top:20px">${s.content.contact}</div></div>`;
+                    break;
+            }
+
+            container.innerHTML = html;
+            document.getElementById('slideInfo').textContent = `${currentSlide + 1} / ${slides.length}`;
+            document.getElementById('prevBtn').disabled = currentSlide === 0;
+            document.getElementById('nextBtn').disabled = currentSlide === slides.length - 1;
+            document.getElementById('slideDots').innerHTML = slides.map((_, i) => `<div class="pres-dot ${i === currentSlide ? 'active' : ''}" onclick="goToSlide(${i})"></div>`).join('');
+        }
+
+        function prevSlide() { if (currentSlide > 0) { currentSlide--; renderSlide(); } }
+        function nextSlide() { if (currentSlide < slides.length - 1) { currentSlide++; renderSlide(); } }
+        function goToSlide(i) { currentSlide = i; renderSlide(); }
+        function enterFullscreen() { document.getElementById('slideContainer').requestFullscreen?.(); }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') nextSlide();
+            if (e.key === 'ArrowRight' || e.key === 'ArrowUp') prevSlide();
+        });
+
+        init();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إصدارات الاستراتيجية - Stratix</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/custom.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        .main-content {
+            margin-right: 250px;
+            padding: 20px;
+        }
+
+        .sidebar {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background: #fff;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+            padding-top: 60px;
+            z-index: 100;
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 12px 20px;
+            color: #555;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: #667eea;
+            color: #fff;
+        }
+
+        .sidebar a i {
+            margin-left: 8px;
+        }
+
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 200;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .content-area {
+            margin-top: 60px;
+        }
+
+        .version-badge {
+            font-size: 0.85rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .version-DRAFT {
+            background: #ffeaa7;
+            color: #6c5ce7;
+        }
+
+        .version-ACTIVE {
+            background: #55efc4;
+            color: #00b894;
+        }
+
+        .version-ARCHIVED {
+            background: #dfe6e9;
+            color: #636e72;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .stat-card .num {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-card .label {
+            font-size: 0.75rem;
+            color: #888;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div><strong>Stratix</strong> <i class="bi bi-rocket-takeoff"></i></div>
+        <div>
+            <span id="userName" class="me-2">مدير النظام</span>
+            <button class="btn btn-sm btn-outline-secondary" onclick="logout()"><i class="bi bi-box-arrow-left"></i>
+                خروج</button>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <a href="/dashboard"><i class="bi bi-speedometer2"></i> لوحة التحكم</a>
+        <a href="/sectors"><i class="bi bi-diagram-3"></i> القطاعات</a>
+        <a href="/industries"><i class="bi bi-grid"></i> الأنشطة</a>
+        <a href="/entities"><i class="bi bi-building"></i> الكيانات</a>
+        <a href="/users"><i class="bi bi-people"></i> المستخدمون</a>
+        <a href="/assessments"><i class="bi bi-clipboard-check"></i> التقييمات</a>
+        <a href="/kpis"><i class="bi bi-graph-up"></i> المؤشرات</a>
+        <hr style="margin:8px 16px;border-color:rgba(0,0,0,0.1);">
+        <a href="/versions" class="active"><i class="bi bi-clock-history"></i> إصدارات الاستراتيجية</a>
+        <a href="/choices"><i class="bi bi-signpost-split"></i> الخيارات والمخاطر</a>
+        <a href="/corrections"><i class="bi bi-tools"></i> التصحيحات</a>
+        <a href="/analysis"><i class="bi bi-lightbulb"></i> التحليل الاستراتيجي</a>
+        <a href="/financial"><i class="bi bi-cash-stack"></i> القرارات المالية</a>
+        <a href="/integrations"><i class="bi bi-plug"></i> التكاملات</a>
+        <hr style="margin:8px 16px;border-color:rgba(0,0,0,0.1);">
+        <a href="/settings"><i class="bi bi-gear"></i> الإعدادات</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content content-area">
+        <div class="card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3><i class="bi bi-clock-history"></i> إصدارات الاستراتيجية</h3>
+                <button class="btn btn-primary" onclick="showCreateModal()"><i class="bi bi-plus"></i> إصدار
+                    جديد</button>
+            </div>
+
+            <!-- Filters -->
+            <div class="row g-2 mb-3">
+                <div class="col-md-4">
+                    <select id="entityFilter" class="form-select" onchange="loadVersions()">
+                        <option value="">-- كل الكيانات --</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select id="statusFilter" class="form-select" onchange="loadVersions()">
+                        <option value="">-- كل الحالات --</option>
+                        <option value="DRAFT">مسودة</option>
+                        <option value="ACTIVE">نشط</option>
+                        <option value="ARCHIVED">مؤرشف</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>الإصدار</th>
+                            <th>الكيان</th>
+                            <th>الحالة</th>
+                            <th>الأهداف</th>
+                            <th>المؤشرات</th>
+                            <th>المبادرات</th>
+                            <th>المراجعات</th>
+                            <th>التفعيل</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="versionsTable">
+                        <tr>
+                            <td colspan="9" class="text-center text-muted p-4"><i
+                                    class="bi bi-arrow-clockwise spin"></i> جاري التحميل...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <small id="paginationInfo" class="text-muted"></small>
+                <nav>
+                    <ul id="pagination" class="pagination pagination-sm mb-0"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create/Edit Modal -->
+    <div class="modal fade" id="versionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="versionModalTitle">إصدار جديد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="versionId">
+                    <div class="mb-3">
+                        <label class="form-label">الكيان *</label>
+                        <select id="versionEntity" class="form-select" required>
+                            <option value="">-- اختر كيان --</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الحالة</label>
+                        <select id="versionStatus" class="form-select">
+                            <option value="DRAFT">مسودة</option>
+                            <option value="ACTIVE">نشط</option>
+                            <option value="ARCHIVED">مؤرشف</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="pivotGroup" style="display:none;">
+                        <label class="form-label">مبني على إصدار سابق</label>
+                        <select id="versionPivotFrom" class="form-select">
+                            <option value="">-- بدون --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-primary" onclick="saveVersion()">حفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Modal -->
+    <div class="modal fade" id="detailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailsTitle">تفاصيل الإصدار</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="detailsBody">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/auth.js"></script>
+    <script>
+        const token = getToken();
+        let currentPage = 1;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadEntities();
+            loadVersions();
+        });
+
+        async function loadEntities() {
+            try {
+                const res = await fetch('/api/entities', { headers: { Authorization: `Bearer ${token}` } });
+                const data = await res.json();
+                const entities = data.entities || data;
+
+                const selects = [document.getElementById('entityFilter'), document.getElementById('versionEntity')];
+                selects.forEach(sel => {
+                    if (!sel) return;
+                    const firstOpt = sel.options[0].outerHTML;
+                    sel.innerHTML = firstOpt;
+                    entities.forEach(e => {
+                        const opt = document.createElement('option');
+                        opt.value = e.id;
+                        opt.textContent = e.legalName || e.displayName;
+                        sel.appendChild(opt);
+                    });
+                });
+            } catch (err) {
+                console.error('Error loading entities:', err);
+            }
+        }
+
+        async function loadVersions() {
+            try {
+                const entityId = document.getElementById('entityFilter').value;
+                const status = document.getElementById('statusFilter').value;
+                let url = `/api/versions?page=${currentPage}&limit=10`;
+                if (entityId) url += `&entityId=${entityId}`;
+                if (status) url += `&status=${status}`;
+
+                const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+                const data = await res.json();
+
+                renderVersions(data.versions || []);
+                renderPagination(data.totalPages || 1, data.page || 1);
+                document.getElementById('paginationInfo').textContent = `${data.total || 0} إصدار`;
+            } catch (err) {
+                console.error('Error loading versions:', err);
+                document.getElementById('versionsTable').innerHTML = '<tr><td colspan="9" class="text-center text-danger">فشل تحميل البيانات</td></tr>';
+            }
+        }
+
+        function renderVersions(versions) {
+            const tbody = document.getElementById('versionsTable');
+            if (!versions.length) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted p-4">لا توجد إصدارات</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = versions.map(v => {
+                const entityName = v.entity ? (v.entity.legalName || v.entity.displayName) : '-';
+                const statusLabel = { DRAFT: 'مسودة', ACTIVE: 'نشط', ARCHIVED: 'مؤرشف' }[v.status] || v.status;
+                const activatedAt = v.activatedAt ? new Date(v.activatedAt).toLocaleDateString('ar-SA') : '-';
+                return `
+        <tr>
+          <td><strong>V${v.versionNumber}</strong></td>
+          <td>${entityName}</td>
+          <td><span class="version-badge version-${v.status}">${statusLabel}</span></td>
+          <td><span class="badge bg-primary">${v._count?.objectives || 0}</span></td>
+          <td><span class="badge bg-info">${v._count?.kpis || 0}</span></td>
+          <td><span class="badge bg-warning text-dark">${v._count?.initiatives || 0}</span></td>
+          <td><span class="badge bg-secondary">${v._count?.reviews || 0}</span></td>
+          <td><small>${activatedAt}</small></td>
+          <td>
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-outline-info" onclick="viewDetails('${v.id}')" title="تفاصيل"><i class="bi bi-eye"></i></button>
+              ${v.status === 'DRAFT' ? `<button class="btn btn-outline-success" onclick="activateVersion('${v.id}')" title="تفعيل"><i class="bi bi-check-circle"></i></button>` : ''}
+              <button class="btn btn-outline-danger" onclick="deleteVersion('${v.id}', 'V${v.versionNumber}')" title="حذف"><i class="bi bi-trash"></i></button>
+            </div>
+          </td>
+        </tr>`;
+            }).join('');
+        }
+
+        function renderPagination(totalPages, page) {
+            const ul = document.getElementById('pagination');
+            ul.innerHTML = '';
+            for (let i = 1; i <= totalPages; i++) {
+                const li = document.createElement('li');
+                li.className = `page-item ${i === page ? 'active' : ''}`;
+                li.innerHTML = `<a class="page-link" href="#" onclick="goToPage(${i})">${i}</a>`;
+                ul.appendChild(li);
+            }
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            loadVersions();
+        }
+
+        function showCreateModal() {
+            document.getElementById('versionId').value = '';
+            document.getElementById('versionEntity').value = '';
+            document.getElementById('versionStatus').value = 'DRAFT';
+            document.getElementById('versionModalTitle').textContent = 'إصدار استراتيجية جديد';
+            document.getElementById('pivotGroup').style.display = 'none';
+            new bootstrap.Modal(document.getElementById('versionModal')).show();
+        }
+
+        async function saveVersion() {
+            const entityId = document.getElementById('versionEntity').value;
+            const status = document.getElementById('versionStatus').value;
+            const pivotedFromId = document.getElementById('versionPivotFrom').value;
+
+            if (!entityId) {
+                alert('يرجى اختيار الكيان');
+                return;
+            }
+
+            try {
+                const editId = document.getElementById('versionId').value;
+                const url = editId ? `/api/versions/${editId}` : '/api/versions';
+                const method = editId ? 'PATCH' : 'POST';
+                const body = editId ? { status } : { entityId, status, pivotedFromId: pivotedFromId || null };
+
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify(body)
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || 'Failed to save');
+                }
+
+                bootstrap.Modal.getInstance(document.getElementById('versionModal')).hide();
+                loadVersions();
+            } catch (err) {
+                alert('خطأ: ' + err.message);
+            }
+        }
+
+        async function activateVersion(id) {
+            if (!confirm('هل تريد تفعيل هذا الإصدار؟ سيتم أرشفة الإصدار النشط الحالي.')) return;
+            try {
+                const res = await fetch(`/api/versions/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ status: 'ACTIVE' })
+                });
+                if (!res.ok) throw new Error('Failed');
+                loadVersions();
+            } catch (err) {
+                alert('فشل تفعيل الإصدار');
+            }
+        }
+
+        async function deleteVersion(id, name) {
+            if (!confirm(`حذف الإصدار ${name}؟`)) return;
+            try {
+                const res = await fetch(`/api/versions/${id}`, {
+                    method: 'DELETE',
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error('Failed');
+                loadVersions();
+            } catch (err) {
+                alert('فشل حذف الإصدار');
+            }
+        }
+
+        async function viewDetails(id) {
+            try {
+                const res = await fetch(`/api/versions/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+                const v = await res.json();
+                const entityName = v.entity ? (v.entity.legalName || v.entity.displayName) : '-';
+                const statusLabel = { DRAFT: 'مسودة', ACTIVE: 'نشط', ARCHIVED: 'مؤرشف' }[v.status] || v.status;
+
+                document.getElementById('detailsTitle').textContent = `تفاصيل الإصدار V${v.versionNumber} - ${entityName}`;
+                document.getElementById('detailsBody').innerHTML = `
+          <div class="row g-3 mb-4">
+            <div class="col-3"><div class="stat-card"><div class="num">${v.objectives?.length || 0}</div><div class="label">أهداف</div></div></div>
+            <div class="col-3"><div class="stat-card"><div class="num">${v.kpis?.length || 0}</div><div class="label">مؤشرات</div></div></div>
+            <div class="col-3"><div class="stat-card"><div class="num">${v.initiatives?.length || 0}</div><div class="label">مبادرات</div></div></div>
+            <div class="col-3"><div class="stat-card"><div class="num">${v.reviews?.length || 0}</div><div class="label">مراجعات</div></div></div>
+          </div>
+          <table class="table table-sm">
+            <tr><td class="fw-bold">الحالة</td><td><span class="version-badge version-${v.status}">${statusLabel}</span></td></tr>
+            <tr><td class="fw-bold">تاريخ الإنشاء</td><td>${new Date(v.createdAt).toLocaleDateString('ar-SA')}</td></tr>
+            <tr><td class="fw-bold">تاريخ التفعيل</td><td>${v.activatedAt ? new Date(v.activatedAt).toLocaleDateString('ar-SA') : 'لم يفعّل بعد'}</td></tr>
+            <tr><td class="fw-bold">الإصدار السابق</td><td>${v.prevVersion ? 'V' + v.prevVersion.versionNumber : '-'}</td></tr>
+          </table>
+          ${v.objectives?.length ? `<h6>الأهداف</h6><ul>${v.objectives.map(o => `<li>${o.title} <span class="badge bg-secondary">${o.status}</span></li>`).join('')}</ul>` : ''}
+          ${v.kpis?.length ? `<h6>المؤشرات</h6><ul>${v.kpis.map(k => `<li>${k.nameAr || k.name} — الهدف: ${k.target}${k.unit} / الفعلي: ${k.actual || '-'}</li>`).join('')}</ul>` : ''}
+        `;
+                new bootstrap.Modal(document.getElementById('detailsModal')).show();
+            } catch (err) {
+                alert('فشل تحميل التفاصيل');
+            }
+        }
+    </script>
+</body>
+
+</html>

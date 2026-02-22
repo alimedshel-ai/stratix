@@ -1,0 +1,2053 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Startix — اكتشف أين تذهب طاقتك</title>
+    <meta name="description" content="رحلة تشخيصية سريعة تكشف أين تضيع طاقتك وتعطيك خطوة أولى واضحة — في 3 دقائق فقط.">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0e1a;
+            --bg-subtle: #111827;
+            --card: rgba(255, 255, 255, 0.04);
+            --card-hover: rgba(255, 255, 255, 0.08);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-active: rgba(102, 126, 234, 0.5);
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            --primary: #667eea;
+            --primary-light: rgba(102, 126, 234, 0.15);
+            --secondary: #764ba2;
+            --accent: #f093fb;
+            --success: #4ade80;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ===== PROGRESS BAR (TOP) ===== */
+        .top-progress {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            z-index: 100;
+        }
+
+        .top-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 0%;
+        }
+
+        /* ===== LOGO ===== */
+        .logo-bar {
+            position: fixed;
+            top: 12px;
+            right: 20px;
+            z-index: 101;
+        }
+
+        .logo-bar a {
+            font-size: 18px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        /* ===== STEP CONTAINER ===== */
+        .step-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px 40px;
+        }
+
+        .step {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 580px;
+            opacity: 0;
+        }
+
+        .step.active {
+            display: flex;
+            animation: stepIn 0.5s ease forwards;
+        }
+
+        .step.exiting {
+            animation: stepOut 0.3s ease forwards;
+        }
+
+        @keyframes stepIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes stepOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+
+        /* ===== STEP HEADER ===== */
+        .step-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--primary-light);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 13px;
+            color: var(--primary);
+            margin-bottom: 24px;
+        }
+
+        .step-title {
+            font-size: 28px;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 12px;
+            line-height: 1.4;
+            color: #fff;
+        }
+
+        .step-subtitle {
+            font-size: 16px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 36px;
+            max-width: 480px;
+            line-height: 1.7;
+        }
+
+        /* ===== CHOICE CARDS ===== */
+        .choices {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .choices.grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .choice-card {
+            background: var(--card);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 18px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .choice-card:hover {
+            border-color: rgba(102, 126, 234, 0.3);
+            background: rgba(102, 126, 234, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .choice-card.selected {
+            border-color: var(--primary);
+            background: rgba(102, 126, 234, 0.1);
+            box-shadow: 0 0 25px rgba(102, 126, 234, 0.12);
+        }
+
+        .choice-card .choice-icon {
+            font-size: 24px;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-light);
+            flex-shrink: 0;
+        }
+
+        .choice-card .choice-text {
+            font-size: 15px;
+            font-weight: 600;
+            line-height: 1.5;
+        }
+
+        .choice-card.selected .choice-text {
+            color: #fff;
+        }
+
+        /* Pain cards: special 2x3 grid */
+        .choices.pain-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .choices.pain-grid .choice-card {
+            flex-direction: column;
+            text-align: center;
+            padding: 22px 16px;
+        }
+
+        .choices.pain-grid .choice-card .choice-icon {
+            margin-bottom: 4px;
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn-primary-path {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            border: none;
+            padding: 16px 48px;
+            border-radius: 16px;
+            font-size: 17px;
+            font-weight: 700;
+            font-family: 'Tajawal', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary-path:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.35);
+        }
+
+        .btn-primary-path:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .btn-secondary-path {
+            background: transparent;
+            color: var(--text-muted);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Tajawal', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary-path:hover {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .step-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        /* ===== EMAIL INPUT ===== */
+        .email-section {
+            width: 100%;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .email-label {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .email-input {
+            width: 100%;
+            background: var(--bg-subtle);
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 18px;
+            font-size: 15px;
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+            direction: ltr;
+            text-align: left;
+            transition: all 0.3s;
+        }
+
+        .email-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        }
+
+        .email-input::placeholder {
+            color: var(--text-dim);
+        }
+
+        /* ===== WELCOME HERO ===== */
+        .welcome-icon {
+            width: 100px;
+            height: 100px;
+            border-radius: 28px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            margin-bottom: 28px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .welcome-title {
+            font-size: 42px;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 16px;
+            color: #fff;
+        }
+
+        .welcome-title .gradient {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .welcome-subtitle {
+            font-size: 18px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 40px;
+            max-width: 460px;
+            line-height: 1.8;
+        }
+
+        .welcome-features {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .welcome-feature {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-dim);
+        }
+
+        .welcome-feature i {
+            color: var(--success);
+            font-size: 16px;
+        }
+
+        /* ===== STEP COUNTER ===== */
+        .step-counter {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-bottom: 16px;
+        }
+
+        /* ===== REVEAL PAGE ===== */
+        .reveal-card {
+            width: 100%;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08));
+            border: 1px solid rgba(102, 126, 234, 0.15);
+            border-radius: 24px;
+            padding: 40px 32px;
+            margin-bottom: 24px;
+        }
+
+        .reveal-section {
+            margin-bottom: 28px;
+        }
+
+        .reveal-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .reveal-label {
+            font-size: 13px;
+            color: var(--text-dim);
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .reveal-text {
+            font-size: 18px;
+            font-weight: 600;
+            line-height: 1.7;
+            color: var(--text);
+        }
+
+        .reveal-highlight {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--warning);
+            padding: 16px 20px;
+            background: rgba(245, 158, 11, 0.08);
+            border-right: 4px solid var(--warning);
+            border-radius: 0 12px 12px 0;
+        }
+
+        .feedback-btns {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .feedback-btn {
+            background: var(--card);
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            padding: 14px 28px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .feedback-btn:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .feedback-btn.selected {
+            border-color: var(--primary);
+            background: rgba(102, 126, 234, 0.15);
+            color: #fff;
+        }
+
+        /* ===== NUMBER PAGE ===== */
+        .number-display {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .big-number {
+            font-size: 96px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--warning), var(--danger));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .number-unit {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .number-breakdown {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 24px;
+        }
+
+        .breakdown-item {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px 24px;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .breakdown-num {
+            font-size: 28px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .breakdown-label {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+
+        .number-message {
+            text-align: center;
+            font-size: 18px;
+            color: var(--text-muted);
+            line-height: 1.8;
+            margin-top: 28px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .number-message strong {
+            color: var(--warning);
+        }
+
+        /* ===== ACTION PAGE ===== */
+        .action-intro {
+            text-align: center;
+            font-size: 16px;
+            color: var(--text-muted);
+            line-height: 1.8;
+            margin-bottom: 28px;
+            max-width: 480px;
+        }
+
+        .action-table-wrap {
+            width: 100%;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .action-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .action-table thead th {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 14px 16px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-align: right;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .action-table tbody td {
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .action-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .action-table input {
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 14px;
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        .action-table input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .action-table input::placeholder {
+            color: var(--text-dim);
+        }
+
+        .action-table .col-activity {
+            width: 45%;
+        }
+
+        .action-table .col-time {
+            width: 22%;
+        }
+
+        .action-table .col-value {
+            width: 22%;
+        }
+
+        .action-table .col-del {
+            width: 11%;
+            text-align: center;
+        }
+
+        .btn-add-row {
+            background: transparent;
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            width: 100%;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 28px;
+        }
+
+        .btn-add-row:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-del-row {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 6px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-del-row:hover {
+            color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .checklist {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .checklist-item:hover {
+            background: var(--card-hover);
+        }
+
+        .checklist-item.checked {
+            border-color: rgba(74, 222, 128, 0.3);
+            background: rgba(74, 222, 128, 0.05);
+        }
+
+        .check-box {
+            width: 24px;
+            height: 24px;
+            border-radius: 7px;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: transparent;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .checklist-item.checked .check-box {
+            background: var(--success);
+            border-color: var(--success);
+            color: #fff;
+        }
+
+        .check-label {
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        /* ===== COMING SOON ===== */
+        .coming-soon-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: rgba(10, 14, 26, 0.92);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .coming-soon-overlay.show {
+            display: flex;
+        }
+
+        .coming-soon-card {
+            background: var(--bg-subtle);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 48px 40px;
+            text-align: center;
+            max-width: 420px;
+            animation: stepIn 0.4s ease forwards;
+        }
+
+        .coming-soon-card .cs-icon {
+            font-size: 56px;
+            margin-bottom: 20px;
+        }
+
+        .coming-soon-card h3 {
+            font-size: 24px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 12px;
+        }
+
+        .coming-soon-card p {
+            font-size: 15px;
+            color: var(--text-muted);
+            margin-bottom: 28px;
+            line-height: 1.7;
+        }
+
+        /* ===== BG EFFECTS ===== */
+        .bg-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .bg-glow::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            top: -200px;
+            right: -200px;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.08) 0%, transparent 70%);
+        }
+
+        .bg-glow::after {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            bottom: -200px;
+            left: -150px;
+            background: radial-gradient(circle, rgba(118, 75, 162, 0.06) 0%, transparent 70%);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 600px) {
+            .welcome-title {
+                font-size: 30px;
+            }
+
+            .big-number {
+                font-size: 64px;
+            }
+
+            .choices.pain-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .number-breakdown {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .breakdown-item {
+                width: 100%;
+            }
+
+            .welcome-features {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .feedback-btns {
+                flex-direction: column;
+            }
+
+            .feedback-btn {
+                width: 100%;
+            }
+
+            .reveal-card {
+                padding: 28px 20px;
+            }
+
+            .step-container {
+                padding: 50px 16px 30px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- BG -->
+    <div class="bg-glow"></div>
+
+    <!-- Progress Bar -->
+    <div class="top-progress">
+        <div class="top-progress-fill" id="progressFill"></div>
+    </div>
+
+    <!-- Logo -->
+    <div class="logo-bar">
+        <a href="/">Startix <i class="bi bi-activity"></i></a>
+    </div>
+
+    <!-- ================================ -->
+    <!-- STEP 0: WELCOME                  -->
+    <!-- ================================ -->
+    <div class="step-container">
+
+        <div class="step active" id="step0">
+            <div class="welcome-icon">🔍</div>
+            <h1 class="welcome-title">
+                اكتشف أين تذهب<br><span class="gradient">طاقتك</span>
+            </h1>
+            <p class="welcome-subtitle">
+                رحلة تشخيصية سريعة تكشف لك الفجوة بين مجهودك ونتائجك
+                — وتعطيك خطوة أولى واضحة.
+            </p>
+            <div class="welcome-features">
+                <span class="welcome-feature"><i class="bi bi-check-circle-fill"></i> 3 دقائق فقط</span>
+                <span class="welcome-feature"><i class="bi bi-check-circle-fill"></i> بدون تسجيل</span>
+                <span class="welcome-feature"><i class="bi bi-check-circle-fill"></i> نتيجة فورية</span>
+            </div>
+            <button type="button" class="btn-primary-path" onclick="goToStep(1)">
+                ابدأ الآن <i class="bi bi-arrow-left"></i>
+            </button>
+        </div>
+
+        <!-- ================================ -->
+        <!-- STEP 1: PAIN QUESTION + EMAIL    -->
+        <!-- ================================ -->
+        <div class="step" id="step1">
+            <div class="step-counter">الخطوة 1 من 6</div>
+            <h2 class="step-title">ما الذي يشغل تفكيرك<br>تجاه شركتك هذه الأيام؟</h2>
+            <p class="step-subtitle">اختر الأقرب لموقفك الحالي</p>
+
+            <div class="choices pain-grid" id="painChoices">
+                <div class="choice-card" data-value="hard_work" onclick="selectPain(this)">
+                    <div class="choice-icon">😤</div>
+                    <div class="choice-text">أعمل بجد لكن ما أحس أننا نتقدم</div>
+                </div>
+                <div class="choice-card" data-value="money_flow" onclick="selectPain(this)">
+                    <div class="choice-icon">💸</div>
+                    <div class="choice-text">الفلوس تدخل وتخرج وما أفهم وين</div>
+                </div>
+                <div class="choice-card" data-value="cant_delegate" onclick="selectPain(this)">
+                    <div class="choice-icon">🤯</div>
+                    <div class="choice-text">كل شيء يمر عليّ وما أقدر أوكّل</div>
+                </div>
+                <div class="choice-card" data-value="competition" onclick="selectPain(this)">
+                    <div class="choice-icon">⚔️</div>
+                    <div class="choice-text">خايف منافس يأخذ عملائي</div>
+                </div>
+                <div class="choice-card" data-value="no_direction" onclick="selectPain(this)">
+                    <div class="choice-icon">🧭</div>
+                    <div class="choice-text">ما أعرف الخطوة الجاية</div>
+                </div>
+                <div class="choice-card" data-value="team_dependent" onclick="selectPain(this)">
+                    <div class="choice-icon">👥</div>
+                    <div class="choice-text">الفريق ما يشتغل بدوني</div>
+                </div>
+            </div>
+
+            <div class="email-section">
+                <div class="email-label">
+                    <i class="bi bi-envelope"></i> تبغي نحفظ تقدمك؟ أدخل إيميلك — اختياري
+                </div>
+                <input type="email" id="emailInput" class="email-input" placeholder="your@email.com">
+            </div>
+
+            <div class="step-actions">
+                <button type="button" class="btn-secondary-path" onclick="goToStep(0)">
+                    <i class="bi bi-arrow-right"></i> رجوع
+                </button>
+                <button type="button" class="btn-primary-path" id="btnStep1" disabled onclick="proceedFromPain()">
+                    التالي <i class="bi bi-arrow-left"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ================================ -->
+        <!-- STEP 2: Q2 — الأسعار            -->
+        <!-- ================================ -->
+        <div class="step" id="step2">
+            <div class="step-counter">الخطوة 2 من 6</div>
+            <h2 class="step-title">متى آخر مرة<br>رفعت أسعارك؟</h2>
+
+            <div class="choices" id="q2Choices">
+                <div class="choice-card" data-value="this_year" onclick="selectAnswer(this, 'Q2')">
+                    <div class="choice-icon">📈</div>
+                    <div class="choice-text">هذه السنة</div>
+                </div>
+                <div class="choice-card" data-value="over_2_years" onclick="selectAnswer(this, 'Q2')">
+                    <div class="choice-icon">📅</div>
+                    <div class="choice-text">منذ أكثر من سنتين</div>
+                </div>
+                <div class="choice-card" data-value="never" onclick="selectAnswer(this, 'Q2')">
+                    <div class="choice-icon">🚫</div>
+                    <div class="choice-text">ما رفعتها أبداً</div>
+                </div>
+                <div class="choice-card" data-value="lowered" onclick="selectAnswer(this, 'Q2')">
+                    <div class="choice-icon">📉</div>
+                    <div class="choice-text">خفضتها للاحتفاظ بالعملاء</div>
+                </div>
+            </div>
+
+            <div class="step-actions">
+                <button type="button" class="btn-secondary-path" onclick="goToStep(1)">
+                    <i class="bi bi-arrow-right"></i> رجوع
+                </button>
+                <button type="button" class="btn-primary-path" id="btnQ2" disabled onclick="goToStep(3)">
+                    التالي <i class="bi bi-arrow-left"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ================================ -->
+        <!-- STEP 3: Q3 — الخدمات            -->
+        <!-- ================================ -->
+        <div class="step" id="step3">
+            <div class="step-counter">الخطوة 3 من 6</div>
+            <h2 class="step-title">لو حذفت نصف خدماتك —<br>هل سيلاحظ معظم عملائك؟</h2>
+
+            <div class="choices" id="q3Choices">
+                <div class="choice-card" data-value="yes_all_needed" onclick="selectAnswer(this, 'Q3')">
+                    <div class="choice-icon">✅</div>
+                    <div class="choice-text">نعم — كل شيء مطلوب</div>
+                </div>
+                <div class="choice-card" data-value="maybe_some" onclick="selectAnswer(this, 'Q3')">
+                    <div class="choice-icon">🤔</div>
+                    <div class="choice-text">ربما — بعضها أهم</div>
+                </div>
+                <div class="choice-card" data-value="no_same_things" onclick="selectAnswer(this, 'Q3')">
+                    <div class="choice-icon">🔄</div>
+                    <div class="choice-text">لا — يطلبون نفس الأشياء</div>
+                </div>
+                <div class="choice-card" data-value="never_thought" onclick="selectAnswer(this, 'Q3')">
+                    <div class="choice-icon">💭</div>
+                    <div class="choice-text">ما فكرت في هذا</div>
+                </div>
+            </div>
+
+            <div class="step-actions">
+                <button type="button" class="btn-secondary-path" onclick="goToStep(2)">
+                    <i class="bi bi-arrow-right"></i> رجوع
+                </button>
+                <button type="button" class="btn-primary-path" id="btnQ3" disabled onclick="goToStep(4)">
+                    التالي <i class="bi bi-arrow-left"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ================================ -->
+        <!-- STEP 4: Q4 — الساعات            -->
+        <!-- ================================ -->
+        <div class="step" id="step4">
+            <div class="step-counter">الخطوة 4 من 6</div>
+            <h2 class="step-title">كم ساعة يومياً تقضي في<br>أمور يمكن لغيرك فعلها؟</h2>
+
+            <div class="choices" id="q4Choices">
+                <div class="choice-card" data-value="less_than_2" onclick="selectAnswer(this, 'Q4')">
+                    <div class="choice-icon">⏱️</div>
+                    <div class="choice-text">أقل من ساعتين</div>
+                </div>
+                <div class="choice-card" data-value="2_to_4" onclick="selectAnswer(this, 'Q4')">
+                    <div class="choice-icon">⏰</div>
+                    <div class="choice-text">من 2 إلى 4 ساعات</div>
+                </div>
+                <div class="choice-card" data-value="more_than_4" onclick="selectAnswer(this, 'Q4')">
+                    <div class="choice-icon">🕐</div>
+                    <div class="choice-text">أكثر من 4 ساعات</div>
+                </div>
+                <div class="choice-card" data-value="most_of_day" onclick="selectAnswer(this, 'Q4')">
+                    <div class="choice-icon">😓</div>
+                    <div class="choice-text">معظم يومي للأسف</div>
+                </div>
+            </div>
+
+            <div class="step-actions">
+                <button type="button" class="btn-secondary-path" onclick="goToStep(3)">
+                    <i class="bi bi-arrow-right"></i> رجوع
+                </button>
+                <button type="button" class="btn-primary-path" id="btnQ4" disabled onclick="goToStep(5)">
+                    التالي <i class="bi bi-arrow-left"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ================================ -->
+        <!-- STEP 5: Q5 — النشاط             -->
+        <!-- ================================ -->
+        <div class="step" id="step5">
+            <div class="step-counter">الخطوة 5 من 6</div>
+            <h2 class="step-title">ما النشاط الذي لو ركزت عليه<br>100% سيغير كل شيء؟</h2>
+
+            <div class="choices" id="q5Choices">
+                <div class="choice-card" data-value="attract_clients" onclick="selectAnswer(this, 'Q5')">
+                    <div class="choice-icon">🧲</div>
+                    <div class="choice-text">جذب عملاء جدد</div>
+                </div>
+                <div class="choice-card" data-value="develop_product" onclick="selectAnswer(this, 'Q5')">
+                    <div class="choice-icon">🚀</div>
+                    <div class="choice-text">تطوير المنتج أو الخدمة</div>
+                </div>
+                <div class="choice-card" data-value="build_team" onclick="selectAnswer(this, 'Q5')">
+                    <div class="choice-icon">👥</div>
+                    <div class="choice-text">بناء وتدريب الفريق</div>
+                </div>
+                <div class="choice-card" data-value="organize_ops" onclick="selectAnswer(this, 'Q5')">
+                    <div class="choice-icon">⚙️</div>
+                    <div class="choice-text">تنظيم العمليات</div>
+                </div>
+                <div class="choice-card" data-value="dont_know" onclick="selectAnswer(this, 'Q5')">
+                    <div class="choice-icon">❓</div>
+                    <div class="choice-text">ما أعرف بالضبط</div>
+                </div>
+            </div>
+
+            <div class="step-actions">
+                <button type="button" class="btn-secondary-path" onclick="goToStep(4)">
+                    <i class="bi bi-arrow-right"></i> رجوع
+                </button>
+                <button type="button" class="btn-primary-path" id="btnQ5" disabled onclick="submitAndReveal()">
+                    اكشف النتيجة <i class="bi bi-stars"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ================================ -->
+        <!-- STEP 6: REVEAL                   -->
+        <!-- ================================ -->
+        <div class="step" id="step6">
+            <div class="step-badge"><i class="bi bi-eye"></i> الكشف</div>
+            <h2 class="step-title">هذا ما اكتشفناه</h2>
+
+            <div class="reveal-card">
+                <div class="reveal-section">
+                    <div class="reveal-label">ما يراه الجميع</div>
+                    <div class="reveal-text">شركة نشيطة ومجتهدة</div>
+                </div>
+                <div class="reveal-section">
+                    <div class="reveal-label">فرصتك غير المستغلة</div>
+                    <div class="reveal-text">
+                        طاقتك موزعة على أنشطة كثيرة<br>
+                        لكن <strong>20%</strong> منها يصنع <strong>80%</strong> من قيمتك
+                    </div>
+                </div>
+                <div class="reveal-section">
+                    <div class="reveal-label">الكشف</div>
+                    <div class="reveal-highlight" id="diagnosisLine">—</div>
+                </div>
+            </div>
+
+            <p class="step-subtitle" style="margin-bottom: 20px;">هل شعرت بهذا من قبل؟</p>
+            <div class="feedback-btns" id="feedbackBtns">
+                <button class="feedback-btn" data-value="yes" onclick="selectFeedback(this)">نعم ✅</button>
+                <button class="feedback-btn" data-value="partially" onclick="selectFeedback(this)">جزئياً 🤔</button>
+                <button class="feedback-btn" data-value="no" onclick="selectFeedback(this)">لا ❌</button>
+            </div>
+
+            <div class="step-actions">
+                <button type="button" class="btn-primary-path" id="btnRevealNext" disabled onclick="goToStep(7)">
+                    شوف الرقم <i class="bi bi-arrow-left"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ================================ -->
+        <!-- STEP 7: THE NUMBER               -->
+        <!-- ================================ -->
+        <div class="step" id="step7">
+            <div class="step-badge"><i class="bi bi-hash"></i> الرقم</div>
+
+            <div class="number-display">
+                <div class="big-number" id="bigNumber">0</div>
+                <div class="number-unit">ساعة أسبوعياً</div>
+            </div>
+
+            <div class="number-breakdown">
+                <div class="breakdown-item">
+                    <div class="breakdown-num" id="monthlyNum">0</div>
+                    <div class="breakdown-label">ساعة شهرياً</div>
+                </div>
+                <div class="breakdown-item">
+                    <div class="breakdown-num" id="yearlyDays">0</div>
+                    <div class="breakdown-label">يوم عمل سنوياً</div>
+                </div>
+            </div>
+
+            <div class="number-message">
+                تذهب في أعمال <strong>يمكن لغيرك فعلها</strong>
+            </div>
+
+            <div class="step-actions">
+                <button type="button" class="btn-primary-path" onclick="goToStep(8)">
+                    وش الحل؟ <i class="bi bi-arrow-left"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ================================ -->
+        <!-- STEP 8: ACTION STEP              -->
+        <!-- ================================ -->
+        <div class="step" id="step8">
+            <div class="step-badge"><i class="bi bi-lightning"></i> الخطوة المؤمنة</div>
+            <h2 class="step-title">اكتب كل ما تفعله في يوم عادي</h2>
+            <p class="action-intro">
+                وضع بجانب كل نشاط: كم وقت يأخذ؟ وكم يربح أو يساهم في الإيراد؟
+            </p>
+
+            <div class="action-table-wrap">
+                <table class="action-table">
+                    <thead>
+                        <tr>
+                            <th class="col-activity">النشاط</th>
+                            <th class="col-time">الوقت (ساعات)</th>
+                            <th class="col-value">القيمة (ريال)</th>
+                            <th class="col-del"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="activityRows">
+                        <!-- Dynamic rows -->
+                    </tbody>
+                </table>
+            </div>
+
+            <button type="button" class="btn-add-row" onclick="addActivityRow()">
+                <i class="bi bi-plus-circle"></i> أضف نشاطاً
+            </button>
+
+            <div class="checklist" id="checklist">
+                <div class="checklist-item" onclick="toggleCheck(0)">
+                    <div class="check-box"><i class="bi bi-check-lg"></i></div>
+                    <span class="check-label">كتبت قائمة الأنشطة</span>
+                </div>
+                <div class="checklist-item" onclick="toggleCheck(1)">
+                    <div class="check-box"><i class="bi bi-check-lg"></i></div>
+                    <span class="check-label">وضعت الوقت لكل نشاط</span>
+                </div>
+                <div class="checklist-item" onclick="toggleCheck(2)">
+                    <div class="check-box"><i class="bi bi-check-lg"></i></div>
+                    <span class="check-label">وضعت القيمة لكل نشاط</span>
+                </div>
+                <div class="checklist-item" onclick="toggleCheck(3)">
+                    <div class="check-box"><i class="bi bi-check-lg"></i></div>
+                    <span class="check-label">حددت الـ 20% الذهبية</span>
+                </div>
+            </div>
+
+            <button type="button" class="btn-primary-path" onclick="saveActions(event)" id="btnSaveActions">
+                <i class="bi bi-cloud-check"></i> حفظ التقدم
+            </button>
+        </div>
+
+        <!-- ================================ -->
+        <!-- STEP 9: FINAL SUMMARY            -->
+        <!-- ================================ -->
+        <div class="step" id="step9">
+            <div class="step-badge" style="background:linear-gradient(135deg,#4ade80,#22d3ee); color:#0f0f23;"><i
+                    class="bi bi-trophy"></i> ملخص رحلتك</div>
+            <h2 class="step-title" style="margin-bottom:12px;">تقريرك التشخيصي جاهز 🎯</h2>
+            <p class="step-subtitle" style="margin-bottom:32px;">هذا ملخص ما اكتشفناه سوا — خطوتك الأولى واضحة الآن</p>
+
+            <!-- Summary Card -->
+            <div
+                style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:32px; margin-bottom:24px;">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+                    <div
+                        style="width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg,#667eea,#764ba2); display:flex; align-items:center; justify-content:center;">
+                        <i class="bi bi-eye" style="color:#fff; font-size:18px;"></i>
+                    </div>
+                    <div style="color:rgba(255,255,255,0.5); font-size:0.85rem; font-weight:600;">التشخيص</div>
+                </div>
+                <div id="summaryDiagnosis" style="color:#fff; font-size:1.15rem; font-weight:700; line-height:1.8;">—
+                </div>
+            </div>
+
+            <!-- Numbers Card -->
+            <div
+                style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:32px; margin-bottom:24px;">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+                    <div
+                        style="width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg,#f093fb,#667eea); display:flex; align-items:center; justify-content:center;">
+                        <i class="bi bi-hash" style="color:#fff; font-size:18px;"></i>
+                    </div>
+                    <div style="color:rgba(255,255,255,0.5); font-size:0.85rem; font-weight:600;">الوقت المهدر</div>
+                </div>
+                <div style="display:flex; justify-content:space-around; text-align:center; flex-wrap:wrap; gap:16px;">
+                    <div>
+                        <div id="sumWeekly"
+                            style="font-size:2rem; font-weight:800; background:linear-gradient(135deg,#f093fb,#667eea); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">
+                            0</div>
+                        <div style="color:rgba(255,255,255,0.5); font-size:0.8rem;">ساعة / أسبوع</div>
+                    </div>
+                    <div>
+                        <div id="sumMonthly" style="font-size:2rem; font-weight:800; color:#fff;">0</div>
+                        <div style="color:rgba(255,255,255,0.5); font-size:0.8rem;">ساعة / شهر</div>
+                    </div>
+                    <div>
+                        <div id="sumYearly" style="font-size:2rem; font-weight:800; color:#4ade80;">0</div>
+                        <div style="color:rgba(255,255,255,0.5); font-size:0.8rem;">يوم عمل / سنة</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activities summary -->
+            <div
+                style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:32px; margin-bottom:24px;">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+                    <div
+                        style="width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg,#4ade80,#22d3ee); display:flex; align-items:center; justify-content:center;">
+                        <i class="bi bi-list-check" style="color:#fff; font-size:18px;"></i>
+                    </div>
+                    <div style="color:rgba(255,255,255,0.5); font-size:0.85rem; font-weight:600;">أنشطتك المسجلة</div>
+                </div>
+                <div id="summaryActivities" style="color:rgba(255,255,255,0.7); font-size:0.95rem; line-height:2;">—
+                </div>
+            </div>
+
+            <!-- ======== SMART NEXT STEPS (Logged-in vs Guest) ======== -->
+            <div id="nextStepsLoggedIn" style="display:none;">
+                <!-- === FOR LOGGED-IN USERS === -->
+                <div
+                    style="background:linear-gradient(135deg, rgba(74,222,128,0.08), rgba(34,211,238,0.08)); border:1px solid rgba(74,222,128,0.15); border-radius:20px; padding:28px; margin-bottom:24px;">
+                    <h4 style="color:#4ade80; font-weight:700; margin-bottom:8px; font-size:1.05rem;">
+                        <i class="bi bi-check-circle-fill"></i> أنت مسجّل! حوّل التشخيص لعمل فوري
+                    </h4>
+                    <p style="color:rgba(255,255,255,0.6); font-size:0.88rem; margin:0;">
+                        نتائجك محفوظة — اختر خطوتك التالية:
+                    </p>
+                </div>
+
+                <!-- Action Cards Grid -->
+                <div style="display:grid; grid-template-columns:1fr; gap:16px; margin-bottom:24px;">
+                    <!-- Card 1: Assessment -->
+                    <a href="/assessments" id="ctaAssessment"
+                        style="display:flex; align-items:center; gap:16px; background:rgba(102,126,234,0.06); border:1px solid rgba(102,126,234,0.15); border-radius:16px; padding:20px 24px; text-decoration:none; transition:all 0.25s; cursor:pointer;"
+                        onmouseover="this.style.background='rgba(102,126,234,0.12)'; this.style.borderColor='rgba(102,126,234,0.35)'; this.style.transform='translateX(-4px)'"
+                        onmouseout="this.style.background='rgba(102,126,234,0.06)'; this.style.borderColor='rgba(102,126,234,0.15)'; this.style.transform='none'">
+                        <div
+                            style="width:48px; height:48px; min-width:48px; border-radius:14px; background:linear-gradient(135deg,#667eea,#764ba2); display:flex; align-items:center; justify-content:center;">
+                            <i class="bi bi-clipboard-check" style="color:#fff; font-size:22px;"></i>
+                        </div>
+                        <div style="flex:1;">
+                            <div style="color:#fff; font-weight:700; font-size:1rem; margin-bottom:4px;">
+                                <i class="bi bi-1-circle-fill" style="color:#667eea; margin-left:6px;"></i>
+                                أنشئ تقييم استراتيجي كامل
+                            </div>
+                            <div style="color:rgba(255,255,255,0.5); font-size:0.82rem; line-height:1.5;">
+                                حوّل تشخيصك لتقييم رسمي مع تحليل SWOT وأهداف قابلة للقياس
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-left" style="color:rgba(255,255,255,0.3); font-size:18px;"></i>
+                    </a>
+
+                    <!-- Card 2: Intelligence -->
+                    <a href="/intelligence" id="ctaIntelligence"
+                        style="display:flex; align-items:center; gap:16px; background:rgba(8,145,178,0.06); border:1px solid rgba(8,145,178,0.15); border-radius:16px; padding:20px 24px; text-decoration:none; transition:all 0.25s; cursor:pointer;"
+                        onmouseover="this.style.background='rgba(8,145,178,0.12)'; this.style.borderColor='rgba(8,145,178,0.35)'; this.style.transform='translateX(-4px)'"
+                        onmouseout="this.style.background='rgba(8,145,178,0.06)'; this.style.borderColor='rgba(8,145,178,0.15)'; this.style.transform='none'">
+                        <div
+                            style="width:48px; height:48px; min-width:48px; border-radius:14px; background:linear-gradient(135deg,#0891b2,#22d3ee); display:flex; align-items:center; justify-content:center;">
+                            <i class="bi bi-cpu" style="color:#fff; font-size:22px;"></i>
+                        </div>
+                        <div style="flex:1;">
+                            <div style="color:#fff; font-weight:700; font-size:1rem; margin-bottom:4px;">
+                                <i class="bi bi-2-circle-fill" style="color:#0891b2; margin-left:6px;"></i>
+                                شغّل الذكاء الاستراتيجي
+                            </div>
+                            <div style="color:rgba(255,255,255,0.5); font-size:0.82rem; line-height:1.5;">
+                                فحص ذكي تلقائي + توصيات + مؤشر صحة استراتيجية + قرار CONTINUE/ADJUST/PIVOT
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-left" style="color:rgba(255,255,255,0.3); font-size:18px;"></i>
+                    </a>
+
+                    <!-- Card 3: Dashboard -->
+                    <a href="/dashboard" id="ctaDashboard"
+                        style="display:flex; align-items:center; gap:16px; background:rgba(74,222,128,0.06); border:1px solid rgba(74,222,128,0.15); border-radius:16px; padding:20px 24px; text-decoration:none; transition:all 0.25s; cursor:pointer;"
+                        onmouseover="this.style.background='rgba(74,222,128,0.12)'; this.style.borderColor='rgba(74,222,128,0.35)'; this.style.transform='translateX(-4px)'"
+                        onmouseout="this.style.background='rgba(74,222,128,0.06)'; this.style.borderColor='rgba(74,222,128,0.15)'; this.style.transform='none'">
+                        <div
+                            style="width:48px; height:48px; min-width:48px; border-radius:14px; background:linear-gradient(135deg,#059669,#4ade80); display:flex; align-items:center; justify-content:center;">
+                            <i class="bi bi-speedometer2" style="color:#fff; font-size:22px;"></i>
+                        </div>
+                        <div style="flex:1;">
+                            <div style="color:#fff; font-weight:700; font-size:1rem; margin-bottom:4px;">
+                                <i class="bi bi-3-circle-fill" style="color:#059669; margin-left:6px;"></i>
+                                لوحة التحكم الرئيسية
+                            </div>
+                            <div style="color:rgba(255,255,255,0.5); font-size:0.82rem; line-height:1.5;">
+                                شوف نظرة شاملة على كياناتك ومؤشراتك وآخر التنبيهات
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-left" style="color:rgba(255,255,255,0.3); font-size:18px;"></i>
+                    </a>
+                </div>
+
+                <!-- What scan revealed -->
+                <div
+                    style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:16px; padding:20px 24px; margin-bottom:24px;">
+                    <div style="color:rgba(255,255,255,0.4); font-size:0.8rem; font-weight:600; margin-bottom:12px;">
+                        <i class="bi bi-lightbulb"></i> التشخيص كشف لك:
+                    </div>
+                    <div style="display:flex; flex-wrap:wrap; gap:8px;" id="insightTags">
+                        <span
+                            style="background:rgba(239,68,68,0.12); color:#f87171; padding:6px 14px; border-radius:20px; font-size:0.8rem; font-weight:600;">
+                            ⏰ <span id="tagWastedHours">0</span> ساعة مهدرة أسبوعياً
+                        </span>
+                        <span
+                            style="background:rgba(251,191,36,0.12); color:#fbbf24; padding:6px 14px; border-radius:20px; font-size:0.8rem; font-weight:600;">
+                            📅 <span id="tagYearlyDays">0</span> يوم عمل ضائع سنوياً
+                        </span>
+                        <span
+                            style="background:rgba(102,126,234,0.12); color:#818cf8; padding:6px 14px; border-radius:20px; font-size:0.8rem; font-weight:600;"
+                            id="tagDiagType">
+                            🎯 تشتت تشغيلي
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- === FOR GUEST USERS === -->
+            <div id="nextStepsGuest">
+                <!-- What you unlock section -->
+                <div
+                    style="background:linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1)); border:1px solid rgba(102,126,234,0.2); border-radius:20px; padding:28px; margin-bottom:24px;">
+                    <h4 style="color:#fff; font-weight:700; margin-bottom:16px;">
+                        <i class="bi bi-unlock" style="color:#667eea;"></i> سجّل مجاناً وافتح هالأدوات
+                    </h4>
+                    <div style="display:flex; flex-direction:column; gap:14px;">
+                        <div style="display:flex; gap:12px; align-items:center;">
+                            <div
+                                style="width:36px; height:36px; min-width:36px; border-radius:10px; background:linear-gradient(135deg,#667eea,#764ba2); display:flex; align-items:center; justify-content:center;">
+                                <i class="bi bi-cpu" style="color:#fff; font-size:16px;"></i>
+                            </div>
+                            <div>
+                                <div style="color:#fff; font-weight:600; font-size:0.92rem;">ذكاء استراتيجي تلقائي</div>
+                                <div style="color:rgba(255,255,255,0.45); font-size:0.8rem;">فحص ذكي + توصيات + مؤشر صحة
+                                    + قرار CONTINUE/ADJUST/PIVOT</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:12px; align-items:center;">
+                            <div
+                                style="width:36px; height:36px; min-width:36px; border-radius:10px; background:linear-gradient(135deg,#0891b2,#22d3ee); display:flex; align-items:center; justify-content:center;">
+                                <i class="bi bi-graph-up" style="color:#fff; font-size:16px;"></i>
+                            </div>
+                            <div>
+                                <div style="color:#fff; font-weight:600; font-size:0.92rem;">متابعة مؤشرات الأداء</div>
+                                <div style="color:rgba(255,255,255,0.45); font-size:0.8rem;">KPIs ذكية + تنبيهات +
+                                    مقارنة مع المستهدف</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:12px; align-items:center;">
+                            <div
+                                style="width:36px; height:36px; min-width:36px; border-radius:10px; background:linear-gradient(135deg,#059669,#4ade80); display:flex; align-items:center; justify-content:center;">
+                                <i class="bi bi-clipboard-check" style="color:#fff; font-size:16px;"></i>
+                            </div>
+                            <div>
+                                <div style="color:#fff; font-weight:600; font-size:0.92rem;">تقييم SWOT + خريطة
+                                    استراتيجية</div>
+                                <div style="color:rgba(255,255,255,0.45); font-size:0.8rem;">نقاط القوة والضعف + الفرص
+                                    والتهديدات + خطة عمل</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:12px; align-items:center;">
+                            <div
+                                style="width:36px; height:36px; min-width:36px; border-radius:10px; background:linear-gradient(135deg,#f59e0b,#fbbf24); display:flex; align-items:center; justify-content:center;">
+                                <i class="bi bi-bell" style="color:#fff; font-size:16px;"></i>
+                            </div>
+                            <div>
+                                <div style="color:#fff; font-weight:600; font-size:0.92rem;">تنبيهات ذكية وحلقة مغلقة
+                                </div>
+                                <div style="color:rgba(255,255,255,0.45); font-size:0.8rem;">تنبيه تلقائي + إجراءات
+                                    تصحيحية + متابعة مستمرة</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CTA: Sign up -->
+                <div style="display:flex; flex-direction:column; gap:14px; align-items:center;">
+                    <a href="/login" class="btn-primary-path" id="ctaSignup"
+                        style="text-decoration:none; text-align:center; width:100%; max-width:400px; font-size:1.05rem; position:relative; overflow:hidden;">
+                        <i class="bi bi-rocket-takeoff"></i> سجّل مجاناً وحوّل التشخيص لخطة
+                    </a>
+                    <a href="/#pricing" class="btn-secondary-path"
+                        style="text-decoration:none; text-align:center; width:100%; max-width:400px; color:rgba(255,255,255,0.6);">
+                        <i class="bi bi-tag"></i> شوف الباقات والأسعار
+                    </a>
+                </div>
+            </div>
+
+            <!-- === SHARED ACTIONS (Both logged-in and guest) === -->
+            <div style="display:flex; justify-content:center; gap:16px; margin-top:20px; flex-wrap:wrap;">
+                <button type="button" class="btn-secondary-path" onclick="shareResults()"
+                    style="width:auto; padding:10px 24px; font-size:0.9rem;">
+                    <i class="bi bi-share"></i> شارك النتيجة
+                </button>
+                <button type="button" onclick="downloadReport()"
+                    style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.6); font-size:0.9rem; cursor:pointer; padding:10px 24px; font-family:inherit; border-radius:12px; transition:all 0.2s;"
+                    onmouseover="this.style.background='rgba(255,255,255,0.08)'; this.style.color='#fff'"
+                    onmouseout="this.style.background='rgba(255,255,255,0.04)'; this.style.color='rgba(255,255,255,0.6)'">
+                    <i class="bi bi-download"></i> حمّل التقرير
+                </button>
+                <button type="button" onclick="restartJourney()"
+                    style="background:none; border:none; color:rgba(255,255,255,0.3); font-size:0.85rem; cursor:pointer; padding:10px 16px; font-family:inherit;">
+                    <i class="bi bi-arrow-counterclockwise"></i> ابدأ من جديد
+                </button>
+            </div>
+        </div>
+
+    </div><!-- /step-container -->
+
+    <!-- ================================ -->
+    <!-- COMING SOON OVERLAY              -->
+    <!-- ================================ -->
+    <div class="coming-soon-overlay" id="comingSoonOverlay">
+        <div class="coming-soon-card">
+            <div class="cs-icon">🚧</div>
+            <h3>هذا المسار قريباً</h3>
+            <p>نعمل عليه الآن — اختر المسار الأول<br>"أعمل بجد ولا أتقدم" للبدء فوراً</p>
+            <button type="button" class="btn-primary-path" onclick="closeComingSoon()">فهمت 👍</button>
+        </div>
+    </div>
+
+    <!-- ================================ -->
+    <!-- JAVASCRIPT                       -->
+    <!-- ================================ -->
+    <script>
+        // ===== STATE =====
+        const state = {
+            currentStep: 0,
+            painChoice: null,
+            email: '',
+            answers: {},
+            sessionId: null,
+            result: null,
+            feedback: null,
+            activities: [],
+            checklist: [false, false, false, false]
+        };
+
+        const TOTAL_STEPS = 9;
+
+        // Hours mapping
+        const HOURS_MAP = {
+            'less_than_2': 1.5,
+            '2_to_4': 3,
+            'more_than_4': 4.5,
+            'most_of_day': 6
+        };
+
+        // ===== LOAD SAVED STATE =====
+        function loadState() {
+            const saved = localStorage.getItem('path1_state');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    Object.assign(state, parsed);
+                } catch (e) { }
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('path1_state', JSON.stringify(state));
+        }
+
+        // ===== STEP NAVIGATION =====
+        function goToStep(n) {
+            const current = document.querySelector('.step.active');
+            if (current) {
+                current.classList.remove('active');
+            }
+
+            state.currentStep = n;
+            saveState();
+
+            const next = document.getElementById('step' + n);
+            // Small delay for animation
+            setTimeout(() => {
+                next.classList.add('active');
+            }, 50);
+
+            // Update progress
+            const progress = n === 0 ? 0 : (n / TOTAL_STEPS) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Special: animate number on step 7
+            if (n === 7 && state.result) {
+                setTimeout(() => animateNumbers(), 300);
+            }
+
+            // Special: init activity table on step 8
+            if (n === 8) {
+                initActivityTable();
+            }
+        }
+
+        // ===== PAIN SELECTION =====
+        function selectPain(card) {
+            const value = card.dataset.value;
+
+            // Only Path 1 (hard_work) is available
+            if (value !== 'hard_work') {
+                document.getElementById('comingSoonOverlay').classList.add('show');
+                return;
+            }
+
+            // Deselect all
+            document.querySelectorAll('#painChoices .choice-card').forEach(c =>
+                c.classList.remove('selected'));
+            card.classList.add('selected');
+
+            state.painChoice = value;
+            document.getElementById('btnStep1').disabled = false;
+            saveState();
+        }
+
+        function closeComingSoon() {
+            document.getElementById('comingSoonOverlay').classList.remove('show');
+        }
+
+        function proceedFromPain() {
+            state.email = document.getElementById('emailInput').value.trim();
+            saveState();
+            goToStep(2);
+        }
+
+        // ===== ANSWER SELECTION =====
+        function selectAnswer(card, questionId) {
+            const container = card.closest('.choices');
+            container.querySelectorAll('.choice-card').forEach(c =>
+                c.classList.remove('selected'));
+            card.classList.add('selected');
+
+            state.answers[questionId] = card.dataset.value;
+            saveState();
+
+            // Enable the next button
+            const btnMap = { Q2: 'btnQ2', Q3: 'btnQ3', Q4: 'btnQ4', Q5: 'btnQ5' };
+            document.getElementById(btnMap[questionId]).disabled = false;
+        }
+
+        // ===== SUBMIT & REVEAL =====
+        async function submitAndReveal() {
+            const btn = document.getElementById('btnQ5');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> جاري التحليل...';
+
+            // Calculate locally (instant)
+            const dailyHours = HOURS_MAP[state.answers.Q4] || 3;
+            const weeklyHours = dailyHours * 5;
+            const monthlyHours = weeklyHours * 4;
+            const yearlyHours = monthlyHours * 12;
+            const yearlyDays = Math.round(yearlyHours / 8);
+
+            // Diagnosis line
+            const priceLow = ['never', 'lowered'].includes(state.answers.Q2);
+            const hoursHigh = ['more_than_4', 'most_of_day'].includes(state.answers.Q4);
+
+            let diagnosisLine;
+            if (priceLow && hoursHigh) diagnosisLine = 'تعمل أكثر بسعر أقل ومجهود مضاعف';
+            else if (priceLow) diagnosisLine = 'تعمل أكثر لتحصل على أقل';
+            else if (hoursHigh) diagnosisLine = 'وقتك الثمين يذهب في الاتجاه الخطأ';
+            else diagnosisLine = 'طاقتك تستحق عائداً أعلى';
+
+            state.result = { diagnosisLine, weeklyHours, monthlyHours, yearlyHours, yearlyDays };
+
+            // Try to save to backend (non-blocking)
+            try {
+                const res = await fetch('/api/path/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        painChoice: state.painChoice,
+                        email: state.email || null,
+                        answers: state.answers
+                    })
+                });
+                const data = await res.json();
+                if (data.sessionId) {
+                    state.sessionId = data.sessionId;
+                }
+            } catch (e) {
+                console.warn('Backend save failed, continuing with local data:', e);
+            }
+
+            saveState();
+
+            // Show diagnosis line
+            document.getElementById('diagnosisLine').textContent = diagnosisLine;
+
+            // Add dramatic delay
+            await sleep(800);
+
+            goToStep(6);
+
+            btn.disabled = false;
+            btn.innerHTML = 'اكشف النتيجة <i class="bi bi-stars"></i>';
+        }
+
+        function sleep(ms) {
+            return new Promise(r => setTimeout(r, ms));
+        }
+
+        // ===== FEEDBACK =====
+        function selectFeedback(btn) {
+            document.querySelectorAll('.feedback-btn').forEach(b =>
+                b.classList.remove('selected'));
+            btn.classList.add('selected');
+            state.feedback = btn.dataset.value;
+            document.getElementById('btnRevealNext').disabled = false;
+            saveState();
+
+            // Save feedback to backend
+            if (state.sessionId) {
+                fetch(`/api/path/${state.sessionId}/feedback`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ feedback: state.feedback })
+                }).catch(() => { });
+            }
+        }
+
+        // ===== ANIMATED NUMBER =====
+        function animateNumbers() {
+            if (!state.result) return;
+            animateCounter('bigNumber', state.result.weeklyHours, 1500);
+            animateCounter('monthlyNum', state.result.monthlyHours, 1800);
+            animateCounter('yearlyDays', state.result.yearlyDays, 2000);
+        }
+
+        function animateCounter(elementId, target, duration) {
+            const el = document.getElementById(elementId);
+            const start = 0;
+            const startTime = performance.now();
+
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                // Ease out cubic
+                const eased = 1 - Math.pow(1 - progress, 3);
+                const current = Math.round(start + (target - start) * eased);
+                el.textContent = current;
+
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    el.textContent = target;
+                }
+            }
+            requestAnimationFrame(update);
+        }
+
+        // ===== ACTIVITY TABLE =====
+        function initActivityTable() {
+            const tbody = document.getElementById('activityRows');
+            if (tbody.children.length === 0) {
+                // Add 3 empty rows to start
+                addActivityRow();
+                addActivityRow();
+                addActivityRow();
+            }
+            // Restore checklist
+            state.checklist.forEach((checked, i) => {
+                const item = document.querySelectorAll('.checklist-item')[i];
+                if (checked) item.classList.add('checked');
+                else item.classList.remove('checked');
+            });
+        }
+
+        function addActivityRow() {
+            const tbody = document.getElementById('activityRows');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="col-activity">
+                    <input type="text" placeholder="مثال: الرد على الإيميلات" oninput="autoSaveActivities()">
+                </td>
+                <td class="col-time">
+                    <input type="number" placeholder="2" min="0" step="0.5" oninput="autoSaveActivities()">
+                </td>
+                <td class="col-value">
+                    <input type="number" placeholder="0" min="0" oninput="autoSaveActivities()">
+                </td>
+                <td class="col-del">
+                    <button type="button" class="btn-del-row" onclick="deleteRow(this)">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        }
+
+        function deleteRow(btn) {
+            const tbody = document.getElementById('activityRows');
+            if (tbody.children.length > 1) {
+                btn.closest('tr').remove();
+                autoSaveActivities();
+            }
+        }
+
+        function autoSaveActivities() {
+            // Collect data from table
+            const rows = document.querySelectorAll('#activityRows tr');
+            state.activities = [];
+            rows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const activity = inputs[0].value.trim();
+                const time = parseFloat(inputs[1].value) || 0;
+                const value = parseFloat(inputs[2].value) || 0;
+                if (activity || time || value) {
+                    state.activities.push({ activity, time, value });
+                }
+            });
+            saveState();
+        }
+
+        function toggleCheck(index) {
+            state.checklist[index] = !state.checklist[index];
+            const items = document.querySelectorAll('.checklist-item');
+            items[index].classList.toggle('checked');
+            saveState();
+        }
+
+        async function saveActions(e) {
+            if (e) { e.preventDefault(); e.stopPropagation(); }
+            autoSaveActivities();
+            const btn = document.getElementById('btnSaveActions');
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> جاري الحفظ...';
+            btn.disabled = true;
+
+            // Save to backend if we have a session
+            if (state.sessionId) {
+                try {
+                    await fetch(`/api/path/${state.sessionId}/actions`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            activities: state.activities,
+                            checklist: state.checklist
+                        })
+                    });
+                } catch (e) {
+                    console.warn('Backend save failed:', e);
+                }
+            }
+
+            saveState();
+
+            btn.innerHTML = '<i class="bi bi-check-circle"></i> تم الحفظ!';
+            btn.style.background = 'linear-gradient(135deg, #059669, #10b981)';
+
+            // Navigate to summary after brief success feedback
+            setTimeout(() => {
+                btn.innerHTML = '<i class="bi bi-cloud-check"></i> حفظ التقدم';
+                btn.style.background = '';
+                btn.disabled = false;
+                goToStep(9);
+                populateSummary();
+            }, 1200);
+        }
+
+        // ===== STEP 9: POPULATE SUMMARY =====
+        function populateSummary() {
+            // Diagnosis
+            if (state.result && state.result.diagnosisLine) {
+                document.getElementById('summaryDiagnosis').textContent = state.result.diagnosisLine;
+            }
+            // Numbers
+            if (state.result) {
+                document.getElementById('sumWeekly').textContent = state.result.weeklyHours || 0;
+                document.getElementById('sumMonthly').textContent = state.result.monthlyHours || 0;
+                document.getElementById('sumYearly').textContent = state.result.yearlyDays || 0;
+            }
+            // Activities
+            const activitiesEl = document.getElementById('summaryActivities');
+            if (state.activities && state.activities.length > 0) {
+                const filtered = state.activities.filter(a => a.activity);
+                if (filtered.length > 0) {
+                    activitiesEl.innerHTML = filtered.map((a, i) =>
+                        `<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+                            <span>${i + 1}. ${a.activity}</span>
+                            <span style="color:rgba(255,255,255,0.4);">${a.time}h — ${a.value} ريال</span>
+                        </div>`
+                    ).join('');
+                } else {
+                    activitiesEl.textContent = 'لم تُسجّل أنشطة بعد';
+                }
+            } else {
+                activitiesEl.textContent = 'لم تُسجّل أنشطة بعد';
+            }
+
+            // Detect login status and show appropriate next steps
+            detectLoginStatus();
+            updateInsightTags();
+        }
+
+        // ===== SHARE RESULTS =====
+        function shareResults() {
+            const text = `🎯 تقريري التشخيصي من Startix\n\n` +
+                `التشخيص: ${state.result?.diagnosisLine || '—'}\n` +
+                `الوقت المهدر: ${state.result?.weeklyHours || 0} ساعة أسبوعياً\n` +
+                `= ${state.result?.yearlyDays || 0} يوم عمل سنوياً!\n\n` +
+                `اكتشف أين تذهب طاقتك: ${window.location.origin}/path1`;
+
+            if (navigator.share) {
+                navigator.share({ title: 'تقريري التشخيصي — Startix', text: text })
+                    .catch(() => copyToClipboard(text));
+            } else {
+                copyToClipboard(text);
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const shareBtn = document.querySelector('#step9 .btn-secondary-path');
+                const original = shareBtn.innerHTML;
+                shareBtn.innerHTML = '<i class="bi bi-check-lg"></i> تم النسخ!';
+                shareBtn.style.borderColor = '#4ade80';
+                shareBtn.style.color = '#4ade80';
+                setTimeout(() => {
+                    shareBtn.innerHTML = original;
+                    shareBtn.style.borderColor = '';
+                    shareBtn.style.color = '';
+                }, 2000);
+            });
+        }
+
+        // ===== RESTART JOURNEY =====
+        function restartJourney() {
+            localStorage.removeItem('path1_state');
+            window.location.reload();
+        }
+
+        // ===== DETECT LOGIN STATUS =====
+        function detectLoginStatus() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            const isLoggedIn = !!(token && user);
+
+            const loggedInSection = document.getElementById('nextStepsLoggedIn');
+            const guestSection = document.getElementById('nextStepsGuest');
+
+            if (isLoggedIn) {
+                loggedInSection.style.display = 'block';
+                guestSection.style.display = 'none';
+            } else {
+                loggedInSection.style.display = 'none';
+                guestSection.style.display = 'block';
+            }
+        }
+
+        // ===== UPDATE INSIGHT TAGS =====
+        function updateInsightTags() {
+            if (!state.result) return;
+
+            const tagWasted = document.getElementById('tagWastedHours');
+            const tagYearly = document.getElementById('tagYearlyDays');
+            const tagDiag = document.getElementById('tagDiagType');
+
+            if (tagWasted) tagWasted.textContent = state.result.weeklyHours || 0;
+            if (tagYearly) tagYearly.textContent = state.result.yearlyDays || 0;
+
+            // Map pain choice to diagnosis type
+            const diagMap = {
+                'busy_no_progress': '🎯 تشتت تشغيلي',
+                'no_clear_plan': '🧭 غياب الاتجاه الاستراتيجي',
+                'team_misaligned': '🤝 عدم تناغم الفريق',
+                'cant_measure': '📊 ضعف القياس والمتابعة'
+            };
+            if (tagDiag && state.painChoice) {
+                tagDiag.textContent = diagMap[state.painChoice] || '🎯 تشتت تشغيلي';
+            }
+        }
+
+        // ===== DOWNLOAD REPORT =====
+        function downloadReport() {
+            const diagnosis = state.result?.diagnosisLine || 'لم يتم التشخيص';
+            const weekly = state.result?.weeklyHours || 0;
+            const monthly = state.result?.monthlyHours || 0;
+            const yearly = state.result?.yearlyDays || 0;
+
+            let activitiesText = '';
+            if (state.activities && state.activities.length > 0) {
+                const filtered = state.activities.filter(a => a.activity);
+                activitiesText = filtered.map((a, i) =>
+                    `${i + 1}. ${a.activity} — ${a.time} ساعة — ${a.value} ريال`
+                ).join('\n');
+            }
+
+            const report = `
+╔══════════════════════════════════════════╗
+║        تقرير التشخيص الاستراتيجي         ║
+║              Startix Platform            ║
+╚══════════════════════════════════════════╝
+
+📅 التاريخ: ${new Date().toLocaleDateString('ar-SA')}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 التشخيص:
+${diagnosis}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 الأرقام:
+• الوقت المهدر أسبوعياً: ${weekly} ساعة
+• الوقت المهدر شهرياً: ${monthly} ساعة
+• أيام العمل الضائعة سنوياً: ${yearly} يوم
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 الأنشطة المسجلة:
+${activitiesText || 'لم تُسجّل أنشطة'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 الخطوات القادمة:
+1. أنشئ تقييم استراتيجي كامل (SWOT + أهداف)
+2. شغّل الذكاء الاستراتيجي (فحص ذكي + توصيات)
+3. تابع المؤشرات عبر لوحة التحكم
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔗 رابط المنصة: ${window.location.origin}
+`.trim();
+
+            const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `تقرير-التشخيص-Startix-${new Date().toISOString().slice(0, 10)}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ===== INIT =====
+        loadState();
+
+        // Resume from saved state
+        if (state.currentStep > 0) {
+            // Restore visual selections
+            if (state.painChoice) {
+                const painCard = document.querySelector(`#painChoices .choice-card[data-value="${state.painChoice}"]`);
+                if (painCard) {
+                    painCard.classList.add('selected');
+                    document.getElementById('btnStep1').disabled = false;
+                }
+            }
+            if (state.email) {
+                document.getElementById('emailInput').value = state.email;
+            }
+            // Restore answer selections
+            const qContainers = { Q2: 'q2Choices', Q3: 'q3Choices', Q4: 'q4Choices', Q5: 'q5Choices' };
+            const qBtns = { Q2: 'btnQ2', Q3: 'btnQ3', Q4: 'btnQ4', Q5: 'btnQ5' };
+            for (const [q, containerId] of Object.entries(qContainers)) {
+                if (state.answers[q]) {
+                    const card = document.querySelector(`#${containerId} .choice-card[data-value="${state.answers[q]}"]`);
+                    if (card) {
+                        card.classList.add('selected');
+                        document.getElementById(qBtns[q]).disabled = false;
+                    }
+                }
+            }
+            // Restore diagnosis
+            if (state.result && state.result.diagnosisLine) {
+                document.getElementById('diagnosisLine').textContent = state.result.diagnosisLine;
+            }
+            // Restore feedback
+            if (state.feedback) {
+                const fbBtn = document.querySelector(`.feedback-btn[data-value="${state.feedback}"]`);
+                if (fbBtn) {
+                    fbBtn.classList.add('selected');
+                    document.getElementById('btnRevealNext').disabled = false;
+                }
+            }
+
+            goToStep(state.currentStep);
+            // Populate summary if on step 9
+            if (state.currentStep === 9) {
+                setTimeout(() => populateSummary(), 100);
+            }
+        }
+    </script>
+</body>
+
+</html>

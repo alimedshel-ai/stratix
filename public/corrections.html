@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكيس - التصحيحات والتشخيصات</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --secondary: #764ba2;
+            --bg: #0f1117;
+            --bg-card: #1a1d2e;
+            --bg-card-hover: #232640;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --success: #22c55e;
+            --warning: #facc15;
+            --danger: #ef4444;
+            --info: #38bdf8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Tajawal', 'Segoe UI', sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .top-nav {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 14px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .top-nav .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .top-nav .nav-links {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .top-nav .nav-links a {
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .top-nav .nav-links a:hover,
+        .top-nav .nav-links a.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 14px;
+        }
+
+        .user-info {
+            text-align: left;
+            color: white;
+        }
+
+        .user-info .name {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .user-info .role {
+            font-size: 11px;
+            opacity: 0.75;
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: rgba(239, 68, 68, 0.6);
+        }
+
+        .page-layout {
+            display: flex;
+            min-height: calc(100vh - 60px);
+        }
+
+        /* SIDEBAR — managed by sidebar.js */
+
+        .main-content {
+            flex: 1;
+            padding: 24px;
+            overflow-x: hidden;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .page-header h1 {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: none;
+            color: var(--text);
+        }
+
+        .nav-tabs {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--text-muted);
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 10px 18px;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .nav-tabs .nav-link.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        .nav-tabs .nav-link:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text);
+        }
+
+        .table {
+            color: var(--text);
+        }
+
+        .table thead th {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: var(--border);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            padding: 10px 14px;
+        }
+
+        .table tbody td {
+            border-color: var(--border);
+            padding: 10px 14px;
+            font-size: 13px;
+            vertical-align: middle;
+        }
+
+        .table-hover tbody tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .table-danger {
+            background: rgba(239, 68, 68, 0.1) !important;
+        }
+
+        .form-control,
+        .form-select {
+            background: var(--bg) !important;
+            border: 1px solid var(--border) !important;
+            color: var(--text) !important;
+            border-radius: 10px !important;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary) !important;
+            box-shadow: none !important;
+        }
+
+        .form-control::placeholder {
+            color: var(--text-muted) !important;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .modal-content {
+            background: var(--bg-card) !important;
+            border: 1px solid var(--border) !important;
+            color: var(--text) !important;
+        }
+
+        .modal-header {
+            border-bottom: 1px solid var(--border) !important;
+        }
+
+        .modal-footer {
+            border-top: 1px solid var(--border) !important;
+        }
+
+        .btn-close {
+            filter: invert(1);
+        }
+
+        .severity-HIGH {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .severity-MEDIUM {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
+        .severity-LOW {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .corr-PENDING {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+
+        .corr-IN_PROGRESS {
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+        }
+
+        .corr-COMPLETED {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .progress {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .alert {
+            color: var(--text) !important;
+        }
+
+        /* تجاوز قيود text-muted على الألوان الداخلية */
+        .c-danger { color: #ef4444 !important; }
+        .c-warning { color: #f59e0b !important; }
+        .c-success { color: #22c55e !important; }
+        .c-primary { color: #667eea !important; }
+        .c-purple  { color: #7c3aed !important; }
+        .c-green   { color: #059669 !important; }
+    </style>
+</head>
+
+<body>
+    <!-- Top Nav -->
+    <nav class="top-nav">
+        <a href="/dashboard" class="brand"><i class="bi bi-graph-up-arrow"></i> ستارتكيس</a>
+        <div class="nav-links">
+            <a href="/dashboard"><i class="bi bi-house"></i> الرئيسية</a>
+            <a href="/kpis"><i class="bi bi-graph-up"></i> المؤشرات</a>
+            <a href="/intelligence"><i class="bi bi-bell"></i> التنبيهات</a>
+        </div>
+        <div class="user-area">
+            <div class="user-avatar" id="userAvatar">م</div>
+            <div class="user-info">
+                <div class="name" id="userName">مدير النظام</div>
+                <div class="role" id="userRole">ADMIN</div>
+            </div>
+            <button class="btn-logout" onclick="logout()">خروج</button>
+        </div>
+    </nav>
+
+    <div class="page-layout">
+        <!-- SIDEBAR — يُدار بواسطة sidebar.js -->
+        <aside class="sidebar"></aside>
+
+        <main class="main-content">
+
+            <div class="page-header">
+                <div>
+                    <h1><i class="bi bi-tools"></i> التصحيحات والتشخيصات</h1>
+                    <p style="color:var(--text-muted);font-size:13px;margin-top:4px">🔧 شخّص المشكلات واقترح حلول
+                        تصحيحية — عشان تبقى على المسار الصحيح</p>
+                </div>
+            </div>
+
+
+            <!-- Concept Explanation Banner -->
+            <div class="card p-4 mb-3"
+                style="background: linear-gradient(135deg, rgba(102,126,234,0.08), rgba(118,75,162,0.08)); border: 1px solid rgba(102,126,234,0.2);"
+                id="conceptBanner">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <span style="font-size:28px;">🔧</span>
+                        <div>
+                            <h5 class="mb-0" style="font-weight:700;">نظام التصحيحات — الحلقة المغلقة</h5>
+                            <small class="text-muted">تشخيص + علاج + تحسين تلقائي</small>
+                        </div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary"
+                        onclick="document.getElementById('conceptBanner').style.display='none'">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <p class="mb-3" style="font-size:13px; color:var(--text-muted); line-height:1.8;">
+                    نظام التصحيحات هو <strong class="c-primary">المحرك العلاجي</strong> لاستراتيجيتك — يكتشف لماذا
+                    المؤشر ضعيف، ويصنع خطة لعلاجه، ويربط كل شيء بالتحليل الاستراتيجي.
+                    النظام يتكوّن من <strong>جزئين</strong>:
+                </p>
+
+                <!-- Visual Flow -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="p-3"
+                            style="background:rgba(255,255,255,0.03); border-radius:10px; border:1px solid var(--border);">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span style="font-size:20px;">🔍</span>
+                                <strong style="color:#667eea;">الجزء 1: التشخيص</strong>
+                            </div>
+                            <p style="font-size:11px; color:var(--text-muted); margin-bottom:8px; line-height:1.6;">
+                                تحدد <strong>لماذا</strong> المؤشر أداؤه ضعيف — ما السبب الجذري؟<br>
+                                مثال: "إيرادات المبيعات منخفضة بسبب ضعف التسويق الرقمي"
+                            </p>
+                            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                                <span class="badge"
+                                    style="font-size:10px; background:rgba(255,255,255,0.06); color:var(--text);">
+                                    <i class="bi bi-graph-up" style="color:#667eea;"></i> مرتبط بـ KPI
+                                </span>
+                                <span class="badge"
+                                    style="font-size:10px; background:rgba(255,255,255,0.06); color:var(--text);">
+                                    <i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> حدّية
+                                    (عالي/متوسط/منخفض)
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3"
+                            style="background:rgba(255,255,255,0.03); border-radius:10px; border:1px solid var(--border);">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span style="font-size:20px;">🛠️</span>
+                                <strong style="color:#059669;">الجزء 2: الإجراء التصحيحي</strong>
+                            </div>
+                            <p style="font-size:11px; color:var(--text-muted); margin-bottom:8px; line-height:1.6;">
+                                تحدد <strong>كيف</strong> تصلح المشكلة — خطوة عملية بمسؤول وموعد<br>
+                                مثال: "إطلاق حملة تسويق رقمي خلال 30 يوم"
+                            </p>
+                            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                                <span class="badge"
+                                    style="font-size:10px; background:rgba(255,255,255,0.06); color:var(--text);">
+                                    <i class="bi bi-link-45deg" style="color:#059669;"></i> مرتبط بالتشخيص
+                                </span>
+                                <span class="badge"
+                                    style="font-size:10px; background:rgba(255,255,255,0.06); color:var(--text);">
+                                    <i class="bi bi-bullseye" style="color:#7c3aed;"></i> مرتبط بنقطة SWOT
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flow Diagram -->
+                <div class="p-3"
+                    style="background:rgba(255,255,255,0.03); border-radius:10px; border:1px solid var(--border);">
+                    <div style="font-size:11px; font-weight:700; color:var(--text-muted); margin-bottom:8px;">
+                        <i class="bi bi-arrow-repeat" style="color:#667eea;"></i> مسار الحلقة المغلقة:
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:11px;">
+                        <span class="badge" style="background:rgba(239,68,68,0.1); color:#ef4444; padding:6px 10px;">
+                            📉 KPI منخفض
+                        </span>
+                        <i class="bi bi-arrow-left" style="color:#ccc;"></i>
+                        <span class="badge" style="background:rgba(102,126,234,0.1); color:#667eea; padding:6px 10px;">
+                            🔍 تشخيص السبب
+                        </span>
+                        <i class="bi bi-arrow-left" style="color:#ccc;"></i>
+                        <span class="badge" style="background:rgba(5,150,105,0.1); color:#059669; padding:6px 10px;">
+                            🛠️ إجراء تصحيحي
+                        </span>
+                        <i class="bi bi-arrow-left" style="color:#ccc;"></i>
+                        <span class="badge" style="background:rgba(124,58,237,0.1); color:#7c3aed; padding:6px 10px;">
+                            🎯 ربط نقطة SWOT
+                        </span>
+                        <i class="bi bi-arrow-left" style="color:#ccc;"></i>
+                        <span class="badge" style="background:rgba(34,197,94,0.1); color:#22c55e; padding:6px 10px;">
+                            ✅ إكمال → تنبيه نجاح
+                        </span>
+                        <i class="bi bi-arrow-left" style="color:#ccc;"></i>
+                        <span class="badge" style="background:rgba(245,158,11,0.1); color:#f59e0b; padding:6px 10px;">
+                            📊 تحسين مؤشر الصحة
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card p-4">
+                <!-- Tabs -->
+                <ul class="nav nav-tabs mb-4" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#diagnosesTab"
+                            onclick="loadDiagnoses()">
+                            <i class="bi bi-search"></i> التشخيصات
+                            <span class="badge bg-primary ms-1" style="font-size:10px;">الخطوة 1</span>
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#correctionsTab"
+                            onclick="loadCorrections()">
+                            <i class="bi bi-tools"></i> الإجراءات التصحيحية
+                            <span class="badge bg-success ms-1" style="font-size:10px;">الخطوة 2</span>
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <!-- Diagnoses Tab -->
+                    <div class="tab-pane fade show active" id="diagnosesTab">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h5 class="mb-1"><i class="bi bi-search"></i> تشخيص المؤشرات</h5>
+                                <small class="text-muted">اكتشف <strong>لماذا</strong> المؤشر أداؤه ضعيف — حدد السبب
+                                    الجذري
+                                    ودرجة الخطورة</small>
+                            </div>
+                            <button class="btn btn-primary btn-sm" onclick="showDiagnosisModal()"><i
+                                    class="bi bi-plus"></i>
+                                تشخيص جديد</button>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-4">
+                                <input type="text" id="diagSearchInput" class="form-control form-control-sm"
+                                    placeholder="🔍 بحث في التشخيصات..." oninput="loadDiagnoses()">
+                            </div>
+                            <div class="col-md-3">
+                                <select id="diagSeverityFilter" class="form-select form-select-sm"
+                                    onchange="loadDiagnoses()">
+                                    <option value="">⚠️ كل الحدّيات</option>
+                                    <option value="HIGH">🔴 عالي — يحتاج تدخل فوري</option>
+                                    <option value="MEDIUM">🟡 متوسط — يحتاج متابعة</option>
+                                    <option value="LOW">🟢 منخفض — للمراقبة</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th title="مؤشر الأداء المُشخَّص">المؤشر</th>
+                                        <th title="وصف المشكلة المكتشفة">التشخيص</th>
+                                        <th title="الأصل الحقيقي للمشكلة">السبب الجذري</th>
+                                        <th title="HIGH=فوري, MEDIUM=متابعة, LOW=مراقبة">الحدّية</th>
+                                        <th title="نسبة تحقيق المستهدف">الأداء</th>
+                                        <th title="عدد الإجراءات التصحيحية المرتبطة">التصحيحات</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="diagnosesTable">
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted p-4">جاري التحميل...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Corrections Tab -->
+                    <div class="tab-pane fade" id="correctionsTab">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h5 class="mb-1"><i class="bi bi-tools"></i> الإجراءات التصحيحية</h5>
+                                <small class="text-muted">حدد <strong>كيف</strong> تعالج المشكلة — خطوة عملية بمسؤول
+                                    وموعد.
+                                    عند إكمالها يتحسن مؤشر الصحة</small>
+                            </div>
+                            <button class="btn btn-success btn-sm" onclick="showCorrectionModal()"><i
+                                    class="bi bi-plus"></i> إجراء جديد</button>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-4">
+                                <input type="text" id="corrSearchInput" class="form-control form-control-sm"
+                                    placeholder="🔍 بحث في الإجراءات..." oninput="loadCorrections()">
+                            </div>
+                            <div class="col-md-3">
+                                <select id="corrStatusFilter" class="form-select form-select-sm"
+                                    onchange="loadCorrections()">
+                                    <option value="">📊 كل الحالات</option>
+                                    <option value="PENDING">⏳ معلّق — ينتظر البدء</option>
+                                    <option value="IN_PROGRESS">🔄 قيد التنفيذ — العمل جارٍ</option>
+                                    <option value="COMPLETED">✅ مكتمل — تم العلاج</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th title="اسم الإجراء التصحيحي">العنوان</th>
+                                        <th title="المؤشر الذي يعالجه هذا الإجراء">المؤشر المرتبط</th>
+                                        <th title="الشخص المسؤول عن التنفيذ">المسؤول</th>
+                                        <th title="الموعد النهائي — النظام ينبهك عند التأخر">تاريخ الاستحقاق</th>
+                                        <th title="PENDING=ينتظر, IN_PROGRESS=جارٍ, COMPLETED=يرفع الصحة">الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="correctionsTable">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted p-4">جاري التحميل...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+
+    <!-- Diagnosis Modal (Enhanced) -->
+    <div class="modal fade" id="diagnosisModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header"
+                    style="background:linear-gradient(135deg, rgba(102,126,234,0.08), rgba(118,75,162,0.06));">
+                    <h5 class="modal-title" id="diagModalTitle">
+                        <i class="bi bi-search" style="color:#667eea;"></i> تشخيص جديد
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="diagId">
+
+                    <!-- Explanation Banner -->
+                    <div class="alert"
+                        style="background:rgba(102,126,234,0.06); border:1px solid rgba(102,126,234,0.15); border-radius:12px; font-size:12px; line-height:1.8; color:var(--text-muted);">
+                        <strong class="c-primary">🔍 ما هو التشخيص؟</strong><br>
+                        التشخيص هو <strong>الخطوة الأولى</strong> في الحلقة المغلقة — تحدد فيه لماذا مؤشر الأداء (KPI)
+                        لا يحقق المستهدف.
+                        بعد التشخيص، تنشئ <strong class="c-green">إجراءً تصحيحياً</strong> لعلاج المشكلة.
+                    </div>
+
+                    <!-- KPI Selection -->
+                    <div class="mb-3">
+                        <label class="form-label d-flex align-items-center gap-1">
+                            <i class="bi bi-graph-up" style="color:#667eea;"></i>
+                            <strong>المؤشر (KPI) *</strong>
+                        </label>
+                        <select id="diagKpi" class="form-select">
+                            <option value="">-- اختر مؤشر --</option>
+                        </select>
+                        <small class="text-muted d-block mt-1" style="line-height:1.6;">
+                            📊 <strong>مرتبط بـ:</strong> مؤشرات الأداء الاستراتيجية. اختر المؤشر الذي أداؤه ضعيف أو
+                            يحتاج تحليل.<br>
+                            💡 <strong>نصيحة:</strong> ركّز على المؤشرات ذات الحالة <span
+                                class="c-danger fw-bold">OFF_TRACK</span> أو <span class="c-warning fw-bold">AT_RISK</span>.
+                        </small>
+                    </div>
+
+                    <!-- Diagnosis Text -->
+                    <div class="mb-3">
+                        <label class="form-label d-flex align-items-center gap-1">
+                            <i class="bi bi-card-text" style="color:#059669;"></i>
+                            <strong>التشخيص *</strong>
+                        </label>
+                        <textarea id="diagDiagnosis" class="form-control" rows="3"
+                            placeholder="مثال: إيرادات المبيعات أقل من المستهدف بنسبة 30% بسبب تراجع الطلب في القطاع الصناعي"></textarea>
+                        <small class="text-muted d-block mt-1" style="line-height:1.6;">
+                            📝 <strong>ماذا تكتب هنا؟</strong> وصف دقيق للمشكلة — ماذا يحدث ولماذا هو مشكلة.<br>
+                            💡 <strong>أمثلة:</strong> "تأخر المشروع بسبب نقص الموارد" • "رضا العملاء انخفض لعدم الرد
+                            خلال 24 ساعة"
+                        </small>
+                    </div>
+
+                    <!-- Root Cause -->
+                    <div class="mb-3">
+                        <label class="form-label d-flex align-items-center gap-1">
+                            <i class="bi bi-diagram-3" style="color:#7c3aed;"></i>
+                            <strong>السبب الجذري</strong>
+                        </label>
+                        <textarea id="diagRootCause" class="form-control" rows="2"
+                            placeholder="مثال: عدم وجود فريق تسويق رقمي متخصص + غياب خطة تسويق سنوية"></textarea>
+                        <small class="text-muted d-block mt-1" style="line-height:1.6;">
+                            🌱 <strong>مرتبط بـ:</strong> تحليل Root Cause في الذكاء الاستراتيجي — يظهر في سلسلة التأثير
+                            BSC.<br>
+                            💡 <strong>نصيحة:</strong> استخدم تقنية "<strong class="c-purple">5 لماذا</strong>" —
+                            اسأل "لماذا؟" 5 مرات للوصول للسبب الحقيقي.
+                        </small>
+                    </div>
+
+                    <!-- Severity -->
+                    <div class="mb-3">
+                        <label class="form-label d-flex align-items-center gap-1">
+                            <i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i>
+                            <strong>الحدّية</strong>
+                        </label>
+                        <select id="diagSeverity" class="form-select">
+                            <option value="HIGH">🔴 عالي — يحتاج تدخل فوري (أسبوع)</option>
+                            <option value="MEDIUM" selected>🟡 متوسط — يحتاج متابعة (شهر)</option>
+                            <option value="LOW">🟢 منخفض — للمراقبة (ربع سنوي)</option>
+                        </select>
+                        <small class="text-muted d-block mt-1">
+                            ⚠️ <strong>التأثير:</strong> الحدّية تحدد أولوية المعالجة وتؤثر على ترتيب التنبيهات في
+                            الذكاء الاستراتيجي
+                        </small>
+                    </div>
+
+                    <!-- Connection Map -->
+                    <div style="font-size:11px; font-weight:700; color:var(--text-muted); margin-bottom:6px;">
+                        <i class="bi bi-diagram-3" style="color:#667eea;"></i> خريطة الارتباطات
+                    </div>
+                    <div style="font-size:11px; color:var(--text-muted); line-height:2;">
+                        <div>🔵 <strong class="c-primary">المؤشرات:</strong> التشخيص مرتبط مباشرة بمؤشر KPI
+                            محدد</div>
+                        <div>🟢 <strong class="c-green">التصحيحات:</strong> بعد التشخيص، تنشئ إجراء تصحيحي
+                            لعلاج المشكلة</div>
+                        <div>🟣 <strong class="c-purple">SWOT:</strong> السبب الجذري قد يرتبط بنقطة ضعف في
+                            التحليل الاستراتيجي</div>
+                        <div>🟡 <strong class="c-warning">التنبيهات:</strong> يظهر في صفحة الذكاء الاستراتيجي
+                            كتحذير</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-primary" id="btnSaveDiagnosis">
+                        <i class="bi bi-check-lg"></i> حفظ التشخيص
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Correction Modal (Enhanced) -->
+    <div class="modal fade" id="correctionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header"
+                    style="background:linear-gradient(135deg, rgba(5,150,105,0.08), rgba(34,197,94,0.06));">
+                    <h5 class="modal-title" id="corrModalTitle">
+                        <i class="bi bi-tools" style="color:#059669;"></i> إجراء تصحيحي جديد
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="corrId">
+
+                    <!-- Explanation Banner -->
+                    <div class="alert"
+                        style="background:rgba(5,150,105,0.06); border:1px solid rgba(5,150,105,0.15); border-radius:12px; font-size:12px; line-height:1.8; color:var(--text-muted);">
+                        <strong class="c-green">🛠️ ما هو الإجراء التصحيحي؟</strong><br>
+                        هو <strong>الخطوة العلاجية</strong> المربوطة بتشخيص — عند إكماله، النظام يُرسل تنبيه نجاح تلقائي
+                        ويحسّن مؤشر الصحة.
+                        يمكن ربطه بنقطة ضعف في <strong class="c-purple">SWOT</strong> لإغلاق الحلقة كاملة.
+                    </div>
+
+                    <!-- Diagnosis Link -->
+                    <div class="mb-3">
+                        <label class="form-label d-flex align-items-center gap-1">
+                            <i class="bi bi-link-45deg" style="color:#667eea;"></i>
+                            <strong>التشخيص المرتبط *</strong>
+                        </label>
+                        <select id="corrDiagnosis" class="form-select">
+                            <option value="">-- اختر تشخيص --</option>
+                        </select>
+                        <small class="text-muted d-block mt-1" style="line-height:1.6;">
+                            🔗 <strong>مرتبط بـ:</strong> التشخيصات (الخطوة 1). كل إجراء تصحيحي يجب أن يرتبط بتشخيص
+                            محدد.<br>
+                            💡 <strong>فكرة:</strong> يمكنك إنشاء عدة إجراءات لنفس التشخيص إذا المشكلة تحتاج حلول
+                            متعددة.
+                        </small>
+                    </div>
+
+                    <!-- Title -->
+                    <div class="mb-3">
+                        <label class="form-label d-flex align-items-center gap-1">
+                            <i class="bi bi-bookmark-star" style="color:#059669;"></i>
+                            <strong>العنوان *</strong>
+                        </label>
+                        <input type="text" id="corrTitle" class="form-control"
+                            placeholder="مثال: توظيف مدير تسويق رقمي">
+                        <small class="text-muted d-block mt-1" style="line-height:1.6;">
+                            💡 <strong>نصيحة:</strong> ابدأ بفعل واضح: "توظيف..." • "إطلاق..." • "تدريب..." •
+                            "تحديث..."<br>
+                            <strong class="c-green">أمثلة:</strong> "إطلاق حملة تسويق Q2" • "تدريب 20 موظف على
+                            CRM" • "تحديث سياسة الجودة"
+                        </small>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label class="form-label d-flex align-items-center gap-1">
+                            <i class="bi bi-card-text" style="color:#0891b2;"></i>
+                            <strong>الوصف</strong>
+                        </label>
+                        <textarea id="corrDesc" class="form-control" rows="2"
+                            placeholder="تفاصيل ما يجب فعله بالضبط والنتائج المتوقعة..."></textarea>
+                        <small class="text-muted d-block mt-1">
+                            📝 اشرح الخطوات المطلوبة والنتائج المتوقعة — يظهر في تقارير المراجعات الدورية
+                        </small>
+                    </div>
+
+                    <!-- Assignee + Due Date -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label d-flex align-items-center gap-1">
+                                <i class="bi bi-person-badge" style="color:#f59e0b;"></i>
+                                <strong>المسؤول</strong>
+                            </label>
+                            <input type="text" id="corrAssignee" class="form-control" placeholder="اسم الشخص المسؤول">
+                            <small class="text-muted d-block mt-1">
+                                👤 من سينفّذ هذا الإجراء ويتابع نتائجه
+                            </small>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label d-flex align-items-center gap-1">
+                                <i class="bi bi-calendar2-check" style="color:#ef4444;"></i>
+                                <strong>تاريخ الاستحقاق</strong>
+                            </label>
+                            <input type="date" id="corrDueDate" class="form-control">
+                            <small class="text-muted d-block mt-1">
+                                ⏰ النظام ينبّهك تلقائياً عند التأخر عن هذا الموعد
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="mb-3">
+                        <label class="form-label d-flex align-items-center gap-1">
+                            <i class="bi bi-flag" style="color:#8b5cf6;"></i>
+                            <strong>الحالة</strong>
+                        </label>
+                        <select id="corrStatus" class="form-select">
+                            <option value="PENDING">⏳ معلّق — ينتظر البدء</option>
+                            <option value="IN_PROGRESS">🔄 قيد التنفيذ — العمل جارٍ</option>
+                            <option value="COMPLETED">✅ مكتمل — تم العلاج بنجاح</option>
+                        </select>
+                        <small class="text-muted d-block mt-1" style="line-height:1.6;">
+                            🔄 <strong>الحلقة المغلقة:</strong> عند تحديد الحالة كـ <strong
+                                class="c-success">مكتمل</strong>:<br>
+                            <span style="margin-right:12px;">1️⃣ النظام يسجّل تاريخ الإكمال</span>
+                            <span style="margin-right:12px;">2️⃣ يُرسل تنبيه <span
+                                    class="c-success">CORRECTION_SUCCESS</span></span>
+                            <span>3️⃣ يتحسّن مؤشر الصحة الاستراتيجية</span>
+                        </small>
+                    </div>
+
+                    <!-- Connection Map -->
+                    <div style="font-size:11px; font-weight:700; color:var(--text-muted); margin-bottom:6px;">
+                        <i class="bi bi-diagram-3" style="color:#059669;"></i> خريطة الارتباطات
+                    </div>
+                    <div style="font-size:11px; color:var(--text-muted); line-height:2;">
+                        <div>🔵 <strong class="c-primary">التشخيص:</strong> كل إجراء مرتبط بتشخيص يحدد المشكلة
+                        </div>
+                        <div>🟣 <strong class="c-purple">SWOT:</strong> يمكن ربطه بنقطة ضعف/تهديد في التحليل
+                            الاستراتيجي</div>
+                        <div>🟡 <strong class="c-warning">التنبيهات:</strong> التأخر يولّد تنبيه تلقائي •
+                            الإكمال يولّد تنبيه نجاح</div>
+                        <div>🔴 <strong class="c-danger">المراجعات:</strong> يظهر في تقارير المراجعات الدورية
+                            كتصحيح مرتبط</div>
+                        <div>🟢 <strong class="c-success">الصحة:</strong> إكمال التصحيح يرفع مؤشر الصحة
+                            الاستراتيجية الكلي</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-success" id="btnSaveCorrection">
+                        <i class="bi bi-check-lg"></i> حفظ الإجراء
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </main>
+    </div> <!-- end page-layout -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/auth.js"></script>
+    <script>
+        // ===== TOKEN & INITIALIZATION =====
+        let token = null;
+
+        function initApp() {
+            token = getToken();
+            if (!token) {
+                console.error('No token - redirecting to login');
+                window.location.href = '/login.html';
+                return false;
+            }
+            console.log('Token found:', token.substring(0, 20) + '...');
+            return true;
+        }
+
+        // ===== LOAD DATA =====
+        async function loadKpisForSelect() {
+            try {
+                const res = await fetch('/api/strategic/kpis?limit=100', { headers: { Authorization: `Bearer ${token}` } });
+                const data = await res.json();
+                const kpis = data.kpis || [];
+                const sel = document.getElementById('diagKpi');
+                sel.innerHTML = '<option value="">-- اختر مؤشر --</option>';
+                kpis.forEach(k => {
+                    const opt = document.createElement('option');
+                    opt.value = k.id;
+                    opt.textContent = `${k.nameAr || k.name} (${k.actual || '-'}/${k.target}${k.unit})`;
+                    sel.appendChild(opt);
+                });
+            } catch (err) {
+                console.error('Error loading KPIs:', err);
+            }
+        }
+
+        async function loadDiagnosesForSelect() {
+            try {
+                const res = await fetch('/api/corrections/diagnoses?limit=100', { headers: { Authorization: `Bearer ${token}` } });
+                const data = await res.json();
+                const diags = data.diagnoses || [];
+                const sel = document.getElementById('corrDiagnosis');
+                sel.innerHTML = '<option value="">-- اختر تشخيص --</option>';
+                diags.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d.id;
+                    opt.textContent = `${d.kpi?.nameAr || d.kpi?.name || 'مؤشر'}: ${d.diagnosis.substring(0, 50)}`;
+                    sel.appendChild(opt);
+                });
+            } catch (err) {
+                console.error('Error loading diagnoses:', err);
+            }
+        }
+
+        async function loadDiagnoses() {
+            try {
+                const search = document.getElementById('diagSearchInput').value;
+                const severity = document.getElementById('diagSeverityFilter').value;
+                let url = '/api/corrections/diagnoses?limit=50';
+                if (search) url += `&search=${encodeURIComponent(search)}`;
+                if (severity) url += `&severity=${severity}`;
+
+                const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+                const data = await res.json();
+                renderDiagnoses(data.diagnoses || []);
+            } catch (err) {
+                console.error('Error:', err);
+                document.getElementById('diagnosesTable').innerHTML = '<tr><td colspan="7" class="text-center text-danger">فشل التحميل</td></tr>';
+            }
+        }
+
+        function renderDiagnoses(diagnoses) {
+            const tbody = document.getElementById('diagnosesTable');
+            if (!diagnoses.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted p-4">لا توجد تشخيصات</td></tr>';
+                return;
+            }
+
+            const sevLabel = { HIGH: 'عالي', MEDIUM: 'متوسط', LOW: 'منخفض' };
+
+            tbody.innerHTML = diagnoses.map(d => {
+                const kpi = d.kpi || {};
+                const progress = kpi.target ? Math.round(((kpi.actual || 0) / kpi.target) * 100) : 0;
+                const progressColor = progress >= 80 ? 'success' : progress >= 50 ? 'warning' : 'danger';
+
+                return `
+        <tr>
+          <td>
+            <strong>${kpi.nameAr || kpi.name || '-'}</strong>
+            <br><small class="text-muted">${kpi.version?.entity?.legalName || ''}</small>
+          </td>
+          <td><small>${d.diagnosis.substring(0, 80)}${d.diagnosis.length > 80 ? '...' : ''}</small></td>
+          <td><small>${d.rootCause || '-'}</small></td>
+          <td><span class="badge severity-${d.severity}">${sevLabel[d.severity]}</span></td>
+          <td>
+            <div class="progress" style="height: 18px; min-width: 80px;">
+              <div class="progress-bar bg-${progressColor}" style="width: ${progress}%">${progress}%</div>
+            </div>
+            <small class="text-muted">${kpi.actual || '-'} / ${kpi.target || '-'}${kpi.unit || ''}</small>
+          </td>
+          <td><span class="badge bg-secondary">${d._count?.corrections || 0}</span></td>
+          <td>
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-outline-primary" onclick="editDiagnosis('${d.id}')" title="تعديل"><i class="bi bi-pencil"></i></button>
+              <button class="btn btn-outline-danger" onclick="deleteDiagnosis('${d.id}')" title="حذف"><i class="bi bi-trash"></i></button>
+            </div>
+          </td>
+        </tr>`;
+            }).join('');
+        }
+
+        function showDiagnosisModal() {
+            document.getElementById('diagId').value = '';
+            document.getElementById('diagKpi').value = '';
+            document.getElementById('diagDiagnosis').value = '';
+            document.getElementById('diagRootCause').value = '';
+            document.getElementById('diagSeverity').value = 'MEDIUM';
+            document.getElementById('diagModalTitle').innerHTML = '<i class="bi bi-search" style="color:#667eea;"></i> تشخيص جديد';
+            new bootstrap.Modal(document.getElementById('diagnosisModal')).show();
+        }
+
+        async function editDiagnosis(id) {
+            try {
+                const res = await fetch(`/api/corrections/diagnoses/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+                const d = await res.json();
+                document.getElementById('diagId').value = d.id;
+                document.getElementById('diagKpi').value = d.kpiId;
+                document.getElementById('diagDiagnosis').value = d.diagnosis;
+                document.getElementById('diagRootCause').value = d.rootCause || '';
+                document.getElementById('diagSeverity').value = d.severity;
+                document.getElementById('diagModalTitle').innerHTML = '<i class="bi bi-pencil" style="color:#667eea;"></i> تعديل التشخيص';
+                new bootstrap.Modal(document.getElementById('diagnosisModal')).show();
+            } catch (err) {
+                alert('فشل تحميل البيانات');
+            }
+        }
+
+        async function saveDiagnosis() {
+            const editId = document.getElementById('diagId').value;
+            const kpiId = document.getElementById('diagKpi').value;
+            const diagnosis = document.getElementById('diagDiagnosis').value.trim();
+            const rootCause = document.getElementById('diagRootCause').value.trim();
+            const severity = document.getElementById('diagSeverity').value;
+
+            if (!editId && !kpiId) { alert('يرجى اختيار المؤشر'); return; }
+            if (!diagnosis) { alert('يرجى كتابة التشخيص'); return; }
+
+            try {
+                const url = editId ? `/api/corrections/diagnoses/${editId}` : '/api/corrections/diagnoses';
+                const method = editId ? 'PATCH' : 'POST';
+                const body = editId ? { diagnosis, rootCause, severity } : { kpiId, diagnosis, rootCause, severity };
+
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify(body)
+                });
+
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.error || 'فشل الحفظ');
+                }
+
+                bootstrap.Modal.getInstance(document.getElementById('diagnosisModal')).hide();
+                loadDiagnoses();
+            } catch (err) {
+                console.error('Save error:', err);
+                alert('خطأ: ' + err.message);
+            }
+        }
+
+        async function deleteDiagnosis(id) {
+            if (!confirm('حذف هذا التشخيص وجميع الإجراءات التصحيحية المرتبطة؟')) return;
+            try {
+                await fetch(`/api/corrections/diagnoses/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+                loadDiagnoses();
+            } catch (err) {
+                alert('فشل الحذف');
+            }
+        }
+
+        // ===== CORRECTIONS =====
+        async function loadCorrections() {
+            try {
+                const search = document.getElementById('corrSearchInput').value;
+                const status = document.getElementById('corrStatusFilter').value;
+                let url = '/api/corrections/corrections?limit=50';
+                if (search) url += `&search=${encodeURIComponent(search)}`;
+                if (status) url += `&status=${status}`;
+
+                const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+                const data = await res.json();
+                renderCorrections(data.corrections || []);
+            } catch (err) {
+                console.error('Error:', err);
+                document.getElementById('correctionsTable').innerHTML = '<tr><td colspan="6" class="text-center text-danger">فشل التحميل</td></tr>';
+            }
+        }
+
+        function renderCorrections(corrections) {
+            const tbody = document.getElementById('correctionsTable');
+            if (!corrections.length) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted p-4">لا توجد إجراءات تصحيحية</td></tr>';
+                return;
+            }
+
+            const statusLabel = { PENDING: 'معلّق', IN_PROGRESS: 'قيد التنفيذ', COMPLETED: 'مكتمل' };
+
+            tbody.innerHTML = corrections.map(c => {
+                const kpiName = c.diagnosis?.kpi?.nameAr || c.diagnosis?.kpi?.name || '-';
+                const dueDate = c.dueDate ? new Date(c.dueDate).toLocaleDateString('ar-SA') : '-';
+                const isOverdue = c.dueDate && new Date(c.dueDate) < new Date() && c.status !== 'COMPLETED';
+
+                return `
+        <tr class="${isOverdue ? 'table-danger' : ''}">
+          <td>
+            <strong>${c.title}</strong>
+            ${c.description ? `<br><small class="text-muted">${c.description.substring(0, 60)}</small>` : ''}
+          </td>
+          <td><small>${kpiName}</small></td>
+          <td><small>${c.assignee || '-'}</small></td>
+          <td>
+            <small${isOverdue ? ' class="text-danger fw-bold"' : ''}>${dueDate}</small>
+            ${isOverdue ? ' <i class="bi bi-exclamation-triangle text-danger"></i>' : ''}
+          </td>
+          <td><span class="badge corr-${c.status}">${statusLabel[c.status] || c.status}</span></td>
+          <td>
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-outline-primary" onclick="editCorrection('${c.id}')" title="تعديل"><i class="bi bi-pencil"></i></button>
+              ${c.status !== 'COMPLETED' ? `<button class="btn btn-outline-success" onclick="completeCorrection('${c.id}')" title="إكمال"><i class="bi bi-check-lg"></i></button>` : ''}
+              <button class="btn btn-outline-danger" onclick="deleteCorrection('${c.id}')" title="حذف"><i class="bi bi-trash"></i></button>
+            </div>
+          </td>
+        </tr>`;
+            }).join('');
+        }
+
+        async function showCorrectionModal() {
+            await loadDiagnosesForSelect();
+            document.getElementById('corrId').value = '';
+            document.getElementById('corrDiagnosis').value = '';
+            document.getElementById('corrTitle').value = '';
+            document.getElementById('corrDesc').value = '';
+            document.getElementById('corrAssignee').value = '';
+            document.getElementById('corrDueDate').value = '';
+            document.getElementById('corrStatus').value = 'PENDING';
+            document.getElementById('corrModalTitle').innerHTML = '<i class="bi bi-tools" style="color:#059669;"></i> إجراء تصحيحي جديد';
+            new bootstrap.Modal(document.getElementById('correctionModal')).show();
+        }
+
+        async function editCorrection(id) {
+            try {
+                await loadDiagnosesForSelect();
+                const res = await fetch('/api/corrections/corrections?limit=100', { headers: { Authorization: `Bearer ${token}` } });
+                const data = await res.json();
+                const c = (data.corrections || []).find(corr => corr.id === id);
+                if (!c) throw new Error('Not found');
+
+                document.getElementById('corrId').value = c.id;
+                document.getElementById('corrDiagnosis').value = c.diagnosisId;
+                document.getElementById('corrTitle').value = c.title;
+                document.getElementById('corrDesc').value = c.description || '';
+                document.getElementById('corrAssignee').value = c.assignee || '';
+                document.getElementById('corrDueDate').value = c.dueDate ? c.dueDate.split('T')[0] : '';
+                document.getElementById('corrStatus').value = c.status;
+                document.getElementById('corrModalTitle').innerHTML = '<i class="bi bi-pencil" style="color:#059669;"></i> تعديل الإجراء';
+                new bootstrap.Modal(document.getElementById('correctionModal')).show();
+            } catch (err) {
+                alert('فشل تحميل البيانات');
+            }
+        }
+
+        async function saveCorrection() {
+            const editId = document.getElementById('corrId').value;
+            const diagnosisId = document.getElementById('corrDiagnosis').value;
+            const title = document.getElementById('corrTitle').value.trim();
+            const description = document.getElementById('corrDesc').value.trim();
+            const assignee = document.getElementById('corrAssignee').value.trim();
+            const dueDate = document.getElementById('corrDueDate').value;
+            const status = document.getElementById('corrStatus').value;
+
+            if (!title || (!editId && !diagnosisId)) { alert('التشخيص والعنوان مطلوبان'); return; }
+
+            try {
+                const url = editId ? `/api/corrections/corrections/${editId}` : '/api/corrections/corrections';
+                const method = editId ? 'PATCH' : 'POST';
+                const body = { title, description, assignee, dueDate: dueDate || null, status };
+                if (!editId) body.diagnosisId = diagnosisId;
+
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify(body)
+                });
+
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.error || 'فشل الحفظ');
+                }
+
+                bootstrap.Modal.getInstance(document.getElementById('correctionModal')).hide();
+                loadCorrections();
+            } catch (err) {
+                console.error('Save error:', err);
+                alert('خطأ: ' + err.message);
+            }
+        }
+
+        async function completeCorrection(id) {
+            if (!confirm('هل تريد تحديد هذا الإجراء كمكتمل؟')) return;
+            try {
+                const res = await fetch(`/api/corrections/corrections/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ status: 'COMPLETED' })
+                });
+                if (!res.ok) throw new Error('Failed');
+                loadCorrections();
+            } catch (err) {
+                alert('فشل التحديث');
+            }
+        }
+
+        async function deleteCorrection(id) {
+            if (!confirm('حذف هذا الإجراء التصحيحي؟')) return;
+            try {
+                await fetch(`/api/corrections/corrections/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+                loadCorrections();
+            } catch (err) {
+                alert('فشل الحذف');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/login.html';
+        }
+
+        // ===== EVENT LISTENERS =====
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!initApp()) return;
+            loadKpisForSelect();
+            loadDiagnoses();
+
+            // Save buttons
+            document.getElementById('btnSaveDiagnosis').addEventListener('click', saveDiagnosis);
+            document.getElementById('btnSaveCorrection').addEventListener('click', saveCorrection);
+        });
+    </script>
+    <script src="/js/api.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script src="/js/ai-advisor.js"></script>
+    <script src="/js/impersonation.js"></script>
+</body>
+
+</html>

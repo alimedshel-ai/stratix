@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إدارة مؤشرات الأداء - Stratix</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/sidebar.css">
+  <link rel="stylesheet" href="/css/custom.css">
+  <style>
+    .status-badge {
+      padding: 0.35rem 0.65rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .status-on-track {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .status-at-risk {
+      background-color: #ffc107;
+      color: #333;
+    }
+
+    .status-off-track {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .progress-container {
+      position: relative;
+    }
+
+    .kpi-card {
+      transition: all 0.3s;
+    }
+
+    .kpi-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container-fluid">
+    <!-- Top Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+      <div class="container-fluid">
+        <span class="navbar-brand mb-0 h1">Stratix | مؤشرات الأداء الرئيسية</span>
+        <button class="btn btn-sm btn-outline-secondary" onclick="logout()">
+          <i class="bi bi-box-arrow-right"></i> خروج
+        </button>
+      </div>
+    </nav>
+
+    <div class="row g-0 flex-grow-1">
+      <!-- Sidebar -->
+      <nav class="col-md-2 bg-light sidebar p-3">
+        <div class="list-group list-group-flush">
+          <a href="/dashboard" class="list-group-item list-group-item-action">
+            <i class="bi bi-speedometer2"></i> لوحة التحكم
+          </a>
+          <a href="/sectors" class="list-group-item list-group-item-action">
+            <i class="bi bi-diagram-3"></i> القطاعات
+          </a>
+          <a href="/industries" class="list-group-item list-group-item-action">
+            <i class="bi bi-grid"></i> الأنشطة
+          </a>
+          <a href="/entities" class="list-group-item list-group-item-action">
+            <i class="bi bi-building"></i> الكيانات
+          </a>
+          <a href="/users" class="list-group-item list-group-item-action">
+            <i class="bi bi-people"></i> المستخدمون
+          </a>
+          <a href="/assessments" class="list-group-item list-group-item-action">
+            <i class="bi bi-clipboard-check"></i> التقييمات
+          </a>
+          <a href="/kpis" class="list-group-item list-group-item-action active">
+            <i class="bi bi-graph-up"></i> المؤشرات
+          </a>
+          <hr>
+          <a href="/versions" class="list-group-item list-group-item-action">
+            <i class="bi bi-clock-history"></i> إصدارات الاستراتيجية
+          </a>
+          <a href="/choices" class="list-group-item list-group-item-action">
+            <i class="bi bi-signpost-split"></i> الخيارات والمخاطر
+          </a>
+          <a href="/corrections" class="list-group-item list-group-item-action">
+            <i class="bi bi-tools"></i> التصحيحات
+          </a>
+          <a href="/analysis" class="list-group-item list-group-item-action">
+            <i class="bi bi-lightbulb"></i> التحليل الاستراتيجي
+          </a>
+          <a href="/financial" class="list-group-item list-group-item-action">
+            <i class="bi bi-cash-stack"></i> القرارات المالية
+          </a>
+          <a href="/integrations" class="list-group-item list-group-item-action">
+            <i class="bi bi-plug"></i> التكاملات
+          </a>
+          <hr>
+          <a href="/settings" class="list-group-item list-group-item-action">
+            <i class="bi bi-gear"></i> الإعدادات
+          </a>
+        </div>
+      </nav>
+
+      <!-- Main Content -->
+      <main class="col-md-10 p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h2><i class="bi bi-graph-up"></i> مؤشرات الأداء الرئيسية</h2>
+          <button class="btn btn-primary" onclick="openCreateModal()">
+            <i class="bi bi-plus-lg"></i> مؤشر جديد
+          </button>
+        </div>
+
+        <!-- Filters -->
+        <div class="row mb-3">
+          <div class="col-md-3">
+            <input type="text" class="form-control" id="searchInput" placeholder="بحث في المؤشرات..."
+              onkeyup="searchKPIs()">
+          </div>
+          <div class="col-md-3">
+            <select class="form-select" id="versionFilter" onchange="filterKPIs()">
+              <option value="">الخطة الاستراتيجية - الكل</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <select class="form-select" id="objectiveFilter" onchange="filterKPIs()">
+              <option value="">الهدف - الكل</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <select class="form-select" id="statusFilter" onchange="filterKPIs()">
+              <option value="">الحالة - الكل</option>
+              <option value="ON_TRACK">على المسار</option>
+              <option value="AT_RISK">تحت المراقبة</option>
+              <option value="OFF_TRACK">خارج المسار</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- KPIs Grid -->
+        <div class="row" id="kpisContainer">
+          <div class="col-12 text-center text-muted">جاري التحميل...</div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="d-flex justify-content-between align-items-center mt-4">
+          <div>
+            <small class="text-muted" id="paginationInfo">جاري التحميل...</small>
+          </div>
+          <nav>
+            <ul class="pagination mb-0" id="paginationControls"></ul>
+          </nav>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Create/Edit Modal -->
+  <div class="modal fade" id="kpiModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="kpiModalTitle">مؤشر جديد</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="kpiForm">
+            <input type="hidden" id="kpiId">
+
+            <div class="mb-3">
+              <label class="form-label">الاسم <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="kpiName" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">الاسم بالعربية</label>
+              <input type="text" class="form-control" id="kpiNameAr">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">الوصف</label>
+              <textarea class="form-control" id="kpiDescription" rows="2"></textarea>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">الخطة الاستراتيجية <span class="text-danger">*</span></label>
+                <select class="form-select" id="kpiVersion" required onchange="loadObjectives()">
+                  <option value="">اختر...</option>
+                </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">الهدف</label>
+                <select class="form-select" id="kpiObjective">
+                  <option value="">بدون هدف</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">الهدف (Target) <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" id="kpiTarget" step="0.01" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">القيمة الفعلية (Actual)</label>
+                <input type="number" class="form-control" id="kpiActual" step="0.01">
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">الوحدة</label>
+                <select class="form-select" id="kpiUnit">
+                  <option value="%">نسبة مئوية (%)</option>
+                  <option value="$">دولار ($)</option>
+                  <option value="units">وحدات</option>
+                  <option value="hours">ساعات</option>
+                  <option value="count">عدد</option>
+                </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">الحالة</label>
+                <select class="form-select" id="kpiStatus">
+                  <option value="ON_TRACK">على المسار</option>
+                  <option value="AT_RISK">تحت المراقبة</option>
+                  <option value="OFF_TRACK">خارج المسار</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="formError" class="alert alert-danger d-none" role="alert"></div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">الغاء</button>
+          <button type="button" class="btn btn-primary" onclick="saveKPI()">حفظ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    const API_BASE = '/api';
+    let currentPage = 1;
+    const PAGE_SIZE = 10;
+    let kpiModal;
+    let allVersions = [];
+    let allObjectives = [];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      kpiModal = new bootstrap.Modal(document.getElementById('kpiModal'));
+      loadVersions();
+      loadKPIs();
+    });
+
+    async function loadVersions() {
+      try {
+        // Get all entities first to find versions
+        const response = await fetch(`${API_BASE}/entities?limit=1000`, {
+          headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+        if (!response.ok) throw new Error('Failed to load entities');
+        const data = await response.json();
+        const entities = Array.isArray(data.entities) ? data.entities : [];
+
+        // Collect all versions
+        allVersions = [];
+        if (entities.length > 0) {
+          for (const entity of entities) {
+            if (entity._count?.strategyVersions > 0) {
+              // Just add entity info, we'll fetch versions separately if needed
+              allVersions.push({ entityId: entity.id, entityName: entity.legalName || entity.displayName });
+            }
+          }
+        }
+
+        // Populate version dropdown (simplified - using entity names)
+        const versionSelect = document.getElementById('kpiVersion');
+        versionSelect.innerHTML = '<option value="">اختر...</option>';
+        if (entities.length > 0) {
+          entities.forEach(entity => {
+            if (entity._count?.strategyVersions > 0) {
+              const option = document.createElement('option');
+              option.value = entity.id;
+              option.textContent = `${entity.legalName || entity.displayName}`;
+              versionSelect.appendChild(option);
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error loading versions:', error);
+      }
+    }
+
+    async function loadObjectives() {
+      const versionId = document.getElementById('kpiVersion').value;
+      if (!versionId) {
+        document.getElementById('kpiObjective').innerHTML = '<option value="">بدون هدف</option>';
+        return;
+      }
+
+      try {
+        // Get objectives for this version
+        const response = await fetch(`${API_BASE}/strategic/objectives?versionId=${versionId}&limit=1000`, {
+          headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+        if (!response.ok) throw new Error('Failed to load objectives');
+        const data = await response.json();
+        allObjectives = Array.isArray(data.objectives) ? data.objectives : [];
+
+        const objectiveSelect = document.getElementById('kpiObjective');
+        objectiveSelect.innerHTML = '<option value="">بدون هدف</option>';
+        if (allObjectives.length > 0) {
+          allObjectives.forEach(obj => {
+            const option = document.createElement('option');
+            option.value = obj.id;
+            option.textContent = obj.title;
+            objectiveSelect.appendChild(option);
+          });
+        }
+      } catch (error) {
+        console.error('Error loading objectives:', error);
+      }
+    }
+
+    async function loadKPIs(page = 1) {
+      try {
+        currentPage = page;
+        const search = document.getElementById('searchInput').value;
+        const status = document.getElementById('statusFilter').value;
+
+        let url = `${API_BASE}/strategic/kpis?page=${page}&limit=${PAGE_SIZE}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        if (status) url += `&status=${status}`;
+
+        const response = await fetch(url, {
+          headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+
+        if (!response.ok) throw new Error('Failed to load KPIs');
+
+        const data = await response.json();
+        renderKPIs(data.kpis || []);
+        renderPagination(data.totalPages || 1, page);
+        updatePaginationInfo(data.total || 0, page, PAGE_SIZE);
+      } catch (error) {
+        alert('خطأ: ' + error.message);
+      }
+    }
+
+    function renderKPIs(kpis) {
+      const container = document.getElementById('kpisContainer');
+      // Ensure kpis is an array
+      if (!Array.isArray(kpis) || kpis.length === 0) {
+        container.innerHTML = '<div class="col-12 text-center text-muted">لا توجد مؤشرات</div>';
+        return;
+      }
+
+      container.innerHTML = kpis.map(kpi => {
+        const progress = kpi.actual ? Math.min((kpi.actual / kpi.target) * 100, 100) : 0;
+        const progressColor = kpi.status === 'ON_TRACK' ? 'success' : kpi.status === 'AT_RISK' ? 'warning' : 'danger';
+
+        return `
+          <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card kpi-card h-100">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <h6 class="card-title mb-0">${kpi.name}</h6>
+                  <span class="status-badge status-${kpi.status.toLowerCase()}">${getStatusLabel(kpi.status)}</span>
+                </div>
+                
+                ${kpi.nameAr ? `<small class="text-muted">${kpi.nameAr}</small><br>` : ''}
+                
+                <small class="text-muted">${kpi.objective?.title || 'بدون هدف'}</small>
+                
+                <div class="mt-3">
+                  <div class="d-flex justify-content-between mb-1">
+                    <span class="small">${kpi.target} ${kpi.unit}</span>
+                    <span class="small"><strong>${kpi.actual || 0} ${kpi.unit}</strong></span>
+                  </div>
+                  <div class="progress" style="height: 6px;">
+                    <div class="progress-bar bg-${progressColor}" style="width: ${progress}%"></div>
+                  </div>
+                </div>
+
+                <div class="mt-3">
+                  <button class="btn btn-sm btn-outline-primary" onclick="editKPI('${kpi.id}')">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" onclick="deleteKPI('${kpi.id}', '${kpi.name}')">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderPagination(totalPages, currentPage) {
+      const controls = document.getElementById('paginationControls');
+      controls.innerHTML = '';
+
+      if (currentPage > 1) {
+        controls.innerHTML += `<li class="page-item"><a class="page-link" href="#" onclick="loadKPIs(${currentPage - 1}); return false;">السابق</a></li>`;
+      }
+
+      for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+        controls.innerHTML += `<li class="page-item ${i === currentPage ? 'active' : ''}"><a class="page-link" href="#" onclick="loadKPIs(${i}); return false;">${i}</a></li>`;
+      }
+
+      if (currentPage < totalPages) {
+        controls.innerHTML += `<li class="page-item"><a class="page-link" href="#" onclick="loadKPIs(${currentPage + 1}); return false;">التالي</a></li>`;
+      }
+    }
+
+    function updatePaginationInfo(total, page, pageSize) {
+      const start = (page - 1) * pageSize + 1;
+      const end = Math.min(page * pageSize, total);
+      document.getElementById('paginationInfo').textContent = `${start}-${end} من ${total}`;
+    }
+
+    function getStatusLabel(status) {
+      const labels = {
+        'ON_TRACK': 'على المسار',
+        'AT_RISK': 'تحت المراقبة',
+        'OFF_TRACK': 'خارج المسار'
+      };
+      return labels[status] || status;
+    }
+
+    function openCreateModal() {
+      document.getElementById('kpiId').value = '';
+      document.getElementById('kpiForm').reset();
+      document.getElementById('kpiModalTitle').textContent = 'مؤشر جديد';
+      document.getElementById('formError').classList.add('d-none');
+      loadVersions();
+      kpiModal.show();
+    }
+
+    async function editKPI(kpiId) {
+      try {
+        const response = await fetch(`${API_BASE}/strategic/kpis/${kpiId}`, {
+          headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+
+        if (!response.ok) throw new Error('Failed to load KPI');
+
+        const kpi = await response.json();
+        document.getElementById('kpiId').value = kpi.id;
+        document.getElementById('kpiName').value = kpi.name;
+        document.getElementById('kpiNameAr').value = kpi.nameAr || '';
+        document.getElementById('kpiDescription').value = kpi.description || '';
+        document.getElementById('kpiTarget').value = kpi.target;
+        document.getElementById('kpiActual').value = kpi.actual || '';
+        document.getElementById('kpiUnit').value = kpi.unit;
+        document.getElementById('kpiStatus').value = kpi.status;
+        document.getElementById('kpiVersion').value = kpi.versionId;
+        document.getElementById('kpiObjective').value = kpi.objectiveId || '';
+
+        document.getElementById('kpiModalTitle').textContent = 'تعديل مؤشر';
+        document.getElementById('formError').classList.add('d-none');
+
+        kpiModal.show();
+      } catch (error) {
+        alert('خطأ: ' + error.message);
+      }
+    }
+
+    async function saveKPI() {
+      const kpiId = document.getElementById('kpiId').value;
+      const name = document.getElementById('kpiName').value.trim();
+      const nameAr = document.getElementById('kpiNameAr').value.trim();
+      const description = document.getElementById('kpiDescription').value.trim();
+      const versionId = document.getElementById('kpiVersion').value;
+      const objectiveId = document.getElementById('kpiObjective').value;
+      const target = document.getElementById('kpiTarget').value;
+      const actual = document.getElementById('kpiActual').value;
+      const unit = document.getElementById('kpiUnit').value;
+      const status = document.getElementById('kpiStatus').value;
+
+      const formError = document.getElementById('formError');
+
+      if (!name || !versionId || !target) {
+        formError.textContent = 'الاسم والخطة والهدف مطلوبة';
+        formError.classList.remove('d-none');
+        return;
+      }
+
+      try {
+        const data = {
+          name,
+          nameAr: nameAr || null,
+          description: description || null,
+          versionId,
+          objectiveId: objectiveId || null,
+          target: parseFloat(target),
+          actual: actual ? parseFloat(actual) : null,
+          unit,
+          status
+        };
+
+        const url = kpiId ? `${API_BASE}/strategic/kpis/${kpiId}` : `${API_BASE}/strategic/kpis`;
+        const method = kpiId ? 'PATCH' : 'POST';
+
+        const response = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${getToken()}`
+          },
+          body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'خطأ في الحفظ');
+        }
+
+        kpiModal.hide();
+        loadKPIs(currentPage);
+      } catch (error) {
+        formError.textContent = error.message;
+        formError.classList.remove('d-none');
+      }
+    }
+
+    async function deleteKPI(kpiId, name) {
+      if (!confirm(`هل تريد حذف "${name}"؟`)) return;
+
+      try {
+        const response = await fetch(`${API_BASE}/strategic/kpis/${kpiId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+
+        if (!response.ok) throw new Error('Failed to delete KPI');
+
+        loadKPIs(currentPage);
+      } catch (error) {
+        alert('خطأ: ' + error.message);
+      }
+    }
+
+    function searchKPIs() {
+      currentPage = 1;
+      loadKPIs();
+    }
+
+    function filterKPIs() {
+      currentPage = 1;
+      loadKPIs();
+    }
+  </script>
+</body>
+
+</html>

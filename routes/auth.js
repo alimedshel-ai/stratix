@@ -7,48 +7,128 @@ const { validateLogin, validateRegister } = require('../middleware/validation');
 
 const router = express.Router();
 
-// Register new user
-router.post('/register', validateRegister, async (req, res) => {
+// Register new user — Full Onboarding Chain
+router.post('/register', async (req, res) => {
   try {
-    const { email, password, name } = req.body;
+    const { email, password, name, companyName } = req.body;
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
-
-    if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
+    // 1. التحقق من البيانات
+    if (!email || !password || !name || !companyName) {
+      return res.status(400).json({ error: 'جميع الحقول مطلوبة: الاسم، الإيميل، كلمة المرور، اسم المنشأة' });
     }
 
-    // Hash password
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' });
+    }
+
+    // 2. التحقق من عدم تكرار البريد
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ error: 'البريد الإلكتروني مستخدم بالفعل' });
+    }
+
+    // 3. تشفير كلمة المرور
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name,
-      },
+    // 4. إنشاء كل شي في Transaction واحد (User + Company + Entity + Member + Version)
+    const result = await prisma.$transaction(async (tx) => {
+      // أ. إنشاء المستخدم
+      const user = await tx.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          name,
+          systemRole: 'USER',
+        },
+      });
+
+      // ب. إنشاء الشركة
+      const company = await tx.company.create({
+        data: {
+          nameAr: companyName,
+          nameEn: companyName,
+          status: 'ACTIVE',
+        },
+      });
+
+      // ج. إنشاء الكيان (Entity) مرتبط بالشركة
+      const entity = await tx.entity.create({
+        data: {
+          legalName: companyName,
+          displayName: companyName,
+          companyId: company.id,
+          isActive: true,
+        },
+      });
+
+      // د. إنشاء العضوية (المستخدم = مالك الكيان)
+      await tx.member.create({
+        data: {
+          userId: user.id,
+          entityId: entity.id,
+          role: 'OWNER',
+        },
+      });
+
+      // هـ. إنشاء أول نسخة استراتيجية تلقائياً
+      await tx.strategyVersion.create({
+        data: {
+          entityId: entity.id,
+          versionNumber: 1,
+          name: 'الخطة الاستراتيجية الأولى',
+          description: 'تم إنشاؤها تلقائياً عند التسجيل',
+          status: 'ACTIVE',
+          isActive: true,
+          createdBy: user.id,
+          activatedAt: new Date(),
+        },
+      });
+
+      return { user, entity, company };
     });
 
+    // 5. إنشاء JWT token
+    const token = jwt.sign(
+      {
+        id: result.user.id,
+        email: result.user.email,
+        name: result.user.name,
+        systemRole: 'USER',
+        role: 'OWNER',
+        entityId: result.entity.id,
+        companyId: result.company.id,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    // 6. الرد
     res.status(201).json({
-      message: 'User registered successfully',
+      message: 'تم إنشاء الحساب بنجاح',
+      token,
       user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
+        id: result.user.id,
+        email: result.user.email,
+        name: result.user.name,
+        systemRole: 'USER',
+        role: 'OWNER',
+        entity: result.entity,
+        memberships: [{ role: 'OWNER', entity: result.entity }],
       },
     });
   } catch (error) {
-    res.status(500).json({ message: 'Registration failed', error: error.message });
+    console.error('Registration Error:', error);
+    if (error.code === 'P2002') {
+      return res.status(400).json({ error: 'البريد الإلكتروني مستخدم بالفعل' });
+    }
+    res.status(500).json({ error: 'فشل إنشاء الحساب، يرجى المحاولة لاحقاً' });
   }
 });
 
 // Login
 router.post('/login', validateLogin, async (req, res) => {
   try {
+
     const { email, password } = req.body;
 
     // Find user with memberships
@@ -57,25 +137,40 @@ router.post('/login', validateLogin, async (req, res) => {
       include: {
         memberships: {
           include: {
-            entity: true,
+            entity: {
+              include: { company: { select: { id: true, nameAr: true, nameEn: true } } }
+            },
           },
         },
       },
     });
 
+    console.log('LOGIN DEBUG:', {
+      email,
+      passwordEntered: password,
+      userFound: !!user,
+      userPasswordHash: user?.password
+    });
+
     if (!user) {
+      console.log('LOGIN DEBUG: User not found');
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     // Compare passwords
     const isPasswordValid = await bcrypt.compare(password, user.password);
+    console.log('LOGIN DEBUG: isPasswordValid =', isPasswordValid);
 
     if (!isPasswordValid) {
+      console.log('LOGIN DEBUG: Password mismatch');
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     // Get primary role (first membership or default)
-    const primaryRole = user.memberships[0]?.role || 'VIEWER';
+    // SUPER_ADMIN يحصل على OWNER تلقائياً لو ما عنده membership
+    const isSA = user.systemRole === 'SUPER_ADMIN';
+    const primaryRole = user.memberships[0]?.role || (isSA ? 'OWNER' : 'VIEWER');
+    const primaryUserType = user.memberships[0]?.userType || 'EXPLORER';
     const primaryEntity = user.memberships[0]?.entity || null;
 
     // Generate JWT token
@@ -84,7 +179,11 @@ router.post('/login', validateLogin, async (req, res) => {
         id: user.id,
         email: user.email,
         name: user.name,
+        systemRole: user.systemRole || 'USER',
         role: primaryRole,
+        userType: primaryUserType,
+        entityId: primaryEntity?.id || null,
+        companyId: primaryEntity?.companyId || null,
       },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
@@ -97,7 +196,9 @@ router.post('/login', validateLogin, async (req, res) => {
         id: user.id,
         email: user.email,
         name: user.name,
+        systemRole: user.systemRole || 'USER',
         role: primaryRole,
+        userType: primaryUserType,
         entity: primaryEntity,
         memberships: user.memberships,
       },
@@ -115,7 +216,9 @@ router.get('/profile', verifyToken, async (req, res) => {
       include: {
         memberships: {
           include: {
-            entity: true,
+            entity: {
+              include: { company: { select: { id: true, nameAr: true, nameEn: true } } }
+            },
           },
         },
       },
@@ -125,19 +228,166 @@ router.get('/profile', verifyToken, async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const primaryRole = user.memberships[0]?.role || 'VIEWER';
+    const isSA2 = user.systemRole === 'SUPER_ADMIN';
+    const primaryRole = user.memberships[0]?.role || (isSA2 ? 'OWNER' : 'VIEWER');
+    const primaryUserType = user.memberships[0]?.userType || 'EXPLORER';
+    const primaryEntity = user.memberships[0]?.entity || null;
 
     res.json({
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
+        systemRole: user.systemRole || 'USER',
         role: primaryRole,
+        userType: primaryUserType,
+        entity: primaryEntity,
         memberships: user.memberships,
       },
     });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching profile', error: error.message });
+  }
+});
+
+// Update profile (user name)
+router.patch('/profile', verifyToken, async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'الاسم مطلوب' });
+    }
+
+    const user = await prisma.user.update({
+      where: { id: req.user.id },
+      data: { name: name.trim() },
+      select: { id: true, name: true, email: true },
+    });
+
+    res.json({ message: 'تم تحديث الاسم بنجاح', user });
+  } catch (error) {
+    res.status(500).json({ error: 'فشل تحديث الملف الشخصي' });
+  }
+});
+
+// Update user type (EXPLORER/COMPANY_MANAGER/DEPT_MANAGER/CONSULTANT)
+router.patch('/user-type', verifyToken, async (req, res) => {
+  try {
+    const { userType, entityId } = req.body;
+    const validTypes = ['EXPLORER', 'COMPANY_MANAGER', 'DEPT_MANAGER', 'CONSULTANT'];
+
+    if (!userType || !validTypes.includes(userType)) {
+      return res.status(400).json({ error: 'نوع المستخدم غير صالح', validTypes });
+    }
+
+    const targetEntityId = entityId || req.user.entityId;
+    if (!targetEntityId) {
+      return res.status(400).json({ error: 'لا يوجد كيان مرتبط' });
+    }
+
+    // Find the membership
+    const membership = await prisma.member.findFirst({
+      where: { userId: req.user.id, entityId: targetEntityId },
+    });
+
+    if (!membership) {
+      return res.status(404).json({ error: 'لا يوجد عضوية في هذا الكيان' });
+    }
+
+    // Update userType
+    const updated = await prisma.member.update({
+      where: { id: membership.id },
+      data: { userType },
+    });
+
+    res.json({
+      message: 'تم تحديث نوع المستخدم بنجاح',
+      userType: updated.userType,
+      memberId: updated.id,
+    });
+  } catch (error) {
+    console.error('Error updating user type:', error);
+    res.status(500).json({ error: 'فشل تحديث نوع المستخدم' });
+  }
+});
+
+// Update or create company (OWNER/ADMIN only)
+router.patch('/company', verifyToken, async (req, res) => {
+  try {
+    const { companyId, entityId, nameAr, nameEn } = req.body;
+    const isSuperAdmin = req.user.systemRole === 'SUPER_ADMIN';
+
+    if (!nameAr && !nameEn) {
+      return res.status(400).json({ error: 'يجب تقديم nameAr أو nameEn' });
+    }
+
+    const companyNameAr = (nameAr || nameEn || '').trim();
+    const companyNameEn = (nameEn || nameAr || '').trim();
+
+    // Case 1: Update existing company
+    if (companyId) {
+      // Verify user has OWNER/ADMIN access
+      const membership = await prisma.member.findFirst({
+        where: {
+          userId: req.user.id,
+          entity: { companyId },
+          role: { in: ['OWNER', 'ADMIN'] },
+        },
+      });
+
+      if (!membership && !isSuperAdmin) {
+        return res.status(403).json({ error: 'ليس لديك صلاحية تعديل بيانات الشركة' });
+      }
+
+      const company = await prisma.company.update({
+        where: { id: companyId },
+        data: { nameAr: companyNameAr, nameEn: companyNameEn },
+        select: { id: true, nameAr: true, nameEn: true },
+      });
+
+      return res.json({ message: 'تم تحديث اسم الشركة بنجاح', company });
+    }
+
+    // Case 2: Create new company and link to entity
+    const userEntityId = entityId || req.user.entityId;
+    if (!userEntityId) {
+      return res.status(400).json({ error: 'لا يوجد كيان مرتبط بحسابك' });
+    }
+
+    // Verify ownership
+    const membership = await prisma.member.findFirst({
+      where: {
+        userId: req.user.id,
+        entityId: userEntityId,
+        role: { in: ['OWNER', 'ADMIN'] },
+      },
+    });
+
+    if (!membership && !isSuperAdmin) {
+      return res.status(403).json({ error: 'ليس لديك صلاحية' });
+    }
+
+    // Create company + link entity in transaction
+    const result = await prisma.$transaction(async (tx) => {
+      const company = await tx.company.create({
+        data: { nameAr: companyNameAr, nameEn: companyNameEn, status: 'ACTIVE' },
+      });
+
+      await tx.entity.update({
+        where: { id: userEntityId },
+        data: { companyId: company.id },
+      });
+
+      return company;
+    });
+
+    res.json({
+      message: 'تم إنشاء الشركة وربطها بالكيان بنجاح',
+      company: { id: result.id, nameAr: result.nameAr, nameEn: result.nameEn },
+    });
+  } catch (error) {
+    console.error('Error updating company:', error);
+    res.status(500).json({ error: 'فشل تحديث بيانات الشركة' });
   }
 });
 

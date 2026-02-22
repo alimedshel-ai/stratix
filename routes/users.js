@@ -2,6 +2,7 @@ const express = require('express');
 const prisma = require('../lib/prisma');
 const bcrypt = require('bcryptjs');
 const { verifyToken } = require('../middleware/auth');
+const { checkPermission } = require('../middleware/permission');
 
 const router = express.Router();
 
@@ -13,30 +14,36 @@ router.get('/', verifyToken, async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     let where = {};
-    
+
     if (search) {
       where.OR = [
-        { name: { contains: search,  } },
-        { email: { contains: search,  } }
+        { name: { contains: search } },
+        { email: { contains: search } }
       ];
     }
-    
-    if (entityId) {
-      where.entityId = entityId;
-    }
-    
-    if (role) {
-      where.role = role;
+
+    // Filter by entity membership
+    if (entityId || role) {
+      where.memberships = {
+        some: {
+          ...(entityId && { entityId }),
+          ...(role && { role })
+        }
+      };
     }
 
     const users = await prisma.user.findMany({
       where,
       include: {
-        entity: {
-          select: {
-            id: true,
-            name: true,
-            code: true
+        memberships: {
+          include: {
+            entity: {
+              select: {
+                id: true,
+                legalName: true,
+                displayName: true
+              }
+            }
           }
         }
       },
@@ -47,10 +54,16 @@ router.get('/', verifyToken, async (req, res) => {
       ]
     });
 
+    // Remove password from results
+    const safeUsers = users.map(user => {
+      const { password, ...userWithoutPassword } = user;
+      return userWithoutPassword;
+    });
+
     const total = await prisma.user.count({ where });
 
     res.json({
-      users,
+      users: safeUsers,
       total,
       page: parseInt(page),
       limit: parseInt(limit),
@@ -68,19 +81,29 @@ router.get('/:id', verifyToken, async (req, res) => {
     const user = await prisma.user.findUnique({
       where: { id: req.params.id },
       include: {
-        entity: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
-            industry: {
-              select: {
-                id: true,
-                name: true,
+        memberships: {
+          include: {
+            entity: {
+              include: {
                 sector: {
                   select: {
                     id: true,
-                    name: true
+                    nameEn: true,
+                    nameAr: true
+                  }
+                },
+                industry: {
+                  select: {
+                    id: true,
+                    nameEn: true,
+                    nameAr: true
+                  }
+                },
+                entityType: {
+                  select: {
+                    id: true,
+                    nameEn: true,
+                    nameAr: true
                   }
                 }
               }
@@ -95,128 +118,225 @@ router.get('/:id', verifyToken, async (req, res) => {
     }
 
     // Don't return password
-    delete user.password;
+    const { password, ...userWithoutPassword } = user;
 
-    res.json(user);
+    res.json(userWithoutPassword);
   } catch (error) {
     console.error('Error fetching user:', error);
     res.status(500).json({ error: 'Failed to fetch user' });
   }
 });
 
-// Create user
-router.post('/', verifyToken, async (req, res) => {
+// Create user with membership (ADMIN only)
+router.post('/', verifyToken, checkPermission('ADMIN'), async (req, res) => {
   try {
-    const { email, password, name, role, entityId } = req.body;
+    const { email, password, name, entityId, role = 'VIEWER' } = req.body;
 
-    // Validation
     if (!email || !password || !name) {
       return res.status(400).json({ error: 'Email, password, and name are required' });
     }
 
-    // Check if email already exists
-    const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing) {
-      return res.status(409).json({ error: 'Email already exists' });
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ error: 'User with this email already exists' });
     }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
+    // Create user with optional membership
     const user = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
         name,
-        role: role || 'VIEWER',
-        entityId: entityId || null
+        ...(entityId && {
+          memberships: {
+            create: {
+              entityId,
+              role
+            }
+          }
+        })
       },
       include: {
-        entity: {
-          select: {
-            id: true,
-            name: true,
-            code: true
+        memberships: {
+          include: {
+            entity: {
+              select: {
+                id: true,
+                legalName: true,
+                displayName: true
+              }
+            }
           }
         }
       }
     });
 
     // Don't return password
-    delete user.password;
+    const { password: _, ...userWithoutPassword } = user;
 
-    res.status(201).json(user);
+    res.status(201).json(userWithoutPassword);
   } catch (error) {
     console.error('Error creating user:', error);
     res.status(500).json({ error: 'Failed to create user' });
   }
 });
 
-// Update user
-router.patch('/:id', verifyToken, async (req, res) => {
+// Update user (ADMIN only)
+router.patch('/:id', verifyToken, checkPermission('ADMIN'), async (req, res) => {
   try {
-    const { email, password, name, role, entityId } = req.body;
-    const userId = req.params.id;
-
-    // Check if user exists
-    const existing = await prisma.user.findUnique({ where: { id: userId } });
-    if (!existing) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    // If changing email, check for duplicates
-    if (email && email !== existing.email) {
-      const emailExists = await prisma.user.findUnique({ where: { email } });
-      if (emailExists) {
-        return res.status(409).json({ error: 'Email already in use' });
-      }
-    }
+    const { name, email, password } = req.body;
 
     const updateData = {};
-    if (email) updateData.email = email;
     if (name) updateData.name = name;
-    if (role) updateData.role = role;
-    if (entityId !== undefined) updateData.entityId = entityId;
-    if (password) updateData.password = await bcrypt.hash(password, 10);
+    if (email) updateData.email = email;
+    if (password) {
+      updateData.password = await bcrypt.hash(password, 10);
+    }
 
     const user = await prisma.user.update({
-      where: { id: userId },
+      where: { id: req.params.id },
       data: updateData,
       include: {
-        entity: {
-          select: {
-            id: true,
-            name: true,
-            code: true
+        memberships: {
+          include: {
+            entity: {
+              select: {
+                id: true,
+                legalName: true,
+                displayName: true
+              }
+            }
           }
         }
       }
     });
 
     // Don't return password
-    delete user.password;
+    const { password: _, ...userWithoutPassword } = user;
 
-    res.json(user);
+    res.json(userWithoutPassword);
   } catch (error) {
     console.error('Error updating user:', error);
     res.status(500).json({ error: 'Failed to update user' });
   }
 });
 
-// Delete user
-router.delete('/:id', verifyToken, async (req, res) => {
+// Add user to entity (create membership) (ADMIN only)
+router.post('/:userId/memberships', verifyToken, checkPermission('ADMIN'), async (req, res) => {
   try {
-    const userId = req.params.id;
+    const { userId } = req.params;
+    const { entityId, role = 'VIEWER' } = req.body;
 
-    // Check if user exists
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+    if (!entityId) {
+      return res.status(400).json({ error: 'entityId is required' });
     }
 
-    // Delete user
-    await prisma.user.delete({ where: { id: userId } });
+    // Check if membership already exists
+    const existingMembership = await prisma.member.findUnique({
+      where: {
+        userId_entityId: {
+          userId,
+          entityId
+        }
+      }
+    });
+
+    if (existingMembership) {
+      return res.status(400).json({ error: 'User is already a member of this entity' });
+    }
+
+    const membership = await prisma.member.create({
+      data: {
+        userId,
+        entityId,
+        role
+      },
+      include: {
+        entity: {
+          select: {
+            id: true,
+            legalName: true,
+            displayName: true
+          }
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    res.status(201).json(membership);
+  } catch (error) {
+    console.error('Error creating membership:', error);
+    res.status(500).json({ error: 'Failed to create membership' });
+  }
+});
+
+// Update user membership role (ADMIN only)
+router.patch('/:userId/memberships/:membershipId', verifyToken, checkPermission('ADMIN'), async (req, res) => {
+  try {
+    const { membershipId } = req.params;
+    const { role } = req.body;
+
+    if (!role) {
+      return res.status(400).json({ error: 'role is required' });
+    }
+
+    const membership = await prisma.member.update({
+      where: { id: membershipId },
+      data: { role },
+      include: {
+        entity: {
+          select: {
+            id: true,
+            legalName: true,
+            displayName: true
+          }
+        }
+      }
+    });
+
+    res.json(membership);
+  } catch (error) {
+    console.error('Error updating membership:', error);
+    res.status(500).json({ error: 'Failed to update membership' });
+  }
+});
+
+// Remove user from entity (delete membership) (ADMIN only)
+router.delete('/:userId/memberships/:membershipId', verifyToken, checkPermission('ADMIN'), async (req, res) => {
+  try {
+    const { membershipId } = req.params;
+
+    await prisma.member.delete({
+      where: { id: membershipId }
+    });
+
+    res.json({ message: 'Membership removed successfully' });
+  } catch (error) {
+    console.error('Error deleting membership:', error);
+    res.status(500).json({ error: 'Failed to delete membership' });
+  }
+});
+
+// Delete user (ADMIN only)
+router.delete('/:id', verifyToken, checkPermission('ADMIN'), async (req, res) => {
+  try {
+    // Memberships will be deleted automatically (cascade)
+    await prisma.user.delete({
+      where: { id: req.params.id }
+    });
 
     res.json({ message: 'User deleted successfully' });
   } catch (error) {

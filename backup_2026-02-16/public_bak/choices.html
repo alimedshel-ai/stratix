@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الخيارات والمخاطر - Stratix</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/custom.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        .main-content {
+            margin-right: 250px;
+            padding: 20px;
+        }
+
+        .sidebar {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background: #fff;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+            padding-top: 60px;
+            z-index: 100;
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 12px 20px;
+            color: #555;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: #667eea;
+            color: #fff;
+        }
+
+        .sidebar a i {
+            margin-left: 8px;
+        }
+
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 200;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .content-area {
+            margin-top: 60px;
+        }
+
+        .nav-tabs .nav-link.active {
+            background: #667eea;
+            color: #fff;
+            border-color: #667eea;
+        }
+
+        .priority-HIGH {
+            background: #ff7675;
+            color: #fff;
+        }
+
+        .priority-MEDIUM {
+            background: #fdcb6e;
+            color: #333;
+        }
+
+        .priority-LOW {
+            background: #81ecec;
+            color: #333;
+        }
+
+        .status-ACTIVE {
+            background: #55efc4;
+            color: #00b894;
+        }
+
+        .status-COMPLETED {
+            background: #74b9ff;
+            color: #0984e3;
+        }
+
+        .status-DROPPED {
+            background: #ff7675;
+            color: #d63031;
+        }
+
+        .status-OPEN {
+            background: #ffeaa7;
+            color: #e17055;
+        }
+
+        .status-MITIGATED {
+            background: #55efc4;
+            color: #00b894;
+        }
+
+        .status-CLOSED {
+            background: #dfe6e9;
+            color: #636e72;
+        }
+
+        .risk-matrix {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            max-width: 200px;
+        }
+
+        .risk-cell {
+            padding: 6px;
+            text-align: center;
+            font-size: 0.7rem;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div><strong>Stratix</strong> <i class="bi bi-rocket-takeoff"></i></div>
+        <div>
+            <span id="userName" class="me-2">مدير النظام</span>
+            <button class="btn btn-sm btn-outline-secondary" onclick="logout()"><i class="bi bi-box-arrow-left"></i>
+                خروج</button>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <a href="/dashboard"><i class="bi bi-speedometer2"></i> لوحة التحكم</a>
+        <a href="/sectors"><i class="bi bi-diagram-3"></i> القطاعات</a>
+        <a href="/industries"><i class="bi bi-grid"></i> الأنشطة</a>
+        <a href="/entities"><i class="bi bi-building"></i> الكيانات</a>
+        <a href="/users"><i class="bi bi-people"></i> المستخدمون</a>
+        <a href="/assessments"><i class="bi bi-clipboard-check"></i> التقييمات</a>
+        <a href="/kpis"><i class="bi bi-graph-up"></i> المؤشرات</a>
+        <hr style="margin:8px 16px;border-color:rgba(0,0,0,0.1);">
+        <a href="/versions"><i class="bi bi-clock-history"></i> إصدارات الاستراتيجية</a>
+        <a href="/choices" class="active"><i class="bi bi-signpost-split"></i> الخيارات والمخاطر</a>
+        <a href="/corrections"><i class="bi bi-tools"></i> التصحيحات</a>
+        <a href="/analysis"><i class="bi bi-lightbulb"></i> التحليل الاستراتيجي</a>
+        <a href="/financial"><i class="bi bi-cash-stack"></i> القرارات المالية</a>
+        <a href="/integrations"><i class="bi bi-plug"></i> التكاملات</a>
+        <hr style="margin:8px 16px;border-color:rgba(0,0,0,0.1);">
+        <a href="/settings"><i class="bi bi-gear"></i> الإعدادات</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content content-area">
+        <div class="card p-4">
+            <!-- Tabs -->
+            <ul class="nav nav-tabs mb-4" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#choicesTab"
+                        onclick="loadChoices()">
+                        <i class="bi bi-signpost-split"></i> الخيارات الاستراتيجية
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#risksTab" onclick="loadRisks()">
+                        <i class="bi bi-exclamation-triangle"></i> المخاطر
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <!-- Choices Tab -->
+                <div class="tab-pane fade show active" id="choicesTab">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5><i class="bi bi-signpost-split"></i> الخيارات الاستراتيجية</h5>
+                        <button class="btn btn-primary btn-sm" onclick="showChoiceModal()"><i class="bi bi-plus"></i>
+                            خيار جديد</button>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4">
+                            <select id="choiceVersionFilter" class="form-select form-select-sm"
+                                onchange="loadChoices()">
+                                <option value="">-- كل الإصدارات --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select id="choiceStatusFilter" class="form-select form-select-sm" onchange="loadChoices()">
+                                <option value="">-- كل الحالات --</option>
+                                <option value="ACTIVE">نشط</option>
+                                <option value="COMPLETED">مكتمل</option>
+                                <option value="DROPPED">ملغي</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>العنوان</th>
+                                    <th>الإصدار</th>
+                                    <th>الكيان</th>
+                                    <th>الأولوية</th>
+                                    <th>الحالة</th>
+                                    <th>المخاطر</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="choicesTable">
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted p-4">جاري التحميل...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Risks Tab -->
+                <div class="tab-pane fade" id="risksTab">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5><i class="bi bi-exclamation-triangle"></i> سجل المخاطر</h5>
+                        <button class="btn btn-danger btn-sm" onclick="showRiskModal()"><i class="bi bi-plus"></i> خطر
+                            جديد</button>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-3">
+                            <select id="riskVersionFilter" class="form-select form-select-sm" onchange="loadRisks()">
+                                <option value="">-- كل الإصدارات --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select id="riskStatusFilter" class="form-select form-select-sm" onchange="loadRisks()">
+                                <option value="">-- كل الحالات --</option>
+                                <option value="OPEN">مفتوح</option>
+                                <option value="MITIGATED">تم التخفيف</option>
+                                <option value="CLOSED">مغلق</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select id="riskProbFilter" class="form-select form-select-sm" onchange="loadRisks()">
+                                <option value="">-- الاحتمالية --</option>
+                                <option value="HIGH">عالي</option>
+                                <option value="MEDIUM">متوسط</option>
+                                <option value="LOW">منخفض</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>العنوان</th>
+                                    <th>الخيار المرتبط</th>
+                                    <th>الاحتمالية</th>
+                                    <th>الأثر</th>
+                                    <th>المسؤول</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="risksTable">
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted p-4">جاري التحميل...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Choice Modal -->
+    <div class="modal fade" id="choiceModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="choiceModalTitle">خيار استراتيجي جديد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="choiceId">
+                    <div class="mb-3">
+                        <label class="form-label">العنوان *</label>
+                        <input type="text" id="choiceTitle" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الوصف</label>
+                        <textarea id="choiceDesc" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">إصدار الاستراتيجية *</label>
+                        <select id="choiceVersion" class="form-select" required>
+                            <option value="">-- اختر --</option>
+                        </select>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label">الأولوية</label>
+                            <select id="choicePriority" class="form-select">
+                                <option value="HIGH">عالية</option>
+                                <option value="MEDIUM" selected>متوسطة</option>
+                                <option value="LOW">منخفضة</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">الحالة</label>
+                            <select id="choiceStatus" class="form-select">
+                                <option value="ACTIVE">نشط</option>
+                                <option value="COMPLETED">مكتمل</option>
+                                <option value="DROPPED">ملغي</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-primary" onclick="saveChoice()">حفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Risk Modal -->
+    <div class="modal fade" id="riskModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="riskModalTitle">إضافة خطر</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="riskId">
+                    <div class="mb-3">
+                        <label class="form-label">العنوان *</label>
+                        <input type="text" id="riskTitle" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الوصف</label>
+                        <textarea id="riskDesc" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">إصدار الاستراتيجية *</label>
+                        <select id="riskVersion" class="form-select" required>
+                            <option value="">-- اختر --</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الخيار المرتبط</label>
+                        <select id="riskChoice" class="form-select">
+                            <option value="">-- بدون --</option>
+                        </select>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-4">
+                            <label class="form-label">الاحتمالية</label>
+                            <select id="riskProbability" class="form-select">
+                                <option value="HIGH">عالي</option>
+                                <option value="MEDIUM" selected>متوسط</option>
+                                <option value="LOW">منخفض</option>
+                            </select>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label">الأثر</label>
+                            <select id="riskImpact" class="form-select">
+                                <option value="HIGH">عالي</option>
+                                <option value="MEDIUM" selected>متوسط</option>
+                                <option value="LOW">منخفض</option>
+                            </select>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label">الحالة</label>
+                            <select id="riskStatus" class="form-select">
+                                <option value="OPEN">مفتوح</option>
+                                <option value="MITIGATED">تم التخفيف</option>
+                                <option value="CLOSED">مغلق</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">خطة التخفيف</label>
+                        <textarea id="riskMitigation" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">المسؤول</label>
+                        <input type="text" id="riskOwner" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-danger" onclick="saveRisk()">حفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/auth.js"></script>
+    <script>
+        const token = getToken();
+        let allVersions = [];
+        let allChoices = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadVersionsForFilter();
+            loadChoices();
+        });
+
+        async function loadVersionsForFilter() {
+            try {
+                const res = await fetch('/api/versions?limit=100', { headers: { Authorization: `Bearer ${token}` } });
+                const data = await res.json();
+                allVersions = data.versions || [];
+
+                const selects = ['choiceVersionFilter', 'riskVersionFilter', 'choiceVersion', 'riskVersion'];
+                selects.forEach(selId => {
+                    const sel = document.getElementById(selId);
+                    if (!sel) return;
+                    const first = sel.options[0].outerHTML;
+                    sel.innerHTML = first;
+                    allVersions.forEach(v => {
+                        const opt = document.createElement('option');
+                        opt.value = v.id;
+                        const entityName = v.entity ? (v.entity.legalName || v.entity.displayName) : '';
+                        opt.textContent = `V${v.versionNumber} - ${entityName}`;
+                        sel.appendChild(opt);
+                    });
+                });
+            } catch (err) {
+                console.error('Error:', err);
+            }
+        }
+
+        // ============ CHOICES ============
+        async function loadChoices() {
+            try {
+                const versionId = document.getElementById('choiceVersionFilter').value;
+                const status = document.getElementById('choiceStatusFilter').value;
+                let url = '/api/choices?limit=50';
+                if (versionId) url += `&versionId=${versionId}`;
+                if (status) url += `&status=${status}`;
+
+                const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+                const data = await res.json();
+                allChoices = data.choices || [];
+                renderChoices(allChoices);
+            } catch (err) {
+                console.error('Error:', err);
+            }
+        }
+
+        function renderChoices(choices) {
+            const tbody = document.getElementById('choicesTable');
+            if (!choices.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted p-4">لا توجد خيارات</td></tr>';
+                return;
+            }
+
+            const priorityLabel = { HIGH: 'عالية', MEDIUM: 'متوسطة', LOW: 'منخفضة' };
+            const statusLabel = { ACTIVE: 'نشط', COMPLETED: 'مكتمل', DROPPED: 'ملغي' };
+
+            tbody.innerHTML = choices.map(c => {
+                const entityName = c.version?.entity ? (c.version.entity.legalName || c.version.entity.displayName) : '-';
+                return `
+        <tr>
+          <td><strong>${c.title}</strong>${c.description ? `<br><small class="text-muted">${c.description.substring(0, 60)}...</small>` : ''}</td>
+          <td>V${c.version?.versionNumber || '-'}</td>
+          <td><small>${entityName}</small></td>
+          <td><span class="badge priority-${c.priority}">${priorityLabel[c.priority] || c.priority}</span></td>
+          <td><span class="badge status-${c.status}">${statusLabel[c.status] || c.status}</span></td>
+          <td><span class="badge bg-warning text-dark">${c._count?.risks || 0}</span></td>
+          <td>
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-outline-primary" onclick="editChoice('${c.id}')" title="تعديل"><i class="bi bi-pencil"></i></button>
+              <button class="btn btn-outline-danger" onclick="deleteChoice('${c.id}')" title="حذف"><i class="bi bi-trash"></i></button>
+            </div>
+          </td>
+        </tr>`;
+            }).join('');
+        }
+
+        function showChoiceModal() {
+            document.getElementById('choiceId').value = '';
+            document.getElementById('choiceTitle').value = '';
+            document.getElementById('choiceDesc').value = '';
+            document.getElementById('choiceVersion').value = '';
+            document.getElementById('choicePriority').value = 'MEDIUM';
+            document.getElementById('choiceStatus').value = 'ACTIVE';
+            document.getElementById('choiceModalTitle').textContent = 'خيار استراتيجي جديد';
+            new bootstrap.Modal(document.getElementById('choiceModal')).show();
+        }
+
+        async function editChoice(id) {
+            try {
+                const res = await fetch(`/api/choices/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+                const c = await res.json();
+                document.getElementById('choiceId').value = c.id;
+                document.getElementById('choiceTitle').value = c.title;
+                document.getElementById('choiceDesc').value = c.description || '';
+                document.getElementById('choiceVersion').value = c.versionId;
+                document.getElementById('choicePriority').value = c.priority;
+                document.getElementById('choiceStatus').value = c.status;
+                document.getElementById('choiceModalTitle').textContent = 'تعديل الخيار';
+                new bootstrap.Modal(document.getElementById('choiceModal')).show();
+            } catch (err) {
+                alert('فشل تحميل البيانات');
+            }
+        }
+
+        async function saveChoice() {
+            const editId = document.getElementById('choiceId').value;
+            const title = document.getElementById('choiceTitle').value.trim();
+            const description = document.getElementById('choiceDesc').value.trim();
+            const versionId = document.getElementById('choiceVersion').value;
+            const priority = document.getElementById('choicePriority').value;
+            const status = document.getElementById('choiceStatus').value;
+
+            if (!title || !versionId) { alert('العنوان والإصدار مطلوبان'); return; }
+
+            try {
+                const url = editId ? `/api/choices/${editId}` : '/api/choices';
+                const method = editId ? 'PATCH' : 'POST';
+                const body = editId ? { title, description, priority, status } : { title, description, versionId, priority, status };
+
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify(body)
+                });
+                if (!res.ok) throw new Error('Failed');
+
+                bootstrap.Modal.getInstance(document.getElementById('choiceModal')).hide();
+                loadChoices();
+            } catch (err) {
+                alert('خطأ في الحفظ');
+            }
+        }
+
+        async function deleteChoice(id) {
+            if (!confirm('حذف هذا الخيار؟')) return;
+            try {
+                await fetch(`/api/choices/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+                loadChoices();
+            } catch (err) {
+                alert('فشل الحذف');
+            }
+        }
+
+        // ============ RISKS ============
+        async function loadRisks() {
+            try {
+                const versionId = document.getElementById('riskVersionFilter').value;
+                const status = document.getElementById('riskStatusFilter').value;
+                const probability = document.getElementById('riskProbFilter').value;
+                let url = '/api/choices/risks/all?limit=50';
+                if (versionId) url += `&versionId=${versionId}`;
+                if (status) url += `&status=${status}`;
+                if (probability) url += `&probability=${probability}`;
+
+                const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+                const data = await res.json();
+                renderRisks(data.risks || []);
+            } catch (err) {
+                console.error('Error:', err);
+            }
+        }
+
+        function renderRisks(risks) {
+            const tbody = document.getElementById('risksTable');
+            if (!risks.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted p-4">لا توجد مخاطر</td></tr>';
+                return;
+            }
+
+            const levelLabel = { HIGH: 'عالي', MEDIUM: 'متوسط', LOW: 'منخفض' };
+            const statusLabel = { OPEN: 'مفتوح', MITIGATED: 'تم التخفيف', CLOSED: 'مغلق' };
+
+            tbody.innerHTML = risks.map(r => `
+        <tr>
+          <td><strong>${r.title}</strong>${r.description ? `<br><small class="text-muted">${r.description.substring(0, 50)}...</small>` : ''}</td>
+          <td><small>${r.choice?.title || '-'}</small></td>
+          <td><span class="badge priority-${r.probability}">${levelLabel[r.probability]}</span></td>
+          <td><span class="badge priority-${r.impact}">${levelLabel[r.impact]}</span></td>
+          <td><small>${r.owner || '-'}</small></td>
+          <td><span class="badge status-${r.status}">${statusLabel[r.status] || r.status}</span></td>
+          <td>
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-outline-primary" onclick="editRisk('${r.id}')" title="تعديل"><i class="bi bi-pencil"></i></button>
+              <button class="btn btn-outline-danger" onclick="deleteRisk('${r.id}')" title="حذف"><i class="bi bi-trash"></i></button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+        }
+
+        function showRiskModal() {
+            document.getElementById('riskId').value = '';
+            document.getElementById('riskTitle').value = '';
+            document.getElementById('riskDesc').value = '';
+            document.getElementById('riskVersion').value = '';
+            document.getElementById('riskChoice').value = '';
+            document.getElementById('riskProbability').value = 'MEDIUM';
+            document.getElementById('riskImpact').value = 'MEDIUM';
+            document.getElementById('riskStatus').value = 'OPEN';
+            document.getElementById('riskMitigation').value = '';
+            document.getElementById('riskOwner').value = '';
+            document.getElementById('riskModalTitle').textContent = 'إضافة خطر جديد';
+            loadChoicesForRisk();
+            new bootstrap.Modal(document.getElementById('riskModal')).show();
+        }
+
+        async function loadChoicesForRisk() {
+            try {
+                const res = await fetch('/api/choices?limit=100', { headers: { Authorization: `Bearer ${token}` } });
+                const data = await res.json();
+                const sel = document.getElementById('riskChoice');
+                sel.innerHTML = '<option value="">-- بدون --</option>';
+                (data.choices || []).forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.title;
+                    sel.appendChild(opt);
+                });
+            } catch (err) {
+                console.error('Error loading choices for risk:', err);
+            }
+        }
+
+        async function editRisk(id) {
+            try {
+                // Fetch all risks and find the one we need
+                const res = await fetch('/api/choices/risks/all?limit=100', { headers: { Authorization: `Bearer ${token}` } });
+                const data = await res.json();
+                const r = (data.risks || []).find(risk => risk.id === id);
+                if (!r) throw new Error('Not found');
+
+                await loadChoicesForRisk();
+                document.getElementById('riskId').value = r.id;
+                document.getElementById('riskTitle').value = r.title;
+                document.getElementById('riskDesc').value = r.description || '';
+                document.getElementById('riskVersion').value = r.versionId;
+                document.getElementById('riskChoice').value = r.choiceId || '';
+                document.getElementById('riskProbability').value = r.probability;
+                document.getElementById('riskImpact').value = r.impact;
+                document.getElementById('riskStatus').value = r.status;
+                document.getElementById('riskMitigation').value = r.mitigation || '';
+                document.getElementById('riskOwner').value = r.owner || '';
+                document.getElementById('riskModalTitle').textContent = 'تعديل الخطر';
+                new bootstrap.Modal(document.getElementById('riskModal')).show();
+            } catch (err) {
+                alert('فشل تحميل البيانات');
+            }
+        }
+
+        async function saveRisk() {
+            const editId = document.getElementById('riskId').value;
+            const title = document.getElementById('riskTitle').value.trim();
+            const description = document.getElementById('riskDesc').value.trim();
+            const versionId = document.getElementById('riskVersion').value;
+            const choiceId = document.getElementById('riskChoice').value;
+            const probability = document.getElementById('riskProbability').value;
+            const impact = document.getElementById('riskImpact').value;
+            const status = document.getElementById('riskStatus').value;
+            const mitigation = document.getElementById('riskMitigation').value.trim();
+            const owner = document.getElementById('riskOwner').value.trim();
+
+            if (!title || !versionId) { alert('العنوان والإصدار مطلوبان'); return; }
+
+            try {
+                const url = editId ? `/api/choices/risks/${editId}` : '/api/choices/risks';
+                const method = editId ? 'PATCH' : 'POST';
+                const body = { title, description, probability, impact, mitigation, owner, status };
+                if (!editId) body.versionId = versionId;
+                if (choiceId) body.choiceId = choiceId;
+
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify(body)
+                });
+                if (!res.ok) throw new Error('Failed');
+
+                bootstrap.Modal.getInstance(document.getElementById('riskModal')).hide();
+                loadRisks();
+            } catch (err) {
+                alert('خطأ في الحفظ');
+            }
+        }
+
+        async function deleteRisk(id) {
+            if (!confirm('حذف هذا الخطر؟')) return;
+            try {
+                await fetch(`/api/choices/risks/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+                loadRisks();
+            } catch (err) {
+                alert('فشل الحذف');
+            }
+        }
+    </script>
+</body>
+
+</html>
