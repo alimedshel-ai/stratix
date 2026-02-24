@@ -299,7 +299,7 @@ app.get('/login', (req, res) => {
 
 // Serve signup page → redirect to unified auth page
 app.get('/signup', (req, res) => {
-  res.redirect('/login?tab=signup');
+  res.redirect('/login?tab=signup&from=landing');
 });
 
 // Serve Super Admin Dashboard (برج المراقبة)

@@ -265,6 +265,29 @@
 </head>
 
 <body>
+    <!-- بوابة: الدخول فقط من صفحة الهبوط -->
+    <script>
+        (function() {
+            // السماح إذا كان لديه token بالفعل (مستخدم مسجل)
+            if (.getItem('token')) return;
+
+            // السماح إذا جاء من صفحة الهبوط عبر parameter
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('from') === 'landing') return;
+
+            // السماح إذا كان الـ referrer من نفس الموقع (صفحة الهبوط)
+            const ref = document.referrer;
+            if (ref) {
+                try {
+                    const refUrl = new URL(ref);
+                    if (refUrl.origin === window.location.origin) return;
+                } catch(e) {}
+            }
+
+            // غير ذلك → إعادة توجيه لصفحة الهبوط
+            window.location.replace('/');
+        })();
+    </script>
 
     <div class="auth-card">
         <!-- الشعار -->
@@ -526,7 +549,7 @@
                     localStorage.setItem('user', JSON.stringify(data.user));
                     window.location.href = '/pain-ambition.html';
                 } else {
-                    let errDiv = document.getElementById('signupError');
+                    lerDiument.getElementById('signupError');
                     if (!errDiv) {
                         errDiv = document.createElement('div');
                         errDiv.id = 'signupError';
