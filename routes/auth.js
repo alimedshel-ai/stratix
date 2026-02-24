@@ -316,6 +316,7 @@ router.post('/login', validateLogin, async (req, res) => {
         systemRole: user.systemRole || 'USER',
         role: primaryRole,
         userType: primaryUserType,
+        onboardingCompleted: user.onboardingCompleted || false,
         entity: primaryEntity,
         memberships: user.memberships,
       },
@@ -358,6 +359,7 @@ router.get('/profile', verifyToken, async (req, res) => {
         systemRole: user.systemRole || 'USER',
         role: primaryRole,
         userType: primaryUserType,
+        onboardingCompleted: user.onboardingCompleted || false,
         entity: primaryEntity,
         memberships: user.memberships,
       },
@@ -505,6 +507,21 @@ router.patch('/company', verifyToken, async (req, res) => {
   } catch (error) {
     console.error('Error updating company:', error);
     res.status(500).json({ error: 'فشل تحديث بيانات الشركة' });
+  }
+});
+
+// ═══ إكمال الـ Onboarding ═══
+router.post('/complete-onboarding', verifyToken, async (req, res) => {
+  try {
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { onboardingCompleted: true }
+    });
+
+    res.json({ message: 'تم تسجيل إكمال التأسيس بنجاح', onboardingCompleted: true });
+  } catch (error) {
+    console.error('Error completing onboarding:', error);
+    res.status(500).json({ error: 'فشل تحديث حالة التأسيس' });
   }
 });
 

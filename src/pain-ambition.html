@@ -2097,7 +2097,21 @@
             // Clear draft on success
             clearDraft();
 
-            // 4. Redirect to smart tools advisor — shows pattern-specific recommendations
+            // 4. تسجيل إكمال الـ Onboarding في الباك إند
+            if (token) {
+                try {
+                    await fetch('/api/auth/complete-onboarding', {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+                    });
+                    // Update local user data
+                    const localUser = JSON.parse(localStorage.getItem('user') || '{}');
+                    localUser.onboardingCompleted = true;
+                    localStorage.setItem('user', JSON.stringify(localUser));
+                } catch (e) { console.warn('Onboarding complete error:', e); }
+            }
+
+            // 5. Redirect to smart tools advisor — shows pattern-specific recommendations
             window.location.href = '/tools.html';
         }
     </script>
