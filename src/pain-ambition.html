@@ -2019,7 +2019,26 @@
             };
             localStorage.setItem('painAmbition', JSON.stringify(data));
 
+            // SWOT seeds from pain mapping
+            const swotSeeds = { weaknesses: [], threats: [] };
+            pains.forEach(p => {
+                const mapping = PAIN_TO_SWOT[p];
+                if (mapping) {
+                    if (mapping.type === 'weakness') swotSeeds.weaknesses.push(mapping.text);
+                    else swotSeeds.threats.push(mapping.text);
+                }
+            });
+            localStorage.setItem('swotSeeds', JSON.stringify(swotSeeds));
+
             const token = localStorage.getItem('token');
+
+            // إذا المستخدم مو مسجل → وجّهه للتسجيل (البيانات محفوظة في localStorage)
+            if (!token) {
+                clearDraft();
+                window.location.href = '/login?tab=signup&from=pain-ambition';
+                return;
+            }
+
             const user = JSON.parse(localStorage.getItem('user') || '{}');
             const entityId = user?.entity?.id || localStorage.getItem('entityId');
             const companyId = user?.companyId || localStorage.getItem('companyId');
@@ -2083,21 +2102,10 @@
                 }
             }
 
-            // 3. تحويل التحديات إلى نقاط SWOT
-            const swotSeeds = { weaknesses: [], threats: [] };
-            pains.forEach(p => {
-                const mapping = PAIN_TO_SWOT[p];
-                if (mapping) {
-                    if (mapping.type === 'weakness') swotSeeds.weaknesses.push(mapping.text);
-                    else swotSeeds.threats.push(mapping.text);
-                }
-            });
-            localStorage.setItem('swotSeeds', JSON.stringify(swotSeeds));
-
             // Clear draft on success
             clearDraft();
 
-            // 4. تسجيل إكمال الـ Onboarding في الباك إند
+            // 3. تسجيل إكمال الـ Onboarding في الباك إند
             if (token) {
                 try {
                     await fetch('/api/auth/complete-onboarding', {
@@ -2111,7 +2119,7 @@
                 } catch (e) { console.warn('Onboarding complete error:', e); }
             }
 
-            // 5. Redirect to smart tools advisor — shows pattern-specific recommendations
+            // 4. Redirect to smart tools advisor — shows pattern-specific recommendations
             window.location.href = '/tools.html';
         }
     </script>

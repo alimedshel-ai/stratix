@@ -490,7 +490,8 @@
                     } else if (uType === 'DEPT_MANAGER') {
                         window.location.href = '/dept-dashboard.html';
                     } else if (!onboardingDone && sysRole !== 'SUPER_ADMIN') {
-                        window.location.href = '/pain-ambition.html';
+                        const hasDiagnosis = localStorage.getItem('painAmbition');
+                        window.location.href = hasDiagnosis ? '/onboarding.html' : '/pain-ambition.html';
                     } else {
                         window.location.href = '/dashboard.html';
                     }
@@ -547,9 +548,17 @@
                 if (res.ok && data.token) {
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
-                    window.location.href = '/pain-ambition.html';
+                    // Check if diagnosis was already completed before signup
+                    const painAmbition = localStorage.getItem('painAmbition');
+                    if (painAmbition) {
+                        // Diagnosis done → go to onboarding
+                        window.location.href = '/onboarding.html';
+                    } else {
+                        // No diagnosis → go to pain/ambition
+                        window.location.href = '/pain-ambition.html';
+                    }
                 } else {
-                    lerDiument.getElementById('signupError');
+                    let errDiv = document.getElementById('signupError');
                     if (!errDiv) {
                         errDiv = document.createElement('div');
                         errDiv.id = 'signupError';
