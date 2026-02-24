@@ -15,99 +15,106 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 const schemaPath = path.join(__dirname, '..', 'prisma', 'schema.prisma');
+const rootDir = path.join(__dirname, '..');
 
-console.log('🚂 [Railway Build] Starting...');
+console.log('');
+console.log('🚂 ===================================');
+console.log('🚂  STRATIX — Railway Build Script');
+console.log('🚂 ===================================');
 console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
-console.log(`📍 Database URL exists: ${!!process.env.DATABASE_URL}`);
+console.log(`📍 DATABASE_URL set: ${!!process.env.DATABASE_URL}`);
+console.log(`📍 DATABASE_URL type: ${process.env.DATABASE_URL ? (process.env.DATABASE_URL.startsWith('postgres') ? 'PostgreSQL ✅' : 'Other ⚠️') : 'NOT SET ❌'}`);
+console.log('');
 
 // ============ Step 1: Swap provider to PostgreSQL ============
+console.log('📝 [Step 1/3] Updating schema provider...');
 try {
     let schema = fs.readFileSync(schemaPath, 'utf-8');
 
     if (schema.includes('provider = "sqlite"')) {
         schema = schema.replace('provider = "sqlite"', 'provider = "postgresql"');
-
-        // SQLite uses @default(cuid()) which works in PostgreSQL too ✅
-        // SQLite String? works in PostgreSQL too ✅
-        // No other changes needed!
-
         fs.writeFileSync(schemaPath, schema);
-        console.log('✅ [Step 1] Schema provider changed: sqlite → postgresql');
+        console.log('   ✅ Schema provider changed: sqlite → postgresql');
+    } else if (schema.includes('provider = "postgresql"')) {
+        console.log('   ℹ️ Schema already uses postgresql');
     } else {
-        console.log('ℹ️ [Step 1] Schema already uses postgresql');
+        console.log('   ⚠️ Unknown provider in schema');
     }
 } catch (err) {
-    console.error('❌ [Step 1] Failed to update schema:', err.message);
+    console.error('   ❌ Failed to update schema:', err.message);
     process.exit(1);
 }
 
 // ============ Step 2: Generate Prisma Client ============
+console.log('');
+console.log('🔨 [Step 2/3] Generating Prisma Client...');
 try {
-    console.log('🔨 [Step 2] Generating Prisma Client...');
-    execSync('npx prisma generate', { stdio: 'inherit', cwd: path.join(__dirname, '..') });
-    console.log('✅ [Step 2] Prisma Client generated');
+    execSync('npx prisma generate', { stdio: 'inherit', cwd: rootDir });
+    console.log('   ✅ Prisma Client generated');
 } catch (err) {
-    console.error('❌ [Step 2] Failed to generate Prisma Client:', err.message);
+    console.error('   ❌ Failed to generate Prisma Client:', err.message);
     process.exit(1);
 }
 
 // ============ Step 3: Push schema to database ============
+console.log('');
+console.log('📦 [Step 3/3] Pushing schema to database...');
+
+// Check if DATABASE_URL is a valid PostgreSQL URL
+const dbUrl = process.env.DATABASE_URL || '';
+if (!dbUrl) {
+    console.log('   ⚠️ DATABASE_URL is not set!');
+    console.log('   ⚠️ Skipping db push — add a PostgreSQL database in Railway first.');
+    console.log('   ⚠️ After adding PostgreSQL, redeploy and it will work.');
+    console.log('');
+    console.log('🟡 [Railway Build] Partial build complete (no database push)');
+    console.log('   → Add PostgreSQL service in Railway, then redeploy.');
+    process.exit(0); // Don't fail — Prisma Client is generated
+}
+
+if (!dbUrl.startsWith('postgres')) {
+    console.log(`   ⚠️ DATABASE_URL doesn't look like PostgreSQL: ${dbUrl.substring(0, 20)}...`);
+    console.log('   ⚠️ Skipping db push — make sure you have PostgreSQL linked.');
+    console.log('');
+    console.log('🟡 [Railway Build] Partial build complete (invalid DATABASE_URL)');
+    process.exit(0);
+}
+
+// DATABASE_URL is valid PostgreSQL — push the schema
 try {
-    console.log('📦 [Step 3] Pushing schema to database...');
-    execSync('npx prisma db push --skip-generate', { stdio: 'inherit', cwd: path.join(__dirname, '..') });
-    console.log('✅ [Step 3] Database schema pushed');
+    execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit', cwd: rootDir });
+    console.log('   ✅ Database schema pushed successfully');
 } catch (err) {
-    console.error('❌ [Step 3] Failed to push schema:', err.message);
-    console.error('⚠️ Make sure DATABASE_URL is set in Railway variables!');
+    console.error('   ❌ Failed to push schema:', err.message);
+    console.error('   ⚠️ Check that your PostgreSQL database is accessible.');
     process.exit(1);
 }
 
 // ============ Step 4: Seed essential data (first deploy only) ============
+console.log('');
+console.log('🌱 [Bonus] Checking if seed is needed...');
 try {
-    console.log('🌱 [Step 4] Checking if seed is needed...');
-
-    // Check if sectors exist — if not, this is first deploy
-    const checkScript = `
+    const result = execSync(`node -e "
     const prisma = require('./lib/prisma');
-    async function check() {
-      try {
-        const count = await prisma.sector.count();
-        if (count === 0) {
-          console.log('NEEDS_SEED');
-        } else {
-          console.log('ALREADY_SEEDED');
-        }
-        await prisma.$disconnect();
-      } catch(e) {
-        console.log('NEEDS_SEED');
-      }
-    }
-    check();
-  `;
-
-    const tempFile = path.join(__dirname, '_check_seed.js');
-    fs.writeFileSync(tempFile, checkScript);
-
-    const result = execSync(`node ${tempFile}`, {
-        cwd: path.join(__dirname, '..'),
-        encoding: 'utf-8'
-    }).trim();
-
-    // Cleanup temp file
-    fs.unlinkSync(tempFile);
+    prisma.sector.count()
+      .then(c => { console.log(c === 0 ? 'NEEDS_SEED' : 'HAS_DATA'); return prisma.\\$disconnect(); })
+      .catch(() => { console.log('NEEDS_SEED'); return prisma.\\$disconnect(); });
+  "`, { cwd: rootDir, encoding: 'utf-8', timeout: 15000 }).trim();
 
     if (result.includes('NEEDS_SEED')) {
-        console.log('🌱 First deploy detected — running seed...');
-        execSync('node scripts/seed.js', { stdio: 'inherit', cwd: path.join(__dirname, '..') });
-        console.log('✅ [Step 4] Seed completed');
+        console.log('   🌱 First deploy — running seed...');
+        execSync('node scripts/seed.js', { stdio: 'inherit', cwd: rootDir, timeout: 60000 });
+        console.log('   ✅ Seed completed');
     } else {
-        console.log('ℹ️ [Step 4] Data already exists — skipping seed');
+        console.log('   ℹ️ Data exists — skipping seed');
     }
 } catch (err) {
-    console.warn('⚠️ [Step 4] Seed skipped (non-critical):', err.message);
-    // Don't exit — seed failure shouldn't block deployment
+    console.warn('   ⚠️ Seed skipped (non-critical):', err.message?.substring(0, 100));
 }
 
 console.log('');
-console.log('🎉 [Railway Build] Complete!');
-console.log('🚀 Ready to start with: node server.js');
+console.log('🎉 ===================================');
+console.log('🎉  Railway Build COMPLETE!');
+console.log('🎉  Ready to start: node server.js');
+console.log('🎉 ===================================');
+console.log('');
