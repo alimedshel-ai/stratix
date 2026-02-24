@@ -450,6 +450,11 @@ app.get('/intelligence', (req, res) => {
   res.sendFile(path.join(__dirname, 'src', 'intelligence.html'));
 });
 
+// Serve Beginner Path
+app.get('/beginner-path', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'beginner-path.html'));
+});
+
 // Serve Path 1 journey (moved) — redirect to landing
 app.get('/path1', (req, res) => {
   res.redirect(302, '/');

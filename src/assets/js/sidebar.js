@@ -253,6 +253,18 @@
     // ╚═══════════════════════════════════════════╝
     html += '<div class="stx-section-label"><i class="bi bi-lightning-charge-fill" style="color:#667eea;margin-left:4px"></i> مساري</div>';
 
+    // --- زر المبتدئ — بارز ودائم ---
+    if (!isViewerOrDE) {
+      const isBegActive = isActive('/beginner-path.html');
+      html += `
+      <a href="/beginner-path.html" class="stx-item stx-beginner-btn ${isBegActive ? 'active' : ''}" style="margin:0 10px 6px;padding:10px 14px !important;border-radius:12px;font-weight:700;font-size:12.5px;border-right:none !important;background:linear-gradient(135deg,rgba(245,158,11,0.12),rgba(249,115,22,0.08));border:1.5px solid rgba(245,158,11,0.3);display:flex;align-items:center;gap:10px;transition:all 0.3s;">
+        <i class="bi bi-signpost-split-fill" style="color:#f59e0b;font-size:17px"></i>
+        <span style="color:#f59e0b">مسار المبتدئ</span>
+        <span style="margin-right:auto;font-size:10px;padding:2px 8px;border-radius:6px;background:rgba(245,158,11,0.15);color:#f59e0b;font-weight:800">مجاني</span>
+      </a>
+      `;
+    }
+
     html += `
       <a href="${homeHref}" class="stx-item stx-mypath ${isHomeActive ? 'active' : ''}">
         <i class="bi bi-crosshair" style="color:#667eea"></i>
