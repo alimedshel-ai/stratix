@@ -65,7 +65,7 @@ async function gracefulShutdown(signal) {
   await prisma.$disconnect();
   process.exit(0);
 }
-process.on('SIGINT',  () => gracefulShutdown('SIGINT'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
 // Security Middleware
@@ -136,7 +136,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // CORS Configuration
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
-    ? process.env.ALLOWED_ORIGINS?.split(',')
+    ? (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : true)
     : ['http://localhost:3000', 'http://127.0.0.1:3000'],
   credentials: true,
   optionsSuccessStatus: 200,
@@ -573,6 +573,11 @@ app.get('/internal-env', (req, res) => {
 // Serve Admin Panel
 app.get('/admin-panel', (req, res) => {
   res.sendFile(path.join(__dirname, 'src', 'admin-panel.html'));
+});
+
+// 🏥 Health check endpoint (for Railway)
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // Landing page (public homepage)
