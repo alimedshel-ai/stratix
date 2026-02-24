@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الشركات — ستارتكس</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/shared.css">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --bg: #0f1117;
+            --bg-card: #1a1d2e;
+            --bg-hover: #252839;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+        }
+
+        .main-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 24px 32px;
+            overflow-y: auto;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 16px;
+            color: var(--text);
+            font-family: inherit;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.2);
+        }
+
+        .filter-select {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 16px;
+            color: var(--text);
+            font-family: inherit;
+            min-width: 140px;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 12px;
+            padding: 10px 20px;
+            color: white;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Table */
+        .table-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .companies-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .companies-table th {
+            background: rgba(102, 126, 234, 0.08);
+            padding: 14px 16px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-align: right;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .companies-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+            vertical-align: middle;
+        }
+
+        .companies-table tr:hover {
+            background: var(--bg-hover);
+        }
+
+        .companies-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .company-name {
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .company-name-en {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Badges */
+        .badge-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-active {
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+        }
+
+        .badge-suspended {
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
+        }
+
+        .badge-trial {
+            background: rgba(245, 158, 11, 0.12);
+            color: #f59e0b;
+        }
+
+        .badge-plan {
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            background: rgba(102, 126, 234, 0.12);
+            color: var(--primary);
+        }
+
+        /* Actions */
+        .action-btn {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 10px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 13px;
+        }
+
+        .action-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text);
+            border-color: var(--primary);
+        }
+
+        .action-btn.danger:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px;
+            width: 100%;
+            max-width: 560px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 13px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .btn-save {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 12px;
+            padding: 12px;
+            color: white;
+            font-weight: 700;
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .btn-cancel {
+            width: 100%;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            display: block;
+            opacity: 0.4;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-container">
+        <!-- Sidebar placeholder -->
+        <div class="list-group bg-white"></div>
+
+        <div class="content-area">
+            <div class="page-title">
+                <i class="bi bi-buildings" style="color:var(--primary)"></i>
+                إدارة الشركات
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-value" id="statTotal">-</div>
+                    <div class="stat-label">إجمالي الشركات</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statActive">-</div>
+                    <div class="stat-label">نشطة</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statTrial">-</div>
+                    <div class="stat-label">تجريبية</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statEntities">-</div>
+                    <div class="stat-label">الكيانات</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statUsers">-</div>
+                    <div class="stat-label">المستخدمون</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statExpiring">-</div>
+                    <div class="stat-label">تنتهي قريباً</div>
+                </div>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <input type="text" class="search-box" id="searchBox" placeholder="🔍 ابحث عن شركة...">
+                <select class="filter-select" id="filterStatus">
+                    <option value="">كل الحالات</option>
+                    <option value="ACTIVE">نشطة</option>
+                    <option value="SUSPENDED">معلّقة</option>
+                </select>
+                <button class="btn-add" onclick="openModal()"><i class="bi bi-plus-lg"></i> شركة جديدة</button>
+            </div>
+
+            <!-- Table -->
+            <div class="table-container">
+                <table class="companies-table">
+                    <thead>
+                        <tr>
+                            <th>الشركة</th>
+                            <th>الكود</th>
+                            <th>الحالة</th>
+                            <th>الباقة</th>
+                            <th>الكيانات</th>
+                            <th>تاريخ الإنشاء</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="companiesBody">
+                        <tr>
+                            <td colspan="7" class="empty-state"><i class="bi bi-hourglass-split"></i>جاري التحميل...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create/Edit Modal -->
+    <div class="modal-overlay" id="companyModal">
+        <div class="modal-box">
+            <div class="modal-title" id="modalTitle">➕ شركة جديدة</div>
+            <input type="hidden" id="editId">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>اسم الشركة (عربي) *</label>
+                    <input type="text" id="fNameAr" placeholder="شركة التقنية" required>
+                </div>
+                <div class="form-group">
+                    <label>اسم الشركة (إنجليزي)</label>
+                    <input type="text" id="fNameEn" placeholder="Tech Company">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>الكود</label>
+                    <input type="text" id="fCode" placeholder="TECH-001">
+                </div>
+                <div class="form-group">
+                    <label>الباقة</label>
+                    <select id="fPlan">
+                        <option value="TRIAL">تجريبية</option>
+                        <option value="BASIC">أساسية</option>
+                        <option value="PRO">احترافية</option>
+                        <option value="ENTERPRISE">مؤسسية</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>البريد الإلكتروني</label>
+                    <input type="email" id="fEmail" placeholder="info@company.com">
+                </div>
+                <div class="form-group">
+                    <label>الهاتف</label>
+                    <input type="text" id="fPhone" placeholder="+966 5x xxx xxxx">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>الموقع الإلكتروني</label>
+                <input type="url" id="fWebsite" placeholder="https://company.com">
+            </div>
+            <button class="btn-save" onclick="saveCompany()">💾 حفظ</button>
+            <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+
+        const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+
+        // Load stats
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/companies/stats/overview', { headers });
+                if (!res.ok) return;
+                const { data } = await res.json();
+                document.getElementById('statTotal').textContent = data.totalCompanies || 0;
+                document.getElementById('statActive').textContent = data.activeCompanies || 0;
+                document.getElementById('statTrial').textContent = data.trialCompanies || 0;
+                document.getElementById('statEntities').textContent = data.totalEntities || 0;
+                document.getElementById('statUsers').textContent = data.totalUsers || 0;
+                document.getElementById('statExpiring').textContent = data.expiringSubscriptions || 0;
+            } catch (e) { console.error('Stats error:', e); }
+        }
+
+        // Load companies
+        async function loadCompanies() {
+            const search = document.getElementById('searchBox').value;
+            const status = document.getElementById('filterStatus').value;
+            const params = new URLSearchParams();
+            if (search) params.set('search', search);
+            if (status) params.set('status', status);
+
+            try {
+                const res = await fetch(`/api/companies?${params}`, { headers });
+                if (!res.ok) throw new Error('Failed');
+                const { data } = await res.json();
+
+                const tbody = document.getElementById('companiesBody');
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><i class="bi bi-building-slash"></i>لا توجد شركات</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.map(c => {
+                    const statusBadge = c.status === 'ACTIVE'
+                        ? '<span class="badge-status badge-active"><i class="bi bi-check-circle-fill"></i> نشطة</span>'
+                        : '<span class="badge-status badge-suspended"><i class="bi bi-pause-circle-fill"></i> معلّقة</span>';
+
+                    const plan = c.subscription?.plan || 'N/A';
+                    const planClass = plan === 'TRIAL' ? 'badge-trial' : '';
+                    const created = new Date(c.createdAt).toLocaleDateString('ar-SA');
+                    const entityCount = c._count?.entities || 0;
+
+                    return `<tr>
+                        <td>
+                            <div class="company-name">${c.nameAr || '—'}</div>
+                            <div class="company-name-en">${c.nameEn || ''}</div>
+                        </td>
+                        <td style="font-family:monospace;color:var(--text-muted)">${c.code || '—'}</td>
+                        <td>${statusBadge}</td>
+                        <td><span class="badge-plan ${planClass}">${plan}</span></td>
+                        <td style="text-align:center">${entityCount}</td>
+                        <td style="color:var(--text-muted);font-size:12px">${created}</td>
+                        <td>
+                            <div style="display:flex;gap:6px">
+                                <button class="action-btn" onclick="editCompany('${c.id}')" title="تعديل"><i class="bi bi-pencil"></i></button>
+                                <button class="action-btn" onclick="toggleStatus('${c.id}','${c.status}')" title="${c.status === 'ACTIVE' ? 'تعليق' : 'تفعيل'}">
+                                    <i class="bi bi-${c.status === 'ACTIVE' ? 'pause-circle' : 'play-circle'}"></i>
+                                </button>
+                                <button class="action-btn danger" onclick="deleteCompany('${c.id}','${c.nameAr}')" title="حذف"><i class="bi bi-trash3"></i></button>
+                            </div>
+                        </td>
+                    </tr>`;
+                }).join('');
+            } catch (e) {
+                document.getElementById('companiesBody').innerHTML = '<tr><td colspan="7" class="empty-state"><i class="bi bi-exclamation-triangle"></i>خطأ في تحميل البيانات</td></tr>';
+            }
+        }
+
+        // Modal
+        function openModal(id) {
+            document.getElementById('companyModal').classList.add('show');
+            document.getElementById('editId').value = '';
+            document.getElementById('modalTitle').textContent = '➕ شركة جديدة';
+            ['fNameAr', 'fNameEn', 'fCode', 'fEmail', 'fPhone', 'fWebsite'].forEach(f => document.getElementById(f).value = '');
+            document.getElementById('fPlan').value = 'TRIAL';
+        }
+
+        function closeModal() { document.getElementById('companyModal').classList.remove('show'); }
+
+        async function editCompany(id) {
+            try {
+                const res = await fetch(`/api/companies/${id}`, { headers });
+                const { data } = await res.json();
+                document.getElementById('editId').value = id;
+                document.getElementById('modalTitle').textContent = '✏️ تعديل الشركة';
+                document.getElementById('fNameAr').value = data.nameAr || '';
+                document.getElementById('fNameEn').value = data.nameEn || '';
+                document.getElementById('fCode').value = data.code || '';
+                document.getElementById('fEmail').value = data.email || '';
+                document.getElementById('fPhone').value = data.phone || '';
+                document.getElementById('fWebsite').value = data.website || '';
+                document.getElementById('fPlan').value = data.subscription?.plan || 'TRIAL';
+                document.getElementById('companyModal').classList.add('show');
+            } catch (e) { alert('خطأ في جلب بيانات الشركة'); }
+        }
+
+        async function saveCompany() {
+            const id = document.getElementById('editId').value;
+            const body = {
+                nameAr: document.getElementById('fNameAr').value,
+                nameEn: document.getElementById('fNameEn').value,
+                code: document.getElementById('fCode').value || undefined,
+                email: document.getElementById('fEmail').value || undefined,
+                phone: document.getElementById('fPhone').value || undefined,
+                website: document.getElementById('fWebsite').value || undefined,
+                plan: document.getElementById('fPlan').value,
+            };
+
+            if (!body.nameAr) { alert('اسم الشركة بالعربي مطلوب'); return; }
+
+            try {
+                const url = id ? `/api/companies/${id}` : '/api/companies';
+                const method = id ? 'PATCH' : 'POST';
+                const res = await fetch(url, { method, headers, body: JSON.stringify(body) });
+                const result = await res.json();
+                if (!res.ok) { alert(result.message || 'خطأ'); return; }
+                closeModal();
+                loadCompanies();
+                loadStats();
+            } catch (e) { alert('خطأ في حفظ الشركة'); }
+        }
+
+        async function toggleStatus(id, currentStatus) {
+            const newStatus = currentStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+            const msg = newStatus === 'SUSPENDED' ? 'تعليق هذه الشركة؟' : 'تفعيل هذه الشركة؟';
+            if (!confirm(msg)) return;
+
+            try {
+                const res = await fetch(`/api/companies/${id}`, {
+                    method: 'PATCH', headers, body: JSON.stringify({ status: newStatus })
+                });
+                if (res.ok) { loadCompanies(); loadStats(); }
+                else { const r = await res.json(); alert(r.message || 'خطأ'); }
+            } catch (e) { alert('خطأ في تغيير الحالة'); }
+        }
+
+        async function deleteCompany(id, name) {
+            if (!confirm(`هل أنت متأكد من حذف "${name}"؟\nهذا الإجراء لا يمكن التراجع عنه.`)) return;
+            try {
+                const res = await fetch(`/api/companies/${id}`, { method: 'DELETE', headers });
+                const result = await res.json();
+                if (res.ok) { loadCompanies(); loadStats(); }
+                else { alert(result.message || 'خطأ في الحذف'); }
+            } catch (e) { alert('خطأ في حذف الشركة'); }
+        }
+
+        // Search & filter
+        let searchTimer;
+        document.getElementById('searchBox').addEventListener('input', () => {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(loadCompanies, 300);
+        });
+        document.getElementById('filterStatus').addEventListener('change', loadCompanies);
+
+        // Close modal on overlay click
+        document.getElementById('companyModal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeModal();
+        });
+
+        // Init
+        loadStats();
+        loadCompanies();
+    </script>
+</body>
+
+</html>

@@ -1,178 +1,221 @@
-# Stratix — Strategic Management Platform
-> Rebuilt with Express.js, vanilla JavaScript, and Bootstrap 5 RTL | Schema restructured: Sector → Industry → Entity → Users
+# ستراتكيس — Stratix Strategic Management Platform
 
-## ✅ Architecture & Features Completed
+> منصة إدارة استراتيجية متكاملة | 77 صفحة | 67+ أداة تحليل | محرك ذكاء اصطناعي
 
-### 🏗️ Recent Restructuring
-- **Previous:** Sector → Company → Entity → Department → Users  
-- **Current:** Sector → Industry → Entity → Users (Simplified)
-- All APIs updated, database migrated, demo data seeded
+## 🚀 نظرة سريعة
 
-### 📊 Working APIs & Pages (14+ Modules)
+**Stratix** هي منصة SaaS عربية متكاملة لإدارة التخطيط الاستراتيجي، من التشخيص والتحليل إلى التنفيذ والمتابعة. مبنية بـ Express.js مع واجهة HTML5/Bootstrap 5 RTL.
 
-| Module | API Endpoint | Page | Status |
-|--------|------|------|--------|
-| **Authentication** | `/api/auth` | `/login` | ✅ Working |
-| **Sectors** | `/api/sectors` | `/sectors` | ✅ Complete |
-| **Industries** | `/api/industries` | `/industries` | ✅ Complete |
-| **Entities** | `/api/entities` | `/entities` | ✅ Complete |
-| **Users** | `/api/users` | `/users` | ✅ Complete |
-| **Assessments** | `/api/assessments` | `/assessments` | ✅ Complete |
-| **Objectives** | `/api/strategic/objectives` | - | ✅ API Ready |
-| **KPIs** | `/api/strategic/kpis` | `/kpis` | ✅ Complete |
-| **Initiatives** | `/api/strategic/initiatives` | - | ✅ API Ready |
-| **Reviews** | `/api/reviews/reviews` | - | ✅ API Ready |
-| **Dashboard** | - | `/dashboard` | ✅ Updated |
+---
 
-### 🎯 Key Features Implemented
+## ⚡ البدء السريع
 
-## Tech Stack
-
-- **Server**: Express.js
-- **Frontend**: HTML5 + Vanilla JavaScript + Bootstrap 5
-- **Database**: SQLite + Prisma ORM
-- **Authentication**: JWT (JSON Web Tokens)
-- **Password Hashing**: bcryptjs
-
-## Prerequisites
-
-- Node.js (v16 or higher)
-- npm or yarn
-
-## Installation
-
-1. **Clone and navigate to the project:**
-   ```bash
-   cd /Users/ali/startix\ featires
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Initialize the database:**
-   ```bash
-   npx prisma db push
-   ```
-
-4. **Seed demo data:**
-   ```bash
-   node scripts/seed.js
-   ```
-
-## Running the Application
-
-**Development mode** (with auto-reload):
 ```bash
+# 1. تثبيت المكتبات
+npm install
+
+# 2. تهيئة قاعدة البيانات
+npx prisma db push
+
+# 3. بيانات تجريبية
+node scripts/seed.js
+
+# 4. تشغيل السيرفر
 npm run dev
 ```
 
-**Production mode:**
-```bash
-npm start
+المنصة على: `http://localhost:3000`
+
+---
+
+## 🔐 بيانات الدخول (Demo)
+
+| الدور | البريد | كلمة المرور |
+|:------|:-------|:------------|
+| 🔒 Super Admin | `superadmin@stratix.com` | `Str@tix$uper2026!` |
+| 👑 Admin (OWNER) | `admin@stratix.com` | `Adm!n@Str4tix2026` |
+| 📊 Manager (ADMIN) | `manager@stratix.com` | `Mgr@Str4tix2026!` |
+| ✏️ Editor (EDITOR) | `editor@stratix.com` | `Ed!t@Str4tix2026` |
+| 👁️ Viewer (VIEWER) | `viewer@stratix.com` | `V!ew@Str4tix2026` |
+
+---
+
+## 📊 إحصائيات المنصة
+
+| العنصر | العدد |
+|:-------|------:|
+| صفحات HTML | 77 |
+| أدوات تحليل استراتيجي | 67+ |
+| API Endpoints | 50+ |
+| مسارات استراتيجية ذكية | 9 |
+| وحدات (Modules) | 20+ |
+
+---
+
+## 🏛️ الهيكل العام
+
+```
+Sector → Industry → Entity → Users (Members)
+                              ↓
+                    Strategy Version → Objectives → KPIs → Entries
+                                    → Initiatives → Tasks
+                                    → Directions (Vision/Mission/Values)
+                                    → Reviews → Decisions
+                                    → Risks + Choices
 ```
 
-The application will be available at `http://localhost:3000`
+---
 
-## Demo Credentials
+## 🔧 Tech Stack
 
-After running the seed script, use these credentials to login:
+| الطبقة | التقنية |
+|:-------|:--------|
+| **Backend** | Express.js (Node.js) |
+| **Frontend** | HTML5 + Vanilla JS + Bootstrap 5 RTL |
+| **Database** | SQLite + Prisma ORM |
+| **Auth** | JWT + bcryptjs |
+| **Security** | Helmet + Rate Limiting + CORS + CSP |
+| **Docs** | Swagger/OpenAPI |
 
-- **Admin Account**
-  - Email: `admin@stratix.com`
-  - Password: `Admin123!`
-  - Role: `SUPER_ADMIN`
+---
 
-- **User Account**
-  - Email: `user@stratix.com`
-  - Password: `User123!`
-  - Role: `VIEWER`
+## 📦 الوحدات الرئيسية
 
-## Project Structure
+### 🏗️ التأسيس
+- **Onboarding** — تأسيس المنظمة
+- **Pain & Ambition** — تحديد الألم والطموح
+- **Entity Management** — إدارة الكيانات والقطاعات
+
+### 🔍 التشخيص والتحليل
+- **SWOT Analysis** — تحليل نقاط القوة والضعف والفرص والتهديدات
+- **PESTEL Analysis** — التحليل الخارجي (6 عوامل)
+- **TOWS Matrix** — مصفوفة الاستراتيجيات
+- **67+ أداة تحليل** — Porter, McKinsey, BCG, Ansoff, وغيرها
+
+### 🎯 التخطيط
+- **Strategic Directions** — الرؤية والرسالة والقيم
+- **Objectives (BSC)** — الأهداف (بطاقة الأداء المتوازن)
+- **KPIs** — مؤشرات الأداء + إدخال القيم الدورية
+- **OKRs** — الأهداف والنتائج الرئيسية
+
+### 🚀 التنفيذ
+- **Initiatives** — المبادرات الاستراتيجية
+- **Tasks** — المهام
+- **Priority Matrix** — مصفوفة الأولويات (MCDA)
+- **Projects** — إدارة المشاريع
+
+### 📊 المتابعة والذكاء
+- **Reviews** — المراجعات الدورية مع محرك القرارات
+- **Intelligence** — مركز الذكاء الاستراتيجي
+- **Alert Engine** — التنبيهات الآلية
+- **CEO Dashboard** — لوحة القيادة التنفيذية
+- **Risk Map** — خريطة المخاطر
+
+### 🤖 الذكاء الاصطناعي
+- **AI Advisor** — المستشار الذكي
+- **Auto Reports** — التقارير التلقائية
+- **Smart Recommendations** — التوصيات الذكية
+
+---
+
+## 🛡️ الأمان
+
+- ✅ **Helmet** — حماية HTTP headers + CSP مفعّل
+- ✅ **Rate Limiting** — 3 مستويات (عام 500/15min + Auth 10 prod + Sensitive 50 prod)
+- ✅ **CORS** — محدود بالـ origins المسموحة
+- ✅ **JWT** — توثيق بـ tokens (مفتاح 128 حرف)
+- ✅ **bcryptjs** — تشفير كلمات المرور (salt 10 rounds)
+- ✅ **Input Sanitizer** — حماية XSS (تنظيف body/query/params)
+- ✅ **Suspicious Pattern Detector** — كشف SQLi + Script injection
+- ✅ **Security Headers** — HSTS + X-Frame + X-Content-Type + DNS Prefetch
+- ✅ **Security Logger** — تسجيل محاولات 401/403 + طلبات بطيئة
+- ✅ **Referrer-Policy** — `strict-origin-when-cross-origin`
+- ✅ **API Key Guard** — حماية إضافية في البيئة الإنتاجية
+
+---
+
+## 🗂️ هيكل المشروع
 
 ```
-.
-├── public/              # Static files & HTML pages
-│   ├── login.html      # Login page
-│   └── dashboard.html  # Main dashboard/welcome page
-├── routes/             # API routes
-│   └── auth.js         # Authentication routes
-├── middleware/         # Custom middleware
-│   └── auth.js         # JWT verification middleware
-├── prisma/             # Database schema
-│   └── schema.prisma   # Prisma data model
-├── scripts/            # Utility scripts
-│   └── seed.js         # Database seeding
-├── server.js           # Main Express application
-└── package.json        # Project dependencies
+├── server.js              # Express app الرئيسي
+├── prisma/
+│   └── schema.prisma      # Prisma data model (25+ جدول)
+├── routes/                # 30+ API route file
+├── middleware/
+│   ├── auth.js            # JWT authentication
+│   ├── permission.js      # RBAC role-based access
+│   ├── validation.js      # express-validator rules
+│   └── security.js        # XSS/SQLi protection + headers
+├── lib/                   # Prisma client
+├── config/                # Swagger config
+├── scripts/
+│   ├── seed.js            # بيانات تجريبية شاملة (v4.0)
+│   └── create-super-admin.js
+├── public/                # 77 صفحة HTML
+│   ├── js/                # مكتبات JS (sidebar, path-engine, api)
+│   ├── css/               # أنماط CSS
+│   └── *.html             # صفحات المنصة
+├── .env                   # متغيرات البيئة
+└── package.json
 ```
 
-## API Endpoints
+---
 
-### Authentication
-- `POST /api/auth/login` - Login user
-- `POST /api/auth/register` - Register new user
-- `GET /api/auth/profile` - Get current user profile (requires auth)
-
-### Protected Routes
-- `GET /api/user/profile` - Get authenticated user profile (requires JWT token)
-
-## Authentication Flow
-
-1. User visits `/login`
-2. Enters credentials (or uses demo account)
-3. Frontend sends credentials to `/api/auth/login`
-4. Backend verifies credentials and returns JWT token
-5. Frontend stores token in localStorage
-6. User is redirected to `/dashboard`
-7. Dashboard loads and verifies token
-8. User profile is loaded from `/api/user/profile` endpoint
-
-## Security Features
-
-- ✅ Password hashing with bcryptjs
-- ✅ JWT token-based authentication
-- ✅ Token verification middleware
-- ✅ CORS protection
-- ✅ Environment variables for sensitive data
-- ✅ Session persistence via localStorage
-
-## Environment Variables
-
-Create a `.env` file in the root directory:
+## 🌐 متغيرات البيئة
 
 ```env
 DATABASE_URL="file:./dev.db"
-JWT_SECRET="your-secret-key-change-in-production"
+JWT_SECRET="your-256-bit-secret"
 PORT=3000
 NODE_ENV="development"
+ALLOWED_ORIGINS="http://localhost:3000"
 ```
 
-## Next Steps
+---
 
-This initial implementation includes:
-- ✅ Authentication system
-- ✅ Login page with demo credentials
-- ✅ Welcome dashboard
-- ✅ User profile loading
+## 📋 بيانات Seed التجريبية
 
-Coming soon:
-- Companies Management
-- Sectors & Entities
-- Assessments
-- KPIs & Strategic Goals
-- Alerts & Intelligence
-- Reports & Analytics
+بعد تشغيل `node scripts/seed.js`:
 
-## Development Notes
+| البيانات | العدد |
+|:---------|------:|
+| القطاعات | 3 |
+| الصناعات | 3 |
+| أنواع الكيانات | 3 |
+| المستخدمين | 5 (بأدوار مختلفة) |
+| الكيانات | 2 |
+| التوجهات (رؤية + رسالة + قيم + قضايا) | 8 |
+| PESTEL | 8 نقاط |
+| الأهداف الاستراتيجية (BSC — 4 منظورات) | 8 |
+| مؤشرات الأداء KPIs | 10 |
+| بيانات KPI تاريخية | 30 (5 KPIs × 6 أشهر) |
+| المبادرات | 5 |
+| المراجعات | 2 |
+| الخيارات الاستراتيجية | 2 |
+| السيناريوهات | 3 (متفائل + أساسي + متحفظ) |
+| SWOT | 16 نقطة (4 لكل فئة) |
+| المخاطر | 3 (مع تسجيل كمّي) |
+| التنبيهات | 6 |
+| سجلات التدقيق | 5 |
 
-- The frontend uses pure HTML/CSS/JavaScript (no frameworks)
-- Bootstrap 5 is used for styling and components
-- All API communication uses Fetch API
-- Tokens are stored in localStorage (client-side)
-- Database uses SQLite for simplicity (can be upgraded to PostgreSQL)
+---
 
-## License
+## 🛣️ المسارات الاستراتيجية الذكية
+
+9 مسارات ذكية تتكيف مع نمط المنظمة:
+
+1. **🌱 الناشئة المتعثرة** — إنقاذ سريع
+2. **🌿 الناشئة الحذرة** — بناء تدريجي
+3. **🔥 النامية الفوضوية** — تنظيم وتوجيه
+4. **🚀 النامية الطموحة** — نمو سريع
+5. **💰 المتعثرة مالياً** — إعادة هيكلة
+6. **🔄 الناضجة المتجددة** — تحول استراتيجي
+7. **⚔️ الناضجة التنافسية** — حماية الحصة
+8. **🧭 المسار الشامل** — كل الأدوات مفتوحة
+9. **🏆 المسار الذهبي** — 11 خطوة مركزة (Express Path)
+
+---
+
+## 📝 الترخيص
 
 ISC

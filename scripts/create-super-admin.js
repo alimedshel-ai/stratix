@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 
 async function createSuperAdmin() {
     const email = 'superadmin@stratix.com';
-    const password = 'Super123!';
+    const password = 'Str@tix$uper2026!';
     const name = 'مدير النظام الأعلى';
 
     const hashed = await bcrypt.hash(password, 10);

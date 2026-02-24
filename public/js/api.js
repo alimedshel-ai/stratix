@@ -58,6 +58,18 @@
             return;
         }
 
+        // فحص تعليق الحساب
+        if (res.status === 403) {
+            try {
+                const errData = await res.clone().json();
+                if (errData.suspended) {
+                    localStorage.setItem('suspendReason', errData.reason || '');
+                    window.location.href = '/account-suspended.html';
+                    return;
+                }
+            } catch (e) { /* not JSON */ }
+        }
+
         if (!res.ok) {
             const errorText = await res.text().catch(() => '');
             let errorMsg = `API ${res.status}: ${url}`;

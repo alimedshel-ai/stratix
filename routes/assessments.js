@@ -2,8 +2,167 @@ const express = require('express');
 const prisma = require('../lib/prisma');
 const { verifyToken } = require('../middleware/auth');
 const { checkPermission } = require('../middleware/permission');
+const enforceLimit = require('../middleware/enforce-limits');
 
 const router = express.Router();
+
+/**
+ * @swagger
+ * /api/assessments:
+ *   get:
+ *     summary: جلب جميع التقييمات
+ *     tags: [Assessments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 10 }
+ *       - in: query
+ *         name: search
+ *         schema: { type: string }
+ *       - in: query
+ *         name: entityId
+ *         schema: { type: string }
+ *       - in: query
+ *         name: status
+ *         schema: { type: string, enum: [DRAFT, IN_PROGRESS, COMPLETED, ARCHIVED] }
+ *     responses:
+ *       200:
+ *         description: قائمة التقييمات مع النتائج المحسوبة
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 assessments:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Assessment'
+ *                 total: { type: integer }
+ *                 page: { type: integer }
+ *                 totalPages: { type: integer }
+ *   post:
+ *     summary: إنشاء تقييم جديد
+ *     tags: [Assessments]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [title, entityId]
+ *             properties:
+ *               title: { type: string, example: 'تقييم Q1 2026' }
+ *               description: { type: string }
+ *               entityId: { type: string }
+ *               status: { type: string, default: 'DRAFT' }
+ *     responses:
+ *       201:
+ *         description: تم إنشاء التقييم
+ *       403:
+ *         description: تجاوز حد الباقة
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PlanLimitError'
+ */
+
+/**
+ * @swagger
+ * /api/assessments/{id}:
+ *   get:
+ *     summary: جلب تقييم واحد مع النتائج التفصيلية
+ *     tags: [Assessments]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: بيانات التقييم مع scoring
+ *       404:
+ *         description: التقييم غير موجود
+ *   patch:
+ *     summary: تعديل تقييم
+ *     tags: [Assessments]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title: { type: string }
+ *               description: { type: string }
+ *               status: { type: string }
+ *     responses:
+ *       200:
+ *         description: تم التعديل
+ *   delete:
+ *     summary: حذف تقييم
+ *     tags: [Assessments]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *       - in: query
+ *         name: force
+ *         schema: { type: boolean }
+ *         description: مطلوب لحذف تقييم مكتمل
+ *     responses:
+ *       200:
+ *         description: تم الحذف
+ *       400:
+ *         description: لا يمكن حذف تقييم مكتمل بدون force=true
+ */
+
+/**
+ * @swagger
+ * /api/assessments/{id}/score:
+ *   get:
+ *     summary: جلب نتيجة التقييم فقط (بدون بيانات تفصيلية)
+ *     tags: [Assessments]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: النتيجة والتصنيف
+ */
+
+/**
+ * @swagger
+ * /api/assessments/{id}/gaps:
+ *   get:
+ *     summary: تحليل الفجوات — مقارنة النتيجة بالمستهدف
+ *     tags: [Assessments]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *       - in: query
+ *         name: target
+ *         schema: { type: integer, default: 80 }
+ *         description: النسبة المستهدفة (0-100)
+ *     responses:
+ *       200:
+ *         description: تحليل الفجوات بالأبعاد
+ */
 
 // ============================================================
 // 📊 ASSESSMENTS — المنهجية #1: إدارة التقييمات (Closed Loop)
@@ -518,7 +677,7 @@ router.get('/:id/gaps', verifyToken, async (req, res) => {
 // ============================================================
 // POST /api/assessments — Create assessment (enhanced validation)
 // ============================================================
-router.post('/', verifyToken, checkPermission('EDITOR'), async (req, res) => {
+router.post('/', verifyToken, checkPermission('EDITOR'), enforceLimit('maxAssessments'), async (req, res) => {
   try {
     const { title, description, entityId, status } = req.body;
 

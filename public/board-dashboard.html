@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة مجلس الإدارة — ستارتكيس</title>
+    <meta name="description"
+        content="لوحة مراقبة عالية المستوى لأعضاء مجلس الإدارة — مؤشرات صحة استراتيجية، أهداف كبرى، ومخاطر.">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --secondary: #764ba2;
+            --accent: #f093fb;
+            --bg: #0f1117;
+            --bg-card: #1a1d2e;
+            --bg-card-hover: #222640;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* Top Navigation */
+        .board-nav {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .board-nav .logo {
+            font-size: 1.3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .board-nav .nav-center {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            padding: 6px 16px;
+            border-radius: 10px;
+        }
+
+        .board-nav .nav-center i {
+            color: var(--warning);
+        }
+
+        .board-nav .nav-center span {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .board-nav .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .board-nav .user-badge .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .board-nav .user-badge .name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .board-nav .user-badge .role {
+            font-size: 0.75rem;
+            color: var(--warning);
+        }
+
+        /* Main Layout */
+        .board-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 28px 24px;
+        }
+
+        /* Header Section */
+        .board-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .board-header h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+        }
+
+        .board-header .quarter-selector {
+            display: flex;
+            gap: 8px;
+        }
+
+        .quarter-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: transparent;
+            color: var(--text-muted);
+            font-family: 'Tajawal', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quarter-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-color: transparent;
+        }
+
+        .quarter-btn:hover:not(.active) {
+            border-color: var(--primary);
+            color: var(--text);
+        }
+
+        /* Health Score Ring */
+        .health-ring-section {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 24px;
+            margin-bottom: 28px;
+        }
+
+        .health-ring-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .health-ring-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--success), var(--primary));
+        }
+
+        .ring-container {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            margin: 0 auto 16px;
+        }
+
+        .ring-container svg {
+            transform: rotate(-90deg);
+        }
+
+        .ring-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.06);
+            stroke-width: 12;
+        }
+
+        .ring-fill {
+            fill: none;
+            stroke: url(#healthGradient);
+            stroke-width: 12;
+            stroke-linecap: round;
+            stroke-dasharray: 440;
+            stroke-dashoffset: 440;
+            transition: stroke-dashoffset 2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .ring-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .ring-value .pct {
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--success), var(--primary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .ring-value .label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .health-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .health-detail {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            font-size: 0.8rem;
+        }
+
+        .health-detail .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        /* Key Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .metric-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .metric-card .metric-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .metric-card .metric-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .metric-card .metric-trend {
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .metric-card .metric-value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .metric-card .metric-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Strategic Goals */
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin: 28px 0 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .goals-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .goal-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.3s;
+        }
+
+        .goal-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .goal-progress-ring {
+            width: 56px;
+            height: 56px;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .goal-progress-ring svg {
+            transform: rotate(-90deg);
+        }
+
+        .goal-ring-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.06);
+            stroke-width: 5;
+        }
+
+        .goal-ring-fill {
+            fill: none;
+            stroke-width: 5;
+            stroke-linecap: round;
+            stroke-dasharray: 157;
+            transition: stroke-dashoffset 1.5s ease;
+        }
+
+        .goal-pct {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.75rem;
+            font-weight: 800;
+        }
+
+        .goal-info {
+            flex: 1;
+        }
+
+        .goal-info .goal-name {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .goal-info .goal-target {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .goal-status {
+            font-size: 0.8rem;
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .goal-status.on-track {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .goal-status.at-risk {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .goal-status.behind {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        /* Risks Section */
+        .risk-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .risk-level {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .risk-level.high {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+        }
+
+        .risk-level.medium {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+        }
+
+        .risk-level.low {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        .risk-info {
+            flex: 1;
+        }
+
+        .risk-info .risk-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .risk-info .risk-detail {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Comment Section */
+        .comment-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            margin-top: 28px;
+        }
+
+        .comment-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            color: var(--text);
+            font-family: 'Tajawal', sans-serif;
+            font-size: 0.95rem;
+            resize: vertical;
+            min-height: 80px;
+            outline: none;
+            margin-bottom: 12px;
+        }
+
+        .comment-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        }
+
+        .comment-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-comment {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            font-family: 'Tajawal', sans-serif;
+            transition: all 0.3s;
+        }
+
+        .btn-comment.primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .btn-comment.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
+        }
+
+        .btn-comment.secondary {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+
+        /* Download Report */
+        .download-section {
+            text-align: center;
+            margin-top: 28px;
+        }
+
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 32px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            color: var(--text);
+            font-family: 'Tajawal', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .btn-download:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .health-ring-section {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .board-nav {
+                padding: 12px 16px;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .goal-card {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <div class="board-nav">
+        <div style="display:flex;align-items:center;gap:12px">
+            <a href="/dashboard.html" class="logo"><i class="bi bi-activity"></i> ستارتكيس</a>
+            <a href="/dashboard.html"
+                style="color:var(--primary);font-size:12px;text-decoration:none;opacity:0.8;display:flex;align-items:center;gap:4px"><i
+                    class="bi bi-house-door-fill"></i> الرئيسية</a>
+        </div>
+        <div class="nav-center">
+            <i class="bi bi-eye"></i>
+            <span>وضع المراقبة — عرض فقط</span>
+        </div>
+        <div class="user-badge">
+            <div>
+                <div class="name">سلطان الشمري</div>
+                <div class="role">👁️ عضو مجلس الإدارة</div>
+            </div>
+            <div class="avatar">سـ</div>
+        </div>
+    </div>
+
+    <div class="board-content">
+        <!-- Header -->
+        <div class="board-header">
+            <h1>📊 لوحة مجلس الإدارة</h1>
+            <div class="quarter-selector">
+                <button class="quarter-btn" onclick="selectQuarter(this)">Q1</button>
+                <button class="quarter-btn" onclick="selectQuarter(this)">Q2</button>
+                <button class="quarter-btn" onclick="selectQuarter(this)">Q3</button>
+                <button class="quarter-btn active" onclick="selectQuarter(this)">Q4</button>
+            </div>
+        </div>
+
+        <!-- Health Score + Metrics -->
+        <div class="health-ring-section">
+            <!-- Health Ring -->
+            <div class="health-ring-card">
+                <div class="ring-container">
+                    <svg width="160" height="160">
+                        <defs>
+                            <linearGradient id="healthGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color: #10b981;" />
+                                <stop offset="100%" style="stop-color: #667eea;" />
+                            </linearGradient>
+                        </defs>
+                        <circle class="ring-bg" cx="80" cy="80" r="70" />
+                        <circle class="ring-fill" id="healthRing" cx="80" cy="80" r="70" />
+                    </svg>
+                    <div class="ring-value">
+                        <div class="pct" id="healthPct">0%</div>
+                        <div class="label">مؤشر الصحة</div>
+                    </div>
+                </div>
+                <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 8px;">الصحة الاستراتيجية</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">بناءً على الأداء الربعي</p>
+
+                <div class="health-details">
+                    <div class="health-detail">
+                        <div class="dot" style="background: var(--success);"></div>
+                        <span>أداء KPIs: 85%</span>
+                    </div>
+                    <div class="health-detail">
+                        <div class="dot" style="background: var(--primary);"></div>
+                        <span>إتمام المهام: 78%</span>
+                    </div>
+                    <div class="health-detail">
+                        <div class="dot" style="background: var(--warning);"></div>
+                        <span>المراجعات: 65%</span>
+                    </div>
+                    <div class="health-detail">
+                        <div class="dot" style="background: var(--info);"></div>
+                        <span>المواءمة: 90%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Metrics -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-icon" style="background: rgba(16,185,129,0.15); color: var(--success);">
+                            <i class="bi bi-graph-up-arrow"></i>
+                        </div>
+                        <div class="metric-trend" style="color: var(--success);">
+                            <i class="bi bi-arrow-up-short"></i> +12%
+                        </div>
+                    </div>
+                    <div class="metric-value">28%</div>
+                    <div class="metric-label">نمو الإيرادات</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-icon" style="background: rgba(102,126,234,0.15); color: var(--primary);">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
+                        <div class="metric-trend" style="color: var(--success);">
+                            <i class="bi bi-arrow-up-short"></i> +3%
+                        </div>
+                    </div>
+                    <div class="metric-value">14.2%</div>
+                    <div class="metric-label">هامش الربح</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-icon" style="background: rgba(59,130,246,0.15); color: var(--info);">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <div class="metric-trend" style="color: var(--success);">
+                            <i class="bi bi-arrow-up-short"></i> +173
+                        </div>
+                    </div>
+                    <div class="metric-value">523</div>
+                    <div class="metric-label">قاعدة العملاء</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-icon" style="background: rgba(245,158,11,0.15); color: var(--warning);">
+                            <i class="bi bi-lightbulb-fill"></i>
+                        </div>
+                        <div class="metric-trend" style="color: var(--danger);">
+                            <i class="bi bi-arrow-down-short"></i> -1
+                        </div>
+                    </div>
+                    <div class="metric-value">2 / 3</div>
+                    <div class="metric-label">الابتكار (منتجات)</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-icon" style="background: rgba(240,147,251,0.15); color: var(--accent);">
+                            <i class="bi bi-heart-fill"></i>
+                        </div>
+                        <div class="metric-trend" style="color: var(--success);">
+                            <i class="bi bi-arrow-up-short"></i> +5%
+                        </div>
+                    </div>
+                    <div class="metric-value">87%</div>
+                    <div class="metric-label">رضا العملاء</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-icon" style="background: rgba(239,68,68,0.1); color: var(--danger);">
+                            <i class="bi bi-person-dash-fill"></i>
+                        </div>
+                        <div class="metric-trend" style="color: var(--warning);">
+                            <i class="bi bi-arrow-up-short"></i> +2%
+                        </div>
+                    </div>
+                    <div class="metric-value">12%</div>
+                    <div class="metric-label">دوران الموظفين</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Strategic Goals -->
+        <div class="section-title"><i class="bi bi-bullseye" style="color: var(--primary);"></i> الأهداف الاستراتيجية
+            الكبرى</div>
+        <div class="goals-list">
+            <div class="goal-card">
+                <div class="goal-progress-ring">
+                    <svg width="56" height="56">
+                        <circle class="goal-ring-bg" cx="28" cy="28" r="25" />
+                        <circle class="goal-ring-fill" cx="28" cy="28" r="25"
+                            style="stroke: var(--success); stroke-dashoffset: 24;" />
+                    </svg>
+                    <div class="goal-pct" style="color: var(--success);">85%</div>
+                </div>
+                <div class="goal-info">
+                    <div class="goal-name">🎯 تحقيق نمو إيرادات 20%</div>
+                    <div class="goal-target">الفعلي: 28% — تم تجاوز الهدف</div>
+                </div>
+                <div class="goal-status on-track">✅ متجاوز</div>
+            </div>
+
+            <div class="goal-card">
+                <div class="goal-progress-ring">
+                    <svg width="56" height="56">
+                        <circle class="goal-ring-bg" cx="28" cy="28" r="25" />
+                        <circle class="goal-ring-fill" cx="28" cy="28" r="25"
+                            style="stroke: var(--warning); stroke-dashoffset: 32;" />
+                    </svg>
+                    <div class="goal-pct" style="color: var(--warning);">80%</div>
+                </div>
+                <div class="goal-info">
+                    <div class="goal-name">💰 الوصول لهامش ربحية 15%</div>
+                    <div class="goal-target">الفعلي: 14.2% — قريب من الهدف</div>
+                </div>
+                <div class="goal-status at-risk">🟡 قريب</div>
+            </div>
+
+            <div class="goal-card">
+                <div class="goal-progress-ring">
+                    <svg width="56" height="56">
+                        <circle class="goal-ring-bg" cx="28" cy="28" r="25" />
+                        <circle class="goal-ring-fill" cx="28" cy="28" r="25"
+                            style="stroke: var(--success); stroke-dashoffset: 8;" />
+                    </svg>
+                    <div class="goal-pct" style="color: var(--success);">95%</div>
+                </div>
+                <div class="goal-info">
+                    <div class="goal-name">👥 توسيع قاعدة العملاء لـ 500</div>
+                    <div class="goal-target">الفعلي: 523 عميل — تم التحقيق</div>
+                </div>
+                <div class="goal-status on-track">✅ محقق</div>
+            </div>
+
+            <div class="goal-card">
+                <div class="goal-progress-ring">
+                    <svg width="56" height="56">
+                        <circle class="goal-ring-bg" cx="28" cy="28" r="25" />
+                        <circle class="goal-ring-fill" cx="28" cy="28" r="25"
+                            style="stroke: var(--danger); stroke-dashoffset: 52;" />
+                    </svg>
+                    <div class="goal-pct" style="color: var(--danger);">67%</div>
+                </div>
+                <div class="goal-info">
+                    <div class="goal-name">💡 إطلاق 3 منتجات جديدة</div>
+                    <div class="goal-target">الفعلي: 2 منتج — متأخر</div>
+                </div>
+                <div class="goal-status behind">🔴 متأخر</div>
+            </div>
+        </div>
+
+        <!-- Risks -->
+        <div class="section-title"><i class="bi bi-shield-exclamation" style="color: var(--danger);"></i> المخاطر
+            الرئيسية</div>
+        <div class="risk-card">
+            <div class="risk-level high">عالٍ</div>
+            <div class="risk-info">
+                <div class="risk-name">🔴 الاعتماد على منتج واحد (60% إيرادات)</div>
+                <div class="risk-detail">يُوصى بتسريع إطلاق المنتج الثالث</div>
+            </div>
+        </div>
+        <div class="risk-card">
+            <div class="risk-level medium">متوسط</div>
+            <div class="risk-info">
+                <div class="risk-name">🟡 دوران الموظفين ارتفع 2%</div>
+                <div class="risk-detail">مراجعة هيكل الرواتب والحوافز</div>
+            </div>
+        </div>
+        <div class="risk-card">
+            <div class="risk-level low">منخفض</div>
+            <div class="risk-info">
+                <div class="risk-name">🟢 المنافسة في السوق</div>
+                <div class="risk-detail">الحصة السوقية مستقرة — مراقبة مستمرة</div>
+            </div>
+        </div>
+
+        <!-- Comment Section -->
+        <div class="comment-section">
+            <div class="section-title" style="margin-top: 0;"><i class="bi bi-chat-left-text"
+                    style="color: var(--primary);"></i> ملاحظات عضو المجلس</div>
+            <textarea class="comment-input" id="boardComment"
+                placeholder="أضف ملاحظاتك أو استفساراتك هنا — ستصل للإدارة التنفيذية مباشرة..."></textarea>
+            <div class="comment-actions">
+                <span style="font-size: 0.8rem; color: var(--text-muted);">
+                    <i class="bi bi-info-circle"></i> ملاحظاتك تصل لـ CEO مباشرة
+                </span>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-comment secondary" onclick="clearComment()">مسح</button>
+                    <button class="btn-comment primary" onclick="sendComment()">
+                        <i class="bi bi-send-fill"></i> إرسال
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Download Report -->
+        <div class="download-section">
+            <a class="btn-download" onclick="downloadReport()">
+                <i class="bi bi-file-earmark-pdf"></i>
+                تحميل التقرير الربعي (PDF)
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Animate Health Ring on load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const healthScore = 78;
+                const ring = document.getElementById('healthRing');
+                const offset = 440 - (440 * healthScore / 100);
+                ring.style.strokeDashoffset = offset;
+                document.getElementById('healthPct').textContent = healthScore + '%';
+
+                // Animate counter
+                let count = 0;
+                const interval = setInterval(() => {
+                    count += 2;
+                    if (count >= healthScore) {
+                        count = healthScore;
+                        clearInterval(interval);
+                    }
+                    document.getElementById('healthPct').textContent = count + '%';
+                }, 30);
+            }, 500);
+        });
+
+        // Quarter selector
+        function selectQuarter(btn) {
+            document.querySelectorAll('.quarter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        // Comment functions
+        function sendComment() {
+            const comment = document.getElementById('boardComment').value.trim();
+            if (!comment) return;
+
+            document.getElementById('boardComment').value = '';
+            const btn = event.currentTarget;
+            btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> تم الإرسال';
+            btn.style.background = 'var(--success)';
+
+            setTimeout(() => {
+                btn.innerHTML = '<i class="bi bi-send-fill"></i> إرسال';
+                btn.style.background = '';
+            }, 2000);
+        }
+
+        function clearComment() {
+            document.getElementById('boardComment').value = '';
+        }
+
+        function downloadReport() {
+            const btn = event.currentTarget;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> جارٍ التحميل...';
+
+            setTimeout(() => {
+                btn.innerHTML = '<i class="bi bi-check-circle-fill" style="color: var(--success);"></i> تم التحميل بنجاح!';
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="bi bi-file-earmark-pdf"></i> تحميل التقرير الربعي (PDF)';
+                }, 2000);
+            }, 1500);
+        }
+    </script>
+    <script src="/js/ai-advisor.js"></script>
+</body>
+
+</html>

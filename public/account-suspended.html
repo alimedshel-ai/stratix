@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حسابك معلق — ستارتكيس</title>
+    <meta name="description" content="حسابك معلق مؤقتاً. اختر من الخيارات المتاحة لإعادة تفعيل حسابك.">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --secondary: #764ba2;
+            --accent: #f093fb;
+            --bg: #0f1117;
+            --bg-card: #1a1d2e;
+            --bg-card-hover: #222640;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.15);
+            --warning: #f59e0b;
+            --warning-glow: rgba(245, 158, 11, 0.15);
+            --success: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 20% 80%, rgba(239, 68, 68, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(245, 158, 11, 0.06) 0%, transparent 50%);
+            z-index: -1;
+            animation: bgPulse 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes bgPulse {
+            0% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* Logo */
+        .logo-section {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo-section h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-section p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-top: 4px;
+        }
+
+        /* Main Container */
+        .suspended-container {
+            width: 100%;
+            max-width: 680px;
+            padding: 0 20px;
+        }
+
+        /* Lock Icon Animation */
+        .lock-icon-wrapper {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .lock-icon {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--warning), #e67e22, var(--danger));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            animation: lockPulse 3s ease-in-out infinite;
+            box-shadow: 0 0 30px var(--warning-glow), 0 0 60px rgba(245, 158, 11, 0.08);
+        }
+
+        .lock-icon i {
+            font-size: 3rem;
+            color: white;
+        }
+
+        @keyframes lockPulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 30px var(--warning-glow);
+            }
+
+            50% {
+                transform: scale(1.03);
+                box-shadow: 0 0 45px var(--warning-glow), 0 0 80px rgba(245, 158, 11, 0.08);
+            }
+        }
+
+        /* Status Card */
+        .status-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 36px;
+            text-align: center;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--warning), var(--primary), var(--warning));
+            background-size: 200% 100%;
+            animation: gradientSlide 4s linear infinite;
+        }
+
+        @keyframes gradientSlide {
+            0% {
+                background-position: 0% 0;
+            }
+
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
+        .status-card h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--warning);
+            margin-bottom: 12px;
+        }
+
+        .status-card .reason {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .status-card .reason strong {
+            color: var(--warning);
+        }
+
+        /* Usage bars */
+        .usage-info {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        .usage-item {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 24px;
+            min-width: 180px;
+            text-align: center;
+        }
+
+        .usage-item .label {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .usage-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .usage-bar .fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+
+        .usage-bar .fill.over {
+            background: linear-gradient(90deg, var(--danger), #f87171);
+            animation: overPulse 1.5s ease-in-out infinite;
+        }
+
+        .usage-bar .fill.ok {
+            background: linear-gradient(90deg, var(--success), #34d399);
+        }
+
+        @keyframes overPulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .usage-item .value {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .usage-item .value.over {
+            color: var(--danger);
+        }
+
+        .usage-item .value.ok {
+            color: var(--success);
+        }
+
+        /* Timer */
+        .data-timer {
+            background: var(--warning-glow);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 12px;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .data-timer i {
+            color: var(--warning);
+            font-size: 1.3rem;
+        }
+
+        .data-timer .timer-text {
+            color: var(--warning);
+            font-weight: 600;
+        }
+
+        .data-timer .timer-text span {
+            font-weight: 800;
+            font-size: 1.2rem;
+        }
+
+        /* Options Grid */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .option-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .option-card.recommended {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.05));
+        }
+
+        .option-card.recommended::before {
+            content: '⭐ مُوصى به';
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: 0.7rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-weight: 700;
+        }
+
+        .option-card .option-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 1.5rem;
+        }
+
+        .option-card:nth-child(1) .option-icon {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.1));
+            color: var(--primary);
+        }
+
+        .option-card:nth-child(2) .option-icon {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.1));
+            color: var(--success);
+        }
+
+        .option-card:nth-child(3) .option-icon {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.1));
+            color: var(--warning);
+        }
+
+        .option-card:nth-child(4) .option-icon {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(185, 28, 28, 0.05));
+            color: var(--danger);
+        }
+
+        .option-card h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .option-card p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin: 0;
+        }
+
+        .option-card .badge-time {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .option-card:nth-child(1) .badge-time {
+            background: rgba(102, 126, 234, 0.15);
+            color: var(--primary);
+        }
+
+        .option-card:nth-child(2) .badge-time {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        .option-card:nth-child(3) .badge-time {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+        }
+
+        .option-card:nth-child(4) .badge-time {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        /* Upgrade Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 560px;
+            width: 100%;
+            position: relative;
+            animation: modalIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.4rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: var(--text);
+        }
+
+        .plan-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .plan-box {
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .plan-box.current {
+            opacity: 0.5;
+        }
+
+        .plan-box.recommended {
+            border-color: var(--primary);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .plan-box .plan-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .plan-box .plan-price {
+            font-size: 1.6rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+
+        .plan-box .plan-feature {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            justify-content: center;
+            margin-bottom: 4px;
+        }
+
+        .plan-box .plan-feature i {
+            color: var(--success);
+            font-size: 0.8rem;
+        }
+
+        .btn-upgrade {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .btn-upgrade.primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .btn-upgrade.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Support Chat */
+        .support-chat {
+            display: none;
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            width: 380px;
+            max-height: 500px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+            z-index: 999;
+            animation: chatIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .support-chat.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes chatIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-header .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .chat-header .info h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: white;
+            margin: 0;
+        }
+
+        .chat-header .info p {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin: 0;
+        }
+
+        .chat-header .close-chat {
+            margin-right: auto;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .chat-messages {
+            padding: 16px;
+            flex: 1;
+            overflow-y: auto;
+            max-height: 300px;
+        }
+
+        .chat-msg {
+            margin-bottom: 12px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-msg.support .bubble {
+            background: rgba(102, 126, 234, 0.15);
+            border-radius: 12px 12px 4px 12px;
+        }
+
+        .chat-msg.user .bubble {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px 12px 12px 4px;
+            margin-right: auto;
+        }
+
+        .chat-msg .bubble {
+            padding: 10px 14px;
+            font-size: 0.9rem;
+            max-width: 280px;
+            line-height: 1.6;
+        }
+
+        .chat-msg .time {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .chat-input {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: var(--text);
+            font-family: 'Tajawal', sans-serif;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .chat-input input:focus {
+            border-color: var(--primary);
+        }
+
+        .chat-input button {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 10px;
+            width: 42px;
+            height: 42px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .chat-input button:hover {
+            transform: scale(1.05);
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 8px 16px 12px;
+        }
+
+        .quick-action-btn {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 8px;
+            padding: 6px 12px;
+            color: var(--primary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-family: 'Tajawal', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .quick-action-btn:hover {
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        /* Export Progress */
+        .export-progress {
+            display: none;
+        }
+
+        .export-progress.active {
+            display: block;
+        }
+
+        .progress-bar-custom {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+
+        .progress-bar-custom .fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .plan-comparison {
+                grid-template-columns: 1fr;
+            }
+
+            .usage-info {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .support-chat {
+                width: calc(100% - 32px);
+                left: 16px;
+                right: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Logo -->
+    <div class="logo-section">
+        <h1><i class="bi bi-rocket-takeoff"></i> ستارتكيس</h1>
+        <p>منصة الإدارة الاستراتيجية الذكية</p>
+    </div>
+
+    <div class="suspended-container">
+        <!-- Lock Icon -->
+        <div class="lock-icon-wrapper">
+            <div class="lock-icon">
+                <i class="bi bi-lock-fill"></i>
+            </div>
+        </div>
+
+        <!-- Status Card -->
+        <div class="status-card">
+            <h2 style="color: var(--warning);">⏸️ عذراً <span id="userName">خالد</span>، حسابك معلق مؤقتاً</h2>
+            <p class="reason" style="font-size: 1rem; line-height: 1.8;">لقد تجاوزت الحد الأقصى المسموح به في باقتك
+                الحالية. <br>نحن نحتفظ بجميع بياناتك الاستراتيجية بأمان — <strong>السبب: تجاوز حدود خطة PRO</strong></p>
+
+            <!-- Usage Bars -->
+            <div class="usage-info">
+                <div class="usage-item">
+                    <div class="label">المستخدمين</div>
+                    <div class="usage-bar">
+                        <div class="fill over" style="width: 110%"></div>
+                    </div>
+                    <div class="value over">11 / 10 ❌</div>
+                </div>
+                <div class="usage-item">
+                    <div class="label">مؤشرات الأداء KPIs</div>
+                    <div class="usage-bar">
+                        <div class="fill ok" style="width: 95%"></div>
+                    </div>
+                    <div class="value ok">95 / 100 ✅</div>
+                </div>
+            </div>
+
+            <!-- Data Timer -->
+            <div class="data-timer">
+                <i class="bi bi-clock-history"></i>
+                <div class="timer-text">
+                    بياناتك محفوظة لمدة <span id="daysRemaining">83</span> يوم
+                    <br><small>بعدها يتم حذفها تلقائياً</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Options -->
+        <div class="options-grid">
+            <!-- Option 1: Upgrade -->
+            <div class="option-card recommended" onclick="openUpgradeModal()" id="opt-upgrade">
+                <div class="option-icon"><i class="bi bi-arrow-up-circle-fill"></i></div>
+                <h3>ترقية فورية</h3>
+                <p>ترقية خطتك لاستعادة الوصول الكامل فوراً</p>
+                <div class="badge-time">⚡ فوري</div>
+            </div>
+
+            <!-- Option 2: Support -->
+            <div class="option-card" onclick="openSupportChat()" id="opt-support">
+                <div class="option-icon"><i class="bi bi-headset"></i></div>
+                <h3>تحدث مع الدعم</h3>
+                <p>فريقنا جاهز لإيجاد حل مناسب لميزانيتك</p>
+                <div class="badge-time">⏱️ خلال دقائق</div>
+            </div>
+
+            <!-- Option 3: Export -->
+            <div class="option-card" onclick="startExport()" id="opt-export">
+                <div class="option-icon"><i class="bi bi-download"></i></div>
+                <h3>تصدير بياناتك</h3>
+                <p>تحميل جميع بياناتك بصيغة PDF أو Excel</p>
+                <div class="badge-time">📄 PDF / Excel</div>
+            </div>
+
+            <!-- Option 4: Delete -->
+            <div class="option-card" onclick="confirmDelete()" id="opt-delete">
+                <div class="option-icon"><i class="bi bi-trash3"></i></div>
+                <h3>حذف الحساب</h3>
+                <p>حذف حسابك وبياناتك نهائياً بشكل لا رجعة فيه</p>
+                <div class="badge-time">⚠️ نهائي</div>
+            </div>
+        </div>
+
+        <!-- Export Progress (hidden by default) -->
+        <div class="export-progress" id="exportProgress">
+            <div class="status-card" style="padding: 24px;">
+                <i class="bi bi-file-earmark-zip"
+                    style="font-size: 2rem; color: var(--warning); margin-bottom: 12px;"></i>
+                <h3 style="margin-bottom: 8px;">جارٍ تجهيز بياناتك...</h3>
+                <p class="reason" id="exportStatus">تجميع مؤشرات الأداء...</p>
+                <div class="progress-bar-custom">
+                    <div class="fill" id="exportFill"></div>
+                </div>
+                <small style="color: var(--text-muted);" id="exportPercent">0%</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upgrade Modal -->
+    <div class="modal-overlay" id="upgradeModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeUpgradeModal()"><i class="bi bi-x-lg"></i></button>
+
+            <div style="text-align: center; margin-bottom: 24px;">
+                <i class="bi bi-stars" style="font-size: 2.5rem; color: var(--primary);"></i>
+                <h2 style="font-size: 1.5rem; font-weight: 800; margin-top: 12px;">اختر خطتك الجديدة</h2>
+                <p style="color: var(--text-muted);">استعد الوصول الكامل فوراً</p>
+            </div>
+
+            <div class="plan-comparison">
+                <!-- Current Plan -->
+                <div class="plan-box current">
+                    <div class="plan-name" style="color: var(--text-muted);">PRO الحالية</div>
+                    <div class="plan-price" style="opacity: 0.5;">199 ر.س</div>
+                    <div class="plan-feature"><i class="bi bi-x-circle" style="color: var(--danger);"></i> 10 مستخدمين
+                    </div>
+                    <div class="plan-feature"><i class="bi bi-x-circle" style="color: var(--danger);"></i> 100 KPI</div>
+                    <div
+                        style="margin-top: 12px; padding: 6px 12px; background: rgba(239,68,68,0.1); border-radius: 8px; color: var(--danger); font-size: 0.8rem; font-weight: 600;">
+                        تم تجاوز الحدود
+                    </div>
+                </div>
+
+                <!-- PRO+ Plan -->
+                <div class="plan-box recommended" onclick="selectPlan('pro-plus')">
+                    <div
+                        style="position: absolute; top: -1px; right: 50%; transform: translateX(50%); background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 4px 16px; border-radius: 0 0 8px 8px; font-size: 0.75rem; font-weight: 700;">
+                        الأنسب لك
+                    </div>
+                    <div class="plan-name" style="margin-top: 16px;">PRO+</div>
+                    <div class="plan-price">239 ر.س</div>
+                    <div class="plan-feature"><i class="bi bi-check-circle-fill"></i> 15 مستخدم</div>
+                    <div class="plan-feature"><i class="bi bi-check-circle-fill"></i> 150 KPI</div>
+                    <div class="plan-feature"><i class="bi bi-check-circle-fill"></i> تقارير متقدمة</div>
+                    <div
+                        style="margin-top: 12px; padding: 6px 12px; background: rgba(16,185,129,0.1); border-radius: 8px; color: var(--success); font-size: 0.8rem; font-weight: 600;">
+                        +20% فقط من PRO
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-upgrade primary" onclick="processUpgrade()">
+                <i class="bi bi-lightning-charge-fill"></i>
+                ترقية لـ PRO+ الآن — 239 ر.س/شهر
+            </button>
+
+            <div style="text-align: center; margin-top: 16px;">
+                <a href="/pricing.html" style="color: var(--text-muted); font-size: 0.85rem; text-decoration: none;">
+                    عرض جميع الخطط <i class="bi bi-arrow-left"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Support Chat -->
+    <div class="support-chat" id="supportChat">
+        <div class="chat-header">
+            <div class="avatar">فـ</div>
+            <div class="info">
+                <h4>فهد — فريق الدعم</h4>
+                <p>🟢 متصل الآن</p>
+            </div>
+            <button class="close-chat" onclick="closeSupportChat()"><i class="bi bi-x-lg"></i></button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-msg support">
+                <div>
+                    <div class="bubble">مرحباً! 👋 أنا فهد من فريق الدعم. كيف أقدر أساعدك؟</div>
+                    <div class="time">الآن</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="quick-actions" id="quickActions">
+            <button class="quick-action-btn" onclick="sendQuickMsg('لماذا تم تعليق حسابي؟')">لماذا تعليق حسابي؟</button>
+            <button class="quick-action-btn" onclick="sendQuickMsg('أحتاج باقة أرخص')">أحتاج باقة أرخص</button>
+            <button class="quick-action-btn" onclick="sendQuickMsg('أريد تقليل المستخدمين')">تقليل المستخدمين</button>
+        </div>
+
+        <div class="chat-input">
+            <input type="text" id="chatInput" placeholder="اكتب رسالتك..."
+                onkeypress="if(event.key==='Enter')sendMessage()">
+            <button onclick="sendMessage()"><i class="bi bi-send-fill"></i></button>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal-content" style="text-align: center;">
+            <button class="modal-close" onclick="closeDeleteModal()"><i class="bi bi-x-lg"></i></button>
+
+            <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem; color: var(--danger);"></i>
+            <h2 style="font-size: 1.4rem; font-weight: 800; margin: 16px 0 8px; color: var(--danger);">
+                هل أنت متأكد؟
+            </h2>
+            <p style="color: var(--text-muted); margin-bottom: 24px;">
+                سيتم حذف <strong style="color: var(--danger);">جميع بياناتك</strong> نهائياً ولا يمكن استرجاعها.
+                <br>يشمل ذلك: الخطط، التحليلات، المؤشرات، والتقارير.
+            </p>
+
+            <div
+                style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: right;">
+                <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" id="deleteConfirmCheck" style="margin-top: 4px;">
+                    <span style="font-size: 0.9rem; color: var(--text-muted);">
+                        أفهم أن حذف الحساب <strong style="color: var(--danger);">نهائي ولا يمكن التراجع عنه</strong>
+                        وأريد المتابعة.
+                    </span>
+                </label>
+            </div>
+
+            <div style="display: flex; gap: 12px;">
+                <button class="btn-upgrade" style="background: rgba(255,255,255,0.08); color: var(--text); flex: 1;"
+                    onclick="closeDeleteModal()">
+                    إلغاء — أريد البقاء
+                </button>
+                <button class="btn-upgrade" id="deleteBtn"
+                    style="background: var(--danger); color: white; flex: 1; opacity: 0.5; cursor: not-allowed;"
+                    disabled>
+                    حذف نهائياً
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ UPGRADE MODAL ============
+        function openUpgradeModal() {
+            document.getElementById('upgradeModal').classList.add('active');
+        }
+
+        function closeUpgradeModal() {
+            document.getElementById('upgradeModal').classList.remove('active');
+        }
+
+        function selectPlan(plan) {
+            // Visual feedback
+            document.querySelectorAll('.plan-box').forEach(b => b.style.borderColor = 'var(--border)');
+            event.currentTarget.style.borderColor = 'var(--primary)';
+        }
+
+        function processUpgrade() {
+            const btn = event.currentTarget;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> جارٍ الترقية...';
+            btn.style.opacity = '0.7';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                closeUpgradeModal();
+                showSuccessMessage();
+            }, 2000);
+        }
+
+        function showSuccessMessage() {
+            const container = document.querySelector('.suspended-container');
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px 0;">
+                    <div style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #10b981, #059669); display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; animation: lockPulse 2s ease-in-out infinite;">
+                        <i class="bi bi-check-lg" style="font-size: 3rem; color: white;"></i>
+                    </div>
+                    <h2 style="font-size: 1.8rem; font-weight: 800; color: var(--success); margin-bottom: 12px;">
+                        🎉 تمت الترقية بنجاح!
+                    </h2>
+                    <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 32px;">
+                        مرحباً بعودتك! خطتك الجديدة <strong style="color: var(--primary);">PRO+</strong> فعّالة الآن
+                    </p>
+                    
+                    <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px;">
+                        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px 24px; text-align: center;">
+                            <div style="color: var(--text-muted); font-size: 0.85rem;">المستخدمين</div>
+                            <div style="color: var(--success); font-weight: 700; margin-top: 4px;">11 / 15 ✅</div>
+                        </div>
+                        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px 24px; text-align: center;">
+                            <div style="color: var(--text-muted); font-size: 0.85rem;">KPIs</div>
+                            <div style="color: var(--success); font-weight: 700; margin-top: 4px;">95 / 150 ✅</div>
+                        </div>
+                    </div>
+
+                    <a href="/dashboard.html" style="display: inline-flex; align-items: center; gap: 8px; padding: 14px 36px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 1.1rem; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <i class="bi bi-arrow-right"></i>
+                        الدخول للمنصة
+                    </a>
+                </div>
+            `;
+            launchConfetti();
+        }
+
+        // ============ SUPPORT CHAT ============
+        function openSupportChat() {
+            document.getElementById('supportChat').classList.add('active');
+        }
+
+        function closeSupportChat() {
+            document.getElementById('supportChat').classList.remove('active');
+        }
+
+        const supportResponses = {
+            'لماذا تم تعليق حسابي؟': 'حسابك تم تعليقه لأنك تجاوزت حد المستخدمين في باقة PRO (11 من 10). لحل المشكلة، يمكنك إما ترقية الباقة أو إزالة مستخدم واحد.',
+            'أحتاج باقة أرخص': 'أفهمك! عندنا عرض خاص: باقة PRO+ بـ 239 ريال فقط — تشمل 15 مستخدم و150 KPI. يعني 20% زيادة فقط عن PRO وتحل مشكلتك 😊',
+            'أريد تقليل المستخدمين': 'ممتاز! إذا أزلت مستخدم واحد (من 11 إلى 10)، يمكننا إعادة تفعيل حسابك فوراً على نفس باقة PRO. هل تحتاج مساعدة في تحديد المستخدم اللي تبي تزيله؟'
+        };
+
+        function sendQuickMsg(msg) {
+            addChatMessage(msg, 'user');
+            document.getElementById('quickActions').style.display = 'none';
+
+            setTimeout(() => {
+                const response = supportResponses[msg] || 'شكراً لتواصلك! تم تحويل طلبك لمختص. سيتواصل معك خلال 30 دقيقة.';
+                addChatMessage(response, 'support');
+            }, 1200);
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            addChatMessage(msg, 'user');
+            input.value = '';
+
+            setTimeout(() => {
+                addChatMessage('شكراً لرسالتك! سأراجع الطلب وأرد عليك خلال دقائق 🙏', 'support');
+            }, 1500);
+        }
+
+        function addChatMessage(text, type) {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = `chat-msg ${type}`;
+            div.innerHTML = `
+                <div>
+                    <div class="bubble">${text}</div>
+                    <div class="time">الآن</div>
+                </div>
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // ============ EXPORT ============
+        function startExport() {
+            const progress = document.getElementById('exportProgress');
+            progress.classList.add('active');
+            progress.scrollIntoView({ behavior: 'smooth' });
+
+            const steps = [
+                { text: 'تجميع مؤشرات الأداء...', pct: 20 },
+                { text: 'تصدير التحليلات...', pct: 45 },
+                { text: 'تجهيز التقارير...', pct: 70 },
+                { text: 'ضغط الملفات...', pct: 90 },
+                { text: '✅ جاهز للتحميل!', pct: 100 }
+            ];
+
+            steps.forEach((step, i) => {
+                setTimeout(() => {
+                    document.getElementById('exportStatus').textContent = step.text;
+                    document.getElementById('exportFill').style.width = step.pct + '%';
+                    document.getElementById('exportPercent').textContent = step.pct + '%';
+
+                    if (step.pct === 100) {
+                        setTimeout(() => {
+                            document.getElementById('exportProgress').querySelector('.status-card').innerHTML = `
+                                <i class="bi bi-file-earmark-check" style="font-size: 2.5rem; color: var(--success); margin-bottom: 12px;"></i>
+                                <h3 style="color: var(--success); margin-bottom: 8px;">✅ بياناتك جاهزة!</h3>
+                                <p style="color: var(--text-muted); margin-bottom: 16px;">تم تجهيز ملف يحتوي على جميع بياناتك</p>
+                                <div style="display: flex; gap: 12px; justify-content: center;">
+                                    <button onclick="alert('سيتم تحميل ملف PDF')" style="padding: 10px 24px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 10px; color: #ef4444; cursor: pointer; font-family: 'Tajawal'; font-weight: 600;">
+                                        <i class="bi bi-file-pdf"></i> PDF
+                                    </button>
+                                    <button onclick="alert('سيتم تحميل ملف Excel')" style="padding: 10px 24px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: 10px; color: #10b981; cursor: pointer; font-family: 'Tajawal'; font-weight: 600;">
+                                        <i class="bi bi-file-earmark-excel"></i> Excel
+                                    </button>
+                                </div>
+                            `;
+                        }, 500);
+                    }
+                }, i * 1200);
+            });
+        }
+
+        // ============ DELETE ============
+        function confirmDelete() {
+            document.getElementById('deleteModal').classList.add('active');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('active');
+        }
+
+        document.getElementById('deleteConfirmCheck')?.addEventListener('change', function () {
+            const btn = document.getElementById('deleteBtn');
+            btn.disabled = !this.checked;
+            btn.style.opacity = this.checked ? '1' : '0.5';
+            btn.style.cursor = this.checked ? 'pointer' : 'not-allowed';
+        });
+
+        document.getElementById('deleteBtn')?.addEventListener('click', function () {
+            if (!document.getElementById('deleteConfirmCheck').checked) return;
+            this.innerHTML = '<i class="bi bi-hourglass-split"></i> جارٍ الحذف...';
+            this.disabled = true;
+            setTimeout(() => {
+                window.location.href = '/landing.html';
+            }, 2000);
+        });
+
+        // ============ CONFETTI ============
+        function launchConfetti() {
+            const colors = ['#667eea', '#764ba2', '#f093fb', '#10b981', '#f59e0b', '#ef4444'];
+            for (let i = 0; i < 60; i++) {
+                const el = document.createElement('div');
+                el.style.cssText = `
+                    position: fixed;
+                    top: -10px;
+                    left: ${Math.random() * 100}%;
+                    width: ${Math.random() * 10 + 5}px;
+                    height: ${Math.random() * 10 + 5}px;
+                    background: ${colors[Math.floor(Math.random() * colors.length)]};
+                    border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+                    z-index: 9999;
+                    animation: confettiFall ${Math.random() * 2 + 2}s linear forwards;
+                    animation-delay: ${Math.random() * 0.5}s;
+                `;
+                document.body.appendChild(el);
+                setTimeout(() => el.remove(), 4000);
+            }
+        }
+
+        // ============ LOAD REAL DATA ============
+        function loadSuspensionData() {
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                const reason = localStorage.getItem('suspendReason') || 'تجاوز حدود الباقة';
+                const suspendedAt = localStorage.getItem('suspendedAt');
+
+                // اسم المستخدم
+                const nameEl = document.getElementById('userName');
+                if (nameEl && user.name) nameEl.textContent = user.name;
+
+                // سبب التعليق
+                const reasonEl = document.querySelector('.reason');
+                if (reasonEl) {
+                    reasonEl.innerHTML = `لقد تم تعليق حسابك مؤقتاً. <br>نحن نحتفظ بجميع بياناتك الاستراتيجية بأمان — <strong>السبب: ${reason}</strong>`;
+                }
+
+                // حساب الأيام المتبقية (90 يوم من تاريخ التعليق)
+                const el = document.getElementById('daysRemaining');
+                if (el && suspendedAt) {
+                    const suspended = new Date(suspendedAt);
+                    const now = new Date();
+                    const diffDays = Math.max(0, 90 - Math.floor((now - suspended) / (1000 * 60 * 60 * 24)));
+                    el.textContent = diffDays > 0 ? diffDays : 90;
+                }
+            } catch (e) {
+                console.warn('Could not load suspension data:', e);
+            }
+        }
+
+        loadSuspensionData();
+
+        // Close modals on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(m => {
+            m.addEventListener('click', function (e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -6,6 +6,121 @@ const { checkPermission } = require('../middleware/permission');
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /api/entities:
+ *   get:
+ *     summary: جلب جميع الكيانات
+ *     tags: [Entities]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema: { type: string }
+ *       - in: query
+ *         name: sectorId
+ *         schema: { type: string }
+ *       - in: query
+ *         name: industryId
+ *         schema: { type: string }
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 10 }
+ *     responses:
+ *       200:
+ *         description: قائمة الكيانات
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 entities:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Entity'
+ *                 total: { type: integer }
+ *   post:
+ *     summary: إنشاء كيان جديد (ADMIN فقط)
+ *     tags: [Entities]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [legalName]
+ *             properties:
+ *               legalName: { type: string, example: 'شركة التقنية' }
+ *               displayName: { type: string }
+ *               sectorId: { type: string }
+ *               industryId: { type: string }
+ *               size: { type: string, enum: [STARTUP, SME, MEDIUM, LARGE, ENTERPRISE] }
+ *               school: { type: string }
+ *     responses:
+ *       201:
+ *         description: تم إنشاء الكيان
+ *       403:
+ *         description: تجاوز حد الباقة (maxEntities)
+ */
+
+/**
+ * @swagger
+ * /api/entities/{id}:
+ *   get:
+ *     summary: جلب كيان واحد مع الأعضاء والتقييمات
+ *     tags: [Entities]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: بيانات الكيان
+ *       404:
+ *         description: الكيان غير موجود
+ *   patch:
+ *     summary: تعديل كيان (ADMIN فقط)
+ *     tags: [Entities]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               legalName: { type: string }
+ *               displayName: { type: string }
+ *               isActive: { type: boolean }
+ *               size: { type: string }
+ *     responses:
+ *       200:
+ *         description: تم التعديل
+ *   delete:
+ *     summary: حذف كيان (ADMIN فقط — بدون أعضاء)
+ *     tags: [Entities]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: تم الحذف
+ *       400:
+ *         description: لا يمكن حذف كيان مع أعضاء
+ */
+
 
 // Get all entities
 router.get('/', verifyToken, async (req, res) => {

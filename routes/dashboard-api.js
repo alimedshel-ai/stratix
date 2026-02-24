@@ -409,46 +409,39 @@ router.get('/health/:entityId', verifyToken, async (req, res) => {
 // Get Health Index for ALL entities (system overview)
 router.get('/health-overview', verifyToken, async (req, res) => {
     try {
+        // Single query — fetch all entities with their active version, KPIs, and initiatives
         const entities = await prisma.entity.findMany({
-            select: { id: true, legalName: true, displayName: true },
+            select: {
+                id: true,
+                legalName: true,
+                displayName: true,
+                versions: {
+                    where: { isActive: true },
+                    take: 1,
+                    select: {
+                        id: true,
+                        kpis: { select: { actual: true, target: true } },
+                        initiatives: { select: { progress: true } }
+                    }
+                }
+            },
             orderBy: { legalName: 'asc' }
         });
 
-        const results = [];
-
-        for (const entity of entities) {
-            const activeVersion = await prisma.strategyVersion.findFirst({
-                where: { entityId: entity.id, isActive: true }
-            });
-
+        const results = entities.map(entity => {
+            const activeVersion = entity.versions[0];
             if (!activeVersion) {
-                results.push({
-                    entityId: entity.id,
-                    entityName: entity.legalName || entity.displayName,
-                    healthScore: 0,
-                    level: 'UNKNOWN',
-                    hasStrategy: false
-                });
-                continue;
+                return { entityId: entity.id, entityName: entity.legalName || entity.displayName, healthScore: 0, level: 'UNKNOWN', hasStrategy: false };
             }
 
-            // Quick KPI score
-            const kpis = await prisma.kPI.findMany({
-                where: { versionId: activeVersion.id },
-                select: { actual: true, target: true }
-            });
+            const kpis = activeVersion.kpis;
+            const initiatives = activeVersion.initiatives;
 
             let kpiScore = 0;
             const measured = kpis.filter(k => k.actual != null && k.target != null && k.target > 0);
             if (measured.length > 0) {
                 kpiScore = Math.min(measured.reduce((s, k) => s + Math.min((k.actual / k.target) * 100, 120), 0) / measured.length, 100);
             }
-
-            // Quick initiative score
-            const initiatives = await prisma.strategicInitiative.findMany({
-                where: { versionId: activeVersion.id },
-                select: { progress: true }
-            });
             const iniScore = initiatives.length > 0
                 ? initiatives.reduce((s, i) => s + (i.progress || 0), 0) / initiatives.length
                 : 0;
@@ -461,18 +454,9 @@ router.get('/health-overview', verifyToken, async (req, res) => {
             else if (score >= 20) level = 'CRITICAL';
             else level = 'DANGER';
 
-            results.push({
-                entityId: entity.id,
-                entityName: entity.legalName || entity.displayName,
-                healthScore: score,
-                level,
-                hasStrategy: true,
-                kpis: kpis.length,
-                initiatives: initiatives.length
-            });
-        }
+            return { entityId: entity.id, entityName: entity.legalName || entity.displayName, healthScore: score, level, hasStrategy: true, kpis: kpis.length, initiatives: initiatives.length };
+        });
 
-        // Sort by health score descending
         results.sort((a, b) => b.healthScore - a.healthScore);
 
         res.json({
@@ -519,31 +503,37 @@ router.get('/consultant-overview', verifyToken, async (req, res) => {
             return res.json({ entities: [], summary: { total: 0 } });
         }
 
-        const results = [];
-
-        for (const membership of memberships) {
+        // Process all memberships concurrently
+        const results = await Promise.all(memberships.map(async (membership) => {
             const entity = membership.entity;
-            if (!entity) continue;
+            if (!entity) return null;
 
-            // Get active version
             const activeVersion = await prisma.strategyVersion.findFirst({
-                where: { entityId: entity.id, isActive: true }
+                where: { entityId: entity.id, isActive: true },
+                select: { id: true }
             });
 
-            // Quick health calculation
             let healthScore = 0, kpiCount = 0, iniCount = 0, alertCount = 0;
             let kpiSummary = { onTrack: 0, warning: 0, critical: 0, total: 0 };
             let iniSummary = { completed: 0, inProgress: 0, overdue: 0, total: 0 };
 
             if (activeVersion) {
-                // KPIs
-                const kpis = await prisma.kPI.findMany({
-                    where: { versionId: activeVersion.id },
-                    select: { actual: true, target: true, warningThreshold: true, criticalThreshold: true }
-                });
+                const [kpis, initiatives, alerts] = await Promise.all([
+                    prisma.kPI.findMany({
+                        where: { versionId: activeVersion.id },
+                        select: { actual: true, target: true, warningThreshold: true, criticalThreshold: true }
+                    }),
+                    prisma.strategicInitiative.findMany({
+                        where: { versionId: activeVersion.id },
+                        select: { status: true, progress: true, endDate: true }
+                    }),
+                    prisma.strategicAlert.count({
+                        where: { entityId: entity.id, isRead: false, isDismissed: false }
+                    })
+                ]);
+
                 kpiCount = kpis.length;
                 kpiSummary.total = kpis.length;
-
                 let kpiScore = 0;
                 const measured = kpis.filter(k => k.actual != null && k.target != null && k.target > 0);
                 if (measured.length > 0) {
@@ -557,11 +547,6 @@ router.get('/consultant-overview', verifyToken, async (req, res) => {
                     else kpiSummary.onTrack++;
                 });
 
-                // Initiatives
-                const initiatives = await prisma.strategicInitiative.findMany({
-                    where: { versionId: activeVersion.id },
-                    select: { status: true, progress: true, endDate: true }
-                });
                 iniCount = initiatives.length;
                 iniSummary.total = initiatives.length;
                 initiatives.forEach(ini => {
@@ -574,11 +559,7 @@ router.get('/consultant-overview', verifyToken, async (req, res) => {
                     : 0;
 
                 healthScore = Math.round(kpiScore * 0.5 + iniScore * 0.5);
-
-                // Alerts count
-                alertCount = await prisma.strategicAlert.count({
-                    where: { entityId: entity.id, isRead: false, isDismissed: false }
-                });
+                alertCount = alerts;
             }
 
             let level;
@@ -588,44 +569,42 @@ router.get('/consultant-overview', verifyToken, async (req, res) => {
             else if (healthScore >= 20) level = 'CRITICAL';
             else level = 'DANGER';
 
-            results.push({
+            return {
                 entityId: entity.id,
                 entityName: entity.displayName || entity.legalName,
                 companyName: entity.company?.nameAr || entity.company?.nameEn || null,
                 sectorName: entity.sector?.nameAr || null,
                 role: membership.role,
                 userType: membership.userType,
-                healthScore,
-                level,
+                healthScore, level,
                 hasStrategy: !!activeVersion,
-                kpis: kpiCount,
-                initiatives: iniCount,
-                alerts: alertCount,
-                kpiSummary,
-                iniSummary,
+                kpis: kpiCount, initiatives: iniCount, alerts: alertCount,
+                kpiSummary, iniSummary,
                 joinedAt: membership.joinedAt,
-            });
-        }
+            };
+        }));
 
-        // Sort by health score descending
-        results.sort((a, b) => b.healthScore - a.healthScore);
+        // Remove nulls (entities that were deleted)
+        const validResults = results.filter(Boolean);
 
-        const avgScore = results.length > 0
-            ? Math.round(results.reduce((s, r) => s + r.healthScore, 0) / results.length)
+        validResults.sort((a, b) => b.healthScore - a.healthScore);
+
+        const avgScore = validResults.length > 0
+            ? Math.round(validResults.reduce((s, r) => s + r.healthScore, 0) / validResults.length)
             : 0;
 
         res.json({
-            entities: results,
+            entities: validResults,
             summary: {
-                total: results.length,
+                total: validResults.length,
                 averageScore: avgScore,
-                excellent: results.filter(r => r.level === 'EXCELLENT').length,
-                good: results.filter(r => r.level === 'GOOD').length,
-                warning: results.filter(r => r.level === 'WARNING').length,
-                critical: results.filter(r => r.level === 'CRITICAL').length,
-                totalAlerts: results.reduce((s, r) => s + r.alerts, 0),
-                totalKpis: results.reduce((s, r) => s + r.kpis, 0),
-                totalInitiatives: results.reduce((s, r) => s + r.initiatives, 0),
+                excellent: validResults.filter(r => r.level === 'EXCELLENT').length,
+                good: validResults.filter(r => r.level === 'GOOD').length,
+                warning: validResults.filter(r => r.level === 'WARNING').length,
+                critical: validResults.filter(r => r.level === 'CRITICAL').length,
+                totalAlerts: validResults.reduce((s, r) => s + r.alerts, 0),
+                totalKpis: validResults.reduce((s, r) => s + r.kpis, 0),
+                totalInitiatives: validResults.reduce((s, r) => s + r.initiatives, 0),
             }
         });
 

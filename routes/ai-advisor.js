@@ -22,19 +22,22 @@ router.get('/context', verifyToken, async (req, res) => {
         const { page, entityId } = req.query;
         const userId = req.user?.id;
 
+        console.log('[AI-Advisor] Context request:', { page, entityId, userId });
+
         if (!entityId) {
+            console.log('[AI-Advisor] No entityId, returning empty');
             return res.json({ suggestions: [], nudge: null });
         }
 
         // === 0. جلب نوع المستخدم ===
         let userType = 'EXPLORER';
-        if (userId) {
+        if (userId && entityId) {
             try {
-                const userRecord = await prisma.user.findUnique({
-                    where: { id: userId },
+                const membership = await prisma.member.findFirst({
+                    where: { userId, entityId },
                     select: { userType: true }
                 });
-                userType = userRecord?.userType || 'EXPLORER';
+                userType = membership?.userType || 'EXPLORER';
             } catch (e) { /* fallback */ }
         }
 
@@ -149,23 +152,115 @@ router.get('/context', verifyToken, async (req, res) => {
 
         // --- قواعد الخيط الذهبي ---
 
+        // جلب اسم المستخدم للترحيب
+        let userName = '';
+        try {
+            const userRecord = await prisma.user.findUnique({ where: { id: userId }, select: { name: true } });
+            userName = userRecord?.name || '';
+        } catch (e) { /* ignore */ }
+        const greeting = userName ? `مرحباً ${userName}!` : 'مرحباً!';
+
         // الخطوة 1: هل أكمل الألم والطموح؟
         if (!painAmbitionData) {
-            suggestions.push({
-                id: 'start-pain-ambition',
-                type: 'START',
-                priority: 100,
-                icon: '💔',
-                title: 'ابدأ رحلتك الاستراتيجية',
-                message: 'حدد ألمك وطموحك أولاً — هذه الخطوة الأساسية التي تبني عليها كل شيء',
-                action: { label: 'ابدأ الآن', href: '/pain-ambition.html' },
-                estimatedTime: '5 دقائق',
-            });
-            nudge = {
-                icon: '🚀',
-                text: 'رحلتك تبدأ هنا — حدد ألمك وطموحك',
-                href: '/pain-ambition.html'
-            };
+            // إذا كان في صفحة الألم والطموح → بطاقة ترحيبية مخصصة
+            if (page === '/pain-ambition.html') {
+                suggestions.push({
+                    id: 'welcome-pain-ambition',
+                    type: 'START',
+                    priority: 100,
+                    icon: '🤖',
+                    title: `${greeting} أنا مساعدك الاستراتيجي`,
+                    message: 'سأرافقك في كل خطوة — من تحديد التحديات إلى بناء خطتك. هالخطوة تأخذ 3 دقائق وتوفر عليك ساعات من التخبط.',
+                    action: null,
+                    estimatedTime: '3 دقائق',
+                    context: 'نقطة البداية'
+                });
+                suggestions.push({
+                    id: 'pain-ambition-guide',
+                    type: 'TIP',
+                    priority: 90,
+                    icon: '📝',
+                    title: 'كيف تختار بذكاء؟',
+                    message: '① اختر 1-3 تحديات تواجهها شركتك فعلاً\n② حدد طموحك — وين تبي توصل؟\n③ أنا أحلل النمط وأقترح لك مسار مخصص',
+                    action: null,
+                    context: 'دليل سريع'
+                });
+                nudge = {
+                    icon: '👋',
+                    text: `${greeting} أنا هنا أساعدك — اختر تحدياتك وأنا أوجهك`,
+                    href: null
+                };
+            }
+            // إذا كان في صفحة أداة تحليل → نصائح سياقية للأداة + اقتراح لطيف لإكمال الرحلة
+            else if (page && (page.includes('tool-detail') || page.includes('swot') || page.includes('tows') || page.includes('analysis') || page.includes('internal-env'))) {
+                // استخراج كود الأداة من الصفحة
+                const toolNames = {
+                    'PESTEL': 'تحليل PESTEL',
+                    'PORTER': 'قوى بورتر',
+                    'SWOT': 'تحليل SWOT',
+                    'TOWS': 'مصفوفة TOWS',
+                    'VALUE_CHAIN': 'سلسلة القيمة',
+                    'CORE_COMPETENCY': 'القدرات الجوهرية',
+                    'CUSTOMER_JOURNEY': 'رحلة العميل',
+                    'BLUE_OCEAN': 'المحيط الأزرق'
+                };
+                const toolTips = {
+                    'PESTEL': 'ابدأ بالعامل الأكثر تأثيراً على شركتك — ركّز على ما يتغير خلال 1-3 سنوات',
+                    'PORTER': 'حلل بيئتك التنافسية — من أقوى: أنت أم المنافسين أم البدائل؟',
+                    'SWOT': 'كن صريحاً مع نفسك — نقاط الضعف هي فرص التحسين الحقيقية',
+                    'VALUE_CHAIN': 'تتبع رحلة القيمة من المدخلات للعميل — وين الهدر؟',
+                    'CORE_COMPETENCY': 'حدد 2-3 قدرات فقط تميزك — الأقل = الأوضح',
+                    'CUSTOMER_JOURNEY': 'ارسم تجربة العميل كاملة — وركز على لحظات الألم'
+                };
+
+                // نصيحة سياقية للأداة الحالية (أولوية عالية)
+                const toolCode = page.includes('swot') ? 'SWOT' : page.includes('tows') ? 'TOWS' : (page.split('code=')[1] || '').split('&')[0];
+                if (toolCode && toolNames[toolCode]) {
+                    suggestions.push({
+                        id: `tool-tip-${toolCode}`,
+                        type: 'TIP',
+                        priority: 90,
+                        icon: '💡',
+                        title: `نصيحة: ${toolNames[toolCode]}`,
+                        message: toolTips[toolCode] || `أكمل ${toolNames[toolCode]} — كل عنصر تضيفه يقربك من الصورة الكاملة`,
+                        action: null,
+                        context: 'نصيحة سياقية'
+                    });
+                }
+
+                // معلومة إضافية بدون إعادة توجيه
+                suggestions.push({
+                    id: 'gentle-pain-ambition',
+                    type: 'INFO',
+                    priority: 40,
+                    icon: '💡',
+                    title: 'نصيحة إضافية',
+                    message: 'أكمل التحليل هنا أولاً — بعدها ممكن تربط البيانات بألمك وطموحك من القائمة الجانبية لتحصل على توصيات مخصصة.',
+                    action: null,
+                });
+                nudge = {
+                    icon: '💡',
+                    text: `${greeting} أنا هنا أساعدك في التحليل`,
+                    href: null
+                };
+            } else {
+                // في بقية الصفحات (Dashboard, KPIs, etc) → دعوة للبدء
+                suggestions.push({
+                    id: 'start-pain-ambition',
+                    type: 'START',
+                    priority: 100,
+                    icon: '💔',
+                    title: 'ابدأ رحلتك الاستراتيجية',
+                    message: 'حدد ألمك وطموحك أولاً — هذه الخطوة الأساسية التي تبني عليها كل شيء',
+                    action: { label: 'ابدأ الآن', href: '/pain-ambition.html' },
+                    estimatedTime: '5 دقائق',
+                });
+                nudge = {
+                    icon: '🚀',
+                    text: 'رحلتك تبدأ هنا — حدد ألمك وطموحك',
+                    href: '/pain-ambition.html'
+                };
+            }
         }
 
         // الخطوة 2: أكمل الألم → أقترح التشخيص حسب النمط
@@ -270,7 +365,7 @@ router.get('/context', verifyToken, async (req, res) => {
             try {
                 stakeholders = await prisma.stakeholder.findMany({
                     where: { entityId },
-                    include: { _count: { select: { stakeholderRisks: true } } },
+                    include: { _count: { select: { risks: true } } },
                     take: 100,
                 });
             } catch (e) { /* ignore */ }
@@ -693,6 +788,9 @@ function getToolSummary(analyses, code) {
 
 function getPageNudge(page, ctx) {
     const nudges = {
+        '/pain-ambition.html': {
+            icon: '🤖', text: 'أنا مساعدك الذكي — اختر تحدياتك وراح أوجهك للأدوات المناسبة', href: null
+        },
         '/swot.html': ctx.completedTools.some(t => t.code === 'SWOT')
             ? null
             : { icon: '💡', text: 'ركّز على أهم 3-5 نقاط في كل قسم', href: null },

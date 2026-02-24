@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const prisma = require('./lib/prisma');
 const { verifyToken } = require('./middleware/auth');
+const { inputSanitizer, suspiciousPatternDetector, securityHeaders, securityLogger } = require('./middleware/security');
 const authRoutes = require('./routes/auth');
 const sectorsRoutes = require('./routes/sectors');
 const industriesRoutes = require('./routes/industries');
@@ -44,14 +45,53 @@ const scenariosRoutes = require('./routes/scenarios');
 const commentsRoutes = require('./routes/comments');
 const activitiesRoutes = require('./routes/activities');
 const aiAdvisorRoutes = require('./routes/ai-advisor');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// ============ PROCESS SAFETY HANDLERS ============
+process.on('unhandledRejection', (reason) => {
+  console.error('❌ [Process] Unhandled Rejection:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('💀 [Process] Uncaught Exception:', err);
+  process.exit(1);
+});
+
+async function gracefulShutdown(signal) {
+  console.log(`\n📴 [Process] ${signal} received — shutting down gracefully...`);
+  await prisma.$disconnect();
+  process.exit(0);
+}
+process.on('SIGINT',  () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+
 // Security Middleware
 app.use(helmet({
-  contentSecurityPolicy: false, // Disabled for development — enable in production
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+      scriptSrcAttr: ["'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
 }));
+
+// Prevent clickjacking
+app.use((req, res, next) => {
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  next();
+});
 
 // Rate Limiting
 const limiter = rateLimit({
@@ -64,13 +104,30 @@ const limiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'production' ? 20 : 200,
-  message: 'Too many login attempts, please try again later.',
+  max: process.env.NODE_ENV === 'production' ? 10 : 100,
+  message: { error: 'محاولات تسجيل دخول كثيرة. حاول بعد 15 دقيقة.' },
   skipSuccessfulRequests: true,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// API-specific stricter limiter for sensitive operations
+const sensitiveLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: process.env.NODE_ENV === 'production' ? 50 : 300,
+  message: { error: 'طلبات كثيرة. حاول لاحقاً.' },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 // Apply rate limiting to all routes
 app.use('/api/', limiter);
+
+// 🛡️ Security Middleware (Day 1 Hardening)
+app.use(securityHeaders);
+app.use(securityLogger);
+app.use(inputSanitizer);
+app.use('/api/', suspiciousPatternDetector);
 
 // Basic Middleware
 app.use(express.json({ limit: '10mb' }));
@@ -87,6 +144,12 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 app.use(express.static(path.join(__dirname, 'public')));
+
+// =========================================
+// 📚 Swagger API Documentation
+// =========================================
+const setupSwagger = require('./config/swagger');
+setupSwagger(app);
 
 // =========================================
 // API Routes — مع حماية الصلاحيات (Phase 8)
@@ -115,6 +178,7 @@ app.use('/api/entity-types', entityTypesRoutes);
 app.use('/api/entities', entitiesRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/companies', companiesRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/integrations', integrationsRoutes);
 app.use('/api/audit', auditRoutes);
 
@@ -179,6 +243,10 @@ app.use('/api/risks', risksRoutes);
 const companyPatternRoutes = require('./routes/company-pattern');
 app.use('/api/company-pattern', companyPatternRoutes);
 
+// 📊 حدود الباقة — Plan Limits
+const planLimitsRoutes = require('./routes/plan-limits');
+app.use('/api/plan-limits', planLimitsRoutes);
+
 // Serve pain-ambition page
 app.get('/pain-ambition', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'pain-ambition.html'));
@@ -229,9 +297,9 @@ app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-// Serve signup page
+// Serve signup page → redirect to unified auth page
 app.get('/signup', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'signup.html'));
+  res.redirect('/login?tab=signup');
 });
 
 // Serve Super Admin Dashboard (برج المراقبة)
@@ -487,14 +555,24 @@ app.get('/webhooks', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'webhooks.html'));
 });
 
+// Serve Companies page (SUPER_ADMIN)
+app.get('/companies', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'companies.html'));
+});
+
+// Serve AI Center
+app.get('/ai-center', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'ai-center.html'));
+});
+
+// Serve Internal Environment Analysis
+app.get('/internal-env', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'internal-env.html'));
+});
+
 // Serve Admin Panel
 app.get('/admin-panel', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin-panel.html'));
-});
-
-// Serve Settings
-app.get('/settings', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'settings.html'));
 });
 
 // Landing page (public homepage)
@@ -529,25 +607,33 @@ app.listen(PORT, () => {
   console.log(`📝 Login at http://localhost:${PORT}/login`);
 
   // ============ AUTO-SCAN SCHEDULER ============
-  // Run alert engine scan every 2 hours
   const SCAN_INTERVAL = 2 * 60 * 60 * 1000; // 2 hours
+  let scanRunning = false;
+  let scanFailCount = 0;
 
   async function autoScan() {
+    if (scanRunning) {
+      console.log('⏭️ [Auto-Scan] Already running, skipping...');
+      return;
+    }
+    scanRunning = true;
     try {
       console.log('🔍 [Auto-Scan] Starting scheduled alert engine scan...');
-      const entities = await prisma.entity.findMany();
+      const entities = await prisma.entity.findMany({
+        select: { id: true }
+      });
       let totalAlerts = 0;
 
       for (const entity of entities) {
         const activeVersion = await prisma.strategyVersion.findFirst({
-          where: { entityId: entity.id, isActive: true }
+          where: { entityId: entity.id, isActive: true },
+          select: { id: true }
         });
         if (!activeVersion) continue;
 
-        // Check KPIs
         const kpis = await prisma.kPI.findMany({
           where: { versionId: activeVersion.id },
-          select: { id: true, name: true, actual: true, target: true, warningThreshold: true, criticalThreshold: true, objectiveId: true }
+          select: { id: true, name: true, actual: true, target: true, criticalThreshold: true }
         });
 
         for (const kpi of kpis) {
@@ -568,14 +654,19 @@ app.listen(PORT, () => {
         }
       }
 
+      scanFailCount = 0;
       console.log(`✅ [Auto-Scan] Complete — ${totalAlerts} new alerts generated`);
     } catch (err) {
-      console.error('❌ [Auto-Scan] Error:', err.message);
+      scanFailCount++;
+      console.error(`❌ [Auto-Scan] Error (fail #${scanFailCount}):`, err.message);
+      if (scanFailCount >= 3) {
+        console.error('🚨 [Auto-Scan] 3 consecutive failures — possible DB issue');
+      }
+    } finally {
+      scanRunning = false;
     }
   }
 
-  // Run first scan after 30 seconds (let server warm up)
   setTimeout(autoScan, 30000);
-  // Then every 2 hours
   setInterval(autoScan, SCAN_INTERVAL);
 });

@@ -7,8 +7,94 @@ const { validateLogin, validateRegister } = require('../middleware/validation');
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: تسجيل مستخدم جديد مع إنشاء شركة وكيان
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password, name]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: ahmed@company.com
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: MyP@ss123!
+ *                 minLength: 6
+ *               name:
+ *                 type: string
+ *                 example: أحمد محمد
+ *               companyName:
+ *                 type: string
+ *                 example: شركة التقنية
+ *     responses:
+ *       201:
+ *         description: تم التسجيل بنجاح — يرجع token + بيانات المستخدم
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LoginResponse'
+ *       400:
+ *         description: بيانات ناقصة أو الإيميل مسجل مسبقاً
+ */
+
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: تسجيل الدخول والحصول على JWT Token
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/LoginRequest'
+ *     responses:
+ *       200:
+ *         description: تم تسجيل الدخول بنجاح
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LoginResponse'
+ *       401:
+ *         description: بيانات الدخول غير صحيحة
+ *       403:
+ *         description: الحساب معطّل
+ */
+
+/**
+ * @swagger
+ * /api/auth/me:
+ *   get:
+ *     summary: جلب بيانات المستخدم الحالي
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: بيانات المستخدم
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Token غير صالح
+ */
+
 // Register new user — Full Onboarding Chain
-router.post('/register', async (req, res) => {
+router.post('/register', validateRegister, async (req, res) => {
   try {
     const { email, password, name, companyName } = req.body;
 
@@ -145,26 +231,57 @@ router.post('/login', validateLogin, async (req, res) => {
       },
     });
 
-    console.log('LOGIN DEBUG:', {
-      email,
-      passwordEntered: password,
-      userFound: !!user,
-      userPasswordHash: user?.password
-    });
+
 
     if (!user) {
-      console.log('LOGIN DEBUG: User not found');
+
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     // Compare passwords
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    console.log('LOGIN DEBUG: isPasswordValid =', isPasswordValid);
+
 
     if (!isPasswordValid) {
-      console.log('LOGIN DEBUG: Password mismatch');
+
       return res.status(401).json({ message: 'Invalid credentials' });
     }
+
+    // التحقق من تعطيل الحساب
+    if (user.disabled) {
+      return res.status(403).json({ message: 'الحساب معطّل — تواصل مع مدير النظام' });
+    }
+
+    // التحقق من تعليق الشركة (SUSPENDED)
+    const userCompany = user.memberships[0]?.entity?.company;
+    if (userCompany && user.systemRole !== 'SUPER_ADMIN') {
+      const company = await prisma.company.findUnique({
+        where: { id: userCompany.id },
+        select: { status: true, suspendedAt: true, suspendReason: true }
+      });
+      if (company?.status === 'SUSPENDED') {
+        // نسمح بالدخول لكن نرسل علامة التعليق
+        const suspendedToken = jwt.sign(
+          { id: user.id, email: user.email, name: user.name, systemRole: user.systemRole || 'USER', role: 'VIEWER', suspended: true },
+          process.env.JWT_SECRET,
+          { expiresIn: '2h' }
+        );
+        return res.status(403).json({
+          suspended: true,
+          message: 'حسابك معلق مؤقتاً',
+          reason: company.suspendReason || 'تجاوز حدود الباقة',
+          suspendedAt: company.suspendedAt,
+          token: suspendedToken,
+          user: { id: user.id, name: user.name, email: user.email }
+        });
+      }
+    }
+
+    // تحديث آخر تسجيل دخول
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLogin: new Date() }
+    }).catch(() => { });
 
     // Get primary role (first membership or default)
     // SUPER_ADMIN يحصل على OWNER تلقائياً لو ما عنده membership
@@ -183,7 +300,7 @@ router.post('/login', validateLogin, async (req, res) => {
         role: primaryRole,
         userType: primaryUserType,
         entityId: primaryEntity?.id || null,
-        companyId: primaryEntity?.companyId || null,
+        companyId: primaryEntity?.company?.id || primaryEntity?.companyId || null,
       },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }

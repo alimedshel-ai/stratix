@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكيس - تخطيط السيناريوهات</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --bg: #0f1117;
+            --bg-card: #1a1d2e;
+            --bg-card-hover: #232640;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --success: #22c55e;
+            --warning: #facc15;
+            --danger: #ef4444;
+            --info: #38bdf8;
+            --purple: #a78bfa;
+            --accent: #818cf8;
+            --optimistic: #22c55e;
+            --baseline: #3b82f6;
+            --pessimistic: #ef4444;
+            --custom: #a78bfa;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .top-nav {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 14px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,.3);
+        }
+
+        .top-nav .brand {
+            display: flex; align-items: center; gap: 10px;
+            color: #fff; text-decoration: none;
+            font-size: 20px; font-weight: 700;
+        }
+
+        .top-nav .nav-links { display: flex; gap: 6px; }
+        .top-nav .nav-links a {
+            color: rgba(255,255,255,.85); text-decoration: none;
+            padding: 8px 14px; border-radius: 8px; font-size: 13px; transition: .2s;
+        }
+        .top-nav .nav-links a:hover { background: rgba(255,255,255,.15); color: #fff; }
+
+        .user-area { display: flex; align-items: center; gap: 12px; }
+        .user-avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: rgba(255,255,255,.2);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; color: #fff;
+        }
+        .btn-logout {
+            background: rgba(239,68,68,.3); color: #fff; border: none;
+            padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 13px;
+        }
+
+        .layout { display: flex; min-height: calc(100vh - 60px); }
+
+        .main-content {
+            flex: 1; padding: 30px;
+            max-width: calc(100% - 220px);
+        }
+
+        .page-header { margin-bottom: 24px; }
+        .page-header h1 {
+            font-size: 1.8rem; font-weight: 800;
+            background: linear-gradient(135deg, #f59e0b, #a78bfa);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .page-header p { color: var(--text-muted); font-size: .95rem; margin-top: 4px; }
+
+        /* ===== STATS ===== */
+        .stats-row {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 16px; margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 14px; padding: 20px;
+            display: flex; align-items: center; gap: 16px; transition: .3s;
+        }
+        .stat-card:hover { transform: translateY(-2px); border-color: var(--primary); }
+        .stat-icon {
+            width: 48px; height: 48px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; font-size: 22px;
+        }
+        .stat-icon.green { background: rgba(34,197,94,.15); color: #22c55e; }
+        .stat-icon.blue  { background: rgba(59,130,246,.15); color: #3b82f6; }
+        .stat-icon.red   { background: rgba(239,68,68,.15);  color: #ef4444; }
+        .stat-icon.purple{ background: rgba(167,139,250,.15);color: #a78bfa; }
+        .stat-value { font-size: 1.8rem; font-weight: 800; }
+        .stat-label { font-size: .8rem; color: var(--text-muted); }
+
+        /* ===== CONCEPTS BAR ===== */
+        .concepts-bar {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 12px; margin-bottom: 24px;
+        }
+        .concept-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 14px 16px;
+            border-right: 3px solid;
+        }
+        .concept-card.optimistic { border-right-color: var(--optimistic); }
+        .concept-card.baseline   { border-right-color: var(--baseline); }
+        .concept-card.pessimistic{ border-right-color: var(--pessimistic); }
+        .concept-card.custom     { border-right-color: var(--custom); }
+        .concept-title { font-size: .85rem; font-weight: 700; margin-bottom: 4px; }
+        .concept-desc  { font-size: .75rem; color: var(--text-muted); }
+
+        /* ===== DATA CARD ===== */
+        .data-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 14px; overflow: hidden;
+        }
+        .card-toolbar {
+            padding: 16px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+        .card-toolbar h3 { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+
+        .filters-row {
+            display: flex; gap: 10px; padding: 12px 20px;
+            border-bottom: 1px solid var(--border); flex-wrap: wrap;
+        }
+        .filter-select {
+            background: var(--bg); border: 1px solid var(--border); color: var(--text);
+            padding: 6px 12px; border-radius: 8px; font-size: .8rem;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff; border: none; padding: 8px 18px; border-radius: 10px;
+            font-weight: 600; cursor: pointer; font-size: .85rem;
+            font-family: 'Tajawal', sans-serif; display: flex; align-items: center; gap: 6px;
+        }
+
+        /* ===== SCENARIO CARDS GRID ===== */
+        .scenarios-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px; padding: 20px;
+        }
+
+        .scenario-card {
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: 14px; padding: 20px;
+            border-top: 3px solid; transition: .3s; position: relative;
+        }
+        .scenario-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.3); }
+        .scenario-card.OPTIMISTIC { border-top-color: var(--optimistic); }
+        .scenario-card.BASELINE   { border-top-color: var(--baseline); }
+        .scenario-card.PESSIMISTIC{ border-top-color: var(--pessimistic); }
+        .scenario-card.CUSTOM     { border-top-color: var(--custom); }
+
+        .scenario-header {
+            display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;
+        }
+        .scenario-name { font-size: 1rem; font-weight: 700; }
+        .scenario-actions { display: flex; gap: 4px; }
+
+        .btn-action {
+            background: rgba(255,255,255,.06); border: 1px solid var(--border);
+            color: var(--text-muted); width: 30px; height: 30px; border-radius: 8px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: .2s; font-size: 13px;
+        }
+        .btn-action:hover { background: rgba(255,255,255,.12); color: var(--text); }
+        .btn-action.danger:hover { background: rgba(239,68,68,.2); color: var(--danger); border-color: var(--danger); }
+
+        .scenario-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+
+        .badge-type {
+            padding: 3px 10px; border-radius: 20px; font-size: .72rem; font-weight: 700;
+        }
+        .badge-OPTIMISTIC  { background: rgba(34,197,94,.15);  color: #22c55e; }
+        .badge-BASELINE    { background: rgba(59,130,246,.15);  color: #3b82f6; }
+        .badge-PESSIMISTIC { background: rgba(239,68,68,.15);   color: #ef4444; }
+        .badge-CUSTOM      { background: rgba(167,139,250,.15); color: #a78bfa; }
+
+        .badge-status {
+            padding: 3px 10px; border-radius: 20px; font-size: .72rem; font-weight: 600;
+        }
+        .badge-draft    { background: rgba(148,163,184,.15); color: #94a3b8; }
+        .badge-active   { background: rgba(34,197,94,.15);  color: #22c55e; }
+        .badge-archived { background: rgba(239,68,68,.1);   color: #94a3b8; }
+
+        .badge-impact {
+            padding: 3px 10px; border-radius: 20px; font-size: .72rem;
+        }
+        .badge-HIGH   { background: rgba(239,68,68,.15);  color: #ef4444; }
+        .badge-MEDIUM { background: rgba(250,204,21,.15); color: #facc15; }
+        .badge-LOW    { background: rgba(34,197,94,.15);  color: #22c55e; }
+
+        .probability-bar {
+            margin: 10px 0 6px;
+        }
+        .prob-label {
+            display: flex; justify-content: space-between;
+            font-size: .75rem; color: var(--text-muted); margin-bottom: 4px;
+        }
+        .prob-track {
+            height: 6px; background: rgba(255,255,255,.08); border-radius: 10px; overflow: hidden;
+        }
+        .prob-fill { height: 100%; border-radius: 10px; transition: width .5s; }
+
+        .scenario-desc {
+            font-size: .83rem; color: var(--text-muted); line-height: 1.5;
+            margin-top: 8px;
+        }
+
+        .scenario-footer {
+            margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border);
+            font-size: .75rem; color: var(--text-muted);
+        }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center; padding: 60px 20px; color: var(--text-muted);
+        }
+        .empty-state .emoji { font-size: 3rem; margin-bottom: 12px; }
+        .empty-state h4 { font-size: 1.1rem; margin-bottom: 6px; }
+
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.6); backdrop-filter: blur(8px);
+            z-index: 1000; align-items: center; justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-box {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 16px; width: 580px; max-height: 85vh;
+            overflow-y: auto; animation: slideUp .3s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to   { transform: translateY(0);    opacity: 1; }
+        }
+        .modal-header {
+            padding: 20px 24px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-header h3 { font-size: 1.1rem; font-weight: 700; }
+        .modal-close { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; }
+        .modal-body { padding: 20px 24px; }
+        .modal-footer {
+            padding: 16px 24px; border-top: 1px solid var(--border);
+            display: flex; justify-content: flex-end; gap: 10px;
+        }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: .85rem; font-weight: 600; margin-bottom: 6px; }
+        .form-input {
+            width: 100%; background: var(--bg); border: 1px solid var(--border);
+            color: var(--text); padding: 10px 14px; border-radius: 10px;
+            font-size: .9rem; font-family: 'Tajawal', sans-serif; transition: .2s;
+        }
+        .form-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(102,126,234,.15); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+        .section-divider {
+            font-size: .8rem; font-weight: 700; color: var(--primary);
+            margin: 16px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 6px;
+        }
+        .btn-save {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff; border: none; padding: 10px 24px; border-radius: 10px;
+            font-weight: 600; cursor: pointer; font-family: 'Tajawal', sans-serif;
+        }
+        .btn-cancel {
+            background: transparent; border: 1px solid var(--border); color: var(--text-muted);
+            padding: 10px 20px; border-radius: 10px; cursor: pointer; font-family: 'Tajawal', sans-serif;
+        }
+
+        @media (max-width: 768px) {
+            .main-content { max-width: 100%; padding: 16px; }
+            .stats-row, .concepts-bar { grid-template-columns: 1fr 1fr; }
+            .scenarios-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="top-nav">
+        <a href="/dashboard.html" class="brand"><i class="bi bi-rocket-takeoff-fill"></i> ستارتكيس</a>
+        <div class="nav-links">
+            <a href="/dashboard.html"><i class="bi bi-house"></i> الرئيسية</a>
+            <a href="/reviews.html"><i class="bi bi-journal-check"></i> المراجعات</a>
+            <a href="/directions.html"><i class="bi bi-compass"></i> التوجهات</a>
+        </div>
+        <div class="user-area">
+            <span style="color:#fff;font-size:13px" id="userName">مستخدم</span>
+            <div class="user-avatar" id="userAvatar">م</div>
+            <button class="btn-logout" onclick="logout()">خروج</button>
+        </div>
+    </nav>
+
+    <div class="layout">
+        <nav class="sidebar"></nav>
+        <main class="main-content">
+
+            <div class="page-header">
+                <h1>🔮 تخطيط السيناريوهات</h1>
+                <p>استعدّ لكل الاحتمالات — بنِ خططاً بديلة لكل مستقبل محتمل</p>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon blue">🔮</div>
+                    <div>
+                        <div class="stat-value" id="statTotal">0</div>
+                        <div class="stat-label">إجمالي السيناريوهات</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">📈</div>
+                    <div>
+                        <div class="stat-value" id="statOptimistic">0</div>
+                        <div class="stat-label">متفائلة</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon red">📉</div>
+                    <div>
+                        <div class="stat-value" id="statPessimistic">0</div>
+                        <div class="stat-label">متشائمة</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple">✅</div>
+                    <div>
+                        <div class="stat-value" id="statActive">0</div>
+                        <div class="stat-label">نشطة</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Concepts Guide -->
+            <div class="concepts-bar">
+                <div class="concept-card optimistic">
+                    <div class="concept-title">📈 متفائل (Optimistic)</div>
+                    <div class="concept-desc">أفضل سيناريو ممكن — كل الظروف مواتية وتسير كما نخطط</div>
+                </div>
+                <div class="concept-card baseline">
+                    <div class="concept-title">📊 أساسي (Baseline)</div>
+                    <div class="concept-desc">السيناريو الأكثر احتمالاً — توقعاتك الواقعية المعتدلة</div>
+                </div>
+                <div class="concept-card pessimistic">
+                    <div class="concept-title">📉 متشائم (Pessimistic)</div>
+                    <div class="concept-desc">أسوأ سيناريو — تحدياتك الكبرى وكيف تتعامل معها</div>
+                </div>
+                <div class="concept-card custom">
+                    <div class="concept-title">⚡ مخصص (Custom)</div>
+                    <div class="concept-desc">سيناريو خاص تحدده أنت — اضطراب، ابتكار، أو حدث معين</div>
+                </div>
+            </div>
+
+            <!-- Data Card -->
+            <div class="data-card">
+                <div class="card-toolbar">
+                    <h3><i class="bi bi-bezier2"></i> السيناريوهات الاستراتيجية</h3>
+                    <button class="btn-add" onclick="showModal()"><i class="bi bi-plus-lg"></i> سيناريو جديد</button>
+                </div>
+                <div class="filters-row">
+                    <select class="filter-select" id="versionFilter" onchange="loadScenarios()">
+                        <option value="">كل الإصدارات</option>
+                    </select>
+                    <select class="filter-select" id="typeFilter" onchange="loadScenarios()">
+                        <option value="">كل الأنواع</option>
+                        <option value="OPTIMISTIC">متفائل</option>
+                        <option value="BASELINE">أساسي</option>
+                        <option value="PESSIMISTIC">متشائم</option>
+                        <option value="CUSTOM">مخصص</option>
+                    </select>
+                    <select class="filter-select" id="statusFilter" onchange="loadScenarios()">
+                        <option value="">كل الحالات</option>
+                        <option value="DRAFT">مسودة</option>
+                        <option value="ACTIVE">نشط</option>
+                        <option value="ARCHIVED">مؤرشف</option>
+                    </select>
+                </div>
+                <div id="scenariosContainer">
+                    <div class="empty-state"><div class="emoji">⏳</div>جاري التحميل...</div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="scenarioModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modalTitle">سيناريو جديد</h3>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editId">
+
+                <div class="section-divider"><i class="bi bi-info-circle"></i> المعلومات الأساسية</div>
+                <div class="form-group">
+                    <label>اسم السيناريو *</label>
+                    <input type="text" id="scName" class="form-input" placeholder="مثال: توسع سريع في السوق الخليجي">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>النوع</label>
+                        <select id="scType" class="form-input">
+                            <option value="BASELINE">أساسي 📊</option>
+                            <option value="OPTIMISTIC">متفائل 📈</option>
+                            <option value="PESSIMISTIC">متشائم 📉</option>
+                            <option value="CUSTOM">مخصص ⚡</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>الحالة</label>
+                        <select id="scStatus" class="form-input">
+                            <option value="DRAFT">مسودة</option>
+                            <option value="ACTIVE">نشط</option>
+                            <option value="ARCHIVED">مؤرشف</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="section-divider"><i class="bi bi-sliders"></i> التقييم والتأثير</div>
+                <div class="form-row three">
+                    <div class="form-group">
+                        <label>احتمالية الحدوث (%)</label>
+                        <input type="number" id="scProbability" class="form-input" min="0" max="100" value="50" placeholder="50">
+                    </div>
+                    <div class="form-group">
+                        <label>مستوى التأثير</label>
+                        <select id="scImpact" class="form-input">
+                            <option value="HIGH">عالي 🔴</option>
+                            <option value="MEDIUM" selected>متوسط 🟡</option>
+                            <option value="LOW">منخفض 🟢</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>الإصدار</label>
+                        <select id="scVersion" class="form-input"></select>
+                    </div>
+                </div>
+
+                <div class="section-divider"><i class="bi bi-file-text"></i> التفاصيل</div>
+                <div class="form-group">
+                    <label>وصف السيناريو</label>
+                    <textarea id="scDesc" class="form-input" rows="3" placeholder="ما الذي يميز هذا السيناريو؟ ما الظروف التي تجعله ممكناً؟"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>الاستجابة الاستراتيجية</label>
+                    <textarea id="scNotes" class="form-input" rows="3" placeholder="كيف ستتصرف المنظمة إذا تحقق هذا السيناريو؟"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
+                <button class="btn-save" onclick="save()">💾 حفظ</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script src="/js/ai-advisor.js"></script>
+    <script>
+        if (window.StartixAPI?.showEntityBanner) {
+            StartixAPI.showEntityBanner({ toolName: 'تخطيط السيناريوهات' });
+        }
+    </script>
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+        const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.name || 'مستخدم';
+        document.getElementById('userAvatar').textContent = (user.name || 'م')[0];
+
+        const typeLabel  = { OPTIMISTIC: 'متفائل 📈', BASELINE: 'أساسي 📊', PESSIMISTIC: 'متشائم 📉', CUSTOM: 'مخصص ⚡' };
+        const statusLabel= { DRAFT: 'مسودة', ACTIVE: 'نشط', ARCHIVED: 'مؤرشف' };
+        const impactLabel= { HIGH: 'تأثير عالٍ', MEDIUM: 'تأثير متوسط', LOW: 'تأثير منخفض' };
+        const probColor  = { OPTIMISTIC: '#22c55e', BASELINE: '#3b82f6', PESSIMISTIC: '#ef4444', CUSTOM: '#a78bfa' };
+
+        let allScenarios = [];
+
+        function closeModal() { document.getElementById('scenarioModal').classList.remove('show'); }
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+        async function init() { await loadVersions(); await loadScenarios(); }
+
+        async function loadVersions() {
+            try {
+                const res = await fetch('/api/versions', { headers });
+                const data = await res.json();
+                const vList = data.versions || [];
+                const selFilter = document.getElementById('versionFilter');
+                const selModal  = document.getElementById('scVersion');
+                vList.forEach(v => {
+                    const label = `V${v.versionNumber} — ${v.entity?.legalName || ''}`;
+                    [selFilter, selModal].forEach(sel => {
+                        const o = document.createElement('option');
+                        o.value = v.id; o.textContent = label;
+                        sel.appendChild(o);
+                    });
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadScenarios() {
+            const container = document.getElementById('scenariosContainer');
+            try {
+                let url = '/api/strategic/scenarios?';
+                const vId  = document.getElementById('versionFilter').value;
+                const type = document.getElementById('typeFilter').value;
+                const stat = document.getElementById('statusFilter').value;
+                if (vId)  url += `versionId=${vId}&`;
+                if (type) url += `type=${type}&`;
+                if (stat) url += `status=${stat}&`;
+
+                const res = await fetch(url, { headers });
+                const data = await res.json();
+                allScenarios = data.scenarios || [];
+                updateStats();
+
+                if (!allScenarios.length) {
+                    container.innerHTML = `<div class="empty-state">
+                        <div class="emoji">🔮</div>
+                        <h4>لا توجد سيناريوهات بعد</h4>
+                        <p>اضغط "سيناريو جديد" وابدأ ببناء خططك البديلة</p>
+                    </div>`;
+                    return;
+                }
+
+                container.innerHTML = `<div class="scenarios-grid">${allScenarios.map(renderCard).join('')}</div>`;
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = '<div class="empty-state"><div class="emoji">❌</div>خطأ في التحميل</div>';
+            }
+        }
+
+        function renderCard(s) {
+            const prob = s.probability ?? 50;
+            const color = probColor[s.type] || '#667eea';
+            return `<div class="scenario-card ${s.type}">
+                <div class="scenario-header">
+                    <div class="scenario-name">${s.name}</div>
+                    <div class="scenario-actions">
+                        <button class="btn-action" onclick="editScenario('${s.id}')"><i class="bi bi-pencil"></i></button>
+                        <button class="btn-action danger" onclick="del('${s.id}')"><i class="bi bi-trash"></i></button>
+                    </div>
+                </div>
+                <div class="scenario-meta">
+                    <span class="badge-type badge-${s.type}">${typeLabel[s.type] || s.type}</span>
+                    <span class="badge-status badge-${s.status?.toLowerCase()}">${statusLabel[s.status] || s.status}</span>
+                    <span class="badge-impact badge-${s.impact}">${impactLabel[s.impact] || s.impact}</span>
+                </div>
+                <div class="probability-bar">
+                    <div class="prob-label">
+                        <span>احتمالية الحدوث</span>
+                        <span style="color:${color};font-weight:700">${prob}%</span>
+                    </div>
+                    <div class="prob-track">
+                        <div class="prob-fill" style="width:${prob}%;background:${color}"></div>
+                    </div>
+                </div>
+                ${s.description ? `<div class="scenario-desc">${s.description}</div>` : ''}
+                ${s.notes ? `<div class="scenario-desc" style="margin-top:8px;border-right:2px solid ${color};padding-right:8px"><strong>الاستجابة:</strong> ${s.notes}</div>` : ''}
+                <div class="scenario-footer">
+                    <i class="bi bi-layers"></i> الإصدار V${s.version?.versionNumber || '-'} — ${s.version?.entity?.legalName || ''}
+                </div>
+            </div>`;
+        }
+
+        function updateStats() {
+            document.getElementById('statTotal').textContent      = allScenarios.length;
+            document.getElementById('statOptimistic').textContent  = allScenarios.filter(s => s.type === 'OPTIMISTIC').length;
+            document.getElementById('statPessimistic').textContent = allScenarios.filter(s => s.type === 'PESSIMISTIC').length;
+            document.getElementById('statActive').textContent      = allScenarios.filter(s => s.status === 'ACTIVE').length;
+        }
+
+        function showModal() {
+            ['editId','scName','scDesc','scNotes'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('scType').value = 'BASELINE';
+            document.getElementById('scStatus').value = 'DRAFT';
+            document.getElementById('scProbability').value = '50';
+            document.getElementById('scImpact').value = 'MEDIUM';
+            document.getElementById('modalTitle').textContent = 'سيناريو جديد';
+            document.getElementById('scenarioModal').classList.add('show');
+        }
+
+        async function editScenario(id) {
+            try {
+                const res = await fetch(`/api/strategic/scenarios/${id}`, { headers });
+                const s = await res.json();
+                document.getElementById('editId').value = s.id;
+                document.getElementById('scName').value = s.name;
+                document.getElementById('scType').value = s.type || 'BASELINE';
+                document.getElementById('scStatus').value = s.status || 'DRAFT';
+                document.getElementById('scProbability').value = s.probability ?? 50;
+                document.getElementById('scImpact').value = s.impact || 'MEDIUM';
+                document.getElementById('scDesc').value = s.description || '';
+                document.getElementById('scNotes').value = s.notes || '';
+                document.getElementById('modalTitle').textContent = 'تعديل السيناريو';
+                document.getElementById('scenarioModal').classList.add('show');
+            } catch (e) { alert('خطأ في التحميل'); }
+        }
+
+        async function save() {
+            const editId = document.getElementById('editId').value;
+            const name = document.getElementById('scName').value.trim();
+            if (!name) return alert('الرجاء إدخال اسم السيناريو');
+
+            const body = {
+                name,
+                type:        document.getElementById('scType').value,
+                status:      document.getElementById('scStatus').value,
+                probability: parseFloat(document.getElementById('scProbability').value) || 50,
+                impact:      document.getElementById('scImpact').value,
+                description: document.getElementById('scDesc').value.trim() || null,
+                notes:       document.getElementById('scNotes').value.trim() || null,
+            };
+
+            if (!editId) {
+                body.versionId = document.getElementById('scVersion').value;
+                if (!body.versionId) return alert('الرجاء اختيار الإصدار');
+            }
+
+            try {
+                const url = editId ? `/api/strategic/scenarios/${editId}` : '/api/strategic/scenarios';
+                const res = await fetch(url, {
+                    method: editId ? 'PATCH' : 'POST',
+                    headers, body: JSON.stringify(body)
+                });
+                if (!res.ok) throw new Error('Failed');
+                closeModal();
+                loadScenarios();
+            } catch (e) { alert('خطأ في الحفظ'); }
+        }
+
+        async function del(id) {
+            if (!confirm('هل أنت متأكد من حذف هذا السيناريو؟')) return;
+            try {
+                await fetch(`/api/strategic/scenarios/${id}`, { method: 'DELETE', headers });
+                loadScenarios();
+            } catch (e) { alert('خطأ في الحذف'); }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login.html';
+        }
+
+        init();
+    </script>
+    <script src="/js/impersonation.js"></script>
+</body>
+
+</html>

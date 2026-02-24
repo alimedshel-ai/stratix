@@ -62,6 +62,8 @@
     }
   } catch (e) { /* ignore */ }
 
+  // === محرك المسارات الذكية (يُقرأ ديناميكياً داخل buildSidebar) ===
+
   // === رحلتي الاستراتيجية: 5 مراحل (بالتسميات الجديدة) ===
   const journeyPhases = [
     {
@@ -71,37 +73,40 @@
       emoji: '🏗️',
       color: '#667eea',
       items: [
-        { label: 'إعداد المنظمة', href: '/onboarding.html', icon: 'bi-rocket-takeoff' },
-        { label: 'الكيانات', href: '/entities.html', icon: 'bi-building' },
-        { label: 'الإعدادات', href: '/settings.html', icon: 'bi-gear' },
-        { label: 'البيانات الأساسية', href: '/settings-data.html', icon: 'bi-database-gear' },
+        { label: 'إعداد المنظمة', href: '/onboarding.html', icon: 'bi-rocket-takeoff-fill' },
+        { label: 'الكيانات', href: '/entities.html', icon: 'bi-building-fill' },
+        { label: 'القطاعات والأنشطة', href: '/sectors.html', icon: 'bi-grid-3x3-gap-fill' },
+        { label: 'الإعدادات', href: '/settings.html', icon: 'bi-gear-fill' },
+        { label: 'البيانات الأساسية', href: '/settings-data.html', icon: 'bi-database-fill-gear' },
       ]
     },
     {
       id: 'DIAGNOSIS',
       nameAr: 'تشخيصي',
-      icon: 'bi-search',
+      icon: 'bi-search-heart',
       emoji: '🔍',
       color: '#f59e0b',
       items: [
-        { label: '🔬 التحليل الاستراتيجي', href: '/analysis.html', icon: 'bi-lightbulb' },
-        { label: 'تحليل SWOT', href: '/swot.html', icon: 'bi-grid-3x3' },
-        { label: 'التقييمات', href: '/assessments.html', icon: 'bi-clipboard-check' },
+        { label: 'التحليل الاستراتيجي', href: '/analysis.html', icon: 'bi-binoculars-fill' },
+        { label: 'التقييمات', href: '/assessments.html', icon: 'bi-clipboard-check-fill' },
+        { label: 'البيئة الداخلية', href: '/internal-env.html', icon: 'bi-building-fill-check' },
+        { label: 'أصحاب المصلحة', href: '/stakeholders.html', icon: 'bi-people-fill' },
+        { label: 'خريطة المخاطر', href: '/risk-map.html', icon: 'bi-exclamation-triangle-fill' },
         { label: 'البيانات الإحصائية', href: '/statistical-data.html', icon: 'bi-bar-chart-steps' },
       ]
     },
     {
       id: 'PLANNING',
       nameAr: 'خياراتي وخطتي',
-      icon: 'bi-bullseye',
+      icon: 'bi-signpost-split',
       emoji: '🎯',
       color: '#7c3aed',
       items: [
-        { label: 'مصفوفة TOWS', href: '/tows.html', icon: 'bi-grid-3x3-gap' },
-        { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass' },
+        { label: 'مصفوفة TOWS', href: '/tows.html', icon: 'bi-arrows-fullscreen' },
+        { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass-fill' },
         { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye' },
-        { label: 'مؤشرات الأداء', href: '/kpis.html', icon: 'bi-graph-up' },
-        { label: 'OKRs', href: '/okrs.html', icon: 'bi-bullseye' },
+        { label: 'مؤشرات الأداء', href: '/kpis.html', icon: 'bi-graph-up-arrow' },
+        { label: 'OKRs', href: '/okrs.html', icon: 'bi-layers-fill' },
       ]
     },
     {
@@ -111,10 +116,10 @@
       emoji: '🚀',
       color: '#059669',
       items: [
-        { label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban' },
+        { label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban-fill' },
         { label: 'المشاريع', href: '/projects.html', icon: 'bi-folder2-open' },
         { label: 'المهام', href: '/tasks.html', icon: 'bi-check2-square' },
-        { label: 'إدخال المؤشرات', href: '/kpi-entries.html', icon: 'bi-input-cursor-text' },
+        { label: 'إدخال المؤشرات', href: '/kpi-entries.html', icon: 'bi-pencil-square' },
       ]
     },
     {
@@ -125,38 +130,44 @@
       color: '#0891b2',
       items: [
         { label: 'المراجعات الدورية', href: '/reviews.html', icon: 'bi-journal-check' },
-        { label: 'الذكاء الاستراتيجي', href: '/intelligence.html', icon: 'bi-cpu' },
-        { label: 'التصحيحات', href: '/corrections.html', icon: 'bi-tools' },
+        { label: 'الذكاء الاستراتيجي', href: '/intelligence.html', icon: 'bi-stars' },
+        { label: 'التصحيحات', href: '/corrections.html', icon: 'bi-arrow-repeat' },
+        { label: 'التقويم الاستراتيجي', href: '/strategic-calendar.html', icon: 'bi-calendar-event-fill' },
       ]
     }
   ];
 
   // === رؤيتي (قسم جديد) ===
   const visionItems = [
-    { label: '📊 تقاريري', href: '/auto-reports.html', icon: 'bi-file-earmark-bar-graph', roles: [] },
-    { label: '📜 إصداراتي', href: '/versions.html', icon: 'bi-clock-history', roles: [] },
-    { label: '🔬 مختبر المحاكاة', href: '/simulation-lab.html', icon: 'bi-lightning', roles: ['OWNER', 'ADMIN', 'EDITOR'] },
+    { label: 'تقاريري', href: '/auto-reports.html', icon: 'bi-file-earmark-bar-graph', roles: [] },
+    { label: 'إصداراتي', href: '/versions.html', icon: 'bi-clock-history', roles: [] },
+    { label: 'مختبر المحاكاة', href: '/simulation-lab.html', icon: 'bi-bezier2', roles: ['OWNER', 'ADMIN', 'EDITOR'] },
+    { label: 'اللوحة الحية', href: '/live-board.html', icon: 'bi-display-fill', roles: ['OWNER', 'ADMIN'] },
   ];
 
-  // === أدواتي المتقدمة (5 عناصر فقط — الباقي في دليل الأدوات) ===
+  // === أدواتي المتقدمة ===
   const advancedItems = [
-    { label: '📥 استيراد البيانات', href: '/import.html', icon: 'bi-cloud-upload', roles: ['OWNER', 'ADMIN', 'EDITOR'] },
-    { label: '🎤 العرض التقديمي', href: '/ai-presentation.html', icon: 'bi-easel2', roles: ['OWNER', 'ADMIN', 'EDITOR'] },
-    { label: '📡 سجل النشاطات', href: '/activity-feed.html', icon: 'bi-activity', roles: [] },
-    { label: '🧬 DNA المنظمة', href: '/org-dna.html', icon: 'bi-fingerprint', roles: [] },
-    { label: '📚 دليل الأدوات', href: '/tools-guide.html', icon: 'bi-map', roles: [] },
+    { label: 'المستشار الذكي', href: '/intelligence.html', icon: 'bi-robot', roles: [] },
+    { label: 'مركز الذكاء', href: '/ai-center.html', icon: 'bi-cpu-fill', roles: ['OWNER', 'ADMIN'] },
+    { label: 'القرارات المالية', href: '/financial.html', icon: 'bi-cash-stack', roles: ['OWNER', 'ADMIN'] },
+    { label: 'القرارات الإدارية', href: '/admin-decisions.html', icon: 'bi-clipboard2-check', roles: ['OWNER', 'ADMIN'] },
+    { label: 'المقارنة المعيارية', href: '/benchmarking.html', icon: 'bi-bar-chart-line-fill', roles: [] },
+    { label: 'الأدوات الاستراتيجية', href: '/tools.html', icon: 'bi-tools', roles: [] },
   ];
 
-  // === نظام (OWNER/ADMIN فقط) — مُنظّف + القرارات المالية/الإدارية ===
+  // === نظام (OWNER/ADMIN فقط) ===
   const systemItems = [
-    { label: 'لوحة الإدارة', href: '/admin-panel.html', icon: 'bi-shield-lock' },
-    { label: 'المستخدمون', href: '/users.html', icon: 'bi-people' },
-    { label: 'القرارات المالية', href: '/financial.html', icon: 'bi-cash-stack' },
-    { label: 'القرارات الإدارية', href: '/admin-decisions.html', icon: 'bi-clipboard2-check' },
-    { label: 'التكاملات و Webhooks', href: '/integrations.html', icon: 'bi-plug' },
-    { label: 'مفتش النظام', href: '/inspector.html', icon: 'bi-shield-check' },
+    { label: 'لوحة الإدارة', href: '/admin-panel.html', icon: 'bi-shield-lock-fill' },
+    { label: 'المستخدمون', href: '/users.html', icon: 'bi-people-fill' },
+    { label: 'استيراد البيانات', href: '/import.html', icon: 'bi-cloud-upload-fill' },
+    { label: 'العرض التقديمي', href: '/ai-presentation.html', icon: 'bi-easel2-fill' },
+    { label: 'سجل النشاطات', href: '/activity-feed.html', icon: 'bi-activity' },
+    { label: 'DNA المنظمة', href: '/org-dna.html', icon: 'bi-fingerprint' },
+    { label: 'التكاملات', href: '/integrations.html', icon: 'bi-plug-fill' },
+    { label: 'مفتش النظام', href: '/inspector.html', icon: 'bi-shield-fill-check' },
     { label: 'مركز API', href: '/api-docs.html', icon: 'bi-braces' },
-    { label: 'الأسعار', href: '/pricing.html', icon: 'bi-credit-card' },
+    { label: 'الأسعار', href: '/pricing.html', icon: 'bi-credit-card-2-front-fill' },
+    { label: 'الإعدادات', href: '/admin-dashboard.html#settings', icon: 'bi-gear-wide-connected' },
   ];
 
   // === Helper: صلاحيات ===
@@ -177,6 +188,10 @@
 
   // === بناء HTML السايدبار ===
   function buildSidebar(progressData) {
+    // قراءة محرك المسارات في كل مرة يُبنى الـ sidebar
+    const PE = window.PathEngine || null;
+    const isSmartPath = PE ? PE.isPathMode() : false;
+
     let html = '';
 
     // --- بادج اليوزر + الجهة ---
@@ -199,7 +214,7 @@
       }
     } catch (e) { /* ignore */ }
 
-    const initial = userName ? userName[0] : '⚡';
+    const initial = userName ? userName[0] : 'S';
     const orgLine = companyNameAr || entityLegalName;
 
     html += `
@@ -222,16 +237,26 @@
     const isViewerOrDE = ['VIEWER', 'DATA_ENTRY'].includes(userRole) && systemRole !== 'SUPER_ADMIN';
 
     // ╔═══════════════════════════════════════════╗
-    // ║  ⚡ مساري — القسم الأول الجديد             ║
+    // ║  🏠 الرئيسية — زر العودة الدائم            ║
     // ╚═══════════════════════════════════════════╝
-    html += '<div class="stx-section-label">⚡ مساري</div>';
-
     const homeHref = isViewerOrDE ? '/viewer-hub.html' : '/dashboard.html';
     const isHomeActive = isActive('/dashboard.html') || isActive('/viewer-hub.html');
     html += `
+      <a href="${homeHref}" class="stx-item stx-home-btn ${isHomeActive ? 'active' : ''}">
+        <i class="bi bi-house-door-fill" style="color:#667eea;font-size:16px"></i>
+        <span>الرئيسية</span>
+      </a>
+    `;
+
+    // ╔═══════════════════════════════════════════╗
+    // ║  ⚡ مساري — القسم الأول الجديد             ║
+    // ╚═══════════════════════════════════════════╝
+    html += '<div class="stx-section-label"><i class="bi bi-lightning-charge-fill" style="color:#667eea;margin-left:4px"></i> مساري</div>';
+
+    html += `
       <a href="${homeHref}" class="stx-item stx-mypath ${isHomeActive ? 'active' : ''}">
-        <i class="bi bi-compass" style="color:#667eea"></i>
-        <span>🎯 أولويتي اليوم</span>
+        <i class="bi bi-crosshair" style="color:#667eea"></i>
+        <span>أولويتي اليوم</span>
       </a>
     `;
 
@@ -241,7 +266,7 @@
       html += `
       <a href="/ceo-dashboard.html" class="stx-item stx-mypath ${isCeoActive ? 'active' : ''}">
         <i class="bi bi-gem" style="color:#a78bfa"></i>
-        <span>💎 لوحة القيادة</span>
+        <span>لوحة القيادة</span>
       </a>
       `;
     }
@@ -251,8 +276,8 @@
       const isConsultantActive = isActive('/consultant-dashboard.html');
       html += `
       <a href="/consultant-dashboard.html" class="stx-item stx-mypath ${isConsultantActive ? 'active' : ''}" style="border-right:3px solid #a78bfa !important">
-        <i class="bi bi-people" style="color:#a78bfa"></i>
-        <span>🧠 لوحة العملاء</span>
+        <i class="bi bi-person-workspace" style="color:#a78bfa"></i>
+        <span>لوحة العملاء</span>
       </a>
       `;
     }
@@ -262,48 +287,94 @@
       const isDeptActive = isActive('/dept-dashboard.html');
       html += `
       <a href="/dept-dashboard.html" class="stx-item stx-mypath ${isDeptActive ? 'active' : ''}" style="border-right:3px solid #f59e0b !important">
-        <i class="bi bi-diagram-3" style="color:#f59e0b"></i>
-        <span>📊 لوحة إدارتي</span>
+        <i class="bi bi-diagram-3-fill" style="color:#f59e0b"></i>
+        <span>لوحة إدارتي</span>
       </a>
       `;
     }
 
-    // --- شريط التقدم العام (مخفي عن المشاهد) ---
+    // --- شريط التقدم (ذكي أو عام) ---
     if (!isViewerOrDE) {
-      const overall = progressData ? progressData.overall : 0;
-      html += `
-      <div class="stx-progress-bar-container">
-        <div class="stx-progress-label">
-          <span>التقدم الكلي</span>
-          <span class="stx-progress-percent">${overall}%</span>
+      if (isSmartPath && PE) {
+        // المسار الذكي — شريط تقدم مخصص
+        html += PE.buildProgressHTML();
+      } else {
+        // المسار الكلاسيكي — شريط تقدم عام
+        const overall = progressData ? progressData.overall : 0;
+        html += `
+        <div class="stx-progress-bar-container">
+          <div class="stx-progress-label">
+            <span>التقدم الكلي</span>
+            <span class="stx-progress-percent">${overall}%</span>
+          </div>
+          <div class="stx-progress-track">
+            <div class="stx-progress-fill" style="width:${overall}%"></div>
+          </div>
         </div>
-        <div class="stx-progress-track">
-          <div class="stx-progress-fill" style="width:${overall}%"></div>
-        </div>
-      </div>
-    `;
+        `;
+        // زر التبديل للمسار الذكي (يظهر فقط لو عنده نمط محدد)
+        if (PE) {
+          html += PE.buildClassicToggleHTML();
+        }
+      }
     }
 
     // ╔═══════════════════════════════════════════╗
     // ║  🧭 رحلتي الاستراتيجية                     ║
     // ╚═══════════════════════════════════════════╝
-    if (!isViewerOrDE && currentRules.showJourney) {
-
+    if (!isViewerOrDE && currentRules.showJourney && !isSmartPath) {
+      // === المسار الكلاسيكي: عرض كل المراحل ===
       html += '<div class="stx-divider"></div>';
-      html += '<div class="stx-section-label">🧭 رحلتي الاستراتيجية</div>';
+      html += '<div class="stx-section-label"><i class="bi bi-compass-fill" style="color:#667eea;margin-left:4px"></i> رحلتي الاستراتيجية</div>';
 
-      // --- الألم والطموح (المرحلة صفر) + رابط DNA ---
+      // --- الألم والطموح (المرحلة صفر) + بادج النمط + رابط DNA ---
       const hasPainAmbition = !!localStorage.getItem('painAmbition');
       const isPainActive = isActive('/pain-ambition.html');
       const isDnaActive = isActive('/org-dna.html');
+
+      // Extract pattern info for badge
+      let patternBadgeHTML = '';
+      if (hasPainAmbition && patternKey !== 'default') {
+        try {
+          const paData = JSON.parse(localStorage.getItem('painAmbition'));
+          const patternName = paData?.pattern || '';
+          const PATTERN_COLORS_SIDEBAR = {
+            nascent_struggling: '#ef4444', nascent_cautious: '#22c55e',
+            growing_chaotic: '#f59e0b', growing_ambitious: '#3b82f6',
+            financial_struggling: '#dc2626', mature_renewing: '#8b5cf6',
+            mature_competitive: '#6366f1', default_strategic: '#667eea',
+            startup: '#22c55e', growing: '#3b82f6', mature: '#8b5cf6', struggling: '#ef4444'
+          };
+          const pColor = PATTERN_COLORS_SIDEBAR[patternKey] || '#667eea';
+          if (patternName) {
+            patternBadgeHTML = `
+              <div style="margin:0 14px 6px;padding:6px 12px;border-radius:8px;background:${pColor}12;border:1px solid ${pColor}25;display:flex;align-items:center;gap:6px;font-size:11px;">
+                <span style="width:8px;height:8px;border-radius:50%;background:${pColor};flex-shrink:0"></span>
+                <span style="font-weight:700;color:${pColor};flex:1">${patternName}</span>
+                <a href="/pain-ambition.html" style="color:var(--text-muted);font-size:10px;text-decoration:none;opacity:0.7" title="أعد التقييم">
+                  <i class="bi bi-arrow-repeat"></i>
+                </a>
+              </div>
+            `;
+          }
+        } catch (e) { /* ignore */ }
+      }
+
       html += `
       <a href="/pain-ambition.html" class="stx-item stx-phase0 ${isPainActive ? 'active' : ''}" style="margin:2px 10px;border-radius:10px;padding:10px 14px !important;border-right:none !important;background:${hasPainAmbition ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)'};border:1px solid ${hasPainAmbition ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.15)'};">
-        <span style="font-size:16px">${hasPainAmbition ? '✅' : '🔴'}</span>
-        <span style="font-weight:700;font-size:12.5px">💔 الألم والطموح</span>
+        <i class="bi ${hasPainAmbition ? 'bi-check-circle-fill' : 'bi-record-circle'}" style="font-size:15px;color:${hasPainAmbition ? '#22c55e' : '#ef4444'}"></i>
+        <span style="font-weight:700;font-size:12.5px">الألم والطموح</span>
       </a>
+      ${patternBadgeHTML}
+      ${!hasPainAmbition ? `
+      <a href="/beginner-path.html" class="stx-item" style="margin:-2px 18px 4px;padding:6px 12px !important;border-radius:8px;font-size:11.5px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.12)">
+        <i class="bi bi-signpost-split" style="color:#f59e0b;font-size:13px"></i>
+        <span style="color:#f59e0b;font-weight:600">مبتدئ؟ ابدأ من هنا</span>
+      </a>
+      ` : ''}
       <a href="/org-dna.html" class="stx-item stx-dna-link ${isDnaActive ? 'active' : ''}" style="margin:-2px 18px 4px;padding:6px 12px !important;border-radius:8px;font-size:11.5px;opacity:0.85">
         <i class="bi bi-fingerprint" style="color:#ec4899;font-size:13px"></i>
-        <span>🧬 هوية المنظمة (DNA)</span>
+        <span>هوية المنظمة (DNA)</span>
       </a>
     `;
 
@@ -319,16 +390,16 @@
         const isLocked = isHighRole ? false : (stageData ? !!stageData.locked : (idx > 0));
         const unlockMsg = stageData ? (stageData.unlockMsg || '') : '';
 
-        let statusIcon = '⬜';
+        let statusIcon = '<i class="bi bi-square" style="font-size:13px;color:var(--text-muted,#94a3b8)"></i>';
         let statusClass = 'locked';
         if (isLocked) {
-          statusIcon = '🔒';
+          statusIcon = '<i class="bi bi-lock-fill" style="font-size:13px;color:#ef4444"></i>';
           statusClass = 'phase-locked';
         } else if (completed) {
-          statusIcon = '✅';
+          statusIcon = '<i class="bi bi-check-circle-fill" style="font-size:13px;color:#22c55e"></i>';
           statusClass = 'completed';
         } else if (percent > 0) {
-          statusIcon = '🔵';
+          statusIcon = '<i class="bi bi-circle-fill" style="font-size:10px;color:#3b82f6"></i>';
           statusClass = 'in-progress';
         }
 
@@ -340,7 +411,7 @@
           html += `
           <div class="stx-phase phase-locked" data-phase="${idx}">
             <div class="stx-phase-header" onclick="showLockToast('${unlockMsg || 'أكمل المرحلة السابقة أولاً'}')" style="--phase-color: ${phase.color}; opacity:0.45; cursor:not-allowed">
-              <span class="stx-phase-status">🔒</span>
+              <span class="stx-phase-status"><i class="bi bi-lock-fill" style="font-size:13px;color:#ef4444"></i></span>
               <span class="stx-phase-name">
                 <i class="bi ${phase.icon}" style="color:${phase.color}"></i>
                 ${phase.nameAr}
@@ -362,7 +433,7 @@
               <i class="bi bi-chevron-down stx-chevron"></i>
             </div>
             <div class="stx-phase-items" ${isOpen ? 'style="max-height:500px"' : ''}>
-              ${phase.items.map(item => `
+              ${(PE && !isSmartPath ? PE.filterPhaseItems(phase.items) : phase.items).map(item => `
                 <a href="${item.href}" class="stx-item ${isActive(item.href) ? 'active' : ''}" title="${item.label}">
                   <i class="bi ${item.icon}"></i>
                   <span class="stx-item-label">${item.label}</span>
@@ -386,15 +457,15 @@
         html += `
           <a href="/kpi-entries.html" class="stx-item ${isActive('/kpi-entries.html') ? 'active' : ''}">
             <i class="bi bi-input-cursor-text" style="color:#22c55e"></i>
-            <span>📝 إدخال المؤشرات</span>
+            <span>إدخال المؤشرات</span>
           </a>
           <a href="/data-forms.html" class="stx-item ${isActive('/data-forms.html') ? 'active' : ''}">
             <i class="bi bi-clipboard2-data" style="color:#38bdf8"></i>
-            <span>📋 نماذج الأقسام</span>
+            <span>نماذج الأقسام</span>
           </a>
           <a href="/statistical-data.html" class="stx-item ${isActive('/statistical-data.html') ? 'active' : ''}">
             <i class="bi bi-bar-chart-steps" style="color:#a78bfa"></i>
-            <span>📊 البيانات الإحصائية</span>
+            <span>البيانات الإحصائية</span>
           </a>
         `;
       }
@@ -411,7 +482,7 @@
         <div class="sgt-wrapper" id="sgt-section">
           <div class="sgt-header" onclick="document.getElementById('sgt-section').classList.toggle('collapsed')">
             <i class="bi bi-stars" style="color:#a78bfa"></i>
-            🛠️ أدواتي المقترحة
+            أدواتي المقترحة
             <i class="bi bi-chevron-down" style="margin-right:auto"></i>
           </div>
           <div class="sgt-body">
@@ -433,7 +504,7 @@
       html += `
         <div class="stx-section ${visionHasActive ? 'open' : ''}" data-section="vision">
           <div class="stx-section-header" onclick="toggleSection('vision')">
-            <span><i class="bi bi-eye" style="color:#0891b2"></i> 📈 رؤيتي</span>
+            <span><i class="bi bi-eye-fill" style="color:#0891b2"></i> رؤيتي</span>
             <i class="bi bi-chevron-down stx-chevron"></i>
           </div>
           <div class="stx-section-items" ${visionHasActive ? 'style="max-height:400px"' : ''}>
@@ -458,7 +529,7 @@
       html += `
         <div class="stx-section ${advHasActive ? 'open' : ''}" data-section="advanced">
           <div class="stx-section-header" onclick="toggleSection('advanced')">
-            <span><i class="bi bi-gem" style="color:#a78bfa"></i> 💎 أدواتي المتقدمة</span>
+            <span><i class="bi bi-gem" style="color:#a78bfa"></i> أدواتي المتقدمة</span>
             <i class="bi bi-chevron-down stx-chevron"></i>
           </div>
           <div class="stx-section-items" ${advHasActive ? 'style="max-height:1200px"' : ''}>
@@ -482,7 +553,7 @@
       html += `
         <div class="stx-section ${sysHasActive ? 'open' : ''}" data-section="system">
           <div class="stx-section-header" onclick="toggleSection('system')">
-            <span><i class="bi bi-sliders" style="color:#64748b"></i> ⚙️ النظام</span>
+            <span><i class="bi bi-sliders2" style="color:#64748b"></i> النظام</span>
             <i class="bi bi-chevron-down stx-chevron"></i>
           </div>
           <div class="stx-section-items" ${sysHasActive ? 'style="max-height:600px"' : ''}>
@@ -501,8 +572,8 @@
     html += `
       <div class="stx-divider"></div>
       <a href="/achievements.html" class="stx-item stx-achievements ${isActive('/achievements.html') ? 'active' : ''}">
-        <i class="bi bi-trophy"></i>
-        <span>🏆 الإنجازات</span>
+        <i class="bi bi-trophy-fill" style="color:#f59e0b"></i>
+        <span>الإنجازات</span>
       </a>
     `;
 
@@ -510,7 +581,7 @@
     html += `
       <a href="#" class="stx-item stx-logout" onclick="event.preventDefault(); localStorage.clear(); location.href='/login.html';" style="color:#ef4444;margin-top:4px">
         <i class="bi bi-box-arrow-right" style="color:#ef4444"></i>
-        <span>🚪 تسجيل الخروج</span>
+        <span>تسجيل الخروج</span>
       </a>
       <div style="height:20px"></div>
     `;
@@ -547,6 +618,18 @@
 
   if (!oldSidebar) return;
 
+  // === تحميل محرك المسارات الذكية (ديناميكي) ===
+  function loadPathEngine() {
+    return new Promise((resolve) => {
+      if (window.PathEngine) { resolve(); return; }
+      const script = document.createElement('script');
+      script.src = '/js/path-engine.js';
+      script.onload = () => resolve();
+      script.onerror = () => resolve(); // fail silently
+      document.head.appendChild(script);
+    });
+  }
+
   // === تحميل محرك الأدوات المقترحة (ديناميكي) ===
   function loadSuggestedTools() {
     return new Promise((resolve) => {
@@ -562,45 +645,51 @@
     });
   }
 
-  // === بناء Sidebar أولي (بدون progress data) ===
-  const newSidebar = document.createElement('nav');
-  newSidebar.className = 'stx-sidebar sidebar';
-  newSidebar.innerHTML = buildSidebar(null);
+  // === تحميل PathEngine أولاً ثم بناء Sidebar ===
+  loadPathEngine().then(() => {
+    // إعادة تعيين PE بعد التحميل
+    const PE_loaded = window.PathEngine || null;
+    const isSmartPath_loaded = PE_loaded ? PE_loaded.isPathMode() : false;
 
-  if (replaceMode === 'replace') {
-    const oldStyles = window.getComputedStyle(oldSidebar);
-    if (oldStyles.position === 'fixed') newSidebar.classList.add('stx-fixed');
-    oldSidebar.replaceWith(newSidebar);
-  } else {
-    const container = oldSidebar.parentElement;
-    if (!container) return;
-    container.innerHTML = '';
-    container.appendChild(newSidebar);
-  }
+    // === بناء Sidebar أولي (بدون progress data) ===
+    const newSidebar = document.createElement('nav');
+    newSidebar.className = 'stx-sidebar sidebar';
+    newSidebar.innerHTML = buildSidebar(null);
 
-  // === تحميل SuggestedTools + بيانات التقدم ← إعادة بناء ===
-  loadSuggestedTools().then(() => {
-    if (token && entityId) {
-      fetch(`/api/user-progress/entity/${entityId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-        .then(res => res.ok ? res.json() : null)
-        .then(data => {
-          newSidebar.innerHTML = buildSidebar(data || null);
-        })
-        .catch(() => {
-          // Even on error, rebuild with SuggestedTools available
-          newSidebar.innerHTML = buildSidebar(null);
-        });
+    if (replaceMode === 'replace') {
+      const oldStyles = window.getComputedStyle(oldSidebar);
+      if (oldStyles.position === 'fixed') newSidebar.classList.add('stx-fixed');
+      oldSidebar.replaceWith(newSidebar);
     } else {
-      // No token/entity — rebuild with SuggestedTools anyway
-      newSidebar.innerHTML = buildSidebar(null);
+      const container = oldSidebar.parentElement;
+      if (!container) return;
+      container.innerHTML = '';
+      container.appendChild(newSidebar);
     }
-  });
 
-  // === CSS ===
-  const style = document.createElement('style');
-  style.textContent = `
+    // === تحميل SuggestedTools + بيانات التقدم ← إعادة بناء ===
+    loadSuggestedTools().then(() => {
+      if (token && entityId) {
+        fetch(`/api/user-progress/entity/${entityId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+          .then(res => res.ok ? res.json() : null)
+          .then(data => {
+            newSidebar.innerHTML = buildSidebar(data || null);
+          })
+          .catch(() => {
+            // Even on error, rebuild with SuggestedTools available
+            newSidebar.innerHTML = buildSidebar(null);
+          });
+      } else {
+        // No token/entity — rebuild with SuggestedTools anyway
+        newSidebar.innerHTML = buildSidebar(null);
+      }
+    });
+
+    // === CSS ===
+    const style = document.createElement('style');
+    style.textContent = `
     .stx-sidebar {
       width: 240px;
       background: ${isDark ? 'var(--bg-card, #1a1d2e)' : '#fff'};
@@ -684,6 +773,32 @@
       z-index: 100;
       overflow-y: auto;
       box-shadow: -2px 0 10px rgba(0,0,0,0.15);
+    }
+
+    /* زر الرئيسية — العودة الدائمة */
+    .stx-home-btn {
+      margin: 4px 10px 8px !important;
+      padding: 10px 14px !important;
+      border-radius: 12px !important;
+      font-weight: 700 !important;
+      font-size: 13px !important;
+      border-right: none !important;
+      background: ${isDark ? 'rgba(102,126,234,0.08)' : 'rgba(102,126,234,0.06)'} !important;
+      border: 1px solid ${isDark ? 'rgba(102,126,234,0.2)' : 'rgba(102,126,234,0.15)'} !important;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.25s ease;
+    }
+    .stx-home-btn:hover {
+      background: ${isDark ? 'rgba(102,126,234,0.18)' : 'rgba(102,126,234,0.12)'} !important;
+      border-color: var(--primary, #667eea) !important;
+      transform: translateX(-2px);
+    }
+    .stx-home-btn.active {
+      background: linear-gradient(135deg, rgba(102,126,234,0.15), rgba(124,58,237,0.1)) !important;
+      border-color: var(--primary, #667eea) !important;
+      color: var(--primary, #667eea) !important;
     }
 
     /* عنوان القسم الجديد */
@@ -916,28 +1031,28 @@
       .stx-sidebar { display: none; }
     }
   `;
-  document.head.appendChild(style);
+    document.head.appendChild(style);
 
-  // === Toggle Functions ===
-  window.togglePhase = function (idx) {
-    const phase = document.querySelector(`.stx-phase[data-phase="${idx}"]`);
-    if (phase) phase.classList.toggle('open');
-  };
+    // === Toggle Functions ===
+    window.togglePhase = function (idx) {
+      const phase = document.querySelector(`.stx-phase[data-phase="${idx}"]`);
+      if (phase) phase.classList.toggle('open');
+    };
 
-  window.toggleSection = function (name) {
-    const section = document.querySelector(`.stx-section[data-section="${name}"]`);
-    if (section) section.classList.toggle('open');
-  };
+    window.toggleSection = function (name) {
+      const section = document.querySelector(`.stx-section[data-section="${name}"]`);
+      if (section) section.classList.toggle('open');
+    };
 
-  // === Lock Toast ===
-  window.showLockToast = function (msg) {
-    const old = document.getElementById('stx-lock-toast');
-    if (old) old.remove();
+    // === Lock Toast ===
+    window.showLockToast = function (msg) {
+      const old = document.getElementById('stx-lock-toast');
+      if (old) old.remove();
 
-    const toast = document.createElement('div');
-    toast.id = 'stx-lock-toast';
-    toast.innerHTML = `<i class="bi bi-lock-fill"></i> ${msg}`;
-    toast.style.cssText = `
+      const toast = document.createElement('div');
+      toast.id = 'stx-lock-toast';
+      toast.innerHTML = `<i class="bi bi-lock-fill"></i> ${msg}`;
+      toast.style.cssText = `
       position:fixed; bottom:24px; left:24px; z-index:99999;
       background:rgba(239,68,68,0.92); color:#fff;
       padding:14px 22px; border-radius:14px;
@@ -948,22 +1063,24 @@
       box-shadow: 0 8px 25px rgba(239,68,68,0.3);
     `;
 
-    if (!document.getElementById('stx-toast-anim')) {
-      const animStyle = document.createElement('style');
-      animStyle.id = 'stx-toast-anim';
-      animStyle.textContent = '@keyframes toastSlide { from { transform:translateY(30px); opacity:0; } to { transform:translateY(0); opacity:1; } }';
-      document.head.appendChild(animStyle);
+      if (!document.getElementById('stx-toast-anim')) {
+        const animStyle = document.createElement('style');
+        animStyle.id = 'stx-toast-anim';
+        animStyle.textContent = '@keyframes toastSlide { from { transform:translateY(30px); opacity:0; } to { transform:translateY(0); opacity:1; } }';
+        document.head.appendChild(animStyle);
+      }
+
+      document.body.appendChild(toast);
+      setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3000);
+    };
+
+    // === تحميل المستشار الذكي تلقائياً ===
+    if (!document.querySelector('script[src*="ai-advisor"]')) {
+      const aiScript = document.createElement('script');
+      aiScript.src = '/js/ai-advisor.js';
+      aiScript.defer = true;
+      document.body.appendChild(aiScript);
     }
+  }); // end loadPathEngine().then()
 
-    document.body.appendChild(toast);
-    setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3000);
-  };
-
-  // === تحميل المستشار الذكي تلقائياً ===
-  if (!document.querySelector('script[src*="ai-advisor"]')) {
-    const aiScript = document.createElement('script');
-    aiScript.src = '/js/ai-advisor.js';
-    aiScript.defer = true;
-    document.body.appendChild(aiScript);
-  }
 })();

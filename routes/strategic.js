@@ -2,11 +2,294 @@ const express = require('express');
 const prisma = require('../lib/prisma');
 const { verifyToken } = require('../middleware/auth');
 const { checkPermission, checkDataEntryPermission } = require('../middleware/permission');
+const enforceLimit = require('../middleware/enforce-limits');
 
 const router = express.Router();
 
 
 // ============ OBJECTIVES ============
+
+/**
+ * @swagger
+ * /api/strategic/objectives:
+ *   get:
+ *     summary: جلب جميع الأهداف الاستراتيجية
+ *     tags: [Strategy]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *         description: رقم الصفحة
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 10 }
+ *       - in: query
+ *         name: search
+ *         schema: { type: string }
+ *         description: بحث بالعنوان أو الوصف
+ *       - in: query
+ *         name: versionId
+ *         schema: { type: string }
+ *       - in: query
+ *         name: status
+ *         schema: { type: string, enum: [DRAFT, ACTIVE, ON_TRACK, AT_RISK, COMPLETED] }
+ *     responses:
+ *       200:
+ *         description: قائمة الأهداف الاستراتيجية مع بيانات الصفحات
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 objectives:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Objective'
+ *                 total: { type: integer }
+ *                 page: { type: integer }
+ *                 totalPages: { type: integer }
+ *   post:
+ *     summary: إنشاء هدف استراتيجي جديد
+ *     tags: [Strategy]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateObjective'
+ *     responses:
+ *       201:
+ *         description: تم إنشاء الهدف
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Objective'
+ *       403:
+ *         description: تجاوز حد الباقة
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PlanLimitError'
+ */
+
+/**
+ * @swagger
+ * /api/strategic/objectives/{id}:
+ *   get:
+ *     summary: جلب هدف استراتيجي واحد
+ *     tags: [Strategy]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: بيانات الهدف
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Objective'
+ *       404:
+ *         description: الهدف غير موجود
+ *   patch:
+ *     summary: تعديل هدف استراتيجي
+ *     tags: [Strategy]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateObjective'
+ *     responses:
+ *       200:
+ *         description: تم التعديل
+ *       404:
+ *         description: غير موجود
+ *   delete:
+ *     summary: حذف هدف استراتيجي
+ *     tags: [Strategy]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: تم الحذف
+ *       404:
+ *         description: غير موجود
+ */
+
+/**
+ * @swagger
+ * /api/strategic/kpis:
+ *   get:
+ *     summary: جلب جميع مؤشرات الأداء
+ *     tags: [Strategy]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 10 }
+ *       - in: query
+ *         name: search
+ *         schema: { type: string }
+ *       - in: query
+ *         name: versionId
+ *         schema: { type: string }
+ *       - in: query
+ *         name: objectiveId
+ *         schema: { type: string }
+ *       - in: query
+ *         name: status
+ *         schema: { type: string, enum: [ON_TRACK, AT_RISK, OFF_TRACK, NOT_STARTED] }
+ *     responses:
+ *       200:
+ *         description: قائمة المؤشرات
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 kpis:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/KPI'
+ *                 total: { type: integer }
+ *   post:
+ *     summary: إنشاء مؤشر أداء جديد
+ *     tags: [Strategy]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateKPI'
+ *     responses:
+ *       201:
+ *         description: تم إنشاء المؤشر
+ *       403:
+ *         description: تجاوز حد الباقة (PLAN_LIMIT_REACHED)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PlanLimitError'
+ */
+
+/**
+ * @swagger
+ * /api/strategic/kpis/{id}:
+ *   get:
+ *     summary: جلب مؤشر أداء واحد
+ *     tags: [Strategy]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: بيانات المؤشر مع آخر 12 إدخال
+ *       404:
+ *         description: المؤشر غير موجود
+ *   patch:
+ *     summary: تعديل مؤشر أداء
+ *     tags: [Strategy]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateKPI'
+ *     responses:
+ *       200:
+ *         description: تم التعديل
+ *   delete:
+ *     summary: حذف مؤشر أداء
+ *     tags: [Strategy]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: تم الحذف
+ */
+
+/**
+ * @swagger
+ * /api/strategic/initiatives:
+ *   get:
+ *     summary: جلب جميع المبادرات الاستراتيجية
+ *     tags: [Strategy]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *       - in: query
+ *         name: search
+ *         schema: { type: string }
+ *       - in: query
+ *         name: versionId
+ *         schema: { type: string }
+ *       - in: query
+ *         name: status
+ *         schema: { type: string, enum: [PLANNED, IN_PROGRESS, ON_HOLD, COMPLETED, CANCELLED] }
+ *     responses:
+ *       200:
+ *         description: قائمة المبادرات
+ *   post:
+ *     summary: إنشاء مبادرة جديدة
+ *     tags: [Strategy]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [title, versionId]
+ *             properties:
+ *               title: { type: string, example: 'إطلاق تطبيق الجوال' }
+ *               description: { type: string }
+ *               versionId: { type: string }
+ *               owner: { type: string }
+ *               status: { type: string, default: 'PLANNED' }
+ *               priority: { type: string, enum: [LOW, MEDIUM, HIGH, CRITICAL] }
+ *               budget: { type: number }
+ *               startDate: { type: string, format: date }
+ *               endDate: { type: string, format: date }
+ *     responses:
+ *       201:
+ *         description: تم الإنشاء
+ *       403:
+ *         description: تجاوز حد الباقة
+ */
 
 // Get all objectives with pagination
 router.get('/objectives', verifyToken, async (req, res) => {
@@ -112,7 +395,7 @@ router.get('/objectives/:id', verifyToken, async (req, res) => {
 });
 
 // Create objective
-router.post('/objectives', verifyToken, checkPermission('EDITOR'), async (req, res) => {
+router.post('/objectives', verifyToken, checkPermission('EDITOR'), enforceLimit('maxObjectives'), async (req, res) => {
   try {
     const { title, description, versionId, status, parentId, perspective, weight, baselineValue, targetValue, deadline, ownerId } = req.body;
 
@@ -331,7 +614,7 @@ router.get('/kpis/:id', verifyToken, async (req, res) => {
 });
 
 // Create KPI
-router.post('/kpis', verifyToken, checkPermission('EDITOR'), async (req, res) => {
+router.post('/kpis', verifyToken, checkPermission('EDITOR'), enforceLimit('maxKpis'), async (req, res) => {
   try {
     const { name, nameAr, description, target, unit, versionId, objectiveId, status,
       formula, dataSource, frequency, warningThreshold, criticalThreshold, kpiType, bscPerspective } = req.body;
@@ -502,7 +785,7 @@ router.get('/initiatives', verifyToken, async (req, res) => {
 });
 
 // Create initiative
-router.post('/initiatives', verifyToken, checkPermission('EDITOR'), async (req, res) => {
+router.post('/initiatives', verifyToken, checkPermission('EDITOR'), enforceLimit('maxInitiatives'), async (req, res) => {
   try {
     const { title, description, versionId, owner, status, startDate, endDate, progress, budget, priority, kpiId } = req.body;
 
@@ -615,6 +898,111 @@ router.delete('/initiatives/:id', verifyToken, checkPermission('EDITOR'), async 
   } catch (error) {
     console.error('Error deleting initiative:', error);
     res.status(500).json({ error: 'Failed to delete initiative' });
+  }
+});
+
+// ============ SCENARIOS ============
+
+// GET all scenarios
+router.get('/scenarios', verifyToken, async (req, res) => {
+  try {
+    const { versionId, type, status } = req.query;
+    const where = {};
+    if (versionId) where.versionId = versionId;
+    if (type) where.type = type;
+    if (status) where.status = status;
+
+    const scenarios = await prisma.scenario.findMany({
+      where,
+      include: {
+        version: { select: { id: true, versionNumber: true, entity: { select: { id: true, legalName: true } } } },
+        variables: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json({ scenarios });
+  } catch (error) {
+    console.error('Error fetching scenarios:', error);
+    res.status(500).json({ error: 'Failed to fetch scenarios' });
+  }
+});
+
+// GET single scenario
+router.get('/scenarios/:id', verifyToken, async (req, res) => {
+  try {
+    const scenario = await prisma.scenario.findUnique({
+      where: { id: req.params.id },
+      include: { version: { select: { id: true, versionNumber: true } }, variables: true },
+    });
+    if (!scenario) return res.status(404).json({ error: 'Scenario not found' });
+    res.json(scenario);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch scenario' });
+  }
+});
+
+// POST create scenario
+router.post('/scenarios', verifyToken, checkPermission('EDITOR'), async (req, res) => {
+  try {
+    const { name, versionId, type, description, probability, impact, status, notes } = req.body;
+    if (!name || !versionId) return res.status(400).json({ error: 'name and versionId are required' });
+
+    const version = await prisma.strategyVersion.findUnique({ where: { id: versionId } });
+    if (!version) return res.status(404).json({ error: 'Version not found' });
+
+    const scenario = await prisma.scenario.create({
+      data: {
+        name,
+        versionId,
+        type: type || 'BASELINE',
+        description: description || null,
+        probability: probability != null ? parseFloat(probability) : 50,
+        impact: impact || 'MEDIUM',
+        status: status || 'DRAFT',
+        notes: notes || null,
+        createdBy: req.user?.id || null,
+      },
+      include: { version: { select: { id: true, versionNumber: true, entity: { select: { id: true, legalName: true } } } } },
+    });
+    res.status(201).json(scenario);
+  } catch (error) {
+    console.error('Error creating scenario:', error);
+    res.status(500).json({ error: 'Failed to create scenario' });
+  }
+});
+
+// PATCH update scenario
+router.patch('/scenarios/:id', verifyToken, checkPermission('EDITOR'), async (req, res) => {
+  try {
+    const existing = await prisma.scenario.findUnique({ where: { id: req.params.id } });
+    if (!existing) return res.status(404).json({ error: 'Scenario not found' });
+
+    const { name, type, description, probability, impact, status, notes } = req.body;
+    const data = {};
+    if (name !== undefined) data.name = name;
+    if (type !== undefined) data.type = type;
+    if (description !== undefined) data.description = description;
+    if (probability !== undefined) data.probability = parseFloat(probability);
+    if (impact !== undefined) data.impact = impact;
+    if (status !== undefined) data.status = status;
+    if (notes !== undefined) data.notes = notes;
+
+    const scenario = await prisma.scenario.update({ where: { id: req.params.id }, data });
+    res.json(scenario);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update scenario' });
+  }
+});
+
+// DELETE scenario
+router.delete('/scenarios/:id', verifyToken, checkPermission('EDITOR'), async (req, res) => {
+  try {
+    const existing = await prisma.scenario.findUnique({ where: { id: req.params.id } });
+    if (!existing) return res.status(404).json({ error: 'Scenario not found' });
+    await prisma.scenario.delete({ where: { id: req.params.id } });
+    res.json({ message: 'Scenario deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete scenario' });
   }
 });
 

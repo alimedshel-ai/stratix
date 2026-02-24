@@ -9,291 +9,291 @@
  *   4. يعرض في السايدبار قسم "🛠️ أدواتي المقترحة"
  */
 (function () {
-    'use strict';
+  'use strict';
 
-    // ====================================================================
-    //  TOOL DEFINITIONS — كل الأدوات مع ربطها بالمراحل والشروط
-    // ====================================================================
-    const ALL_TOOLS = [
-        // ── تشخيصي ──
-        { id: 'swot', name: 'تحليل SWOT', emoji: '📊', href: '/swot.html', phase: 'DIAGNOSIS', order: 1, checkKey: 'swot' },
-        { id: 'pestel', name: 'تحليل PESTEL', emoji: '🌍', href: '/tool-detail.html?code=PESTEL', phase: 'DIAGNOSIS', order: 2, checkKey: 'pestel' },
-        { id: 'porter', name: 'قوى بورتر الخمس', emoji: '⚔️', href: '/tool-detail.html?code=PORTER', phase: 'DIAGNOSIS', order: 3, checkKey: 'porter' },
-        { id: 'vchain', name: 'سلسلة القيمة', emoji: '🔗', href: '/tool-detail.html?code=VALUE_CHAIN', phase: 'DIAGNOSIS', order: 4, checkKey: 'vchain' },
-        { id: 'vrio', name: 'تحليل VRIO', emoji: '💎', href: '/internal-env.html', phase: 'DIAGNOSIS', order: 5, checkKey: 'vrio' },
-        { id: 'core', name: 'القدرات الجوهرية', emoji: '🏆', href: '/tool-detail.html?code=CORE_COMPETENCY', phase: 'DIAGNOSIS', order: 6, checkKey: 'core' },
-        { id: 'journey', name: 'رحلة العميل', emoji: '👥', href: '/tool-detail.html?code=CUSTOMER_JOURNEY', phase: 'DIAGNOSIS', order: 7, checkKey: 'journey' },
-        { id: 'gap', name: 'تحليل الفجوات', emoji: '📉', href: '/gap-analysis.html', phase: 'DIAGNOSIS', order: 8, checkKey: 'gap' },
-        { id: 'bench', name: 'المقارنة المعيارية', emoji: '📊', href: '/benchmarking.html', phase: 'DIAGNOSIS', order: 9, checkKey: 'bench' },
+  // ====================================================================
+  //  TOOL DEFINITIONS — كل الأدوات مع ربطها بالمراحل والشروط
+  // ====================================================================
+  const ALL_TOOLS = [
+    // ── تشخيصي ──
+    { id: 'swot', name: 'تحليل SWOT', emoji: '📊', href: '/swot.html', phase: 'DIAGNOSIS', order: 1, checkKey: 'swot' },
+    { id: 'pestel', name: 'تحليل PESTEL', emoji: '🌍', href: '/tool-detail.html?code=PESTEL', phase: 'DIAGNOSIS', order: 2, checkKey: 'pestel' },
+    { id: 'porter', name: 'قوى بورتر الخمس', emoji: '⚔️', href: '/tool-detail.html?code=PORTER', phase: 'DIAGNOSIS', order: 3, checkKey: 'porter' },
+    { id: 'vchain', name: 'سلسلة القيمة', emoji: '🔗', href: '/tool-detail.html?code=VALUE_CHAIN', phase: 'DIAGNOSIS', order: 4, checkKey: 'vchain' },
+    { id: 'vrio', name: 'تحليل VRIO', emoji: '💎', href: '/internal-env.html', phase: 'DIAGNOSIS', order: 5, checkKey: 'vrio' },
+    { id: 'core', name: 'القدرات الجوهرية', emoji: '🏆', href: '/tool-detail.html?code=CORE_COMPETENCY', phase: 'DIAGNOSIS', order: 6, checkKey: 'core' },
+    { id: 'journey', name: 'رحلة العميل', emoji: '👥', href: '/tool-detail.html?code=CUSTOMER_JOURNEY', phase: 'DIAGNOSIS', order: 7, checkKey: 'journey' },
+    { id: 'gap', name: 'تحليل الفجوات', emoji: '📉', href: '/gap-analysis.html', phase: 'DIAGNOSIS', order: 8, checkKey: 'gap' },
+    { id: 'bench', name: 'المقارنة المعيارية', emoji: '📊', href: '/benchmarking.html', phase: 'DIAGNOSIS', order: 9, checkKey: 'bench' },
 
-        // ── خياراتي وخطتي ──
-        { id: 'tows', name: 'مصفوفة TOWS', emoji: '🎯', href: '/tows.html', phase: 'PLANNING', order: 1, checkKey: 'tows' },
-        { id: 'directions', name: 'التوجهات الاستراتيجية', emoji: '🧭', href: '/directions.html', phase: 'PLANNING', order: 2, checkKey: 'directions' },
-        { id: 'objectives', name: 'الأهداف', emoji: '🎯', href: '/objectives.html', phase: 'PLANNING', order: 3, checkKey: 'objectives' },
-        { id: 'kpis', name: 'مؤشرات الأداء', emoji: '📈', href: '/kpis.html', phase: 'PLANNING', order: 4, checkKey: 'kpis' },
-        { id: 'bmodel', name: 'نموذج الأعمال', emoji: '🏢', href: '/tool-detail.html?code=BUSINESS_MODEL', phase: 'PLANNING', order: 5, checkKey: 'bmodel' },
+    // ── خياراتي وخطتي ──
+    { id: 'tows', name: 'مصفوفة TOWS', emoji: '🎯', href: '/tows.html', phase: 'PLANNING', order: 1, checkKey: 'tows' },
+    { id: 'directions', name: 'التوجهات الاستراتيجية', emoji: '🧭', href: '/directions.html', phase: 'PLANNING', order: 2, checkKey: 'directions' },
+    { id: 'objectives', name: 'الأهداف', emoji: '🎯', href: '/objectives.html', phase: 'PLANNING', order: 3, checkKey: 'objectives' },
+    { id: 'kpis', name: 'مؤشرات الأداء', emoji: '📈', href: '/kpis.html', phase: 'PLANNING', order: 4, checkKey: 'kpis' },
+    { id: 'bmodel', name: 'نموذج الأعمال', emoji: '🏢', href: '/tool-detail.html?code=BUSINESS_MODEL', phase: 'PLANNING', order: 5, checkKey: 'bmodel' },
 
-        // ── تنفيذي ──
-        { id: 'initiatives', name: 'المبادرات', emoji: '🚀', href: '/initiatives.html', phase: 'EXECUTION', order: 1, checkKey: 'initiatives' },
-        { id: 'eisenhower', name: 'مصفوفة أيزنهاور', emoji: '📐', href: '/tool-detail.html?code=EISENHOWER', phase: 'EXECUTION', order: 2, checkKey: 'eisenhower' },
+    // ── تنفيذي ──
+    { id: 'initiatives', name: 'المبادرات', emoji: '🚀', href: '/initiatives.html', phase: 'EXECUTION', order: 1, checkKey: 'initiatives' },
+    { id: 'eisenhower', name: 'مصفوفة أيزنهاور', emoji: '📐', href: '/tool-detail.html?code=EISENHOWER', phase: 'EXECUTION', order: 2, checkKey: 'eisenhower' },
 
-        // ── متابعتي ──
-        { id: 'reviews', name: 'المراجعات الدورية', emoji: '📋', href: '/reviews.html', phase: 'ADAPTATION', order: 1, checkKey: 'reviews' },
-        { id: 'pareto', name: 'تحليل باريتو 80/20', emoji: '📊', href: '/tool-detail.html?code=PARETO', phase: 'ADAPTATION', order: 2, checkKey: 'pareto' },
+    // ── متابعتي ──
+    { id: 'reviews', name: 'المراجعات الدورية', emoji: '📋', href: '/reviews.html', phase: 'ADAPTATION', order: 1, checkKey: 'reviews' },
+    { id: 'pareto', name: 'تحليل باريتو 80/20', emoji: '📊', href: '/tool-detail.html?code=PARETO', phase: 'ADAPTATION', order: 2, checkKey: 'pareto' },
 
-        // ── أدوات عامة متقدمة ──
-        { id: 'riskmap', name: 'خريطة المخاطر', emoji: '🛡️', href: '/risk-map.html', phase: 'ADVANCED', order: 1, checkKey: 'riskmap' },
-        { id: 'stratmap', name: 'الخريطة الاستراتيجية', emoji: '🗺️', href: '/strategy-map.html', phase: 'ADVANCED', order: 2, checkKey: 'stratmap' },
-        { id: 'ogsm', name: 'ملخص OGSM', emoji: '📋', href: '/ogsm.html', phase: 'ADVANCED', order: 3, checkKey: 'ogsm' },
-        { id: 'horizons', name: 'الآفاق الثلاثة', emoji: '🔭', href: '/three-horizons.html', phase: 'ADVANCED', order: 4, checkKey: 'horizons' },
-        { id: 'stakeholders', name: 'أصحاب المصلحة', emoji: '👥', href: '/stakeholders.html', phase: 'ADVANCED', order: 5, checkKey: 'stakeholders' },
-        { id: 'calendar', name: 'التقويم الاستراتيجي', emoji: '📅', href: '/strategic-calendar.html', phase: 'ADVANCED', order: 6, checkKey: 'calendar' },
-        { id: 'priority', name: 'مصفوفة الأولويات', emoji: '⚖️', href: '/priority-matrix.html', phase: 'ADVANCED', order: 7, checkKey: 'priority' },
-    ];
+    // ── أدوات عامة متقدمة ──
+    { id: 'riskmap', name: 'خريطة المخاطر', emoji: '🛡️', href: '/risk-map.html', phase: 'ADVANCED', order: 1, checkKey: 'riskmap' },
+    { id: 'stratmap', name: 'الخريطة الاستراتيجية', emoji: '🗺️', href: '/strategy-map.html', phase: 'ADVANCED', order: 2, checkKey: 'stratmap' },
+    { id: 'ogsm', name: 'ملخص OGSM', emoji: '📋', href: '/ogsm.html', phase: 'ADVANCED', order: 3, checkKey: 'ogsm' },
+    { id: 'horizons', name: 'الآفاق الثلاثة', emoji: '🔭', href: '/three-horizons.html', phase: 'ADVANCED', order: 4, checkKey: 'horizons' },
+    { id: 'stakeholders', name: 'أصحاب المصلحة', emoji: '👥', href: '/stakeholders.html', phase: 'ADVANCED', order: 5, checkKey: 'stakeholders' },
+    { id: 'calendar', name: 'التقويم الاستراتيجي', emoji: '📅', href: '/strategic-calendar.html', phase: 'ADVANCED', order: 6, checkKey: 'calendar' },
+    { id: 'priority', name: 'مصفوفة الأولويات', emoji: '⚖️', href: '/priority-matrix.html', phase: 'ADVANCED', order: 7, checkKey: 'priority' },
+  ];
 
-    // ====================================================================
-    //  SUGGESTION RULES — قواعد الاقتراح الذكي
-    // ====================================================================
-    const SUGGESTION_RULES = [
-        // المرحلة 0: لم يبدأ بعد
-        {
-            condition: (ctx) => !ctx.hasPainAmbition,
-            suggestions: [
-                { toolId: 'swot', reason: 'ابدأ بتحليل SWOT لفهم وضعك الحالي' }
-            ]
-        },
-        // مرحلة التشخيص: أكمل SWOT → اقترح PESTEL + Porter
-        {
-            condition: (ctx) => ctx.completed.includes('swot') && !ctx.completed.includes('pestel'),
-            suggestions: [
-                { toolId: 'pestel', reason: 'SWOT جاهز — حلل البيئة الخارجية الآن' },
-                { toolId: 'porter', reason: 'افهم ديناميكيات المنافسة في صناعتك' }
-            ]
-        },
-        // أكمل SWOT + PESTEL → اقترح Porter + TOWS
-        {
-            condition: (ctx) => ctx.completed.includes('swot') && ctx.completed.includes('pestel') && !ctx.completed.includes('tows'),
-            suggestions: [
-                { toolId: 'tows', reason: 'حوّل نتائج SWOT إلى استراتيجيات عملية' },
-                { toolId: 'porter', reason: 'حلل قوى المنافسة لتحديد موقعك', skip: ctx => ctx.completed.includes('porter') }
-            ]
-        },
-        // أكمل التشخيص → اقترح التخطيط
-        {
-            condition: (ctx) => ctx.diagnosisPercent >= 60 && !ctx.completed.includes('objectives'),
-            suggestions: [
-                { toolId: 'tows', reason: 'حوّل تحليلك إلى خيارات استراتيجية', skip: ctx => ctx.completed.includes('tows') },
-                { toolId: 'objectives', reason: 'حدد أهدافك الاستراتيجية بناءً على التحليل' }
-            ]
-        },
-        // أكمل الأهداف → اقترح KPIs + مبادرات
-        {
-            condition: (ctx) => ctx.completed.includes('objectives') && !ctx.completed.includes('kpis'),
-            suggestions: [
-                { toolId: 'kpis', reason: 'اربط أهدافك بمؤشرات قابلة للقياس' },
-                { toolId: 'initiatives', reason: 'حوّل أهدافك إلى مبادرات تنفيذية' }
-            ]
-        },
-        // أكمل KPIs → اقترح المبادرات + المراجعات
-        {
-            condition: (ctx) => ctx.completed.includes('kpis') && !ctx.completed.includes('initiatives'),
-            suggestions: [
-                { toolId: 'initiatives', reason: 'ابدأ تنفيذ خطتك بمبادرات محددة' }
-            ]
-        },
-        // في مرحلة التنفيذ → اقترح أدوات المتابعة
-        {
-            condition: (ctx) => ctx.completed.includes('initiatives') && !ctx.completed.includes('reviews'),
-            suggestions: [
-                { toolId: 'reviews', reason: 'راجع تقدمك بشكل دوري' },
-                { toolId: 'eisenhower', reason: 'رتب أولويات مهامك بذكاء' }
-            ]
-        },
-        // أدوات متقدمة — للمستخدمين المتقدمين
-        {
-            condition: (ctx) => ctx.diagnosisPercent >= 80 && ctx.planningPercent >= 50,
-            suggestions: [
-                { toolId: 'riskmap', reason: 'خطتك متقدمة — حدد المخاطر المحتملة', skip: ctx => ctx.completed.includes('riskmap') },
-                { toolId: 'stratmap', reason: 'ابنِ خريطة استراتيجية بصرية', skip: ctx => ctx.completed.includes('stratmap') }
-            ]
-        },
-    ];
+  // ====================================================================
+  //  SUGGESTION RULES — قواعد الاقتراح الذكي
+  // ====================================================================
+  const SUGGESTION_RULES = [
+    // المرحلة 0: لم يبدأ بعد
+    {
+      condition: (ctx) => !ctx.hasPainAmbition,
+      suggestions: [
+        { toolId: 'swot', reason: 'ابدأ بتحليل SWOT لفهم وضعك الحالي' }
+      ]
+    },
+    // مرحلة التشخيص: أكمل SWOT → اقترح PESTEL + Porter
+    {
+      condition: (ctx) => ctx.completed.includes('swot') && !ctx.completed.includes('pestel'),
+      suggestions: [
+        { toolId: 'pestel', reason: 'SWOT جاهز — حلل البيئة الخارجية الآن' },
+        { toolId: 'porter', reason: 'افهم ديناميكيات المنافسة في صناعتك' }
+      ]
+    },
+    // أكمل SWOT + PESTEL → اقترح Porter + TOWS
+    {
+      condition: (ctx) => ctx.completed.includes('swot') && ctx.completed.includes('pestel') && !ctx.completed.includes('tows'),
+      suggestions: [
+        { toolId: 'tows', reason: 'حوّل نتائج SWOT إلى استراتيجيات عملية' },
+        { toolId: 'porter', reason: 'حلل قوى المنافسة لتحديد موقعك', skip: ctx => ctx.completed.includes('porter') }
+      ]
+    },
+    // أكمل التشخيص → اقترح التخطيط
+    {
+      condition: (ctx) => ctx.diagnosisPercent >= 60 && !ctx.completed.includes('objectives'),
+      suggestions: [
+        { toolId: 'tows', reason: 'حوّل تحليلك إلى خيارات استراتيجية', skip: ctx => ctx.completed.includes('tows') },
+        { toolId: 'objectives', reason: 'حدد أهدافك الاستراتيجية بناءً على التحليل' }
+      ]
+    },
+    // أكمل الأهداف → اقترح KPIs + مبادرات
+    {
+      condition: (ctx) => ctx.completed.includes('objectives') && !ctx.completed.includes('kpis'),
+      suggestions: [
+        { toolId: 'kpis', reason: 'اربط أهدافك بمؤشرات قابلة للقياس' },
+        { toolId: 'initiatives', reason: 'حوّل أهدافك إلى مبادرات تنفيذية' }
+      ]
+    },
+    // أكمل KPIs → اقترح المبادرات + المراجعات
+    {
+      condition: (ctx) => ctx.completed.includes('kpis') && !ctx.completed.includes('initiatives'),
+      suggestions: [
+        { toolId: 'initiatives', reason: 'ابدأ تنفيذ خطتك بمبادرات محددة' }
+      ]
+    },
+    // في مرحلة التنفيذ → اقترح أدوات المتابعة
+    {
+      condition: (ctx) => ctx.completed.includes('initiatives') && !ctx.completed.includes('reviews'),
+      suggestions: [
+        { toolId: 'reviews', reason: 'راجع تقدمك بشكل دوري' },
+        { toolId: 'eisenhower', reason: 'رتب أولويات مهامك بذكاء' }
+      ]
+    },
+    // أدوات متقدمة — للمستخدمين المتقدمين
+    {
+      condition: (ctx) => ctx.diagnosisPercent >= 80 && ctx.planningPercent >= 50,
+      suggestions: [
+        { toolId: 'riskmap', reason: 'خطتك متقدمة — حدد المخاطر المحتملة', skip: ctx => ctx.completed.includes('riskmap') },
+        { toolId: 'stratmap', reason: 'ابنِ خريطة استراتيجية بصرية', skip: ctx => ctx.completed.includes('stratmap') }
+      ]
+    },
+  ];
 
-    // ====================================================================
-    //  CONTEXT BUILDER — بناء سياق المستخدم
-    // ====================================================================
-    function buildContext(progressData) {
-        const ctx = {
-            hasPainAmbition: !!localStorage.getItem('painAmbition'),
-            completed: [],
-            diagnosisPercent: 0,
-            planningPercent: 0,
-            executionPercent: 0,
-            adaptationPercent: 0,
-            overall: 0,
-            userRole: 'VIEWER',
-            systemRole: 'USER',
-            accountAge: 0, // days
-        };
+  // ====================================================================
+  //  CONTEXT BUILDER — بناء سياق المستخدم
+  // ====================================================================
+  function buildContext(progressData) {
+    const ctx = {
+      hasPainAmbition: !!localStorage.getItem('painAmbition'),
+      completed: [],
+      diagnosisPercent: 0,
+      planningPercent: 0,
+      executionPercent: 0,
+      adaptationPercent: 0,
+      overall: 0,
+      userRole: 'VIEWER',
+      systemRole: 'USER',
+      accountAge: 0, // days
+    };
 
-        // User info
-        try {
-            const u = JSON.parse(localStorage.getItem('user') || '{}');
-            ctx.userRole = u.role || 'VIEWER';
-            ctx.systemRole = u.systemRole || 'USER';
-            if (u.createdAt) {
-                ctx.accountAge = Math.floor((Date.now() - new Date(u.createdAt).getTime()) / (1000 * 60 * 60 * 24));
-            }
-        } catch (e) { /* silent */ }
+    // User info
+    try {
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      ctx.userRole = u.role || 'VIEWER';
+      ctx.systemRole = u.systemRole || 'USER';
+      if (u.createdAt) {
+        ctx.accountAge = Math.floor((Date.now() - new Date(u.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+      }
+    } catch (e) { /* silent */ }
 
-        // Progress data
-        if (progressData) {
-            ctx.overall = progressData.overall || 0;
-            if (progressData.stages) {
-                progressData.stages.forEach(s => {
-                    if (s.id === 'DIAGNOSIS') ctx.diagnosisPercent = s.percent || 0;
-                    if (s.id === 'PLANNING') ctx.planningPercent = s.percent || 0;
-                    if (s.id === 'EXECUTION') ctx.executionPercent = s.percent || 0;
-                    if (s.id === 'ADAPTATION') ctx.adaptationPercent = s.percent || 0;
-                });
-            }
+    // Progress data
+    if (progressData) {
+      ctx.overall = progressData.overall || 0;
+      if (progressData.stages) {
+        progressData.stages.forEach(s => {
+          if (s.id === 'DIAGNOSIS') ctx.diagnosisPercent = s.percent || 0;
+          if (s.id === 'PLANNING') ctx.planningPercent = s.percent || 0;
+          if (s.id === 'EXECUTION') ctx.executionPercent = s.percent || 0;
+          if (s.id === 'ADAPTATION') ctx.adaptationPercent = s.percent || 0;
+        });
+      }
 
-            // Detect completed tools from progress data
-            if (progressData.completedTools) {
-                ctx.completed = progressData.completedTools;
-            }
+      // Detect completed tools from progress data
+      if (progressData.completedTools) {
+        ctx.completed = progressData.completedTools;
+      }
+    }
+
+    // Also check localStorage for any tool completions
+    try {
+      const toolStatus = JSON.parse(localStorage.getItem('stx_tool_status') || '{}');
+      Object.entries(toolStatus).forEach(([key, val]) => {
+        if (val && !ctx.completed.includes(key)) {
+          ctx.completed.push(key);
         }
+      });
+    } catch (e) { /* silent */ }
 
-        // Also check localStorage for any tool completions
-        try {
-            const toolStatus = JSON.parse(localStorage.getItem('stx_tool_status') || '{}');
-            Object.entries(toolStatus).forEach(([key, val]) => {
-                if (val && !ctx.completed.includes(key)) {
-                    ctx.completed.push(key);
-                }
+    // Heuristic: if diagnosis > 30%, assume SWOT is done
+    if (ctx.diagnosisPercent >= 30 && !ctx.completed.includes('swot')) {
+      ctx.completed.push('swot');
+    }
+    if (ctx.planningPercent >= 20 && !ctx.completed.includes('objectives')) {
+      ctx.completed.push('objectives');
+    }
+    if (ctx.planningPercent >= 40 && !ctx.completed.includes('kpis')) {
+      ctx.completed.push('kpis');
+    }
+    if (ctx.executionPercent >= 20 && !ctx.completed.includes('initiatives')) {
+      ctx.completed.push('initiatives');
+    }
+
+    return ctx;
+  }
+
+  // ====================================================================
+  //  SUGGESTION ENGINE — محرك الاقتراحات
+  // ====================================================================
+  function getSuggestions(ctx) {
+    const suggestions = [];
+
+    for (const rule of SUGGESTION_RULES) {
+      if (rule.condition(ctx)) {
+        for (const sug of rule.suggestions) {
+          // Skip if already completed
+          if (ctx.completed.includes(sug.toolId)) continue;
+          // Skip if custom skip condition
+          if (sug.skip && sug.skip(ctx)) continue;
+
+          const tool = ALL_TOOLS.find(t => t.id === sug.toolId);
+          if (tool) {
+            suggestions.push({
+              ...tool,
+              reason: sug.reason,
+              status: 'suggested'
             });
-        } catch (e) { /* silent */ }
-
-        // Heuristic: if diagnosis > 30%, assume SWOT is done
-        if (ctx.diagnosisPercent >= 30 && !ctx.completed.includes('swot')) {
-            ctx.completed.push('swot');
+          }
         }
-        if (ctx.planningPercent >= 20 && !ctx.completed.includes('objectives')) {
-            ctx.completed.push('objectives');
-        }
-        if (ctx.planningPercent >= 40 && !ctx.completed.includes('kpis')) {
-            ctx.completed.push('kpis');
-        }
-        if (ctx.executionPercent >= 20 && !ctx.completed.includes('initiatives')) {
-            ctx.completed.push('initiatives');
-        }
-
-        return ctx;
+        // Take first matching rule only (priority order)
+        if (suggestions.length > 0) break;
+      }
     }
 
-    // ====================================================================
-    //  SUGGESTION ENGINE — محرك الاقتراحات
-    // ====================================================================
-    function getSuggestions(ctx) {
-        const suggestions = [];
-
-        for (const rule of SUGGESTION_RULES) {
-            if (rule.condition(ctx)) {
-                for (const sug of rule.suggestions) {
-                    // Skip if already completed
-                    if (ctx.completed.includes(sug.toolId)) continue;
-                    // Skip if custom skip condition
-                    if (sug.skip && sug.skip(ctx)) continue;
-
-                    const tool = ALL_TOOLS.find(t => t.id === sug.toolId);
-                    if (tool) {
-                        suggestions.push({
-                            ...tool,
-                            reason: sug.reason,
-                            status: 'suggested'
-                        });
-                    }
-                }
-                // Take first matching rule only (priority order)
-                if (suggestions.length > 0) break;
-            }
+    // Fallback: if no rules matched, suggest based on phase
+    if (suggestions.length === 0) {
+      const phaseOrder = ['DIAGNOSIS', 'PLANNING', 'EXECUTION', 'ADAPTATION'];
+      for (const phase of phaseOrder) {
+        const phaseTools = ALL_TOOLS.filter(t => t.phase === phase && !ctx.completed.includes(t.id));
+        if (phaseTools.length > 0) {
+          suggestions.push({
+            ...phaseTools[0],
+            reason: 'الخطوة التالية في رحلتك الاستراتيجية',
+            status: 'suggested'
+          });
+          break;
         }
-
-        // Fallback: if no rules matched, suggest based on phase
-        if (suggestions.length === 0) {
-            const phaseOrder = ['DIAGNOSIS', 'PLANNING', 'EXECUTION', 'ADAPTATION'];
-            for (const phase of phaseOrder) {
-                const phaseTools = ALL_TOOLS.filter(t => t.phase === phase && !ctx.completed.includes(t.id));
-                if (phaseTools.length > 0) {
-                    suggestions.push({
-                        ...phaseTools[0],
-                        reason: 'الخطوة التالية في رحلتك الاستراتيجية',
-                        status: 'suggested'
-                    });
-                    break;
-                }
-            }
-        }
-
-        // Limit to 3 suggestions max
-        return suggestions.slice(0, 3);
+      }
     }
 
-    // ====================================================================
-    //  DETERMINE CURRENT STAGE — تحديد المرحلة الحالية
-    // ====================================================================
-    function getCurrentStage(ctx) {
-        if (ctx.overall >= 80) return { name: 'التحسين المستمر', emoji: '🏅', color: '#22c55e' };
-        if (ctx.executionPercent >= 30) return { name: 'التنفيذ والمتابعة', emoji: '🚀', color: '#059669' };
-        if (ctx.planningPercent >= 30) return { name: 'التخطيط والبناء', emoji: '🎯', color: '#7c3aed' };
-        if (ctx.diagnosisPercent >= 20) return { name: 'التشخيص والتحليل', emoji: '🔍', color: '#f59e0b' };
-        if (ctx.hasPainAmbition) return { name: 'البداية', emoji: '🌱', color: '#3b82f6' };
-        return { name: 'الخطوة الأولى', emoji: '👣', color: '#8b8ba7' };
-    }
+    // Limit to 3 suggestions max
+    return suggestions.slice(0, 3);
+  }
 
-    // ====================================================================
-    //  RENDER — عرض القسم في السايدبار
-    // ====================================================================
-    function renderSuggestedTools(progressData) {
-        const ctx = buildContext(progressData);
-        const suggestions = getSuggestions(ctx);
-        const stage = getCurrentStage(ctx);
+  // ====================================================================
+  //  DETERMINE CURRENT STAGE — تحديد المرحلة الحالية
+  // ====================================================================
+  function getCurrentStage(ctx) {
+    if (ctx.overall >= 80) return { name: 'التحسين المستمر', emoji: '🏅', color: '#22c55e' };
+    if (ctx.executionPercent >= 30) return { name: 'التنفيذ والمتابعة', emoji: '🚀', color: '#059669' };
+    if (ctx.planningPercent >= 30) return { name: 'التخطيط والبناء', emoji: '🎯', color: '#7c3aed' };
+    if (ctx.diagnosisPercent >= 20) return { name: 'التشخيص والتحليل', emoji: '🔍', color: '#f59e0b' };
+    if (ctx.hasPainAmbition) return { name: 'البداية', emoji: '🌱', color: '#3b82f6' };
+    return { name: 'الخطوة الأولى', emoji: '👣', color: '#8b8ba7' };
+  }
 
-        // Recently completed (show up to 2)
-        const recentDone = ctx.completed.slice(-2).map(id => ALL_TOOLS.find(t => t.id === id)).filter(Boolean);
+  // ====================================================================
+  //  RENDER — عرض القسم في السايدبار
+  // ====================================================================
+  function renderSuggestedTools(progressData) {
+    const ctx = buildContext(progressData);
+    const suggestions = getSuggestions(ctx);
+    const stage = getCurrentStage(ctx);
 
-        // Can show all tools?
-        const isSuperAdmin = ctx.systemRole === 'SUPER_ADMIN';
-        const isOwner = ['OWNER', 'ADMIN'].includes(ctx.userRole);
-        const isVeteran = ctx.accountAge >= 90;
-        const canShowAll = isSuperAdmin || isOwner || isVeteran;
+    // Recently completed (show up to 2)
+    const recentDone = ctx.completed.slice(-2).map(id => ALL_TOOLS.find(t => t.id === id)).filter(Boolean);
 
-        let html = '';
+    // Can show all tools?
+    const isSuperAdmin = ctx.systemRole === 'SUPER_ADMIN';
+    const isOwner = ['OWNER', 'ADMIN'].includes(ctx.userRole);
+    const isVeteran = ctx.accountAge >= 90;
+    const canShowAll = isSuperAdmin || isOwner || isVeteran;
 
-        // Stage badge
-        html += `
+    let html = '';
+
+    // Stage badge
+    html += `
       <div class="sgt-stage" style="--stg-color: ${stage.color}">
         <span class="sgt-stage-emoji">${stage.emoji}</span>
         <span class="sgt-stage-name">${stage.name}</span>
       </div>
     `;
 
-        // Completed tools (recent)
-        if (recentDone.length > 0) {
-            recentDone.forEach(tool => {
-                html += `
+    // Completed tools (recent)
+    if (recentDone.length > 0) {
+      recentDone.forEach(tool => {
+        html += `
           <a href="${tool.href}" class="sgt-tool sgt-done" title="${tool.name}">
             <span class="sgt-tool-status">✅</span>
             <span class="sgt-tool-name">${tool.emoji} ${tool.name}</span>
           </a>
         `;
-            });
-        }
+      });
+    }
 
-        // Suggested tools
-        if (suggestions.length > 0) {
-            suggestions.forEach(sug => {
-                html += `
+    // Suggested tools
+    if (suggestions.length > 0) {
+      suggestions.forEach(sug => {
+        html += `
           <a href="${sug.href}" class="sgt-tool sgt-suggested" title="${sug.reason}">
             <span class="sgt-tool-status">⏳</span>
             <div class="sgt-tool-info">
@@ -303,44 +303,44 @@
             <span class="sgt-tool-go"><i class="bi bi-arrow-left"></i></span>
           </a>
         `;
-            });
-        } else {
-            html += `
+      });
+    } else {
+      html += `
         <div class="sgt-empty">
           <span>🎉</span>
           <small>أحسنت! أنجزت المطلوب لهذه المرحلة</small>
         </div>
       `;
-        }
+    }
 
-        // "Show all tools" button
-        if (canShowAll) {
-            html += `
-        <a href="/tools-guide.html" class="sgt-all-btn">
+    // "Show all tools" button
+    if (canShowAll) {
+      html += `
+        <a href="/tools.html" class="sgt-all-btn">
           <i class="bi bi-grid-3x3-gap"></i>
           <span>جميع الأدوات</span>
         </a>
       `;
-        } else {
-            html += `
+    } else {
+      html += `
         <div class="sgt-locked-hint">
           <i class="bi bi-lock"></i>
           <small>يُفتح بعد 3 أشهر أو لدور OWNER</small>
         </div>
       `;
-        }
-
-        return html;
     }
 
-    // ====================================================================
-    //  CSS — التنسيق
-    // ====================================================================
-    function injectCSS() {
-        if (document.getElementById('sgt-css')) return;
-        const style = document.createElement('style');
-        style.id = 'sgt-css';
-        style.textContent = `
+    return html;
+  }
+
+  // ====================================================================
+  //  CSS — التنسيق
+  // ====================================================================
+  function injectCSS() {
+    if (document.getElementById('sgt-css')) return;
+    const style = document.createElement('style');
+    style.id = 'sgt-css';
+    style.textContent = `
       /* ===== Suggested Tools Section ===== */
       .sgt-wrapper {
         margin: 4px 10px 8px;
@@ -566,21 +566,21 @@
       .sgt-suggested:nth-child(3) { animation-delay: 0.2s; }
       .sgt-suggested:nth-child(4) { animation-delay: 0.3s; }
     `;
-        document.head.appendChild(style);
-    }
+    document.head.appendChild(style);
+  }
 
-    // ====================================================================
-    //  PUBLIC API — واجهة عامة
-    // ====================================================================
-    window.SuggestedTools = {
-        render: renderSuggestedTools,
-        injectCSS: injectCSS,
-        getContext: buildContext,
-        getSuggestions: function (progressData) {
-            const ctx = buildContext(progressData);
-            return getSuggestions(ctx);
-        },
-        ALL_TOOLS: ALL_TOOLS
-    };
+  // ====================================================================
+  //  PUBLIC API — واجهة عامة
+  // ====================================================================
+  window.SuggestedTools = {
+    render: renderSuggestedTools,
+    injectCSS: injectCSS,
+    getContext: buildContext,
+    getSuggestions: function (progressData) {
+      const ctx = buildContext(progressData);
+      return getSuggestions(ctx);
+    },
+    ALL_TOOLS: ALL_TOOLS
+  };
 
 })();

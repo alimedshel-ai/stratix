@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ستارتكيس - لوحة القيادة</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -651,6 +651,112 @@
             font-weight: 700;
         }
 
+        /* Pain & Ambition Summary Card */
+        .pa-summary {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.06), rgba(236, 72, 153, 0.04));
+            border: 1px solid rgba(102, 126, 234, 0.15);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pa-summary::before {
+            content: '';
+            position: absolute;
+            top: -40px;
+            left: -40px;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.06), transparent 70%);
+            pointer-events: none;
+        }
+
+        .pa-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .pa-title {
+            font-size: 16px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pa-pattern-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .pa-reassess {
+            padding: 6px 16px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: inherit;
+        }
+
+        .pa-reassess:hover {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+
+        .pa-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .pa-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .pa-tag.pain {
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.15);
+        }
+
+        .pa-tag.amb {
+            background: rgba(34, 197, 94, 0.1);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.15);
+        }
+
+        .pa-date {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
         /* Smart Recommendations */
         .smart-recs {
             background: var(--bg-card);
@@ -731,6 +837,10 @@
             .qs-steps {
                 grid-template-columns: 1fr;
             }
+
+            .pa-summary>div:nth-child(2) {
+                grid-template-columns: 1fr !important;
+            }
         }
 
         @media (max-width: 768px) {
@@ -793,6 +903,32 @@
                     <i class="bi bi-lightbulb-fill" style="color:var(--warning)"></i> توصيات مخصصة لك
                 </div>
                 <div id="smartRecsList"></div>
+            </div>
+
+            <!-- 💔 Pain & Ambition Summary Card -->
+            <div class="pa-summary" id="paSummaryCard" style="display:none;">
+                <div class="pa-header">
+                    <div class="pa-title">
+                        <span>💔 ملخص التشخيص</span>
+                        <span id="paPatternBadge"></span>
+                    </div>
+                    <a href="/pain-ambition.html" class="pa-reassess" id="paReassessBtn">
+                        <i class="bi bi-arrow-repeat"></i> أعِد التقييم
+                    </a>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div>
+                        <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--text-muted)">😤
+                            التحديات المحددة</div>
+                        <div class="pa-tags" id="paPainTags"></div>
+                    </div>
+                    <div>
+                        <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--text-muted)">🎯
+                            الطموحات المختارة</div>
+                        <div class="pa-tags" id="paAmbTags"></div>
+                    </div>
+                </div>
+                <div class="pa-date" id="paDate"></div>
             </div>
 
             <!-- Progress Card -->
@@ -1260,7 +1396,7 @@
                 };
 
                 listEl.innerHTML = pa.recommendations.slice(0, 4).map(r => {
-                    const link = recLinks[r.tool] || '/tools-guide.html';
+                    const link = recLinks[r.tool] || '/tools.html';
                     const c = recColors[r.tool] || { bg: 'rgba(102,126,234,0.12)', color: '#667eea' };
                     return `
                         <a href="${link}" class="rec-item">
@@ -1278,12 +1414,91 @@
             function getSmartNextSteps(paData) {
                 const pk = paData.patternKey || 'growing';
                 const nextMap = {
+                    // Legacy patterns
                     startup: { title: 'حدد توجهاتك', desc: 'ابدأ بالرؤية والرسالة والتوجه الاستراتيجي', icon: '🎯', href: '/directions.html', status: 'current', num: '3' },
                     growing: { title: 'حلل بيئتك', desc: 'ابدأ تحليل SWOT لفهم نقاط القوة والضعف', icon: '🔍', href: '/swot.html', status: 'current', num: '3' },
                     mature: { title: 'شخّص الفجوات', desc: 'تحليل PESTEL وبورتر لفهم البيئة التنافسية', icon: '🔬', href: '/tool-detail.html?code=PESTEL', status: 'current', num: '3' },
                     struggling: { title: 'تشخيص طوارئ', desc: 'تحليل SWOT عاجل لتحديد السبب الجذري', icon: '⚡', href: '/swot.html', status: 'current', num: '3' },
+                    // New patterns
+                    nascent_struggling: { title: 'ابنِ الأساسات', desc: 'ركّز على 3 أولويات واضحة — ما تشتت جهودك', icon: '🧱', href: '/directions.html', status: 'current', num: '3' },
+                    nascent_cautious: { title: 'أسّس رؤيتك', desc: 'حدد الرؤية والرسالة — بنيتك قوية والحين وقت التوجيه', icon: '🧭', href: '/directions.html', status: 'current', num: '3' },
+                    growing_chaotic: { title: 'نظّم النمو', desc: 'حدد مؤشرات أداء + هيكل العمليات قبل الفوضى', icon: '📊', href: '/kpis.html', status: 'current', num: '3' },
+                    growing_ambitious: { title: 'حلل بيئتك', desc: 'ابدأ تحليل SWOT لتبني ميزة تنافسية مستدامة', icon: '🔍', href: '/swot.html', status: 'current', num: '3' },
+                    financial_struggling: { title: 'تشخيص مالي عاجل', desc: 'حلل التكاليف والعمليات — حدد وين الهدر', icon: '💰', href: '/swot.html', status: 'current', num: '3' },
+                    mature_renewing: { title: 'جدّد استراتيجيتك', desc: 'تحليل Porter + PESTEL لفتح فرص نمو جديدة', icon: '🔄', href: '/tool-detail.html?code=PORTER', status: 'current', num: '3' },
+                    mature_competitive: { title: 'عزّز تفوقك', desc: 'حلل سلسلة القيمة والمحيط الأزرق للاستدامة', icon: '🏆', href: '/tool-detail.html?code=VALUE_CHAIN', status: 'current', num: '3' },
+                    default_strategic: { title: 'حلل بيئتك', desc: 'ابدأ تحليل SWOT الشامل لفهم وضعك', icon: '🔍', href: '/swot.html', status: 'current', num: '3' },
                 };
                 return [nextMap[pk] || nextMap.growing];
+            }
+        })();
+    </script>
+    <script>
+        // ===== Pain & Ambition Summary Card =====
+        (function buildPASummary() {
+            const pa = JSON.parse(localStorage.getItem('painAmbition') || 'null');
+            if (!pa) return;
+
+            const card = document.getElementById('paSummaryCard');
+            if (!card) return;
+            card.style.display = 'block';
+
+            // Pattern badge
+            const PATTERN_COLORS = {
+                nascent_struggling: '#ef4444', nascent_cautious: '#22c55e',
+                growing_chaotic: '#f59e0b', growing_ambitious: '#3b82f6',
+                financial_struggling: '#dc2626', mature_renewing: '#8b5cf6',
+                mature_competitive: '#6366f1', default_strategic: '#667eea',
+                startup: '#22c55e', growing: '#3b82f6', mature: '#8b5cf6', struggling: '#ef4444'
+            };
+            const pColor = PATTERN_COLORS[pa.patternKey] || '#667eea';
+            document.getElementById('paPatternBadge').innerHTML =
+                `<span class="pa-pattern-badge" style="background:${pColor}18;border:1px solid ${pColor}30;color:${pColor}">${pa.pattern || 'نمط عام'}</span>`;
+
+            // Pain tags
+            const PAIN_LABELS = {
+                no_strategy: 'ما عندنا خطة استراتيجية',
+                no_measurement: 'ما نقدر نقيس أداءنا',
+                plan_vs_execution: 'فجوة بين الخطة والتنفيذ',
+                team_alignment: 'الفريق مو متوافق',
+                market_pressure: 'ضغط من السوق والمنافسين',
+                growth_stuck: 'النمو متوقف',
+                custom_pain: pa.customPainText || pa.painCustom || 'تحدي مخصص'
+            };
+            const painTagsEl = document.getElementById('paPainTags');
+            if (pa.pains && pa.pains.length) {
+                painTagsEl.innerHTML = pa.pains.map(p =>
+                    `<span class="pa-tag pain">😤 ${PAIN_LABELS[p] || p}</span>`
+                ).join('');
+            } else {
+                painTagsEl.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">لم يُحدد</span>';
+            }
+
+            // Ambition tags
+            const AMB_LABELS = {
+                clear_strategy: 'خطة استراتيجية واضحة',
+                data_decisions: 'قرارات مبنية على بيانات',
+                team_ownership: 'فريق متحمس يعرف وجهته',
+                market_lead: 'التفوق على المنافسين',
+                sustainable_growth: 'نمو مستدام ومخطط',
+                execution_machine: 'نظام تنفيذ منتظم',
+                custom_amb: pa.customAmbText || pa.ambitionCustom || 'طموح مخصص'
+            };
+            const ambTagsEl = document.getElementById('paAmbTags');
+            if (pa.ambitions && pa.ambitions.length) {
+                ambTagsEl.innerHTML = pa.ambitions.map(a =>
+                    `<span class="pa-tag amb">🎯 ${AMB_LABELS[a] || a}</span>`
+                ).join('');
+            } else {
+                ambTagsEl.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">لم يُحدد</span>';
+            }
+
+            // Date
+            if (pa.timestamp) {
+                const d = new Date(pa.timestamp);
+                const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+                document.getElementById('paDate').innerHTML =
+                    `<i class="bi bi-clock"></i> آخر تقييم: ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
             }
         })();
     </script>

@@ -12,7 +12,7 @@
         }
     </script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -1711,6 +1711,104 @@
 
         // ===== START =====
         init();
+    </script>
+
+    <!-- 🤖 المستشار الذكي -->
+    <script src="/js/ai-advisor.js"></script>
+    <script>
+        // نصائح سياقية للأدوات — تظهر بعد تحميل الأداة
+        (function () {
+            const TOOL_GUIDANCE = {
+                PESTEL: {
+                    emoji: '🌍',
+                    msg: 'تحليل PESTEL يفحص 6 عوامل خارجية تأثر على شركتك',
+                    points: [
+                        'ابدأ بالعامل اللي تحس إنه أكثر تأثير على شركتك حالياً',
+                        'لا تكتب كل شي — ركّز على العوامل اللي ممكن تتغير خلال 1-3 سنوات',
+                        'خلّي كل نقطة قصيرة وواضحة: ماذا + كيف يأثر عليك'
+                    ],
+                    tool: { name: 'ابدأ بأهم عامل', icon: '⚡' }
+                },
+                PORTER: {
+                    emoji: '⚔️',
+                    msg: 'قوى Porter الخمس تحلل بيئتك التنافسية — من أقوى؟',
+                    points: [
+                        'فكّر: من هم المنافسين المباشرين؟ وش قوتهم؟',
+                        'البدائل مهمة — عملاءك وش ممكن يستخدمون بدال خدمتك؟',
+                        'الموردين والمشترين — من عنده قوة أكبر في العلاقة؟'
+                    ],
+                    tool: { name: 'التحليل التنافسي', icon: '🔍' }
+                },
+                VALUE_CHAIN: {
+                    emoji: '🔗',
+                    msg: 'سلسلة القيمة تكشف وين تخلق القيمة ووين تضيعها',
+                    points: [
+                        'ابدأ من عملياتك الأساسية — من المواد الخام للعميل',
+                        'حدد كل خطوة تضيف قيمة للمنتج أو الخدمة',
+                        'ابحث عن الفجوات — وين ممكن تحسّن أو تقلل التكلفة؟'
+                    ],
+                    tool: { name: 'تحليل العمليات', icon: '⚙️' }
+                },
+                CORE_COMPETENCY: {
+                    emoji: '🏆',
+                    msg: 'القدرات الجوهرية = ميزتك اللي ما أحد يقدر يقلدها بسهولة',
+                    points: [
+                        'اسأل: وش الشي اللي نسويه أحسن من الكل؟',
+                        'القدرة الجوهرية لازم تكون: نادرة + صعبة التقليد + تعطي قيمة للعميل',
+                        'حدد 2-3 قدرات فقط — لا تكثر عشان ما تفقد التركيز'
+                    ],
+                    tool: { name: 'VRIO تحليل', icon: '💎' }
+                },
+                CUSTOMER_JOURNEY: {
+                    emoji: '🚶',
+                    msg: 'رحلة العميل تبيّن تجربته من أول ما يعرفك لما يكون عميل دائم',
+                    points: [
+                        'ارسم المراحل: الوعي → الاهتمام → الشراء → الاستخدام → الولاء',
+                        'حدد نقاط الألم في كل مرحلة — وين العميل يتضايق؟',
+                        'ركّز على اللحظات الحاسمة — اللي تحدد إذا يكمل أو يطلع'
+                    ],
+                    tool: { name: 'تحسين التجربة', icon: '⭐' }
+                },
+                TOWS: {
+                    emoji: '🎯',
+                    msg: 'TOWS = استراتيجيات عملية من ربط SWOT ببعضه',
+                    points: [
+                        'SO: استغل نقاط قوتك لاقتناص الفرص (هجوم)',
+                        'WO: عالج ضعفك عشان ما تضيع الفرص (تطوير)',
+                        'ST/WT: احمِ نفسك من التهديدات (دفاع وانسحاب ذكي)'
+                    ],
+                    tool: { name: 'البناء الاستراتيجي', icon: '🏗️' }
+                },
+                BLUE_OCEAN: {
+                    emoji: '🌊',
+                    msg: 'المحيط الأزرق = اصنع سوق جديد بدال ما تنافس في سوق مزدحم',
+                    points: [
+                        'حذف: وش العوامل اللي الصناعة تعتبرها ضرورية بس ما تهم العميل؟',
+                        'ابتكار: وش الشي اللي ما أحد يسويه ويحتاجه العميل بشدة؟',
+                        'ارسم منحنى القيمة — قارن نفسك بالمنافسين بصرياً'
+                    ],
+                    tool: { name: 'الابتكار الاستراتيجي', icon: '💡' }
+                }
+            };
+
+            // انتظر تحميل الأداة ثم أعرض النصيحة
+            setTimeout(function () {
+                const code = new URLSearchParams(window.location.search).get('code') || '';
+                const tip = TOOL_GUIDANCE[code];
+                if (tip && window.__aiAdvisor && window.__aiAdvisor.showContextualTip) {
+                    // استخدم showContextualTip مع بيانات مخصصة
+                    // أو أعرض كـ nudge toast
+                    if (window.__aiAdvisor.showToast) {
+                        window.__aiAdvisor.showToast({
+                            icon: tip.emoji,
+                            title: tip.msg,
+                            message: tip.points[0],
+                            persistent: false
+                        });
+                    }
+                }
+            }, 3000);
+        })();
     </script>
 </body>
 
