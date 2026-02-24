@@ -490,6 +490,11 @@ app.get('/swot', (req, res) => {
   res.redirect(301, '/tool?code=SWOT');
 });
 
+// Serve Getting Started guide
+app.get('/getting-started', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'getting-started.html'));
+});
+
 // Serve Operations page
 app.get('/operations', (req, res) => {
   res.sendFile(path.join(__dirname, 'src', 'operations.html'));
