@@ -1,5 +1,5 @@
 /**
- * ستارتكيس — نظام الإنجازات (Gamification)
+ * ستارتكس — نظام الإنجازات (Gamification)
  * يُستورد في أي صفحة: <script src="/js/achievements.js"></script>
  * يعتمد على sidebar.js (يُحمّل بعده)
  */

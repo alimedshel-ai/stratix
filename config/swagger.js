@@ -14,7 +14,7 @@ const options = {
             title: 'Stratix API',
             version: '2.0.0',
             description: `
-## 🎯 منصة ستارتكيس — واجهة برمجة التطبيقات
+## 🎯 منصة ستارتكس — واجهة برمجة التطبيقات
 
 منصة إدارة استراتيجية ذكية تقدم أدوات متكاملة للتخطيط والتنفيذ والمتابعة.
 
@@ -42,7 +42,7 @@ Authorization: Bearer YOUR_TOKEN
 | مؤسسات (ENTERPRISE) | ∞ | ∞ | ∞ |
             `,
             contact: {
-                name: 'فريق ستارتكيس',
+                name: 'فريق ستارتكس',
                 email: 'api@stratix.com',
                 url: 'https://stratix.com'
             },
@@ -123,7 +123,7 @@ Authorization: Bearer YOUR_TOKEN
                     type: 'object',
                     properties: {
                         id: { type: 'string' },
-                        nameAr: { type: 'string', example: 'شركة ستارتكيس' },
+                        nameAr: { type: 'string', example: 'شركة ستارتكس' },
                         nameEn: { type: 'string', example: 'Startix Corp' },
                         email: { type: 'string', nullable: true },
                         createdAt: { type: 'string', format: 'date-time' }

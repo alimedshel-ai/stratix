@@ -1,5 +1,5 @@
 /**
- * ستارتكيس — API Helper المشترك
+ * ستارتكس — API Helper المشترك
  * يُستخدم في كل الصفحات: <script src="/js/api.js"></script>
  */
 (function () {

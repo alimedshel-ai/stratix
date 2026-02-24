@@ -1,5 +1,5 @@
 /**
- * ستارتكيس — نظام التعليقات المدمج (Comment Widget)
+ * ستارتكس — نظام التعليقات المدمج (Comment Widget)
  * يُضاف لأي صفحة: <script src="/js/comments-widget.js"></script>
  * ثم: StartixComments.init({ targetType: 'OBJECTIVE', targetId: 'xxx', targetName: 'اسم الهدف', container: '#comments-container' })
  */
