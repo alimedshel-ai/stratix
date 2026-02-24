@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مصفوفة TOWS - Startix</title>
+    <meta name="description" content="مصفوفة TOWS لتوليد الاستراتيجيات من تقاطع SWOT">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0f0e17;
+            --bg-card: #1a1a2e;
+            --bg-elevated: #16213e;
+            --text-primary: #e8e8f0;
+            --text-muted: #8b8ba7;
+            --accent-so: #22c55e;
+            --accent-st: #3b82f6;
+            --accent-wo: #f59e0b;
+            --accent-wt: #ef4444;
+            --accent-purple: #a78bfa;
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* ===== NAVBAR ===== */
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            background: rgba(15, 14, 23, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .top-nav .brand {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent-purple);
+            text-decoration: none;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--text-primary);
+            background: var(--glass);
+        }
+
+        .nav-links a.active {
+            color: var(--accent-purple);
+        }
+
+        /* ===== HEADER ===== */
+        .page-header {
+            padding: 32px 32px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .page-header h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-so), var(--accent-st));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-header .subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* ===== STATS BAR ===== */
+        .stats-bar {
+            display: flex;
+            gap: 16px;
+            padding: 0 32px 24px;
+            flex-wrap: wrap;
+        }
+
+        .stat-chip {
+            background: var(--glass);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .stat-chip .number {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .stat-chip .label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* ===== ASSESSMENT SELECT ===== */
+        .control-bar {
+            padding: 0 32px 24px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .control-bar select,
+        .control-bar button {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .control-bar select:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+        }
+
+        .btn-generate {
+            background: linear-gradient(135deg, var(--accent-purple), #7c3aed) !important;
+            border: none !important;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-generate:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(167, 139, 250, 0.3);
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, var(--accent-so), #16a34a) !important;
+            border: none !important;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ===== TOWS MATRIX ===== */
+        .matrix-container {
+            padding: 0 32px 32px;
+        }
+
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: 80px 1fr 1fr;
+            grid-template-rows: 80px auto auto;
+            gap: 2px;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .matrix-corner {
+            background: var(--bg-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: var(--accent-purple);
+        }
+
+        .matrix-col-header {
+            background: var(--bg-card);
+            padding: 16px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.95rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .matrix-col-header small {
+            font-weight: 400;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .matrix-row-header {
+            background: var(--bg-card);
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 16px 8px;
+            transform: rotate(180deg);
+        }
+
+        .quadrant {
+            background: var(--bg-elevated);
+            padding: 16px;
+            min-height: 200px;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .quadrant:hover {
+            background: rgba(22, 33, 62, 0.9);
+        }
+
+        .quadrant-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .quadrant-title {
+            font-weight: 700;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .quadrant-badge {
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .q-so .quadrant-title {
+            color: var(--accent-so);
+        }
+
+        .q-so .quadrant-badge {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--accent-so);
+        }
+
+        .q-st .quadrant-title {
+            color: var(--accent-st);
+        }
+
+        .q-st .quadrant-badge {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent-st);
+        }
+
+        .q-wo .quadrant-title {
+            color: var(--accent-wo);
+        }
+
+        .q-wo .quadrant-badge {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-wo);
+        }
+
+        .q-wt .quadrant-title {
+            color: var(--accent-wt);
+        }
+
+        .q-wt .quadrant-badge {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-wt);
+        }
+
+        /* ===== STRATEGY CARDS ===== */
+        .strategy-card {
+            background: var(--glass);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .strategy-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .strategy-card .strategy-text {
+            font-size: 0.82rem;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .strategy-card .strategy-meta {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .strategy-card .point-tag {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-weight: 600;
+        }
+
+        .tag-strength {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+        }
+
+        .tag-weakness {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+        }
+
+        .tag-opportunity {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+        }
+
+        .tag-threat {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+        }
+
+        .priority-badge {
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .priority-HIGH {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+        }
+
+        .priority-MEDIUM {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+        }
+
+        .priority-LOW {
+            background: rgba(107, 114, 128, 0.15);
+            color: #9ca3af;
+        }
+
+        .status-badge {
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .status-PROPOSED {
+            background: rgba(167, 139, 250, 0.15);
+            color: #a78bfa;
+        }
+
+        .status-APPROVED {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+        }
+
+        .status-IN_PROGRESS {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+        }
+
+        .status-COMPLETED {
+            background: rgba(107, 114, 128, 0.15);
+            color: #9ca3af;
+        }
+
+        .strategy-actions {
+            display: flex;
+            gap: 4px;
+            margin-right: auto;
+        }
+
+        .strategy-actions button {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .strategy-actions button:hover {
+            color: var(--text-primary);
+            background: var(--glass);
+        }
+
+        .empty-quadrant {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 40px 16px;
+            opacity: 0.6;
+        }
+
+        /* ===== MODAL ===== */
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            color: var(--text-primary);
+        }
+
+        .modal-header {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .modal-footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .form-control,
+        .form-select {
+            background: var(--bg-elevated) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: var(--text-primary) !important;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--accent-purple) !important;
+            box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.15) !important;
+        }
+
+        .form-label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .btn-close {
+            filter: invert(1);
+        }
+
+        /* ===== LOADING ===== */
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: var(--text-muted);
+        }
+
+        .loading i {
+            font-size: 2rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .matrix-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto;
+            }
+
+            .matrix-corner,
+            .matrix-col-header,
+            .matrix-row-header {
+                display: none;
+            }
+
+            .quadrant {
+                min-height: 120px;
+            }
+
+            .page-header {
+                padding: 16px;
+            }
+
+            .stats-bar,
+            .control-bar,
+            .matrix-container {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ===== NAVBAR ===== -->
+    <nav class="top-nav">
+        <a href="/dashboard" class="brand"><i class="bi bi-graph-up-arrow"></i> ستارتكيس</a>
+        <div class="nav-links">
+            <a href="/dashboard"><i class="bi bi-house"></i> الرئيسية</a>
+            <a href="/kpis"><i class="bi bi-graph-up"></i> المؤشرات</a>
+            <a href="/intelligence"><i class="bi bi-bell"></i> التنبيهات</a>
+        </div>
+        <button class="btn btn-sm" style="background:rgba(255,255,255,0.06);color:var(--text-muted);border:none;"
+            onclick="logout()">
+            <i class="bi bi-box-arrow-left"></i> خروج
+        </button>
+    </nav>
+
+    <!-- ===== HEADER ===== -->
+    <div class="page-header">
+        <div>
+            <h1><i class="bi bi-grid-3x3-gap-fill"></i> مصفوفة TOWS</h1>
+            <div class="subtitle">تقاطع نقاط القوة والضعف مع الفرص والتهديدات → استراتيجيات تطبيقية</div>
+        </div>
+    </div>
+
+    <!-- ===== STATS ===== -->
+    <div class="stats-bar" id="statsBar">
+        <div class="stat-chip">
+            <div>
+                <div class="number" id="statTotal">-</div>
+                <div class="label">إجمالي الاستراتيجيات</div>
+            </div>
+        </div>
+        <div class="stat-chip" style="border-color:rgba(34,197,94,0.2);">
+            <div>
+                <div class="number" id="statSO" style="color:var(--accent-so);">-</div>
+                <div class="label">SO هجومية</div>
+            </div>
+        </div>
+        <div class="stat-chip" style="border-color:rgba(59,130,246,0.2);">
+            <div>
+                <div class="number" id="statST" style="color:var(--accent-st);">-</div>
+                <div class="label">ST دفاعية</div>
+            </div>
+        </div>
+        <div class="stat-chip" style="border-color:rgba(245,158,11,0.2);">
+            <div>
+                <div class="number" id="statWO" style="color:var(--accent-wo);">-</div>
+                <div class="label">WO علاجية</div>
+            </div>
+        </div>
+        <div class="stat-chip" style="border-color:rgba(239,68,68,0.2);">
+            <div>
+                <div class="number" id="statWT" style="color:var(--accent-wt);">-</div>
+                <div class="label">WT تجنبية</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== CONTROLS ===== -->
+    <div class="control-bar">
+        <select id="assessmentSelect" onchange="loadMatrix()">
+            <option value="">-- اختر تقييم --</option>
+        </select>
+        <button class="btn-generate" onclick="autoGenerate()"><i class="bi bi-magic"></i> توليد تلقائي</button>
+        <button class="btn-add" onclick="openAddModal()"><i class="bi bi-plus-lg"></i> إضافة استراتيجية</button>
+    </div>
+
+    <!-- ===== MATRIX ===== -->
+    <div class="matrix-container">
+        <div id="matrixArea">
+            <div class="loading"><i class="bi bi-arrow-repeat"></i><br>اختر تقييم لعرض المصفوفة</div>
+        </div>
+    </div>
+
+    <!-- ===== ADD/EDIT MODAL ===== -->
+    <div class="modal fade" id="strategyModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">إضافة استراتيجية TOWS</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editId">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">النقطة الداخلية (قوة / ضعف)</label>
+                            <select class="form-select" id="internalPointSelect"></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">النقطة الخارجية (فرصة / تهديد)</label>
+                            <select class="form-select" id="externalPointSelect"></select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">نص الاستراتيجية</label>
+                            <textarea class="form-control" id="strategyText" rows="3"
+                                placeholder="صف الاستراتيجية المقترحة..."></textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">الأولوية</label>
+                            <select class="form-select" id="prioritySelect">
+                                <option value="HIGH">عالية</option>
+                                <option value="MEDIUM" selected>متوسطة</option>
+                                <option value="LOW">منخفضة</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">الحالة</label>
+                            <select class="form-select" id="statusSelect">
+                                <option value="PROPOSED">مقترحة</option>
+                                <option value="APPROVED">معتمدة</option>
+                                <option value="IN_PROGRESS">قيد التنفيذ</option>
+                                <option value="COMPLETED">مكتملة</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">الربع (تلقائي)</label>
+                            <input class="form-control" id="quadrantPreview" readonly disabled>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">ملاحظات</label>
+                            <textarea class="form-control" id="notesText" rows="2"
+                                placeholder="ملاحظات إضافية..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn" style="background:var(--accent-purple);color:white;"
+                        onclick="saveStrategy()">
+                        <i class="bi bi-check-lg"></i> حفظ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login';
+
+        let currentData = null;
+
+        const statusLabel = { PROPOSED: 'مقترحة', APPROVED: 'معتمدة', IN_PROGRESS: 'قيد التنفيذ', COMPLETED: 'مكتملة' };
+        const priorityLabel = { HIGH: 'عالية', MEDIUM: 'متوسطة', LOW: 'منخفضة' };
+
+        // ===== INIT =====
+        async function init() {
+            await loadAssessments();
+            // Show SWOT → TOWS connection banner
+            showSwotConnectionBanner();
+        }
+
+        async function loadAssessments() {
+            try {
+                const res = await fetch('/api/assessments', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                const assessments = data.assessments || data || [];
+                const sel = document.getElementById('assessmentSelect');
+                assessments.forEach(a => {
+                    sel.innerHTML += `<option value="${a.id}">${a.title || a.name || 'تقييم'} (${a.entity?.legalName || ''})</option>`;
+                });
+                // Auto-select if only one
+                if (assessments.length === 1) {
+                    sel.value = assessments[0].id;
+                    loadMatrix();
+                }
+                // Auto-select based on selected entity
+                else if (assessments.length > 0) {
+                    const user = JSON.parse(localStorage.getItem('user') || '{}');
+                    const entityId = user?.entity?.id || localStorage.getItem('entityId');
+                    if (entityId) {
+                        const match = assessments.find(a => a.entityId === entityId || a.entity?.id === entityId);
+                        if (match) {
+                            sel.value = match.id;
+                            loadMatrix();
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Error loading assessments:', e);
+            }
+        }
+
+        // Show a banner when SWOT data exists, indicating automatic connection
+        function showSwotConnectionBanner() {
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                const entityId = user?.entity?.id || localStorage.getItem('entityId');
+                const versionId = localStorage.getItem('selectedVersionId');
+                if (!versionId || !entityId) return;
+
+                // Check if SWOT analysis exists for this version
+                fetch(`/api/company-analysis/version/${versionId}/SWOT`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }).then(r => r.json()).then(swotData => {
+                    if (!swotData?.id) return;
+
+                    // Get data summary
+                    let data = {};
+                    try { data = typeof swotData.data === 'string' ? JSON.parse(swotData.data) : (swotData.data || {}); } catch (e) { }
+                    const sCount = (data.strengths || []).length;
+                    const wCount = (data.weaknesses || []).length;
+                    const oCount = (data.opportunities || []).length;
+                    const tCount = (data.threats || []).length;
+                    const total = sCount + wCount + oCount + tCount;
+
+                    if (total === 0) return;
+
+                    // Insert banner before matrix
+                    const container = document.querySelector('.matrix-container');
+                    if (!container) return;
+
+                    const banner = document.createElement('div');
+                    banner.style.cssText = 'background:linear-gradient(135deg,rgba(167,139,250,0.08),rgba(99,102,241,0.04));border:1px solid rgba(167,139,250,0.2);border-radius:14px;padding:16px 20px;margin:0 32px 16px;display:flex;align-items:center;gap:14px;animation:fadeIn 0.5s ease';
+                    banner.innerHTML = `
+                        <div style="font-size:28px">🔄</div>
+                        <div style="flex:1">
+                            <div style="font-weight:700;font-size:14px;color:var(--text-primary);margin-bottom:4px">TOWS يبني على تحليل SWOT الخاص بك</div>
+                            <div style="font-size:12px;color:var(--text-muted)">
+                                لديك ${total} نقطة SWOT جاهزة:
+                                <span style="color:#22c55e;font-weight:600">${sCount} قوة</span> · 
+                                <span style="color:#ef4444;font-weight:600">${wCount} ضعف</span> · 
+                                <span style="color:#3b82f6;font-weight:600">${oCount} فرص</span> · 
+                                <span style="color:#f59e0b;font-weight:600">${tCount} تهديدات</span>
+                                — اختر تقييماً ثم اضغط "توليد تلقائي" لإنشاء الاستراتيجيات
+                            </div>
+                        </div>
+                        <a href="/swot.html" style="font-size:11px;color:#a78bfa;text-decoration:none;padding:6px 12px;border-radius:8px;border:1px solid rgba(167,139,250,0.3);white-space:nowrap">عرض SWOT ←</a>
+                    `;
+                    container.insertBefore(banner, container.firstChild);
+                }).catch(e => console.warn('SWOT check skipped:', e));
+            } catch (e) { /* silent */ }
+        }
+
+        async function loadMatrix() {
+            const assessmentId = document.getElementById('assessmentSelect').value;
+            if (!assessmentId) return;
+
+            document.getElementById('matrixArea').innerHTML = '<div class="loading"><i class="bi bi-arrow-repeat"></i><br>جاري التحميل...</div>';
+
+            try {
+                const res = await fetch(`/api/tows?assessmentId=${assessmentId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                currentData = await res.json();
+                renderMatrix(currentData);
+                updateStats(currentData.stats);
+            } catch (e) {
+                console.error('Error loading matrix:', e);
+                document.getElementById('matrixArea').innerHTML = '<div class="loading" style="color:#ef4444;">خطأ في تحميل المصفوفة</div>';
+            }
+        }
+
+        function renderMatrix(data) {
+            const { matrix, swotPoints } = data;
+            const s = swotPoints.strengths, w = swotPoints.weaknesses;
+            const o = swotPoints.opportunities, t = swotPoints.threats;
+
+            const sLabel = s.map(p => p.code || 'S').join(' / ') || 'لا توجد';
+            const wLabel = w.map(p => p.code || 'W').join(' / ') || 'لا توجد';
+            const oLabel = o.map(p => p.code || 'O').join(' / ') || 'لا توجد';
+            const tLabel = t.map(p => p.code || 'T').join(' / ') || 'لا توجد';
+
+            document.getElementById('matrixArea').innerHTML = `
+        <div class="matrix-grid">
+          <!-- Row 0: Headers -->
+          <div class="matrix-corner">TOWS</div>
+          <div class="matrix-col-header" style="border-bottom:3px solid var(--accent-so);">
+            <span>✨ الفرص (Opportunities)</span>
+            <small>${oLabel}</small>
+          </div>
+          <div class="matrix-col-header" style="border-bottom:3px solid var(--accent-wt);">
+            <span>⚡ التهديدات (Threats)</span>
+            <small>${tLabel}</small>
+          </div>
+
+          <!-- Row 1: Strengths -->
+          <div class="matrix-row-header" style="border-left:3px solid var(--accent-so);">
+            💪 القوة (${sLabel})
+          </div>
+          <div class="quadrant q-so" id="quadrant-SO">
+            <div class="quadrant-header">
+              <div class="quadrant-title"><i class="bi bi-rocket-takeoff"></i> SO — هجومية</div>
+              <span class="quadrant-badge">${matrix.SO.strategies.length}</span>
+            </div>
+            ${renderStrategies(matrix.SO.strategies)}
+          </div>
+          <div class="quadrant q-st" id="quadrant-ST">
+            <div class="quadrant-header">
+              <div class="quadrant-title"><i class="bi bi-shield-check"></i> ST — دفاعية</div>
+              <span class="quadrant-badge">${matrix.ST.strategies.length}</span>
+            </div>
+            ${renderStrategies(matrix.ST.strategies)}
+          </div>
+
+          <!-- Row 2: Weaknesses -->
+          <div class="matrix-row-header" style="border-left:3px solid var(--accent-wt);">
+            ⚠️ الضعف (${wLabel})
+          </div>
+          <div class="quadrant q-wo" id="quadrant-WO">
+            <div class="quadrant-header">
+              <div class="quadrant-title"><i class="bi bi-bandaid"></i> WO — علاجية</div>
+              <span class="quadrant-badge">${matrix.WO.strategies.length}</span>
+            </div>
+            ${renderStrategies(matrix.WO.strategies)}
+          </div>
+          <div class="quadrant q-wt" id="quadrant-WT">
+            <div class="quadrant-header">
+              <div class="quadrant-title"><i class="bi bi-escape"></i> WT — تجنبية</div>
+              <span class="quadrant-badge">${matrix.WT.strategies.length}</span>
+            </div>
+            ${renderStrategies(matrix.WT.strategies)}
+          </div>
+        </div>
+      `;
+        }
+
+        function renderStrategies(strategies) {
+            if (strategies.length === 0) {
+                return '<div class="empty-quadrant"><i class="bi bi-plus-circle"></i><br>لا توجد استراتيجيات بعد</div>';
+            }
+
+            return strategies.map(s => `
+        <div class="strategy-card" onclick="editStrategy('${s.id}')">
+          <div class="strategy-text">${s.strategy}</div>
+          <div class="strategy-meta">
+            <span class="point-tag tag-${s.internalPoint.type.toLowerCase()}">${s.internalPoint.code || s.internalPoint.type[0]}</span>
+            <span style="color:var(--text-muted);font-size:0.7rem;">×</span>
+            <span class="point-tag tag-${s.externalPoint.type.toLowerCase()}">${s.externalPoint.code || s.externalPoint.type[0]}</span>
+            <span class="priority-badge priority-${s.priority}">${priorityLabel[s.priority]}</span>
+            <span class="status-badge status-${s.status}">${statusLabel[s.status]}</span>
+            <div class="strategy-actions">
+              <button onclick="event.stopPropagation();deleteStrategy('${s.id}')" title="حذف"><i class="bi bi-trash"></i></button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+        }
+
+        function updateStats(stats) {
+            if (!stats) return;
+            document.getElementById('statTotal').textContent = stats.totalStrategies;
+            document.getElementById('statSO').textContent = stats.byQuadrant.SO;
+            document.getElementById('statST').textContent = stats.byQuadrant.ST;
+            document.getElementById('statWO').textContent = stats.byQuadrant.WO;
+            document.getElementById('statWT').textContent = stats.byQuadrant.WT;
+        }
+
+        // ===== MODAL =====
+        function openAddModal() {
+            if (!currentData) return alert('اختر تقييم أولاً');
+            document.getElementById('editId').value = '';
+            document.getElementById('strategyText').value = '';
+            document.getElementById('notesText').value = '';
+            document.getElementById('prioritySelect').value = 'MEDIUM';
+            document.getElementById('statusSelect').value = 'PROPOSED';
+            document.getElementById('quadrantPreview').value = '';
+            document.getElementById('modalTitle').textContent = 'إضافة استراتيجية TOWS';
+
+            populatePointSelects();
+            new bootstrap.Modal(document.getElementById('strategyModal')).show();
+        }
+
+        function populatePointSelects() {
+            const { swotPoints } = currentData;
+            const internalSel = document.getElementById('internalPointSelect');
+            const externalSel = document.getElementById('externalPointSelect');
+
+            internalSel.innerHTML = '<option value="">-- اختر نقطة داخلية --</option>';
+            externalSel.innerHTML = '<option value="">-- اختر نقطة خارجية --</option>';
+
+            // Strengths + Weaknesses for internal
+            [...swotPoints.strengths, ...swotPoints.weaknesses].forEach(p => {
+                const prefix = p.type === 'STRENGTH' ? '💪' : '⚠️';
+                internalSel.innerHTML += `<option value="${p.id}">${prefix} ${p.code || p.type[0]} — ${p.title}</option>`;
+            });
+
+            // Opportunities + Threats for external
+            [...swotPoints.opportunities, ...swotPoints.threats].forEach(p => {
+                const prefix = p.type === 'OPPORTUNITY' ? '✨' : '⚡';
+                externalSel.innerHTML += `<option value="${p.id}">${prefix} ${p.code || p.type[0]} — ${p.title}</option>`;
+            });
+
+            // Auto-detect quadrant
+            const updateQuadrant = () => {
+                const intId = internalSel.value;
+                const extId = externalSel.value;
+                if (!intId || !extId) { document.getElementById('quadrantPreview').value = ''; return; }
+
+                const allPoints = [...swotPoints.strengths, ...swotPoints.weaknesses, ...swotPoints.opportunities, ...swotPoints.threats];
+                const intPoint = allPoints.find(p => p.id === intId);
+                const extPoint = allPoints.find(p => p.id === extId);
+                if (!intPoint || !extPoint) return;
+
+                const map = { STRENGTH_OPPORTUNITY: 'SO', STRENGTH_THREAT: 'ST', WEAKNESS_OPPORTUNITY: 'WO', WEAKNESS_THREAT: 'WT' };
+                const q = map[`${intPoint.type}_${extPoint.type}`] || '?';
+                const names = { SO: 'هجومية', ST: 'دفاعية', WO: 'علاجية', WT: 'تجنبية' };
+                document.getElementById('quadrantPreview').value = `${q} — ${names[q] || ''}`;
+            };
+
+            internalSel.onchange = updateQuadrant;
+            externalSel.onchange = updateQuadrant;
+        }
+
+        function editStrategy(id) {
+            if (!currentData) return;
+            const allStrategies = [
+                ...currentData.matrix.SO.strategies,
+                ...currentData.matrix.ST.strategies,
+                ...currentData.matrix.WO.strategies,
+                ...currentData.matrix.WT.strategies
+            ];
+            const s = allStrategies.find(st => st.id === id);
+            if (!s) return;
+
+            document.getElementById('editId').value = s.id;
+            document.getElementById('strategyText').value = s.strategy;
+            document.getElementById('notesText').value = s.notes || '';
+            document.getElementById('prioritySelect').value = s.priority;
+            document.getElementById('statusSelect').value = s.status;
+            document.getElementById('modalTitle').textContent = 'تعديل استراتيجية TOWS';
+
+            populatePointSelects();
+            document.getElementById('internalPointSelect').value = s.internalPointId;
+            document.getElementById('externalPointSelect').value = s.externalPointId;
+            document.getElementById('internalPointSelect').onchange();
+
+            new bootstrap.Modal(document.getElementById('strategyModal')).show();
+        }
+
+        async function saveStrategy() {
+            const assessmentId = document.getElementById('assessmentSelect').value;
+            const editId = document.getElementById('editId').value;
+            const body = {
+                assessmentId,
+                internalPointId: document.getElementById('internalPointSelect').value,
+                externalPointId: document.getElementById('externalPointSelect').value,
+                strategy: document.getElementById('strategyText').value,
+                priority: document.getElementById('prioritySelect').value,
+                status: document.getElementById('statusSelect').value,
+                notes: document.getElementById('notesText').value || null
+            };
+
+            if (!body.strategy) return alert('نص الاستراتيجية مطلوب');
+
+            try {
+                const url = editId ? `/api/tows/${editId}` : '/api/tows';
+                const method = editId ? 'PUT' : 'POST';
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(body)
+                });
+
+                if (res.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('strategyModal'))?.hide();
+                    loadMatrix();
+                } else {
+                    const err = await res.json();
+                    alert(err.error || 'حدث خطأ');
+                }
+            } catch (e) {
+                alert('خطأ في الحفظ: ' + e.message);
+            }
+        }
+
+        async function deleteStrategy(id) {
+            if (!confirm('هل تريد حذف هذه الاستراتيجية؟')) return;
+            try {
+                await fetch(`/api/tows/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                loadMatrix();
+            } catch (e) {
+                alert('خطأ في الحذف');
+            }
+        }
+
+        async function autoGenerate() {
+            const assessmentId = document.getElementById('assessmentSelect').value;
+            if (!assessmentId) return alert('اختر تقييم أولاً');
+            if (!confirm('سيتم توليد استراتيجيات لجميع التقاطعات الممكنة. متابعة؟')) return;
+
+            try {
+                const res = await fetch('/api/tows/auto-generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ assessmentId })
+                });
+                const data = await res.json();
+                alert(data.message || `تم التوليد: ${data.generated} استراتيجية`);
+                loadMatrix();
+            } catch (e) {
+                alert('خطأ في التوليد التلقائي');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        }
+
+        init();
+    </script>
+    <script src="/assets/js/ai-advisor.js"></script>
+</body>
+
+</html>

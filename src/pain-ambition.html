@@ -1,0 +1,2107 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكيس — الألم والطموح</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --bg: #0f1117;
+            --bg-card: #1a1d2e;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --success: #22c55e;
+            --warning: #facc15;
+            --danger: #ef4444;
+            --info: #38bdf8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* Background */
+        .bg-glow {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .bg-glow::before {
+            content: '';
+            position: absolute;
+            top: -30%;
+            left: -10%;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.06), transparent 70%);
+            animation: g1 12s ease-in-out infinite;
+        }
+
+        .bg-glow::after {
+            content: '';
+            position: absolute;
+            bottom: -20%;
+            right: -10%;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(118, 75, 162, 0.05), transparent 70%);
+            animation: g2 15s ease-in-out infinite;
+        }
+
+        @keyframes g1 {
+
+            0%,
+            100% {
+                transform: translate(0, 0)
+            }
+
+            50% {
+                transform: translate(40px, 30px)
+            }
+        }
+
+        @keyframes g2 {
+
+            0%,
+            100% {
+                transform: translate(0, 0)
+            }
+
+            50% {
+                transform: translate(-30px, -20px)
+            }
+        }
+
+        /* Top bar */
+        .top-bar {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 14px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .top-bar a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .top-bar .step-ind {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .top-bar .skip-link {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            text-decoration: none;
+        }
+
+        .main {
+            position: relative;
+            z-index: 1;
+            max-width: 740px;
+            margin: 0 auto;
+            padding: 30px 20px 60px;
+        }
+
+        /* Progress bar — Enhanced */
+        .prog-wrap {
+            margin-bottom: 32px;
+        }
+
+        .prog-bar-container {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .prog-bar-bg {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 14px;
+        }
+
+        .prog-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 10px;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .prog-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 30px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3));
+            border-radius: 10px;
+            animation: shimmer 2s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+
+            0%,
+            100% {
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .prog-steps {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 2px;
+            position: relative;
+        }
+
+        .prog-step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            cursor: default;
+        }
+
+        .prog-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.12);
+            transition: all .4s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .prog-dot.on {
+            background: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 0 12px rgba(102, 126, 234, 0.5);
+            transform: scale(1.4);
+        }
+
+        .prog-dot.ok {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .prog-dot.ok::after {
+            content: '✓';
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 7px;
+            color: #fff;
+            font-weight: 900;
+        }
+
+        .prog-step-label {
+            font-size: 9.5px;
+            color: var(--text-muted);
+            transition: color 0.3s;
+            text-align: center;
+            line-height: 1.3;
+            max-width: 70px;
+            opacity: 0.6;
+        }
+
+        .prog-step-item.active .prog-step-label {
+            color: var(--primary);
+            font-weight: 700;
+            opacity: 1;
+        }
+
+        .prog-step-item.done .prog-step-label {
+            color: var(--success);
+            opacity: 0.8;
+        }
+
+        .prog-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .prog-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .prog-percent {
+            font-size: 12px;
+            color: var(--primary);
+            font-weight: 700;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+
+        /* Draft save indicator */
+        .draft-saved {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: var(--success);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .draft-saved.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Section — Enhanced with slide animations */
+        .sec {
+            display: none;
+        }
+
+        .sec.on {
+            display: block;
+            animation: slideIn 0.45s cubic-bezier(0.4, 0, 0.2, 1) both;
+        }
+
+        .sec.slide-out {
+            animation: slideOut 0.25s cubic-bezier(0.4, 0, 0.2, 1) both;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(var(--slide-dir, -30px));
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateX(calc(var(--slide-dir, -30px) * -1));
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .sec-head {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .sec-emoji {
+            font-size: 52px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .sec-title {
+            font-size: 26px;
+            font-weight: 900;
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        .sec-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.7;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* Cards grid */
+        .cgrid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .ccard {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 20px 16px;
+            cursor: pointer;
+            transition: all .3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ccard:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .ccard.sel {
+            border-color: var(--danger);
+            background: rgba(239, 68, 68, 0.06);
+        }
+
+        .ccard.sel .cico {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+        }
+
+        .ccard.amb.sel {
+            border-color: var(--success);
+            background: rgba(34, 197, 94, 0.06);
+        }
+
+        .ccard.amb.sel .cico {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--success);
+        }
+
+        /* Context card style */
+        .ccard.ctx-card.sel {
+            border-color: var(--primary);
+            background: rgba(102, 126, 234, 0.06);
+        }
+
+        .ccard.ctx-card.sel .cico {
+            background: rgba(102, 126, 234, 0.15);
+            color: var(--primary);
+        }
+
+        .cico {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 8px;
+            transition: all .3s;
+        }
+
+        .ctx-t {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .cdesc {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .ctag {
+            display: inline-block;
+            font-size: 9.5px;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-weight: 700;
+            margin-top: 6px;
+        }
+
+        .ccheck {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            color: #fff;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            animation: pop .3s ease;
+        }
+
+        .ccard.sel .ccheck {
+            display: flex;
+            background: var(--danger);
+        }
+
+        .ccard.amb.sel .ccheck {
+            background: var(--success);
+        }
+
+        .ccard.ctx-card.sel .ccheck {
+            background: var(--primary);
+        }
+
+        @keyframes pop {
+            from {
+                transform: scale(0)
+            }
+
+            to {
+                transform: scale(1)
+            }
+        }
+
+        /* Full-width card */
+        .ccard.full {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 18px;
+        }
+
+        .ccard.full .cico {
+            margin-bottom: 0;
+            flex-shrink: 0;
+        }
+
+        .ccard.full .cinfo {
+            flex: 1;
+        }
+
+        /* Counter */
+        .sel-counter {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .sel-counter strong {
+            color: var(--primary);
+        }
+
+        /* Textarea */
+        .tarea {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+            margin-top: 14px;
+            transition: border-color .3s;
+        }
+
+        .tarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .tarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Depth questions */
+        .depth-q {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+
+        .depth-q label {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .depth-q .dq-hint {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .depth-opts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .depth-opt {
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1.5px solid var(--border);
+            cursor: pointer;
+            transition: all .3s;
+        }
+
+        .depth-opt:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .depth-opt.sel {
+            border-color: var(--primary);
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary);
+        }
+
+        .slider-group {
+            margin-top: 6px;
+        }
+
+        .slider-group input[type="range"] {
+            width: 100%;
+            accent-color: var(--primary);
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .slider-val {
+            text-align: center;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        /* Welcome card */
+        .welcome-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px 32px;
+            text-align: center;
+        }
+
+        .welcome-card h1 {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 12px;
+        }
+
+        .welcome-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin: 24px 0;
+        }
+
+        .wf-item {
+            padding: 16px 10px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+        }
+
+        .wf-item .wf-ico {
+            font-size: 28px;
+            margin-bottom: 6px;
+        }
+
+        .wf-item .wf-t {
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .wf-item .wf-d {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .est-time {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: rgba(102, 126, 234, 0.08);
+            font-size: 12px;
+            color: var(--primary);
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        /* Result */
+        .rbox {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 14px;
+        }
+
+        .rbadge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-size: 15px;
+            font-weight: 800;
+            margin-bottom: 14px;
+        }
+
+        .rgrid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            text-align: right;
+        }
+
+        .ritem {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px;
+        }
+
+        .ritem-l {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 3px;
+        }
+
+        .ritem-v {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        /* Recommendation */
+        .rec-box {
+            background: rgba(102, 126, 234, 0.06);
+            border: 1px solid rgba(102, 126, 234, 0.15);
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 14px;
+        }
+
+        .rec-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .rec-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .rec-list li {
+            font-size: 13px;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .rec-list li:last-child {
+            border-bottom: none;
+        }
+
+        /* Path */
+        .path-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .path-step .ps-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        /* Nav */
+        .nav-bar {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 28px;
+        }
+
+        .bn {
+            padding: 14px 32px;
+            border-radius: 14px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+        }
+
+        .bn:hover {
+            transform: translateY(-2px);
+        }
+
+        .bn.next {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .bn.next:hover {
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        .bn.next:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .bn.back {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        /* Draft save button */
+        .btn-draft {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-family: inherit;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s;
+        }
+
+        .btn-draft:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .btn-draft.saved {
+            background: rgba(34, 197, 94, 0.3);
+            border-color: rgba(34, 197, 94, 0.5);
+        }
+
+        @media(max-width:640px) {
+            .draft-btn-text {
+                display: none;
+            }
+        }
+
+        /* Custom "Other" card */
+        .ccard-custom {
+            grid-column: 1 / -1;
+        }
+
+        .ccard-custom .custom-input-wrap {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .ccard-custom.sel .custom-input-wrap {
+            display: block;
+        }
+
+        .ccard-custom .custom-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1.5px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 13px;
+            transition: border-color .3s;
+        }
+
+        .ccard-custom .custom-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .ccard-custom .custom-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        @media(max-width:640px) {
+            .main {
+                padding: 20px 14px 80px;
+            }
+
+            .cgrid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .rgrid {
+                grid-template-columns: 1fr;
+            }
+
+            .welcome-features {
+                grid-template-columns: 1fr;
+            }
+
+            .depth-opts {
+                flex-direction: column;
+            }
+
+            .sec-title {
+                font-size: 22px;
+            }
+
+            .sec-emoji {
+                font-size: 42px;
+            }
+
+            .sec-desc {
+                font-size: 13px;
+            }
+
+            .prog-step-label {
+                display: none;
+            }
+
+            .prog-steps {
+                justify-content: center;
+                gap: 8px;
+            }
+
+            .prog-step-item {
+                flex: unset;
+            }
+
+            .nav-bar {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .bn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .ccard {
+                padding: 14px;
+            }
+
+            .top-bar {
+                padding: 10px 16px;
+            }
+
+            .top-bar a {
+                font-size: 15px;
+            }
+
+            .draft-saved {
+                left: 50%;
+                transform: translateX(-50%) translateY(10px);
+                bottom: 10px;
+            }
+
+            .draft-saved.show {
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        @media(max-width:380px) {
+            .sec-title {
+                font-size: 19px;
+            }
+
+            .main {
+                padding: 16px 10px 80px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-glow"></div>
+    <nav class="top-bar">
+        <a href="/dashboard.html"><i class="bi bi-gem"></i> ستارتكيس</a>
+        <div style="display:flex;align-items:center;gap:12px">
+            <button onclick="saveDraft()" class="btn-draft" id="draftBtn" title="حفظ مسودة">
+                <i class="bi bi-floppy"></i>
+                <span class="draft-btn-text">حفظ مسودة</span>
+            </button>
+            <span class="step-ind" id="stepInd">الخطوة 1 من 6</span>
+        </div>
+    </nav>
+
+    <!-- Draft saved toast -->
+    <div class="draft-saved" id="draftToast">
+        <i class="bi bi-check-circle-fill"></i>
+        <span>تم حفظ المسودة</span>
+    </div>
+
+    <div class="main">
+        <!-- Progress -->
+        <div class="prog-wrap">
+            <div class="prog-bar-container">
+                <div class="prog-info">
+                    <div class="prog-label" id="progLabel">🧭 نقطة البداية</div>
+                    <div class="prog-percent" id="progPercent">0%</div>
+                </div>
+                <div class="prog-bar-bg">
+                    <div class="prog-bar-fill" id="progFill" style="width: 0%"></div>
+                </div>
+                <div class="prog-steps" id="progSteps">
+                    <div class="prog-step-item active">
+                        <div class="prog-dot on"></div>
+                        <div class="prog-step-label">البداية</div>
+                    </div>
+                    <div class="prog-step-item">
+                        <div class="prog-dot"></div>
+                        <div class="prog-step-label">التحديات</div>
+                    </div>
+                    <div class="prog-step-item">
+                        <div class="prog-dot"></div>
+                        <div class="prog-step-label">العمق</div>
+                    </div>
+                    <div class="prog-step-item">
+                        <div class="prog-dot"></div>
+                        <div class="prog-step-label">الطموح</div>
+                    </div>
+                    <div class="prog-step-item">
+                        <div class="prog-dot"></div>
+                        <div class="prog-step-label">الشركة</div>
+                    </div>
+                    <div class="prog-step-item">
+                        <div class="prog-dot"></div>
+                        <div class="prog-step-label">النتيجة</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== STEP 1: ترحيب ===== -->
+        <div class="sec on" id="s1">
+            <div class="welcome-card">
+                <span class="sec-emoji">🧭</span>
+                <h1>قبل ما نبدأ رحلتك الاستراتيجية</h1>
+                <p style="color:var(--text-muted);font-size:14px;line-height:1.8;max-width:480px;margin:0 auto 20px;">
+                    نحتاج نفهم وضعك الحالي وطموحك — عشان نرسم لك <strong style="color:var(--text)">مسار مُخصّص</strong>
+                    بدل ما تضيع في أدوات ما تحتاجها. <br>هالخطوة تأخذ <strong style="color:var(--primary)">3 دقائق
+                        فقط</strong> وتوفر عليك ساعات.
+                </p>
+
+                <div class="welcome-features">
+                    <div class="wf-item">
+                        <div class="wf-ico">😓</div>
+                        <div class="wf-t">حدد تحدياتك</div>
+                        <div class="wf-d">وش يوقفك عن التقدم؟</div>
+                    </div>
+                    <div class="wf-item">
+                        <div class="wf-ico">🎯</div>
+                        <div class="wf-t">حدد طموحك</div>
+                        <div class="wf-d">وين تبي توصل؟</div>
+                    </div>
+                    <div class="wf-item">
+                        <div class="wf-ico">🗺️</div>
+                        <div class="wf-t">اكتشف مسارك</div>
+                        <div class="wf-d">خطة مُفصّلة لك</div>
+                    </div>
+                </div>
+
+                <div class="est-time"><i class="bi bi-clock"></i> ~3 دقائق · 6 خطوات بسيطة</div>
+
+                <div class="nav-bar">
+                    <button class="bn next" onclick="go(2)">يلا نبدأ <i class="bi bi-arrow-left"></i></button>
+                </div>
+
+                <div
+                    style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06)">
+                    <a href="/beginner-path.html"
+                        style="display:inline-flex;align-items:center;gap:8px;padding:10px 24px;border-radius:12px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);color:#f59e0b;text-decoration:none;font-size:13px;font-weight:700;transition:all .3s">
+                        <i class="bi bi-signpost-split"></i>
+                        مبتدئ؟ جرّب المسار المبسّط (3 أسئلة فقط)
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== STEP 2: الألم ===== -->
+        <div class="sec" id="s2">
+            <div class="sec-head">
+                <span class="sec-emoji">😓</span>
+                <h1 class="sec-title">وش أكبر تحدي يواجه شركتك؟</h1>
+                <p class="sec-desc">اختر التحديات اللي تحس فيها فعلاً — يمكنك اختيار أكثر من واحد.</p>
+            </div>
+            <div class="cgrid">
+                <div class="ccard" data-v="no_strategy" onclick="pick(this,'pain')">
+                    <div class="ccheck"><i class="bi bi-check"></i></div>
+                    <div class="cico">🧭</div>
+                    <div class="ctx-t">ما عندنا خطة استراتيجية</div>
+                    <div class="cdesc">نشتغل يوم بيوم. ما فيه رؤية مكتوبة أو أهداف محددة.</div>
+                    <span class="ctag" style="background:rgba(124,58,237,0.1);color:#7c3aed">يحتاج: تخطيط</span>
+                </div>
+                <div class="ccard" data-v="no_measurement" onclick="pick(this,'pain')">
+                    <div class="ccheck"><i class="bi bi-check"></i></div>
+                    <div class="cico">📊</div>
+                    <div class="ctx-t">ما نقدر نقيس أداءنا</div>
+                    <div class="cdesc">ما عندنا مؤشرات. ما نعرف هل نتحسن أو نتراجع.</div>
+                    <span class="ctag" style="background:rgba(245,158,11,0.1);color:#f59e0b">يحتاج: KPIs</span>
+                </div>
+                <div class="ccard" data-v="plan_vs_execution" onclick="pick(this,'pain')">
+                    <div class="ccheck"><i class="bi bi-check"></i></div>
+                    <div class="cico">🔄</div>
+                    <div class="ctx-t">فجوة بين الخطة والتنفيذ</div>
+                    <div class="cdesc">نخطط كثير لكن التنفيذ ضعيف. المبادرات تتأخر.</div>
+                    <span class="ctag" style="background:rgba(5,150,105,0.1);color:#059669">يحتاج: تنفيذ</span>
+                </div>
+                <div class="ccard" data-v="team_alignment" onclick="pick(this,'pain')">
+                    <div class="ccheck"><i class="bi bi-check"></i></div>
+                    <div class="cico">👥</div>
+                    <div class="ctx-t">الفريق مو متوافق</div>
+                    <div class="cdesc">كل قسم يشتغل لحاله. ما فيه توافق على الأولويات.</div>
+                    <span class="ctag" style="background:rgba(59,130,246,0.1);color:#3b82f6">يحتاج: محاذاة</span>
+                </div>
+                <div class="ccard" data-v="market_pressure" onclick="pick(this,'pain')">
+                    <div class="ccheck"><i class="bi bi-check"></i></div>
+                    <div class="cico">⚡</div>
+                    <div class="ctx-t">ضغط من السوق والمنافسين</div>
+                    <div class="cdesc">المنافسين يتقدمون. ما عندنا تحليل واضح لموقعنا.</div>
+                    <span class="ctag" style="background:rgba(239,68,68,0.1);color:#ef4444">يحتاج: تشخيص</span>
+                </div>
+                <div class="ccard" data-v="growth_stuck" onclick="pick(this,'pain')">
+                    <div class="ccheck"><i class="bi bi-check"></i></div>
+                    <div class="cico">📉</div>
+                    <div class="ctx-t">النمو متوقف</div>
+                    <div class="cdesc">الإيرادات ثابتة أو نازلة. نحتاج نعرف السبب الجذري.</div>
+                    <span class="ctag" style="background:rgba(139,92,246,0.1);color:#8b5cf6">يحتاج: تحليل</span>
+                </div>
+                <div class="ccard ccard-custom" data-v="custom_pain" onclick="pickCustom(this,'pain')">
+                    <div class="ccheck"><i class="bi bi-check"></i></div>
+                    <div style="display:flex;align-items:center;gap:10px">
+                        <div class="cico">✏️</div>
+                        <div>
+                            <div class="ctx-t">تحدي آخر</div>
+                            <div class="cdesc">عندك تحدي مختلف؟ اكتبه هنا</div>
+                        </div>
+                    </div>
+                    <div class="custom-input-wrap">
+                        <input type="text" class="custom-input" id="customPainInput"
+                            placeholder="اكتب تحديك هنا... مثال: ضعف التسويق الرقمي" onclick="event.stopPropagation()"
+                            oninput="updateCustomValue('pain')">
+                    </div>
+                </div>
+            </div>
+            <div class="sel-counter" id="painCount">اختر تحدي واحد على الأقل</div>
+            <div class="nav-bar">
+                <button class="bn back" onclick="go(1)"><i class="bi bi-arrow-right"></i> السابق</button>
+                <button class="bn next" id="b2" onclick="go(3)" disabled>التالي <i
+                        class="bi bi-arrow-left"></i></button>
+            </div>
+        </div>
+
+        <!-- ===== STEP 3: عمق الألم ===== -->
+        <div class="sec" id="s3">
+            <div class="sec-head">
+                <span class="sec-emoji">🔬</span>
+                <h1 class="sec-title">خلنا نفهم أكثر</h1>
+                <p class="sec-desc">كم هالتحدي مأثر عليك؟ هالمعلومات تساعدنا نحدد أولوياتك بدقة.</p>
+            </div>
+
+            <div class="depth-q">
+                <label>⏱️ من متى تواجه هالتحدي؟</label>
+                <div class="dq-hint">اختر الإجابة الأقرب</div>
+                <div class="depth-opts" id="dqDuration">
+                    <div class="depth-opt" onclick="pickDepth(this,'duration')">أقل من 3 شهور</div>
+                    <div class="depth-opt" onclick="pickDepth(this,'duration')">3 - 6 شهور</div>
+                    <div class="depth-opt" onclick="pickDepth(this,'duration')">6 - 12 شهر</div>
+                    <div class="depth-opt" onclick="pickDepth(this,'duration')">أكثر من سنة</div>
+                </div>
+            </div>
+
+            <div class="depth-q">
+                <label>📈 كم مستوى التأثير على شركتك؟</label>
+                <div class="dq-hint">1 = تأثير بسيط · 10 = مهدد لبقاء الشركة</div>
+                <div class="slider-group">
+                    <div class="slider-val" id="impactVal">5</div>
+                    <input type="range" min="1" max="10" value="5" id="impactSlider" oninput="updateImpact()">
+                    <div class="slider-labels"><span>بسيط</span><span>متوسط</span><span>خطير</span></div>
+                </div>
+            </div>
+
+            <div class="depth-q">
+                <label>🔧 هل جربت تحل هالمشكلة قبل؟</label>
+                <div class="depth-opts" id="dqTried">
+                    <div class="depth-opt" onclick="pickDepth(this,'tried')">لا، أول مرة أركّز عليها</div>
+                    <div class="depth-opt" onclick="pickDepth(this,'tried')">جربت حلول بسيطة (Excel, اجتماعات)</div>
+                    <div class="depth-opt" onclick="pickDepth(this,'tried')">استخدمت أدوات لكن ما نفعت</div>
+                    <div class="depth-opt" onclick="pickDepth(this,'tried')">جبت استشاري لكن ما استمر الأثر</div>
+                </div>
+            </div>
+
+            <textarea class="tarea" id="painTxt"
+                placeholder="أضف أي تفاصيل إضافية عن تحديك — وش اللي يصحّيك بالليل؟ (اختياري)"></textarea>
+
+            <div class="nav-bar">
+                <button class="bn back" onclick="go(2)"><i class="bi bi-arrow-right"></i> السابق</button>
+                <button class="bn next" onclick="go(4)">التالي: حدد طموحك <i class="bi bi-arrow-left"></i></button>
+            </div>
+        </div>
+
+        <!-- ===== STEP 4: الطموح ===== -->
+        <div class="sec" id="s4">
+            <div class="sec-head">
+                <span class="sec-emoji">🎯</span>
+                <h1 class="sec-title">وش تبي تحقق خلال 12 شهر؟</h1>
+                <p class="sec-desc">حدد الطموح الأهم — يمكنك اختيار أكثر من واحد. كل خيار يوجّه أدواتك في ستارتكيس.</p>
+            </div>
+            <div class="cgrid">
+                <div class="ccard amb" data-v="clear_strategy" onclick="pick(this,'amb')">
+                    <div class="ccheck"><i class="bi bi-check"></i></div>
+                    <div class="cico">🗺️</div>
+                    <div class="ctx-t">خطة استراتيجية واضحة ومنفذة</div>
+                    <div class="cdesc">رؤية مكتوبة، أهداف قابلة للقياس، وخارطة طريق واضحة.</div>
+                    <span class="ctag" style="background:rgba(34,197,94,0.1);color:#22c55e">ستارتكيس يساعدك</span>
+                </div>
+                <div class="ccard amb" data-v="data_decisions" onclick="pick(this,'amb')">
+                    <div class="ccheck"><i class="bi bi-check"></i></div>
+                    <div class="cico">📈</div>
+                    <div class="ctx-t">قرارات مبنية على بيانات</div>
+                    <div class="cdesc">Dashboard لحظي، KPIs مراقبة، وتنبيهات ذكية.</div>
+                    <span class="ctag" style="background:rgba(34,197,94,0.1);color:#22c55e">ستارتكيس يساعدك</span>
+                </div>
+                <div class="ccard amb" data-v="team_ownership" onclick="pick(this,'amb')">
+                    <div class="ccheck"><i class="bi bi-check"></i></div>
+                    <div class="cico">🤝</div>
+                    <div class="ctx-t">فريق متحمس يعرف وجهته</div>
+                    <div class="cdesc">كل واحد يعرف دوره في الاستراتيجية. مسؤوليات واضحة.</div>
+                    <span class="ctag" style="background:rgba(34,197,94,0.1);color:#22c55e">ستارتكيس يساعدك</span>
+                </div>
+                <div class="ccard amb" data-v="market_lead" onclick="pick(this,'amb')">
+                    <div class="ccheck"><i class="bi bi-check"></i></div>
+                    <div class="cico">🏆</div>
+                    <div class="ctx-t">التفوق على المنافسين</div>
+                    <div class="cdesc">فهم السوق بعمق. استغلال الفرص قبل غيرنا.</div>
+                    <span class="ctag" style="background:rgba(34,197,94,0.1);color:#22c55e">ستارتكيس يساعدك</span>
+                </div>
+                <div class="ccard amb" data-v="sustainable_growth" onclick="pick(this,'amb')">
+                    <div class="ccheck"><i class="bi bi-check"></i></div>
+                    <div class="cico">🌱</div>
+                    <div class="ctx-t">نمو مستدام ومُخطط</div>
+                    <div class="cdesc">توسع مدروس مبني على بيانات. مو نمو عشوائي.</div>
+                    <span class="ctag" style="background:rgba(34,197,94,0.1);color:#22c55e">ستارتكيس يساعدك</span>
+                </div>
+                <div class="ccard amb" data-v="execution_machine" onclick="pick(this,'amb')">
+                    <div class="ccheck"><i class="bi bi-check"></i></div>
+                    <div class="cico">⚙️</div>
+                    <div class="ctx-t">نظام تنفيذ منتظم</div>
+                    <div class="cdesc">مبادرات، مشاريع، مهام — كلها متابعة ومقاسة.</div>
+                    <span class="ctag" style="background:rgba(34,197,94,0.1);color:#22c55e">ستارتكيس يساعدك</span>
+                </div>
+                <div class="ccard amb ccard-custom" data-v="custom_amb" onclick="pickCustom(this,'amb')">
+                    <div class="ccheck"><i class="bi bi-check"></i></div>
+                    <div style="display:flex;align-items:center;gap:10px">
+                        <div class="cico">✏️</div>
+                        <div>
+                            <div class="ctx-t">طموح آخر</div>
+                            <div class="cdesc">عندك طموح مختلف؟ اكتبه هنا</div>
+                        </div>
+                    </div>
+                    <div class="custom-input-wrap">
+                        <input type="text" class="custom-input" id="customAmbInput"
+                            placeholder="اكتب طموحك هنا... مثال: دخول أسواق جديدة" onclick="event.stopPropagation()"
+                            oninput="updateCustomValue('amb')">
+                    </div>
+                </div>
+            </div>
+            <div class="sel-counter" id="ambCount">اختر طموح واحد على الأقل</div>
+            <textarea class="tarea" id="ambTxt"
+                placeholder="صِف طموحك بكلماتك — لو كل شي مثالي بعد سنة، وش الوضع؟ (اختياري)"></textarea>
+            <div class="nav-bar">
+                <button class="bn back" onclick="go(3)"><i class="bi bi-arrow-right"></i> السابق</button>
+                <button class="bn next" id="b4" onclick="go(5)" disabled>التالي <i
+                        class="bi bi-arrow-left"></i></button>
+            </div>
+        </div>
+
+        <!-- ===== STEP 5: سياق الشركة ===== -->
+        <div class="sec" id="s5">
+            <div class="sec-head">
+                <span class="sec-emoji">🏢</span>
+                <h1 class="sec-title">أخبرنا أكثر عن شركتك</h1>
+                <p class="sec-desc">هالمعلومات تساعدنا نخصص المسار والتوصيات بشكل أدق.</p>
+            </div>
+
+            <div class="depth-q">
+                <label>📅 منذ متى شركتك شغّالة؟</label>
+                <div class="depth-opts" id="dqAge">
+                    <div class="depth-opt" onclick="pickDepth(this,'age')">أقل من سنة</div>
+                    <div class="depth-opt" onclick="pickDepth(this,'age')">1 - 3 سنوات</div>
+                    <div class="depth-opt" onclick="pickDepth(this,'age')">3 - 7 سنوات</div>
+                    <div class="depth-opt" onclick="pickDepth(this,'age')">7 - 15 سنة</div>
+                    <div class="depth-opt" onclick="pickDepth(this,'age')">أكثر من 15 سنة</div>
+                </div>
+            </div>
+
+            <div class="depth-q">
+                <label>👥 كم عدد فريقك؟</label>
+                <div class="depth-opts" id="dqTeamSize">
+                    <div class="depth-opt" onclick="pickDepth(this,'teamSize')">أنا لحالي</div>
+                    <div class="depth-opt" onclick="pickDepth(this,'teamSize')">2 - 10</div>
+                    <div class="depth-opt" onclick="pickDepth(this,'teamSize')">11 - 50</div>
+                    <div class="depth-opt" onclick="pickDepth(this,'teamSize')">51 - 200</div>
+                    <div class="depth-opt" onclick="pickDepth(this,'teamSize')">أكثر من 200</div>
+                </div>
+            </div>
+
+            <div class="depth-q">
+                <label>🎯 هل سبق استخدمت أداة إدارة استراتيجية؟</label>
+                <div class="depth-opts" id="dqToolExp">
+                    <div class="depth-opt" onclick="pickDepth(this,'toolExp')">لا، أول مرة</div>
+                    <div class="depth-opt" onclick="pickDepth(this,'toolExp')">Excel / Google Sheets</div>
+                    <div class="depth-opt" onclick="pickDepth(this,'toolExp')">برنامج إدارة مشاريع</div>
+                    <div class="depth-opt" onclick="pickDepth(this,'toolExp')">Balanced Scorecard</div>
+                    <div class="depth-opt" onclick="pickDepth(this,'toolExp')">استشاري خارجي</div>
+                </div>
+            </div>
+
+            <div class="nav-bar">
+                <button class="bn back" onclick="go(4)"><i class="bi bi-arrow-right"></i> السابق</button>
+                <button class="bn next" onclick="go(6)">اكتشف مسارك <i class="bi bi-arrow-left"></i></button>
+            </div>
+        </div>
+
+        <!-- ===== STEP 6: النتيجة ===== -->
+        <div class="sec" id="s6">
+            <div class="sec-head">
+                <span class="sec-emoji">🧭</span>
+                <h1 class="sec-title">تشخيصك الأولي ومسارك في ستارتكيس</h1>
+                <p class="sec-desc">بناءً على تحدياتك، طموحك، وسياق شركتك:</p>
+            </div>
+
+            <!-- النمط -->
+            <div class="rbox" style="text-align:center;">
+                <div id="resPattern"></div>
+            </div>
+
+            <!-- الملخص -->
+            <div class="rbox">
+                <div style="font-weight:800;font-size:14px;margin-bottom:12px">📋 ملخص تحليلك</div>
+                <div class="rgrid" id="resSummary"></div>
+            </div>
+
+            <!-- التوصيات -->
+            <div class="rec-box" id="recBox">
+                <div class="rec-title">🎯 توصياتنا لك في ستارتكيس:</div>
+                <ul class="rec-list" id="recList"></ul>
+            </div>
+
+            <!-- 🚀 أهداف سريعة مقترحة -->
+            <div class="rbox" style="border:2px solid rgba(102,126,234,0.2);background:rgba(102,126,234,0.03)">
+                <div style="font-weight:800;font-size:16px;margin-bottom:6px;color:var(--primary)">🚀 3 أهداف سريعة
+                    لتبدأ بها</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">بناءً على تحدياتك — اختر الأهداف
+                    اللي تبي النظام ينشئها لك تلقائياً</div>
+                <div id="quickGoals" style="display:flex;flex-direction:column;gap:10px"></div>
+                <div style="text-align:center;margin-top:12px;font-size:11px;color:var(--text-muted)" id="goalNote">✨
+                    الأهداف المختارة ستُنشأ تلقائياً عند بدء التأسيس</div>
+            </div>
+
+            <!-- المسار -->
+            <div class="rbox">
+                <div style="font-weight:800;font-size:14px;margin-bottom:12px">🗺️ مسارك في ستارتكيس</div>
+                <div id="resPath"></div>
+            </div>
+
+            <div class="nav-bar" style="flex-direction:column;gap:10px;align-items:center">
+                <button class="bn next" onclick="saveGo()" style="padding:16px 48px;font-size:16px" id="startBtn"><i
+                        class="bi bi-rocket-takeoff"></i> ابدأ رحلتك الاستراتيجية</button>
+                <div id="savingIndicator" style="display:none;font-size:13px;color:var(--primary)">⏳ جارٍ إنشاء
+                    أهدافك...</div>
+                <button class="bn back" onclick="go(5)"><i class="bi bi-arrow-right"></i> عدّل إجاباتك</button>
+                <a href="/dashboard.html"
+                    style="font-size:12px;color:var(--text-muted);text-decoration:none;margin-top:4px">أو اذهب للوحة
+                    التحكم ←</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== STATE =====
+        let pains = [], ambs = [];
+        let customPainText = '', customAmbText = '';
+        const depth = { duration: '', impact: 5, tried: '', age: '', teamSize: '', toolExp: '' };
+        const TOTAL_STEPS = 6;
+        const stepLabels = ['', '🧭 نقطة البداية', '😓 تحديد التحديات', '🔬 عمق التحدي', '🎯 تحديد الطموح', '🏢 سياق الشركة', '📋 النتيجة'];
+
+        // ===== 8 COMPOUND PATTERNS =====
+        const PATTERNS = {
+            nascent_struggling: {
+                name: 'ناشئة متعثرة', emoji: '🆘', color: '#ef4444',
+                tip: 'شركتك في بدايتها وتواجه صعوبات كبيرة. الأولوية: إنقاذ السيولة وتثبيت الأساس قبل أي توسع.',
+                priority: 'إنقاذ السيولة → تثبيت الأساس → خطة بقاء',
+                initiative: 'إنقاذ السيولة Q3'
+            },
+            nascent_cautious: {
+                name: 'ناشئة حذرة', emoji: '🌱', color: '#22c55e',
+                tip: 'أنت في بداية ذكية — تبني بحذر وهذا صح. ركّز على أساس مستدام ولا تتسرع.',
+                priority: 'بناء الأساس → تشخيص بسيط → خطة مرحلية',
+                initiative: 'بناء الأساس المستدام'
+            },
+            growing_chaotic: {
+                name: 'نامية فوضوية', emoji: '🌪️', color: '#f59e0b',
+                tip: 'شركتك تنمو بسرعة لكن بدون نظام. الفوضى الآن ستكلّفك غالي لاحقاً. وقت الهيكلة.',
+                priority: 'هيكلة وتنظيم → مؤشرات أداء → تنفيذ منظّم',
+                initiative: 'هيكلة وتنظيم Q3'
+            },
+            growing_ambitious: {
+                name: 'نامية طموحة', emoji: '🚀', color: '#3b82f6',
+                tip: 'أساس قوي + طموح عالي = فرصة ذهبية. حافظ على الزخم وطوّر ميزتك التنافسية.',
+                priority: 'تحليل تنافسي → تخطيط التميز → تنفيذ سريع',
+                initiative: 'التميز التنافسي Q3'
+            },
+            financial_struggling: {
+                name: 'متعثرة مالياً', emoji: '💰', color: '#dc2626',
+                tip: 'المشكلة الأولى مالية — لازم نوقف النزيف. ركّز على مسار الربحية وخفض التكاليف.',
+                priority: 'تشخيص مالي → خفض تكاليف → مسار الربحية',
+                initiative: 'مسار الربحية'
+            },
+            mature_renewing: {
+                name: 'ناضجة تحتاج تجديد', emoji: '🏢', color: '#8b5cf6',
+                tip: 'شركتك مستقرة لكن الابتكار ناقص. حان وقت التحول الاستراتيجي والتجديد.',
+                priority: 'تشخيص فجوات → تخطيط تحوّلي → ابتكار',
+                initiative: 'مبادرة التجديد الاستراتيجي'
+            },
+            mature_competitive: {
+                name: 'ناضجة تنافسية', emoji: '🏆', color: '#6366f1',
+                tip: 'أنت في موقع قوة — حافظ عليه وتقدّم. استثمر في الابتكار وتوسع بذكاء.',
+                priority: 'تحليل تنافسي → توسع مدروس → قيادة السوق',
+                initiative: 'مبادرة قيادة السوق'
+            },
+            default_strategic: {
+                name: 'تحتاج تطوير استراتيجي', emoji: '🧭', color: '#667eea',
+                tip: 'وضعك يحتاج نظرة استراتيجية شاملة. ابدأ من التشخيص وحدد أولوياتك.',
+                priority: 'تشخيص شامل → تخطيط → تنفيذ',
+                initiative: 'مبادرة التطوير الاستراتيجي'
+            },
+        };
+
+        // ===== 2-AXIS PATTERN DETECTION =====
+        function detectPattern() {
+            // المحور 1: مرحلة الشركة (stage)
+            const stage = { nascent: 0, growing: 0, mature: 0 };
+            // المحور 2: السلوك/الحالة (behavior)
+            const behavior = { struggling: 0, cautious: 0, chaotic: 0, ambitious: 0, financial: 0 };
+
+            // === الألم ← Stage + Behavior ===
+            if (pains.includes('no_strategy')) { stage.nascent += 3; behavior.cautious += 1; }
+            if (pains.includes('no_measurement')) { stage.nascent += 2; stage.growing += 2; behavior.chaotic += 2; }
+            if (pains.includes('plan_vs_execution')) { stage.growing += 3; behavior.chaotic += 3; }
+            if (pains.includes('team_alignment')) { stage.growing += 2; behavior.chaotic += 2; stage.mature += 1; }
+            if (pains.includes('market_pressure')) { stage.mature += 3; behavior.struggling += 1; }
+            if (pains.includes('growth_stuck')) { behavior.struggling += 3; behavior.financial += 2; }
+
+            // === الطموح ← Behavior ===
+            if (ambs.includes('clear_strategy')) { behavior.cautious += 2; stage.nascent += 1; }
+            if (ambs.includes('data_decisions')) { behavior.ambitious += 2; stage.growing += 1; }
+            if (ambs.includes('team_ownership')) { behavior.ambitious += 1; stage.growing += 1; }
+            if (ambs.includes('market_lead')) { behavior.ambitious += 3; stage.mature += 2; }
+            if (ambs.includes('sustainable_growth')) { behavior.cautious += 1; behavior.ambitious += 1; }
+            if (ambs.includes('execution_machine')) { behavior.ambitious += 2; }
+
+            // === السياق ===
+            if (pains.length >= 4) { behavior.struggling += 3; }
+            if (pains.length >= 3) { behavior.struggling += 1; }
+            if (depth.impact >= 8) { behavior.struggling += 2; behavior.financial += 2; }
+            if (depth.impact >= 6) { behavior.struggling += 1; }
+            if (depth.age === 'أقل من سنة') { stage.nascent += 3; }
+            if (depth.age === '1 - 3 سنوات') { stage.nascent += 1; stage.growing += 1; }
+            if (depth.age === '3 - 7 سنوات') { stage.growing += 2; }
+            if (depth.age === '7 - 15 سنة' || depth.age === 'أكثر من 15 سنة') { stage.mature += 3; }
+            if (depth.duration === 'أكثر من سنة') { behavior.struggling += 2; }
+            if (depth.previousSolution === 'لا، أول مرة') { behavior.cautious += 1; }
+
+            // === Combine: Stage × Behavior ===
+            const topStage = Object.entries(stage).sort((a, b) => b[1] - a[1])[0][0];
+            const topBehavior = Object.entries(behavior).sort((a, b) => b[1] - a[1])[0][0];
+
+            // Map to 8 patterns
+            const patternMap = {
+                'nascent_struggling': 'nascent_struggling',
+                'nascent_cautious': 'nascent_cautious',
+                'nascent_chaotic': 'nascent_struggling',    // fallback
+                'nascent_ambitious': 'nascent_cautious',    // fallback
+                'nascent_financial': 'nascent_struggling',  // fallback
+                'growing_struggling': 'financial_struggling',
+                'growing_cautious': 'growing_ambitious',    // cautious growing = ambitious
+                'growing_chaotic': 'growing_chaotic',
+                'growing_ambitious': 'growing_ambitious',
+                'growing_financial': 'financial_struggling',
+                'mature_struggling': 'financial_struggling',
+                'mature_cautious': 'mature_renewing',
+                'mature_chaotic': 'mature_renewing',
+                'mature_ambitious': 'mature_competitive',
+                'mature_financial': 'financial_struggling',
+            };
+
+            const key = topStage + '_' + topBehavior;
+            return patternMap[key] || 'default_strategic';
+        }
+
+        // ===== RECOMMENDATIONS =====
+        function getRecommendations(patternKey) {
+            const recs = [];
+            if (pains.includes('no_strategy') || ambs.includes('clear_strategy'))
+                recs.push({ icon: '🎯', text: 'ابدأ بتحديد التوجهات الاستراتيجية والأهداف', tool: 'التخطيط' });
+            if (pains.includes('no_measurement') || ambs.includes('data_decisions'))
+                recs.push({ icon: '📊', text: 'حدد 5-7 مؤشرات أداء رئيسية (KPIs) وفعّل المتابعة', tool: 'KPIs' });
+            if (pains.includes('market_pressure') || ambs.includes('market_lead'))
+                recs.push({ icon: '🔍', text: 'ابدأ بتحليل SWOT + Porter لفهم موقعك التنافسي', tool: 'تشخيص' });
+            if (pains.includes('plan_vs_execution') || ambs.includes('execution_machine'))
+                recs.push({ icon: '🚀', text: 'حوّل أهدافك لمبادرات ومشاريع قابلة للتنفيذ', tool: 'تنفيذ' });
+            if (pains.includes('team_alignment') || ambs.includes('team_ownership'))
+                recs.push({ icon: '👥', text: 'وزّع المسؤوليات وفعّل المراجعات الدورية', tool: 'متابعة' });
+            if (pains.includes('growth_stuck'))
+                recs.push({ icon: '⚡', text: 'تشخيص طوارئ (SWOT) لتحديد السبب الجذري', tool: 'تشخيص' });
+            if (ambs.includes('sustainable_growth'))
+                recs.push({ icon: '🌱', text: 'خطة نمو مستدامة مع مراجعات شهرية', tool: 'تخطيط' });
+            if (recs.length === 0)
+                recs.push({ icon: '🧭', text: 'ابدأ بالتشخيص الاستراتيجي لتحديد أولوياتك', tool: 'تشخيص' });
+            return recs.slice(0, 5);
+        }
+
+        // ===== INTERACTIONS =====
+        function pick(el, type) {
+            el.classList.toggle('sel');
+            const v = el.dataset.v;
+            const arr = type === 'pain' ? pains : ambs;
+            const idx = arr.indexOf(v);
+            const isSelecting = idx < 0; // true if we're adding, false if removing
+            if (idx >= 0) arr.splice(idx, 1); else arr.push(v);
+            if (type === 'pain') {
+                document.getElementById('b2').disabled = pains.length === 0;
+                document.getElementById('painCount').innerHTML = pains.length > 0
+                    ? `تم اختيار <strong>${pains.length}</strong> تحدي` : 'اختر تحدي واحد على الأقل';
+            } else {
+                document.getElementById('b4').disabled = ambs.length === 0;
+                document.getElementById('ambCount').innerHTML = ambs.length > 0
+                    ? `تم اختيار <strong>${ambs.length}</strong> طموح` : 'اختر طموح واحد على الأقل';
+            }
+            // 🤖 Task 1.2: عرض نصيحة المستشار الذكي عند اختيار بطاقة
+            if (isSelecting && window.__aiAdvisor && window.__aiAdvisor.showContextualTip) {
+                const tipType = type === 'pain' ? 'pain' : 'amb';
+                window.__aiAdvisor.showContextualTip(tipType, v);
+            }
+        }
+
+        function pickDepth(el, key) {
+            el.parentElement.querySelectorAll('.depth-opt').forEach(o => o.classList.remove('sel'));
+            el.classList.add('sel');
+            depth[key] = el.textContent.trim();
+        }
+
+        function updateImpact() {
+            const v = document.getElementById('impactSlider').value;
+            depth.impact = parseInt(v);
+            const el = document.getElementById('impactVal');
+            el.textContent = v;
+            el.style.color = v >= 8 ? 'var(--danger)' : v >= 5 ? 'var(--warning)' : 'var(--success)';
+        }
+
+        // ===== CUSTOM OPTION (أخرى) =====
+        function pickCustom(el, type) {
+            el.classList.toggle('sel');
+            const v = el.dataset.v;
+            const arr = type === 'pain' ? pains : ambs;
+            const idx = arr.indexOf(v);
+            if (idx >= 0) {
+                arr.splice(idx, 1);
+                if (type === 'pain') customPainText = '';
+                else customAmbText = '';
+            } else {
+                arr.push(v);
+                // Focus the input after a small delay
+                setTimeout(() => {
+                    const input = el.querySelector('.custom-input');
+                    if (input) input.focus();
+                }, 100);
+            }
+            // Update counters
+            if (type === 'pain') {
+                document.getElementById('b2').disabled = pains.length === 0;
+                document.getElementById('painCount').innerHTML = pains.length > 0
+                    ? `تم اختيار <strong>${pains.length}</strong> تحدي` : 'اختر تحدي واحد على الأقل';
+            } else {
+                document.getElementById('b4').disabled = ambs.length === 0;
+                document.getElementById('ambCount').innerHTML = ambs.length > 0
+                    ? `تم اختيار <strong>${ambs.length}</strong> طموح` : 'اختر طموح واحد على الأقل';
+            }
+        }
+
+        function updateCustomValue(type) {
+            if (type === 'pain') {
+                customPainText = document.getElementById('customPainInput').value.trim();
+            } else {
+                customAmbText = document.getElementById('customAmbInput').value.trim();
+            }
+        }
+
+        // ===== NAVIGATION =====
+        let currentStep = 1;
+
+        function go(step) {
+            const direction = step > currentStep ? -1 : 1; // RTL: forward = slide left
+            const root = document.documentElement;
+            root.style.setProperty('--slide-dir', `${direction * 30}px`);
+
+            // Animate out current section
+            const currentSec = document.getElementById('s' + currentStep);
+            if (currentSec && currentStep !== step) {
+                currentSec.classList.add('slide-out');
+                setTimeout(() => {
+                    currentSec.classList.remove('on', 'slide-out');
+                }, 200);
+            }
+
+            // Animate in new section
+            setTimeout(() => {
+                document.querySelectorAll('.sec').forEach(s => { s.classList.remove('on', 'slide-out'); });
+                document.getElementById('s' + step).classList.add('on');
+            }, currentStep === step ? 0 : 220);
+
+            currentStep = step;
+
+            // Update progress bar
+            const percent = Math.round(((step - 1) / (TOTAL_STEPS - 1)) * 100);
+            document.getElementById('progFill').style.width = percent + '%';
+            document.getElementById('progPercent').textContent = percent + '%';
+
+            // Update dots & step items
+            const items = document.querySelectorAll('.prog-step-item');
+            items.forEach((item, i) => {
+                const dot = item.querySelector('.prog-dot');
+                item.classList.remove('active', 'done');
+                dot.classList.remove('on', 'ok');
+                if (i + 1 === step) { dot.classList.add('on'); item.classList.add('active'); }
+                else if (i + 1 < step) { dot.classList.add('ok'); item.classList.add('done'); }
+            });
+
+            document.getElementById('stepInd').textContent = `الخطوة ${step} من ${TOTAL_STEPS}`;
+            document.getElementById('progLabel').textContent = stepLabels[step] || '';
+
+            if (step === 6) buildResult();
+
+            // 🤖 Task 1.3: عرض تشخيص النمط عند الانتقال من الطموح (4) للسياق (5)
+            if (step === 5 && pains.length > 0 && ambs.length > 0 && window.__aiAdvisor && window.__aiAdvisor.showPatternDiagnosis) {
+                const patternKey = detectPattern();
+                const pattern = PATTERNS[patternKey];
+                window.__aiAdvisor.showPatternDiagnosis({
+                    pains: pains.map(x => x === 'custom_pain' && customPainText ? customPainText : (painNames[x] || x)),
+                    ambs: ambs.map(x => x === 'custom_amb' && customAmbText ? customAmbText : (ambNames[x] || x)),
+                    patternKey,
+                    patternName: pattern.name,
+                    patternEmoji: pattern.emoji,
+                    patternColor: pattern.color,
+                    patternTip: pattern.tip
+                });
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Auto-save draft on every step change
+            saveDraftSilent();
+        }
+
+        // ===== READABLE NAMES =====
+        const painNames = {
+            no_strategy: 'غياب خطة استراتيجية', no_measurement: 'لا مؤشرات أداء',
+            plan_vs_execution: 'فجوة خطة↔تنفيذ', team_alignment: 'فريق غير متوافق',
+            market_pressure: 'ضغط تنافسي', growth_stuck: 'نمو متوقف',
+            custom_pain: 'أخرى'
+        };
+        const ambNames = {
+            clear_strategy: 'خطة واضحة', data_decisions: 'قرارات بالبيانات',
+            team_ownership: 'فريق مسؤول', market_lead: 'تفوق تنافسي',
+            sustainable_growth: 'نمو مستدام', execution_machine: 'نظام تنفيذ',
+            custom_amb: 'أخرى'
+        };
+
+        // ===== QUICK GOALS BY 8 PATTERNS =====
+        const QUICK_GOALS = {
+            nascent_struggling: [
+                { name: 'إنقاذ السيولة — خطة بقاء 90 يوم', perspective: 'FINANCIAL', desc: 'تحديد مصادر النزيف المالي ووقفها فوراً' },
+                { name: 'تثبيت الأساس التشغيلي', perspective: 'INTERNAL', desc: 'تحديد 3 عمليات أساسية وتوثيقها' },
+                { name: 'بناء خطة بقاء مبسّطة', perspective: 'INTERNAL', desc: 'رؤية واضحة + 3 أهداف فقط للربع القادم' },
+            ],
+            nascent_cautious: [
+                { name: 'بناء الأساس المستدام', perspective: 'INTERNAL', desc: 'تحديد الرؤية والرسالة والأهداف الأولى' },
+                { name: 'تحديد 5 مؤشرات أداء أساسية', perspective: 'LEARNING', desc: 'اختيار KPIs قابلة للقياس ومربوطة بالأهداف' },
+                { name: 'إطلاق أول مبادرة تنفيذية', perspective: 'INTERNAL', desc: 'تحويل الهدف الأهم لمبادرة بجدول زمني واضح' },
+            ],
+            growing_chaotic: [
+                { name: 'هيكلة وتنظيم العمليات', perspective: 'INTERNAL', desc: 'توثيق العمليات الحرجة وتحديد المسؤوليات' },
+                { name: 'بناء نظام قياس أداء مركزي', perspective: 'INTERNAL', desc: 'Dashboard مركزي لمتابعة KPIs الحرجة' },
+                { name: 'محاذاة الفرق مع الأهداف', perspective: 'LEARNING', desc: 'ربط أهداف الأقسام بالأهداف الاستراتيجية' },
+            ],
+            growing_ambitious: [
+                { name: 'تحقيق التميز التنافسي', perspective: 'CUSTOMER', desc: 'تحليل موقعنا التنافسي وتحديد فرص التميز' },
+                { name: 'تسريع النمو المدروس', perspective: 'FINANCIAL', desc: 'تحديد 3 فرص نمو وتخصيص الموارد' },
+                { name: 'بناء ثقافة الأداء العالي', perspective: 'LEARNING', desc: 'نظام مكافآت مربوط بتحقيق الأهداف' },
+            ],
+            financial_struggling: [
+                { name: 'مسار الربحية — وقف النزيف', perspective: 'FINANCIAL', desc: 'تحديد أكبر 3 مصادر خسارة ووضع خطة إيقاف' },
+                { name: 'خفض التكاليف التشغيلية 15%', perspective: 'INTERNAL', desc: 'مراجعة كل بنود المصاريف وتحديد فرص التوفير' },
+                { name: 'تنويع مصادر الإيراد', perspective: 'FINANCIAL', desc: 'تحديد 2-3 مصادر إيراد جديدة قابلة للتفعيل' },
+            ],
+            mature_renewing: [
+                { name: 'مبادرة التجديد الاستراتيجي', perspective: 'INTERNAL', desc: 'إعادة تقييم الاستراتيجية وتحديد فجوات الابتكار' },
+                { name: 'إطلاق برنامج ابتكار داخلي', perspective: 'LEARNING', desc: '3 مشاريع تجريبية لاختبار أفكار جديدة' },
+                { name: 'تحديث تجربة العميل', perspective: 'CUSTOMER', desc: 'رفع NPS بـ 10 نقاط خلال 6 أشهر' },
+            ],
+            mature_competitive: [
+                { name: 'مبادرة قيادة السوق', perspective: 'CUSTOMER', desc: 'الوصول لحصة سوقية 25%+ في القطاع' },
+                { name: 'التوسع الإقليمي المدروس', perspective: 'FINANCIAL', desc: 'دخول 2 أسواق جديدة خلال 12 شهر' },
+                { name: 'بناء قدرات الذكاء التنافسي', perspective: 'LEARNING', desc: 'نظام رصد منافسين + تقارير ربعية' },
+            ],
+            default_strategic: [
+                { name: 'مبادرة التطوير الاستراتيجي', perspective: 'INTERNAL', desc: 'تشخيص شامل وتحديد 3 أولويات استراتيجية' },
+                { name: 'بناء ثقافة القياس والمتابعة', perspective: 'LEARNING', desc: 'تحديد KPIs وتفعيل المراجعات الدورية' },
+                { name: 'تحسين الكفاءة التشغيلية', perspective: 'INTERNAL', desc: 'أتمتة 3 عمليات يدوية رئيسية' },
+            ],
+        };
+
+        // ===== PAIN → SWOT MAPPING =====
+        const PAIN_TO_SWOT = {
+            no_strategy: { type: 'weakness', text: 'غياب خطة استراتيجية مكتوبة وواضحة' },
+            no_measurement: { type: 'weakness', text: 'عدم وجود مؤشرات أداء لقياس التقدم' },
+            plan_vs_execution: { type: 'weakness', text: 'فجوة كبيرة بين التخطيط والتنفيذ الفعلي' },
+            team_alignment: { type: 'weakness', text: 'ضعف التوافق والتنسيق بين فرق العمل' },
+            market_pressure: { type: 'threat', text: 'ضغط تنافسي متزايد من المنافسين في السوق' },
+            growth_stuck: { type: 'threat', text: 'توقف النمو وثبات أو انخفاض الإيرادات' },
+        };
+
+        // ===== BUILD RESULT =====
+        function buildResult() {
+            const patternKey = detectPattern();
+            const p = PATTERNS[patternKey];
+
+            // Pattern badge
+            document.getElementById('resPattern').innerHTML = `
+                <div class="rbadge" style="background:${p.color}18;border:1px solid ${p.color}35;color:${p.color}">
+                    ${p.emoji} ${p.name}
+                </div>
+                <p style="font-size:15px;font-weight:700;margin-bottom:8px;line-height:1.7">"${p.tip}"</p>
+                <p style="font-size:12px;color:var(--text-muted)">الأولوية: <strong style="color:${p.color}">${p.priority}</strong></p>
+                <div style="margin-top:12px;padding:10px 16px;border-radius:10px;background:${p.color}12;border:1px solid ${p.color}25;font-size:13px">
+                    <span style="font-weight:800;color:${p.color}">📌 المبادرة المُقترحة:</span>
+                    <span style="font-weight:700;margin-right:6px">${p.initiative}</span>
+                </div>
+            `;
+
+            // Summary grid
+            const impactColor = depth.impact >= 8 ? 'var(--danger)' : depth.impact >= 5 ? 'var(--warning)' : 'var(--success)';
+            document.getElementById('resSummary').innerHTML = `
+                <div class="ritem" style="border-color:rgba(239,68,68,0.15)">
+                    <div class="ritem-l">😓 تحدياتك</div>
+                    <div class="ritem-v" style="color:var(--danger)">${pains.map(x => x === 'custom_pain' && customPainText ? customPainText : (painNames[x] || x)).join('، ')}</div>
+                </div>
+                <div class="ritem" style="border-color:rgba(34,197,94,0.15)">
+                    <div class="ritem-l">🎯 طموحاتك</div>
+                    <div class="ritem-v" style="color:var(--success)">${ambs.map(x => x === 'custom_amb' && customAmbText ? customAmbText : (ambNames[x] || x)).join('، ')}</div>
+                </div>
+                <div class="ritem">
+                    <div class="ritem-l">📈 مستوى التأثير</div>
+                    <div class="ritem-v" style="color:${impactColor}">${depth.impact}/10 ${depth.impact >= 8 ? '🔴 خطير' : depth.impact >= 5 ? '🟡 متوسط' : '🟢 بسيط'}</div>
+                </div>
+                <div class="ritem">
+                    <div class="ritem-l">⏱️ المدة</div>
+                    <div class="ritem-v">${depth.duration || 'غير محدد'}</div>
+                </div>
+                ${depth.age ? `<div class="ritem"><div class="ritem-l">📅 عمر الشركة</div><div class="ritem-v">${depth.age}</div></div>` : ''}
+                ${depth.teamSize ? `<div class="ritem"><div class="ritem-l">👥 حجم الفريق</div><div class="ritem-v">${depth.teamSize}</div></div>` : ''}
+            `;
+
+            // Recommendations
+            const recs = getRecommendations(patternKey);
+            document.getElementById('recList').innerHTML = recs.map(r =>
+                `<li>${r.icon} <span style="flex:1">${r.text}</span> <span style="font-size:10px;padding:2px 8px;border-radius:6px;background:rgba(102,126,234,0.1);color:var(--primary);font-weight:700">${r.tool}</span></li>`
+            ).join('');
+
+            // Quick Goals
+            const goals = QUICK_GOALS[patternKey] || QUICK_GOALS.growing;
+            const perspColors = { FINANCIAL: '#22c55e', CUSTOMER: '#38bdf8', INTERNAL: '#facc15', LEARNING: '#a78bfa' };
+            const perspNames = { FINANCIAL: 'مالي', CUSTOMER: 'عملاء', INTERNAL: 'عمليات', LEARNING: 'تعلّم' };
+            document.getElementById('quickGoals').innerHTML = goals.map((g, i) => `
+                <label style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;background:var(--bg-card);border:2px solid var(--border);cursor:pointer;transition:all .3s" 
+                    onmouseover="this.style.borderColor='rgba(255,255,255,0.15)'" onmouseout="this.style.borderColor='var(--border)'">
+                    <input type="checkbox" checked data-goal="${i}" style="width:20px;height:20px;accent-color:var(--primary);flex-shrink:0">
+                    <div style="flex:1">
+                        <div style="font-weight:700;font-size:14px;margin-bottom:2px">${g.name}</div>
+                        <div style="font-size:11px;color:var(--text-muted)">${g.desc}</div>
+                    </div>
+                    <span style="font-size:10px;padding:3px 10px;border-radius:8px;background:${perspColors[g.perspective]}18;color:${perspColors[g.perspective]};font-weight:700">${perspNames[g.perspective]}</span>
+                </label>
+            `).join('');
+
+            // Path
+            const phases = [
+                { icon: '🏗️', name: 'التأسيس', desc: 'بيانات المنظمة والهيكلة', color: '#667eea', status: '👈 الخطوة التالية', open: true },
+                { icon: '🔍', name: 'التشخيص', desc: 'SWOT · PESTEL · Porter', color: '#f59e0b', status: 'بعد التأسيس', open: false },
+                { icon: '🎯', name: 'التخطيط', desc: 'أهداف · KPIs · توجهات', color: '#7c3aed', status: '🔒', open: false },
+                { icon: '🚀', name: 'التنفيذ', desc: 'مبادرات · مشاريع · مهام', color: '#059669', status: '🔒', open: false },
+                { icon: '📊', name: 'المتابعة', desc: 'مراجعات · تقارير · ذكاء', color: '#0891b2', status: '🔒', open: false },
+            ];
+            document.getElementById('resPath').innerHTML = phases.map(ph => `
+                <div class="path-step" style="background:${ph.open ? ph.color + '12' : 'rgba(255,255,255,0.02)'};border:1px solid ${ph.open ? ph.color + '30' : 'var(--border)'}">
+                    <div class="ps-icon" style="background:${ph.color}20;color:${ph.color}">${ph.icon}</div>
+                    <div style="flex:1">
+                        <div style="color:${ph.open ? ph.color : 'var(--text-muted)'};font-weight:700;font-size:13px">${ph.name}</div>
+                        <div style="font-size:10px;color:var(--text-muted);font-weight:400">${ph.desc}</div>
+                    </div>
+                    <div style="font-size:11px;font-weight:700;color:${ph.open ? 'var(--success)' : 'var(--text-muted)'}">${ph.status}</div>
+                </div>
+            `).join('');
+        }
+
+        // ===== PAIN / AMBITION → API MAPPING =====
+        const PAIN_API_MAP = {
+            growth_stuck: 'growth-stopped',
+            no_strategy: 'no-direction',
+            team_alignment: 'team-chaos',
+            market_pressure: 'competition',
+            plan_vs_execution: 'burnout',
+            no_measurement: 'no-direction',
+        };
+        const AMB_API_MAP = {
+            sustainable_growth: 'stability',
+            execution_machine: 'system-run',
+            market_lead: 'differentiation',
+            data_decisions: 'rapid-growth',
+            clear_strategy: 'rapid-growth',
+            team_ownership: 'system-run',
+        };
+
+        // ===== DRAFT SAVE/RESTORE =====
+        const DRAFT_KEY = 'painAmbitionDraft';
+
+        function getDraftData() {
+            return {
+                pains, ambs, customPainText, customAmbText, depth,
+                currentStep,
+                painTxt: document.getElementById('painTxt')?.value || '',
+                ambTxt: document.getElementById('ambTxt')?.value || '',
+                savedAt: new Date().toISOString()
+            };
+        }
+
+        function saveDraftSilent() {
+            try {
+                localStorage.setItem(DRAFT_KEY, JSON.stringify(getDraftData()));
+            } catch (e) { /* ignore */ }
+        }
+
+        function saveDraft() {
+            saveDraftSilent();
+            // Show toast
+            const toast = document.getElementById('draftToast');
+            toast.classList.add('show');
+            // Button feedback
+            const btn = document.getElementById('draftBtn');
+            btn.classList.add('saved');
+            setTimeout(() => {
+                toast.classList.remove('show');
+                btn.classList.remove('saved');
+            }, 2000);
+        }
+
+        function restoreDraft() {
+            try {
+                const raw = localStorage.getItem(DRAFT_KEY);
+                if (!raw) return;
+                const d = JSON.parse(raw);
+                if (!d.pains || !d.currentStep) return;
+
+                // Check if saved within 24 hours
+                const savedAt = new Date(d.savedAt);
+                const hoursDiff = (Date.now() - savedAt.getTime()) / (1000 * 60 * 60);
+                if (hoursDiff > 24) {
+                    localStorage.removeItem(DRAFT_KEY);
+                    return;
+                }
+
+                // Restore state
+                pains = d.pains || [];
+                ambs = d.ambs || [];
+                customPainText = d.customPainText || '';
+                customAmbText = d.customAmbText || '';
+                if (d.depth) Object.assign(depth, d.depth);
+
+                // Restore UI selections - pains
+                pains.forEach(v => {
+                    const card = document.querySelector(`.ccard[data-v="${v}"]`);
+                    if (card) card.classList.add('sel');
+                });
+                // Restore UI selections - ambitions
+                ambs.forEach(v => {
+                    const card = document.querySelector(`.ccard.amb[data-v="${v}"]`);
+                    if (card) card.classList.add('sel');
+                });
+
+                // Restore text fields
+                if (d.painTxt) {
+                    const el = document.getElementById('painTxt');
+                    if (el) el.value = d.painTxt;
+                }
+                if (d.ambTxt) {
+                    const el = document.getElementById('ambTxt');
+                    if (el) el.value = d.ambTxt;
+                }
+
+                // Restore depth selections
+                if (d.depth?.duration) {
+                    document.querySelectorAll('#dqDuration .depth-opt').forEach(opt => {
+                        if (opt.textContent === d.depth.duration) opt.classList.add('sel');
+                    });
+                }
+                if (d.depth?.tried) {
+                    document.querySelectorAll('#dqTried .depth-opt').forEach(opt => {
+                        if (opt.textContent === d.depth.tried) opt.classList.add('sel');
+                    });
+                }
+                if (d.depth?.age) {
+                    document.querySelectorAll('#dqAge .depth-opt').forEach(opt => {
+                        if (opt.textContent === d.depth.age) opt.classList.add('sel');
+                    });
+                }
+                if (d.depth?.teamSize) {
+                    document.querySelectorAll('#dqTeamSize .depth-opt').forEach(opt => {
+                        if (opt.textContent === d.depth.teamSize) opt.classList.add('sel');
+                    });
+                }
+                if (d.depth?.toolExp) {
+                    document.querySelectorAll('#dqToolExp .depth-opt').forEach(opt => {
+                        if (opt.textContent === d.depth.toolExp) opt.classList.add('sel');
+                    });
+                }
+                if (d.depth?.impact) {
+                    const slider = document.getElementById('impactSlider');
+                    if (slider) { slider.value = d.depth.impact; updateImpact(); }
+                }
+
+                // Update counters
+                if (pains.length > 0) {
+                    document.getElementById('b2').disabled = false;
+                    document.getElementById('painCount').innerHTML = `تم اختيار <strong>${pains.length}</strong> تحدي`;
+                }
+                if (ambs.length > 0) {
+                    document.getElementById('b4').disabled = false;
+                    document.getElementById('ambCount').innerHTML = `تم اختيار <strong>${ambs.length}</strong> طموح`;
+                }
+
+                // Navigate to saved step
+                if (d.currentStep > 1) {
+                    go(d.currentStep);
+                }
+            } catch (e) { console.warn('Draft restore error:', e); }
+        }
+
+        function clearDraft() {
+            localStorage.removeItem(DRAFT_KEY);
+        }
+
+        // Restore draft on page load
+        setTimeout(() => restoreDraft(), 300);
+
+        // Auto-save draft every 30 seconds
+        setInterval(() => saveDraftSilent(), 30000);
+
+        // ===== SAVE & GO =====
+        async function saveGo() {
+            const patternKey = detectPattern();
+            const data = {
+                pains, ambitions: ambs, depth,
+                painCustom: document.getElementById('painTxt').value.trim(),
+                ambitionCustom: document.getElementById('ambTxt').value.trim(),
+                customPainText: customPainText,
+                customAmbText: customAmbText,
+                patternKey,
+                pattern: PATTERNS[patternKey].name,
+                recommendations: getRecommendations(patternKey),
+                timestamp: new Date().toISOString()
+            };
+            localStorage.setItem('painAmbition', JSON.stringify(data));
+
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const entityId = user?.entity?.id || localStorage.getItem('entityId');
+            const companyId = user?.companyId || localStorage.getItem('companyId');
+
+            // Show loading
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('savingIndicator').style.display = 'block';
+
+            // 1. حفظ بيانات الألم والطموح في الباك إند
+            if (token && entityId) {
+                try {
+                    await fetch('/api/user-progress/pain-ambition', {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ entityId, ...data })
+                    });
+                } catch (e) { console.warn('Pain save error:', e); }
+            }
+
+            // 1b. حفظ نمط الشركة في company-pattern API
+            if (token && companyId) {
+                try {
+                    const dominantPain = pains.length ? (PAIN_API_MAP[pains[0]] || pains[0]) : 'no-direction';
+                    const dominantAmb = ambs.length ? (AMB_API_MAP[ambs[0]] || ambs[0]) : 'stability';
+                    const budget = data.depth?.budget || 20000;
+                    const cpRes = await fetch('/api/company-pattern', {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ pain: dominantPain, ambition: dominantAmb, budget, companyId })
+                    });
+                    const cpData = await cpRes.json();
+                    if (cpData.success) {
+                        localStorage.setItem('companyPattern', JSON.stringify(cpData));
+                        if (cpData.initiative?.id) {
+                            localStorage.setItem('autoInitiativeId', cpData.initiative.id);
+                        }
+                    }
+                } catch (e) { console.warn('Company pattern save error:', e); }
+            }
+
+            // 2. إنشاء الأهداف السريعة المختارة
+            if (token && entityId) {
+                const goals = QUICK_GOALS[patternKey] || QUICK_GOALS.growing;
+                const checkboxes = document.querySelectorAll('#quickGoals input[type="checkbox"]');
+                for (let i = 0; i < checkboxes.length; i++) {
+                    if (checkboxes[i].checked && goals[i]) {
+                        try {
+                            await fetch('/api/objectives', {
+                                method: 'POST',
+                                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    name: goals[i].name,
+                                    description: goals[i].desc,
+                                    perspective: goals[i].perspective,
+                                    entityId: entityId,
+                                    source: 'PAIN_AMBITION'
+                                })
+                            });
+                        } catch (e) { console.warn('Goal create error:', e); }
+                    }
+                }
+            }
+
+            // 3. تحويل التحديات إلى نقاط SWOT
+            const swotSeeds = { weaknesses: [], threats: [] };
+            pains.forEach(p => {
+                const mapping = PAIN_TO_SWOT[p];
+                if (mapping) {
+                    if (mapping.type === 'weakness') swotSeeds.weaknesses.push(mapping.text);
+                    else swotSeeds.threats.push(mapping.text);
+                }
+            });
+            localStorage.setItem('swotSeeds', JSON.stringify(swotSeeds));
+
+            // Clear draft on success
+            clearDraft();
+
+            // 4. Redirect to smart tools advisor — shows pattern-specific recommendations
+            window.location.href = '/tools.html';
+        }
+    </script>
+    <script src="/assets/js/ai-advisor.js"></script>
+</body>
+
+</html>

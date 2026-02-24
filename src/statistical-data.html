@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>البيانات الإحصائية — ستارتكس</title>
+    <meta name="description"
+        content="مستودع البيانات الإحصائية والقطاعية — رفع وتنظيم بيانات السوق والتحليل الاستراتيجي">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0e1a;
+            --bg-card: rgba(255, 255, 255, 0.04);
+            --bg-card-hover: rgba(255, 255, 255, 0.07);
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --primary: #667eea;
+            --green: #22c55e;
+            --orange: #f97316;
+            --red: #ef4444;
+            --purple: #a78bfa;
+            --cyan: #38bdf8;
+            --pink: #ec4899;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            flex-shrink: 0;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 28px 36px;
+            overflow-y: auto;
+            max-height: 100vh;
+        }
+
+        /* === Header === */
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 28px;
+        }
+
+        .page-header h1 {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .page-header p {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .btn-action {
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: none;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary-glow {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+        }
+
+        .btn-primary-glow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
+        }
+
+        .btn-green-glow {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #fff;
+        }
+
+        .btn-green-glow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.3);
+        }
+
+        /* === Stats Overview === */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            background: var(--bg-card-hover);
+            transform: translateY(-2px);
+        }
+
+        .stat-card .stat-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 26px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .stat-card .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* === Category Tabs === */
+        .cat-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .cat-tab {
+            padding: 8px 18px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .cat-tab:hover {
+            border-color: var(--primary);
+            color: var(--text);
+        }
+
+        .cat-tab.active {
+            border-color: var(--primary);
+            background: rgba(102, 126, 234, 0.12);
+            color: var(--text);
+        }
+
+        /* === Dataset Cards === */
+        .dataset-list {
+            display: grid;
+            gap: 14px;
+        }
+
+        .dataset-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .dataset-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        .dataset-card .ds-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .dataset-card .ds-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .dataset-card .ds-name {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .dataset-card .ds-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .dataset-card .ds-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-shrink: 0;
+        }
+
+        .ds-badge {
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .ds-stat {
+            text-align: center;
+        }
+
+        .ds-stat .num {
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        .ds-stat .label {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        /* === Upload Zone === */
+        .excel-zone {
+            border: 2px dashed var(--border);
+            border-radius: 18px;
+            padding: 36px;
+            text-align: center;
+            margin-bottom: 28px;
+            background: var(--bg-card);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: none;
+        }
+
+        .excel-zone.show {
+            display: block;
+        }
+
+        .excel-zone:hover,
+        .excel-zone.dragover {
+            border-color: var(--green);
+            background: rgba(34, 197, 94, 0.04);
+        }
+
+        .excel-zone .zone-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin: 0 auto 14px;
+        }
+
+        .excel-zone h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .excel-zone p {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .zone-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .btn-upload-file,
+        .btn-category-select {
+            padding: 10px 22px;
+            border-radius: 10px;
+            border: none;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-upload-file {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #fff;
+        }
+
+        .btn-upload-file:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        }
+
+        /* === Upload Config === */
+        .upload-config {
+            display: none;
+            gap: 12px;
+            margin-top: 16px;
+            padding: 16px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+        }
+
+        .upload-config.show {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: end;
+        }
+
+        .upload-config .cfg-field {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .upload-config label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .upload-config input,
+        .upload-config select {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 12px;
+        }
+
+        .upload-config input:focus,
+        .upload-config select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* === Detail Modal === */
+        .detail-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(6px);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .detail-overlay.show {
+            display: flex;
+        }
+
+        .detail-modal {
+            background: #0f1629;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            width: 92%;
+            max-width: 800px;
+            max-height: 85vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .detail-header h3 {
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .detail-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 24px;
+        }
+
+        .detail-meta {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .detail-meta .meta-item {
+            padding: 8px 14px;
+            border-radius: 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            font-size: 12px;
+        }
+
+        .detail-meta .meta-item strong {
+            display: block;
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .data-table {
+            width: 100%;
+            font-size: 12px;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.04);
+            text-align: right;
+            font-weight: 700;
+            color: var(--text-muted);
+            position: sticky;
+            top: 0;
+        }
+
+        .data-table td {
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .btn-close-modal {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* === Empty State === */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            opacity: 0.3;
+            display: block;
+            margin-bottom: 14px;
+        }
+
+        .empty-state h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: var(--text);
+        }
+
+        /* === Toast === */
+        .toast-msg {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-120px);
+            padding: 14px 28px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 14px;
+            z-index: 20000;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            transition: transform 0.4s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+        }
+
+        .toast-msg.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* === Upload Progress === */
+        .upload-indicator {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            margin-top: 14px;
+            justify-content: center;
+        }
+
+        .upload-indicator.show {
+            display: flex;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--green);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* === Search Bar === */
+        .search-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .search-input {
+            flex: 1;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 16px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 13px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Category colors */
+        .cat-MARKET {
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+        }
+
+        .cat-DEMOGRAPHIC {
+            background: rgba(167, 139, 250, 0.15);
+            color: #a78bfa;
+        }
+
+        .cat-FINANCIAL {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+        }
+
+        .cat-OPERATIONAL {
+            background: rgba(249, 115, 22, 0.15);
+            color: #f97316;
+        }
+
+        .cat-INDUSTRY {
+            background: rgba(102, 126, 234, 0.15);
+            color: #667eea;
+        }
+
+        .cat-COMPETITIVE {
+            background: rgba(236, 72, 153, 0.15);
+            color: #ec4899;
+        }
+
+        .cat-REGULATORY {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .cat-CUSTOM {
+            background: rgba(148, 163, 184, 0.15);
+            color: #94a3b8;
+        }
+
+        @media (max-width: 900px) {
+            .sidebar {
+                display: none;
+            }
+
+            .main-content {
+                padding: 16px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <aside class="sidebar"></aside>
+
+    <div class="main-content">
+        <!-- Header -->
+        <div class="page-header">
+            <div>
+                <h1>📊 البيانات الإحصائية</h1>
+                <p>مستودع بيانات السوق والقطاع — ارفع بيانات إحصائية يُستعان بها في التحليل الاستراتيجي</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-action btn-green-glow" onclick="toggleUploadZone()">
+                    <i class="bi bi-cloud-upload"></i>
+                    رفع بيانات
+                </button>
+                <button class="btn-action btn-primary-glow" onclick="showAddManual()">
+                    <i class="bi bi-plus-lg"></i>
+                    إضافة يدوياً
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:rgba(102,126,234,0.15);color:#667eea"><i
+                        class="bi bi-database"></i></div>
+                <div class="stat-value" id="totalDatasets">0</div>
+                <div class="stat-label">مجموعة بيانات</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:rgba(34,197,94,0.15);color:#22c55e"><i
+                        class="bi bi-list-ol"></i></div>
+                <div class="stat-value" id="totalRecords">0</div>
+                <div class="stat-label">سجل إحصائي</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:rgba(167,139,250,0.15);color:#a78bfa"><i
+                        class="bi bi-tags"></i></div>
+                <div class="stat-value" id="totalCategories">0</div>
+                <div class="stat-label">تصنيف</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:rgba(56,189,248,0.15);color:#38bdf8"><i
+                        class="bi bi-calendar-event"></i></div>
+                <div class="stat-value" id="latestYear">-</div>
+                <div class="stat-label">أحدث سنة</div>
+            </div>
+        </div>
+
+        <!-- Upload Zone (hidden by default) -->
+        <div class="excel-zone" id="uploadZone">
+            <div class="zone-icon"><i class="bi bi-file-earmark-spreadsheet"></i></div>
+            <h3>📤 رفع ملف بيانات إحصائية</h3>
+            <p>اسحب ملف Excel أو CSV هنا — سيتم رفعه كمجموعة بيانات جديدة يمكن الرجوع إليها من أدوات التحليل</p>
+
+            <div class="upload-config show" id="uploadConfig">
+                <div class="cfg-field">
+                    <label>اسم المجموعة</label>
+                    <input type="text" id="cfgName" placeholder="مثال: بيانات السوق الصحي 2025">
+                </div>
+                <div class="cfg-field">
+                    <label>التصنيف</label>
+                    <select id="cfgCategory">
+                        <option value="MARKET">📈 بيانات السوق</option>
+                        <option value="DEMOGRAPHIC">👥 بيانات ديموغرافية</option>
+                        <option value="FINANCIAL">💰 بيانات مالية</option>
+                        <option value="OPERATIONAL">⚙️ بيانات تشغيلية</option>
+                        <option value="INDUSTRY">🏭 بيانات صناعية</option>
+                        <option value="COMPETITIVE">🏆 بيانات تنافسية</option>
+                        <option value="REGULATORY">📋 بيانات تنظيمية</option>
+                        <option value="CUSTOM">📝 أخرى</option>
+                    </select>
+                </div>
+                <div class="cfg-field">
+                    <label>المصدر</label>
+                    <input type="text" id="cfgSource" placeholder="هيئة الإحصاء، تقارير...">
+                </div>
+                <div class="cfg-field">
+                    <label>السنة</label>
+                    <input type="number" id="cfgYear" value="2026" min="2000" max="2030">
+                </div>
+            </div>
+
+            <div class="zone-actions" style="margin-top:16px">
+                <button class="btn-upload-file" onclick="document.getElementById('statsFileInput').click()">
+                    <i class="bi bi-cloud-upload"></i> اختر ملف
+                </button>
+            </div>
+            <input type="file" id="statsFileInput" accept=".xlsx,.xls,.csv" style="display:none">
+
+            <div class="upload-indicator" id="uploadIndicator">
+                <div class="spinner"></div>
+                <span>جاري رفع وتحليل الملف...</span>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-bar">
+            <input type="text" class="search-input" id="searchInput" placeholder="🔍 ابحث في مجموعات البيانات...">
+        </div>
+
+        <!-- Category Tabs -->
+        <div class="cat-tabs" id="catTabs">
+            <button class="cat-tab active" data-cat="" onclick="filterCategory('')">الكل</button>
+            <button class="cat-tab" data-cat="MARKET" onclick="filterCategory('MARKET')">📈 السوق</button>
+            <button class="cat-tab" data-cat="DEMOGRAPHIC" onclick="filterCategory('DEMOGRAPHIC')">👥
+                ديموغرافية</button>
+            <button class="cat-tab" data-cat="FINANCIAL" onclick="filterCategory('FINANCIAL')">💰 مالية</button>
+            <button class="cat-tab" data-cat="OPERATIONAL" onclick="filterCategory('OPERATIONAL')">⚙️ تشغيلية</button>
+            <button class="cat-tab" data-cat="INDUSTRY" onclick="filterCategory('INDUSTRY')">🏭 صناعية</button>
+            <button class="cat-tab" data-cat="COMPETITIVE" onclick="filterCategory('COMPETITIVE')">🏆 تنافسية</button>
+            <button class="cat-tab" data-cat="REGULATORY" onclick="filterCategory('REGULATORY')">📋 تنظيمية</button>
+        </div>
+
+        <!-- Dataset List -->
+        <div class="dataset-list" id="datasetList">
+            <div class="empty-state">
+                <i class="bi bi-hourglass-split"></i>
+                <div>جاري التحميل...</div>
+            </div>
+        </div>
+
+        <div style="height:80px"></div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="detail-overlay" id="detailOverlay">
+        <div class="detail-modal">
+            <div class="detail-header">
+                <h3 id="detailTitle"><i class="bi bi-table" style="color:var(--primary)"></i> تفاصيل المجموعة</h3>
+                <button class="btn-close-modal" onclick="closeDetail()">✕</button>
+            </div>
+            <div class="detail-body" id="detailBody">
+                <!-- Filled dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Entry Modal -->
+    <div class="detail-overlay" id="manualOverlay">
+        <div class="detail-modal" style="max-width:600px">
+            <div class="detail-header">
+                <h3><i class="bi bi-pencil-square" style="color:var(--green)"></i> إضافة بيانات يدوياً</h3>
+                <button class="btn-close-modal" onclick="closeManual()">✕</button>
+            </div>
+            <div class="detail-body">
+                <div style="display:flex;flex-direction:column;gap:14px">
+                    <div>
+                        <label
+                            style="font-size:12px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:4px">اسم
+                            المجموعة *</label>
+                        <input type="text" id="manualName" placeholder="مثال: حجم السوق الصحي في المملكة"
+                            style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:10px;font-family:inherit;font-size:13px">
+                    </div>
+                    <div style="display:flex;gap:12px">
+                        <div style="flex:1">
+                            <label
+                                style="font-size:12px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:4px">التصنيف
+                                *</label>
+                            <select id="manualCategory"
+                                style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:10px;font-family:inherit;font-size:13px">
+                                <option value="MARKET">📈 السوق</option>
+                                <option value="DEMOGRAPHIC">👥 ديموغرافية</option>
+                                <option value="FINANCIAL">💰 مالية</option>
+                                <option value="OPERATIONAL">⚙️ تشغيلية</option>
+                                <option value="INDUSTRY">🏭 صناعية</option>
+                                <option value="COMPETITIVE">🏆 تنافسية</option>
+                                <option value="REGULATORY">📋 تنظيمية</option>
+                                <option value="CUSTOM">📝 أخرى</option>
+                            </select>
+                        </div>
+                        <div style="flex:1">
+                            <label
+                                style="font-size:12px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:4px">السنة</label>
+                            <input type="number" id="manualYear" value="2026"
+                                style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:10px;font-family:inherit;font-size:13px">
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:12px">
+                        <div style="flex:1">
+                            <label
+                                style="font-size:12px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:4px">المصدر</label>
+                            <input type="text" id="manualSource" placeholder="هيئة الإحصاء..."
+                                style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:10px;font-family:inherit;font-size:13px">
+                        </div>
+                        <div style="flex:1">
+                            <label
+                                style="font-size:12px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:4px">الوصف</label>
+                            <input type="text" id="manualDesc" placeholder="وصف مختصر..."
+                                style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:10px;font-family:inherit;font-size:13px">
+                        </div>
+                    </div>
+
+                    <hr style="border-color:var(--border);margin:8px 0">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                        <strong style="font-size:13px">📋 البيانات:</strong>
+                        <button onclick="addManualRow()"
+                            style="background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.2);color:#22c55e;padding:5px 14px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:700">
+                            <i class="bi bi-plus"></i> إضافة صف
+                        </button>
+                    </div>
+                    <div id="manualRows">
+                        <!-- rows added dynamically -->
+                    </div>
+
+                    <button onclick="saveManualDataset()" class="btn-action btn-green-glow"
+                        style="width:100%;justify-content:center;margin-top:8px">
+                        <i class="bi bi-check2-all"></i> حفظ المجموعة
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast-msg" id="toast">
+        <i class="bi bi-check-circle-fill"></i>
+        <span id="toastMsg"></span>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/sidebar.js"></script>
+    <script src="/assets/js/ai-advisor.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) location.href = '/login.html';
+        const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+        const CATEGORY_NAMES = {
+            MARKET: '📈 السوق',
+            DEMOGRAPHIC: '👥 ديموغرافية',
+            FINANCIAL: '💰 مالية',
+            OPERATIONAL: '⚙️ تشغيلية',
+            INDUSTRY: '🏭 صناعية',
+            COMPETITIVE: '🏆 تنافسية',
+            REGULATORY: '📋 تنظيمية',
+            CUSTOM: '📝 أخرى',
+        };
+
+        const CATEGORY_ICONS = {
+            MARKET: 'bi-graph-up-arrow',
+            DEMOGRAPHIC: 'bi-people-fill',
+            FINANCIAL: 'bi-currency-dollar',
+            OPERATIONAL: 'bi-gear-wide-connected',
+            INDUSTRY: 'bi-building',
+            COMPETITIVE: 'bi-trophy',
+            REGULATORY: 'bi-file-earmark-ruled',
+            CUSTOM: 'bi-tag',
+        };
+
+        const CATEGORY_COLORS = {
+            MARKET: '#38bdf8',
+            DEMOGRAPHIC: '#a78bfa',
+            FINANCIAL: '#22c55e',
+            OPERATIONAL: '#f97316',
+            INDUSTRY: '#667eea',
+            COMPETITIVE: '#ec4899',
+            REGULATORY: '#ef4444',
+            CUSTOM: '#94a3b8',
+        };
+
+        let allDatasets = [];
+        let activeCategory = '';
+
+        // Load datasets
+        async function loadDatasets() {
+            try {
+                const params = new URLSearchParams();
+                if (activeCategory) params.set('category', activeCategory);
+                const search = document.getElementById('searchInput').value.trim();
+                if (search) params.set('search', search);
+
+                const res = await fetch(`/api/stats/datasets?${params}`, { headers });
+                const data = await res.json();
+                allDatasets = data.datasets || [];
+                renderDatasets();
+                updateStats();
+            } catch (e) {
+                console.error('Load error:', e);
+                document.getElementById('datasetList').innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <h3>خطأ في التحميل</h3>
+                        <p>تأكد من اتصال الخادم</p>
+                    </div>`;
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalDatasets').textContent = allDatasets.length;
+            const totalRecs = allDatasets.reduce((s, d) => s + (d._count?.records || 0), 0);
+            document.getElementById('totalRecords').textContent = totalRecs;
+
+            const cats = new Set(allDatasets.map(d => d.category));
+            document.getElementById('totalCategories').textContent = cats.size;
+
+            const years = allDatasets.map(d => d.year).filter(Boolean).sort((a, b) => b - a);
+            document.getElementById('latestYear').textContent = years[0] || '-';
+        }
+
+        function renderDatasets() {
+            const container = document.getElementById('datasetList');
+
+            if (allDatasets.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-database-slash"></i>
+                        <h3>لا توجد بيانات إحصائية</h3>
+                        <p style="font-size:12px">ارفع ملف Excel أو أضف بيانات يدوياً للبدء</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = allDatasets.map(ds => {
+                const color = CATEGORY_COLORS[ds.category] || '#94a3b8';
+                const icon = CATEGORY_ICONS[ds.category] || 'bi-tag';
+                const catName = CATEGORY_NAMES[ds.category] || ds.category;
+                const count = ds._count?.records || 0;
+
+                return `
+                    <div class="dataset-card" onclick="showDetail('${ds.id}')">
+                        <div class="ds-icon" style="background:${color}18;color:${color}">
+                            <i class="bi ${icon}"></i>
+                        </div>
+                        <div class="ds-info">
+                            <div class="ds-name">${ds.nameAr || ds.name}</div>
+                            <div class="ds-desc">
+                                ${ds.description || ''}
+                                ${ds.source ? ` · 📌 ${ds.source}` : ''}
+                                ${ds.fileName ? ` · 📄 ${ds.fileName}` : ''}
+                            </div>
+                        </div>
+                        <div class="ds-meta">
+                            <span class="ds-badge cat-${ds.category}">${catName}</span>
+                            ${ds.year ? `<span style="font-size:12px;color:var(--text-muted)">${ds.year}</span>` : ''}
+                            <div class="ds-stat">
+                                <div class="num" style="color:${color}">${count}</div>
+                                <div class="label">سجل</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterCategory(cat) {
+            activeCategory = cat;
+            document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`[data-cat="${cat}"]`).classList.add('active');
+            loadDatasets();
+        }
+
+        // Search
+        let searchTimer;
+        document.getElementById('searchInput').addEventListener('input', () => {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(loadDatasets, 400);
+        });
+
+        // Upload zone
+        function toggleUploadZone() {
+            const zone = document.getElementById('uploadZone');
+            zone.classList.toggle('show');
+            if (zone.classList.contains('show')) zone.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Drag and drop
+        const uploadZone = document.getElementById('uploadZone');
+        uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+        uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+        uploadZone.addEventListener('drop', e => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) uploadStatsFile(file);
+        });
+
+        document.getElementById('statsFileInput').addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (file) uploadStatsFile(file);
+            e.target.value = '';
+        });
+
+        async function uploadStatsFile(file) {
+            const indicator = document.getElementById('uploadIndicator');
+            indicator.classList.add('show');
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('datasetName', document.getElementById('cfgName').value || '');
+            formData.append('category', document.getElementById('cfgCategory').value);
+            formData.append('source', document.getElementById('cfgSource').value);
+            formData.append('year', document.getElementById('cfgYear').value);
+
+            try {
+                const res = await fetch('/api/stats/upload', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+
+                const data = await res.json();
+                indicator.classList.remove('show');
+
+                if (res.ok) {
+                    showToast(`✅ ${data.message} — ${data.totalRecords} سجل`, 'success');
+                    document.getElementById('uploadZone').classList.remove('show');
+                    document.getElementById('cfgName').value = '';
+                    document.getElementById('cfgSource').value = '';
+                    loadDatasets();
+                } else {
+                    showToast(data.error || 'خطأ في الرفع', 'error');
+                }
+            } catch (err) {
+                indicator.classList.remove('show');
+                showToast('خطأ في الاتصال بالخادم', 'error');
+            }
+        }
+
+        // Detail view
+        async function showDetail(id) {
+            try {
+                const res = await fetch(`/api/stats/datasets/${id}`, { headers });
+                const ds = await res.json();
+
+                const color = CATEGORY_COLORS[ds.category] || '#94a3b8';
+                const catName = CATEGORY_NAMES[ds.category] || ds.category;
+
+                document.getElementById('detailTitle').innerHTML = `
+                    <i class="bi bi-table" style="color:${color}"></i>
+                    ${ds.nameAr || ds.name}
+                `;
+
+                let html = `
+                    <div class="detail-meta">
+                        <div class="meta-item"><strong>التصنيف</strong>${catName}</div>
+                        ${ds.year ? `<div class="meta-item"><strong>السنة</strong>${ds.year}</div>` : ''}
+                        ${ds.source ? `<div class="meta-item"><strong>المصدر</strong>${ds.source}</div>` : ''}
+                        <div class="meta-item"><strong>عدد السجلات</strong>${ds.records?.length || 0}</div>
+                        ${ds.fileName ? `<div class="meta-item"><strong>ملف أصلي</strong>${ds.fileName}</div>` : ''}
+                    </div>
+                    ${ds.description ? `<p style="font-size:12px;color:var(--text-muted);margin-bottom:16px">${ds.description}</p>` : ''}
+                `;
+
+                if (ds.records && ds.records.length > 0) {
+                    // Detect which columns to show
+                    const hasValue = ds.records.some(r => r.value != null);
+                    const hasText = ds.records.some(r => r.textValue);
+                    const hasUnit = ds.records.some(r => r.unit);
+                    const hasPeriod = ds.records.some(r => r.period);
+                    const hasRegion = ds.records.some(r => r.region);
+
+                    html += `<table class="data-table"><thead><tr>
+                        <th>#</th>
+                        <th>المؤشر / البند</th>
+                        ${hasValue ? '<th>القيمة</th>' : ''}
+                        ${hasText ? '<th>القيمة النصية</th>' : ''}
+                        ${hasUnit ? '<th>الوحدة</th>' : ''}
+                        ${hasPeriod ? '<th>الفترة</th>' : ''}
+                        ${hasRegion ? '<th>المنطقة</th>' : ''}
+                    </tr></thead><tbody>`;
+
+                    ds.records.forEach((r, i) => {
+                        html += `<tr>
+                            <td style="color:var(--text-muted)">${i + 1}</td>
+                            <td><strong>${r.indicatorAr || r.indicator}</strong></td>
+                            ${hasValue ? `<td style="font-weight:700;color:${color}">${r.value != null ? r.value.toLocaleString() : '-'}</td>` : ''}
+                            ${hasText ? `<td>${r.textValue || '-'}</td>` : ''}
+                            ${hasUnit ? `<td style="font-size:11px;color:var(--text-muted)">${r.unit || ''}</td>` : ''}
+                            ${hasPeriod ? `<td style="font-size:11px">${r.period || ''}</td>` : ''}
+                            ${hasRegion ? `<td style="font-size:11px">${r.region || ''}</td>` : ''}
+                        </tr>`;
+                    });
+
+                    html += '</tbody></table>';
+                } else {
+                    html += '<div class="empty-state"><i class="bi bi-inbox"></i><h3>لا توجد سجلات</h3></div>';
+                }
+
+                document.getElementById('detailBody').innerHTML = html;
+                document.getElementById('detailOverlay').classList.add('show');
+            } catch (e) {
+                showToast('خطأ في تحميل التفاصيل', 'error');
+            }
+        }
+
+        function closeDetail() {
+            document.getElementById('detailOverlay').classList.remove('show');
+        }
+
+        // Manual entry
+        let manualRowCount = 0;
+
+        function showAddManual() {
+            manualRowCount = 0;
+            document.getElementById('manualRows').innerHTML = '';
+            addManualRow(); // add first row
+            addManualRow(); // add second row
+            addManualRow(); // add third row
+            document.getElementById('manualOverlay').classList.add('show');
+        }
+
+        function closeManual() {
+            document.getElementById('manualOverlay').classList.remove('show');
+        }
+
+        function addManualRow() {
+            manualRowCount++;
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;align-items:center';
+            row.innerHTML = `
+                <input type="text" placeholder="اسم البند" style="flex:2;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:8px;font-family:inherit;font-size:12px" class="manual-indicator">
+                <input type="number" placeholder="القيمة" step="any" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:8px;font-family:inherit;font-size:12px" class="manual-value">
+                <input type="text" placeholder="الوحدة" style="flex:0.7;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:8px;font-family:inherit;font-size:12px" class="manual-unit">
+                <button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px">✕</button>
+            `;
+            document.getElementById('manualRows').appendChild(row);
+        }
+
+        async function saveManualDataset() {
+            const name = document.getElementById('manualName').value.trim();
+            const category = document.getElementById('manualCategory').value;
+            const year = document.getElementById('manualYear').value;
+            const source = document.getElementById('manualSource').value.trim();
+            const desc = document.getElementById('manualDesc').value.trim();
+
+            if (!name) { showToast('أدخل اسم المجموعة', 'error'); return; }
+
+            const indicators = document.querySelectorAll('.manual-indicator');
+            const values = document.querySelectorAll('.manual-value');
+            const units = document.querySelectorAll('.manual-unit');
+
+            const records = [];
+            indicators.forEach((ind, i) => {
+                if (ind.value.trim()) {
+                    records.push({
+                        indicator: ind.value.trim(),
+                        indicatorAr: ind.value.trim(),
+                        value: values[i]?.value ? parseFloat(values[i].value) : null,
+                        unit: units[i]?.value?.trim() || null,
+                    });
+                }
+            });
+
+            if (records.length === 0) { showToast('أضف بند واحد على الأقل', 'error'); return; }
+
+            try {
+                const res = await fetch('/api/stats/datasets', {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        name,
+                        nameAr: name,
+                        description: desc,
+                        category,
+                        source,
+                        year: parseInt(year),
+                        records,
+                    })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    showToast(`✅ تم إنشاء "${name}" بـ ${records.length} سجل`, 'success');
+                    closeManual();
+                    loadDatasets();
+                } else {
+                    showToast(data.error || 'خطأ في الإنشاء', 'error');
+                }
+            } catch (e) {
+                showToast('خطأ في الاتصال', 'error');
+            }
+        }
+
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = msg;
+            toast.style.background = type === 'success'
+                ? 'linear-gradient(135deg, #22c55e, #16a34a)'
+                : 'linear-gradient(135deg, #ef4444, #dc2626)';
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3500);
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                closeDetail();
+                closeManual();
+            }
+        });
+
+        // Initialize
+        loadDatasets();
+    </script>
+</body>
+
+</html>

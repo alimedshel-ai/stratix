@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Startix — ملخص OGSM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="/assets/css/sidebar.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f1117;
+            --bg-card: #1a1d2e;
+            --bg-card-hover: #222640;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --primary: #667eea;
+            --purple: #7c3aed;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: rgba(255, 255, 255, 0.08);
+            --radius: 12px;
+            --o-color: #6366f1;
+            --g-color: #10b981;
+            --s-color: #f59e0b;
+            --m-color: #ec4899;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .top-nav {
+            background: linear-gradient(135deg, #1a1d2e, #252845);
+            padding: 0 24px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .top-nav .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .top-nav .nav-links {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .top-nav .nav-links a {
+            color: rgba(255, 255, 255, .85);
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            transition: .2s;
+        }
+
+        .top-nav .nav-links a:hover {
+            background: rgba(255, 255, 255, .1);
+        }
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-logout {
+            background: rgba(239, 68, 68, .2);
+            color: #f87171;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Tajawal';
+            font-size: 13px;
+        }
+
+        .layout {
+            display: flex;
+            min-height: calc(100vh - 60px);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            max-width: calc(100% - 220px);
+        }
+
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .page-header h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, var(--o-color), var(--m-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .page-header p {
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text);
+            cursor: pointer;
+            font-family: 'Tajawal';
+            font-size: 13px;
+            font-weight: 600;
+            transition: .2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-action:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-action.primary {
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            border: none;
+            color: #fff;
+        }
+
+        .btn-action.primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, .3);
+        }
+
+        /* Context Bar */
+        .context-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .context-bar select {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-family: 'Tajawal';
+            font-size: 13px;
+        }
+
+        .context-bar .btn-pull {
+            background: linear-gradient(135deg, var(--o-color), var(--purple));
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: 'Tajawal';
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: .2s;
+        }
+
+        .context-bar .btn-pull:hover {
+            transform: translateY(-1px);
+        }
+
+        /* OGSM Container */
+        .ogsm-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        /* Company Header */
+        .ogsm-cover {
+            background: linear-gradient(135deg, rgba(99, 102, 241, .15), rgba(236, 72, 153, .1));
+            padding: 28px 32px;
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .ogsm-cover .entity-name {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+            background: linear-gradient(135deg, var(--o-color), var(--m-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .ogsm-cover .version-label {
+            color: var(--text-muted);
+            font-size: .85rem;
+        }
+
+        .ogsm-cover .date-label {
+            color: var(--text-muted);
+            font-size: .75rem;
+            margin-top: 4px;
+        }
+
+        /* OGSM Table */
+        .ogsm-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .ogsm-table th {
+            padding: 14px 20px;
+            font-size: .85rem;
+            font-weight: 700;
+            text-align: right;
+            vertical-align: top;
+            width: 150px;
+            min-width: 130px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .ogsm-table td {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        .section-O th {
+            background: rgba(99, 102, 241, .1);
+            color: var(--o-color);
+            border-right: 4px solid var(--o-color);
+        }
+
+        .section-G th {
+            background: rgba(16, 185, 129, .1);
+            color: var(--g-color);
+            border-right: 4px solid var(--g-color);
+        }
+
+        .section-S th {
+            background: rgba(245, 158, 11, .1);
+            color: var(--s-color);
+            border-right: 4px solid var(--s-color);
+        }
+
+        .section-M th {
+            background: rgba(236, 72, 153, .1);
+            color: var(--m-color);
+            border-right: 4px solid var(--m-color);
+        }
+
+        .section-icon {
+            font-size: 1.3rem;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .section-label {
+            font-size: .65rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Items */
+        .ogsm-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .03);
+        }
+
+        .ogsm-item:last-child {
+            border-bottom: none;
+        }
+
+        .ogsm-item .idx {
+            font-size: .7rem;
+            font-weight: 700;
+            width: 22px;
+            height: 22px;
+            min-width: 22px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ogsm-item .item-text {
+            flex: 1;
+        }
+
+        .ogsm-item .item-title {
+            font-size: .9rem;
+            font-weight: 600;
+        }
+
+        .ogsm-item .item-detail {
+            font-size: .78rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .idx-o {
+            background: rgba(99, 102, 241, .15);
+            color: var(--o-color);
+        }
+
+        .idx-g {
+            background: rgba(16, 185, 129, .15);
+            color: var(--g-color);
+        }
+
+        .idx-s {
+            background: rgba(245, 158, 11, .15);
+            color: var(--s-color);
+        }
+
+        .idx-m {
+            background: rgba(236, 72, 153, .15);
+            color: var(--m-color);
+        }
+
+        /* Progress bar for measures */
+        .measure-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, .1);
+            border-radius: 4px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+
+        .measure-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width .5s ease;
+        }
+
+        .empty-section {
+            text-align: center;
+            padding: 16px;
+            color: var(--text-muted);
+            font-size: .8rem;
+            font-style: italic;
+        }
+
+        /* Manual Edit */
+        .editable-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .editable-input {
+            flex: 1;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-family: 'Tajawal';
+            font-size: .85rem;
+        }
+
+        .editable-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn-remove-item {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 4px;
+        }
+
+        .btn-remove-item:hover {
+            color: var(--danger);
+        }
+
+        .btn-add-manual {
+            background: transparent;
+            border: 1px dashed var(--border);
+            color: var(--text-muted);
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Tajawal';
+            font-size: .78rem;
+            transition: .2s;
+            width: 100%;
+        }
+
+        .btn-add-manual:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .save-indicator {
+            font-size: .8rem;
+        }
+
+        .save-indicator.saving {
+            color: var(--warning);
+        }
+
+        .save-indicator.saved {
+            color: var(--success);
+        }
+
+        .mode-toggle {
+            display: flex;
+            gap: 4px;
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 3px;
+        }
+
+        .mode-btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            font-family: 'Tajawal';
+            font-size: .8rem;
+            cursor: pointer;
+            transition: .2s;
+            background: transparent;
+            color: var(--text-muted);
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            color: #fff;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                max-width: 100%;
+                padding: 16px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .ogsm-table th {
+                width: 100px;
+                min-width: 80px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="top-nav">
+        <a href="/dashboard" class="brand"><i class="bi bi-rocket-takeoff-fill"></i> ستارتكيس</a>
+        <div class="nav-links">
+            <a href="/dashboard"><i class="bi bi-house"></i> الرئيسية</a>
+            <a href="/kpis"><i class="bi bi-graph-up"></i> المؤشرات</a>
+            <a href="/intelligence"><i class="bi bi-bell"></i> التنبيهات</a>
+        </div>
+        <div class="user-area">
+            <span id="saveStatus" class="save-indicator"></span>
+            <span style="color:#fff;font-size:13px" id="userName">مدير النظام</span>
+            <button class="btn-logout" onclick="logout()">خروج</button>
+        </div>
+    </nav>
+
+    <div class="layout">
+        <nav class="sidebar"></nav>
+        <main class="main-content">
+            <div class="page-header">
+                <div>
+                    <h1>📋 ملخص OGSM</h1>
+                    <p>ملخص استراتيجي على صفحة واحدة: الأهداف · الغايات · الاستراتيجيات · المقاييس</p>
+                </div>
+                <div class="header-actions">
+                    <div class="mode-toggle">
+                        <button class="mode-btn active" id="btnViewMode" onclick="setMode('view')">👁 عرض</button>
+                        <button class="mode-btn" id="btnEditMode" onclick="setMode('edit')">✏️ تعديل</button>
+                    </div>
+                    <button class="btn-action" onclick="exportPDF()" title="تصدير PDF (سيتم تفعيله لاحقاً)">
+                        <i class="bi bi-filetype-pdf"></i> PDF
+                    </button>
+                    <button class="btn-action primary" onclick="saveManual()">
+                        <i class="bi bi-cloud-check"></i> حفظ
+                    </button>
+                </div>
+            </div>
+
+            <!-- Context Bar -->
+            <div class="context-bar">
+                <i class="bi bi-building" style="color:var(--primary)"></i>
+                <select id="versionSelect" onchange="loadData()">
+                    <option value="">-- اختر إصدار الاستراتيجية --</option>
+                </select>
+                <button class="btn-pull" onclick="autoPull()"><i class="bi bi-magic"></i> سحب البيانات تلقائياً</button>
+            </div>
+
+            <!-- OGSM One-Pager -->
+            <div class="ogsm-container" id="ogsmContainer">
+                <div class="ogsm-cover">
+                    <div class="entity-name" id="entityName">—</div>
+                    <div class="version-label" id="versionLabel">—</div>
+                    <div class="date-label" id="dateLabel"></div>
+                </div>
+
+                <table class="ogsm-table">
+                    <!-- O - Objectives -->
+                    <tr class="section-O">
+                        <th>
+                            <span class="section-icon">🎯</span>
+                            <strong>Objectives</strong>
+                            <span class="section-label">الأهداف الاستراتيجية</span>
+                        </th>
+                        <td id="sectionO">
+                            <div class="empty-section">سيتم السحب من الأهداف الاستراتيجية...</div>
+                        </td>
+                    </tr>
+                    <!-- G - Goals -->
+                    <tr class="section-G">
+                        <th>
+                            <span class="section-icon">🏆</span>
+                            <strong>Goals</strong>
+                            <span class="section-label">الغايات الكمية (KPI Targets)</span>
+                        </th>
+                        <td id="sectionG">
+                            <div class="empty-section">سيتم السحب من مستهدفات المؤشرات...</div>
+                        </td>
+                    </tr>
+                    <!-- S - Strategies -->
+                    <tr class="section-S">
+                        <th>
+                            <span class="section-icon">♟️</span>
+                            <strong>Strategies</strong>
+                            <span class="section-label">الاستراتيجيات المُعتمدة</span>
+                        </th>
+                        <td id="sectionS">
+                            <div class="empty-section">سيتم السحب من استراتيجيات TOWS...</div>
+                        </td>
+                    </tr>
+                    <!-- M - Measures -->
+                    <tr class="section-M">
+                        <th>
+                            <span class="section-icon">📊</span>
+                            <strong>Measures</strong>
+                            <span class="section-label">المقاييس والأداء الفعلي</span>
+                        </th>
+                        <td id="sectionM">
+                            <div class="empty-section">سيتم السحب من الأداء الفعلي للمؤشرات...</div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/sidebar.js"></script>
+    <script src="/assets/js/ai-advisor.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+
+        let analysisId = null;
+        let ogsmData = { objectives: [], goals: [], strategies: [], measures: [], manual: {} };
+        let currentMode = 'view';
+        let versionInfo = null;
+
+        document.addEventListener('DOMContentLoaded', loadVersions);
+
+        async function api(url, opts = {}) {
+            const res = await fetch(url, {
+                ...opts,
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...opts.headers }
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res.json();
+        }
+
+        async function loadVersions() {
+            try {
+                const data = await api('/api/versions?limit=50');
+                const sel = document.getElementById('versionSelect');
+                (data.versions || []).forEach(v => {
+                    const opt = document.createElement('option');
+                    opt.value = v.id;
+                    opt.textContent = `V${v.versionNumber} — ${v.entity?.legalName || v.entity?.displayName || ''}`;
+                    if (v.isActive) opt.textContent += ' ✅';
+                    sel.appendChild(opt);
+                });
+                const active = (data.versions || []).find(v => v.isActive);
+                if (active) { sel.value = active.id; loadData(); }
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadData() {
+            const versionId = document.getElementById('versionSelect').value;
+            if (!versionId) return;
+
+            // Get version info
+            try {
+                const versions = await api('/api/versions?limit=50');
+                versionInfo = (versions.versions || []).find(v => v.id === versionId);
+                if (versionInfo) {
+                    document.getElementById('entityName').textContent = versionInfo.entity?.legalName || versionInfo.entity?.displayName || '—';
+                    document.getElementById('versionLabel').textContent = `الخطة الاستراتيجية — الإصدار ${versionInfo.versionNumber}`;
+                    document.getElementById('dateLabel').textContent = `تاريخ التوليد: ${new Date().toLocaleDateString('ar-SA')}`;
+                }
+            } catch (e) { console.error(e); }
+
+            // Load existing analysis
+            try {
+                const analysis = await api(`/api/company-analysis/version/${versionId}/OGSM`);
+                if (analysis && analysis.parsedData) {
+                    analysisId = analysis.id;
+                    ogsmData = analysis.parsedData;
+                    if (!ogsmData.manual) ogsmData.manual = {};
+                }
+            } catch (e) {
+                analysisId = null;
+                ogsmData = { objectives: [], goals: [], strategies: [], measures: [], manual: {} };
+            }
+
+            renderOGSM();
+        }
+
+        // ===== Auto-Pull =====
+        async function autoPull() {
+            const versionId = document.getElementById('versionSelect').value;
+            if (!versionId) { alert('اختر إصدار الاستراتيجية أولاً'); return; }
+
+            const status = document.getElementById('saveStatus');
+            status.textContent = '⏳ جاري السحب...';
+            status.className = 'save-indicator saving';
+
+            try {
+                // O — Objectives from StrategicObjective
+                try {
+                    const objData = await api(`/api/strategic?versionId=${versionId}&limit=50`);
+                    ogsmData.objectives = (objData.objectives || []).map(o => ({
+                        id: o.id,
+                        name: o.name,
+                        nameAr: o.nameAr,
+                        perspective: o.perspective || '',
+                        weight: o.weight || 0
+                    }));
+                } catch (e) { console.error('Objectives:', e); }
+
+                // G — Goals from KPI targets
+                try {
+                    const kpiData = await api(`/api/kpis?versionId=${versionId}&limit=100`);
+                    ogsmData.goals = (kpiData.kpis || []).map(k => ({
+                        id: k.id,
+                        name: k.name,
+                        nameAr: k.nameAr,
+                        target: k.target,
+                        unit: k.unit || '%',
+                        objectiveName: k.objective?.nameAr || k.objective?.name || ''
+                    }));
+                } catch (e) { console.error('KPIs:', e); }
+
+                // S — Strategies from TOWS
+                try {
+                    const towsAnalysis = await api(`/api/company-analysis/version/${versionId}/TOWS`);
+                    if (towsAnalysis && towsAnalysis.parsedData) {
+                        const tows = towsAnalysis.parsedData;
+                        ogsmData.strategies = [];
+                        ['SO', 'WO', 'ST', 'WT'].forEach(q => {
+                            if (tows[q] && Array.isArray(tows[q])) {
+                                tows[q].forEach(s => {
+                                    if (typeof s === 'string') {
+                                        ogsmData.strategies.push({ text: s, quadrant: q });
+                                    } else if (s.text || s.strategy) {
+                                        ogsmData.strategies.push({ text: s.text || s.strategy, quadrant: q });
+                                    }
+                                });
+                            }
+                        });
+                    }
+                } catch (e) { console.error('TOWS:', e); }
+
+                // M — Measures from KPI actuals
+                try {
+                    const kpiData = await api(`/api/kpis?versionId=${versionId}&limit=100`);
+                    ogsmData.measures = (kpiData.kpis || []).filter(k => k.actual != null).map(k => ({
+                        id: k.id,
+                        name: k.nameAr || k.name,
+                        target: k.target,
+                        actual: k.actual,
+                        unit: k.unit || '%',
+                        ratio: k.target > 0 ? (k.actual / k.target) : 0,
+                        status: k.status
+                    }));
+                } catch (e) { console.error('Measures:', e); }
+
+                renderOGSM();
+                await saveToServer();
+
+                status.textContent = '✅ تم السحب والحفظ';
+                status.className = 'save-indicator saved';
+                setTimeout(() => { status.textContent = ''; }, 3000);
+            } catch (e) {
+                console.error(e);
+                status.textContent = '❌ خطأ في السحب';
+                status.className = 'save-indicator';
+            }
+        }
+
+        // ===== Render =====
+        function renderOGSM() {
+            if (currentMode === 'edit') {
+                renderEditMode();
+            } else {
+                renderViewMode();
+            }
+        }
+
+        function renderViewMode() {
+            // O — Objectives
+            const sO = document.getElementById('sectionO');
+            if (ogsmData.objectives.length) {
+                sO.innerHTML = ogsmData.objectives.map((o, i) => `
+                    <div class="ogsm-item">
+                        <span class="idx idx-o">${i + 1}</span>
+                        <div class="item-text">
+                            <div class="item-title">${o.nameAr || o.name}</div>
+                            ${o.perspective ? `<div class="item-detail">📌 ${perspectiveLabel(o.perspective)}${o.weight ? ` | الوزن: ${o.weight}%` : ''}</div>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                sO.innerHTML = renderManualSection('objectives', 'idx-o') || '<div class="empty-section">اضغط "سحب البيانات تلقائياً" أو انتقل لوضع التعديل</div>';
+            }
+
+            // G — Goals
+            const sG = document.getElementById('sectionG');
+            if (ogsmData.goals.length) {
+                sG.innerHTML = ogsmData.goals.map((g, i) => `
+                    <div class="ogsm-item">
+                        <span class="idx idx-g">${i + 1}</span>
+                        <div class="item-text">
+                            <div class="item-title">${g.nameAr || g.name}: <strong>${g.target}${g.unit}</strong></div>
+                            ${g.objectiveName ? `<div class="item-detail">🔗 ${g.objectiveName}</div>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                sG.innerHTML = renderManualSection('goals', 'idx-g') || '<div class="empty-section">لا توجد غايات كمية</div>';
+            }
+
+            // S — Strategies
+            const sS = document.getElementById('sectionS');
+            if (ogsmData.strategies.length) {
+                const quadLabels = { SO: 'هجومية', WO: 'علاجية', ST: 'دفاعية', WT: 'تحوطية' };
+                sS.innerHTML = ogsmData.strategies.map((s, i) => `
+                    <div class="ogsm-item">
+                        <span class="idx idx-s">${i + 1}</span>
+                        <div class="item-text">
+                            <div class="item-title">${s.text}</div>
+                            ${s.quadrant ? `<div class="item-detail">♟️ ${quadLabels[s.quadrant] || s.quadrant}</div>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                sS.innerHTML = renderManualSection('strategies', 'idx-s') || '<div class="empty-section">لا توجد استراتيجيات (أكمل مصفوفة TOWS أولاً)</div>';
+            }
+
+            // M — Measures
+            const sM = document.getElementById('sectionM');
+            if (ogsmData.measures.length) {
+                sM.innerHTML = ogsmData.measures.map((m, i) => {
+                    const pct = m.target > 0 ? Math.round((m.actual / m.target) * 100) : 0;
+                    const barColor = pct >= 100 ? 'var(--success)' : pct >= 70 ? 'var(--warning)' : 'var(--danger)';
+                    return `
+                    <div class="ogsm-item">
+                        <span class="idx idx-m">${i + 1}</span>
+                        <div class="item-text" style="flex:1">
+                            <div class="item-title">${m.name}</div>
+                            <div class="item-detail">المستهدف: ${m.target}${m.unit} | الفعلي: ${m.actual}${m.unit} (${pct}%)</div>
+                            <div class="measure-bar">
+                                <div class="measure-bar-fill" style="width:${Math.min(pct, 100)}%;background:${barColor}"></div>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+            } else {
+                sM.innerHTML = renderManualSection('measures', 'idx-m') || '<div class="empty-section">لا توجد بيانات أداء فعلي</div>';
+            }
+        }
+
+        function renderManualSection(key, idxClass) {
+            const manual = ogsmData.manual?.[key];
+            if (!manual || !manual.length) return '';
+            return manual.map((item, i) => `
+                <div class="ogsm-item">
+                    <span class="idx ${idxClass}">${i + 1}</span>
+                    <div class="item-text">
+                        <div class="item-title">${item}</div>
+                        <div class="item-detail" style="color:var(--warning)">📝 إدخال يدوي</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderEditMode() {
+            const sections = ['objectives', 'goals', 'strategies', 'measures'];
+            const sectionIds = ['sectionO', 'sectionG', 'sectionS', 'sectionM'];
+            const idxClasses = ['idx-o', 'idx-g', 'idx-s', 'idx-m'];
+            const labels = ['هدف جديد', 'غاية جديدة', 'استراتيجية جديدة', 'مقياس جديد'];
+
+            sections.forEach((key, si) => {
+                const td = document.getElementById(sectionIds[si]);
+                if (!ogsmData.manual) ogsmData.manual = {};
+                if (!ogsmData.manual[key]) ogsmData.manual[key] = [];
+
+                // Show auto-pulled items as read-only
+                let autoItems = '';
+                if (key === 'objectives' && ogsmData.objectives.length) {
+                    autoItems = ogsmData.objectives.map(o => `
+                        <div style="padding:4px 0;font-size:.82rem;color:var(--text-muted)">✅ ${o.nameAr || o.name}</div>
+                    `).join('');
+                } else if (key === 'goals' && ogsmData.goals.length) {
+                    autoItems = ogsmData.goals.map(g => `
+                        <div style="padding:4px 0;font-size:.82rem;color:var(--text-muted)">✅ ${g.nameAr || g.name}: ${g.target}${g.unit}</div>
+                    `).join('');
+                } else if (key === 'strategies' && ogsmData.strategies.length) {
+                    autoItems = ogsmData.strategies.map(s => `
+                        <div style="padding:4px 0;font-size:.82rem;color:var(--text-muted)">✅ ${s.text}</div>
+                    `).join('');
+                } else if (key === 'measures' && ogsmData.measures.length) {
+                    autoItems = ogsmData.measures.map(m => `
+                        <div style="padding:4px 0;font-size:.82rem;color:var(--text-muted)">✅ ${m.name}: ${m.actual}/${m.target}${m.unit}</div>
+                    `).join('');
+                }
+
+                const manualItems = ogsmData.manual[key].map((item, i) => `
+                    <div class="editable-item">
+                        <input type="text" class="editable-input" value="${item}" onchange="updateManualItem('${key}', ${i}, this.value)">
+                        <button class="btn-remove-item" onclick="removeManualItem('${key}', ${i})"><i class="bi bi-x-lg"></i></button>
+                    </div>
+                `).join('');
+
+                td.innerHTML = `
+                    ${autoItems ? `<div style="margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:8px"><div style="font-size:.7rem;color:var(--text-muted);margin-bottom:4px">📥 بيانات تلقائية:</div>${autoItems}</div>` : ''}
+                    <div style="font-size:.7rem;color:var(--warning);margin-bottom:4px">✏️ إدخال يدوي:</div>
+                    ${manualItems}
+                    <button class="btn-add-manual" onclick="addManualItem('${key}')"><i class="bi bi-plus"></i> ${labels[si]}</button>
+                `;
+            });
+        }
+
+        // ===== Manual Edit Functions =====
+        function addManualItem(section) {
+            if (!ogsmData.manual) ogsmData.manual = {};
+            if (!ogsmData.manual[section]) ogsmData.manual[section] = [];
+            ogsmData.manual[section].push('');
+            renderOGSM();
+            // Focus last input
+            const inputs = document.querySelectorAll(`.editable-input`);
+            if (inputs.length) inputs[inputs.length - 1].focus();
+        }
+
+        function removeManualItem(section, idx) {
+            ogsmData.manual[section].splice(idx, 1);
+            renderOGSM();
+        }
+
+        function updateManualItem(section, idx, value) {
+            ogsmData.manual[section][idx] = value;
+        }
+
+        // ===== Mode Toggle =====
+        function setMode(mode) {
+            currentMode = mode;
+            document.getElementById('btnViewMode').classList.toggle('active', mode === 'view');
+            document.getElementById('btnEditMode').classList.toggle('active', mode === 'edit');
+            renderOGSM();
+        }
+
+        // ===== Save =====
+        async function saveManual() {
+            await saveToServer();
+        }
+
+        async function saveToServer() {
+            const versionId = document.getElementById('versionSelect').value;
+            if (!versionId) { alert('اختر إصدار الاستراتيجية أولاً'); return; }
+
+            const status = document.getElementById('saveStatus');
+            status.textContent = '⏳ جاري الحفظ...';
+            status.className = 'save-indicator saving';
+
+            try {
+                const totalItems = ogsmData.objectives.length + ogsmData.goals.length + ogsmData.strategies.length + ogsmData.measures.length;
+                const manualCount = Object.values(ogsmData.manual || {}).reduce((sum, arr) => sum + (arr?.length || 0), 0);
+                const allCount = totalItems + manualCount;
+                const progress = allCount > 0 ? Math.min(100, Math.round((allCount / 12) * 100)) : 0;
+
+                const body = {
+                    versionId,
+                    toolCode: 'OGSM',
+                    data: JSON.stringify(ogsmData),
+                    summary: `O:${ogsmData.objectives.length} G:${ogsmData.goals.length} S:${ogsmData.strategies.length} M:${ogsmData.measures.length}`,
+                    status: allCount >= 4 ? 'COMPLETED' : allCount > 0 ? 'IN_PROGRESS' : 'DRAFT',
+                    progress
+                };
+
+                if (analysisId) {
+                    await api(`/api/company-analysis/${analysisId}`, { method: 'PATCH', body: JSON.stringify(body) });
+                } else {
+                    const result = await api('/api/company-analysis', { method: 'POST', body: JSON.stringify(body) });
+                    analysisId = result.id;
+                }
+
+                status.textContent = '✅ تم الحفظ';
+                status.className = 'save-indicator saved';
+                setTimeout(() => { status.textContent = ''; }, 3000);
+            } catch (e) {
+                console.error(e);
+                status.textContent = '❌ خطأ في الحفظ';
+                status.className = 'save-indicator';
+                alert('خطأ في الحفظ');
+            }
+        }
+
+        // ===== Helpers =====
+        function perspectiveLabel(p) {
+            const map = {
+                'FINANCIAL': '💰 المالي',
+                'CUSTOMER': '👥 العملاء',
+                'INTERNAL_PROCESS': '⚙️ العمليات',
+                'LEARNING_GROWTH': '📚 التعلم والنمو'
+            };
+            return map[p] || p;
+        }
+
+        function exportPDF() {
+            alert('📄 ميزة تصدير PDF ستُفعّل في المرحلة 17.\n\nحالياً يمكنك طباعة الصفحة (Ctrl+P) لحفظها كـ PDF.');
+            window.print();
+        }
+
+        function logout() { localStorage.clear(); window.location.href = '/login'; }
+    </script>
+</body>
+
+</html>

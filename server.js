@@ -143,7 +143,7 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'src')));
 
 // =========================================
 // 📚 Swagger API Documentation
@@ -249,17 +249,17 @@ app.use('/api/plan-limits', planLimitsRoutes);
 
 // Serve pain-ambition page
 app.get('/pain-ambition', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'pain-ambition.html'));
+  res.sendFile(path.join(__dirname, 'src', 'pain-ambition.html'));
 });
 
 // Serve import page
 app.get('/import', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'import.html'));
+  res.sendFile(path.join(__dirname, 'src', 'import.html'));
 });
 
 // Serve statistical data page
 app.get('/statistical-data', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'statistical-data.html'));
+  res.sendFile(path.join(__dirname, 'src', 'statistical-data.html'));
 });
 
 // Serve strategic tools page (redirected to canonical /tools)
@@ -269,32 +269,32 @@ app.get('/strategic-tools', (req, res) => {
 
 // Serve OKRs page
 app.get('/okrs', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'okrs.html'));
+  res.sendFile(path.join(__dirname, 'src', 'okrs.html'));
 });
 
 // Serve Gap Analysis page
 app.get('/gap-analysis', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'gap-analysis.html'));
+  res.sendFile(path.join(__dirname, 'src', 'gap-analysis.html'));
 });
 
 // Serve Three Horizons page
 app.get('/three-horizons', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'three-horizons.html'));
+  res.sendFile(path.join(__dirname, 'src', 'three-horizons.html'));
 });
 
 // Serve OGSM page
 app.get('/ogsm', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'ogsm.html'));
+  res.sendFile(path.join(__dirname, 'src', 'ogsm.html'));
 });
 
 // Serve Simulation Lab page
 app.get('/simulation-lab', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'simulation-lab.html'));
+  res.sendFile(path.join(__dirname, 'src', 'simulation-lab.html'));
 });
 
 // Serve login page
 app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+  res.sendFile(path.join(__dirname, 'src', 'login.html'));
 });
 
 // Serve signup page → redirect to unified auth page
@@ -304,117 +304,117 @@ app.get('/signup', (req, res) => {
 
 // Serve Super Admin Dashboard (برج المراقبة)
 app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+  res.sendFile(path.join(__dirname, 'src', 'admin.html'));
 });
 
 // Serve dashboard/welcome page (protected by frontend)
 app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+  res.sendFile(path.join(__dirname, 'src', 'dashboard.html'));
 });
 
 // Serve strategic pipeline page
 app.get('/tools', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'tools.html'));
+  res.sendFile(path.join(__dirname, 'src', 'tools.html'));
 });
 
 // Serve tool detail page
 app.get('/tool', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'tool-detail.html'));
+  res.sendFile(path.join(__dirname, 'src', 'tool-detail.html'));
 });
 
 // Serve sectors page
 app.get('/sectors', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'sectors.html'));
+  res.sendFile(path.join(__dirname, 'src', 'sectors.html'));
 });
 
 // Serve industries page
 app.get('/industries', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'industries.html'));
+  res.sendFile(path.join(__dirname, 'src', 'industries.html'));
 });
 
 // Serve entities page
 app.get('/entities', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'entities.html'));
+  res.sendFile(path.join(__dirname, 'src', 'entities.html'));
 });
 
 // Serve users page
 app.get('/users', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'users.html'));
+  res.sendFile(path.join(__dirname, 'src', 'users.html'));
 });
 
 // Serve assessments page
 app.get('/assessments', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'assessments.html'));
+  res.sendFile(path.join(__dirname, 'src', 'assessments.html'));
 });
 
 // Serve KPIs page
 app.get('/kpis', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'kpis.html'));
+  res.sendFile(path.join(__dirname, 'src', 'kpis.html'));
 });
 
 // Serve settings page
 app.get('/settings', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'settings.html'));
+  res.sendFile(path.join(__dirname, 'src', 'settings.html'));
 });
 
 // Serve settings-data page
 app.get('/settings-data', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'settings-data.html'));
+  res.sendFile(path.join(__dirname, 'src', 'settings-data.html'));
 });
 
 // Serve onboarding wizard
 app.get('/onboarding', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'onboarding.html'));
+  res.sendFile(path.join(__dirname, 'src', 'onboarding.html'));
 });
 
 // Serve versions page
 app.get('/versions', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'versions.html'));
+  res.sendFile(path.join(__dirname, 'src', 'versions.html'));
 });
 
 // Serve choices page
 app.get('/choices', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'choices.html'));
+  res.sendFile(path.join(__dirname, 'src', 'choices.html'));
 });
 
 // Serve corrections page
 app.get('/corrections', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'corrections.html'));
+  res.sendFile(path.join(__dirname, 'src', 'corrections.html'));
 });
 
 // Serve analysis page
 app.get('/analysis', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'analysis.html'));
+  res.sendFile(path.join(__dirname, 'src', 'analysis.html'));
 });
 
 // Serve financial page
 app.get('/financial', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'financial.html'));
+  res.sendFile(path.join(__dirname, 'src', 'financial.html'));
 });
 
 // Serve integrations page
 app.get('/integrations', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'integrations.html'));
+  res.sendFile(path.join(__dirname, 'src', 'integrations.html'));
 });
 
 // Serve directions page
 app.get('/directions', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'directions.html'));
+  res.sendFile(path.join(__dirname, 'src', 'directions.html'));
 });
 
 // Serve objectives page
 app.get('/objectives', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'objectives.html'));
+  res.sendFile(path.join(__dirname, 'src', 'objectives.html'));
 });
 
 // Serve initiatives page
 app.get('/initiatives', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'initiatives.html'));
+  res.sendFile(path.join(__dirname, 'src', 'initiatives.html'));
 });
 
 // Serve reviews page
 app.get('/reviews', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'reviews.html'));
+  res.sendFile(path.join(__dirname, 'src', 'reviews.html'));
 });
 
 // Redirect alerts to intelligence page (alerts are shown there)
@@ -424,30 +424,30 @@ app.get('/alerts', (req, res) => {
 
 // Serve TOWS Matrix page
 app.get('/tows', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'tows.html'));
+  res.sendFile(path.join(__dirname, 'src', 'tows.html'));
 });
 
 // Serve Strategy Map / Causal Links page
 app.get('/strategy-map', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'strategy-map.html'));
+  res.sendFile(path.join(__dirname, 'src', 'strategy-map.html'));
 });
 
 // Serve KPI entries page
 app.get('/kpi-entries', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'kpi-entries.html'));
+  res.sendFile(path.join(__dirname, 'src', 'kpi-entries.html'));
 });
 
 // Serve Priority Matrix page
 app.get('/priority-matrix', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'priority-matrix.html'));
+  res.sendFile(path.join(__dirname, 'src', 'priority-matrix.html'));
 });
 app.get('/inspector', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'inspector.html'));
+  res.sendFile(path.join(__dirname, 'src', 'inspector.html'));
 });
 
 // Serve Intelligence Dashboard
 app.get('/intelligence', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'intelligence.html'));
+  res.sendFile(path.join(__dirname, 'src', 'intelligence.html'));
 });
 
 // Serve Path 1 journey (moved) — redirect to landing
@@ -457,27 +457,27 @@ app.get('/path1', (req, res) => {
 
 // Serve Guided Journey
 app.get('/journey', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'journey.html'));
+  res.sendFile(path.join(__dirname, 'src', 'journey.html'));
 });
 
 // Serve Pricing page
 app.get('/pricing', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'pricing.html'));
+  res.sendFile(path.join(__dirname, 'src', 'pricing.html'));
 });
 
 // Serve Projects page
 app.get('/projects', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'projects.html'));
+  res.sendFile(path.join(__dirname, 'src', 'projects.html'));
 });
 
 // Serve Tasks page
 app.get('/tasks', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'tasks.html'));
+  res.sendFile(path.join(__dirname, 'src', 'tasks.html'));
 });
 
 // Serve Admin Decisions page
 app.get('/admin-decisions', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin-decisions.html'));
+  res.sendFile(path.join(__dirname, 'src', 'admin-decisions.html'));
 });
 
 // Serve SWOT page (moved) — redirect to canonical tool detail
@@ -487,97 +487,97 @@ app.get('/swot', (req, res) => {
 
 // Serve Operations page
 app.get('/operations', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'operations.html'));
+  res.sendFile(path.join(__dirname, 'src', 'operations.html'));
 });
 
 // Serve CEO Executive Dashboard
 app.get('/ceo-dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'ceo-dashboard.html'));
+  res.sendFile(path.join(__dirname, 'src', 'ceo-dashboard.html'));
 });
 
 // Serve Achievements page
 app.get('/achievements', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'achievements.html'));
+  res.sendFile(path.join(__dirname, 'src', 'achievements.html'));
 });
 
 // Serve Strategic Calendar
 app.get('/strategic-calendar', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'strategic-calendar.html'));
+  res.sendFile(path.join(__dirname, 'src', 'strategic-calendar.html'));
 });
 
 // Serve Activity Feed
 app.get('/activity-feed', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'activity-feed.html'));
+  res.sendFile(path.join(__dirname, 'src', 'activity-feed.html'));
 });
 
 // Serve Auto Reports
 app.get('/auto-reports', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'auto-reports.html'));
+  res.sendFile(path.join(__dirname, 'src', 'auto-reports.html'));
 });
 
 // Serve Risk Map
 app.get('/risk-map', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'risk-map.html'));
+  res.sendFile(path.join(__dirname, 'src', 'risk-map.html'));
 });
 
 // Serve Org DNA
 app.get('/org-dna', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'org-dna.html'));
+  res.sendFile(path.join(__dirname, 'src', 'org-dna.html'));
 });
 
 // Serve Benchmarking
 app.get('/benchmarking', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'benchmarking.html'));
+  res.sendFile(path.join(__dirname, 'src', 'benchmarking.html'));
 });
 
 // Serve Stakeholders
 app.get('/stakeholders', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'stakeholders.html'));
+  res.sendFile(path.join(__dirname, 'src', 'stakeholders.html'));
 });
 
 // Serve AI Presentation
 app.get('/ai-presentation', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'ai-presentation.html'));
+  res.sendFile(path.join(__dirname, 'src', 'ai-presentation.html'));
 });
 
 // Serve Live Board
 app.get('/live-board', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'live-board.html'));
+  res.sendFile(path.join(__dirname, 'src', 'live-board.html'));
 });
 
 // Serve API Docs
 app.get('/api-docs-page', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'api-docs.html'));
+  res.sendFile(path.join(__dirname, 'src', 'api-docs.html'));
 });
 
 // Serve Webhooks
 app.get('/webhooks', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'webhooks.html'));
+  res.sendFile(path.join(__dirname, 'src', 'webhooks.html'));
 });
 
 // Serve Companies page (SUPER_ADMIN)
 app.get('/companies', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'companies.html'));
+  res.sendFile(path.join(__dirname, 'src', 'companies.html'));
 });
 
 // Serve AI Center
 app.get('/ai-center', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'ai-center.html'));
+  res.sendFile(path.join(__dirname, 'src', 'ai-center.html'));
 });
 
 // Serve Internal Environment Analysis
 app.get('/internal-env', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'internal-env.html'));
+  res.sendFile(path.join(__dirname, 'src', 'internal-env.html'));
 });
 
 // Serve Admin Panel
 app.get('/admin-panel', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin-panel.html'));
+  res.sendFile(path.join(__dirname, 'src', 'admin-panel.html'));
 });
 
 // Landing page (public homepage)
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'landing.html'));
+  res.sendFile(path.join(__dirname, 'src', 'landing.html'));
 });
 
 // Global Error Handler

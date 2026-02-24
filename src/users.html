@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ستارتكيس - إدارة المستخدمين</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #667eea;
+      --primary-dark: #5a67d8;
+      --secondary: #764ba2;
+      --bg: #0f1117;
+      --bg-card: #1a1d2e;
+      --bg-card-hover: #232640;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.08);
+      --success: #22c55e;
+      --warning: #facc15;
+      --danger: #ef4444;
+      --info: #38bdf8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      font-family: 'Tajawal', sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* NAVBAR */
+    .top-nav {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      padding: 14px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .top-nav .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: white;
+      text-decoration: none;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .top-nav .nav-links {
+      display: flex;
+      gap: 6px;
+    }
+
+    .top-nav .nav-links a {
+      color: rgba(255, 255, 255, 0.85);
+      text-decoration: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .top-nav .nav-links a:hover,
+    .top-nav .nav-links a.active {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+    }
+
+    .user-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+      font-size: 14px;
+    }
+
+    .user-info {
+      text-align: left;
+      color: white;
+    }
+
+    .user-info .name {
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .user-info .role {
+      font-size: 11px;
+      opacity: 0.75;
+    }
+
+    .btn-logout {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-logout:hover {
+      background: rgba(239, 68, 68, 0.6);
+    }
+
+    .layout {
+      display: flex;
+      min-height: calc(100vh - 60px);
+    }
+
+    /* SIDEBAR — managed by sidebar.js */
+
+    .main-content {
+      flex: 1;
+      padding: 30px;
+      max-width: calc(100% - 220px);
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .page-header h1 {
+      font-size: 24px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .page-header h1 i {
+      color: var(--primary);
+    }
+
+    .btn-add {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-add:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    /* STATS */
+    .mini-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .mini-stat {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .mini-stat .ms-value {
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .mini-stat .ms-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* CONTROLS */
+    .controls-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 200px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px 12px 44px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      position: relative;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .search-wrap i {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+
+    .filter-select {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      min-width: 140px;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    /* USER CARDS */
+    .users-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .user-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .user-card:hover {
+      border-color: rgba(255, 255, 255, 0.12);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .user-card .accent-bar {
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      height: 3px;
+    }
+
+    .accent-owner {
+      background: linear-gradient(90deg, #f59e0b, #ef4444);
+    }
+
+    .accent-admin {
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+    }
+
+    .accent-editor {
+      background: linear-gradient(90deg, var(--info), var(--success));
+    }
+
+    .accent-viewer {
+      background: linear-gradient(90deg, #6b7280, #9ca3af);
+    }
+
+    .uc-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .uc-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 800;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .uc-info h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .uc-info .uc-email {
+      font-size: 12px;
+      color: var(--text-muted);
+      direction: ltr;
+      text-align: right;
+    }
+
+    .uc-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .uc-detail {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .uc-detail-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .uc-detail-value {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .uc-memberships {
+      margin-bottom: 14px;
+    }
+
+    .uc-membership {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 8px;
+      margin-bottom: 4px;
+      font-size: 12px;
+    }
+
+    .uc-membership i {
+      color: var(--primary);
+    }
+
+    .role-badge {
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .role-OWNER {
+      background: rgba(245, 158, 11, 0.15);
+      color: #f59e0b;
+    }
+
+    .role-ADMIN {
+      background: rgba(102, 126, 234, 0.15);
+      color: var(--primary);
+    }
+
+    .role-EDITOR {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--info);
+    }
+
+    .role-VIEWER {
+      background: rgba(148, 163, 184, 0.15);
+      color: var(--text-muted);
+    }
+
+    .uc-actions {
+      display: flex;
+      gap: 8px;
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+    }
+
+    .uc-actions .btn-action {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .uc-actions .btn-action:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+    }
+
+    .uc-actions .btn-action.btn-edit:hover {
+      border-color: var(--warning);
+      color: var(--warning);
+    }
+
+    .uc-actions .btn-action.btn-delete:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .uc-actions .btn-action.btn-membership:hover {
+      border-color: var(--info);
+      color: var(--info);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    .empty-state i {
+      font-size: 48px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .empty-state h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .empty-state p {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .pagination-bar {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .page-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .page-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .page-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    .pagination-info {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-right: 12px;
+    }
+
+    /* MODAL */
+    .modal-backdrop {
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    .modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      color: var(--text);
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border-radius: 16px 16px 0 0;
+      padding: 18px 24px;
+      border-bottom: none;
+    }
+
+    .modal-header .modal-title {
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .form-select {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    .form-select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .form-select option {
+      background: var(--bg-card);
+      color: var(--text);
+    }
+
+    .btn-modal-save {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-modal-save:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-modal-cancel {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .btn-modal-cancel:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .form-error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: var(--danger);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      margin-top: 12px;
+      display: none;
+    }
+
+    .loading-skeleton {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+    }
+
+    .skeleton-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      animation: pulse 1.5s infinite;
+    }
+
+    .skeleton-line {
+      height: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+
+    .skeleton-line.short {
+      width: 60%;
+    }
+
+    .skeleton-line.medium {
+      width: 80%;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    @media (max-width: 768px) {
+
+      .sidebar,
+      .stx-sidebar {
+        display: none;
+      }
+
+      .main-content {
+        max-width: 100%;
+        padding: 15px;
+      }
+
+      .users-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .mini-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .top-nav .nav-links {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="top-nav">
+    <a href="/dashboard" class="brand"><i class="bi bi-graph-up-arrow"></i> ستارتكيس</a>
+    <div class="nav-links">
+      <a href="/dashboard"><i class="bi bi-house"></i> الرئيسية</a>
+      <a href="/kpis"><i class="bi bi-graph-up"></i> المؤشرات</a>
+      <a href="/intelligence"><i class="bi bi-bell"></i> التنبيهات</a>
+    </div>
+    <div class="user-area">
+      <div class="user-info">
+        <div class="name" id="navUserName">—</div>
+        <div class="role" id="navUserRole">—</div>
+      </div>
+      <div class="user-avatar" id="navUserInitial">—</div>
+      <button class="btn-logout" id="logoutBtn">خروج</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <!-- SIDEBAR — يُدار بواسطة sidebar.js -->
+    <nav class="sidebar"></nav>
+
+    <main class="main-content">
+      <div class="page-header">
+        <div>
+          <h1><i class="bi bi-people"></i> إدارة المستخدمين</h1>
+          <p style="color:var(--text-muted);font-size:13px;margin-top:4px">👥 أدر فريقك وصلاحياتهم — كل شخص في المكان
+            الصحيح</p>
+        </div>
+        <button class="btn-add" id="addBtn"><i class="bi bi-person-plus"></i> مستخدم جديد</button>
+      </div>
+
+      <div class="mini-stats">
+        <div class="mini-stat">
+          <div class="ms-value" id="statTotal" style="color:var(--primary)">--</div>
+          <div class="ms-label">إجمالي المستخدمين</div>
+        </div>
+        <div class="mini-stat">
+          <div class="ms-value" id="statOwners" style="color:#f59e0b">--</div>
+          <div class="ms-label">مالكون</div>
+        </div>
+        <div class="mini-stat">
+          <div class="ms-value" id="statAdmins" style="color:var(--info)">--</div>
+          <div class="ms-label">مدراء</div>
+        </div>
+        <div class="mini-stat">
+          <div class="ms-value" id="statViewers" style="color:var(--text-muted)">--</div>
+          <div class="ms-label">مشاهدون</div>
+        </div>
+      </div>
+
+      <div class="controls-bar">
+        <div class="search-wrap"><i class="bi bi-search"></i><input type="text" class="search-input" id="searchInput"
+            placeholder="ابحث بالاسم أو البريد..."></div>
+        <select class="filter-select" id="roleFilter">
+          <option value="">كل الأدوار</option>
+          <option value="OWNER">مالك</option>
+          <option value="ADMIN">مدير</option>
+          <option value="EDITOR">محرر</option>
+          <option value="VIEWER">مشاهد</option>
+        </select>
+      </div>
+
+      <div id="container">
+        <div class="loading-skeleton">
+          <div class="skeleton-card">
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line"></div>
+          </div>
+          <div class="skeleton-card">
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line"></div>
+          </div>
+        </div>
+      </div>
+      <div class="pagination-bar" id="pagination"></div>
+    </main>
+  </div>
+
+  <!-- CREATE/EDIT MODAL -->
+  <div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalTitle">مستخدم جديد</h5><button type="button"
+            class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="userForm">
+            <div class="form-group"><label>الاسم الكامل *</label><input type="text" class="form-input" id="uName"
+                required></div>
+            <div class="form-group"><label>البريد الإلكتروني *</label><input type="email" class="form-input" id="uEmail"
+                required dir="ltr" style="text-align:left"></div>
+            <div class="form-group" id="passwordGroup"><label>كلمة المرور *</label><input type="password"
+                class="form-input" id="uPassword" dir="ltr" style="text-align:left"></div>
+            <div class="form-group"><label>الكيان</label>
+              <select class="form-select" id="uEntity">
+                <option value="">بدون كيان</option>
+              </select>
+            </div>
+            <div class="form-group"><label>الدور</label>
+              <select class="form-select" id="uRole">
+                <option value="VIEWER">مشاهد (VIEWER)</option>
+                <option value="EDITOR">محرر (EDITOR)</option>
+                <option value="ADMIN">مدير (ADMIN)</option>
+                <option value="OWNER">مالك (OWNER)</option>
+              </select>
+            </div>
+            <div class="form-error" id="formError"></div>
+          </form>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn-modal-cancel"
+            data-bs-dismiss="modal">إلغاء</button><button type="button" class="btn-modal-save" id="saveBtn">حفظ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    if (!token || !user) window.location.href = '/login';
+    const userData = JSON.parse(user);
+    document.getElementById('navUserName').textContent = userData.name;
+    document.getElementById('navUserRole').textContent = userData.role;
+    document.getElementById('navUserInitial').textContent = (userData.name || 'U').charAt(0).toUpperCase();
+
+    let currentPage = 1, editingId = null, modalInstance, entities = [];
+
+    async function api(url, opts = {}) {
+      const r = await fetch(url, { ...opts, headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...(opts.headers || {}) } });
+      if (r.status === 401) { logout(); return null; }
+      return r;
+    }
+
+    const roleLabels = { OWNER: 'مالك', ADMIN: 'مدير', EDITOR: 'محرر', VIEWER: 'مشاهد' };
+    const roleColors = { OWNER: '#f59e0b', ADMIN: '#667eea', EDITOR: '#38bdf8', VIEWER: '#94a3b8' };
+    const roleBgs = { OWNER: 'rgba(245,158,11,0.2)', ADMIN: 'rgba(102,126,234,0.2)', EDITOR: 'rgba(56,189,248,0.2)', VIEWER: 'rgba(148,163,184,0.2)' };
+
+    async function loadEntities() {
+      try {
+        const r = await api('/api/entities?limit=100');
+        const d = await r.json();
+        entities = d.entities || [];
+        const sel = document.getElementById('uEntity');
+        sel.innerHTML = '<option value="">بدون كيان</option>' + entities.map(e => `<option value="${e.id}">${e.legalName || e.displayName}</option>`).join('');
+      } catch (e) { console.error(e); }
+    }
+
+    async function loadUsers(page = 1) {
+      currentPage = page;
+      const search = document.getElementById('searchInput').value;
+      const role = document.getElementById('roleFilter').value;
+      const params = new URLSearchParams({ page, limit: 12 });
+      if (search) params.append('search', search);
+      if (role) params.append('role', role);
+
+      const r = await api(`/api/users?${params}`);
+      const data = await r.json();
+      const users = data.users || [];
+
+      // Stats
+      let owners = 0, admins = 0, viewers = 0;
+      users.forEach(u => {
+        const roles = u.memberships?.map(m => m.role) || [];
+        if (roles.includes('OWNER')) owners++;
+        if (roles.includes('ADMIN')) admins++;
+        if (roles.includes('VIEWER') || roles.length === 0) viewers++;
+      });
+
+      document.getElementById('statTotal').textContent = data.total || 0;
+      document.getElementById('statOwners').textContent = owners;
+      document.getElementById('statAdmins').textContent = admins;
+      document.getElementById('statViewers').textContent = viewers;
+
+      renderUsers(users);
+      renderPagination(data.totalPages || 1, page, data.total || 0);
+    }
+
+    function renderUsers(users) {
+      const c = document.getElementById('container');
+      if (!users.length) {
+        c.innerHTML = `<div class="empty-state"><i class="bi bi-people"></i><h3>لا يوجد مستخدمون</h3><p>أضف أول مستخدم للنظام</p></div>`;
+        return;
+      }
+
+      c.innerHTML = `<div class="users-grid">${users.map(u => {
+        const topRole = u.memberships?.[0]?.role || 'VIEWER';
+        const initial = (u.name || 'U').charAt(0).toUpperCase();
+        const accentClass = `accent-${topRole.toLowerCase()}`;
+        const createdDate = new Date(u.createdAt).toLocaleDateString('ar-SA');
+
+        return `<div class="user-card">
+          <div class="accent-bar ${accentClass}"></div>
+          <div class="uc-header">
+            <div class="uc-avatar" style="background:${roleBgs[topRole]};color:${roleColors[topRole]}">${initial}</div>
+            <div class="uc-info"><h3>${u.name}</h3><div class="uc-email">${u.email}</div></div>
+          </div>
+
+          <div class="uc-details">
+            <div class="uc-detail"><div class="uc-detail-label">تاريخ الإنشاء</div><div class="uc-detail-value">${createdDate}</div></div>
+            <div class="uc-detail"><div class="uc-detail-label">عدد العضويات</div><div class="uc-detail-value" style="color:var(--primary)">${u.memberships?.length || 0}</div></div>
+          </div>
+
+          ${u.memberships?.length ? `<div class="uc-memberships">${u.memberships.map(m => `
+            <div class="uc-membership">
+              <i class="bi bi-building"></i>
+              <span style="flex:1">${m.entity?.legalName || m.entity?.displayName || '—'}</span>
+              <span class="role-badge role-${m.role}">${roleLabels[m.role] || m.role}</span>
+            </div>`).join('')}</div>` : ''}
+
+          <div class="uc-actions">
+            <button class="btn-action btn-edit" onclick="editUser('${u.id}','${esc(u.name)}','${esc(u.email)}')"><i class="bi bi-pencil"></i> تعديل</button>
+            <button class="btn-action btn-delete" onclick="deleteUser('${u.id}','${esc(u.name)}')"><i class="bi bi-trash"></i> حذف</button>
+          </div>
+        </div>`;
+      }).join('')}</div>`;
+    }
+
+    function esc(s) { return (s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+
+    function renderPagination(totalPages, current, total) {
+      const p = document.getElementById('pagination');
+      if (totalPages <= 1) { p.innerHTML = ''; return; }
+      let h = `<span class="pagination-info">الصفحة ${current} من ${totalPages} (${total})</span>`;
+      if (current > 1) h += `<button class="page-btn" onclick="loadUsers(${current - 1})"><i class="bi bi-chevron-right"></i></button>`;
+      for (let i = Math.max(1, current - 2); i <= Math.min(totalPages, current + 2); i++) h += `<button class="page-btn ${i === current ? 'active' : ''}" onclick="loadUsers(${i})">${i}</button>`;
+      if (current < totalPages) h += `<button class="page-btn" onclick="loadUsers(${current + 1})"><i class="bi bi-chevron-left"></i></button>`;
+      p.innerHTML = h;
+    }
+
+    function openCreate() {
+      editingId = null;
+      document.getElementById('userForm').reset();
+      document.getElementById('modalTitle').textContent = 'مستخدم جديد';
+      document.getElementById('passwordGroup').style.display = 'block';
+      document.getElementById('formError').style.display = 'none';
+      modalInstance.show();
+    }
+
+    function editUser(id, name, email) {
+      editingId = id;
+      document.getElementById('uName').value = name;
+      document.getElementById('uEmail').value = email;
+      document.getElementById('uPassword').value = '';
+      document.getElementById('modalTitle').textContent = 'تعديل المستخدم';
+      document.getElementById('passwordGroup').style.display = 'none';
+      document.getElementById('formError').style.display = 'none';
+      modalInstance.show();
+    }
+
+    async function saveUser() {
+      const name = document.getElementById('uName').value.trim();
+      const email = document.getElementById('uEmail').value.trim();
+      const password = document.getElementById('uPassword').value;
+      const entityId = document.getElementById('uEntity').value;
+      const role = document.getElementById('uRole').value;
+      const err = document.getElementById('formError');
+
+      if (!name || !email) { err.textContent = 'الاسم والبريد مطلوبان'; err.style.display = 'block'; return; }
+      if (!editingId && !password) { err.textContent = 'كلمة المرور مطلوبة'; err.style.display = 'block'; return; }
+
+      const url = editingId ? `/api/users/${editingId}` : '/api/users';
+      const method = editingId ? 'PATCH' : 'POST';
+      const body = editingId ? { name, email, ...(password && { password }) } : { name, email, password, ...(entityId && { entityId, role }) };
+
+      try {
+        const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(body) });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || d.message || 'خطأ');
+        modalInstance.hide();
+        loadUsers(currentPage);
+      } catch (e) { err.textContent = e.message; err.style.display = 'block'; }
+    }
+
+    async function deleteUser(id, name) {
+      if (!confirm(`هل تريد حذف المستخدم "${name}"؟`)) return;
+      try {
+        const r = await fetch(`/api/users/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+        if (!r.ok) { const d = await r.json(); alert(d.error || 'خطأ'); return; }
+        loadUsers(currentPage);
+      } catch (e) { alert('خطأ: ' + e.message); }
+    }
+
+    function logout() { localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.href = '/login'; }
+
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+    document.getElementById('addBtn').addEventListener('click', openCreate);
+    document.getElementById('saveBtn').addEventListener('click', saveUser);
+    document.getElementById('roleFilter').addEventListener('change', () => loadUsers(1));
+    let st; document.getElementById('searchInput').addEventListener('input', () => { clearTimeout(st); st = setTimeout(() => loadUsers(1), 300); });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      modalInstance = new bootstrap.Modal(document.getElementById('userModal'));
+      loadEntities();
+      loadUsers();
+    });
+  </script>
+  <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/sidebar.js"></script>
+    <script src="/assets/js/ai-advisor.js"></script>
+</body>
+
+</html>

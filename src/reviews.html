@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكيس - المراجعات الدورية</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="/assets/css/sidebar.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --secondary: #764ba2;
+            --bg: #0f1117;
+            --bg-card: #1a1d2e;
+            --bg-card-hover: #232640;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --success: #22c55e;
+            --warning: #facc15;
+            --danger: #ef4444;
+            --info: #38bdf8;
+            --purple: #a78bfa;
+            --accent: #818cf8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .top-nav {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 14px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .3);
+        }
+
+        .top-nav .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .top-nav .nav-links {
+            display: flex;
+            gap: 6px;
+        }
+
+        .top-nav .nav-links a {
+            color: rgba(255, 255, 255, .85);
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            transition: .2s;
+        }
+
+        .top-nav .nav-links a:hover {
+            background: rgba(255, 255, 255, .15);
+            color: #fff;
+        }
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .btn-logout {
+            background: rgba(239, 68, 68, .3);
+            color: #fff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .layout {
+            display: flex;
+            min-height: calc(100vh - 60px);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            max-width: calc(100% - 220px);
+        }
+
+        .page-header {
+            margin-bottom: 24px;
+        }
+
+        .page-header h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-header p {
+            color: var(--text-muted);
+            font-size: .95rem;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: .3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .stat-icon.blue {
+            background: rgba(56, 189, 248, .15);
+            color: #38bdf8;
+        }
+
+        .stat-icon.green {
+            background: rgba(34, 197, 94, .15);
+            color: #22c55e;
+        }
+
+        .stat-icon.yellow {
+            background: rgba(250, 204, 21, .15);
+            color: #facc15;
+        }
+
+        .stat-icon.purple {
+            background: rgba(167, 139, 250, .15);
+            color: #a78bfa;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+
+        .stat-label {
+            font-size: .8rem;
+            color: var(--text-muted);
+        }
+
+        .data-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .card-toolbar {
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-toolbar h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filters-row {
+            display: flex;
+            gap: 10px;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: .8rem;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 10px;
+            font-size: .85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: .2s;
+            font-family: 'Tajawal', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, .4);
+        }
+
+        .review-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 12px 20px;
+            transition: .3s;
+        }
+
+        .review-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        .review-card h5 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .review-meta {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+
+        .badge-custom {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: .75rem;
+            font-weight: 600;
+        }
+
+        .badge-draft {
+            background: rgba(148, 163, 184, .15);
+            color: #94a3b8;
+        }
+
+        .badge-scheduled {
+            background: rgba(56, 189, 248, .15);
+            color: #38bdf8;
+        }
+
+        .badge-in_review {
+            background: rgba(167, 139, 250, .15);
+            color: #a78bfa;
+        }
+
+        .badge-completed {
+            background: rgba(34, 197, 94, .15);
+            color: #22c55e;
+        }
+
+        .badge-cancelled {
+            background: rgba(239, 68, 68, .15);
+            color: #ef4444;
+        }
+
+        .badge-continue {
+            background: rgba(34, 197, 94, .15);
+            color: #22c55e;
+        }
+
+        .badge-adjust {
+            background: rgba(250, 204, 21, .15);
+            color: #facc15;
+        }
+
+        .badge-pivot {
+            background: rgba(239, 68, 68, .15);
+            color: #ef4444;
+        }
+
+        .badge-type {
+            background: rgba(102, 126, 234, .12);
+            color: var(--primary);
+        }
+
+        .btn-action {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: .2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-action:hover {
+            background: var(--bg-card-hover);
+            color: var(--text);
+        }
+
+        .btn-action.danger:hover {
+            background: rgba(239, 68, 68, .15);
+            color: #ef4444;
+        }
+
+        .findings-list {
+            margin-top: 8px;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, .03);
+            border-radius: 8px;
+            font-size: .85rem;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+
+        .findings-list div {
+            padding: 2px 0;
+            color: var(--text-muted);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .empty-state .emoji {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .6);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            width: 620px;
+            max-height: 85vh;
+            overflow-y: auto;
+            animation: slideUp .3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1
+            }
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 20px 24px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: .85rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: .9rem;
+            font-family: 'Tajawal', sans-serif;
+            transition: .2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, .15);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .form-row.three {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .section-divider {
+            font-size: .8rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 16px 0 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .btn-cancel {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Tajawal', sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="top-nav">
+        <a href="/dashboard" class="brand"><i class="bi bi-rocket-takeoff-fill"></i> ستارتكيس</a>
+        <div class="nav-links">
+            <a href="/dashboard"><i class="bi bi-house"></i> الرئيسية</a>
+            <a href="/kpis"><i class="bi bi-graph-up"></i> المؤشرات</a>
+            <a href="/alerts"><i class="bi bi-bell"></i> التنبيهات</a>
+        </div>
+        <div class="user-area">
+            <span style="color:#fff;font-size:13px" id="userName">مدير النظام</span>
+            <div class="user-avatar">م</div>
+            <button class="btn-logout" onclick="logout()">خروج</button>
+        </div>
+    </nav>
+
+    <div class="layout">
+        <nav class="sidebar"></nav>
+        <main class="main-content">
+            <div class="page-header">
+                <h1>📆 المراجعات الدورية</h1>
+                <p>راجع أداءك بشكل دوري — التحسين المستمر هو سر النجاح 🎯</p>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon blue">📋</div>
+                    <div>
+                        <div class="stat-value" id="statTotal">0</div>
+                        <div class="stat-label">إجمالي المراجعات</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">✅</div>
+                    <div>
+                        <div class="stat-value" id="statCompleted">0</div>
+                        <div class="stat-label">مكتملة</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon yellow">⚠️</div>
+                    <div>
+                        <div class="stat-value" id="statAdjust">0</div>
+                        <div class="stat-label">تحتاج تعديل</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple">🔄</div>
+                    <div>
+                        <div class="stat-value" id="statPivot">0</div>
+                        <div class="stat-label">تحوّل</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="data-card">
+                <div class="card-toolbar">
+                    <h3><i class="bi bi-journal-check"></i> سجل المراجعات</h3>
+                    <button class="btn-add" onclick="showModal()"><i class="bi bi-plus-lg"></i> مراجعة جديدة</button>
+                </div>
+                <div class="filters-row">
+                    <select class="filter-select" id="versionFilter" onchange="loadReviews()">
+                        <option value="">كل الإصدارات</option>
+                    </select>
+                    <select class="filter-select" id="statusFilter" onchange="loadReviews()">
+                        <option value="">كل الحالات</option>
+                        <option value="DRAFT">مسودة</option>
+                        <option value="SCHEDULED">مجدول</option>
+                        <option value="IN_REVIEW">قيد المراجعة</option>
+                        <option value="COMPLETED">مكتمل</option>
+                    </select>
+                    <select class="filter-select" id="decisionFilter" onchange="loadReviews()">
+                        <option value="">كل القرارات</option>
+                        <option value="CONTINUE">استمرار</option>
+                        <option value="ADJUST">تعديل</option>
+                        <option value="PIVOT">تحوّل</option>
+                    </select>
+                </div>
+                <div id="reviewsContainer">
+                    <div class="empty-state">
+                        <div class="emoji">⏳</div>جاري التحميل...
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="reviewModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modalTitle">مراجعة جديدة</h3><button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editId">
+                <div class="section-divider"><i class="bi bi-info-circle"></i> المعلومات الأساسية</div>
+                <div class="form-row">
+                    <div class="form-group"><label>العنوان *</label><input type="text" id="revTitle" class="form-input"
+                            placeholder="مثال: المراجعة الربعية Q1"></div>
+                    <div class="form-group"><label>تاريخ المراجعة</label><input type="date" id="revDate"
+                            class="form-input"></div>
+                </div>
+                <div class="form-group"><label>الملاحظات العامة</label><textarea id="revNotes" class="form-input"
+                        rows="3"></textarea></div>
+                <div class="form-group"><label>النتائج (findings) — سطر لكل نتيجة</label><textarea id="revFindings"
+                        class="form-input" rows="3" placeholder="النتيجة 1&#10;النتيجة 2"></textarea></div>
+                <div class="section-divider"><i class="bi bi-sliders"></i> التصنيف والحالة</div>
+                <div class="form-row three">
+                    <div class="form-group"><label>القرار</label>
+                        <select id="revDecision" class="form-input">
+                            <option value="">-- اختر --</option>
+                            <option value="CONTINUE">استمرار ✅</option>
+                            <option value="ADJUST">تعديل ⚠️</option>
+                            <option value="PIVOT">تحوّل 🔄</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>الحالة</label>
+                        <select id="revStatus" class="form-input">
+                            <option value="DRAFT">مسودة</option>
+                            <option value="SCHEDULED">مجدول</option>
+                            <option value="IN_REVIEW">قيد المراجعة</option>
+                            <option value="COMPLETED">مكتمل</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>النوع</label>
+                        <select id="revType" class="form-input">
+                            <option value="QUARTERLY">ربع سنوي</option>
+                            <option value="SEMI_ANNUAL">نصف سنوي</option>
+                            <option value="ANNUAL">سنوي</option>
+                            <option value="AD_HOC">استثنائي</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn-cancel" onclick="closeModal()">إلغاء</button><button
+                    class="btn-save" onclick="save()">💾 حفظ</button></div>
+        </div>
+    </div>
+
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/sidebar.js"></script>
+    <script src="/assets/js/ai-advisor.js"></script>
+    <script>
+        if (window.StartixAPI?.showEntityBanner) {
+            StartixAPI.showEntityBanner({ toolName: 'المراجعات الدورية' });
+        }
+    </script>
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+        const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.name || 'مستخدم';
+
+        const decisionLabel = { CONTINUE: 'استمرار ✅', ADJUST: 'تعديل ⚠️', PIVOT: 'تحوّل 🔄' };
+        const statusLabel = { DRAFT: 'مسودة', SCHEDULED: 'مجدول', IN_REVIEW: 'قيد المراجعة', COMPLETED: 'مكتمل', CANCELLED: 'ملغي' };
+        const typeLabel = { QUARTERLY: 'ربع سنوي', SEMI_ANNUAL: 'نصف سنوي', ANNUAL: 'سنوي', AD_HOC: 'استثنائي' };
+        let allReviews = [];
+
+        function closeModal() { document.getElementById('reviewModal').classList.remove('show'); }
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+        async function init() { await loadVersions(); await loadReviews(); }
+
+        async function loadVersions() {
+            try {
+                const res = await fetch('/api/versions', { headers }); const data = await res.json();
+                const sel = document.getElementById('versionFilter');
+                (data.versions || []).forEach(v => { const o = document.createElement('option'); o.value = v.id; o.textContent = `V${v.versionNumber} — ${v.entity?.legalName || ''}`; sel.appendChild(o); });
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadReviews() {
+            const container = document.getElementById('reviewsContainer');
+            try {
+                let url = '/api/strategic/reviews?';
+                const vId = document.getElementById('versionFilter').value;
+                const stat = document.getElementById('statusFilter').value;
+                const dec = document.getElementById('decisionFilter').value;
+                if (vId) url += `versionId=${vId}&`; if (stat) url += `status=${stat}&`; if (dec) url += `decision=${dec}&`;
+                const res = await fetch(url, { headers }); const data = await res.json();
+                allReviews = data.reviews || data || [];
+                updateStats();
+                if (!allReviews.length) { container.innerHTML = '<div class="empty-state"><div class="emoji">📋</div><h4>لا توجد مراجعات</h4><p>اضغط "مراجعة جديدة" للبدء</p></div>'; return; }
+
+                container.innerHTML = allReviews.map(r => {
+                    const fmt = d => d ? new Date(d).toLocaleDateString('ar-SA') : '-';
+                    return `<div class="review-card">
+                        <div style="display:flex;justify-content:space-between;align-items:start">
+                            <div>
+                                <h5>${r.title}</h5>
+                                <div class="review-meta">
+                                    <span class="badge-custom badge-${r.status.toLowerCase()}">${statusLabel[r.status] || r.status}</span>
+                                    ${r.decision ? `<span class="badge-custom badge-${r.decision.toLowerCase()}">${decisionLabel[r.decision]}</span>` : ''}
+                                    ${r.type ? `<span class="badge-custom badge-type">${typeLabel[r.type] || r.type}</span>` : ''}
+                                    <span style="color:var(--text-muted);font-size:.8rem"><i class="bi bi-calendar3"></i> ${fmt(r.reviewDate || r.createdAt)}</span>
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:4px">
+                                <button class="btn-action" onclick="edit('${r.id}')"><i class="bi bi-pencil"></i></button>
+                                <button class="btn-action danger" onclick="del('${r.id}')"><i class="bi bi-trash"></i></button>
+                            </div>
+                        </div>
+                        ${r.notes ? `<p style="margin-top:8px;color:var(--text-muted);font-size:.85rem">${r.notes}</p>` : ''}
+                        ${r.findings ? `<div class="findings-list"><div>• ${r.findings}</div></div>` : ''}
+                        <div style="margin-top:8px;font-size:.8rem;color:var(--text-muted)">الإصدار: V${r.version?.versionNumber || '-'} — ${r.version?.entity?.legalName || ''}</div>
+                    </div>`;
+                }).join('');
+            } catch (e) { console.error(e); container.innerHTML = '<div class="empty-state"><div class="emoji">❌</div>خطأ في التحميل</div>'; }
+        }
+
+        function updateStats() {
+            document.getElementById('statTotal').textContent = allReviews.length;
+            document.getElementById('statCompleted').textContent = allReviews.filter(r => r.status === 'COMPLETED').length;
+            document.getElementById('statAdjust').textContent = allReviews.filter(r => r.decision === 'ADJUST').length;
+            document.getElementById('statPivot').textContent = allReviews.filter(r => r.decision === 'PIVOT').length;
+        }
+
+        function showModal() {
+            ['editId', 'revTitle', 'revDate', 'revNotes', 'revFindings'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('revDecision').value = ''; document.getElementById('revStatus').value = 'DRAFT'; document.getElementById('revType').value = 'QUARTERLY';
+            document.getElementById('modalTitle').textContent = 'مراجعة جديدة';
+            document.getElementById('reviewModal').classList.add('show');
+        }
+
+        async function edit(id) {
+            try {
+                const res = await fetch(`/api/strategic/reviews/${id}`, { headers }); const r = await res.json();
+                document.getElementById('editId').value = r.id; document.getElementById('revTitle').value = r.title;
+                document.getElementById('revDate').value = r.reviewDate ? r.reviewDate.split('T')[0] : '';
+                document.getElementById('revNotes').value = r.notes || ''; document.getElementById('revFindings').value = r.findings || '';
+                document.getElementById('revDecision').value = r.decision || ''; document.getElementById('revStatus').value = r.status;
+                document.getElementById('revType').value = r.type || 'QUARTERLY';
+                document.getElementById('modalTitle').textContent = 'تعديل المراجعة';
+                document.getElementById('reviewModal').classList.add('show');
+            } catch (e) { alert('خطأ في التحميل'); }
+        }
+
+        async function save() {
+            const editId = document.getElementById('editId').value;
+            const title = document.getElementById('revTitle').value.trim();
+            if (!title) return alert('الرجاء إدخال العنوان');
+            const body = {
+                title, reviewDate: document.getElementById('revDate').value || null,
+                notes: document.getElementById('revNotes').value.trim() || null,
+                findings: document.getElementById('revFindings').value.trim() || null,
+                decision: document.getElementById('revDecision').value || null,
+                status: document.getElementById('revStatus').value, type: document.getElementById('revType').value,
+            };
+            if (!editId) body.versionId = document.getElementById('versionFilter').value;
+            try {
+                const url = editId ? `/api/strategic/reviews/${editId}` : '/api/strategic/reviews';
+                const res = await fetch(url, { method: editId ? 'PATCH' : 'POST', headers, body: JSON.stringify(body) });
+                if (!res.ok) throw new Error('Failed');
+                closeModal(); loadReviews();
+            } catch (e) { alert('خطأ في الحفظ'); }
+        }
+
+        async function del(id) { if (!confirm('هل أنت متأكد من الحذف؟')) return; try { await fetch(`/api/strategic/reviews/${id}`, { method: 'DELETE', headers }); loadReviews(); } catch (e) { alert('خطأ'); } }
+        function logout() { localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.href = '/login.html'; }
+        init();
+    </script>
+    <script src="/assets/js/impersonation.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكيس - إدخال بيانات المؤشرات</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="/assets/css/sidebar.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --bg: #0f1117;
+            --bg-card: #1a1d2e;
+            --bg-card-hover: #232640;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --success: #22c55e;
+            --warning: #facc15;
+            --danger: #ef4444;
+            --info: #38bdf8;
+            --purple: #a78bfa;
+            --accent: #818cf8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .top-nav {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 14px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .3);
+        }
+
+        .top-nav .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .top-nav .nav-links {
+            display: flex;
+            gap: 6px;
+        }
+
+        .top-nav .nav-links a {
+            color: rgba(255, 255, 255, .85);
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            transition: .2s;
+        }
+
+        .top-nav .nav-links a:hover {
+            background: rgba(255, 255, 255, .15);
+            color: #fff;
+        }
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .btn-logout {
+            background: rgba(239, 68, 68, .3);
+            color: #fff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .layout {
+            display: flex;
+            min-height: calc(100vh - 60px);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            max-width: calc(100% - 220px);
+        }
+
+        .page-header {
+            margin-bottom: 24px;
+        }
+
+        .page-header h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-header p {
+            color: var(--text-muted);
+            font-size: .95rem;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+        }
+
+        /* KPI List Panel */
+        .kpi-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            height: fit-content;
+        }
+
+        .kpi-panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .kpi-panel .filter-area {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .filter-select {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: .85rem;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .kpi-item {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: .2s;
+        }
+
+        .kpi-item:hover {
+            background: rgba(255, 255, 255, .03);
+        }
+
+        .kpi-item.selected {
+            background: rgba(102, 126, 234, .1);
+            border-right: 3px solid var(--primary);
+        }
+
+        .kpi-item:last-child {
+            border-bottom: none;
+        }
+
+        .kpi-item .name {
+            font-weight: 600;
+            font-size: .9rem;
+            margin-bottom: 4px;
+        }
+
+        .kpi-item .meta {
+            font-size: .75rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .kpi-item .entry-count {
+            background: rgba(56, 189, 248, .15);
+            color: #38bdf8;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: .7rem;
+            font-weight: 600;
+        }
+
+        /* Entries Panel */
+        .entries-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .entries-panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .entries-panel-header h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .mini-stat {
+            background: var(--bg);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .mini-stat .num {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .mini-stat .lbl {
+            font-size: .7rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            padding: 10px 16px;
+            text-align: right;
+            font-size: .8rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, .02);
+        }
+
+        .data-table td {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: .85rem;
+        }
+
+        .data-table tr:hover td {
+            background: rgba(255, 255, 255, .03);
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge-draft {
+            background: rgba(250, 204, 21, .15);
+            color: #facc15;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: .75rem;
+            font-weight: 600;
+        }
+
+        .badge-confirmed {
+            background: rgba(34, 197, 94, .15);
+            color: #22c55e;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: .75rem;
+            font-weight: 600;
+        }
+
+        .trend-up {
+            color: var(--success);
+        }
+
+        .trend-down {
+            color: var(--danger);
+        }
+
+        .trend-same {
+            color: var(--text-muted);
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: .85rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Tajawal', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: .2s;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, .4);
+        }
+
+        .btn-action {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: .2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .8rem;
+        }
+
+        .btn-action:hover {
+            background: var(--bg-card-hover);
+            color: var(--text);
+        }
+
+        .btn-action.danger:hover {
+            background: rgba(239, 68, 68, .15);
+            color: #ef4444;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .empty-state .emoji {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .6);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            width: 500px;
+            max-height: 85vh;
+            overflow-y: auto;
+            animation: slideUp .3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1
+            }
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 20px 24px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: .85rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: .9rem;
+            font-family: 'Tajawal', sans-serif;
+            transition: .2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, .15);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .section-divider {
+            font-size: .8rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 16px 0 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .btn-cancel {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        @media(max-width:768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .main-content {
+                max-width: 100%;
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="top-nav">
+        <a href="/dashboard" class="brand"><i class="bi bi-rocket-takeoff-fill"></i> ستارتكيس</a>
+        <div class="nav-links">
+            <a href="/dashboard"><i class="bi bi-house"></i> الرئيسية</a>
+            <a href="/kpis"><i class="bi bi-graph-up"></i> المؤشرات</a>
+            <a href="/alerts"><i class="bi bi-bell"></i> التنبيهات</a>
+        </div>
+        <div class="user-area">
+            <span style="color:#fff;font-size:13px" id="userName">مدير النظام</span>
+            <div class="user-avatar">م</div>
+            <button class="btn-logout" onclick="logout()">خروج</button>
+        </div>
+    </nav>
+
+    <div class="layout">
+        <nav class="sidebar"></nav>
+        <main class="main-content">
+            <div class="page-header">
+                <h1>✏️ إدخال بيانات المؤشرات</h1>
+                <p>سجّل القيم الفعلية لمؤشراتك — البيانات المحدّثة تعني قرارات أذكى 📊</p>
+            </div>
+
+            <div class="content-grid">
+                <!-- KPI List -->
+                <div class="kpi-panel">
+                    <div class="kpi-panel-header"><i class="bi bi-list-check"></i> المؤشرات</div>
+                    <div class="filter-area">
+                        <select class="filter-select" id="versionFilter" onchange="loadKPIs()">
+                            <option value="">كل الإصدارات</option>
+                        </select>
+                    </div>
+                    <div id="kpiList">
+                        <div class="empty-state">
+                            <div class="emoji">⏳</div>جاري التحميل...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Entries Area -->
+                <div class="entries-panel" id="entriesArea">
+                    <div class="empty-state" style="padding:60px 20px">
+                        <div class="emoji">👈</div>
+                        <h4 style="margin-top:12px">اختر مؤشراً</h4>
+                        <p>اختر مؤشراً من القائمة لعرض وإدخال البيانات</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="entryModal">
+        <div class="modal-box" style="width:600px">
+            <div class="modal-header">
+                <h3 id="modalTitle" style="display:flex;align-items:center;gap:8px"><i class="bi bi-plus-circle"
+                        style="color:var(--primary)"></i> إدخال قيمة جديدة</h3>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editId">
+                <input type="hidden" id="selectedKpiId">
+
+                <!-- Templates -->
+                <div id="entryTplSection" style="margin-bottom:14px">
+                    <label
+                        style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;margin-bottom:8px">
+                        <i class="bi bi-lightning-charge-fill" style="color:#facc15"></i> نماذج سريعة
+                        <span style="font-size:10px;color:var(--text-muted);font-weight:400">(اضغط لتعبئة
+                            تلقائية)</span>
+                    </label>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px" id="entryTplGrid">
+                        <div class="entry-tpl" onclick="fillEntryTpl(0)"
+                            style="background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15);border-radius:8px;padding:8px;cursor:pointer;text-align:center;transition:all 0.2s;font-size:10px"
+                            onmouseenter="this.style.transform='translateY(-1px)'"
+                            onmouseleave="this.style.transform=''">
+                            <i class="bi bi-cash-stack"
+                                style="font-size:16px;color:var(--success);display:block;margin-bottom:2px"></i>
+                            <div style="font-weight:700">إيرادات شهرية</div>
+                        </div>
+                        <div class="entry-tpl" onclick="fillEntryTpl(1)"
+                            style="background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.15);border-radius:8px;padding:8px;cursor:pointer;text-align:center;transition:all 0.2s;font-size:10px"
+                            onmouseenter="this.style.transform='translateY(-1px)'"
+                            onmouseleave="this.style.transform=''">
+                            <i class="bi bi-graph-up-arrow"
+                                style="font-size:16px;color:var(--info);display:block;margin-bottom:2px"></i>
+                            <div style="font-weight:700">نمو ربع سنوي</div>
+                        </div>
+                        <div class="entry-tpl" onclick="fillEntryTpl(2)"
+                            style="background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.15);border-radius:8px;padding:8px;cursor:pointer;text-align:center;transition:all 0.2s;font-size:10px"
+                            onmouseenter="this.style.transform='translateY(-1px)'"
+                            onmouseleave="this.style.transform=''">
+                            <i class="bi bi-people"
+                                style="font-size:16px;color:#a78bfa;display:block;margin-bottom:2px"></i>
+                            <div style="font-weight:700">رضا العملاء</div>
+                        </div>
+                        <div class="entry-tpl" onclick="fillEntryTpl(3)"
+                            style="background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.15);border-radius:8px;padding:8px;cursor:pointer;text-align:center;transition:all 0.2s;font-size:10px"
+                            onmouseenter="this.style.transform='translateY(-1px)'"
+                            onmouseleave="this.style.transform=''">
+                            <i class="bi bi-percent"
+                                style="font-size:16px;color:#f97316;display:block;margin-bottom:2px"></i>
+                            <div style="font-weight:700">نسبة الإنجاز</div>
+                        </div>
+                        <div class="entry-tpl" onclick="fillEntryTpl(4)"
+                            style="background:rgba(236,72,153,0.06);border:1px solid rgba(236,72,153,0.15);border-radius:8px;padding:8px;cursor:pointer;text-align:center;transition:all 0.2s;font-size:10px"
+                            onmouseenter="this.style.transform='translateY(-1px)'"
+                            onmouseleave="this.style.transform=''">
+                            <i class="bi bi-person-check"
+                                style="font-size:16px;color:#ec4899;display:block;margin-bottom:2px"></i>
+                            <div style="font-weight:700">معدل دوران</div>
+                        </div>
+                        <div class="entry-tpl" onclick="fillEntryTpl(5)"
+                            style="background:rgba(250,204,21,0.06);border:1px solid rgba(250,204,21,0.15);border-radius:8px;padding:8px;cursor:pointer;text-align:center;transition:all 0.2s;font-size:10px"
+                            onmouseenter="this.style.transform='translateY(-1px)'"
+                            onmouseleave="this.style.transform=''">
+                            <i class="bi bi-boxes"
+                                style="font-size:16px;color:var(--warning);display:block;margin-bottom:2px"></i>
+                            <div style="font-weight:700">إنتاجية</div>
+                        </div>
+                    </div>
+                </div>
+                <hr style="border-color:var(--border);margin:10px 0">
+
+                <!-- القيمة -->
+                <div class="section-divider"><i class="bi bi-123"></i> البيانات الأساسية</div>
+                <div class="form-group">
+                    <label style="font-weight:700;display:flex;align-items:center;gap:6px">
+                        <i class="bi bi-hash" style="color:var(--primary)"></i> القيمة الفعلية *
+                    </label>
+                    <div style="font-size:10px;color:var(--text-muted);margin:-2px 0 6px"><i class="bi bi-info-circle"
+                            style="font-size:9px"></i> القيمة المقاسة الفعلية للمؤشر في هذه الفترة (رقم عشري)</div>
+                    <input type="number" id="entryValue" class="form-input" step="0.01" placeholder="مثال: 85.5"
+                        oninput="updateEntryPreview()">
+                    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">
+                        <span
+                            onclick="document.getElementById('entryValue').value=this.textContent;updateEntryPreview()"
+                            style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(102,126,234,0.08);color:var(--primary);cursor:pointer;border:1px solid rgba(102,126,234,0.15)">50</span>
+                        <span
+                            onclick="document.getElementById('entryValue').value=this.textContent;updateEntryPreview()"
+                            style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(102,126,234,0.08);color:var(--primary);cursor:pointer;border:1px solid rgba(102,126,234,0.15)">75</span>
+                        <span
+                            onclick="document.getElementById('entryValue').value=this.textContent;updateEntryPreview()"
+                            style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(102,126,234,0.08);color:var(--primary);cursor:pointer;border:1px solid rgba(102,126,234,0.15)">100</span>
+                        <span
+                            onclick="document.getElementById('entryValue').value=this.textContent;updateEntryPreview()"
+                            style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(34,197,94,0.08);color:var(--success);cursor:pointer;border:1px solid rgba(34,197,94,0.15)">250000</span>
+                        <span
+                            onclick="document.getElementById('entryValue').value=this.textContent;updateEntryPreview()"
+                            style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(34,197,94,0.08);color:var(--success);cursor:pointer;border:1px solid rgba(34,197,94,0.15)">1000000</span>
+                    </div>
+                </div>
+
+                <!-- الفترة -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label style="font-weight:700;display:flex;align-items:center;gap:6px">
+                            <i class="bi bi-calendar-event" style="color:var(--success)"></i> بداية الفترة
+                        </label>
+                        <div style="font-size:10px;color:var(--text-muted);margin:-2px 0 6px"><i
+                                class="bi bi-info-circle" style="font-size:9px"></i> أول يوم في فترة القياس</div>
+                        <input type="date" id="entryStart" class="form-input" onchange="updateEntryPreview()">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight:700;display:flex;align-items:center;gap:6px">
+                            <i class="bi bi-calendar-check" style="color:var(--danger)"></i> نهاية الفترة
+                        </label>
+                        <div style="font-size:10px;color:var(--text-muted);margin:-2px 0 6px"><i
+                                class="bi bi-info-circle" style="font-size:9px"></i> آخر يوم في فترة القياس</div>
+                        <input type="date" id="entryEnd" class="form-input" onchange="updateEntryPreview()">
+                    </div>
+                </div>
+                <div style="display:flex;gap:4px;margin-top:-8px;margin-bottom:12px">
+                    <span onclick="setQuickPeriod('month')"
+                        style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(102,126,234,0.08);color:var(--primary);cursor:pointer;border:1px solid rgba(102,126,234,0.15)"><i
+                            class="bi bi-calendar3" style="font-size:9px"></i> هذا الشهر</span>
+                    <span onclick="setQuickPeriod('quarter')"
+                        style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(167,139,250,0.08);color:#a78bfa;cursor:pointer;border:1px solid rgba(167,139,250,0.15)"><i
+                            class="bi bi-calendar3" style="font-size:9px"></i> هذا الربع</span>
+                    <span onclick="setQuickPeriod('year')"
+                        style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(249,115,22,0.08);color:#f97316;cursor:pointer;border:1px solid rgba(249,115,22,0.15)"><i
+                            class="bi bi-calendar3" style="font-size:9px"></i> هذا العام</span>
+                </div>
+
+                <!-- التفاصيل -->
+                <div class="section-divider"><i class="bi bi-sliders"></i> التفاصيل</div>
+                <div class="form-group">
+                    <label style="font-weight:700;display:flex;align-items:center;gap:6px">
+                        <i class="bi bi-flag-fill" style="color:#facc15"></i> الحالة
+                    </label>
+                    <div style="font-size:10px;color:var(--text-muted);margin:-2px 0 6px"><i class="bi bi-info-circle"
+                            style="font-size:9px"></i> مسودة = قابل للتعديل | مؤكد = معتمد ونهائي</div>
+                    <select id="entryStatus" class="form-input" onchange="updateEntryPreview()">
+                        <option value="DRAFT">📝 مسودة — قابل للتعديل لاحقاً</option>
+                        <option value="CONFIRMED">✅ مؤكد — قيمة معتمدة ونهائية</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label style="font-weight:700;display:flex;align-items:center;gap:6px">
+                        <i class="bi bi-chat-left-text" style="color:var(--info)"></i> ملاحظات
+                    </label>
+                    <div style="font-size:10px;color:var(--text-muted);margin:-2px 0 6px"><i class="bi bi-info-circle"
+                            style="font-size:9px"></i> أي ملاحظات أو توضيحات حول هذه القيمة</div>
+                    <textarea id="entryNotes" class="form-input" rows="2"
+                        placeholder="مثال: القيمة تشمل المبيعات المباشرة فقط..."
+                        oninput="updateEntryPreview()"></textarea>
+                    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">
+                        <span
+                            onclick="document.getElementById('entryNotes').value=this.getAttribute('data-v');updateEntryPreview()"
+                            data-v="القيمة تشمل جميع الفروع"
+                            style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(56,189,248,0.08);color:var(--info);cursor:pointer;border:1px solid rgba(56,189,248,0.15)">جميع
+                            الفروع</span>
+                        <span
+                            onclick="document.getElementById('entryNotes').value=this.getAttribute('data-v');updateEntryPreview()"
+                            data-v="قيمة تقريبية — التأكيد بعد المراجعة"
+                            style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(250,204,21,0.08);color:var(--warning);cursor:pointer;border:1px solid rgba(250,204,21,0.15)">قيمة
+                            تقريبية</span>
+                        <span
+                            onclick="document.getElementById('entryNotes').value=this.getAttribute('data-v');updateEntryPreview()"
+                            data-v="تحسّن ملحوظ عن الفترة السابقة"
+                            style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(34,197,94,0.08);color:var(--success);cursor:pointer;border:1px solid rgba(34,197,94,0.15)">تحسّن
+                            ملحوظ</span>
+                    </div>
+                </div>
+
+                <!-- Live Preview -->
+                <div
+                    style="background:rgba(102,126,234,0.04);border:1px solid rgba(102,126,234,0.12);border-radius:10px;padding:12px;margin-top:8px">
+                    <div
+                        style="font-size:11px;font-weight:700;color:var(--primary);margin-bottom:6px;display:flex;align-items:center;gap:6px">
+                        <i class="bi bi-eye-fill"></i> معاينة الإدخال
+                    </div>
+                    <div id="entryPreviewContent" style="font-size:11px;color:var(--text-muted);line-height:1.8">
+                        <div style="text-align:center;padding:10px;opacity:0.5"><i class="bi bi-pencil-square"
+                                style="font-size:18px;display:block;margin-bottom:4px"></i>أدخل القيمة لرؤية المعاينة
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
+                <button class="btn-save" onclick="saveEntry()" style="display:flex;align-items:center;gap:6px"><i
+                        class="bi bi-check-lg"></i> حفظ</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/sidebar.js"></script>
+    <script src="/assets/js/ai-advisor.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+        const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.name || 'مستخدم';
+        let currentKpiId = null, currentKpiName = '';
+        const freqLabel = { MONTHLY: 'شهري', QUARTERLY: 'ربع سنوي', SEMI_ANNUAL: 'نصف سنوي', ANNUAL: 'سنوي' };
+
+        function closeModal() { document.getElementById('entryModal').classList.remove('show'); }
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+        async function init() { await loadVersions(); await loadKPIs(); }
+
+        async function loadVersions() {
+            try {
+                const res = await fetch('/api/versions', { headers }); const data = await res.json();
+                const sel = document.getElementById('versionFilter');
+                (data.versions || []).forEach(v => { const o = document.createElement('option'); o.value = v.id; o.textContent = `V${v.versionNumber} — ${v.entity?.legalName || ''}`; sel.appendChild(o); });
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadKPIs() {
+            const container = document.getElementById('kpiList');
+            container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted)"><i class="bi bi-hourglass-split" style="font-size:20px;display:block;margin-bottom:6px"></i>جاري التحميل...</div>';
+            try {
+                let url = '/api/strategic/kpis?limit=100';
+                const vId = document.getElementById('versionFilter').value;
+                if (vId) url += `&versionId=${vId}`;
+                console.log('[KPI-Entries] Fetching KPIs:', url);
+                const res = await fetch(url, { headers });
+                if (res.status === 401) {
+                    container.innerHTML = '<div class="empty-state"><div class="emoji">🔒</div><p>انتهت الجلسة</p><p style="font-size:11px;color:var(--text-muted);margin-top:6px"><a href="/login.html" style="color:var(--primary)">سجّل دخولك مرة أخرى</a></p></div>';
+                    return;
+                }
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                console.log('[KPI-Entries] Response:', data);
+                const list = Array.isArray(data) ? data : (data.kpis || []);
+                if (!list.length) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="emoji">📊</div>
+                            <p>لا توجد مؤشرات أداء بعد</p>
+                            <p style="font-size:11px;color:var(--text-muted);margin-top:6px">قم بإنشاء مؤشرات أداء من صفحة <a href="/kpis.html" style="color:var(--primary)">المؤشرات</a> أولاً</p>
+                        </div>`;
+                    return;
+                }
+                container.innerHTML = list.map(k => {
+                    const displayName = k.nameAr || k.name || 'مؤشر';
+                    const subName = k.nameAr && k.name ? k.name : '';
+                    const freq = freqLabel[k.frequency] || k.frequency || 'شهري';
+                    const target = k.target != null ? k.target : (k.targetValue != null ? k.targetValue : '-');
+                    const unit = k.unit || '';
+                    const desc = k.description || '';
+                    return `
+                    <div class="kpi-item ${currentKpiId === k.id ? 'selected' : ''}" onclick="selectKPI('${k.id}','${displayName.replace(/'/g, "\\'")}')">
+                        <div class="name">${displayName}</div>
+                        ${subName ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;opacity:0.7">${subName}</div>` : ''}
+                        ${desc ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;line-height:1.5">${desc.length > 60 ? desc.slice(0, 60) + '...' : desc}</div>` : ''}
+                        <div class="meta">
+                            <span style="display:inline-flex;align-items:center;gap:3px"><i class="bi bi-clock" style="font-size:10px"></i> ${freq}</span> ·
+                            <span>🎯 ${target} ${unit}</span>
+                            <span class="entry-count">${k._count?.entries || 0} إدخال</span>
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+            } catch (e) { console.error('[KPI-Entries] Error loading KPIs:', e); container.innerHTML = '<div class="empty-state"><div class="emoji">❌</div>خطأ في التحميل<p style="font-size:11px;color:var(--text-muted);margin-top:6px">تأكد من تسجيل الدخول وأن الخادم يعمل</p></div>'; }
+        }
+
+        async function selectKPI(kpiId, kpiName) {
+            currentKpiId = kpiId; currentKpiName = kpiName;
+            document.getElementById('selectedKpiId').value = kpiId;
+            document.querySelectorAll('.kpi-item').forEach(el => el.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+            await loadEntries(kpiId, kpiName);
+        }
+
+        async function loadEntries(kpiId, kpiName) {
+            const area = document.getElementById('entriesArea');
+            try {
+                const [entriesRes, statsRes] = await Promise.all([
+                    fetch(`/api/kpi-entries?kpiId=${kpiId}`, { headers }),
+                    fetch(`/api/kpi-entries/stats/${kpiId}`, { headers })
+                ]);
+                const entriesData = await entriesRes.json();
+                const stats = await statsRes.json();
+                const entries = entriesData.entries || [];
+                const fmt = d => d ? new Date(d).toLocaleDateString('ar-SA') : '-';
+                const trendIcon = stats.trend === 'UP' ? '<i class="bi bi-arrow-up-short trend-up"></i>' : stats.trend === 'DOWN' ? '<i class="bi bi-arrow-down-short trend-down"></i>' : '<i class="bi bi-dash trend-same"></i>';
+
+                let html = `
+                    <div class="entries-panel-header">
+                        <h3><i class="bi bi-graph-up"></i> ${kpiName || 'المؤشر'}</h3>
+                        <button class="btn-add" onclick="showEntryModal()"><i class="bi bi-plus-lg"></i> إدخال قيمة</button>
+                    </div>
+                    <div class="stats-row">
+                        <div class="mini-stat"><div class="num">${stats.latest != null ? stats.latest : '-'}</div><div class="lbl">آخر قيمة</div></div>
+                        <div class="mini-stat"><div class="num">${stats.average != null ? Number(stats.average).toFixed(1) : '-'}</div><div class="lbl">المتوسط</div></div>
+                        <div class="mini-stat"><div class="num">${stats.max != null ? stats.max : '-'} / ${stats.min != null ? stats.min : '-'}</div><div class="lbl">أعلى / أدنى</div></div>
+                        <div class="mini-stat"><div class="num">${trendIcon} ${stats.count || 0}</div><div class="lbl">الاتجاه · عدد</div></div>
+                    </div>`;
+
+                if (!entries.length) {
+                    html += '<div class="empty-state"><div class="emoji">📝</div><p>لا توجد إدخالات بعد</p></div>';
+                } else {
+                    html += `<div style="overflow-x:auto"><table class="data-table"><thead><tr>
+                        <th>القيمة</th><th>بداية الفترة</th><th>نهاية الفترة</th><th>الحالة</th><th>ملاحظات</th><th>إجراءات</th>
+                    </tr></thead><tbody>`;
+                    entries.forEach(e => {
+                        html += `<tr>
+                            <td><strong>${e.value}</strong></td>
+                            <td><small>${fmt(e.periodStart)}</small></td>
+                            <td><small>${fmt(e.periodEnd)}</small></td>
+                            <td><span class="badge-${e.status.toLowerCase()}">${e.status === 'DRAFT' ? 'مسودة' : 'مؤكد'}</span></td>
+                            <td><small style="color:var(--text-muted)">${e.notes || '-'}</small></td>
+                            <td><button class="btn-action" onclick="editEntry('${e.id}')"><i class="bi bi-pencil"></i></button> <button class="btn-action danger" onclick="delEntry('${e.id}')"><i class="bi bi-trash"></i></button></td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table></div>';
+                }
+                area.innerHTML = html;
+            } catch (e) { console.error(e); area.innerHTML = '<div class="empty-state"><div class="emoji">❌</div>خطأ في التحميل</div>'; }
+        }
+
+        // ===== TEMPLATES =====
+        const entryTemplates = [
+            { value: 250000, notes: 'إجمالي الإيرادات الشهرية — يشمل جميع مصادر الدخل', status: 'CONFIRMED', period: 'month' },
+            { value: 15.5, notes: 'معدل النمو ربع السنوي مقارنة بالربع السابق (%)', status: 'DRAFT', period: 'quarter' },
+            { value: 85, notes: 'نتيجة استبيان رضا العملاء — متوسط التقييم من 100', status: 'CONFIRMED', period: 'month' },
+            { value: 72, notes: 'نسبة إنجاز المشاريع المخططة للفترة (%)', status: 'DRAFT', period: 'month' },
+            { value: 8.5, notes: 'معدل دوران الموظفين السنوي (%)', status: 'CONFIRMED', period: 'year' },
+            { value: 1250, notes: 'عدد الوحدات المنتجة أو الخدمات المقدمة في الفترة', status: 'DRAFT', period: 'month' },
+        ];
+
+        function fillEntryTpl(i) {
+            const t = entryTemplates[i]; if (!t) return;
+            document.getElementById('entryValue').value = t.value;
+            document.getElementById('entryNotes').value = t.notes;
+            document.getElementById('entryStatus').value = t.status;
+            setQuickPeriod(t.period);
+            document.querySelectorAll('.entry-tpl').forEach((el, idx) => {
+                el.style.boxShadow = idx === i ? '0 0 0 2px var(--primary)' : '';
+            });
+            updateEntryPreview();
+        }
+
+        // ===== QUICK PERIOD =====
+        function setQuickPeriod(type) {
+            const now = new Date();
+            let start, end;
+            if (type === 'month') {
+                start = new Date(now.getFullYear(), now.getMonth(), 1);
+                end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            } else if (type === 'quarter') {
+                const q = Math.floor(now.getMonth() / 3);
+                start = new Date(now.getFullYear(), q * 3, 1);
+                end = new Date(now.getFullYear(), q * 3 + 3, 0);
+            } else {
+                start = new Date(now.getFullYear(), 0, 1);
+                end = new Date(now.getFullYear(), 11, 31);
+            }
+            document.getElementById('entryStart').value = start.toISOString().split('T')[0];
+            document.getElementById('entryEnd').value = end.toISOString().split('T')[0];
+            updateEntryPreview();
+        }
+
+        // ===== LIVE PREVIEW =====
+        function updateEntryPreview() {
+            const val = document.getElementById('entryValue').value;
+            const startD = document.getElementById('entryStart').value;
+            const endD = document.getElementById('entryEnd').value;
+            const status = document.getElementById('entryStatus').value;
+            const notes = document.getElementById('entryNotes').value.trim();
+            const el = document.getElementById('entryPreviewContent');
+            if (!val) { el.innerHTML = '<div style="text-align:center;padding:10px;opacity:0.5"><i class="bi bi-pencil-square" style="font-size:18px;display:block;margin-bottom:4px"></i>أدخل القيمة لرؤية المعاينة</div>'; return; }
+            const statusLabel = status === 'CONFIRMED' ? 'مؤكد' : 'مسودة';
+            const statusColor = status === 'CONFIRMED' ? 'var(--success)' : 'var(--warning)';
+            const statusIcon = status === 'CONFIRMED' ? 'bi-check-circle-fill' : 'bi-pencil';
+            const fmtD = d => d ? new Date(d).toLocaleDateString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
+            el.innerHTML = `
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+                    <div style="width:36px;height:36px;border-radius:10px;background:rgba(102,126,234,0.1);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:16px"><i class="bi bi-graph-up"></i></div>
+                    <div style="flex:1"><span style="font-weight:800;font-size:18px;color:var(--text)">${Number(val).toLocaleString('ar-SA')}</span> <span style="font-size:10px;color:var(--text-muted)">${currentKpiName || 'المؤشر'}</span></div>
+                    <span style="font-size:9px;padding:2px 8px;border-radius:6px;background:${statusColor}12;color:${statusColor}"><i class="bi ${statusIcon}"></i> ${statusLabel}</span>
+                </div>
+                <div style="display:flex;gap:8px;font-size:10px;margin-bottom:4px">
+                    <span style="color:var(--text-muted)"><i class="bi bi-calendar-event" style="color:var(--success)"></i> ${fmtD(startD)}</span>
+                    <span style="color:var(--text-muted)">→</span>
+                    <span style="color:var(--text-muted)"><i class="bi bi-calendar-check" style="color:var(--danger)"></i> ${fmtD(endD)}</span>
+                </div>
+                ${notes ? `<div style="font-size:10px;padding:4px 8px;background:rgba(255,255,255,0.03);border-radius:6px;color:var(--text-muted);margin-top:4px"><i class="bi bi-chat-left-text" style="color:var(--info)"></i> ${notes}</div>` : ''}`;
+        }
+
+        function showEntryModal() {
+            if (!currentKpiId) return alert('الرجاء اختيار مؤشر أولاً');
+            ['editId', 'entryValue', 'entryStart', 'entryEnd', 'entryNotes'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('entryStatus').value = 'DRAFT';
+            document.getElementById('modalTitle').innerHTML = '<i class="bi bi-plus-circle" style="color:var(--primary)"></i> إدخال قيمة جديدة';
+            document.getElementById('entryTplSection').style.display = '';
+            document.querySelectorAll('.entry-tpl').forEach(el => { el.style.boxShadow = ''; });
+            updateEntryPreview();
+            document.getElementById('entryModal').classList.add('show');
+        }
+
+        async function editEntry(id) {
+            try {
+                const res = await fetch(`/api/kpi-entries/${id}`, { headers }); const e = await res.json();
+                document.getElementById('editId').value = e.id; document.getElementById('entryValue').value = e.value;
+                document.getElementById('entryStart').value = e.periodStart ? e.periodStart.split('T')[0] : '';
+                document.getElementById('entryEnd').value = e.periodEnd ? e.periodEnd.split('T')[0] : '';
+                document.getElementById('entryStatus').value = e.status; document.getElementById('entryNotes').value = e.notes || '';
+                document.getElementById('modalTitle').innerHTML = '<i class="bi bi-pencil-square" style="color:var(--warning)"></i> تعديل القيمة';
+                document.getElementById('entryTplSection').style.display = 'none';
+                updateEntryPreview();
+                document.getElementById('entryModal').classList.add('show');
+            } catch (e) { alert('خطأ'); }
+        }
+
+        async function saveEntry() {
+            const editId = document.getElementById('editId').value;
+            const value = document.getElementById('entryValue').value;
+            if (!value) return alert('الرجاء إدخال القيمة');
+            const body = {
+                value: parseFloat(value),
+                periodStart: document.getElementById('entryStart').value || new Date().toISOString(),
+                periodEnd: document.getElementById('entryEnd').value || new Date().toISOString(),
+                status: document.getElementById('entryStatus').value,
+                notes: document.getElementById('entryNotes').value.trim() || null,
+            };
+            if (!editId) body.kpiId = currentKpiId;
+            try {
+                const url = editId ? `/api/kpi-entries/${editId}` : '/api/kpi-entries';
+                const res = await fetch(url, { method: editId ? 'PATCH' : 'POST', headers, body: JSON.stringify(body) });
+                if (!res.ok) throw new Error('Failed');
+                closeModal(); selectKPI(currentKpiId, currentKpiName); loadKPIs();
+            } catch (e) { alert('خطأ في الحفظ'); }
+        }
+
+        async function delEntry(id) { if (!confirm('حذف هذا الإدخال؟')) return; try { await fetch(`/api/kpi-entries/${id}`, { method: 'DELETE', headers }); selectKPI(currentKpiId, currentKpiName); loadKPIs(); } catch (e) { alert('خطأ'); } }
+        function logout() { localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.href = '/login.html'; }
+        init();
+    </script>
+    <script src="/assets/js/impersonation.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ستارتكيس - إدارة التقييمات</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #667eea;
+      --primary-dark: #5a67d8;
+      --secondary: #764ba2;
+      --bg: #0f1117;
+      --bg-card: #1a1d2e;
+      --bg-card-hover: #232640;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.08);
+      --success: #22c55e;
+      --warning: #facc15;
+      --danger: #ef4444;
+      --info: #38bdf8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      font-family: 'Tajawal', sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ===== NAVBAR ===== */
+    .top-nav {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      padding: 14px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .top-nav .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: white;
+      text-decoration: none;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .user-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+      font-size: 14px;
+    }
+
+    .btn-logout {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .btn-logout:hover {
+      background: rgba(239, 68, 68, 0.6);
+    }
+
+    /* ===== LAYOUT ===== */
+    .layout {
+      display: flex;
+      min-height: calc(100vh - 60px);
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 30px;
+      max-width: calc(100% - 220px);
+    }
+
+    /* ===== PAGE HEADER ===== */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+
+    .page-header h1 {
+      font-size: 26px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .page-header h1 i {
+      color: var(--primary);
+    }
+
+    .page-subtitle {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    .btn-add {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s;
+    }
+
+    .btn-add:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    /* ===== MINI STATS ===== */
+    .mini-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .mini-stat {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      text-align: center;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mini-stat::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      border-radius: 14px 14px 0 0;
+    }
+
+    .mini-stat:nth-child(1)::before {
+      background: var(--primary);
+    }
+
+    .mini-stat:nth-child(2)::before {
+      background: var(--success);
+    }
+
+    .mini-stat:nth-child(3)::before {
+      background: var(--warning);
+    }
+
+    .mini-stat:nth-child(4)::before {
+      background: var(--danger);
+    }
+
+    .mini-stat:hover {
+      transform: translateY(-3px);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .mini-stat .ms-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin: 0 auto 10px;
+    }
+
+    .mini-stat:nth-child(1) .ms-icon {
+      background: rgba(102, 126, 234, 0.15);
+      color: var(--primary);
+    }
+
+    .mini-stat:nth-child(2) .ms-icon {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--success);
+    }
+
+    .mini-stat:nth-child(3) .ms-icon {
+      background: rgba(250, 204, 21, 0.15);
+      color: var(--warning);
+    }
+
+    .mini-stat:nth-child(4) .ms-icon {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+    }
+
+    .ms-value {
+      font-size: 30px;
+      font-weight: 800;
+    }
+
+    .ms-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .ms-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      opacity: 0.7;
+      margin-top: 2px;
+    }
+
+    /* ===== ASSESSMENT CARDS ===== */
+    .assessments-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    .assessment-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 0;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .assessment-card:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .ac-status-bar {
+      height: 4px;
+      width: 100%;
+    }
+
+    .ac-status-bar.completed {
+      background: linear-gradient(90deg, var(--success), #4ade80);
+    }
+
+    .ac-status-bar.in_progress {
+      background: linear-gradient(90deg, var(--warning), #fde047);
+    }
+
+    .ac-status-bar.draft {
+      background: linear-gradient(90deg, var(--text-muted), #cbd5e1);
+    }
+
+    .ac-body {
+      padding: 22px;
+    }
+
+    .ac-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .ac-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .ac-icon.internal {
+      background: rgba(102, 126, 234, 0.15);
+      color: var(--primary);
+    }
+
+    .ac-icon.external {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--info);
+    }
+
+    .ac-title h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .ac-title .ac-type {
+      font-size: 11px;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .ac-type.internal {
+      background: rgba(102, 126, 234, 0.12);
+      color: var(--primary);
+    }
+
+    .ac-type.external {
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--info);
+    }
+
+    .ac-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+
+    /* Progress Bar */
+    .ac-progress {
+      margin-bottom: 16px;
+    }
+
+    .ac-progress-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .ac-progress-label {
+      color: var(--text-muted);
+    }
+
+    .ac-progress-value {
+      font-weight: 700;
+    }
+
+    .ac-progress-bar {
+      height: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .ac-progress-fill {
+      height: 100%;
+      border-radius: 10px;
+      transition: width 0.5s ease;
+    }
+
+    .ac-progress-fill.completed {
+      background: linear-gradient(90deg, var(--success), #4ade80);
+    }
+
+    .ac-progress-fill.in_progress {
+      background: linear-gradient(90deg, var(--warning), #fde047);
+    }
+
+    .ac-progress-fill.draft {
+      background: linear-gradient(90deg, var(--text-muted), #cbd5e1);
+    }
+
+    /* Score */
+    .ac-score-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 10px;
+      margin-bottom: 16px;
+    }
+
+    .ac-score {
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .ac-score.high {
+      color: var(--success);
+    }
+
+    .ac-score.medium {
+      color: var(--warning);
+    }
+
+    .ac-score.low {
+      color: var(--danger);
+    }
+
+    .ac-score-label {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .ac-score-stars {
+      margin-right: auto;
+      display: flex;
+      gap: 2px;
+    }
+
+    .ac-score-stars i {
+      font-size: 14px;
+      color: var(--warning);
+    }
+
+    .ac-score-stars i.empty {
+      color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Criteria Preview */
+    .ac-criteria {
+      margin-bottom: 16px;
+    }
+
+    .ac-criteria-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .criteria-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      margin: 0 4px 6px 0;
+      color: var(--text-muted);
+    }
+
+    .criteria-chip .chip-score {
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .chip-score.good {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--success);
+    }
+
+    .chip-score.warn {
+      background: rgba(250, 204, 21, 0.15);
+      color: var(--warning);
+    }
+
+    .chip-score.bad {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+    }
+
+    /* Response Options */
+    .response-options {
+      margin-bottom: 16px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .response-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .response-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 13px;
+    }
+
+    .response-option:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .response-option.selected {
+      background: rgba(102, 126, 234, 0.1);
+      color: var(--primary);
+    }
+
+    .response-radio {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .response-option.selected .response-radio {
+      border-color: var(--primary);
+    }
+
+    .response-radio-inner {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: transparent;
+      transition: all 0.2s;
+    }
+
+    .response-option.selected .response-radio-inner {
+      background: var(--primary);
+    }
+
+    /* Meta Info */
+    .ac-meta {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .ac-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Actions */
+    .ac-actions {
+      display: flex;
+      gap: 8px;
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+    }
+
+    .btn-action {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 600;
+    }
+
+    .btn-action:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+    }
+
+    .btn-action.btn-view:hover {
+      border-color: var(--info);
+      color: var(--info);
+    }
+
+    .btn-action.btn-edit:hover {
+      border-color: var(--warning);
+      color: var(--warning);
+    }
+
+    .btn-action.btn-delete:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    /* Status Badge */
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .status-badge.completed {
+      background: rgba(34, 197, 94, 0.12);
+      color: var(--success);
+    }
+
+    .status-badge.in_progress {
+      background: rgba(250, 204, 21, 0.12);
+      color: var(--warning);
+    }
+
+    .status-badge.draft {
+      background: rgba(148, 163, 184, 0.12);
+      color: var(--text-muted);
+    }
+
+    /* ===== MODAL ===== */
+    .modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      color: var(--text);
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border-radius: 16px 16px 0 0;
+      padding: 18px 24px;
+      border-bottom: none;
+    }
+
+    .modal-header .modal-title {
+      font-weight: 700;
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .form-input option {
+      background: var(--bg-card);
+      color: var(--text);
+    }
+
+    textarea.form-input {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .btn-modal-save {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-modal-save:hover {
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-modal-cancel {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 10px 24px;
+      border-radius: 10px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      z-index: 9999;
+    }
+
+    .toast-msg {
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      animation: slideUp 0.3s ease;
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toast-msg.success {
+      background: rgba(34, 197, 94, 0.9);
+      color: white;
+    }
+
+    .toast-msg.error {
+      background: rgba(239, 68, 68, 0.9);
+      color: white;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .mini-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .assessments-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .main-content {
+        max-width: 100%;
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- NAVBAR -->
+  <nav class="top-nav">
+    <a href="/dashboard.html" class="brand">
+      <i class="bi bi-gem"></i> ستارتكيس
+    </a>
+    <div class="user-area">
+      <div class="user-avatar" id="userAvatar">م</div>
+      <button class="btn-logout" onclick="localStorage.clear(); location.href='/login.html'">
+        <i class="bi bi-box-arrow-right"></i> خروج
+      </button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar"></aside>
+
+    <!-- MAIN -->
+    <div class="main-content">
+      <div class="page-header">
+        <div>
+          <h1><i class="bi bi-clipboard-check"></i> إدارة التقييمات</h1>
+          <p class="page-subtitle">تقييم البيئة الداخلية والخارجية — أساس التخطيط الاستراتيجي</p>
+        </div>
+        <button class="btn-add" onclick="openCreateModal()">
+          <i class="bi bi-plus-lg"></i> تقييم جديد
+        </button>
+      </div>
+
+      <!-- STATS -->
+      <div class="mini-stats">
+        <div class="mini-stat">
+          <div class="ms-icon"><i class="bi bi-clipboard-data"></i></div>
+          <div class="ms-value" id="statTotal">6</div>
+          <div class="ms-label">إجمالي التقييمات</div>
+          <div class="ms-desc">جميع التقييمات المسجلة</div>
+        </div>
+        <div class="mini-stat">
+          <div class="ms-icon"><i class="bi bi-check-circle"></i></div>
+          <div class="ms-value" id="statCompleted">2</div>
+          <div class="ms-label">مكتملة</div>
+          <div class="ms-desc">تم إنهاء التحليل والتقييم</div>
+        </div>
+        <div class="mini-stat">
+          <div class="ms-icon"><i class="bi bi-hourglass-split"></i></div>
+          <div class="ms-value" id="statInProgress">2</div>
+          <div class="ms-label">قيد التنفيذ</div>
+          <div class="ms-desc">جاري العمل عليها حالياً</div>
+        </div>
+        <div class="mini-stat">
+          <div class="ms-icon"><i class="bi bi-file-earmark"></i></div>
+          <div class="ms-value" id="statDraft">2</div>
+          <div class="ms-label">مسودة</div>
+          <div class="ms-desc">بانتظار البدء في التقييم</div>
+        </div>
+      </div>
+
+      <!-- ASSESSMENTS GRID -->
+      <div class="assessments-grid" id="assessmentsGrid">
+        <!-- Cards will be rendered here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- CREATE/EDIT MODAL -->
+  <div class="modal fade" id="assessmentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalTitle"><i class="bi bi-plus-circle"></i> تقييم جديد</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="editId">
+
+          <!-- Templates -->
+          <div id="asmTplSection" style="margin-bottom:16px">
+            <label style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;margin-bottom:10px">
+              <i class="bi bi-lightning-charge-fill" style="color:#facc15"></i> ابدأ من نموذج جاهز
+              <span style="font-size:10px;color:var(--text-muted);font-weight:400">(اختياري — اضغط لتعبئة
+                تلقائية)</span>
+            </label>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px" id="asmTplGrid">
+              <div class="asm-tpl" onclick="fillAsmTpl(0)"
+                style="background:rgba(102,126,234,0.06);border:1px solid rgba(102,126,234,0.15);border-radius:10px;padding:10px;cursor:pointer;text-align:center;transition:all 0.2s"
+                onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform=''">
+                <i class="bi bi-building"
+                  style="font-size:18px;color:var(--primary);display:block;margin-bottom:3px"></i>
+                <div style="font-size:11px;font-weight:700">البيئة الداخلية</div>
+                <div style="font-size:9px;color:var(--text-muted)">نقاط القوة والضعف</div>
+              </div>
+              <div class="asm-tpl" onclick="fillAsmTpl(1)"
+                style="background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.15);border-radius:10px;padding:10px;cursor:pointer;text-align:center;transition:all 0.2s"
+                onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform=''">
+                <i class="bi bi-globe2" style="font-size:18px;color:var(--info);display:block;margin-bottom:3px"></i>
+                <div style="font-size:11px;font-weight:700">البيئة الخارجية</div>
+                <div style="font-size:9px;color:var(--text-muted)">الفرص والتهديدات</div>
+              </div>
+              <div class="asm-tpl" onclick="fillAsmTpl(2)"
+                style="background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.15);border-radius:10px;padding:10px;cursor:pointer;text-align:center;transition:all 0.2s"
+                onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform=''">
+                <i class="bi bi-diagram-3" style="font-size:18px;color:#a78bfa;display:block;margin-bottom:3px"></i>
+                <div style="font-size:11px;font-weight:700">تحليل PESTEL</div>
+                <div style="font-size:9px;color:var(--text-muted)">العوامل الكلية</div>
+              </div>
+              <div class="asm-tpl" onclick="fillAsmTpl(3)"
+                style="background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15);border-radius:10px;padding:10px;cursor:pointer;text-align:center;transition:all 0.2s"
+                onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform=''">
+                <i class="bi bi-cash-stack"
+                  style="font-size:18px;color:var(--success);display:block;margin-bottom:3px"></i>
+                <div style="font-size:11px;font-weight:700">الأداء المالي</div>
+                <div style="font-size:9px;color:var(--text-muted)">مراجعة مالية شاملة</div>
+              </div>
+              <div class="asm-tpl" onclick="fillAsmTpl(4)"
+                style="background:rgba(236,72,153,0.06);border:1px solid rgba(236,72,153,0.15);border-radius:10px;padding:10px;cursor:pointer;text-align:center;transition:all 0.2s"
+                onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform=''">
+                <i class="bi bi-people-fill" style="font-size:18px;color:#ec4899;display:block;margin-bottom:3px"></i>
+                <div style="font-size:11px;font-weight:700">رأس المال البشري</div>
+                <div style="font-size:9px;color:var(--text-muted)">كفاءات الموظفين</div>
+              </div>
+              <div class="asm-tpl" onclick="fillAsmTpl(5)"
+                style="background:rgba(250,204,21,0.06);border:1px solid rgba(250,204,21,0.15);border-radius:10px;padding:10px;cursor:pointer;text-align:center;transition:all 0.2s"
+                onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform=''">
+                <i class="bi bi-trophy" style="font-size:18px;color:var(--warning);display:block;margin-bottom:3px"></i>
+                <div style="font-size:11px;font-weight:700">التنافسية</div>
+                <div style="font-size:9px;color:var(--text-muted)">تحليل السوق والمنافسين</div>
+              </div>
+            </div>
+          </div>
+          <hr style="border-color:var(--border);margin:12px 0">
+
+          <!-- العنوان -->
+          <div class="form-group">
+            <label style="font-weight:700;display:flex;align-items:center;gap:6px;color:var(--text)">
+              <i class="bi bi-type-h1" style="color:var(--primary)"></i> عنوان التقييم *
+            </label>
+            <div style="font-size:10px;color:var(--text-muted);margin:-2px 0 6px"><i class="bi bi-info-circle"
+                style="font-size:9px"></i> عنوان واضح يوضح نوع التقييم والفترة الزمنية</div>
+            <input type="text" class="form-input" id="formTitle" placeholder="مثال: تقييم البيئة الداخلية Q1-2026"
+              oninput="updateAsmPreview()">
+            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">
+              <span onclick="document.getElementById('formTitle').value=this.textContent;updateAsmPreview()"
+                style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(102,126,234,0.08);color:var(--primary);cursor:pointer;border:1px solid rgba(102,126,234,0.15)">تقييم
+                البيئة الداخلية Q1</span>
+              <span onclick="document.getElementById('formTitle').value=this.textContent;updateAsmPreview()"
+                style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(102,126,234,0.08);color:var(--primary);cursor:pointer;border:1px solid rgba(102,126,234,0.15)">تحليل
+                SWOT 2026</span>
+              <span onclick="document.getElementById('formTitle').value=this.textContent;updateAsmPreview()"
+                style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(102,126,234,0.08);color:var(--primary);cursor:pointer;border:1px solid rgba(102,126,234,0.15)">مراجعة
+                الأداء المالي</span>
+            </div>
+          </div>
+
+          <!-- الوصف -->
+          <div class="form-group">
+            <label style="font-weight:700;display:flex;align-items:center;gap:6px;color:var(--text)">
+              <i class="bi bi-card-text" style="color:#f97316"></i> وصف التقييم
+            </label>
+            <div style="font-size:10px;color:var(--text-muted);margin:-2px 0 6px"><i class="bi bi-info-circle"
+                style="font-size:9px"></i> وصف يوضح الغرض من التقييم ونطاقه والنتائج المتوقعة</div>
+            <textarea class="form-input" id="formDesc" placeholder="اشرح الهدف من هذا التقييم ومجالاته..."
+              oninput="updateAsmPreview()"></textarea>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">
+              <span onclick="document.getElementById('formDesc').value=this.getAttribute('data-v');updateAsmPreview()"
+                data-v="تحليل شامل لنقاط القوة والضعف الداخلية في المنظمة مع تقييم الموارد البشرية والتقنية والمالية والعمليات التشغيلية"
+                style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(249,115,22,0.08);color:#f97316;cursor:pointer;border:1px solid rgba(249,115,22,0.15)"><i
+                  class="bi bi-file-text" style="font-size:9px"></i> مثال: تحليل داخلي</span>
+              <span onclick="document.getElementById('formDesc').value=this.getAttribute('data-v');updateAsmPreview()"
+                data-v="دراسة الفرص والتهديدات في البيئة الخارجية مع التركيز على السوق المحلي والاتجاهات الاقتصادية والتقنية والتنظيمية"
+                style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(249,115,22,0.08);color:#f97316;cursor:pointer;border:1px solid rgba(249,115,22,0.15)"><i
+                  class="bi bi-file-text" style="font-size:9px"></i> مثال: تحليل خارجي</span>
+            </div>
+          </div>
+
+          <!-- النوع والحالة -->
+          <div class="form-row">
+            <div class="form-group">
+              <label style="font-weight:700;display:flex;align-items:center;gap:6px;color:var(--text)">
+                <i class="bi bi-diagram-3-fill" style="color:#8b5cf6"></i> النوع *
+              </label>
+              <div style="font-size:10px;color:var(--text-muted);margin:-2px 0 6px"><i class="bi bi-info-circle"
+                  style="font-size:9px"></i> داخلي = نقاط القوة والضعف | خارجي = الفرص والتهديدات</div>
+              <select class="form-input" id="formType" onchange="updateTypeHint();updateAsmPreview()">
+                <option value="INTERNAL">🏢 داخلي — نقاط القوة والضعف</option>
+                <option value="EXTERNAL">🌍 خارجي — الفرص والتهديدات</option>
+              </select>
+              <div id="typeHintBox"
+                style="font-size:10px;margin-top:5px;padding:6px 10px;border-radius:8px;background:rgba(102,126,234,0.06);border:1px dashed rgba(102,126,234,0.2);color:var(--text-muted);display:flex;align-items:center;gap:6px">
+                <i class="bi bi-lightbulb" style="color:var(--primary);font-size:11px"></i>
+                <span>يشمل: القيادة، العمليات، التقنية، الموارد البشرية، الملاءة المالية</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label style="font-weight:700;display:flex;align-items:center;gap:6px;color:var(--text)">
+                <i class="bi bi-flag-fill" style="color:#facc15"></i> الحالة
+              </label>
+              <div style="font-size:10px;color:var(--text-muted);margin:-2px 0 6px"><i class="bi bi-info-circle"
+                  style="font-size:9px"></i> مرحلة التقييم الحالية في دورة العمل</div>
+              <select class="form-input" id="formStatus" onchange="updateAsmPreview()">
+                <option value="DRAFT">📝 مسودة — قيد الإعداد والتجهيز</option>
+                <option value="IN_PROGRESS">⏳ قيد التنفيذ — جاري جمع البيانات والتحليل</option>
+                <option value="COMPLETED">✅ مكتمل — تم إنهاء التقييم والتوثيق</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- الإنجاز والتقييم -->
+          <div class="form-row">
+            <div class="form-group">
+              <label style="font-weight:700;display:flex;align-items:center;gap:6px;color:var(--text)">
+                <i class="bi bi-percent" style="color:#22c55e"></i> نسبة الإنجاز
+              </label>
+              <div style="font-size:10px;color:var(--text-muted);margin:-2px 0 6px"><i class="bi bi-info-circle"
+                  style="font-size:9px"></i> النسبة المئوية لاكتمال عملية التقييم (0-100%)</div>
+              <input type="number" class="form-input" id="formProgress" min="0" max="100" value="0"
+                oninput="updateAsmPreview()">
+              <div style="display:flex;gap:4px;margin-top:5px">
+                <span onclick="document.getElementById('formProgress').value=0;updateAsmPreview()"
+                  style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(148,163,184,0.08);color:var(--text-muted);cursor:pointer;border:1px solid rgba(148,163,184,0.15);flex:1;text-align:center">0%
+                  بداية</span>
+                <span onclick="document.getElementById('formProgress').value=50;updateAsmPreview()"
+                  style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(250,204,21,0.08);color:var(--warning);cursor:pointer;border:1px solid rgba(250,204,21,0.15);flex:1;text-align:center">50%
+                  منتصف</span>
+                <span onclick="document.getElementById('formProgress').value=100;updateAsmPreview()"
+                  style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(34,197,94,0.08);color:var(--success);cursor:pointer;border:1px solid rgba(34,197,94,0.15);flex:1;text-align:center">100%
+                  مكتمل</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label style="font-weight:700;display:flex;align-items:center;gap:6px;color:var(--text)">
+                <i class="bi bi-star-fill" style="color:#f97316"></i> التقييم (0-100)
+              </label>
+              <div style="font-size:10px;color:var(--text-muted);margin:-2px 0 6px"><i class="bi bi-info-circle"
+                  style="font-size:9px"></i> الدرجة الإجمالية للتقييم — يُحسب عادة بعد اكتمال التحليل</div>
+              <input type="number" class="form-input" id="formScore" min="0" max="100"
+                placeholder="اختياري — يُحسب لاحقاً" oninput="updateAsmPreview()">
+            </div>
+          </div>
+
+          <!-- Live Preview -->
+          <div
+            style="background:rgba(102,126,234,0.04);border:1px solid rgba(102,126,234,0.12);border-radius:12px;padding:14px;margin-top:4px">
+            <div
+              style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:8px;display:flex;align-items:center;gap:6px">
+              <i class="bi bi-eye-fill"></i> معاينة التقييم
+            </div>
+            <div id="asmPreviewContent" style="font-size:11px;color:var(--text-muted);line-height:1.8">
+              <div style="text-align:center;padding:12px;opacity:0.5"><i class="bi bi-clipboard-plus"
+                  style="font-size:20px;display:block;margin-bottom:6px"></i>املأ الحقول لرؤية المعاينة</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-modal-cancel" data-bs-dismiss="modal">إلغاء</button>
+          <button class="btn-modal-save" onclick="saveAssessment()">
+            <i class="bi bi-check-lg"></i> حفظ
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Details Modal -->
+  <div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="detailsTitle"><i class="bi bi-eye"></i> تفاصيل التقييم</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="detailsBody" style="padding:24px"></div>
+        <div class="modal-footer">
+          <button class="btn-modal-cancel" data-bs-dismiss="modal">إغلاق</button>
+          <button class="btn-modal-save" id="detailsEditBtn" onclick=""><i class="bi bi-pencil-square"></i>
+            تعديل</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script src="/assets/js/sidebar.js"></script>
+    <script src="/assets/js/ai-advisor.js"></script>
+  <script src="/assets/js/stats-panel.js"></script>
+  <script>if (typeof StatsPanel !== 'undefined') StatsPanel.init('ASSESSMENT');</script>
+  <script>
+    // ===== SAMPLE DATA =====
+    let assessments = [
+      {
+        id: '1',
+        title: 'تقييم البيئة الداخلية Q1-2026',
+        description: 'تحليل شامل لنقاط القوة والضعف الداخلية للمنظمة خلال الربع الأول. يشمل تقييم الموارد البشرية والتقنية والمالية.',
+        type: 'INTERNAL',
+        status: 'COMPLETED',
+        progress: 100,
+        score: 78.5,
+        createdAt: '2026-01-15',
+        criteria: [
+          { name: 'جودة القيادة الإدارية', score: 85, response: 'ممتاز' },
+          { name: 'كفاءة العمليات التشغيلية', score: 72, response: 'جيد' },
+          { name: 'البنية التقنية', score: 90, response: 'ممتاز' },
+          { name: 'الملاءة المالية', score: 68, response: 'مقبول' },
+        ],
+        responses: {
+          question: 'ما مدى جاهزية المنظمة للتحول الرقمي؟',
+          options: ['جاهزة بالكامل', 'جاهزة جزئياً', 'تحتاج تطوير كبير', 'غير جاهزة'],
+          selected: 1
+        }
+      },
+      {
+        id: '2',
+        title: 'تقييم البيئة الخارجية Q1-2026',
+        description: 'تحليل الفرص والتهديدات في البيئة الخارجية مع التركيز على السوق المحلي والاتجاهات الاقتصادية.',
+        type: 'EXTERNAL',
+        status: 'COMPLETED',
+        progress: 100,
+        score: 65.0,
+        createdAt: '2026-01-20',
+        criteria: [
+          { name: 'حجم السوق المستهدف', score: 80, response: 'واعد' },
+          { name: 'شدة المنافسة', score: 45, response: 'عالية' },
+          { name: 'الفرص التنظيمية', score: 70, response: 'متوسطة' },
+          { name: 'المخاطر الاقتصادية', score: 55, response: 'متوسطة' },
+        ],
+        responses: {
+          question: 'كيف تقيّم التهديدات التنافسية في السوق؟',
+          options: ['منخفضة — سوق مفتوح', 'متوسطة — منافسة معتدلة', 'عالية — سوق مشبع', 'حادة — تهديد وجودي'],
+          selected: 2
+        }
+      },
+      {
+        id: '3',
+        title: 'تقييم الأداء المالي',
+        description: 'مراجعة الأداء المالي وتحليل مؤشرات الربحية والسيولة والعائد على الاستثمار للعام الحالي.',
+        type: 'INTERNAL',
+        status: 'IN_PROGRESS',
+        progress: 72,
+        score: null,
+        createdAt: '2026-02-01',
+        criteria: [
+          { name: 'العائد على الاستثمار ROI', score: 75, response: 'جيد' },
+          { name: 'نسبة السيولة النقدية', score: 60, response: 'مقبول' },
+          { name: 'معدل النمو السنوي', score: null, response: null },
+        ],
+        responses: {
+          question: 'ما هو التوجه المالي المطلوب للمرحلة القادمة؟',
+          options: ['توسع واستثمار', 'استقرار وتوازن', 'تقشف وترشيد', 'إعادة هيكلة'],
+          selected: 0
+        }
+      },
+      {
+        id: '4',
+        title: 'تحليل تنافسية السوق',
+        description: 'دراسة الموقع التنافسي للمنظمة مقارنة بالمنافسين الرئيسيين في القطاع وتحديد فجوات الأداء.',
+        type: 'EXTERNAL',
+        status: 'IN_PROGRESS',
+        progress: 45,
+        score: null,
+        createdAt: '2026-02-05',
+        criteria: [
+          { name: 'الحصة السوقية', score: 55, response: 'متوسطة' },
+          { name: 'تميز المنتج / الخدمة', score: null, response: null },
+        ],
+        responses: {
+          question: 'ما هي الميزة التنافسية الأساسية للمنظمة؟',
+          options: ['التسعير المنافس', 'جودة المنتج', 'الابتكار والتقنية', 'خدمة العملاء', 'لم تُحدد بعد'],
+          selected: null
+        }
+      },
+      {
+        id: '5',
+        title: 'تقييم رأس المال البشري',
+        description: 'تقييم كفاءات الموارد البشرية والاحتياجات التدريبية وخطط التطوير والاستبقاء.',
+        type: 'INTERNAL',
+        status: 'DRAFT',
+        progress: 10,
+        score: null,
+        createdAt: '2026-02-10',
+        criteria: [],
+        responses: {
+          question: 'ما مستوى رضا الموظفين العام؟',
+          options: ['مرتفع جداً (90%+)', 'مرتفع (75-90%)', 'متوسط (50-75%)', 'منخفض (أقل من 50%)'],
+          selected: null
+        }
+      },
+      {
+        id: '6',
+        title: 'تحليل PESTEL — البيئة الكلية',
+        description: 'تقييم العوامل السياسية والاقتصادية والاجتماعية والتقنية والبيئية والقانونية المؤثرة.',
+        type: 'EXTERNAL',
+        status: 'DRAFT',
+        progress: 0,
+        score: null,
+        createdAt: '2026-02-15',
+        criteria: [],
+        responses: {
+          question: 'أي عامل خارجي يمثل التأثير الأكبر على المنظمة؟',
+          options: ['سياسي — تغيرات تنظيمية', 'اقتصادي — تقلبات السوق', 'اجتماعي — تحول ثقافي', 'تقني — ثورة رقمية', 'بيئي — استدامة', 'قانوني — تشريعات جديدة'],
+          selected: null
+        }
+      }
+    ];
+
+    // ===== RENDER =====
+    function renderAll() {
+      renderStats();
+      renderCards();
+    }
+
+    function renderStats() {
+      document.getElementById('statTotal').textContent = assessments.length;
+      document.getElementById('statCompleted').textContent = assessments.filter(a => a.status === 'COMPLETED').length;
+      document.getElementById('statInProgress').textContent = assessments.filter(a => a.status === 'IN_PROGRESS').length;
+      document.getElementById('statDraft').textContent = assessments.filter(a => a.status === 'DRAFT').length;
+    }
+
+    function getStatusLabel(s) {
+      return { COMPLETED: 'مكتمل', IN_PROGRESS: 'قيد التنفيذ', DRAFT: 'مسودة' }[s] || s;
+    }
+    function getTypeLabel(t) {
+      return { INTERNAL: 'داخلي', EXTERNAL: 'خارجي' }[t] || t;
+    }
+    function getTypeIcon(t) {
+      return t === 'INTERNAL' ? 'bi-building' : 'bi-globe2';
+    }
+    function getScoreClass(s) {
+      if (s >= 70) return 'high';
+      if (s >= 50) return 'medium';
+      return 'low';
+    }
+    function getChipClass(s) {
+      if (s >= 70) return 'good';
+      if (s >= 50) return 'warn';
+      return 'bad';
+    }
+    function getStars(score) {
+      const filled = Math.round((score / 100) * 5);
+      let html = '';
+      for (let i = 0; i < 5; i++) {
+        html += `<i class="bi bi-star-fill ${i < filled ? '' : 'empty'}"></i>`;
+      }
+      return html;
+    }
+
+    function renderCards() {
+      const grid = document.getElementById('assessmentsGrid');
+      grid.innerHTML = assessments.map(a => `
+        <div class="assessment-card">
+          <div class="ac-status-bar ${a.status.toLowerCase()}"></div>
+          <div class="ac-body">
+            <div class="ac-header">
+              <div class="ac-icon ${a.type.toLowerCase()}">
+                <i class="bi ${getTypeIcon(a.type)}"></i>
+              </div>
+              <div class="ac-title" style="flex:1">
+                <h3>${a.title}</h3>
+                <span class="ac-type ${a.type.toLowerCase()}">${getTypeLabel(a.type)}</span>
+                <span class="status-badge ${a.status.toLowerCase()}" style="margin-right:6px">${getStatusLabel(a.status)}</span>
+              </div>
+            </div>
+
+            <div class="ac-desc">${a.description}</div>
+
+            <!-- Progress -->
+            <div class="ac-progress">
+              <div class="ac-progress-header">
+                <span class="ac-progress-label">نسبة الإنجاز</span>
+                <span class="ac-progress-value">${a.progress}%</span>
+              </div>
+              <div class="ac-progress-bar">
+                <div class="ac-progress-fill ${a.status.toLowerCase()}" style="width:${a.progress}%"></div>
+              </div>
+            </div>
+
+            ${a.score !== null ? `
+            <div class="ac-score-row">
+              <div>
+                <div class="ac-score ${getScoreClass(a.score)}">${a.score}</div>
+                <div class="ac-score-label">التقييم العام</div>
+              </div>
+              <div class="ac-score-stars">${getStars(a.score)}</div>
+            </div>` : ''}
+
+            ${a.criteria && a.criteria.length > 0 ? `
+            <div class="ac-criteria">
+              <div class="ac-criteria-title"><i class="bi bi-list-check"></i> معايير التقييم</div>
+              <div>
+                ${a.criteria.map(c => `
+                  <span class="criteria-chip">
+                    ${c.name}
+                    ${c.score !== null ? `<span class="chip-score ${getChipClass(c.score)}">${c.score}%</span>` : '<span class="chip-score" style="opacity:0.4">—</span>'}
+                  </span>
+                `).join('')}
+              </div>
+            </div>` : ''}
+
+            ${a.responses ? `
+            <div class="response-options">
+              <div class="response-title"><i class="bi bi-chat-dots"></i> ${a.responses.question}</div>
+              ${a.responses.options.map((opt, i) => `
+                <div class="response-option ${a.responses.selected === i ? 'selected' : ''}" onclick="selectResponse('${a.id}', ${i})">
+                  <div class="response-radio"><div class="response-radio-inner"></div></div>
+                  <span>${opt}</span>
+                </div>
+              `).join('')}
+            </div>` : ''}
+
+            <div class="ac-meta">
+              <span class="ac-meta-item"><i class="bi bi-calendar3"></i> ${a.createdAt}</span>
+              ${a.criteria ? `<span class="ac-meta-item"><i class="bi bi-list-check"></i> ${a.criteria.length} معايير</span>` : ''}
+            </div>
+
+            <div class="ac-actions">
+              <button class="btn-action btn-view" onclick="viewAssessment('${a.id}')">
+                <i class="bi bi-eye"></i> عرض
+              </button>
+              <button class="btn-action btn-edit" onclick="openEditModal('${a.id}')">
+                <i class="bi bi-pencil-square"></i> تعديل
+              </button>
+              <button class="btn-action btn-delete" onclick="deleteAssessment('${a.id}')">
+                <i class="bi bi-trash3"></i> حذف
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ===== INTERACTIONS =====
+    function selectResponse(id, idx) {
+      const a = assessments.find(x => x.id === id);
+      if (a && a.responses) {
+        a.responses.selected = idx;
+        renderCards();
+        showToast('تم حفظ الإجابة ✓', 'success');
+      }
+    }
+
+    // ===== TEMPLATES =====
+    const asmTemplates = [
+      { title: 'تقييم البيئة الداخلية Q1-2026', desc: 'تحليل شامل لنقاط القوة والضعف الداخلية للمنظمة — يشمل الموارد البشرية، التقنية، المالية، والعمليات التشغيلية', type: 'INTERNAL', status: 'DRAFT', progress: 0 },
+      { title: 'تقييم البيئة الخارجية Q1-2026', desc: 'تحليل الفرص والتهديدات في البيئة الخارجية — السوق المحلي، الاتجاهات الاقتصادية، المنافسة، والتغييرات التنظيمية', type: 'EXTERNAL', status: 'DRAFT', progress: 0 },
+      { title: 'تحليل PESTEL — البيئة الكلية', desc: 'تقييم العوامل السياسية والاقتصادية والاجتماعية والتقنية والبيئية والقانونية المؤثرة على المنظمة', type: 'EXTERNAL', status: 'DRAFT', progress: 0 },
+      { title: 'تقييم الأداء المالي', desc: 'مراجعة شاملة للأداء المالي وتحليل مؤشرات الربحية والسيولة والعائد على الاستثمار وكفاءة التكاليف', type: 'INTERNAL', status: 'IN_PROGRESS', progress: 30 },
+      { title: 'تقييم رأس المال البشري', desc: 'تقييم كفاءات الموارد البشرية والاحتياجات التدريبية وخطط التطوير والاستبقاء ورضا الموظفين', type: 'INTERNAL', status: 'DRAFT', progress: 0 },
+      { title: 'تحليل تنافسية السوق', desc: 'دراسة الموقع التنافسي مقارنة بالمنافسين الرئيسيين وتحديد الفجوات والميزات التنافسية والحصة السوقية', type: 'EXTERNAL', status: 'DRAFT', progress: 0 },
+    ];
+
+    function fillAsmTpl(i) {
+      const t = asmTemplates[i]; if (!t) return;
+      document.getElementById('formTitle').value = t.title;
+      document.getElementById('formDesc').value = t.desc;
+      document.getElementById('formType').value = t.type;
+      document.getElementById('formStatus').value = t.status;
+      document.getElementById('formProgress').value = t.progress;
+      document.getElementById('formScore').value = '';
+      document.querySelectorAll('.asm-tpl').forEach((el, idx) => {
+        el.style.boxShadow = idx === i ? '0 0 0 2px var(--primary)' : '';
+      });
+      updateTypeHint(); updateAsmPreview();
+    }
+
+    // ===== TYPE HINT =====
+    const typeHints = {
+      INTERNAL: { color: 'var(--primary)', text: 'يشمل: القيادة، العمليات، التقنية، الموارد البشرية، الملاءة المالية' },
+      EXTERNAL: { color: 'var(--info)', text: 'يشمل: حجم السوق، المنافسة، التشريعات، الفرص التقنية، التهديدات الاقتصادية' }
+    };
+    function updateTypeHint() {
+      const v = document.getElementById('formType').value;
+      const h = typeHints[v]; if (!h) return;
+      const el = document.getElementById('typeHintBox');
+      el.style.borderColor = h.color + '30'; el.style.background = h.color.replace(')', ',0.06)').replace('var(', 'rgba(').replace('--primary', '102,126,234').replace('--info', '56,189,248');
+      el.querySelector('i').style.color = h.color;
+      el.querySelector('span').textContent = h.text;
+    }
+
+    // ===== LIVE PREVIEW =====
+    function updateAsmPreview() {
+      const title = document.getElementById('formTitle').value.trim();
+      const desc = document.getElementById('formDesc').value.trim();
+      const type = document.getElementById('formType').value;
+      const status = document.getElementById('formStatus').value;
+      const progress = document.getElementById('formProgress').value;
+      const scoreVal = document.getElementById('formScore').value;
+      const el = document.getElementById('asmPreviewContent');
+      if (!title) { el.innerHTML = '<div style="text-align:center;padding:12px;opacity:0.5"><i class="bi bi-clipboard-plus" style="font-size:20px;display:block;margin-bottom:6px"></i>املأ الحقول لرؤية المعاينة</div>'; return; }
+      const typeColor = type === 'INTERNAL' ? 'var(--primary)' : 'var(--info)';
+      const typeLabel = type === 'INTERNAL' ? 'داخلي' : 'خارجي';
+      const typeIcon = type === 'INTERNAL' ? 'bi-building' : 'bi-globe2';
+      const statusLabel = { COMPLETED: 'مكتمل', IN_PROGRESS: 'قيد التنفيذ', DRAFT: 'مسودة' }[status];
+      const statusColor = { COMPLETED: 'var(--success)', IN_PROGRESS: 'var(--warning)', DRAFT: 'var(--text-muted)' }[status];
+      const prgColor = progress >= 70 ? 'var(--success)' : progress >= 40 ? 'var(--warning)' : 'var(--text-muted)';
+      el.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <div style="width:36px;height:36px;border-radius:10px;background:${typeColor}20;color:${typeColor};display:flex;align-items:center;justify-content:center;font-size:16px"><i class="bi ${typeIcon}"></i></div>
+          <div style="flex:1"><div style="font-weight:800;font-size:13px;color:var(--text)">${title}</div><div style="font-size:10px;color:var(--text-muted);max-width:400px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${desc || '—'}</div></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+          <span style="font-size:9px;padding:2px 8px;border-radius:6px;background:${typeColor}15;color:${typeColor}"><i class="bi ${typeIcon}"></i> ${typeLabel}</span>
+          <span style="font-size:9px;padding:2px 8px;border-radius:6px;background:${statusColor}15;color:${statusColor}"><i class="bi bi-flag"></i> ${statusLabel}</span>
+          <span style="font-size:9px;padding:2px 8px;border-radius:6px;background:${prgColor}15;color:${prgColor}"><i class="bi bi-bar-chart"></i> إنجاز ${progress}%</span>
+          ${scoreVal ? `<span style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(249,115,22,0.08);color:#f97316"><i class="bi bi-star-fill"></i> تقييم ${scoreVal}/100</span>` : ''}
+        </div>
+        <div style="height:4px;border-radius:2px;background:rgba(255,255,255,0.06);overflow:hidden"><div style="height:100%;width:${progress}%;background:${prgColor};border-radius:2px;transition:width 0.3s"></div></div>`;
+    }
+
+    function openCreateModal() {
+      document.getElementById('modalTitle').innerHTML = '<i class="bi bi-plus-circle"></i> تقييم جديد';
+      document.getElementById('editId').value = '';
+      document.getElementById('formTitle').value = '';
+      document.getElementById('formDesc').value = '';
+      document.getElementById('formType').value = 'INTERNAL';
+      document.getElementById('formStatus').value = 'DRAFT';
+      document.getElementById('formProgress').value = 0;
+      document.getElementById('formScore').value = '';
+      document.getElementById('asmTplSection').style.display = '';
+      document.querySelectorAll('.asm-tpl').forEach(el => { el.style.boxShadow = ''; });
+      updateTypeHint(); updateAsmPreview();
+      new bootstrap.Modal(document.getElementById('assessmentModal')).show();
+    }
+
+    function openEditModal(id) {
+      const a = assessments.find(x => x.id === id);
+      if (!a) return;
+      document.getElementById('modalTitle').innerHTML = '<i class="bi bi-pencil-square"></i> تعديل التقييم';
+      document.getElementById('editId').value = a.id;
+      document.getElementById('formTitle').value = a.title;
+      document.getElementById('formDesc').value = a.description;
+      document.getElementById('formType').value = a.type;
+      document.getElementById('formStatus').value = a.status;
+      document.getElementById('formProgress').value = a.progress;
+      document.getElementById('formScore').value = a.score || '';
+      document.getElementById('asmTplSection').style.display = 'none';
+      updateTypeHint(); updateAsmPreview();
+      new bootstrap.Modal(document.getElementById('assessmentModal')).show();
+    }
+
+    function saveAssessment() {
+      const id = document.getElementById('editId').value;
+      const title = document.getElementById('formTitle').value.trim();
+      const desc = document.getElementById('formDesc').value.trim();
+      const type = document.getElementById('formType').value;
+      const status = document.getElementById('formStatus').value;
+      const progress = parseInt(document.getElementById('formProgress').value) || 0;
+      const scoreVal = document.getElementById('formScore').value;
+      const score = scoreVal ? parseFloat(scoreVal) : null;
+
+      if (!title) { showToast('يرجى إدخال عنوان التقييم', 'error'); return; }
+
+      if (id) {
+        // Edit
+        const a = assessments.find(x => x.id === id);
+        if (a) {
+          a.title = title; a.description = desc; a.type = type;
+          a.status = status; a.progress = progress; a.score = score;
+        }
+        showToast('تم تحديث التقييم بنجاح ✓', 'success');
+      } else {
+        // Create
+        assessments.unshift({
+          id: Date.now().toString(),
+          title, description: desc, type, status, progress, score,
+          createdAt: new Date().toISOString().split('T')[0],
+          criteria: [],
+          responses: {
+            question: type === 'INTERNAL' ? 'ما مدى جاهزية المنظمة في هذا المجال؟' : 'كيف تقيّم التأثير الخارجي؟',
+            options: type === 'INTERNAL'
+              ? ['جاهزة بالكامل', 'جاهزة جزئياً', 'تحتاج تطوير', 'غير جاهزة']
+              : ['إيجابي — فرص كبيرة', 'محايد — مستقر', 'سلبي — تهديدات', 'حرج — مخاطر عالية'],
+            selected: null
+          }
+        });
+        showToast('تم إنشاء التقييم بنجاح ✓', 'success');
+      }
+
+      bootstrap.Modal.getInstance(document.getElementById('assessmentModal')).hide();
+      renderAll();
+    }
+
+    function deleteAssessment(id) {
+      if (!confirm('هل أنت متأكد من حذف هذا التقييم؟')) return;
+      assessments = assessments.filter(x => x.id !== id);
+      renderAll();
+      showToast('تم حذف التقييم ✓', 'success');
+    }
+
+    function showToast(msg, type) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast-msg ${type}`;
+      toast.innerHTML = `<i class="bi ${type === 'success' ? 'bi-check-circle' : 'bi-exclamation-circle'}"></i> ${msg}`;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    // ===== VIEW DETAILS =====
+    function viewAssessment(id) {
+      const a = assessments.find(x => x.id === id);
+      if (!a) return;
+      const typeColor = a.type === 'INTERNAL' ? 'var(--primary)' : 'var(--info)';
+      const typeLabel = getTypeLabel(a.type);
+      const typeIcon = getTypeIcon(a.type);
+      const statusLabel = getStatusLabel(a.status);
+      const statusColor = { COMPLETED: 'var(--success)', IN_PROGRESS: 'var(--warning)', DRAFT: 'var(--text-muted)' }[a.status];
+      const prgColor = a.progress >= 70 ? 'var(--success)' : a.progress >= 40 ? 'var(--warning)' : 'var(--text-muted)';
+
+      let html = `
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;padding:18px;background:rgba(255,255,255,0.02);border-radius:14px;border:1px solid var(--border)">
+          <div style="width:56px;height:56px;border-radius:14px;background:${typeColor}15;color:${typeColor};display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0"><i class="bi ${typeIcon}"></i></div>
+          <div style="flex:1">
+            <h4 style="font-size:18px;font-weight:800;margin-bottom:4px">${a.title}</h4>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <span style="font-size:11px;padding:3px 10px;border-radius:8px;background:${typeColor}12;color:${typeColor};font-weight:600"><i class="bi ${typeIcon}"></i> ${typeLabel}</span>
+              <span style="font-size:11px;padding:3px 10px;border-radius:8px;background:${statusColor}12;color:${statusColor};font-weight:600"><i class="bi bi-flag"></i> ${statusLabel}</span>
+              <span style="font-size:11px;padding:3px 10px;border-radius:8px;background:rgba(255,255,255,0.04);color:var(--text-muted)"><i class="bi bi-calendar3"></i> ${a.createdAt}</span>
+            </div>
+          </div>
+        </div>`;
+
+      // Description
+      if (a.description) {
+        html += `<div style="margin-bottom:18px;padding:14px;background:rgba(255,255,255,0.02);border-radius:10px;border:1px solid var(--border)">
+          <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:6px;display:flex;align-items:center;gap:6px"><i class="bi bi-card-text" style="color:#f97316"></i> الوصف</div>
+          <div style="font-size:13px;line-height:1.7;color:var(--text)">${a.description}</div>
+        </div>`;
+      }
+
+      // Progress & Score
+      html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+        <div style="padding:16px;background:rgba(255,255,255,0.02);border-radius:10px;border:1px solid var(--border);text-align:center">
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px"><i class="bi bi-bar-chart"></i> نسبة الإنجاز</div>
+          <div style="font-size:28px;font-weight:900;color:${prgColor}">${a.progress}%</div>
+          <div style="height:6px;border-radius:3px;background:rgba(255,255,255,0.06);margin-top:8px;overflow:hidden"><div style="height:100%;width:${a.progress}%;background:${prgColor};border-radius:3px"></div></div>
+        </div>
+        <div style="padding:16px;background:rgba(255,255,255,0.02);border-radius:10px;border:1px solid var(--border);text-align:center">
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px"><i class="bi bi-star-fill"></i> التقييم العام</div>
+          ${a.score !== null ? `<div style="font-size:28px;font-weight:900;color:${a.score >= 70 ? 'var(--success)' : a.score >= 50 ? 'var(--warning)' : 'var(--danger)'}">${a.score}</div><div style="margin-top:4px">${getStars(a.score)}</div>` : '<div style="font-size:16px;color:var(--text-muted);opacity:0.5;padding:8px 0">لم يُحدد بعد</div>'}
+        </div>
+      </div>`;
+
+      // Criteria
+      if (a.criteria && a.criteria.length > 0) {
+        html += `<div style="margin-bottom:18px;padding:14px;background:rgba(255,255,255,0.02);border-radius:10px;border:1px solid var(--border)">
+          <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:6px"><i class="bi bi-list-check" style="color:var(--primary)"></i> معايير التقييم (${a.criteria.length})</div>
+          <div style="display:flex;flex-direction:column;gap:6px">`;
+        a.criteria.forEach(c => {
+          const cColor = c.score >= 70 ? 'var(--success)' : c.score >= 50 ? 'var(--warning)' : c.score !== null ? 'var(--danger)' : 'var(--text-muted)';
+          html += `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(255,255,255,0.02);border-radius:8px">
+            <div style="flex:1;font-size:13px;font-weight:600">${c.name}</div>
+            <div style="font-size:11px;color:var(--text-muted)">${c.response || '—'}</div>
+            ${c.score !== null ? `<div style="font-size:12px;font-weight:800;color:${cColor};min-width:40px;text-align:center;padding:2px 8px;border-radius:6px;background:${cColor}12">${c.score}%</div>` : '<div style="font-size:11px;color:var(--text-muted);opacity:0.4">—</div>'}
+          </div>`;
+        });
+        html += `</div></div>`;
+      }
+
+      // Response question
+      if (a.responses) {
+        html += `<div style="padding:14px;background:rgba(102,126,234,0.04);border-radius:10px;border:1px solid rgba(102,126,234,0.12)">
+          <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:8px;display:flex;align-items:center;gap:6px"><i class="bi bi-chat-dots"></i> ${a.responses.question}</div>
+          <div style="display:flex;flex-direction:column;gap:4px">`;
+        a.responses.options.forEach((opt, i) => {
+          const sel = a.responses.selected === i;
+          html += `<div style="padding:8px 12px;border-radius:8px;font-size:13px;display:flex;align-items:center;gap:8px;${sel ? 'background:rgba(102,126,234,0.1);color:var(--primary);font-weight:600' : 'color:var(--text-muted)'}">
+            <div style="width:16px;height:16px;border-radius:50%;border:2px solid ${sel ? 'var(--primary)' : 'var(--border)'};display:flex;align-items:center;justify-content:center">
+              ${sel ? '<div style="width:8px;height:8px;border-radius:50%;background:var(--primary)"></div>' : ''}
+            </div>
+            ${opt}
+          </div>`;
+        });
+        html += `</div></div>`;
+      }
+
+      document.getElementById('detailsBody').innerHTML = html;
+      document.getElementById('detailsTitle').innerHTML = `<i class="bi bi-eye" style="color:var(--primary)"></i> ${a.title}`;
+      document.getElementById('detailsEditBtn').setAttribute('onclick', `bootstrap.Modal.getInstance(document.getElementById('detailsModal')).hide();setTimeout(()=>openEditModal('${a.id}'),300)`);
+      new bootstrap.Modal(document.getElementById('detailsModal')).show();
+    }
+
+    // ===== INIT =====
+    renderAll();
+  </script>
+</body>
+
+</html>

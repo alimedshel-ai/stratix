@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكيس - لوحة القيادة</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --bg: #0f1117;
+            --bg-card: #1a1d2e;
+            --bg-card-hover: #232640;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --success: #22c55e;
+            --warning: #facc15;
+            --danger: #ef4444;
+            --info: #38bdf8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .top-nav {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 14px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .top-nav .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .layout {
+            display: flex;
+            min-height: calc(100vh - 60px);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            max-width: calc(100% - 220px);
+        }
+
+        /* Welcome */
+        .welcome-bar {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.12), rgba(118, 75, 162, 0.12));
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 16px;
+            padding: 24px 28px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .welcome-bar h2 {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .welcome-bar p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .welcome-date {
+            text-align: left;
+        }
+
+        .welcome-date .date-big {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .welcome-date .date-small {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Quick Stats */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .qstat {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .qstat:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            color: inherit;
+        }
+
+        .qstat-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .qstat-info {
+            flex: 1;
+        }
+
+        .qstat-value {
+            font-size: 26px;
+            font-weight: 800;
+        }
+
+        .qstat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .qstat-link {
+            font-size: 11px;
+            color: var(--primary);
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* BSC Perspectives */
+        .section-title {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: var(--primary);
+        }
+
+        .bsc-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .bsc-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 0;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .bsc-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+            color: inherit;
+        }
+
+        .bsc-bar {
+            height: 4px;
+        }
+
+        .bsc-bar.financial {
+            background: linear-gradient(90deg, #22c55e, #4ade80);
+        }
+
+        .bsc-bar.customer {
+            background: linear-gradient(90deg, #38bdf8, #7dd3fc);
+        }
+
+        .bsc-bar.internal {
+            background: linear-gradient(90deg, #facc15, #fde047);
+        }
+
+        .bsc-bar.learning {
+            background: linear-gradient(90deg, #a78bfa, #c4b5fd);
+        }
+
+        .bsc-body {
+            padding: 20px;
+        }
+
+        .bsc-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .bsc-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .bsc-score {
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        .bsc-name {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .bsc-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .bsc-progress {
+            height: 5px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .bsc-fill {
+            height: 100%;
+            border-radius: 5px;
+        }
+
+        /* Two Column Layout */
+        .two-cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        /* AI Alert */
+        .ai-alert {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .alert-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .alert-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-top: 5px;
+            flex-shrink: 0;
+        }
+
+        .alert-dot.danger {
+            background: var(--danger);
+        }
+
+        .alert-dot.warning {
+            background: var(--warning);
+        }
+
+        .alert-dot.info {
+            background: var(--info);
+        }
+
+        .alert-dot.success {
+            background: var(--success);
+        }
+
+        .alert-text {
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .alert-time {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .alert-link {
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        .alert-link a {
+            color: var(--primary);
+            font-size: 13px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .qa-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+            border: 1px solid var(--border);
+        }
+
+        .qa-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.15);
+            color: inherit;
+            transform: translateX(-4px);
+        }
+
+        .qa-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .qa-info {
+            flex: 1;
+        }
+
+        .qa-name {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .qa-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .qa-arrow {
+            color: var(--text-muted);
+            font-size: 16px;
+        }
+
+        /* Recent Activity */
+        .recent-section {
+            margin-bottom: 28px;
+        }
+
+        .recent-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .recent-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px;
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .recent-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-3px);
+            color: inherit;
+        }
+
+        .recent-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .recent-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .recent-name {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .recent-status {
+            font-size: 11px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .recent-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .recent-progress {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .recent-fill {
+            height: 100%;
+            border-radius: 4px;
+        }
+
+        /* Quick Start Widget */
+        .qs-widget {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.06));
+            border: 1px solid rgba(102, 126, 234, 0.18);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .qs-widget::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            left: -50px;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.08), transparent 70%);
+            pointer-events: none;
+        }
+
+        .qs-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .qs-title {
+            font-size: 18px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .qs-pattern-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .qs-steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+        }
+
+        .qs-step {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 20px 18px;
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            position: relative;
+        }
+
+        .qs-step:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            color: inherit;
+        }
+
+        .qs-step.done {
+            border-color: rgba(34, 197, 94, 0.3);
+            background: rgba(34, 197, 94, 0.04);
+        }
+
+        .qs-step.current {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.15);
+        }
+
+        .qs-step-num {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .qs-step.done .qs-step-num {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--success);
+        }
+
+        .qs-step.current .qs-step-num {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+        }
+
+        .qs-step-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .qs-step-desc {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .qs-step-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+        }
+
+        /* Pain & Ambition Summary Card */
+        .pa-summary {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.06), rgba(236, 72, 153, 0.04));
+            border: 1px solid rgba(102, 126, 234, 0.15);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pa-summary::before {
+            content: '';
+            position: absolute;
+            top: -40px;
+            left: -40px;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.06), transparent 70%);
+            pointer-events: none;
+        }
+
+        .pa-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .pa-title {
+            font-size: 16px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pa-pattern-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .pa-reassess {
+            padding: 6px 16px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: inherit;
+        }
+
+        .pa-reassess:hover {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+
+        .pa-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .pa-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .pa-tag.pain {
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.15);
+        }
+
+        .pa-tag.amb {
+            background: rgba(34, 197, 94, 0.1);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.15);
+        }
+
+        .pa-date {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
+        /* Smart Recommendations */
+        .smart-recs {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 22px;
+            margin-bottom: 24px;
+        }
+
+        .rec-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+            border: 1px solid var(--border);
+        }
+
+        .rec-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.12);
+            transform: translateX(-4px);
+            color: inherit;
+        }
+
+        .rec-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .rec-info {
+            flex: 1;
+        }
+
+        .rec-name {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .rec-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .rec-tag {
+            font-size: 10px;
+            padding: 3px 10px;
+            border-radius: 8px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 1024px) {
+            .bsc-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .two-cols {
+                grid-template-columns: 1fr;
+            }
+
+            .recent-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .qs-steps {
+                grid-template-columns: 1fr;
+            }
+
+            .pa-summary>div:nth-child(2) {
+                grid-template-columns: 1fr !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .quick-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .bsc-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .main-content {
+                max-width: 100%;
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="top-nav">
+        <a href="/dashboard.html" class="brand"><i class="bi bi-gem"></i> ستارتكيس</a>
+        <div class="user-area">
+            <div class="user-avatar">م</div>
+            <button class="btn-logout" onclick="localStorage.clear(); location.href='/login.html'"><i
+                    class="bi bi-box-arrow-right"></i> خروج</button>
+        </div>
+    </nav>
+
+    <div class="layout">
+        <aside class="sidebar"></aside>
+        <div class="main-content">
+
+            <!-- Welcome -->
+            <div class="welcome-bar">
+                <div>
+                    <h2 id="welcomeMsg">👋 مرحباً بك في ستارتكيس</h2>
+                    <p id="welcomeDesc">إليك ملخص حالة استراتيجيتك اليوم — تابع المؤشرات واتخذ القرارات.</p>
+                </div>
+                <div class="welcome-date">
+                    <div class="date-big" id="dateDisplay"></div>
+                    <div class="date-small" id="timeDisplay"></div>
+                </div>
+            </div>
+
+            <!-- 🧭 Quick Start Widget -->
+            <div class="qs-widget" id="qsWidget">
+                <div class="qs-header">
+                    <div class="qs-title">🧭 ابدأ من هنا</div>
+                    <div id="qsPatternBadge"></div>
+                </div>
+                <div class="qs-steps" id="qsSteps">
+                    <!-- Dynamically filled -->
+                </div>
+            </div>
+
+            <!-- 🎯 Smart Recommendations from Pain/Ambition -->
+            <div class="smart-recs" id="smartRecs" style="display:none;">
+                <div class="section-title" style="margin-bottom:14px">
+                    <i class="bi bi-lightbulb-fill" style="color:var(--warning)"></i> توصيات مخصصة لك
+                </div>
+                <div id="smartRecsList"></div>
+            </div>
+
+            <!-- 💔 Pain & Ambition Summary Card -->
+            <div class="pa-summary" id="paSummaryCard" style="display:none;">
+                <div class="pa-header">
+                    <div class="pa-title">
+                        <span>💔 ملخص التشخيص</span>
+                        <span id="paPatternBadge"></span>
+                    </div>
+                    <a href="/pain-ambition.html" class="pa-reassess" id="paReassessBtn">
+                        <i class="bi bi-arrow-repeat"></i> أعِد التقييم
+                    </a>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div>
+                        <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--text-muted)">😤
+                            التحديات المحددة</div>
+                        <div class="pa-tags" id="paPainTags"></div>
+                    </div>
+                    <div>
+                        <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--text-muted)">🎯
+                            الطموحات المختارة</div>
+                        <div class="pa-tags" id="paAmbTags"></div>
+                    </div>
+                </div>
+                <div class="pa-date" id="paDate"></div>
+            </div>
+
+            <!-- Progress Card -->
+            <div id="progressCard" style="margin-bottom:20px;">
+                <div
+                    style="background:linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.08));border:1px solid rgba(102,126,234,0.15);border-radius:16px;padding:20px;">
+                    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
+                        <div
+                            style="width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff">
+                            <i class="bi bi-flag-fill"></i>
+                        </div>
+                        <div style="flex:1">
+                            <div style="font-weight:800;font-size:17px">📌 رحلتك الاستراتيجية</div>
+                            <div id="progressSummary" style="font-size:13px;color:var(--text-muted);margin-top:4px">جارٍ
+                                تحميل التقدم...</div>
+                        </div>
+                        <div id="progressPct" style="font-weight:800;font-size:22px;color:var(--primary)">--%</div>
+                    </div>
+                    <!-- شريط المراحل -->
+                    <div id="progressStages"
+                        style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:14px;"></div>
+                    <!-- زر الخطوة التالية -->
+                    <div id="nextStepContainer" style="display:none;">
+                        <a id="nextStepBtn" href="#"
+                            style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;transition:all .2s;justify-content:center;">
+                            <i class="bi bi-arrow-left-circle"></i>
+                            <span id="nextStepLabel">الخطوة التالية</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats (Live) -->
+            <div class="quick-stats" id="liveStats">
+                <a href="/objectives.html" class="qstat">
+                    <div class="qstat-icon" style="background:rgba(102,126,234,0.12);color:var(--primary)"><i
+                            class="bi bi-bullseye"></i></div>
+                    <div class="qstat-info">
+                        <div class="qstat-value" id="statObjectives">—</div>
+                        <div class="qstat-label">أهداف استراتيجية</div>
+                        <div class="qstat-link"><i class="bi bi-arrow-left-short"></i> عرض الأهداف</div>
+                    </div>
+                </a>
+                <a href="/kpis.html" class="qstat">
+                    <div class="qstat-icon" style="background:rgba(34,197,94,0.12);color:var(--success)"><i
+                            class="bi bi-speedometer2"></i></div>
+                    <div class="qstat-info">
+                        <div class="qstat-value" id="statKpis">—</div>
+                        <div class="qstat-label">مؤشر أداء</div>
+                        <div class="qstat-link"><i class="bi bi-arrow-left-short"></i> عرض المؤشرات</div>
+                    </div>
+                </a>
+                <a href="/initiatives.html" class="qstat">
+                    <div class="qstat-icon" style="background:rgba(250,204,21,0.12);color:var(--warning)"><i
+                            class="bi bi-rocket-takeoff"></i></div>
+                    <div class="qstat-info">
+                        <div class="qstat-value" id="statInitiatives">—</div>
+                        <div class="qstat-label">مبادرة فعّالة</div>
+                        <div class="qstat-link"><i class="bi bi-arrow-left-short"></i> عرض المبادرات</div>
+                    </div>
+                </a>
+                <a href="/assessments.html" class="qstat">
+                    <div class="qstat-icon" style="background:rgba(56,189,248,0.12);color:var(--info)"><i
+                            class="bi bi-clipboard-check"></i></div>
+                    <div class="qstat-info">
+                        <div class="qstat-value" id="statAssessments">—</div>
+                        <div class="qstat-label">تقييم</div>
+                        <div class="qstat-link"><i class="bi bi-arrow-left-short"></i> عرض التقييمات</div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- BSC Perspectives -->
+            <div class="section-title"><i class="bi bi-grid-3x3-gap-fill"></i> المنظورات الاستراتيجية (BSC)</div>
+            <div class="bsc-grid">
+                <a href="/objectives.html" class="bsc-card">
+                    <div class="bsc-bar financial"></div>
+                    <div class="bsc-body">
+                        <div class="bsc-header">
+                            <div class="bsc-icon" style="background:rgba(34,197,94,0.12);color:var(--success)"><i
+                                    class="bi bi-cash-stack"></i></div>
+                            <div class="bsc-score" style="color:var(--success)">85%</div>
+                        </div>
+                        <div class="bsc-name">البُعد المالي</div>
+                        <div class="bsc-desc">معدل تحقيق العوائد المستهدفة — نمو الإيرادات وهامش الربح</div>
+                        <div class="bsc-progress">
+                            <div class="bsc-fill" style="width:85%;background:var(--success)"></div>
+                        </div>
+                    </div>
+                </a>
+                <a href="/objectives.html" class="bsc-card">
+                    <div class="bsc-bar customer"></div>
+                    <div class="bsc-body">
+                        <div class="bsc-header">
+                            <div class="bsc-icon" style="background:rgba(56,189,248,0.12);color:var(--info)"><i
+                                    class="bi bi-people-fill"></i></div>
+                            <div class="bsc-score" style="color:var(--warning)">68%</div>
+                        </div>
+                        <div class="bsc-name">العملاء</div>
+                        <div class="bsc-desc">رضا العملاء ومعدل الاحتفاظ وتوسيع القاعدة</div>
+                        <div class="bsc-progress">
+                            <div class="bsc-fill" style="width:68%;background:var(--warning)"></div>
+                        </div>
+                    </div>
+                </a>
+                <a href="/objectives.html" class="bsc-card">
+                    <div class="bsc-bar internal"></div>
+                    <div class="bsc-body">
+                        <div class="bsc-header">
+                            <div class="bsc-icon" style="background:rgba(250,204,21,0.12);color:var(--warning)"><i
+                                    class="bi bi-gear-wide-connected"></i></div>
+                            <div class="bsc-score" style="color:var(--success)">73%</div>
+                        </div>
+                        <div class="bsc-name">العمليات الداخلية</div>
+                        <div class="bsc-desc">كفاءة الأتمتة ومعايير الجودة وزمن المعالجة</div>
+                        <div class="bsc-progress">
+                            <div class="bsc-fill" style="width:73%;background:var(--warning)"></div>
+                        </div>
+                    </div>
+                </a>
+                <a href="/objectives.html" class="bsc-card">
+                    <div class="bsc-bar learning"></div>
+                    <div class="bsc-body">
+                        <div class="bsc-header">
+                            <div class="bsc-icon" style="background:rgba(167,139,250,0.12);color:#a78bfa"><i
+                                    class="bi bi-lightbulb"></i></div>
+                            <div class="bsc-score" style="color:var(--warning)">51%</div>
+                        </div>
+                        <div class="bsc-name">التعلم والنمو</div>
+                        <div class="bsc-desc">تطوير الكوادر والشهادات المهنية وثقافة الابتكار</div>
+                        <div class="bsc-progress">
+                            <div class="bsc-fill" style="width:51%;background:var(--warning)"></div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Two Columns: Alerts + Quick Actions -->
+            <div class="two-cols">
+                <!-- AI Alerts -->
+                <div class="ai-alert">
+                    <div class="section-title" style="margin-bottom:14px"><i class="bi bi-lightning-charge-fill"
+                            style="color:var(--warning)"></i> تنبيهات المساعد الذكي</div>
+                    <div class="alert-item" onclick="location.href='/kpis.html'">
+                        <div class="alert-dot danger"></div>
+                        <div>
+                            <div class="alert-text"><strong>تأخر حاد</strong> — مؤشر "عملاء حكوميون جدد" عند 38% فقط.
+                                يلزم تغيير نهج الاستهداف.</div>
+                            <div class="alert-time">منذ ساعتين</div>
+                        </div>
+                    </div>
+                    <div class="alert-item" onclick="location.href='/kpis.html'">
+                        <div class="alert-dot warning"></div>
+                        <div>
+                            <div class="alert-text"><strong>تحذير</strong> — رضا العملاء NPS انخفض إلى 72%. راجع شكاوى
+                                الأسبوع الماضي.</div>
+                            <div class="alert-time">منذ 5 ساعات</div>
+                        </div>
+                    </div>
+                    <div class="alert-item" onclick="location.href='/initiatives.html'">
+                        <div class="alert-dot info"></div>
+                        <div>
+                            <div class="alert-text"><strong>ممتاز</strong> — مبادرة ISO 9001 قاربت الاكتمال (88%). يمكن
+                                إعادة توزيع الموارد.</div>
+                            <div class="alert-time">منذ يوم</div>
+                        </div>
+                    </div>
+                    <div class="alert-item" onclick="location.href='/initiatives.html'">
+                        <div class="alert-dot success"></div>
+                        <div>
+                            <div class="alert-text"><strong>إنجاز</strong> — تحسين سلسلة التوريد اكتمل بنجاح — خفض 15%
+                                في التكاليف!</div>
+                            <div class="alert-time">منذ 3 أيام</div>
+                        </div>
+                    </div>
+                    <div class="alert-link"><a href="/ai-center.html">عرض جميع التنبيهات ← مركز الذكاء</a></div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <div class="section-title" style="margin-bottom:14px"><i class="bi bi-lightning"></i> إجراءات سريعة
+                    </div>
+                    <a href="/assessments.html" class="qa-item">
+                        <div class="qa-icon" style="background:rgba(56,189,248,0.12);color:var(--info)"><i
+                                class="bi bi-clipboard-plus"></i></div>
+                        <div class="qa-info">
+                            <div class="qa-name">إنشاء تقييم جديد</div>
+                            <div class="qa-desc">ابدأ تقييم بيئة داخلية أو خارجية لتحليل الفرص والتحديات</div>
+                        </div>
+                        <i class="bi bi-chevron-left qa-arrow"></i>
+                    </a>
+                    <a href="/initiatives.html" class="qa-item">
+                        <div class="qa-icon" style="background:rgba(250,204,21,0.12);color:var(--warning)"><i
+                                class="bi bi-rocket-takeoff"></i></div>
+                        <div class="qa-info">
+                            <div class="qa-name">إضافة مبادرة</div>
+                            <div class="qa-desc">أنشئ مبادرة جديدة مع تحديد الأولوية والميزانية والجدول</div>
+                        </div>
+                        <i class="bi bi-chevron-left qa-arrow"></i>
+                    </a>
+                    <a href="/kpis.html" class="qa-item">
+                        <div class="qa-icon" style="background:rgba(34,197,94,0.12);color:var(--success)"><i
+                                class="bi bi-bar-chart-line"></i></div>
+                        <div class="qa-info">
+                            <div class="qa-name">تحديث مؤشر أداء</div>
+                            <div class="qa-desc">حدّث القيم الفعلية لمؤشراتك وتابع الفجوات</div>
+                        </div>
+                        <i class="bi bi-chevron-left qa-arrow"></i>
+                    </a>
+                    <a href="/ai-center.html" class="qa-item">
+                        <div class="qa-icon" style="background:rgba(167,139,250,0.12);color:#a78bfa"><i
+                                class="bi bi-cpu"></i></div>
+                        <div class="qa-info">
+                            <div class="qa-name">تشغيل التحليل الذكي</div>
+                            <div class="qa-desc">استخدم أدوات الذكاء لتحليل الفجوات والتنبؤ بالنتائج</div>
+                        </div>
+                        <i class="bi bi-chevron-left qa-arrow"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="recent-section">
+                <div class="section-title"><i class="bi bi-clock-history"></i> آخر النشاطات</div>
+                <div class="recent-grid">
+                    <a href="/initiatives.html" class="recent-card">
+                        <div class="recent-header">
+                            <div class="recent-icon" style="background:rgba(56,189,248,0.12);color:var(--info)"><i
+                                    class="bi bi-rocket-takeoff"></i></div>
+                            <div style="flex:1">
+                                <div class="recent-name">التطبيق الرقمي</div>
+                                <span class="recent-status"
+                                    style="background:rgba(250,204,21,0.12);color:var(--warning)">قيد التنفيذ</span>
+                            </div>
+                        </div>
+                        <div class="recent-desc">تطوير تطبيق موبايل للعملاء — 65% مكتمل</div>
+                        <div class="recent-progress">
+                            <div class="recent-fill" style="width:65%;background:var(--warning)"></div>
+                        </div>
+                    </a>
+                    <a href="/initiatives.html" class="recent-card">
+                        <div class="recent-header">
+                            <div class="recent-icon" style="background:rgba(34,197,94,0.12);color:var(--success)"><i
+                                    class="bi bi-gear"></i></div>
+                            <div style="flex:1">
+                                <div class="recent-name">التحول الرقمي</div>
+                                <span class="recent-status"
+                                    style="background:rgba(34,197,94,0.12);color:var(--success)">تقدم ممتاز</span>
+                            </div>
+                        </div>
+                        <div class="recent-desc">أتمتة العمليات الورقية — 78% مكتمل</div>
+                        <div class="recent-progress">
+                            <div class="recent-fill" style="width:78%;background:var(--success)"></div>
+                        </div>
+                    </a>
+                    <a href="/assessments.html" class="recent-card">
+                        <div class="recent-header">
+                            <div class="recent-icon" style="background:rgba(102,126,234,0.12);color:var(--primary)"><i
+                                    class="bi bi-clipboard-check"></i></div>
+                            <div style="flex:1">
+                                <div class="recent-name">تقييم Q1-2026</div>
+                                <span class="recent-status"
+                                    style="background:rgba(34,197,94,0.12);color:var(--success)">مكتمل</span>
+                            </div>
+                        </div>
+                        <div class="recent-desc">تقييم البيئة الداخلية — النتيجة: 78.5/100</div>
+                        <div class="recent-progress">
+                            <div class="recent-fill" style="width:100%;background:var(--success)"></div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/sidebar.js"></script>
+    <script src="/assets/js/ai-advisor.js"></script>
+    <script>
+        // Redirect logic
+        (function () {
+            try {
+                const u = JSON.parse(localStorage.getItem('user') || '{}');
+                const role = u.role || 'VIEWER';
+                const sysRole = u.systemRole || 'USER';
+
+                // VIEWER/DATA_ENTRY → viewer hub
+                if (sysRole !== 'SUPER_ADMIN' && (role === 'VIEWER' || role === 'DATA_ENTRY')) {
+                    location.replace('/viewer-hub.html');
+                    return;
+                }
+
+                // مستخدم جديد ما أكمل الألم والطموح → وجّهه هناك أولاً
+                // SUPER_ADMIN معفي لأنه مدير نظام
+                const painAmbition = localStorage.getItem('painAmbition');
+                if (!painAmbition && sysRole !== 'SUPER_ADMIN') {
+                    location.replace('/pain-ambition.html');
+                    return;
+                }
+            } catch (e) { }
+        })();
+    </script>
+    <script>
+        (async function loadDashboardProgress() {
+            const phaseColors = { FOUNDATION: '#667eea', DIAGNOSIS: '#f59e0b', PLANNING: '#7c3aed', EXECUTION: '#059669', ADAPTATION: '#0891b2' };
+            const phaseEmojis = { FOUNDATION: '🏗️', DIAGNOSIS: '🔍', PLANNING: '🎯', EXECUTION: '🚀', ADAPTATION: '📊' };
+            const phaseLinks = { FOUNDATION: '/onboarding.html', DIAGNOSIS: '/swot.html', PLANNING: '/directions.html', EXECUTION: '/initiatives.html', ADAPTATION: '/reviews.html' };
+
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                const token = localStorage.getItem('token');
+                const entityId = user?.entity?.id || localStorage.getItem('entityId');
+                if (!entityId) { document.getElementById('progressSummary').textContent = 'حدد كيانًا لعرض التقدم'; return; }
+                const res = await fetch(`/api/user-progress/entity/${entityId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!res.ok) { document.getElementById('progressSummary').textContent = 'فشل تحميل التقدم'; return; }
+                const data = await res.json();
+                const overall = data.overall || 0;
+                document.getElementById('progressPct').textContent = overall + '%';
+
+                // رسم المراحل الخمس مع الأقفال
+                const stagesEl = document.getElementById('progressStages');
+                const current = data.stages.find(s => !s.locked && !s.completed && s.percent > 0) || data.stages.find(s => !s.locked && !s.completed);
+
+                if (stagesEl) {
+                    stagesEl.innerHTML = data.stages.map(s => {
+                        const color = phaseColors[s.id] || '#667eea';
+                        const isLocked = s.locked;
+                        const isCurrent = current && s.id === current.id;
+                        const bg = isLocked ? 'rgba(255,255,255,0.02)' : (s.completed ? color + '22' : (isCurrent ? color + '15' : 'rgba(255,255,255,0.03)'));
+                        const border = isCurrent ? '2px solid ' + color : '1px solid rgba(255,255,255,0.06)';
+                        const statusIcon = isLocked ? '🔒' : (s.completed ? '✅' : (s.percent > 0 ? '🔵' : '⬜'));
+                        const opacity = isLocked ? 'opacity:0.45;' : '';
+                        return '<div style="background:' + bg + ';border:' + border + ';border-radius:10px;padding:8px 6px;text-align:center;' + opacity + '">'
+                            + '<div style="font-size:16px;margin-bottom:2px">' + statusIcon + '</div>'
+                            + '<div style="font-size:10px;font-weight:700;color:' + (isLocked ? 'var(--text-muted)' : (s.completed || isCurrent ? color : 'var(--text-muted)')) + '">' + s.nameAr + '</div>'
+                            + (isLocked ? '' : '<div style="font-size:10px;font-weight:600;color:' + color + ';margin-top:2px">' + s.percent + '%</div>')
+                            + '<div style="height:3px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:4px;overflow:hidden">'
+                            + '<div style="height:100%;width:' + (isLocked ? 0 : s.percent) + '%;background:' + color + ';border-radius:2px"></div></div></div>';
+                    }).join('');
+                }
+
+                // ملخص مع نمط الشركة
+                const painAmbition = JSON.parse(localStorage.getItem('painAmbition') || 'null');
+                let summaryHTML = '';
+                if (painAmbition && painAmbition.pattern) {
+                    summaryHTML += '<span style="background:rgba(102,126,234,0.1);padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;color:var(--primary)">نمطك: ' + painAmbition.pattern + '</span> — ';
+                }
+                if (current) {
+                    const color = phaseColors[current.id];
+                    const emoji = phaseEmojis[current.id] || '📌';
+                    summaryHTML += 'أنت في: <strong style="color:' + color + '">' + emoji + ' ' + current.nameAr + '</strong>';
+                    if (current.percent > 0) summaryHTML += ' (' + current.percent + '%)';
+                }
+                document.getElementById('progressSummary').innerHTML = summaryHTML || 'ابدأ بتحديد ألمك وطموحك';
+
+                // زر الخطوة التالية — فقط للمراحل المفتوحة
+                const container = document.getElementById('nextStepContainer');
+                if (current && phaseLinks[current.id] && container) {
+                    container.style.display = 'block';
+                    document.getElementById('nextStepBtn').href = phaseLinks[current.id];
+                    document.getElementById('nextStepLabel').textContent = 'أكمل ' + current.nameAr + ' →';
+                } else if (!painAmbition && container) {
+                    container.style.display = 'block';
+                    document.getElementById('nextStepBtn').href = '/pain-ambition.html';
+                    document.getElementById('nextStepLabel').textContent = 'حدد ألمك وطموحك أولاً →';
+                }
+            } catch (e) { document.getElementById('progressSummary').textContent = 'خطأ عند تحميل التقدم'; console.warn(e); }
+        })();
+    </script>
+    <script>
+        // ===== Quick Start Widget =====
+        (function buildQuickStart() {
+            const pa = JSON.parse(localStorage.getItem('painAmbition') || 'null');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const userName = (user.name || '').split(' ')[0];
+
+            // Personalized welcome
+            const hour = new Date().getHours();
+            const greeting = hour < 12 ? 'صباح الخير' : hour < 18 ? 'مساء الخير' : 'مساء النور';
+            document.getElementById('welcomeMsg').textContent = `👋 ${greeting}${userName ? '، ' + userName : ''}`;
+
+            // Pattern badge
+            const badgeEl = document.getElementById('qsPatternBadge');
+            if (pa && pa.pattern) {
+                const PATTERN_COLORS = {
+                    nascent_struggling: '#ef4444', nascent_cautious: '#22c55e',
+                    growing_chaotic: '#f59e0b', growing_ambitious: '#3b82f6',
+                    financial_struggling: '#dc2626', mature_renewing: '#8b5cf6',
+                    mature_competitive: '#6366f1', default_strategic: '#667eea',
+                    // Legacy fallbacks
+                    startup: '#22c55e', growing: '#3b82f6', mature: '#8b5cf6', struggling: '#ef4444'
+                };
+                const color = PATTERN_COLORS[pa.patternKey] || '#667eea';
+                badgeEl.innerHTML = `<span class="qs-pattern-badge" style="background:${color}18;border:1px solid ${color}30;color:${color}">${pa.pattern}</span>`;
+                document.getElementById('welcomeDesc').textContent = 'توصيات مخصصة بناءً على تشخيصك — تابع خطواتك.';
+            }
+
+            // Build steps based on state
+            const stepsEl = document.getElementById('qsSteps');
+            const hasPainAmbition = !!pa;
+            const hasEntity = !!(user.entity && user.entity.id);
+
+            // Determine steps dynamically
+            let steps;
+            if (!hasPainAmbition) {
+                steps = [
+                    { title: 'حدد ألمك وطموحك', desc: 'أجب على 6 أسئلة في 3 دقائق — النظام يرسم لك مسارك المُخصّص', icon: '🧭', href: '/pain-ambition.html', status: 'current', num: '1' },
+                    { title: 'أسّس منظمتك', desc: 'سجّل بيانات الشركة والكيان والقطاع — الأساس لكل شي', icon: '🏗️', href: '/onboarding.html', status: 'locked', num: '2' },
+                    { title: 'شخّص وضعك', desc: 'ابدأ تحليل SWOT لفهم نقاط القوة والضعف والفرص', icon: '🔍', href: '/swot.html', status: 'locked', num: '3' },
+                ];
+            } else if (!hasEntity) {
+                steps = [
+                    { title: 'حدد ألمك وطموحك', desc: 'تم تحديد نمطك: ' + (pa.pattern || ''), icon: '✅', href: '/pain-ambition.html', status: 'done', num: '✓' },
+                    { title: 'أسّس منظمتك', desc: 'سجّل بيانات الشركة والكيان والقطاع — الأساس لكل شي', icon: '🏗️', href: '/onboarding.html', status: 'current', num: '2' },
+                    { title: 'شخّص وضعك', desc: 'ابدأ تحليل SWOT لفهم نقاط القوة والضعف والفرص', icon: '🔍', href: '/swot.html', status: 'locked', num: '3' },
+                ];
+            } else {
+                // Has both — show next logical steps
+                const nextSteps = getSmartNextSteps(pa);
+                steps = [
+                    { title: 'حدد ألمك وطموحك', desc: 'تم ✓', icon: '✅', href: '/pain-ambition.html', status: 'done', num: '✓' },
+                    { title: 'أسّس منظمتك', desc: 'تم ✓', icon: '✅', href: '/onboarding.html', status: 'done', num: '✓' },
+                    nextSteps[0]
+                ];
+            }
+
+            stepsEl.innerHTML = steps.map(s => {
+                const cls = s.status === 'done' ? 'done' : (s.status === 'current' ? 'current' : '');
+                const isLocked = s.status === 'locked';
+                const numBg = s.status === 'done' ? '' : (s.status === 'current' ? '' : 'background:rgba(255,255,255,0.05);color:var(--text-muted)');
+                const badgeHTML = s.status === 'done'
+                    ? '<span class="qs-step-badge" style="background:rgba(34,197,94,0.15);color:var(--success)">مكتمل ✓</span>'
+                    : (s.status === 'current' ? '<span class="qs-step-badge" style="background:rgba(102,126,234,0.15);color:var(--primary)">← الخطوة الحالية</span>' : '');
+                return `
+                    <a href="${isLocked ? '#' : s.href}" class="qs-step ${cls}" ${isLocked ? 'onclick="event.preventDefault()"' : ''} style="${isLocked ? 'opacity:0.45;cursor:not-allowed' : ''}">
+                        ${badgeHTML}
+                        <div class="qs-step-num" ${numBg ? 'style="' + numBg + '"' : ''}>${s.num}</div>
+                        <div class="qs-step-title">${s.icon} ${s.title}</div>
+                        <div class="qs-step-desc">${s.desc}</div>
+                    </a>
+                `;
+            }).join('');
+
+            // Smart recommendations from pain/ambition
+            if (pa && pa.recommendations && pa.recommendations.length) {
+                const recsEl = document.getElementById('smartRecs');
+                const listEl = document.getElementById('smartRecsList');
+                recsEl.style.display = 'block';
+
+                const recLinks = {
+                    'تخطيط': '/directions.html',
+                    'KPIs': '/kpis.html',
+                    'تشخيص': '/swot.html',
+                    'تنفيذ': '/initiatives.html',
+                    'متابعة': '/reviews.html'
+                };
+                const recColors = {
+                    'تخطيط': { bg: 'rgba(124,58,237,0.12)', color: '#7c3aed' },
+                    'KPIs': { bg: 'rgba(34,197,94,0.12)', color: '#22c55e' },
+                    'تشخيص': { bg: 'rgba(245,158,11,0.12)', color: '#f59e0b' },
+                    'تنفيذ': { bg: 'rgba(5,150,105,0.12)', color: '#059669' },
+                    'متابعة': { bg: 'rgba(8,145,178,0.12)', color: '#0891b2' },
+                };
+
+                listEl.innerHTML = pa.recommendations.slice(0, 4).map(r => {
+                    const link = recLinks[r.tool] || '/tools.html';
+                    const c = recColors[r.tool] || { bg: 'rgba(102,126,234,0.12)', color: '#667eea' };
+                    return `
+                        <a href="${link}" class="rec-item">
+                            <div class="rec-icon" style="background:${c.bg};color:${c.color}">${r.icon}</div>
+                            <div class="rec-info">
+                                <div class="rec-name">${r.text}</div>
+                                <div class="rec-desc">بناءً على تحديك — ${pa.pains && pa.pains.length ? pa.pains.length + ' تحديات مُحللة' : 'تحليل مخصص'}</div>
+                            </div>
+                            <span class="rec-tag" style="background:${c.bg};color:${c.color}">${r.tool}</span>
+                        </a>
+                    `;
+                }).join('');
+            }
+
+            function getSmartNextSteps(paData) {
+                const pk = paData.patternKey || 'growing';
+                const nextMap = {
+                    // Legacy patterns
+                    startup: { title: 'حدد توجهاتك', desc: 'ابدأ بالرؤية والرسالة والتوجه الاستراتيجي', icon: '🎯', href: '/directions.html', status: 'current', num: '3' },
+                    growing: { title: 'حلل بيئتك', desc: 'ابدأ تحليل SWOT لفهم نقاط القوة والضعف', icon: '🔍', href: '/swot.html', status: 'current', num: '3' },
+                    mature: { title: 'شخّص الفجوات', desc: 'تحليل PESTEL وبورتر لفهم البيئة التنافسية', icon: '🔬', href: '/tool-detail.html?code=PESTEL', status: 'current', num: '3' },
+                    struggling: { title: 'تشخيص طوارئ', desc: 'تحليل SWOT عاجل لتحديد السبب الجذري', icon: '⚡', href: '/swot.html', status: 'current', num: '3' },
+                    // New patterns
+                    nascent_struggling: { title: 'ابنِ الأساسات', desc: 'ركّز على 3 أولويات واضحة — ما تشتت جهودك', icon: '🧱', href: '/directions.html', status: 'current', num: '3' },
+                    nascent_cautious: { title: 'أسّس رؤيتك', desc: 'حدد الرؤية والرسالة — بنيتك قوية والحين وقت التوجيه', icon: '🧭', href: '/directions.html', status: 'current', num: '3' },
+                    growing_chaotic: { title: 'نظّم النمو', desc: 'حدد مؤشرات أداء + هيكل العمليات قبل الفوضى', icon: '📊', href: '/kpis.html', status: 'current', num: '3' },
+                    growing_ambitious: { title: 'حلل بيئتك', desc: 'ابدأ تحليل SWOT لتبني ميزة تنافسية مستدامة', icon: '🔍', href: '/swot.html', status: 'current', num: '3' },
+                    financial_struggling: { title: 'تشخيص مالي عاجل', desc: 'حلل التكاليف والعمليات — حدد وين الهدر', icon: '💰', href: '/swot.html', status: 'current', num: '3' },
+                    mature_renewing: { title: 'جدّد استراتيجيتك', desc: 'تحليل Porter + PESTEL لفتح فرص نمو جديدة', icon: '🔄', href: '/tool-detail.html?code=PORTER', status: 'current', num: '3' },
+                    mature_competitive: { title: 'عزّز تفوقك', desc: 'حلل سلسلة القيمة والمحيط الأزرق للاستدامة', icon: '🏆', href: '/tool-detail.html?code=VALUE_CHAIN', status: 'current', num: '3' },
+                    default_strategic: { title: 'حلل بيئتك', desc: 'ابدأ تحليل SWOT الشامل لفهم وضعك', icon: '🔍', href: '/swot.html', status: 'current', num: '3' },
+                };
+                return [nextMap[pk] || nextMap.growing];
+            }
+        })();
+    </script>
+    <script>
+        // ===== Pain & Ambition Summary Card =====
+        (function buildPASummary() {
+            const pa = JSON.parse(localStorage.getItem('painAmbition') || 'null');
+            if (!pa) return;
+
+            const card = document.getElementById('paSummaryCard');
+            if (!card) return;
+            card.style.display = 'block';
+
+            // Pattern badge
+            const PATTERN_COLORS = {
+                nascent_struggling: '#ef4444', nascent_cautious: '#22c55e',
+                growing_chaotic: '#f59e0b', growing_ambitious: '#3b82f6',
+                financial_struggling: '#dc2626', mature_renewing: '#8b5cf6',
+                mature_competitive: '#6366f1', default_strategic: '#667eea',
+                startup: '#22c55e', growing: '#3b82f6', mature: '#8b5cf6', struggling: '#ef4444'
+            };
+            const pColor = PATTERN_COLORS[pa.patternKey] || '#667eea';
+            document.getElementById('paPatternBadge').innerHTML =
+                `<span class="pa-pattern-badge" style="background:${pColor}18;border:1px solid ${pColor}30;color:${pColor}">${pa.pattern || 'نمط عام'}</span>`;
+
+            // Pain tags
+            const PAIN_LABELS = {
+                no_strategy: 'ما عندنا خطة استراتيجية',
+                no_measurement: 'ما نقدر نقيس أداءنا',
+                plan_vs_execution: 'فجوة بين الخطة والتنفيذ',
+                team_alignment: 'الفريق مو متوافق',
+                market_pressure: 'ضغط من السوق والمنافسين',
+                growth_stuck: 'النمو متوقف',
+                custom_pain: pa.customPainText || pa.painCustom || 'تحدي مخصص'
+            };
+            const painTagsEl = document.getElementById('paPainTags');
+            if (pa.pains && pa.pains.length) {
+                painTagsEl.innerHTML = pa.pains.map(p =>
+                    `<span class="pa-tag pain">😤 ${PAIN_LABELS[p] || p}</span>`
+                ).join('');
+            } else {
+                painTagsEl.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">لم يُحدد</span>';
+            }
+
+            // Ambition tags
+            const AMB_LABELS = {
+                clear_strategy: 'خطة استراتيجية واضحة',
+                data_decisions: 'قرارات مبنية على بيانات',
+                team_ownership: 'فريق متحمس يعرف وجهته',
+                market_lead: 'التفوق على المنافسين',
+                sustainable_growth: 'نمو مستدام ومخطط',
+                execution_machine: 'نظام تنفيذ منتظم',
+                custom_amb: pa.customAmbText || pa.ambitionCustom || 'طموح مخصص'
+            };
+            const ambTagsEl = document.getElementById('paAmbTags');
+            if (pa.ambitions && pa.ambitions.length) {
+                ambTagsEl.innerHTML = pa.ambitions.map(a =>
+                    `<span class="pa-tag amb">🎯 ${AMB_LABELS[a] || a}</span>`
+                ).join('');
+            } else {
+                ambTagsEl.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">لم يُحدد</span>';
+            }
+
+            // Date
+            if (pa.timestamp) {
+                const d = new Date(pa.timestamp);
+                const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+                document.getElementById('paDate').innerHTML =
+                    `<i class="bi bi-clock"></i> آخر تقييم: ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+            }
+        })();
+    </script>
+    <script>
+        // ===== Live Stats =====
+        (async function loadLiveStats() {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            const headers = { 'Authorization': 'Bearer ' + token };
+
+            const endpoints = [
+                { id: 'statObjectives', url: '/api/objectives', countKey: null },
+                { id: 'statKpis', url: '/api/kpis', countKey: null },
+                { id: 'statInitiatives', url: '/api/initiatives', countKey: null },
+                { id: 'statAssessments', url: '/api/assessments', countKey: null },
+            ];
+
+            for (const ep of endpoints) {
+                try {
+                    const res = await fetch(ep.url, { headers });
+                    if (res.ok) {
+                        const data = await res.json();
+                        const count = Array.isArray(data) ? data.length : (data.data ? data.data.length : (data.total || 0));
+                        const el = document.getElementById(ep.id);
+                        if (el) {
+                            el.style.transition = 'all 0.3s';
+                            el.textContent = count;
+                        }
+                    }
+                } catch (e) {
+                    // Set 0 on error
+                    const el = document.getElementById(ep.id);
+                    if (el) el.textContent = '0';
+                }
+            }
+        })();
+    </script>
+    <script>
+        // Date & Time
+        function updateDateTime() {
+            const now = new Date();
+            const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+            const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+            document.getElementById('dateDisplay').textContent = `${days[now.getDay()]}، ${now.getDate()} ${months[now.getMonth()]}`;
+            document.getElementById('timeDisplay').textContent = now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+        }
+        updateDateTime();
+        setInterval(updateDateTime, 60000);
+    </script>
+    <script src="/assets/js/achievements.js"></script>
+    <script src="/assets/js/notifications.js"></script>
+</body>
+
+</html>

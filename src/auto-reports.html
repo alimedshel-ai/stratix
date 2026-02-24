@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكيس - التقارير التلقائية</title>
+    <meta name="description" content="توليد تقارير استراتيجية تلقائية جاهزة للطباعة">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0b10;
+            --bg2: #12141f;
+            --card: #171a2a;
+            --card-hover: #1e2236;
+            --text: #e2e8f0;
+            --muted: #7a8599;
+            --border: rgba(255, 255, 255, 0.06);
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --green: #22c55e;
+            --yellow: #facc15;
+            --red: #ef4444;
+            --blue: #38bdf8;
+            --purple: #a78bfa;
+            --orange: #f97316
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+            min-height: 100vh
+        }
+
+        .page-wrapper {
+            display: flex;
+            min-height: 100vh
+        }
+
+        .main-content {
+            flex: 1;
+            min-width: 0;
+            padding: 28px 32px
+        }
+
+        .rpt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 28px
+        }
+
+        .rpt-title {
+            font-size: 28px;
+            font-weight: 900
+        }
+
+        .rpt-title span {
+            background: linear-gradient(135deg, var(--purple), #c084fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        /* Report Templates */
+        .rpt-templates {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px
+        }
+
+        .rpt-tmpl {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 22px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden
+        }
+
+        .rpt-tmpl:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3)
+        }
+
+        .rpt-tmpl.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 1px var(--primary), 0 8px 30px rgba(102, 126, 234, 0.15)
+        }
+
+        .rpt-tmpl::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 16px 16px 0 0
+        }
+
+        .rpt-tmpl-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+            display: block
+        }
+
+        .rpt-tmpl h3 {
+            font-size: 16px;
+            font-weight: 800;
+            margin-bottom: 4px
+        }
+
+        .rpt-tmpl p {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.6
+        }
+
+        .rpt-tmpl-badge {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            padding: 3px 10px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 700
+        }
+
+        .rpt-tmpl-sections {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px
+        }
+
+        .rpt-tmpl-sec {
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--muted)
+        }
+
+        /* Generate button */
+        .rpt-generate {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 28px
+        }
+
+        .rpt-gen-btn {
+            padding: 12px 32px;
+            border-radius: 14px;
+            border: none;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .rpt-gen-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4)
+        }
+
+        .rpt-gen-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none
+        }
+
+        .rpt-gen-btn.generating {
+            animation: pulse 1.5s infinite
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: 0.7
+            }
+        }
+
+        .rpt-period {
+            padding: 10px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 13px;
+            cursor: pointer
+        }
+
+        /* Report Preview */
+        .rpt-preview {
+            display: none;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden
+        }
+
+        .rpt-preview.show {
+            display: block;
+            animation: fadeUp 0.5s ease
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .rpt-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border)
+        }
+
+        .rpt-toolbar-title {
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .rpt-toolbar-actions {
+            display: flex;
+            gap: 8px
+        }
+
+        .rpt-tool-btn {
+            padding: 7px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .rpt-tool-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.12)
+        }
+
+        .rpt-tool-btn.primary {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: var(--primary);
+            color: var(--primary)
+        }
+
+        /* Report document */
+        .rpt-doc {
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto
+        }
+
+        .rpt-doc-header {
+            text-align: center;
+            padding-bottom: 24px;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 28px
+        }
+
+        .rpt-doc-logo {
+            font-size: 28px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 8px
+        }
+
+        .rpt-doc-logo span {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        .rpt-doc-subtitle {
+            font-size: 14px;
+            color: var(--muted)
+        }
+
+        .rpt-doc-date {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 6px
+        }
+
+        .rpt-section {
+            margin-bottom: 28px
+        }
+
+        .rpt-section-title {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .rpt-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 12px
+        }
+
+        .rpt-kpi {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center
+        }
+
+        .rpt-kpi-val {
+            font-size: 28px;
+            font-weight: 900
+        }
+
+        .rpt-kpi-label {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px
+        }
+
+        .rpt-kpi-change {
+            font-size: 11px;
+            margin-top: 4px;
+            font-weight: 700
+        }
+
+        .rpt-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px
+        }
+
+        .rpt-table th {
+            text-align: right;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--border);
+            font-weight: 700;
+            color: var(--muted);
+            font-size: 12px
+        }
+
+        .rpt-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .rpt-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02)
+        }
+
+        .rpt-progress {
+            width: 80px;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.06);
+            overflow: hidden;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 6px
+        }
+
+        .rpt-progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s
+        }
+
+        .rpt-chart {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px
+        }
+
+        .rpt-bar-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            height: 160px;
+            padding-top: 10px
+        }
+
+        .rpt-bar {
+            flex: 1;
+            border-radius: 6px 6px 0 0;
+            position: relative;
+            transition: height 0.5s;
+            min-width: 0
+        }
+
+        .rpt-bar-label {
+            position: absolute;
+            bottom: -22px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 9px;
+            color: var(--muted);
+            white-space: nowrap
+        }
+
+        .rpt-bar-val {
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            font-weight: 700
+        }
+
+        .rpt-rec {
+            display: flex;
+            gap: 10px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border-right: 3px solid var(--primary)
+        }
+
+        .rpt-rec-icon {
+            font-size: 18px;
+            flex-shrink: 0
+        }
+
+        .rpt-rec-text {
+            font-size: 13px;
+            line-height: 1.7
+        }
+
+        .rpt-rec-priority {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 6px;
+            align-self: flex-start;
+            flex-shrink: 0
+        }
+
+        .rpt-summary-box {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08));
+            border: 1px solid rgba(102, 126, 234, 0.15);
+            border-radius: 14px;
+            padding: 20px;
+            font-size: 14px;
+            line-height: 2
+        }
+
+        @media print {
+            body {
+                background: white;
+                color: #222
+            }
+
+            .rpt-toolbar,
+            .page-wrapper>*:not(.main-content) {
+                display: none !important
+            }
+
+            .rpt-doc {
+                padding: 20px
+            }
+
+            .rpt-kpi,
+            .rpt-table th,
+            .rpt-chart,
+            .rpt-rec {
+                border-color: #ddd
+            }
+        }
+
+        @media(max-width:768px) {
+            .main-content {
+                padding: 16px
+            }
+
+            .rpt-doc {
+                padding: 20px
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <div id="sidebar-container"></div>
+        <div class="main-content">
+            <div class="rpt-header">
+                <div>
+                    <h1 class="rpt-title"><i class="bi bi-file-earmark-bar-graph"></i> التقارير <span>التلقائية</span>
+                    </h1>
+                    <div style="font-size:13px;color:var(--muted);margin-top:4px">توليد تقارير استراتيجية شاملة بضغطة
+                        واحدة</div>
+                </div>
+            </div>
+
+            <!-- Templates -->
+            <div class="rpt-templates" id="templates"></div>
+
+            <!-- Generate -->
+            <div class="rpt-generate">
+                <select class="rpt-period" id="reportPeriod">
+                    <option value="Q1">الربع الأول 2026</option>
+                    <option value="Q4" selected>الربع الرابع 2025</option>
+                    <option value="H2">النصف الثاني 2025</option>
+                    <option value="2025">سنوي 2025</option>
+                </select>
+                <button class="rpt-gen-btn" id="generateBtn" onclick="generateReport()">
+                    <i class="bi bi-magic"></i> توليد التقرير
+                </button>
+            </div>
+
+            <!-- Preview -->
+            <div class="rpt-preview" id="reportPreview">
+                <div class="rpt-toolbar">
+                    <div class="rpt-toolbar-title"><i class="bi bi-file-earmark-check"></i> <span
+                            id="previewTitle">التقرير</span></div>
+                    <div class="rpt-toolbar-actions">
+                        <button class="rpt-tool-btn" onclick="window.print()"><i class="bi bi-printer"></i>
+                            طباعة</button>
+                        <button class="rpt-tool-btn primary"><i class="bi bi-download"></i> تحميل PDF</button>
+                    </div>
+                </div>
+                <div class="rpt-doc" id="reportDoc"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/sidebar.js"></script>
+    <script src="/assets/js/ai-advisor.js"></script>
+    <script src="/assets/js/achievements.js"></script>
+    <script src="/assets/js/notifications.js"></script>
+    <script>
+        // === Report Templates ===
+        const templates = [
+            { id: 'strategic', icon: '🎯', title: 'التقرير الاستراتيجي الشامل', desc: 'نظرة شاملة على أداء الأهداف والمبادرات والمخاطر', color: '#667eea', sections: ['ملخص تنفيذي', 'مؤشرات رئيسية', 'أداء الأهداف', 'المبادرات', 'المخاطر', 'التوصيات'], badge: 'الأكثر طلباً', badgeColor: '#22c55e' },
+            { id: 'kpi', icon: '📊', title: 'تقرير مؤشرات الأداء', desc: 'تحليل مفصل لأداء مؤشرات القياس الرئيسية مع التوجهات', color: '#22c55e', sections: ['ملخص الأداء', 'مؤشرات متقدمة', 'مؤشرات متأخرة', 'رسوم بيانية', 'تحليل الفجوات'] },
+            { id: 'initiative', icon: '🚀', title: 'تقرير المبادرات والمشاريع', desc: 'حالة المبادرات الجارية مع نسب الإنجاز والتأخيرات', color: '#f97316', sections: ['نظرة عامة', 'جدول المبادرات', 'المراحل', 'الميزانية', 'المخاطر'] },
+            { id: 'risk', icon: '⚠️', title: 'تقرير المخاطر', desc: 'تحليل المخاطر الاستراتيجية واحتمالات التأثير', color: '#ef4444', sections: ['خريطة الحرارة', 'أعلى المخاطر', 'خطط المعالجة', 'مؤشرات إنذار'] },
+            { id: 'team', icon: '👥', title: 'تقرير أداء الفريق', desc: 'تحليل إنتاجية الفريق والمهام والمشاركة', color: '#8b5cf6', sections: ['ملخص الفريق', 'إنجاز المهام', 'المشاركة', 'الأكثر نشاطاً'] },
+            { id: 'executive', icon: '👔', title: 'الملخص التنفيذي', desc: 'ملخص موجز للإدارة العليا — صفحة واحدة', color: '#facc15', sections: ['الصحة العامة', 'أبرز الإنجازات', 'أبرز التحديات', 'القرارات المطلوبة'], badge: 'صفحة واحدة', badgeColor: '#facc15' },
+        ];
+
+        let selectedTemplate = 'strategic';
+
+        // Render templates
+        function renderTemplates() {
+            document.getElementById('templates').innerHTML = templates.map(t => `
+        <div class="rpt-tmpl ${t.id === selectedTemplate ? 'active' : ''}" onclick="selectTemplate('${t.id}')" style="--tmpl-color:${t.color}">
+          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${t.color}"></div>
+          ${t.badge ? `<div class="rpt-tmpl-badge" style="background:${t.badgeColor}15;color:${t.badgeColor}">${t.badge}</div>` : ''}
+          <span class="rpt-tmpl-icon">${t.icon}</span>
+          <h3>${t.title}</h3>
+          <p>${t.desc}</p>
+          <div class="rpt-tmpl-sections">${t.sections.map(s => `<span class="rpt-tmpl-sec">${s}</span>`).join('')}</div>
+        </div>
+      `).join('');
+        }
+
+        function selectTemplate(id) {
+            selectedTemplate = id;
+            renderTemplates();
+        }
+
+        // === Generate Report ===
+        async function generateReport() {
+            const btn = document.getElementById('generateBtn');
+            btn.disabled = true;
+            btn.classList.add('generating');
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> جاري التوليد...';
+
+            // Simulate generation
+            await new Promise(r => setTimeout(r, 2000));
+
+            const tmpl = templates.find(t => t.id === selectedTemplate);
+            const period = document.getElementById('reportPeriod');
+            const periodText = period.options[period.selectedIndex].text;
+
+            document.getElementById('previewTitle').textContent = `${tmpl.title} — ${periodText}`;
+            document.getElementById('reportDoc').innerHTML = generateReportHTML(tmpl, periodText);
+            document.getElementById('reportPreview').classList.add('show');
+
+            btn.disabled = false;
+            btn.classList.remove('generating');
+            btn.innerHTML = '<i class="bi bi-magic"></i> توليد التقرير';
+
+            document.getElementById('reportPreview').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            // Animate numbers
+            setTimeout(() => {
+                document.querySelectorAll('.rpt-kpi-val[data-target]').forEach(el => {
+                    animateNum(el, parseInt(el.dataset.target));
+                });
+            }, 300);
+        }
+
+        function generateReportHTML(tmpl, period) {
+            const today = new Date();
+            const dateStr = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+
+            const reports = {
+                strategic: strategicReport,
+                kpi: kpiReport,
+                initiative: initiativeReport,
+                risk: riskReport,
+                team: teamReport,
+                executive: executiveReport,
+            };
+
+            return `
+        <div class="rpt-doc-header">
+          <div class="rpt-doc-logo">${tmpl.icon} <span>ستارتكيس</span></div>
+          <h2 style="font-size:22px;font-weight:900;margin-bottom:4px">${tmpl.title}</h2>
+          <div class="rpt-doc-subtitle">${period}</div>
+          <div class="rpt-doc-date">تاريخ التوليد: ${dateStr} | سري — للاستخدام الداخلي</div>
+        </div>
+        ${(reports[tmpl.id] || strategicReport)()}
+      `;
+        }
+
+        // === Report Content Generators ===
+        function strategicReport() {
+            return `
+        <div class="rpt-section">
+          <div class="rpt-section-title"><i class="bi bi-lightning" style="color:var(--primary)"></i> الملخص التنفيذي</div>
+          <div class="rpt-summary-box">
+            حققت المنظمة أداءً <strong style="color:var(--green)">جيداً</strong> خلال الفترة بنسبة إنجاز إجمالية بلغت <strong>73%</strong>. تم إكمال <strong>5 من 8</strong> مبادرات رئيسية بنجاح، فيما تواجه 3 مبادرات تأخيرات طفيفة. مؤشرات رضا العملاء أظهرت تحسناً ملحوظاً بنسبة <strong style="color:var(--green)">+12%</strong> عن الربع السابق. يُنصح بتركيز الجهود على المبادرات المتأخرة وتعزيز مؤشرات الكفاءة التشغيلية.
+          </div>
+        </div>
+
+        <div class="rpt-section">
+          <div class="rpt-section-title"><i class="bi bi-speedometer2" style="color:var(--green)"></i> المؤشرات الرئيسية</div>
+          <div class="rpt-kpi-grid">
+            ${kpiCard('الصحة الاستراتيجية', 78, '%', '+5', 'green')}
+            ${kpiCard('إنجاز الأهداف', 73, '%', '+8', 'green')}
+            ${kpiCard('إنجاز المبادرات', 65, '%', '-3', 'red')}
+            ${kpiCard('رضا العملاء', 82, '%', '+12', 'green')}
+          </div>
+        </div>
+
+        <div class="rpt-section">
+          <div class="rpt-section-title"><i class="bi bi-bullseye" style="color:var(--primary)"></i> أداء الأهداف الاستراتيجية</div>
+          <table class="rpt-table">
+            <thead><tr><th>الهدف</th><th>المنظور</th><th>الإنجاز</th><th>الحالة</th></tr></thead>
+            <tbody>
+              ${objRow('زيادة الإيرادات 25%', 'مالي', 82, 'متقدم')}
+              ${objRow('تحسين رضا العملاء', 'عملاء', 78, 'على المسار')}
+              ${objRow('تحسين الكفاءة التشغيلية', 'عمليات', 65, 'متأخر')}
+              ${objRow('تطوير الكوادر القيادية', 'تعلم ونمو', 70, 'على المسار')}
+              ${objRow('التحول الرقمي الشامل', 'عمليات', 55, 'متأخر')}
+              ${objRow('التوسع الإقليمي', 'مالي', 88, 'متقدم')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="rpt-section">
+          <div class="rpt-section-title"><i class="bi bi-bar-chart-line" style="color:var(--blue)"></i> الأداء الربعي</div>
+          <div class="rpt-chart">
+            <div class="rpt-bar-chart">
+              ${barItem('Q1', 62, 'var(--muted)')} ${barItem('Q2', 68, 'var(--blue)')} ${barItem('Q3', 71, 'var(--primary)')} ${barItem('Q4', 78, 'var(--green)')}
+            </div>
+          </div>
+        </div>
+
+        <div class="rpt-section">
+          <div class="rpt-section-title"><i class="bi bi-lightbulb" style="color:var(--yellow)"></i> التوصيات</div>
+          ${recItem('🔴', 'تسريع مبادرة التحول الرقمي — التأخير يؤثر على 3 أهداف أخرى', 'عاجل', 'var(--red)')}
+          ${recItem('🟡', 'تعزيز فريق الكفاءة التشغيلية بـ 2 محللين إضافيين', 'مهم', 'var(--yellow)')}
+          ${recItem('🟢', 'استثمار نجاح رضا العملاء في برنامج إحالة جديد', 'فرصة', 'var(--green)')}
+          ${recItem('🔵', 'جدولة مراجعة استراتيجية منتصف العام مع مجلس الإدارة', 'تخطيطي', 'var(--primary)')}
+        </div>
+      `;
+        }
+
+        function kpiReport() {
+            return `
+        <div class="rpt-section">
+          <div class="rpt-section-title"><i class="bi bi-speedometer2" style="color:var(--green)"></i> ملخص الأداء</div>
+          <div class="rpt-kpi-grid">
+            ${kpiCard('إجمالي المؤشرات', 24, '', '', '')}
+            ${kpiCard('فوق المستهدف', 14, '', '+3', 'green')}
+            ${kpiCard('تحت المستهدف', 7, '', '-2', 'red')}
+            ${kpiCard('بدون بيانات', 3, '', '', 'muted')}
+          </div>
+        </div>
+        <div class="rpt-section">
+          <div class="rpt-section-title"><i class="bi bi-arrow-up-circle" style="color:var(--green)"></i> مؤشرات متقدمة</div>
+          <table class="rpt-table">
+            <thead><tr><th>المؤشر</th><th>الفعلي</th><th>المستهدف</th><th>الإنجاز</th></tr></thead>
+            <tbody>
+              ${kpiRow('الإيرادات الشهرية', '1.2M', '1M', 120)}
+              ${kpiRow('رضا العملاء NPS', '82', '75', 109)}
+              ${kpiRow('معدل الاحتفاظ بالعملاء', '94%', '90%', 104)}
+              ${kpiRow('حصة السوق', '18%', '15%', 120)}
+            </tbody>
+          </table>
+        </div>
+        <div class="rpt-section">
+          <div class="rpt-section-title"><i class="bi bi-arrow-down-circle" style="color:var(--red)"></i> مؤشرات متأخرة — تحتاج تدخل</div>
+          <table class="rpt-table">
+            <thead><tr><th>المؤشر</th><th>الفعلي</th><th>المستهدف</th><th>الفجوة</th></tr></thead>
+            <tbody>
+              ${kpiRow('دوران الموظفين', '18%', '12%', 67)}
+              ${kpiRow('وقت الاستجابة', '48 ساعة', '24 ساعة', 50)}
+              ${kpiRow('كفاءة العمليات', '62%', '80%', 78)}
+            </tbody>
+          </table>
+        </div>
+      `;
+        }
+
+        function initiativeReport() {
+            return `
+        <div class="rpt-section">
+          <div class="rpt-section-title"><i class="bi bi-rocket-takeoff" style="color:var(--orange)"></i> نظرة عامة على المبادرات</div>
+          <div class="rpt-kpi-grid">
+            ${kpiCard('إجمالي المبادرات', 8, '', '', '')}
+            ${kpiCard('مكتملة', 3, '', '', 'green')}
+            ${kpiCard('جارية', 4, '', '', 'primary')}
+            ${kpiCard('متأخرة', 1, '', '', 'red')}
+          </div>
+        </div>
+        <div class="rpt-section">
+          <div class="rpt-section-title"><i class="bi bi-list-task" style="color:var(--primary)"></i> تفاصيل المبادرات</div>
+          <table class="rpt-table">
+            <thead><tr><th>المبادرة</th><th>المسؤول</th><th>الإنجاز</th><th>الميزانية</th><th>الحالة</th></tr></thead>
+            <tbody>
+              ${initRow('التوسع الإقليمي', 'أحمد', 88, '92%', 'متقدم')}
+              ${initRow('التحول الرقمي', 'سارة', 55, '78%', 'متأخر')}
+              ${initRow('تدريب القيادات', 'محمد', 72, '85%', 'جارية')}
+              ${initRow('تسويق رقمي', 'نورة', 95, '98%', 'مكتمل')}
+              ${initRow('نظام ERP جديد', 'خالد', 40, '45%', 'جارية')}
+            </tbody>
+          </table>
+        </div>
+      `;
+        }
+
+        function riskReport() {
+            return `
+        <div class="rpt-section">
+          <div class="rpt-section-title"><i class="bi bi-exclamation-triangle" style="color:var(--red)"></i> ملخص المخاطر</div>
+          <div class="rpt-kpi-grid">
+            ${kpiCard('مخاطر نشطة', 12, '', '', 'red')}
+            ${kpiCard('حرجة', 3, '', '+1', 'red')}
+            ${kpiCard('متوسطة', 5, '', '0', 'yellow')}
+            ${kpiCard('منخفضة', 4, '', '-1', 'green')}
+          </div>
+        </div>
+        <div class="rpt-section">
+          <div class="rpt-section-title"><i class="bi bi-shield-exclamation" style="color:var(--red)"></i> أعلى المخاطر</div>
+          ${recItem('🔴', 'تأخر مشروع التحول الرقمي قد يؤثر على الأهداف التشغيلية. احتمال: 80% | تأثير: عالٍ', 'حرج', 'var(--red)')}
+          ${recItem('🔴', 'نقص الكوادر المتخصصة في تحليل البيانات. احتمال: 70% | تأثير: عالٍ', 'حرج', 'var(--red)')}
+          ${recItem('🟡', 'تقلبات السوق قد تؤثر على أهداف الإيرادات. احتمال: 50% | تأثير: متوسط', 'متوسط', 'var(--yellow)')}
+          ${recItem('🟡', 'منافس جديد دخل السوق بأسعار أقل. احتمال: 60% | تأثير: متوسط', 'متوسط', 'var(--yellow)')}
+        </div>
+      `;
+        }
+
+        function teamReport() {
+            return `
+        <div class="rpt-section">
+          <div class="rpt-section-title"><i class="bi bi-people" style="color:var(--purple)"></i> ملخص الفريق</div>
+          <div class="rpt-kpi-grid">
+            ${kpiCard('أعضاء الفريق', 12, '', '+2', 'green')}
+            ${kpiCard('المهام المنجزة', 156, '', '+34', 'green')}
+            ${kpiCard('معدل الإنتاجية', 87, '%', '+5', 'green')}
+            ${kpiCard('التعليقات', 89, '', '+12', 'primary')}
+          </div>
+        </div>
+        <div class="rpt-section">
+          <div class="rpt-section-title"><i class="bi bi-trophy" style="color:var(--yellow)"></i> الأكثر إنجازاً</div>
+          <table class="rpt-table">
+            <thead><tr><th>#</th><th>العضو</th><th>المهام</th><th>التعليقات</th><th>الإنتاجية</th></tr></thead>
+            <tbody>
+              <tr><td>🥇</td><td>أحمد المالكي</td><td>34</td><td>22</td><td><span style="color:var(--green)">96%</span></td></tr>
+              <tr><td>🥈</td><td>سارة الحربي</td><td>28</td><td>31</td><td><span style="color:var(--green)">92%</span></td></tr>
+              <tr><td>🥉</td><td>محمد العتيبي</td><td>26</td><td>15</td><td><span style="color:var(--green)">88%</span></td></tr>
+              <tr><td>4</td><td>نورة السبيعي</td><td>22</td><td>18</td><td><span style="color:var(--primary)">85%</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+        }
+
+        function executiveReport() {
+            return `
+        <div class="rpt-summary-box" style="margin-bottom:24px">
+          <strong>الخلاصة:</strong> الأداء العام <span style="color:var(--green);font-weight:800">جيد (78/100)</span> مع تحسن مستمر. 3 إنجازات كبيرة هذا الربع. تحدٍّ واحد يحتاج قراراً عاجلاً.
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+          <div>
+            <h4 style="font-size:14px;font-weight:800;margin-bottom:10px;color:var(--green)"><i class="bi bi-check-circle"></i> أبرز الإنجازات</h4>
+            <div style="font-size:13px;line-height:2;color:var(--muted)">
+              ✅ التوسع الإقليمي وصل 88%<br>
+              ✅ رضا العملاء ارتفع لـ 82%<br>
+              ✅ الإيرادات تجاوزت المستهدف 20%
+            </div>
+          </div>
+          <div>
+            <h4 style="font-size:14px;font-weight:800;margin-bottom:10px;color:var(--red)"><i class="bi bi-exclamation-circle"></i> أبرز التحديات</h4>
+            <div style="font-size:13px;line-height:2;color:var(--muted)">
+              ⚠️ التحول الرقمي متأخر 45%<br>
+              ⚠️ دوران الموظفين مرتفع 18%<br>
+              ⚠️ وقت الاستجابة ضعف المستهدف
+            </div>
+          </div>
+        </div>
+        <div class="rpt-section">
+          <div class="rpt-section-title"><i class="bi bi-hand-index" style="color:var(--yellow)"></i> قرارات مطلوبة</div>
+          ${recItem('🔴', 'الموافقة على ميزانية إضافية لتسريع التحول الرقمي (500K ر.س)', 'عاجل', 'var(--red)')}
+          ${recItem('🟡', 'اعتماد خطة استقطاب 5 محللي بيانات', 'مهم', 'var(--yellow)')}
+          ${recItem('🟢', 'الموافقة على توسيع برنامج إحالة العملاء', 'فرصة', 'var(--green)')}
+        </div>
+      `;
+        }
+
+        // === Helper builders ===
+        function kpiCard(label, val, suffix, change, color) {
+            const c = color === 'green' ? 'var(--green)' : color === 'red' ? 'var(--red)' : color === 'primary' ? 'var(--primary)' : 'var(--muted)';
+            return `<div class="rpt-kpi"><div class="rpt-kpi-val" data-target="${val}" style="color:${c}">0</div><div class="rpt-kpi-label">${label}</div>${change ? `<div class="rpt-kpi-change" style="color:${change.startsWith('-') ? 'var(--red)' : 'var(--green)'}">${change.startsWith('-') ? '↓' : '↑'} ${change}${suffix}</div>` : ''}</div>`;
+        }
+        function objRow(name, persp, pct, status) {
+            const sc = status === 'متقدم' ? 'var(--green)' : status === 'متأخر' ? 'var(--red)' : 'var(--primary)';
+            return `<tr><td>${name}</td><td>${persp}</td><td><div class="rpt-progress"><div class="rpt-progress-fill" style="width:${pct}%;background:${sc}"></div></div> ${pct}%</td><td><span style="color:${sc};font-weight:700">${status}</span></td></tr>`;
+        }
+        function kpiRow(name, actual, target, pct) {
+            const c = pct >= 100 ? 'var(--green)' : pct >= 80 ? 'var(--yellow)' : 'var(--red)';
+            return `<tr><td>${name}</td><td style="font-weight:700">${actual}</td><td>${target}</td><td><div class="rpt-progress"><div class="rpt-progress-fill" style="width:${Math.min(pct, 100)}%;background:${c}"></div></div> ${pct}%</td></tr>`;
+        }
+        function initRow(name, owner, pct, budget, status) {
+            const sc = status === 'مكتمل' ? 'var(--green)' : status === 'متأخر' ? 'var(--red)' : 'var(--primary)';
+            return `<tr><td>${name}</td><td>${owner}</td><td><div class="rpt-progress"><div class="rpt-progress-fill" style="width:${pct}%;background:${sc}"></div></div> ${pct}%</td><td>${budget}</td><td><span style="color:${sc};font-weight:700">${status}</span></td></tr>`;
+        }
+        function barItem(label, val, color) {
+            return `<div class="rpt-bar" style="height:${val}%;background:${color}"><div class="rpt-bar-val">${val}%</div><div class="rpt-bar-label">${label}</div></div>`;
+        }
+        function recItem(icon, text, priority, color) {
+            return `<div class="rpt-rec" style="border-right-color:${color}"><div class="rpt-rec-icon">${icon}</div><div class="rpt-rec-text">${text}</div><div class="rpt-rec-priority" style="background:${color}15;color:${color}">${priority}</div></div>`;
+        }
+        function animateNum(el, target) {
+            let cur = 0; const step = Math.max(1, Math.ceil(target / 25));
+            const iv = setInterval(() => { cur += step; if (cur >= target) { cur = target; clearInterval(iv); } el.textContent = cur + (el.closest('.rpt-kpi')?.querySelector('.rpt-kpi-label')?.textContent.includes('%') ? '' : ''); }, 30);
+        }
+
+        renderTemplates();
+    </script>
+</body>
+
+</html>

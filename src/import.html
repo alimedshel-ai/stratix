@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Startix — استيراد البيانات</title>
+    <meta name="description" content="رفع ملفات Excel و Word واستيراد البيانات تلقائياً إلى Startix">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f1117;
+            --bg-card: #1a1d2e;
+            --bg-card-hover: #222640;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --primary: #667eea;
+            --primary-hover: #5a6fd6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: rgba(255, 255, 255, 0.08);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* === NAVBAR === */
+        .top-navbar {
+            background: rgba(15, 17, 23, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .top-navbar .brand {
+            font-size: 20px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+            margin: 0 8px;
+            transition: color .2s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--primary);
+        }
+
+        /* === LAYOUT === */
+        .page-layout {
+            display: flex;
+            min-height: calc(100vh - 60px);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 32px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* === PAGE HEADER === */
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+
+        /* === STEPS === */
+        .steps-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 32px;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 99px;
+            font-size: 13px;
+            font-weight: 600;
+            background: var(--bg-card);
+            color: var(--text-muted);
+            transition: all .3s;
+        }
+
+        .step-item.active {
+            background: linear-gradient(135deg, var(--primary), #8b5cf6);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .step-item.done {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        .step-connector {
+            width: 40px;
+            height: 2px;
+            background: var(--border);
+            margin: 0 4px;
+        }
+
+        .step-connector.active {
+            background: var(--primary);
+        }
+
+        /* === DROPZONE === */
+        .dropzone {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 60px 40px;
+            text-align: center;
+            transition: all .3s;
+            cursor: pointer;
+            background: var(--bg-card);
+            position: relative;
+        }
+
+        .dropzone:hover,
+        .dropzone.dragover {
+            border-color: var(--primary);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .dropzone .icon {
+            font-size: 48px;
+            color: var(--primary);
+            margin-bottom: 16px;
+            opacity: 0.7;
+        }
+
+        .dropzone h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .dropzone p {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .dropzone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* === TYPE SELECTOR === */
+        .type-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .type-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            cursor: pointer;
+            transition: all .3s;
+            text-align: center;
+        }
+
+        .type-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .type-card.selected {
+            border-color: var(--primary);
+            background: rgba(102, 126, 234, 0.08);
+        }
+
+        .type-card .icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .type-card h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .type-card p {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        /* === TEMPLATES === */
+        .templates-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .template-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            cursor: pointer;
+            transition: all .2s;
+            text-decoration: none;
+        }
+
+        .template-btn:hover {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        /* === PREVIEW TABLE === */
+        .preview-section {
+            display: none;
+        }
+
+        .preview-section.show {
+            display: block;
+        }
+
+        .preview-table-wrap {
+            overflow-x: auto;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .preview-table th {
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary);
+            padding: 10px 14px;
+            text-align: right;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .preview-table td {
+            padding: 8px 14px;
+            border-top: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .preview-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* === VALIDATION === */
+        .validation-summary {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .validation-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .validation-item.valid {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .validation-item.warnings {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .validation-item.errors {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        /* === RESULT === */
+        .result-section {
+            display: none;
+        }
+
+        .result-section.show {
+            display: block;
+        }
+
+        .result-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 40px;
+            text-align: center;
+        }
+
+        .result-card .icon {
+            font-size: 52px;
+            margin-bottom: 16px;
+        }
+
+        .result-card.success .icon {
+            color: var(--success);
+        }
+
+        .result-card.error .icon {
+            color: var(--danger);
+        }
+
+        .result-card h2 {
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+
+        .result-card p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* === BUTTONS === */
+        .btn-primary-gradient {
+            background: linear-gradient(135deg, var(--primary), #8b5cf6);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .2s;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .btn-primary-gradient:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
+        }
+
+        .btn-primary-gradient:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all .2s;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .btn-outline:hover {
+            border-color: var(--text);
+            color: var(--text);
+        }
+
+        /* === FILE INFO === */
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .file-info .fi-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .file-info .fi-icon.excel {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        .file-info .fi-icon.word {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+        }
+
+        .file-info .fi-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .file-info .fi-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* === LOADING === */
+        .spinner-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 17, 23, 0.8);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .spinner-overlay.show {
+            display: flex;
+        }
+
+        .spinner-overlay .spinner-border {
+            width: 48px;
+            height: 48px;
+            color: var(--primary);
+        }
+
+        .spinner-overlay p {
+            color: var(--text);
+            font-size: 15px;
+        }
+
+        /* === ENTITY/VERSION SELECTOR === */
+        .context-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .context-selector select {
+            background: var(--bg-card);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .context-selector select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .context-selector label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="top-navbar">
+        <span class="brand">⚡ Startix</span>
+        <div class="nav-links">
+            <a href="/dashboard"><i class="bi bi-house"></i> الرئيسية</a>
+            <a href="/kpis"><i class="bi bi-graph-up"></i> المؤشرات</a>
+            <a href="/intelligence"><i class="bi bi-bell"></i> التنبيهات</a>
+        </div>
+    </nav>
+
+    <!-- LAYOUT -->
+    <div class="page-layout">
+        <!-- Sidebar placeholder -->
+        <nav class="sidebar"></nav>
+
+        <!-- MAIN -->
+        <div class="main-content">
+
+            <!-- PAGE HEADER -->
+            <div class="page-header">
+                <h1><i class="bi bi-cloud-upload"></i> استيراد البيانات</h1>
+                <p>ارفع ملفات Excel أو Word لاستيراد البيانات تلقائياً إلى النظام</p>
+            </div>
+
+            <!-- STEPS INDICATOR -->
+            <div class="steps-indicator">
+                <div class="step-item active" id="step1-indicator">
+                    <i class="bi bi-1-circle-fill"></i> رفع الملف
+                </div>
+                <div class="step-connector" id="connector-1-2"></div>
+                <div class="step-item" id="step2-indicator">
+                    <i class="bi bi-2-circle-fill"></i> معاينة
+                </div>
+                <div class="step-connector" id="connector-2-3"></div>
+                <div class="step-item" id="step3-indicator">
+                    <i class="bi bi-3-circle-fill"></i> نتيجة
+                </div>
+            </div>
+
+            <!-- ================================ -->
+            <!-- STEP 1: UPLOAD -->
+            <!-- ================================ -->
+            <div id="step1-content">
+
+                <!-- Templates -->
+                <div style="margin-bottom: 20px">
+                    <h6 style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px">
+                        <i class="bi bi-download"></i> حمّل قالب فارغ:
+                    </h6>
+                    <div class="templates-bar">
+                        <a class="template-btn" onclick="downloadTemplate('KPI_ENTRY')">
+                            <i class="bi bi-file-earmark-spreadsheet"></i> إدخال المؤشرات
+                        </a>
+                        <a class="template-btn" onclick="downloadTemplate('FINANCIAL')">
+                            <i class="bi bi-file-earmark-spreadsheet"></i> القرارات المالية
+                        </a>
+                        <a class="template-btn" onclick="downloadTemplate('SWOT')">
+                            <i class="bi bi-file-earmark-spreadsheet"></i> تحليل SWOT
+                        </a>
+                        <a class="template-btn" onclick="downloadTemplate('INITIATIVES')">
+                            <i class="bi bi-file-earmark-spreadsheet"></i> المبادرات
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Type Selector -->
+                <h6 style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px">
+                    <i class="bi bi-tag"></i> اختر نوع البيانات (اختياري — سيتم الكشف تلقائياً):
+                </h6>
+                <div class="type-cards">
+                    <div class="type-card" data-type="KPI_ENTRY" onclick="selectType(this)">
+                        <div class="icon">📊</div>
+                        <h4>إدخال المؤشرات</h4>
+                        <p>بيانات KPI الدورية</p>
+                    </div>
+                    <div class="type-card" data-type="FINANCIAL" onclick="selectType(this)">
+                        <div class="icon">💰</div>
+                        <h4>القرارات المالية</h4>
+                        <p>استثمارات ونفقات</p>
+                    </div>
+                    <div class="type-card" data-type="SWOT" onclick="selectType(this)">
+                        <div class="icon">🎯</div>
+                        <h4>تحليل SWOT</h4>
+                        <p>نقاط القوة والضعف</p>
+                    </div>
+                    <div class="type-card" data-type="INITIATIVES" onclick="selectType(this)">
+                        <div class="icon">🚀</div>
+                        <h4>المبادرات</h4>
+                        <p>مبادرات استراتيجية</p>
+                    </div>
+                </div>
+
+                <!-- Dropzone -->
+                <div class="dropzone" id="dropzone">
+                    <div class="icon"><i class="bi bi-cloud-arrow-up"></i></div>
+                    <h3>اسحب الملف هنا أو اضغط للاختيار</h3>
+                    <p>Excel (.xlsx, .xls, .csv) أو Word (.docx) — حد أقصى 10MB</p>
+                    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,.docx,.doc">
+                </div>
+            </div>
+
+            <!-- ================================ -->
+            <!-- STEP 2: PREVIEW -->
+            <!-- ================================ -->
+            <div class="preview-section" id="step2-content">
+
+                <!-- File Info -->
+                <div class="file-info" id="fileInfo">
+                    <div class="fi-icon excel"><i class="bi bi-file-earmark-spreadsheet"></i></div>
+                    <div>
+                        <div class="fi-name" id="fileName"></div>
+                        <div class="fi-meta" id="fileMeta"></div>
+                    </div>
+                </div>
+
+                <!-- Entity / Version Context -->
+                <div class="context-selector" id="contextSelector">
+                    <div>
+                        <label>الكيان</label>
+                        <select id="entitySelect">
+                            <option value="">اختر الكيان...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>النسخة الاستراتيجية</label>
+                        <select id="versionSelect">
+                            <option value="">اختر النسخة...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Validation Summary -->
+                <div class="validation-summary" id="validationSummary"></div>
+
+                <!-- Preview Table -->
+                <div class="preview-table-wrap">
+                    <table class="preview-table" id="previewTable">
+                        <thead id="previewHead"></thead>
+                        <tbody id="previewBody"></tbody>
+                    </table>
+                </div>
+
+                <!-- Actions -->
+                <div style="display: flex; gap: 12px; justify-content: flex-end">
+                    <button class="btn-outline" onclick="resetUpload()">
+                        <i class="bi bi-arrow-right"></i> إلغاء
+                    </button>
+                    <button class="btn-primary-gradient" id="confirmBtn" onclick="confirmImport()">
+                        <i class="bi bi-check-circle"></i> تأكيد الاستيراد
+                    </button>
+                </div>
+            </div>
+
+            <!-- ================================ -->
+            <!-- STEP 3: RESULT -->
+            <!-- ================================ -->
+            <div class="result-section" id="step3-content">
+                <div class="result-card" id="resultCard">
+                    <div class="icon"><i class="bi bi-check-circle-fill"></i></div>
+                    <h2 id="resultTitle">تم الاستيراد بنجاح!</h2>
+                    <p id="resultMessage"></p>
+
+                    <div id="resultErrors" style="margin-top: 20px; text-align: right; display: none">
+                        <h6 style="color: var(--danger); margin-bottom: 10px">الأخطاء:</h6>
+                        <div id="errorsList"
+                            style="font-size: 12px; color: var(--text-muted); max-height: 200px; overflow-y: auto">
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: center">
+                        <button class="btn-outline" onclick="resetUpload()">
+                            <i class="bi bi-arrow-repeat"></i> استيراد آخر
+                        </button>
+                        <button class="btn-primary-gradient" onclick="window.location.href='/dashboard'">
+                            <i class="bi bi-house"></i> العودة للرئيسية
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- LOADING OVERLAY -->
+    <div class="spinner-overlay" id="loadingOverlay">
+        <div class="spinner-border"></div>
+        <p id="loadingText">جاري رفع الملف...</p>
+    </div>
+
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/sidebar.js"></script>
+    <script src="/assets/js/ai-advisor.js"></script>
+    <script>
+        const API_BASE = '/api';
+        let selectedType = '';
+        let currentPreviewId = '';
+        let previewData = null;
+
+        // ============ AUTH ============
+        function getToken() {
+            return localStorage.getItem('token');
+        }
+
+        function authHeaders() {
+            const h = { 'Authorization': `Bearer ${getToken()}` };
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.entity?.id) h['X-Entity-Id'] = user.entity.id;
+            return h;
+        }
+
+        // ============ TYPE SELECTION ============
+        function selectType(el) {
+            document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+            el.classList.toggle('selected');
+            selectedType = el.classList.contains('selected') ? el.dataset.type : '';
+        }
+
+        // ============ TEMPLATE DOWNLOAD ============
+        function downloadTemplate(type) {
+            const a = document.createElement('a');
+            a.href = `${API_BASE}/import/templates/${type}`;
+            a.download = `template_${type}.xlsx`;
+
+            // Add auth header through fetch approach
+            fetch(`${API_BASE}/import/templates/${type}`, {
+                headers: authHeaders()
+            })
+                .then(res => res.blob())
+                .then(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `template_${type}.xlsx`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                })
+                .catch(err => alert('فشل تحميل القالب'));
+        }
+
+        // ============ DRAG & DROP ============
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('dragover');
+        });
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('dragover');
+        });
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) uploadFile(file);
+        });
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) uploadFile(file);
+        });
+
+        // ============ UPLOAD ============
+        async function uploadFile(file) {
+            showLoading('جاري رفع وتحليل الملف...');
+
+            const formData = new FormData();
+            formData.append('file', file);
+            if (selectedType) formData.append('type', selectedType);
+
+            try {
+                const res = await fetch(`${API_BASE}/import/upload`, {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: formData,
+                });
+
+                const data = await res.json();
+                hideLoading();
+
+                if (!res.ok) {
+                    alert(data.error || 'فشل في رفع الملف');
+                    return;
+                }
+
+                currentPreviewId = data.previewId;
+                previewData = data;
+                showPreview(data, file.name);
+            } catch (err) {
+                hideLoading();
+                alert('خطأ في الاتصال: ' + err.message);
+            }
+        }
+
+        // ============ SHOW PREVIEW ============
+        function showPreview(data, fileName) {
+            // Update steps
+            setStep(2);
+
+            // File info
+            const ext = fileName.split('.').pop().toLowerCase();
+            const isExcel = ['xlsx', 'xls', 'csv'].includes(ext);
+            document.getElementById('fileInfo').querySelector('.fi-icon').className = `fi-icon ${isExcel ? 'excel' : 'word'}`;
+            document.getElementById('fileInfo').querySelector('.fi-icon i').className = `bi ${isExcel ? 'bi-file-earmark-spreadsheet' : 'bi-file-earmark-word'}`;
+            document.getElementById('fileName').textContent = fileName;
+            document.getElementById('fileMeta').textContent = `${data.totalRows} صف • نوع: ${getTypeLabel(data.type)}`;
+
+            // Validation
+            const vSummary = document.getElementById('validationSummary');
+            const v = data.validation || {};
+            vSummary.innerHTML = `
+                <div class="validation-item valid"><i class="bi bi-check-circle"></i> ${v.valid || 0} صحيح</div>
+                <div class="validation-item warnings"><i class="bi bi-exclamation-triangle"></i> ${v.warnings || 0} تحذير</div>
+                <div class="validation-item errors"><i class="bi bi-x-circle"></i> ${v.errors || 0} خطأ</div>
+            `;
+
+            // Preview Table
+            const thead = document.getElementById('previewHead');
+            const tbody = document.getElementById('previewBody');
+
+            if (data.headers && data.preview) {
+                thead.innerHTML = '<tr>' + data.headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+                tbody.innerHTML = data.preview.map(row =>
+                    '<tr>' + data.headers.map(h => `<td>${row[h] !== undefined ? row[h] : ''}</td>`).join('') + '</tr>'
+                ).join('');
+            }
+
+            // Load entities & versions
+            loadEntitiesAndVersions();
+
+            // Show preview
+            document.getElementById('step1-content').style.display = 'none';
+            document.getElementById('step2-content').classList.add('show');
+        }
+
+        // ============ LOAD ENTITIES & VERSIONS ============
+        async function loadEntitiesAndVersions() {
+            try {
+                // Entities
+                const entRes = await fetch(`${API_BASE}/entities?limit=100`, { headers: authHeaders() });
+                const entData = await entRes.json();
+                const entitySelect = document.getElementById('entitySelect');
+                (entData.entities || []).forEach(e => {
+                    const opt = document.createElement('option');
+                    opt.value = e.id;
+                    opt.textContent = e.displayName || e.legalName;
+                    entitySelect.appendChild(opt);
+                });
+
+                // Auto-select user's entity
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                if (user.entity?.id) entitySelect.value = user.entity.id;
+
+                // Load versions when entity changes
+                entitySelect.addEventListener('change', loadVersions);
+                loadVersions();
+            } catch (err) {
+                console.error('Error loading context:', err);
+            }
+        }
+
+        async function loadVersions() {
+            const entityId = document.getElementById('entitySelect').value;
+            const versionSelect = document.getElementById('versionSelect');
+            versionSelect.innerHTML = '<option value="">اختر النسخة...</option>';
+
+            if (!entityId) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/versions?entityId=${entityId}`, { headers: authHeaders() });
+                const data = await res.json();
+                (data.versions || data || []).forEach(v => {
+                    const opt = document.createElement('option');
+                    opt.value = v.id;
+                    opt.textContent = v.name || `نسخة ${v.versionNumber}`;
+                    if (v.isActive) opt.textContent += ' (نشطة)';
+                    versionSelect.appendChild(opt);
+                });
+
+                // Auto-select active version
+                const active = (data.versions || data || []).find(v => v.isActive);
+                if (active) versionSelect.value = active.id;
+            } catch (err) {
+                console.error('Error loading versions:', err);
+            }
+        }
+
+        // ============ CONFIRM IMPORT ============
+        async function confirmImport() {
+            if (!currentPreviewId) return;
+
+            const entityId = document.getElementById('entitySelect').value;
+            const versionId = document.getElementById('versionSelect').value;
+
+            // Check requirements
+            const type = previewData?.type || selectedType;
+            if (['KPI_ENTRY', 'INITIATIVES'].includes(type) && !versionId) {
+                alert('يرجى اختيار النسخة الاستراتيجية');
+                return;
+            }
+            if (['FINANCIAL', 'SWOT'].includes(type) && !entityId) {
+                alert('يرجى اختيار الكيان');
+                return;
+            }
+
+            showLoading('جاري حفظ البيانات...');
+
+            try {
+                const res = await fetch(`${API_BASE}/import/confirm`, {
+                    method: 'POST',
+                    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        previewId: currentPreviewId,
+                        type,
+                        entityId,
+                        versionId,
+                    }),
+                });
+
+                const data = await res.json();
+                hideLoading();
+
+                showResult(data);
+            } catch (err) {
+                hideLoading();
+                alert('خطأ في الحفظ: ' + err.message);
+            }
+        }
+
+        // ============ SHOW RESULT ============
+        function showResult(data) {
+            setStep(3);
+
+            const card = document.getElementById('resultCard');
+            const icon = card.querySelector('.icon i');
+            const title = document.getElementById('resultTitle');
+            const msg = document.getElementById('resultMessage');
+
+            if (data.success) {
+                card.className = 'result-card success';
+                icon.className = 'bi bi-check-circle-fill';
+                title.textContent = `تم الاستيراد بنجاح! ✅`;
+                msg.textContent = data.message || `تم حفظ ${data.savedCount} سجل`;
+            } else {
+                card.className = 'result-card error';
+                icon.className = 'bi bi-x-circle-fill';
+                title.textContent = 'حدث خطأ';
+                msg.textContent = data.error || 'فشل في الاستيراد';
+            }
+
+            // Show errors if any
+            if (data.errors && data.errors.length > 0) {
+                document.getElementById('resultErrors').style.display = 'block';
+                document.getElementById('errorsList').innerHTML = data.errors.map(e =>
+                    `<div style="padding: 4px 0; border-bottom: 1px solid var(--border)">
+                        ${e.row ? `صف ${e.row}: ` : ''}${e.error}
+                    </div>`
+                ).join('');
+            }
+
+            document.getElementById('step2-content').classList.remove('show');
+            document.getElementById('step3-content').classList.add('show');
+        }
+
+        // ============ HELPERS ============
+        function setStep(step) {
+            ['step1-indicator', 'step2-indicator', 'step3-indicator'].forEach((id, idx) => {
+                const el = document.getElementById(id);
+                el.classList.remove('active', 'done');
+                if (idx + 1 < step) el.classList.add('done');
+                if (idx + 1 === step) el.classList.add('active');
+            });
+            ['connector-1-2', 'connector-2-3'].forEach((id, idx) => {
+                document.getElementById(id).classList.toggle('active', idx + 1 < step);
+            });
+
+            document.getElementById('step1-content').style.display = step === 1 ? '' : 'none';
+        }
+
+        function resetUpload() {
+            currentPreviewId = '';
+            previewData = null;
+            selectedType = '';
+            document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+            document.getElementById('fileInput').value = '';
+            document.getElementById('step2-content').classList.remove('show');
+            document.getElementById('step3-content').classList.remove('show');
+            document.getElementById('resultErrors').style.display = 'none';
+            setStep(1);
+        }
+
+        function getTypeLabel(type) {
+            return {
+                'KPI_ENTRY': 'إدخال المؤشرات',
+                'FINANCIAL': 'القرارات المالية',
+                'SWOT': 'تحليل SWOT',
+                'INITIATIVES': 'المبادرات',
+                'DOCUMENT': 'مستند Word',
+                'UNKNOWN': 'غير محدد',
+            }[type] || type;
+        }
+
+        function showLoading(text) {
+            document.getElementById('loadingText').textContent = text;
+            document.getElementById('loadingOverlay').classList.add('show');
+        }
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('show');
+        }
+
+        // ============ AUTH CHECK ============
+        if (!getToken()) {
+            window.location.href = '/login';
+        }
+    </script>
+</body>
+
+</html>

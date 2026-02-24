@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكيس - إدارة Webhooks</title>
+    <meta name="description" content="إدارة الربط التلقائي مع الأنظمة الخارجية">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0b10;
+            --bg2: #12141f;
+            --card: #171a2a;
+            --text: #e2e8f0;
+            --muted: #7a8599;
+            --border: rgba(255, 255, 255, 0.06);
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --green: #22c55e;
+            --yellow: #facc15;
+            --red: #ef4444;
+            --blue: #38bdf8;
+            --purple: #a78bfa;
+            --orange: #f97316
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+            min-height: 100vh
+        }
+
+        .page-wrapper {
+            display: flex;
+            min-height: 100vh
+        }
+
+        .main-content {
+            flex: 1;
+            min-width: 0;
+            padding: 28px 32px
+        }
+
+        .wh-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px
+        }
+
+        .wh-title {
+            font-size: 28px;
+            font-weight: 900
+        }
+
+        .wh-title span {
+            background: linear-gradient(135deg, var(--orange), var(--red));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        .wh-add {
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .wh-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px
+        }
+
+        .wh-stat {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            text-align: center
+        }
+
+        .wh-stat-num {
+            font-size: 26px;
+            font-weight: 900
+        }
+
+        .wh-stat-label {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 2px
+        }
+
+        .wh-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px
+        }
+
+        .wh-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.2s
+        }
+
+        .wh-card:hover {
+            border-color: rgba(255, 255, 255, 0.1)
+        }
+
+        .wh-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px
+        }
+
+        .wh-card-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0
+        }
+
+        .wh-card-info {
+            flex: 1
+        }
+
+        .wh-card-name {
+            font-size: 15px;
+            font-weight: 800
+        }
+
+        .wh-card-url {
+            font-size: 12px;
+            color: var(--muted);
+            font-family: monospace;
+            direction: ltr;
+            text-align: left
+        }
+
+        .wh-toggle {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+            flex-shrink: 0
+        }
+
+        .wh-toggle.active {
+            background: var(--green)
+        }
+
+        .wh-toggle::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: white;
+            transition: all 0.3s
+        }
+
+        .wh-toggle.active::after {
+            right: calc(100% - 21px)
+        }
+
+        .wh-events {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 10px
+        }
+
+        .wh-event {
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600
+        }
+
+        .wh-card-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 11px;
+            color: var(--muted);
+            flex-wrap: wrap
+        }
+
+        .wh-card-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px
+        }
+
+        .wh-card-logs {
+            margin-top: 12px;
+            border-top: 1px solid var(--border);
+            padding-top: 12px
+        }
+
+        .wh-log {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 0;
+            font-size: 11px
+        }
+
+        .wh-log-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%
+        }
+
+        .wh-log-method {
+            font-family: monospace;
+            font-weight: 700;
+            font-size: 10px
+        }
+
+        .wh-log-code {
+            font-family: monospace;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 10px
+        }
+
+        .wh-log-time {
+            margin-right: auto;
+            color: var(--muted);
+            font-size: 10px
+        }
+
+        .wh-empty {
+            text-align: center;
+            padding: 40px;
+            color: var(--muted)
+        }
+
+        /* Event types guide */
+        .wh-guide {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px
+        }
+
+        .wh-guide-title {
+            font-size: 15px;
+            font-weight: 800;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .wh-guide-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 10px
+        }
+
+        .wh-guide-item {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px
+        }
+
+        .wh-guide-event {
+            font-family: monospace;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 2px
+        }
+
+        .wh-guide-desc {
+            font-size: 11px;
+            color: var(--muted)
+        }
+
+        @media(max-width:768px) {
+            .main-content {
+                padding: 16px
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <div id="sidebar-container"></div>
+        <div class="main-content">
+            <div class="wh-header">
+                <div>
+                    <h1 class="wh-title"><i class="bi bi-link-45deg"></i> إدارة <span>Webhooks</span></h1>
+                    <div style="font-size:13px;color:var(--muted);margin-top:4px">الربط التلقائي مع الأنظمة الخارجية —
+                        Slack، Teams، Zapier</div>
+                </div>
+                <button class="wh-add"><i class="bi bi-plus-lg"></i> إضافة Webhook</button>
+            </div>
+
+            <div class="wh-stats" id="whStats"></div>
+            <div class="wh-list" id="whList"></div>
+
+            <div class="wh-guide">
+                <div class="wh-guide-title"><i class="bi bi-journal-code" style="color:var(--primary)"></i> الأحداث
+                    المتاحة</div>
+                <div class="wh-guide-grid" id="whGuide"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/sidebar.js"></script>
+    <script src="/assets/js/ai-advisor.js"></script>
+    <script src="/assets/js/achievements.js"></script>
+    <script src="/assets/js/notifications.js"></script>
+    <script>
+        const webhooks = [
+            {
+                id: 1, name: 'إشعارات Slack', url: 'https://hooks.slack.com/services/T.../B.../xxx', icon: '💬', color: '#4A154B', active: true, events: ['objective.updated', 'kpi.updated', 'comment.created'], created: '2025-12-01', lastCall: 'منذ 3 دقائق', successRate: 98, calls: 1247, logs: [
+                    { status: 200, event: 'kpi.updated', time: '12:45', ok: true },
+                    { status: 200, event: 'comment.created', time: '12:30', ok: true },
+                    { status: 200, event: 'objective.updated', time: '11:15', ok: true },
+                ]
+            },
+            {
+                id: 2, name: 'Microsoft Teams', url: 'https://outlook.office.com/webhook/xxx', icon: '💼', color: '#464EB8', active: true, events: ['initiative.completed', 'review.scheduled'], created: '2026-01-10', lastCall: 'منذ ساعة', successRate: 95, calls: 456, logs: [
+                    { status: 200, event: 'review.scheduled', time: '11:00', ok: true },
+                    { status: 408, event: 'initiative.completed', time: '10:30', ok: false },
+                ]
+            },
+            {
+                id: 3, name: 'Zapier Automation', url: 'https://hooks.zapier.com/hooks/catch/xxx', icon: '⚡', color: '#FF4A00', active: true, events: ['objective.created', 'initiative.created', 'kpi.threshold'], created: '2026-01-20', lastCall: 'منذ 15 دقيقة', successRate: 100, calls: 89, logs: [
+                    { status: 200, event: 'kpi.threshold', time: '12:40', ok: true },
+                ]
+            },
+            {
+                id: 4, name: 'نظام ERP داخلي', url: 'https://erp.company.sa/api/webhooks', icon: '🏢', color: '#059669', active: false, events: ['budget.approved', 'initiative.budget_changed'], created: '2026-02-01', lastCall: 'منذ أسبوع', successRate: 72, calls: 34, logs: [
+                    { status: 500, event: 'budget.approved', time: 'الأحد', ok: false },
+                    { status: 200, event: 'initiative.budget_changed', time: 'السبت', ok: true },
+                ]
+            },
+        ];
+
+        const eventTypes = [
+            { event: 'objective.created', desc: 'عند إنشاء هدف جديد' },
+            { event: 'objective.updated', desc: 'عند تحديث هدف' },
+            { event: 'objective.completed', desc: 'عند إكمال هدف' },
+            { event: 'kpi.updated', desc: 'عند تحديث قيمة مؤشر' },
+            { event: 'kpi.threshold', desc: 'عند تجاوز المؤشر الحد' },
+            { event: 'initiative.created', desc: 'عند إنشاء مبادرة' },
+            { event: 'initiative.completed', desc: 'عند إكمال مبادرة' },
+            { event: 'initiative.budget_changed', desc: 'تغيير ميزانية مبادرة' },
+            { event: 'comment.created', desc: 'عند إضافة تعليق' },
+            { event: 'review.scheduled', desc: 'جدولة مراجعة جديدة' },
+            { event: 'budget.approved', desc: 'اعتماد ميزانية' },
+            { event: 'user.assigned', desc: 'تعيين مستخدم لمهمة' },
+        ];
+
+        const eventColors = { 'objective': 'var(--primary)', 'kpi': 'var(--green)', 'initiative': 'var(--orange)', 'comment': 'var(--blue)', 'review': 'var(--purple)', 'budget': 'var(--yellow)', 'user': 'var(--pink,#ec4899)' };
+
+        function renderStats() {
+            const total = webhooks.length;
+            const active = webhooks.filter(w => w.active).length;
+            const totalCalls = webhooks.reduce((s, w) => s + w.calls, 0);
+            const avgSuccess = Math.round(webhooks.reduce((s, w) => s + w.successRate, 0) / total);
+            document.getElementById('whStats').innerHTML = `
+        <div class="wh-stat"><div class="wh-stat-num">${total}</div><div class="wh-stat-label">إجمالي</div></div>
+        <div class="wh-stat"><div class="wh-stat-num" style="color:var(--green)">${active}</div><div class="wh-stat-label">نشط</div></div>
+        <div class="wh-stat"><div class="wh-stat-num" style="color:var(--primary)">${totalCalls}</div><div class="wh-stat-label">إجمالي الاستدعاءات</div></div>
+        <div class="wh-stat"><div class="wh-stat-num" style="color:${avgSuccess >= 90 ? 'var(--green)' : 'var(--yellow)'}">${avgSuccess}%</div><div class="wh-stat-label">معدل النجاح</div></div>
+      `;
+        }
+
+        function renderList() {
+            document.getElementById('whList').innerHTML = webhooks.map(w => `
+        <div class="wh-card">
+          <div class="wh-card-header">
+            <div class="wh-card-icon" style="background:${w.color}22;color:${w.color}">${w.icon}</div>
+            <div class="wh-card-info">
+              <div class="wh-card-name">${w.name}</div>
+              <div class="wh-card-url">${w.url.substring(0, 45)}...</div>
+            </div>
+            <div class="wh-toggle ${w.active ? 'active' : ''}" onclick="this.classList.toggle('active')"></div>
+          </div>
+          <div class="wh-events">
+            ${w.events.map(e => {
+                const group = e.split('.')[0];
+                const color = eventColors[group] || 'var(--muted)';
+                return `<span class="wh-event" style="background:${color}15;color:${color}">${e}</span>`;
+            }).join('')}
+          </div>
+          <div class="wh-card-meta">
+            <span><i class="bi bi-clock"></i> آخر استدعاء: ${w.lastCall}</span>
+            <span><i class="bi bi-arrow-repeat"></i> ${w.calls} استدعاء</span>
+            <span style="color:${w.successRate >= 90 ? 'var(--green)' : w.successRate >= 70 ? 'var(--yellow)' : 'var(--red)'}"><i class="bi bi-check-circle"></i> ${w.successRate}% نجاح</span>
+            <span><i class="bi bi-calendar"></i> أُنشئ: ${w.created}</span>
+          </div>
+          <div class="wh-card-logs">
+            ${w.logs.map(l => `
+              <div class="wh-log">
+                <div class="wh-log-status" style="background:${l.ok ? 'var(--green)' : 'var(--red)'}"></div>
+                <span class="wh-log-method">${l.event}</span>
+                <span class="wh-log-code" style="background:${l.ok ? 'rgba(34,197,94,0.1);color:var(--green)' : 'rgba(239,68,68,0.1);color:var(--red)'}">${l.status}</span>
+                <span class="wh-log-time">${l.time}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+        }
+
+        function renderGuide() {
+            document.getElementById('whGuide').innerHTML = eventTypes.map(e => {
+                const group = e.event.split('.')[0];
+                const color = eventColors[group] || 'var(--muted)';
+                return `<div class="wh-guide-item"><div class="wh-guide-event" style="color:${color}">${e.event}</div><div class="wh-guide-desc">${e.desc}</div></div>`;
+            }).join('');
+        }
+
+        renderStats(); renderList(); renderGuide();
+    </script>
+</body>
+
+</html>
