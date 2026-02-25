@@ -965,13 +965,25 @@
             }
 
             .nav-bar {
-                flex-direction: column;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                flex-direction: row;
                 gap: 8px;
+                background: linear-gradient(to top, var(--bg) 60%, transparent);
+                padding: 16px 20px 20px;
+                z-index: 100;
             }
 
             .bn {
                 width: 100%;
                 justify-content: center;
+                padding: 12px 16px;
+            }
+
+            .main {
+                padding-bottom: 100px;
             }
 
             .ccard {
@@ -1018,7 +1030,7 @@
                 <i class="bi bi-floppy"></i>
                 <span class="draft-btn-text">حفظ مسودة</span>
             </button>
-            <span class="step-ind" id="stepInd">الخطوة 1 من 6</span>
+            <span class="step-ind" id="stepInd">الخطوة 1 من 7</span>
         </div>
     </nav>
 
@@ -1062,6 +1074,10 @@
                     </div>
                     <div class="prog-step-item">
                         <div class="prog-dot"></div>
+                        <div class="prog-step-label">التشخيص</div>
+                    </div>
+                    <div class="prog-step-item">
+                        <div class="prog-dot"></div>
                         <div class="prog-step-label">النتيجة</div>
                     </div>
                 </div>
@@ -1097,7 +1113,7 @@
                     </div>
                 </div>
 
-                <div class="est-time"><i class="bi bi-clock"></i> ~3 دقائق · 6 خطوات بسيطة</div>
+                <div class="est-time"><i class="bi bi-clock"></i> ~5 دقائق · تشخيص مُعمّق حسب حجم شركتك</div>
 
                 <div class="nav-bar">
                     <button class="bn next" onclick="go(2)">يلا نبدأ <i class="bi bi-arrow-left"></i></button>
@@ -1334,11 +1350,11 @@
             <div class="depth-q">
                 <label>👥 كم عدد فريقك؟</label>
                 <div class="depth-opts" id="dqTeamSize">
-                    <div class="depth-opt" onclick="pickDepth(this,'teamSize')">أنا لحالي</div>
-                    <div class="depth-opt" onclick="pickDepth(this,'teamSize')">2 - 10</div>
-                    <div class="depth-opt" onclick="pickDepth(this,'teamSize')">11 - 50</div>
-                    <div class="depth-opt" onclick="pickDepth(this,'teamSize')">51 - 200</div>
-                    <div class="depth-opt" onclick="pickDepth(this,'teamSize')">أكثر من 200</div>
+                    <div class="depth-opt" onclick="pickTeamSize(this,'أنا لحالي','solo')">أنا لحالي</div>
+                    <div class="depth-opt" onclick="pickTeamSize(this,'2 - 10','tiny')">2 - 10</div>
+                    <div class="depth-opt" onclick="pickTeamSize(this,'11 - 50','small')">11 - 50</div>
+                    <div class="depth-opt" onclick="pickTeamSize(this,'51 - 200','medium')">51 - 200</div>
+                    <div class="depth-opt" onclick="pickTeamSize(this,'أكثر من 200','large')">أكثر من 200</div>
                 </div>
             </div>
 
@@ -1355,12 +1371,50 @@
 
             <div class="nav-bar">
                 <button class="bn back" onclick="go(4)"><i class="bi bi-arrow-right"></i> السابق</button>
-                <button class="bn next" onclick="go(6)">اكتشف مسارك <i class="bi bi-arrow-left"></i></button>
+                <button class="bn next" onclick="goToDeepDiag()">التالي: التشخيص المعمّق <i
+                        class="bi bi-arrow-left"></i></button>
             </div>
         </div>
 
-        <!-- ===== STEP 6: النتيجة ===== -->
+        <!-- ===== STEP 6: التشخيص المعمّق (ديناميكي حسب حجم الشركة) ===== -->
         <div class="sec" id="s6">
+            <div class="sec-head">
+                <span class="sec-emoji">🔬</span>
+                <h1 class="sec-title">التشخيص المعمّق</h1>
+                <p class="sec-desc" id="deepDiagDesc">أسئلة مخصصة حسب حجم شركتك — تعطينا صورة حقيقية عن وضعك</p>
+                <div id="deepDiagMeta"
+                    style="display:flex;justify-content:center;gap:16px;margin-top:12px;flex-wrap:wrap">
+                    <span
+                        style="font-size:12px;padding:4px 12px;border-radius:8px;background:rgba(102,126,234,0.1);color:var(--primary);font-weight:700"
+                        id="ddqCount">0 أسئلة</span>
+                    <span
+                        style="font-size:12px;padding:4px 12px;border-radius:8px;background:rgba(34,197,94,0.1);color:#22c55e;font-weight:700"
+                        id="ddqProgress">0 / 0</span>
+                </div>
+            </div>
+
+            <!-- حاوية الأسئلة الديناميكية -->
+            <div id="deepDiagContainer"></div>
+
+            <!-- شريط التقدم الداخلي للتشخيص -->
+            <div style="margin:16px 0" id="ddProgressBar">
+                <div style="height:6px;background:rgba(255,255,255,0.06);border-radius:10px;overflow:hidden">
+                    <div id="ddProgressFill"
+                        style="height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--secondary));border-radius:10px;transition:width 0.4s ease">
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-bar">
+                <button class="bn back" id="ddBackBtn" onclick="ddPrev()"><i class="bi bi-arrow-right"></i>
+                    السابق</button>
+                <button class="bn next" id="ddNextBtn" onclick="ddNext()" disabled>التالي <i
+                        class="bi bi-arrow-left"></i></button>
+            </div>
+        </div>
+
+        <!-- ===== STEP 7: النتيجة ===== -->
+        <div class="sec" id="s7">
             <div class="sec-head">
                 <span class="sec-emoji">🧭</span>
                 <h1 class="sec-title">تشخيصك الأولي ومسارك في ستارتكس</h1>
@@ -1401,15 +1455,101 @@
                 <div id="resPath"></div>
             </div>
 
-            <div class="nav-bar" style="flex-direction:column;gap:10px;align-items:center">
-                <button class="bn next" onclick="saveGo()" style="padding:16px 48px;font-size:16px" id="startBtn"><i
-                        class="bi bi-rocket-takeoff"></i> ابدأ رحلتك الاستراتيجية</button>
-                <div id="savingIndicator" style="display:none;font-size:13px;color:var(--primary)">⏳ جارٍ إنشاء
-                    أهدافك...</div>
-                <button class="bn back" onclick="go(5)"><i class="bi bi-arrow-right"></i> عدّل إجاباتك</button>
-                <a href="/dashboard.html"
-                    style="font-size:12px;color:var(--text-muted);text-decoration:none;margin-top:4px">أو اذهب للوحة
-                    التحكم ←</a>
+            <!-- 💰 الباقة المناسبة لك -->
+            <div id="pricingSection" style="margin-top:8px">
+                <div style="text-align:center;margin-bottom:16px">
+                    <div style="font-size:15px;font-weight:800;color:var(--text-muted)">💰 الباقة المناسبة لك</div>
+                </div>
+                <div id="pricingCard"
+                    style="background:linear-gradient(135deg,rgba(102,126,234,0.08),rgba(118,75,162,0.06));border:2px solid rgba(102,126,234,0.25);border-radius:20px;padding:28px 24px;text-align:center;position:relative;overflow:hidden">
+                    <div
+                        style="position:absolute;top:12px;left:12px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:10px;font-weight:800;padding:4px 12px;border-radius:8px">
+                        ⭐ الأنسب لك</div>
+
+                    <div id="planIcon" style="font-size:36px;margin-bottom:8px">🚀</div>
+                    <div id="planName" style="font-size:20px;font-weight:800;color:#fff;margin-bottom:4px">احترافي PRO
+                    </div>
+                    <div id="planReason" style="font-size:12px;color:var(--text-muted);margin-bottom:16px"></div>
+
+                    <div style="margin-bottom:16px">
+                        <div id="planPriceOriginal"
+                            style="font-size:14px;color:var(--text-muted);text-decoration:line-through;margin-bottom:2px">
+                            149 ريال/شهر</div>
+                        <div
+                            style="font-size:28px;font-weight:900;background:linear-gradient(135deg,#22c55e,#10b981);-webkit-background-clip:text;background-clip:text;color:transparent">
+                            مجاناً</div>
+                        <div style="font-size:12px;color:#22c55e;font-weight:700">🎁 نسخة تجريبية — 3 أشهر مجاناً</div>
+                    </div>
+
+                    <div id="planFeatures"
+                        style="text-align:right;display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
+
+                    <button class="bn next" onclick="saveGo()"
+                        style="width:100%;padding:16px 32px;font-size:16px;border-radius:14px" id="startBtn">
+                        <i class="bi bi-rocket-takeoff"></i> ابدأ الآن — مجاناً
+                    </button>
+                    <div id="savingIndicator" style="display:none;font-size:13px;color:var(--primary);margin-top:8px">⏳
+                        جارٍ إنشاء أهدافك...</div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:8px">
+                        <i class="bi bi-shield-check"></i> بدون بطاقة ائتمان · إلغاء في أي وقت
+                    </div>
+                </div>
+
+                <div style="text-align:center;margin-top:12px">
+                    <a href="#" onclick="toggleAllPlans()"
+                        style="font-size:12px;color:var(--text-muted);text-decoration:none">
+                        <i class="bi bi-grid-3x3-gap"></i> شوف كل الباقات
+                    </a>
+                </div>
+            </div>
+
+            <!-- كل الباقات -->
+            <div id="allPlansGrid" style="display:none;margin-top:16px">
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
+                    <div class="plan-mini" data-plan="FREE" onclick="selectPlan('FREE')"
+                        style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:18px;text-align:center;cursor:pointer">
+                        <div style="font-size:22px;margin-bottom:6px">🆓</div>
+                        <div style="font-weight:800;font-size:14px;margin-bottom:4px">مجاني</div>
+                        <div style="font-size:18px;font-weight:900;margin-bottom:6px">0 <span
+                                style="font-size:11px;font-weight:400">ريال</span></div>
+                        <div style="font-size:10px;color:var(--text-muted);line-height:1.6">1 كيان · SWOT بسيط · 1 هدف
+                        </div>
+                    </div>
+                    <div class="plan-mini" data-plan="STARTER" onclick="selectPlan('STARTER')"
+                        style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:18px;text-align:center;cursor:pointer">
+                        <div style="font-size:22px;margin-bottom:6px">💎</div>
+                        <div style="font-weight:800;font-size:14px;margin-bottom:4px">مبتدئ</div>
+                        <div style="font-size:18px;font-weight:900;margin-bottom:6px">49 <span
+                                style="font-size:11px;font-weight:400">ريال/شهر</span></div>
+                        <div style="font-size:10px;color:var(--text-muted);line-height:1.6">2 كيانات · SWOT كامل · 3
+                            أهداف</div>
+                    </div>
+                    <div class="plan-mini" data-plan="PRO" onclick="selectPlan('PRO')"
+                        style="background:rgba(102,126,234,0.08);border:2px solid rgba(102,126,234,0.3);border-radius:16px;padding:18px;text-align:center;cursor:pointer">
+                        <div style="font-size:22px;margin-bottom:6px">🚀</div>
+                        <div style="font-weight:800;font-size:14px;margin-bottom:4px;color:var(--primary)">احترافي</div>
+                        <div style="font-size:18px;font-weight:900;margin-bottom:6px">149 <span
+                                style="font-size:11px;font-weight:400">ريال/شهر</span></div>
+                        <div style="font-size:10px;color:var(--text-muted);line-height:1.6">5 كيانات · كل الأدوات ·
+                            تقارير</div>
+                    </div>
+                    <div class="plan-mini" data-plan="ENTERPRISE" onclick="selectPlan('ENTERPRISE')"
+                        style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:18px;text-align:center;cursor:pointer">
+                        <div style="font-size:22px;margin-bottom:6px">🏢</div>
+                        <div style="font-weight:800;font-size:14px;margin-bottom:4px">مؤسسات</div>
+                        <div style="font-size:18px;font-weight:900;margin-bottom:6px">499 <span
+                                style="font-size:11px;font-weight:400">ريال/شهر</span></div>
+                        <div style="font-size:10px;color:var(--text-muted);line-height:1.6">غير محدود · AI · دعم مخصص
+                        </div>
+                    </div>
+                </div>
+                <div style="text-align:center;margin-top:12px;font-size:11px;color:#22c55e;font-weight:700">
+                    🎁 جميع الباقات مجانية لمدة 3 أشهر — نسخة تجريبية
+                </div>
+            </div>
+
+            <div style="text-align:center;margin-top:16px">
+                <button class="bn back" onclick="go(6)"><i class="bi bi-arrow-right"></i> عدّل إجاباتك</button>
             </div>
         </div>
     </div>
@@ -1418,9 +1558,10 @@
         // ===== STATE =====
         let pains = [], ambs = [];
         let customPainText = '', customAmbText = '';
-        const depth = { duration: '', impact: 5, tried: '', age: '', teamSize: '', toolExp: '' };
-        const TOTAL_STEPS = 6;
-        const stepLabels = ['', '🧭 نقطة البداية', '😓 تحديد التحديات', '🔬 عمق التحدي', '🎯 تحديد الطموح', '🏢 سياق الشركة', '📋 النتيجة'];
+        const depth = { duration: '', impact: 5, tried: '', age: '', teamSize: '', teamSizeKey: 'solo', toolExp: '' };
+        const deepDiagAnswers = {};
+        const TOTAL_STEPS = 7;
+        const stepLabels = ['', '🧭 نقطة البداية', '😓 تحديد التحديات', '🔬 عمق التحدي', '🎯 تحديد الطموح', '🏢 سياق الشركة', '🔬 التشخيص المعمّق', '📋 النتيجة'];
 
         // ===== 8 COMPOUND PATTERNS =====
         const PATTERNS = {
@@ -1509,6 +1650,23 @@
             if (depth.duration === 'أكثر من سنة') { behavior.struggling += 2; }
             if (depth.previousSolution === 'لا، أول مرة') { behavior.cautious += 1; }
 
+            // === التشخيص المعمّق (إن وُجد) ===
+            const ddRes = getDeepDiagResults();
+            if (ddRes) {
+                // نتائج التشخيص تعزز دقة الكشف
+                if (ddRes.overallPct < 30) { behavior.struggling += 4; }
+                else if (ddRes.overallPct < 50) { behavior.struggling += 2; behavior.chaotic += 1; }
+                else if (ddRes.overallPct >= 75) { behavior.ambitious += 3; }
+                else if (ddRes.overallPct >= 60) { behavior.ambitious += 1; }
+
+                // أضعف محور يؤثر على التشخيص
+                if (ddRes.weakest && ddRes.weakest.pct < 40) {
+                    if (ddRes.weakest.name === 'الموارد') behavior.financial += 2;
+                    if (ddRes.weakest.name === 'الهيكل') behavior.chaotic += 2;
+                    if (ddRes.weakest.name === 'الاستراتيجية') behavior.cautious += 2;
+                }
+            }
+
             // === Combine: Stage × Behavior ===
             const topStage = Object.entries(stage).sort((a, b) => b[1] - a[1])[0][0];
             const topBehavior = Object.entries(behavior).sort((a, b) => b[1] - a[1])[0][0];
@@ -1556,6 +1714,480 @@
             if (recs.length === 0)
                 recs.push({ icon: '🧭', text: 'ابدأ بالتشخيص الاستراتيجي لتحديد أولوياتك', tool: 'تشخيص' });
             return recs.slice(0, 5);
+        }
+
+        // ═══════════════════════════════════════════════
+        // ===== بنك أسئلة التشخيص المعمّق (25 سؤال) =====
+        // ═══════════════════════════════════════════════
+
+        const DEEP_DIAG_BANK = {
+            // ═══ محور 1: الاستراتيجية (5 أسئلة) ═══
+            strategy: [
+                {
+                    id: 'strat_1', axis: 'الاستراتيجية', axisIcon: '🎯',
+                    q: 'هل لديك خطة استراتيجية مكتوبة للسنتين القادمتين؟',
+                    opts: [
+                        { v: 1, t: 'لا يوجد أي خطة مكتوبة', icon: '🔴' },
+                        { v: 2, t: 'نعم، لكنها قديمة أو غير مُفعَّلة', icon: '🟡' },
+                        { v: 3, t: 'نعم، ونُحدِّثها سنوياً', icon: '🟢' },
+                        { v: 4, t: 'نعم، ونُتابعها ربع سنوياً مع مقاييس', icon: '⭐' }
+                    ]
+                },
+                {
+                    id: 'strat_2', axis: 'الاستراتيجية', axisIcon: '🎯',
+                    q: 'كيف تُحدِّد أولويات الشركة؟',
+                    opts: [
+                        { v: 1, t: 'المدير يقرر بشكل فردي', icon: '🔴' },
+                        { v: 2, t: 'اجتماعات غير منظمة', icon: '🟡' },
+                        { v: 3, t: 'عملية واضحة لكن غير مُوثَّقة', icon: '🟢' },
+                        { v: 4, t: 'نظام OKRs أو نظام مُوثَّق واضح', icon: '⭐' }
+                    ]
+                },
+                {
+                    id: 'strat_3', axis: 'الاستراتيجية', axisIcon: '🎯',
+                    q: 'هل الفرق تعرف أهدافها وكيف ترتبط بالأهداف العامة؟',
+                    opts: [
+                        { v: 1, t: 'لا، كل واحد يعمل لحاله', icon: '🔴' },
+                        { v: 2, t: 'بعض الفرق تعرف', icon: '🟡' },
+                        { v: 3, t: 'نعم، لكن الارتباط غير واضح', icon: '🟢' },
+                        { v: 4, t: 'نعم، كل فريق يرى تأثيره على الأهداف الكبرى', icon: '⭐' }
+                    ]
+                },
+                {
+                    id: 'strat_4', axis: 'الاستراتيجية', axisIcon: '🎯',
+                    q: 'كيف تتعامل مع التغييرات المفاجئة في السوق؟',
+                    opts: [
+                        { v: 1, t: 'رد فعل عشوائي', icon: '🔴' },
+                        { v: 2, t: 'اجتماعات طارئة بدون منهجية', icon: '🟡' },
+                        { v: 3, t: 'فريق محدد يتولى الأزمات', icon: '🟢' },
+                        { v: 4, t: 'نظام مرن للتكييف السريع مع المتغيرات', icon: '⭐' }
+                    ]
+                },
+                {
+                    id: 'strat_5', axis: 'الاستراتيجية', axisIcon: '🎯',
+                    q: 'هل تُجري مراجعة استراتيجية دورية؟',
+                    opts: [
+                        { v: 1, t: 'نادراً أو أبداً', icon: '🔴' },
+                        { v: 2, t: 'سنوياً', icon: '🟡' },
+                        { v: 3, t: 'نصف سنوياً', icon: '🟢' },
+                        { v: 4, t: 'ربع سنوياً مع مقاييس واضحة', icon: '⭐' }
+                    ]
+                }
+            ],
+
+            // ═══ محور 2: الهيكل التنظيمي (5 أسئلة) ═══
+            structure: [
+                {
+                    id: 'struct_1', axis: 'الهيكل', axisIcon: '🏗️',
+                    q: 'كيف تتم عملية اتخاذ القرار في القضايا الكبرى؟',
+                    opts: [
+                        { v: 1, t: 'شخص واحد يقرر كل شيء', icon: '🔴' },
+                        { v: 2, t: 'مجلس إدارة غير منتظم', icon: '🟡' },
+                        { v: 3, t: 'لجان متخصصة لكن غير مُوثَّقة', icon: '🟢' },
+                        { v: 4, t: 'نظام حوكمة واضح ومُوثَّق', icon: '⭐' }
+                    ]
+                },
+                {
+                    id: 'struct_2', axis: 'الهيكل', axisIcon: '🏗️',
+                    q: 'هل تواجه تأخيراً في تنفيذ القرارات؟',
+                    opts: [
+                        { v: 1, t: 'دائماً — القرارات تُنسى أو تتأخر كثيراً', icon: '🔴' },
+                        { v: 2, t: 'غالباً — التنفيذ بطيء', icon: '🟡' },
+                        { v: 3, t: 'أحياناً — حسب القرار', icon: '🟢' },
+                        { v: 4, t: 'نادراً — لدينا نظام تنفيذ فعّال', icon: '⭐' }
+                    ]
+                },
+                {
+                    id: 'struct_3', axis: 'الهيكل', axisIcon: '🏗️',
+                    q: 'كيف يتم التواصل بين الإدارة العليا والموظفين؟',
+                    opts: [
+                        { v: 1, t: 'لا يوجد تواصل منظم', icon: '🔴' },
+                        { v: 2, t: 'بريد إلكتروني واجتماعات نادرة', icon: '🟡' },
+                        { v: 3, t: 'اجتماعات شهرية أو ربع سنوية', icon: '🟢' },
+                        { v: 4, t: 'قنوات متعددة وشفافية كاملة', icon: '⭐' }
+                    ]
+                },
+                {
+                    id: 'struct_4', axis: 'الهيكل', axisIcon: '🏗️',
+                    q: 'هل الأدوار والمسؤوليات واضحة للجميع؟',
+                    opts: [
+                        { v: 1, t: 'غير واضحة — تداخل وفوضى', icon: '🔴' },
+                        { v: 2, t: 'واضحة للبعض فقط', icon: '🟡' },
+                        { v: 3, t: 'مُوثَّقة لكن غير مُحدَّثة', icon: '🟢' },
+                        { v: 4, t: 'مُوثَّقة ومُحدَّثة ومفهومة للجميع', icon: '⭐' }
+                    ]
+                },
+                {
+                    id: 'struct_5', axis: 'الهيكل', axisIcon: '🏗️',
+                    q: 'كيف تُدير الأداء الفردي والفريقي؟',
+                    opts: [
+                        { v: 1, t: 'لا يوجد نظام تقييم', icon: '🔴' },
+                        { v: 2, t: 'تقييم سنوي شكلي', icon: '🟡' },
+                        { v: 3, t: 'تقييم نصف سنوي مع أهداف', icon: '🟢' },
+                        { v: 4, t: 'نظام متكامل: أهداف + تغذية راجعة + تطوير', icon: '⭐' }
+                    ]
+                }
+            ],
+
+            // ═══ محور 3: الثقافة (4 أسئلة) ═══
+            culture: [
+                {
+                    id: 'cult_1', axis: 'الثقافة', axisIcon: '💎',
+                    q: 'هل القيم المؤسسية واضحة ومُعاشة في الشركة؟',
+                    opts: [
+                        { v: 1, t: 'لا يوجد قيم مكتوبة', icon: '🔴' },
+                        { v: 2, t: 'مكتوبة لكن لا أحد يتبعها', icon: '🟡' },
+                        { v: 3, t: 'مكتوبة ومعروفة لكن التطبيق متفاوت', icon: '🟢' },
+                        { v: 4, t: 'مُعاشة يومياً وتؤثر على القرارات', icon: '⭐' }
+                    ]
+                },
+                {
+                    id: 'cult_2', axis: 'الثقافة', axisIcon: '💎',
+                    q: 'كيف تتعامل الشركة مع الأخطاء والفشل؟',
+                    opts: [
+                        { v: 1, t: 'عقاب ولوم — الموظفين يخفون الأخطاء', icon: '🔴' },
+                        { v: 2, t: 'يتم التجاهل بدون تعلّم', icon: '🟡' },
+                        { v: 3, t: 'يتم النقاش لكن بدون نظام واضح', icon: '🟢' },
+                        { v: 4, t: 'ثقافة تعلّم: كل خطأ = فرصة تحسين مُوثَّقة', icon: '⭐' }
+                    ]
+                },
+                {
+                    id: 'cult_3', axis: 'الثقافة', axisIcon: '💎',
+                    q: 'كيف تصف ولاء والتزام الموظفين؟',
+                    opts: [
+                        { v: 1, t: 'معدل دوران عالي — الناس تترك بسرعة', icon: '🔴' },
+                        { v: 2, t: 'متوسط — بعضهم ملتزم وبعضهم لا', icon: '🟡' },
+                        { v: 3, t: 'جيد — أغلب الفريق ملتزم', icon: '🟢' },
+                        { v: 4, t: 'ممتاز — فخر بالانتماء + مبادرات طوعية', icon: '⭐' }
+                    ]
+                },
+                {
+                    id: 'cult_4', axis: 'الثقافة', axisIcon: '💎',
+                    q: 'هل الموظفون مُطّلعون على أداء الشركة ونتائجها؟',
+                    opts: [
+                        { v: 1, t: 'لا — معلومات سرية عند الإدارة فقط', icon: '🔴' },
+                        { v: 2, t: 'يعرفون نتائج قسمهم فقط', icon: '🟡' },
+                        { v: 3, t: 'يُشارَكون نتائج عامة بشكل دوري', icon: '🟢' },
+                        { v: 4, t: 'شفافية كاملة مع لوحات متاحة للجميع', icon: '⭐' }
+                    ]
+                }
+            ],
+
+            // ═══ محور 4: الأداء (4 أسئلة) ═══
+            performance: [
+                {
+                    id: 'perf_1', axis: 'الأداء', axisIcon: '📈',
+                    q: 'هل لديك مؤشرات أداء (KPIs) واضحة ومُتابَعة؟',
+                    opts: [
+                        { v: 1, t: 'لا يوجد مؤشرات محددة', icon: '🔴' },
+                        { v: 2, t: 'نعم لكنها غير مُتابَعة بانتظام', icon: '🟡' },
+                        { v: 3, t: 'مُتابَعة شهرياً لكن بدون تحليل عميق', icon: '🟢' },
+                        { v: 4, t: 'Dashboard لحظي مع تنبيهات وتحليل اتجاهات', icon: '⭐' }
+                    ]
+                },
+                {
+                    id: 'perf_2', axis: 'الأداء', axisIcon: '📈',
+                    q: 'كيف تقيس الكفاءة التشغيلية؟',
+                    opts: [
+                        { v: 1, t: 'لا نقيسها — نعتمد على الإحساس', icon: '🔴' },
+                        { v: 2, t: 'نقيس بعض الأشياء يدوياً (Excel)', icon: '🟡' },
+                        { v: 3, t: 'نظام جزئي لقياس الإنتاجية', icon: '🟢' },
+                        { v: 4, t: 'نظام متكامل: تكلفة × جودة × وقت', icon: '⭐' }
+                    ]
+                },
+                {
+                    id: 'perf_3', axis: 'الأداء', axisIcon: '📈',
+                    q: 'ما معدل نمو الإيرادات خلال آخر سنتين؟',
+                    opts: [
+                        { v: 1, t: 'انخفاض أو ثبات', icon: '🔴' },
+                        { v: 2, t: 'نمو بسيط (أقل من 10%)', icon: '🟡' },
+                        { v: 3, t: 'نمو جيد (10-30%)', icon: '🟢' },
+                        { v: 4, t: 'نمو قوي (أكثر من 30%)', icon: '⭐' }
+                    ]
+                },
+                {
+                    id: 'perf_4', axis: 'الأداء', axisIcon: '📈',
+                    q: 'هل تُجري مقارنة أداء مع المنافسين (Benchmarking)؟',
+                    opts: [
+                        { v: 1, t: 'لا — لا نعرف مستوانا مقارنة بالسوق', icon: '🔴' },
+                        { v: 2, t: 'معرفة عامة بدون أرقام دقيقة', icon: '🟡' },
+                        { v: 3, t: 'مقارنة سنوية مع بعض المنافسين', icon: '🟢' },
+                        { v: 4, t: 'تحليل تنافسي دوري مع مقاييس قطاعية', icon: '⭐' }
+                    ]
+                }
+            ],
+
+            // ═══ محور 5: الموارد (4 أسئلة) ═══
+            resources: [
+                {
+                    id: 'res_1', axis: 'الموارد', axisIcon: '💰',
+                    q: 'كيف تصف الوضع المالي للشركة؟',
+                    opts: [
+                        { v: 1, t: 'أزمة سيولة — نكاد لا نغطي المصاريف', icon: '🔴' },
+                        { v: 2, t: 'مستقر لكن بدون احتياطيات', icon: '🟡' },
+                        { v: 3, t: 'جيد — هناك فائض معقول', icon: '🟢' },
+                        { v: 4, t: 'ممتاز — احتياطيات + ميزانية للتطوير', icon: '⭐' }
+                    ]
+                },
+                {
+                    id: 'res_2', axis: 'الموارد', axisIcon: '💰',
+                    q: 'هل لديك فريق كافٍ ومؤهل لتنفيذ الاستراتيجية؟',
+                    opts: [
+                        { v: 1, t: 'نقص حاد — نحتاج توظيف كثير', icon: '🔴' },
+                        { v: 2, t: 'نقص في بعض التخصصات المهمة', icon: '🟡' },
+                        { v: 3, t: 'الفريق كافٍ لكن يحتاج تطوير', icon: '🟢' },
+                        { v: 4, t: 'فريق قوي ومؤهل مع خطة تطوير', icon: '⭐' }
+                    ]
+                },
+                {
+                    id: 'res_3', axis: 'الموارد', axisIcon: '💰',
+                    q: 'ما مستوى البنية التقنية والرقمية في الشركة؟',
+                    opts: [
+                        { v: 1, t: 'بدائية — أغلب العمل يدوي وورقي', icon: '🔴' },
+                        { v: 2, t: 'بعض الأنظمة لكن غير متكاملة', icon: '🟡' },
+                        { v: 3, t: 'أنظمة جيدة تغطي أغلب العمليات', icon: '🟢' },
+                        { v: 4, t: 'متقدمة — أتمتة كاملة + تحليلات ذكية', icon: '⭐' }
+                    ]
+                },
+                {
+                    id: 'res_4', axis: 'الموارد', axisIcon: '💰',
+                    q: 'هل تستثمر في تدريب وتطوير الموظفين؟',
+                    opts: [
+                        { v: 1, t: 'لا يوجد ميزانية تدريب', icon: '🔴' },
+                        { v: 2, t: 'تدريبات متفرقة حسب الحاجة', icon: '🟡' },
+                        { v: 3, t: 'خطة تدريب سنوية لبعض الفرق', icon: '🟢' },
+                        { v: 4, t: 'برنامج تطوير شامل لكل موظف', icon: '⭐' }
+                    ]
+                }
+            ],
+
+            // ═══ محور 6: البيئة الخارجية (3 أسئلة) ═══
+            external: [
+                {
+                    id: 'ext_1', axis: 'الخارج', axisIcon: '🌍',
+                    q: 'كيف تصف موقعك في السوق مقارنة بالمنافسين؟',
+                    opts: [
+                        { v: 1, t: 'ضعيفة — المنافسين يسبقوننا بكثير', icon: '🔴' },
+                        { v: 2, t: 'متوسطة — وجود لكن بدون تميز واضح', icon: '🟡' },
+                        { v: 3, t: 'قوية — معروفين ولنا حصة جيدة', icon: '🟢' },
+                        { v: 4, t: 'رائدة — من أقوى اللاعبين في السوق', icon: '⭐' }
+                    ]
+                },
+                {
+                    id: 'ext_2', axis: 'الخارج', axisIcon: '🌍',
+                    q: 'هل تتابع التغيرات في بيئتك الخارجية بشكل منظم؟',
+                    opts: [
+                        { v: 1, t: 'لا — ما نتابع شي', icon: '🔴' },
+                        { v: 2, t: 'متابعة عامة من الأخبار والسوشل ميديا', icon: '🟡' },
+                        { v: 3, t: 'تقارير دورية عن بعض الجوانب', icon: '🟢' },
+                        { v: 4, t: 'نظام رصد شامل (سوقي + تشريعي + تقني)', icon: '⭐' }
+                    ]
+                },
+                {
+                    id: 'ext_3', axis: 'الخارج', axisIcon: '🌍',
+                    q: 'هل حددت فرص نمو أو توسع جديدة؟',
+                    opts: [
+                        { v: 1, t: 'لا — نركز على البقاء فقط', icon: '🔴' },
+                        { v: 2, t: 'أفكار عامة بدون دراسة', icon: '🟡' },
+                        { v: 3, t: 'فرص محددة قيد الدراسة', icon: '🟢' },
+                        { v: 4, t: 'فرص مدروسة مع خطة تنفيذ وموارد مخصصة', icon: '⭐' }
+                    ]
+                }
+            ]
+        };
+
+        // ═══ إعدادات حسب حجم الشركة ═══
+        const TEAM_SIZE_CONFIG = {
+            solo: { count: 0, axes: [], label: 'فرد', desc: 'لا يحتاج تشخيص معمّق' },
+            tiny: { count: 5, axes: ['strategy', 'structure'], label: '2-10', desc: '5 أسئلة — استراتيجية + هيكل' },
+            small: { count: 10, axes: ['strategy', 'structure', 'culture', 'performance'], label: '11-50', desc: '10 أسئلة — 4 محاور' },
+            medium: { count: 15, axes: ['strategy', 'structure', 'culture', 'performance', 'resources'], label: '51-200', desc: '15 سؤال — 5 محاور' },
+            large: { count: 20, axes: ['strategy', 'structure', 'culture', 'performance', 'resources', 'external'], label: '200+', desc: '20 سؤال — 6 محاور شاملة' }
+        };
+
+        // ═══ حالة التشخيص المعمّق ═══
+        let ddQuestions = [];
+        let ddCurrentIdx = 0;
+
+        // ═══ اختيار حجم الفريق (مع تخزين المفتاح) ═══
+        function pickTeamSize(el, label, key) {
+            el.parentElement.querySelectorAll('.depth-opt').forEach(o => o.classList.remove('sel'));
+            el.classList.add('sel');
+            depth.teamSize = label;
+            depth.teamSizeKey = key;
+        }
+
+        // ═══ الانتقال للتشخيص المعمّق ═══
+        function goToDeepDiag() {
+            const sizeKey = depth.teamSizeKey || 'solo';
+            const config = TEAM_SIZE_CONFIG[sizeKey];
+
+            if (!config || config.count === 0) {
+                // فرد أو لم يُحدد → تخطى التشخيص المعمّق
+                go(7);
+                return;
+            }
+
+            // بناء قائمة الأسئلة المناسبة
+            ddQuestions = [];
+            const axisQuestionCounts = distributeQuestions(config.count, config.axes);
+
+            config.axes.forEach((axis, idx) => {
+                const questions = DEEP_DIAG_BANK[axis] || [];
+                const take = axisQuestionCounts[idx];
+                ddQuestions.push(...questions.slice(0, take));
+            });
+
+            // تحديث الوصف
+            document.getElementById('deepDiagDesc').innerHTML =
+                `<strong>${config.desc}</strong> — بناءً على حجم شركتك (${config.label} شخص)`;
+            document.getElementById('ddqCount').textContent = `${ddQuestions.length} سؤال`;
+
+            // عرض أول سؤال
+            ddCurrentIdx = 0;
+            renderDeepDiagQuestion();
+            go(6);
+        }
+
+        // ═══ توزيع الأسئلة على المحاور ═══
+        function distributeQuestions(total, axes) {
+            const base = Math.floor(total / axes.length);
+            let remainder = total % axes.length;
+            return axes.map(() => {
+                const count = base + (remainder > 0 ? 1 : 0);
+                if (remainder > 0) remainder--;
+                return count;
+            });
+        }
+
+        // ═══ عرض سؤال التشخيص المعمّق ═══
+        function renderDeepDiagQuestion() {
+            if (ddQuestions.length === 0) return;
+            const q = ddQuestions[ddCurrentIdx];
+            const answered = deepDiagAnswers[q.id] !== undefined;
+
+            let html = `
+                <div class="depth-q" style="animation: slideIn 0.35s ease both">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+                        <span style="font-size:12px;padding:3px 10px;border-radius:8px;background:rgba(102,126,234,0.1);color:var(--primary);font-weight:700">${q.axisIcon} ${q.axis}</span>
+                        <span style="font-size:11px;color:var(--text-muted)">السؤال ${ddCurrentIdx + 1} من ${ddQuestions.length}</span>
+                    </div>
+                    <label style="font-size:16px;line-height:1.7">${q.q}</label>
+                    <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+            `;
+
+            q.opts.forEach(opt => {
+                const selected = deepDiagAnswers[q.id] === opt.v;
+                html += `
+                    <div class="depth-opt${selected ? ' sel' : ''}" 
+                         onclick="pickDDOption('${q.id}', ${opt.v}, this)"
+                         style="display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer;border-radius:12px;border:2px solid ${selected ? 'var(--primary)' : 'rgba(255,255,255,0.08)'};background:${selected ? 'rgba(102,126,234,0.08)' : 'rgba(255,255,255,0.03)'};transition:all .3s">
+                        <span style="font-size:16px;flex-shrink:0">${opt.icon}</span>
+                        <span style="flex:1;font-size:13px;font-weight:600;line-height:1.5">${opt.t}</span>
+                        ${selected ? '<i class="bi bi-check-circle-fill" style="color:var(--primary);flex-shrink:0"></i>' : ''}
+                    </div>
+                `;
+            });
+
+            html += `</div></div>`;
+
+            document.getElementById('deepDiagContainer').innerHTML = html;
+
+            // تحديث شريط التقدم
+            const answeredCount = Object.keys(deepDiagAnswers).length;
+            const pct = Math.round((answeredCount / ddQuestions.length) * 100);
+            document.getElementById('ddProgressFill').style.width = pct + '%';
+            document.getElementById('ddqProgress').textContent = `${answeredCount} / ${ddQuestions.length}`;
+
+            // أزرار التنقل
+            document.getElementById('ddBackBtn').textContent = '';
+            document.getElementById('ddBackBtn').innerHTML = ddCurrentIdx === 0
+                ? '<i class="bi bi-arrow-right"></i> العودة للسياق'
+                : '<i class="bi bi-arrow-right"></i> السؤال السابق';
+
+            const isLast = ddCurrentIdx === ddQuestions.length - 1;
+            const allAnswered = ddQuestions.every(q => deepDiagAnswers[q.id] !== undefined);
+            document.getElementById('ddNextBtn').disabled = !answered;
+            document.getElementById('ddNextBtn').innerHTML = isLast
+                ? 'اكتشف مسارك <i class="bi bi-arrow-left"></i>'
+                : 'التالي <i class="bi bi-arrow-left"></i>';
+        }
+
+        // ═══ اختيار إجابة في التشخيص المعمّق ═══
+        function pickDDOption(qId, value, el) {
+            deepDiagAnswers[qId] = value;
+            renderDeepDiagQuestion();
+
+            // 💡 انتقل تلقائياً للسؤال التالي بعد الاختيار
+            setTimeout(() => {
+                if (ddCurrentIdx < ddQuestions.length - 1) {
+                    ddCurrentIdx++;
+                    renderDeepDiagQuestion();
+                } else {
+                    // آخر سؤال — فعّل زر النتيجة
+                    document.getElementById('ddNextBtn').disabled = false;
+                }
+            }, 350);
+        }
+
+        // ═══ التنقل في التشخيص المعمّق ═══
+        function ddNext() {
+            if (ddCurrentIdx < ddQuestions.length - 1) {
+                ddCurrentIdx++;
+                renderDeepDiagQuestion();
+            } else {
+                // الانتقال للنتيجة
+                go(7);
+            }
+        }
+
+        function ddPrev() {
+            if (ddCurrentIdx > 0) {
+                ddCurrentIdx--;
+                renderDeepDiagQuestion();
+            } else {
+                go(5);
+            }
+        }
+
+        // ═══ حساب نتائج التشخيص المعمّق ═══
+        function getDeepDiagResults() {
+            if (ddQuestions.length === 0) return null;
+
+            const axisScores = {};
+            const axisMaxes = {};
+
+            ddQuestions.forEach(q => {
+                const axisName = q.axis;
+                if (!axisScores[axisName]) {
+                    axisScores[axisName] = 0;
+                    axisMaxes[axisName] = 0;
+                }
+                axisScores[axisName] += (deepDiagAnswers[q.id] || 1);
+                axisMaxes[axisName] += 4;
+            });
+
+            const axes = Object.keys(axisScores).map(name => ({
+                name,
+                score: axisScores[name],
+                max: axisMaxes[name],
+                pct: Math.round((axisScores[name] / axisMaxes[name]) * 100)
+            }));
+
+            const totalScore = Object.values(axisScores).reduce((a, b) => a + b, 0);
+            const totalMax = Object.values(axisMaxes).reduce((a, b) => a + b, 0);
+            const overallPct = Math.round((totalScore / totalMax) * 100);
+
+            let maturityLevel;
+            if (overallPct >= 80) maturityLevel = { name: 'متقدم', color: '#22c55e', icon: '⭐', desc: 'شركتك ناضجة استراتيجياً — ركّز على التميز والابتكار' };
+            else if (overallPct >= 60) maturityLevel = { name: 'متوسط', color: '#f59e0b', icon: '🟡', desc: 'أساس جيد — لكن هناك فجوات مهمة تحتاج معالجة' };
+            else if (overallPct >= 40) maturityLevel = { name: 'مبتدئ', color: '#ef4444', icon: '🔴', desc: 'هناك تحديات كبيرة — ابدأ بالأساسيات' };
+            else maturityLevel = { name: 'حرج', color: '#dc2626', icon: '🆘', desc: 'وضع حرج — تحتاج تدخل فوري في عدة محاور' };
+
+            // أضعف محور
+            const weakest = axes.reduce((a, b) => a.pct < b.pct ? a : b);
+
+            return { axes, totalScore, totalMax, overallPct, maturityLevel, weakest, answers: deepDiagAnswers };
         }
 
         // ===== INTERACTIONS =====
@@ -1677,7 +2309,7 @@
             document.getElementById('stepInd').textContent = `الخطوة ${step} من ${TOTAL_STEPS}`;
             document.getElementById('progLabel').textContent = stepLabels[step] || '';
 
-            if (step === 6) buildResult();
+            if (step === 7) buildResult();
 
             // 🤖 Task 1.3: عرض تشخيص النمط عند الانتقال من الطموح (4) للسياق (5)
             if (step === 5 && pains.length > 0 && ambs.length > 0 && window.__aiAdvisor && window.__aiAdvisor.showPatternDiagnosis) {
@@ -1815,6 +2447,44 @@
                 `<li>${r.icon} <span style="flex:1">${r.text}</span> <span style="font-size:10px;padding:2px 8px;border-radius:6px;background:rgba(102,126,234,0.1);color:var(--primary);font-weight:700">${r.tool}</span></li>`
             ).join('');
 
+            // ═══ نتائج التشخيص المعمّق ═══
+            const ddResults = getDeepDiagResults();
+            if (ddResults) {
+                const ddHtml = `
+                    <div class="rbox" style="border:2px solid ${ddResults.maturityLevel.color}35;background:${ddResults.maturityLevel.color}08;margin-top:16px">
+                        <div style="text-align:center;margin-bottom:16px">
+                            <div style="font-size:28px;margin-bottom:4px">${ddResults.maturityLevel.icon}</div>
+                            <div style="font-size:18px;font-weight:800;color:${ddResults.maturityLevel.color};margin-bottom:4px">مستوى النضج: ${ddResults.maturityLevel.name}</div>
+                            <div style="font-size:13px;color:var(--text-muted)">${ddResults.maturityLevel.desc}</div>
+                            <div style="font-size:28px;font-weight:900;color:${ddResults.maturityLevel.color};margin-top:8px">${ddResults.overallPct}%</div>
+                        </div>
+
+                        <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px">
+                            ${ddResults.axes.map(a => {
+                    const color = a.pct >= 75 ? '#22c55e' : a.pct >= 50 ? '#f59e0b' : '#ef4444';
+                    const isWeakest = a.name === ddResults.weakest.name;
+                    return `
+                                    <div style="padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid ${isWeakest ? color + '40' : 'rgba(255,255,255,0.06)'}">
+                                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                                            <span style="font-size:13px;font-weight:700">${a.name}</span>
+                                            <div style="display:flex;align-items:center;gap:8px">
+                                                ${isWeakest ? '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(239,68,68,0.15);color:#ef4444;font-weight:700">⚠️ يحتاج تحسين</span>' : ''}
+                                                <span style="font-size:12px;font-weight:700;color:${color}">${a.pct}%</span>
+                                            </div>
+                                        </div>
+                                        <div style="height:6px;background:rgba(255,255,255,0.06);border-radius:10px;overflow:hidden">
+                                            <div style="height:100%;width:${a.pct}%;background:${color};border-radius:10px;transition:width 0.6s ease"></div>
+                                        </div>
+                                    </div>
+                                `;
+                }).join('')}
+                        </div>
+                    </div>
+                `;
+                // أضف بعد التوصيات
+                document.getElementById('recBox').insertAdjacentHTML('afterend', ddHtml);
+            }
+
             // Quick Goals
             const goals = QUICK_GOALS[patternKey] || QUICK_GOALS.growing;
             const perspColors = { FINANCIAL: '#22c55e', CUSTOMER: '#38bdf8', INTERNAL: '#facc15', LEARNING: '#a78bfa' };
@@ -1833,7 +2503,7 @@
 
             // Path
             const phases = [
-                { icon: '🏗️', name: 'التأسيس', desc: 'بيانات المنظمة والهيكلة', color: '#667eea', status: '👈 الخطوة التالية', open: true },
+                { icon: '🏗️', name: 'التأسيس', desc: 'إعداد المنظمة', color: '#667eea', status: '👈 التالي', open: true },
                 { icon: '🔍', name: 'التشخيص', desc: 'SWOT · PESTEL · Porter', color: '#f59e0b', status: 'بعد التأسيس', open: false },
                 { icon: '🎯', name: 'التخطيط', desc: 'أهداف · KPIs · توجهات', color: '#7c3aed', status: '🔒', open: false },
                 { icon: '🚀', name: 'التنفيذ', desc: 'مبادرات · مشاريع · مهام', color: '#059669', status: '🔒', open: false },
@@ -1849,6 +2519,9 @@
                     <div style="font-size:11px;font-weight:700;color:${ph.open ? 'var(--success)' : 'var(--text-muted)'}">${ph.status}</div>
                 </div>
             `).join('');
+
+            // عرض الباقة المناسبة
+            renderPricing(patternKey);
         }
 
         // ===== PAIN / AMBITION → API MAPPING =====
@@ -1875,7 +2548,7 @@
         function getDraftData() {
             return {
                 pains, ambs, customPainText, customAmbText, depth,
-                currentStep,
+                currentStep, deepDiagAnswers, ddCurrentIdx,
                 painTxt: document.getElementById('painTxt')?.value || '',
                 ambTxt: document.getElementById('ambTxt')?.value || '',
                 savedAt: new Date().toISOString()
@@ -1923,6 +2596,10 @@
                 customPainText = d.customPainText || '';
                 customAmbText = d.customAmbText || '';
                 if (d.depth) Object.assign(depth, d.depth);
+
+                // Restore deep diagnostic answers
+                if (d.deepDiagAnswers) Object.assign(deepDiagAnswers, d.deepDiagAnswers);
+                if (d.ddCurrentIdx !== undefined) ddCurrentIdx = d.ddCurrentIdx;
 
                 // Restore UI selections - pains
                 pains.forEach(v => {
@@ -2004,6 +2681,67 @@
         setInterval(() => saveDraftSilent(), 30000);
 
         // ===== SAVE & GO =====
+        // ═══ منطق اقتراح الباقة ═══
+        const PLAN_RECOMMENDATION = {
+            'nascent_struggling': { plan: 'PRO', icon: '🚀', name: 'احترافي PRO', price: 149, reason: 'تحتاج كل الأدوات لإنقاذ وضعك بسرعة', features: ['5 كيانات', 'كل أدوات التحليل (SWOT + Porter + PESTEL)', '10 أهداف + 20 مؤشر', 'المبادرات والمتابعة', 'تقارير احترافية', 'دعم أولوية'] },
+            'nascent_cautious': { plan: 'STARTER', icon: '💎', name: 'مبتدئ STARTER', price: 49, reason: 'ابدأ صح من الأول بأدوات بسيطة ومناسبة', features: ['2 كيانات', 'SWOT كامل', '3 أهداف + 5 مؤشرات', 'دعم عبر البريد'] },
+            'growing_chaotic': { plan: 'PRO', icon: '🚀', name: 'احترافي PRO', price: 149, reason: 'تحتاج تنظيم وهيكلة — الأدوات المتقدمة ضرورية', features: ['5 كيانات', 'كل أدوات التحليل', '10 أهداف + 20 مؤشر', 'المبادرات والمتابعة', 'تقارير احترافية', 'دعم أولوية'] },
+            'growing_ambitious': { plan: 'PRO', icon: '🚀', name: 'احترافي PRO', price: 149, reason: 'النمو يحتاج أدوات قوية للتخطيط والمتابعة', features: ['5 كيانات', 'كل أدوات التحليل', '10 أهداف + 20 مؤشر', 'المبادرات والمتابعة', 'تقارير احترافية', 'دعم أولوية'] },
+            'financial_struggling': { plan: 'PRO', icon: '🚀', name: 'احترافي PRO', price: 149, reason: 'ركّز على الإنقاذ المالي بأدوات تحليل متقدمة', features: ['5 كيانات', 'كل أدوات التحليل', '10 أهداف + 20 مؤشر', 'المبادرات والمتابعة', 'تقارير احترافية', 'دعم أولوية'] },
+            'mature_renewing': { plan: 'ENTERPRISE', icon: '🏢', name: 'مؤسسات ENTERPRISE', price: 499, reason: 'التجديد الاستراتيجي يحتاج ميزات متقدمة + AI', features: ['كيانات غير محدودة', 'كل الميزات المتقدمة', 'AI Advisor ذكي', 'التكاملات الخارجية', 'تقارير تنفيذية', 'دعم مخصص 24/7'] },
+            'mature_competitive': { plan: 'ENTERPRISE', icon: '🏢', name: 'مؤسسات ENTERPRISE', price: 499, reason: 'قيادة السوق تتطلب أقوى الأدوات', features: ['كيانات غير محدودة', 'كل الميزات المتقدمة', 'AI Advisor ذكي', 'التكاملات الخارجية', 'تقارير تنفيذية', 'دعم مخصص 24/7'] },
+            'default_strategic': { plan: 'PRO', icon: '🚀', name: 'احترافي PRO', price: 149, reason: 'الخيار الأمثل للتخطيط الاستراتيجي الشامل', features: ['5 كيانات', 'كل أدوات التحليل', '10 أهداف + 20 مؤشر', 'المبادرات والمتابعة', 'تقارير احترافية', 'دعم أولوية'] },
+        };
+
+        let selectedPlanId = null;
+
+        function renderPricing(patternKey) {
+            const rec = PLAN_RECOMMENDATION[patternKey] || PLAN_RECOMMENDATION['default_strategic'];
+            selectedPlanId = rec.plan;
+
+            document.getElementById('planIcon').textContent = rec.icon;
+            document.getElementById('planName').textContent = rec.name;
+            document.getElementById('planReason').textContent = rec.reason;
+            document.getElementById('planPriceOriginal').textContent = rec.price > 0 ? `${rec.price} ريال/شهر` : '';
+
+            const featuresHTML = rec.features.map(f =>
+                `<div style="display:flex;align-items:center;gap:8px;font-size:13px">
+                    <i class="bi bi-check-circle-fill" style="color:#22c55e;flex-shrink:0"></i>
+                    <span>${f}</span>
+                </div>`
+            ).join('');
+            document.getElementById('planFeatures').innerHTML = featuresHTML;
+
+            // تسليط الضوء على الباقة الموصى بها
+            document.querySelectorAll('.plan-mini').forEach(c => {
+                c.style.borderColor = c.dataset.plan === rec.plan ? 'rgba(102,126,234,0.5)' : 'rgba(255,255,255,0.08)';
+                c.style.borderWidth = c.dataset.plan === rec.plan ? '2px' : '1px';
+            });
+
+            localStorage.setItem('stratix_selected_plan', rec.plan);
+        }
+
+        function toggleAllPlans() {
+            const el = document.getElementById('allPlansGrid');
+            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function selectPlan(planId) {
+            selectedPlanId = planId;
+            document.querySelectorAll('.plan-mini').forEach(c => {
+                if (c.dataset.plan === planId) {
+                    c.style.borderColor = 'rgba(102,126,234,0.5)';
+                    c.style.borderWidth = '2px';
+                    c.style.background = 'rgba(102,126,234,0.08)';
+                } else {
+                    c.style.borderColor = 'rgba(255,255,255,0.08)';
+                    c.style.borderWidth = '1px';
+                    c.style.background = 'rgba(255,255,255,0.03)';
+                }
+            });
+            localStorage.setItem('stratix_selected_plan', planId);
+        }
+
         async function saveGo() {
             const patternKey = detectPattern();
             const data = {
@@ -2015,9 +2753,12 @@
                 patternKey,
                 pattern: PATTERNS[patternKey].name,
                 recommendations: getRecommendations(patternKey),
+                deepDiagnostic: getDeepDiagResults(),
+                selectedPlan: selectedPlanId || 'PRO',
                 timestamp: new Date().toISOString()
             };
             localStorage.setItem('painAmbition', JSON.stringify(data));
+            localStorage.setItem('stratix_selected_plan', selectedPlanId || 'PRO');
 
             // SWOT seeds from pain mapping
             const swotSeeds = { weaknesses: [], threats: [] };
@@ -2032,10 +2773,11 @@
 
             const token = localStorage.getItem('token');
 
-            // إذا المستخدم مو مسجل → وجّهه للتسجيل (البيانات محفوظة في localStorage)
+            // ═══ المسار الصحيح ═══
+            // 1. لو ما مسجل → سجّل أولاً
             if (!token) {
                 clearDraft();
-                window.location.href = '/login?tab=signup&from=pain-ambition';
+                window.location.href = '/login?tab=signup&from=diagnostic';
                 return;
             }
 
@@ -2047,7 +2789,15 @@
             document.getElementById('startBtn').disabled = true;
             document.getElementById('savingIndicator').style.display = 'block';
 
-            // 1. حفظ بيانات الألم والطموح في الباك إند
+            // 2. لو مسجل بس ما كمّل Onboarding → روح Onboarding
+            if (!user.onboardingCompleted || !entityId) {
+                clearDraft();
+                window.location.href = '/onboarding.html';
+                return;
+            }
+
+            // 3. لو مسجل ومكمّل Onboarding → احفظ البيانات وروح Dashboard
+            // حفظ بيانات الألم والطموح في الباك إند
             if (token && entityId) {
                 try {
                     await fetch('/api/user-progress/pain-ambition', {
@@ -2058,7 +2808,7 @@
                 } catch (e) { console.warn('Pain save error:', e); }
             }
 
-            // 1b. حفظ نمط الشركة في company-pattern API
+            // حفظ نمط الشركة في company-pattern API
             if (token && companyId) {
                 try {
                     const dominantPain = pains.length ? (PAIN_API_MAP[pains[0]] || pains[0]) : 'no-direction';
@@ -2079,7 +2829,7 @@
                 } catch (e) { console.warn('Company pattern save error:', e); }
             }
 
-            // 2. إنشاء الأهداف السريعة المختارة
+            // إنشاء الأهداف السريعة المختارة
             if (token && entityId) {
                 const goals = QUICK_GOALS[patternKey] || QUICK_GOALS.growing;
                 const checkboxes = document.querySelectorAll('#quickGoals input[type="checkbox"]');
@@ -2102,25 +2852,10 @@
                 }
             }
 
-            // Clear draft on success
             clearDraft();
 
-            // 3. تسجيل إكمال الـ Onboarding في الباك إند
-            if (token) {
-                try {
-                    await fetch('/api/auth/complete-onboarding', {
-                        method: 'POST',
-                        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
-                    });
-                    // Update local user data
-                    const localUser = JSON.parse(localStorage.getItem('user') || '{}');
-                    localUser.onboardingCompleted = true;
-                    localStorage.setItem('user', JSON.stringify(localUser));
-                } catch (e) { console.warn('Onboarding complete error:', e); }
-            }
-
-            // 4. Redirect to smart tools advisor — shows pattern-specific recommendations
-            window.location.href = '/tools.html';
+            // Redirect to Dashboard
+            window.location.href = '/dashboard.html';
         }
     </script>
     <script src="/assets/js/ai-advisor.js"></script>

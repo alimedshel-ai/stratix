@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ستارتكس - التقارير التلقائية</title>
     <meta name="description" content="توليد تقارير استراتيجية تلقائية جاهزة للطباعة">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
@@ -506,17 +508,32 @@
 
         @media print {
             body {
-                background: white;
-                color: #222
+                background: white !important;
+                color: #222 !important
             }
 
             .rpt-toolbar,
+            .rpt-header,
+            .rpt-templates,
+            .rpt-generate,
             .page-wrapper>*:not(.main-content) {
                 display: none !important
             }
 
+            .main-content {
+                margin: 0 !important;
+                padding: 0 !important
+            }
+
+            .rpt-preview {
+                display: block !important;
+                border: none !important;
+                background: white !important
+            }
+
             .rpt-doc {
-                padding: 20px
+                padding: 20px;
+                color: #222
             }
 
             .rpt-kpi,
@@ -524,6 +541,17 @@
             .rpt-chart,
             .rpt-rec {
                 border-color: #ddd
+            }
+
+            .rpt-kpi-val,
+            .rpt-section-title {
+                color: #222 !important
+            }
+
+            .rpt-summary-box {
+                background: #f8f9fa !important;
+                border-color: #ddd !important;
+                color: #222 !important
             }
         }
 
@@ -576,7 +604,8 @@
                     <div class="rpt-toolbar-actions">
                         <button class="rpt-tool-btn" onclick="window.print()"><i class="bi bi-printer"></i>
                             طباعة</button>
-                        <button class="rpt-tool-btn primary"><i class="bi bi-download"></i> تحميل PDF</button>
+                        <button class="rpt-tool-btn primary" id="downloadPdfBtn" onclick="downloadPDF()"><i
+                                class="bi bi-download"></i> تحميل PDF</button>
                     </div>
                 </div>
                 <div class="rpt-doc" id="reportDoc"></div>
@@ -621,6 +650,10 @@
             renderTemplates();
         }
 
+        // === API Data ===
+        let reportData = null;
+        const token = localStorage.getItem('token');
+
         // === Generate Report ===
         async function generateReport() {
             const btn = document.getElementById('generateBtn');
@@ -628,8 +661,19 @@
             btn.classList.add('generating');
             btn.innerHTML = '<i class="bi bi-hourglass-split"></i> جاري التوليد...';
 
-            // Simulate generation
-            await new Promise(r => setTimeout(r, 2000));
+            // Fetch real data from API
+            try {
+                if (token) {
+                    const res = await fetch('/api/dashboard/report-data', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (res.ok) {
+                        reportData = await res.json();
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not fetch report data, using mock:', e);
+            }
 
             const tmpl = templates.find(t => t.id === selectedTemplate);
             const period = document.getElementById('reportPeriod');
@@ -653,9 +697,13 @@
             }, 300);
         }
 
+        // Helper: is real data available?
+        function hasRealData() { return reportData && reportData.hasData; }
+
         function generateReportHTML(tmpl, period) {
             const today = new Date();
             const dateStr = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+            const entityName = hasRealData() ? (reportData.entity.displayName || reportData.entity.legalName) : 'ستارتكس';
 
             const reports = {
                 strategic: strategicReport,
@@ -668,10 +716,11 @@
 
             return `
         <div class="rpt-doc-header">
-          <div class="rpt-doc-logo">${tmpl.icon} <span>ستارتكس</span></div>
+          <div class="rpt-doc-logo">${tmpl.icon} <span>${entityName}</span></div>
           <h2 style="font-size:22px;font-weight:900;margin-bottom:4px">${tmpl.title}</h2>
           <div class="rpt-doc-subtitle">${period}</div>
           <div class="rpt-doc-date">تاريخ التوليد: ${dateStr} | سري — للاستخدام الداخلي</div>
+          ${!hasRealData() ? '<div style="margin-top:8px;padding:6px 14px;border-radius:8px;background:rgba(245,158,11,0.1);color:#f59e0b;font-size:11px;display:inline-block">⚠️ بيانات تجريبية — سجّل دخولك لعرض بياناتك الحقيقية</div>' : ''}
         </div>
         ${(reports[tmpl.id] || strategicReport)()}
       `;
@@ -679,21 +728,66 @@
 
         // === Report Content Generators ===
         function strategicReport() {
+            const d = reportData;
+            const health = hasRealData() ? d.healthScore : 78;
+            const objProg = hasRealData() ? d.overallProgress : 73;
+            const iniProg = hasRealData() ? (d.iniSummary.total > 0 ? Math.round((d.iniSummary.completed / d.iniSummary.total) * 100) : 0) : 65;
+            const custSat = hasRealData() ? (d.kpiSummary.total > 0 ? Math.round((d.kpiSummary.onTrack / d.kpiSummary.total) * 100) : 0) : 82;
+
+            const healthChange = hasRealData() ? '' : '+5';
+            const objChange = hasRealData() ? '' : '+8';
+            const iniChange = hasRealData() ? '' : '-3';
+            const custChange = hasRealData() ? '' : '+12';
+
+            // Objectives table
+            let objRows = '';
+            if (hasRealData() && d.objectives.length > 0) {
+                objRows = d.objectives.map(o => {
+                    const status = o.progress >= 80 ? 'متقدم' : o.progress >= 50 ? 'على المسار' : 'متأخر';
+                    return objRow(o.name, o.perspective, o.progress, status);
+                }).join('');
+            } else {
+                objRows = objRow('زيادة الإيرادات 25%', 'مالي', 82, 'متقدم') +
+                    objRow('تحسين رضا العملاء', 'عملاء', 78, 'على المسار') +
+                    objRow('تحسين الكفاءة التشغيلية', 'عمليات', 65, 'متأخر') +
+                    objRow('تطوير الكوادر القيادية', 'تعلم ونمو', 70, 'على المسار');
+            }
+
+            // Recommendations
+            let recsHtml = '';
+            if (hasRealData()) {
+                const recs = [];
+                if (d.iniSummary.overdue > 0) recs.push(recItem('🔴', `يوجد ${d.iniSummary.overdue} مبادرة متأخرة عن الموعد المحدد — مطلوب تسريع التنفيذ`, 'عاجل', 'var(--red)'));
+                if (d.kpiSummary.critical > 0) recs.push(recItem('🔴', `${d.kpiSummary.critical} مؤشرات أداء في المنطقة الحرجة — مراجعة فورية مطلوبة`, 'عاجل', 'var(--red)'));
+                if (d.kpiSummary.warning > 0) recs.push(recItem('🟡', `${d.kpiSummary.warning} مؤشرات في منطقة التحذير — يُنصح بمتابعة دقيقة`, 'مهم', 'var(--yellow)'));
+                if (d.kpiSummary.onTrack > 0) recs.push(recItem('🟢', `${d.kpiSummary.onTrack} مؤشرات أداء محققة للمستهدف — أداء ممتاز`, 'إيجابي', 'var(--green)'));
+                if (d.riskSummary.critical > 0) recs.push(recItem('🔴', `${d.riskSummary.critical} مخاطر حرجة تحتاج معالجة فورية`, 'حرج', 'var(--red)'));
+                if (recs.length === 0) recs.push(recItem('🟢', 'لا توجد مشكلات حرجة حالياً — استمر في المتابعة الدورية', 'جيد', 'var(--green)'));
+                recsHtml = recs.join('');
+            } else {
+                recsHtml = recItem('🔴', 'تسريع مبادرة التحول الرقمي — التأخير يؤثر على 3 أهداف أخرى', 'عاجل', 'var(--red)') +
+                    recItem('🟡', 'تعزيز فريق الكفاءة التشغيلية بـ 2 محللين إضافيين', 'مهم', 'var(--yellow)') +
+                    recItem('🟢', 'استثمار نجاح رضا العملاء في برنامج إحالة جديد', 'فرصة', 'var(--green)');
+            }
+
+            // Summary text
+            const summaryText = hasRealData()
+                ? `حققت المنظمة نسبة صحة استراتيجية <strong>${health}%</strong>. يوجد <strong>${d.kpiSummary.total}</strong> مؤشر أداء — منها <strong style="color:var(--green)">${d.kpiSummary.onTrack}</strong> محقق و<strong style="color:var(--red)">${d.kpiSummary.critical}</strong> في المنطقة الحرجة. تم إكمال <strong>${d.iniSummary.completed}</strong> من <strong>${d.iniSummary.total}</strong> مبادرة.${d.riskSummary.total > 0 ? ` يوجد <strong>${d.riskSummary.total}</strong> خطر مسجل — ${d.riskSummary.mitigated} تمت معالجتها.` : ''}`
+                : `حققت المنظمة أداءً <strong style="color:var(--green)">جيداً</strong> خلال الفترة بنسبة إنجاز إجمالية بلغت <strong>73%</strong>. تم إكمال <strong>5 من 8</strong> مبادرات رئيسية بنجاح. مؤشرات رضا العملاء أظهرت تحسناً ملحوظاً.`;
+
             return `
         <div class="rpt-section">
           <div class="rpt-section-title"><i class="bi bi-lightning" style="color:var(--primary)"></i> الملخص التنفيذي</div>
-          <div class="rpt-summary-box">
-            حققت المنظمة أداءً <strong style="color:var(--green)">جيداً</strong> خلال الفترة بنسبة إنجاز إجمالية بلغت <strong>73%</strong>. تم إكمال <strong>5 من 8</strong> مبادرات رئيسية بنجاح، فيما تواجه 3 مبادرات تأخيرات طفيفة. مؤشرات رضا العملاء أظهرت تحسناً ملحوظاً بنسبة <strong style="color:var(--green)">+12%</strong> عن الربع السابق. يُنصح بتركيز الجهود على المبادرات المتأخرة وتعزيز مؤشرات الكفاءة التشغيلية.
-          </div>
+          <div class="rpt-summary-box">${summaryText}</div>
         </div>
 
         <div class="rpt-section">
           <div class="rpt-section-title"><i class="bi bi-speedometer2" style="color:var(--green)"></i> المؤشرات الرئيسية</div>
           <div class="rpt-kpi-grid">
-            ${kpiCard('الصحة الاستراتيجية', 78, '%', '+5', 'green')}
-            ${kpiCard('إنجاز الأهداف', 73, '%', '+8', 'green')}
-            ${kpiCard('إنجاز المبادرات', 65, '%', '-3', 'red')}
-            ${kpiCard('رضا العملاء', 82, '%', '+12', 'green')}
+            ${kpiCard('الصحة الاستراتيجية', health, '%', healthChange, 'green')}
+            ${kpiCard('إنجاز الأهداف', objProg, '%', objChange, 'green')}
+            ${kpiCard('إنجاز المبادرات', iniProg, '%', iniChange, iniProg >= 60 ? 'green' : 'red')}
+            ${kpiCard('مؤشرات محققة', custSat, '%', custChange, 'green')}
           </div>
         </div>
 
@@ -701,175 +795,231 @@
           <div class="rpt-section-title"><i class="bi bi-bullseye" style="color:var(--primary)"></i> أداء الأهداف الاستراتيجية</div>
           <table class="rpt-table">
             <thead><tr><th>الهدف</th><th>المنظور</th><th>الإنجاز</th><th>الحالة</th></tr></thead>
-            <tbody>
-              ${objRow('زيادة الإيرادات 25%', 'مالي', 82, 'متقدم')}
-              ${objRow('تحسين رضا العملاء', 'عملاء', 78, 'على المسار')}
-              ${objRow('تحسين الكفاءة التشغيلية', 'عمليات', 65, 'متأخر')}
-              ${objRow('تطوير الكوادر القيادية', 'تعلم ونمو', 70, 'على المسار')}
-              ${objRow('التحول الرقمي الشامل', 'عمليات', 55, 'متأخر')}
-              ${objRow('التوسع الإقليمي', 'مالي', 88, 'متقدم')}
-            </tbody>
+            <tbody>${objRows}</tbody>
           </table>
         </div>
 
         <div class="rpt-section">
-          <div class="rpt-section-title"><i class="bi bi-bar-chart-line" style="color:var(--blue)"></i> الأداء الربعي</div>
-          <div class="rpt-chart">
-            <div class="rpt-bar-chart">
-              ${barItem('Q1', 62, 'var(--muted)')} ${barItem('Q2', 68, 'var(--blue)')} ${barItem('Q3', 71, 'var(--primary)')} ${barItem('Q4', 78, 'var(--green)')}
-            </div>
-          </div>
-        </div>
-
-        <div class="rpt-section">
           <div class="rpt-section-title"><i class="bi bi-lightbulb" style="color:var(--yellow)"></i> التوصيات</div>
-          ${recItem('🔴', 'تسريع مبادرة التحول الرقمي — التأخير يؤثر على 3 أهداف أخرى', 'عاجل', 'var(--red)')}
-          ${recItem('🟡', 'تعزيز فريق الكفاءة التشغيلية بـ 2 محللين إضافيين', 'مهم', 'var(--yellow)')}
-          ${recItem('🟢', 'استثمار نجاح رضا العملاء في برنامج إحالة جديد', 'فرصة', 'var(--green)')}
-          ${recItem('🔵', 'جدولة مراجعة استراتيجية منتصف العام مع مجلس الإدارة', 'تخطيطي', 'var(--primary)')}
+          ${recsHtml}
         </div>
       `;
         }
 
         function kpiReport() {
+            let kpiRowsAbove = '', kpiRowsBelow = '';
+            let totalKpis = 0, aboveTarget = 0, belowTarget = 0, noData = 0;
+
+            if (hasRealData() && reportData.kpis.length > 0) {
+                totalKpis = reportData.kpis.length;
+                reportData.kpis.forEach(k => {
+                    if (!k.actual || !k.target) { noData++; return; }
+                    const pct = k.pct;
+                    if (pct >= 100) {
+                        aboveTarget++;
+                        kpiRowsAbove += kpiRow(k.name, `${k.actual}${k.unit || ''}`, `${k.target}${k.unit || ''}`, pct);
+                    } else {
+                        belowTarget++;
+                        kpiRowsBelow += kpiRow(k.name, `${k.actual}${k.unit || ''}`, `${k.target}${k.unit || ''}`, pct);
+                    }
+                });
+            } else {
+                totalKpis = 24; aboveTarget = 14; belowTarget = 7; noData = 3;
+                kpiRowsAbove = kpiRow('الإيرادات الشهرية', '1.2M', '1M', 120) + kpiRow('رضا العملاء NPS', '82', '75', 109) + kpiRow('معدل الاحتفاظ بالعملاء', '94%', '90%', 104);
+                kpiRowsBelow = kpiRow('دوران الموظفين', '18%', '12%', 67) + kpiRow('وقت الاستجابة', '48 ساعة', '24 ساعة', 50) + kpiRow('كفاءة العمليات', '62%', '80%', 78);
+            }
+
             return `
         <div class="rpt-section">
           <div class="rpt-section-title"><i class="bi bi-speedometer2" style="color:var(--green)"></i> ملخص الأداء</div>
           <div class="rpt-kpi-grid">
-            ${kpiCard('إجمالي المؤشرات', 24, '', '', '')}
-            ${kpiCard('فوق المستهدف', 14, '', '+3', 'green')}
-            ${kpiCard('تحت المستهدف', 7, '', '-2', 'red')}
-            ${kpiCard('بدون بيانات', 3, '', '', 'muted')}
+            ${kpiCard('إجمالي المؤشرات', totalKpis, '', '', '')}
+            ${kpiCard('فوق المستهدف', aboveTarget, '', '', 'green')}
+            ${kpiCard('تحت المستهدف', belowTarget, '', '', 'red')}
+            ${kpiCard('بدون بيانات', noData, '', '', 'muted')}
           </div>
         </div>
         <div class="rpt-section">
           <div class="rpt-section-title"><i class="bi bi-arrow-up-circle" style="color:var(--green)"></i> مؤشرات متقدمة</div>
           <table class="rpt-table">
             <thead><tr><th>المؤشر</th><th>الفعلي</th><th>المستهدف</th><th>الإنجاز</th></tr></thead>
-            <tbody>
-              ${kpiRow('الإيرادات الشهرية', '1.2M', '1M', 120)}
-              ${kpiRow('رضا العملاء NPS', '82', '75', 109)}
-              ${kpiRow('معدل الاحتفاظ بالعملاء', '94%', '90%', 104)}
-              ${kpiRow('حصة السوق', '18%', '15%', 120)}
-            </tbody>
+            <tbody>${kpiRowsAbove || '<tr><td colspan="4" style="text-align:center;color:var(--muted)">لا توجد مؤشرات محققة</td></tr>'}</tbody>
           </table>
         </div>
         <div class="rpt-section">
           <div class="rpt-section-title"><i class="bi bi-arrow-down-circle" style="color:var(--red)"></i> مؤشرات متأخرة — تحتاج تدخل</div>
           <table class="rpt-table">
             <thead><tr><th>المؤشر</th><th>الفعلي</th><th>المستهدف</th><th>الفجوة</th></tr></thead>
-            <tbody>
-              ${kpiRow('دوران الموظفين', '18%', '12%', 67)}
-              ${kpiRow('وقت الاستجابة', '48 ساعة', '24 ساعة', 50)}
-              ${kpiRow('كفاءة العمليات', '62%', '80%', 78)}
-            </tbody>
+            <tbody>${kpiRowsBelow || '<tr><td colspan="4" style="text-align:center;color:var(--muted)">جميع المؤشرات محققة 🎉</td></tr>'}</tbody>
           </table>
         </div>
       `;
         }
 
         function initiativeReport() {
+            let iniRows = '';
+            let total = 0, completed = 0, inProgress = 0, overdue = 0;
+
+            if (hasRealData() && reportData.initiatives.length > 0) {
+                total = reportData.iniSummary.total;
+                completed = reportData.iniSummary.completed;
+                inProgress = reportData.iniSummary.inProgress;
+                overdue = reportData.iniSummary.overdue;
+                iniRows = reportData.initiatives.map(i => {
+                    const statusAr = i.status === 'COMPLETED' ? 'مكتمل' : i.status === 'IN_PROGRESS' ? 'جارية' : 'مخطط';
+                    const budgetPct = i.budget > 0 ? Math.round((i.actualCost || 0) / i.budget * 100) + '%' : '-';
+                    return initRow(i.name, i.owner || '-', i.progress, budgetPct, statusAr);
+                }).join('');
+            } else {
+                total = 8; completed = 3; inProgress = 4; overdue = 1;
+                iniRows = initRow('التوسع الإقليمي', 'أحمد', 88, '92%', 'متقدم') +
+                    initRow('التحول الرقمي', 'سارة', 55, '78%', 'متأخر') +
+                    initRow('تدريب القيادات', 'محمد', 72, '85%', 'جارية') +
+                    initRow('تسويق رقمي', 'نورة', 95, '98%', 'مكتمل');
+            }
+
             return `
         <div class="rpt-section">
           <div class="rpt-section-title"><i class="bi bi-rocket-takeoff" style="color:var(--orange)"></i> نظرة عامة على المبادرات</div>
           <div class="rpt-kpi-grid">
-            ${kpiCard('إجمالي المبادرات', 8, '', '', '')}
-            ${kpiCard('مكتملة', 3, '', '', 'green')}
-            ${kpiCard('جارية', 4, '', '', 'primary')}
-            ${kpiCard('متأخرة', 1, '', '', 'red')}
+            ${kpiCard('إجمالي المبادرات', total, '', '', '')}
+            ${kpiCard('مكتملة', completed, '', '', 'green')}
+            ${kpiCard('جارية', inProgress, '', '', 'primary')}
+            ${kpiCard('متأخرة', overdue, '', '', 'red')}
           </div>
         </div>
         <div class="rpt-section">
           <div class="rpt-section-title"><i class="bi bi-list-task" style="color:var(--primary)"></i> تفاصيل المبادرات</div>
           <table class="rpt-table">
             <thead><tr><th>المبادرة</th><th>المسؤول</th><th>الإنجاز</th><th>الميزانية</th><th>الحالة</th></tr></thead>
-            <tbody>
-              ${initRow('التوسع الإقليمي', 'أحمد', 88, '92%', 'متقدم')}
-              ${initRow('التحول الرقمي', 'سارة', 55, '78%', 'متأخر')}
-              ${initRow('تدريب القيادات', 'محمد', 72, '85%', 'جارية')}
-              ${initRow('تسويق رقمي', 'نورة', 95, '98%', 'مكتمل')}
-              ${initRow('نظام ERP جديد', 'خالد', 40, '45%', 'جارية')}
-            </tbody>
+            <tbody>${iniRows || '<tr><td colspan="5" style="text-align:center;color:var(--muted)">لا توجد مبادرات</td></tr>'}</tbody>
           </table>
         </div>
       `;
         }
 
         function riskReport() {
+            let riskItems = '';
+            let total = 0, critical = 0, medium = 0, low = 0, mitigated = 0;
+
+            if (hasRealData() && reportData.risks.length > 0) {
+                total = reportData.riskSummary.total;
+                critical = reportData.riskSummary.critical + reportData.riskSummary.high;
+                medium = reportData.riskSummary.medium;
+                low = reportData.riskSummary.low;
+                mitigated = reportData.riskSummary.mitigated;
+                riskItems = reportData.risks.map(r => {
+                    const icon = r.score >= 15 ? '🔴' : r.score >= 8 ? '🟡' : '🟢';
+                    const priority = r.score >= 15 ? 'حرج' : r.score >= 8 ? 'متوسط' : 'منخفض';
+                    const color = r.score >= 15 ? 'var(--red)' : r.score >= 8 ? 'var(--yellow)' : 'var(--green)';
+                    return recItem(icon, `${r.name}${r.mitigation ? ' — خطة المعالجة: ' + r.mitigation.substring(0, 80) : ''}. درجة الخطورة: ${r.score}`, priority, color);
+                }).join('');
+            } else {
+                total = 12; critical = 3; medium = 5; low = 4; mitigated = 4;
+                riskItems = recItem('🔴', 'تأخر مشروع التحول الرقمي. احتمال: 80% | تأثير: عالٍ', 'حرج', 'var(--red)') +
+                    recItem('🟡', 'تقلبات السوق قد تؤثر على أهداف الإيرادات. احتمال: 50%', 'متوسط', 'var(--yellow)') +
+                    recItem('🟡', 'منافس جديد دخل السوق بأسعار أقل. احتمال: 60%', 'متوسط', 'var(--yellow)');
+            }
+
             return `
         <div class="rpt-section">
           <div class="rpt-section-title"><i class="bi bi-exclamation-triangle" style="color:var(--red)"></i> ملخص المخاطر</div>
           <div class="rpt-kpi-grid">
-            ${kpiCard('مخاطر نشطة', 12, '', '', 'red')}
-            ${kpiCard('حرجة', 3, '', '+1', 'red')}
-            ${kpiCard('متوسطة', 5, '', '0', 'yellow')}
-            ${kpiCard('منخفضة', 4, '', '-1', 'green')}
+            ${kpiCard('مخاطر نشطة', total, '', '', 'red')}
+            ${kpiCard('حرجة', critical, '', '', 'red')}
+            ${kpiCard('متوسطة', medium, '', '', 'yellow')}
+            ${kpiCard('تمت معالجتها', mitigated, '', '', 'green')}
           </div>
         </div>
         <div class="rpt-section">
-          <div class="rpt-section-title"><i class="bi bi-shield-exclamation" style="color:var(--red)"></i> أعلى المخاطر</div>
-          ${recItem('🔴', 'تأخر مشروع التحول الرقمي قد يؤثر على الأهداف التشغيلية. احتمال: 80% | تأثير: عالٍ', 'حرج', 'var(--red)')}
-          ${recItem('🔴', 'نقص الكوادر المتخصصة في تحليل البيانات. احتمال: 70% | تأثير: عالٍ', 'حرج', 'var(--red)')}
-          ${recItem('🟡', 'تقلبات السوق قد تؤثر على أهداف الإيرادات. احتمال: 50% | تأثير: متوسط', 'متوسط', 'var(--yellow)')}
-          ${recItem('🟡', 'منافس جديد دخل السوق بأسعار أقل. احتمال: 60% | تأثير: متوسط', 'متوسط', 'var(--yellow)')}
+          <div class="rpt-section-title"><i class="bi bi-shield-exclamation" style="color:var(--red)"></i> تفاصيل المخاطر</div>
+          ${riskItems}
         </div>
       `;
         }
 
         function teamReport() {
+            const teamSize = hasRealData() ? reportData.teamSize : 12;
             return `
         <div class="rpt-section">
           <div class="rpt-section-title"><i class="bi bi-people" style="color:var(--purple)"></i> ملخص الفريق</div>
           <div class="rpt-kpi-grid">
-            ${kpiCard('أعضاء الفريق', 12, '', '+2', 'green')}
-            ${kpiCard('المهام المنجزة', 156, '', '+34', 'green')}
-            ${kpiCard('معدل الإنتاجية', 87, '%', '+5', 'green')}
-            ${kpiCard('التعليقات', 89, '', '+12', 'primary')}
+            ${kpiCard('أعضاء الفريق', teamSize, '', '', 'green')}
+            ${kpiCard('الأهداف', hasRealData() ? reportData.objSummary.total : 8, '', '', 'primary')}
+            ${kpiCard('المؤشرات', hasRealData() ? reportData.kpiSummary.total : 24, '', '', 'primary')}
+            ${kpiCard('المبادرات', hasRealData() ? reportData.iniSummary.total : 8, '', '', 'primary')}
           </div>
         </div>
         <div class="rpt-section">
-          <div class="rpt-section-title"><i class="bi bi-trophy" style="color:var(--yellow)"></i> الأكثر إنجازاً</div>
+          <div class="rpt-section-title"><i class="bi bi-bar-chart-line" style="color:var(--blue)"></i> توزيع الأهداف حسب المنظور</div>
           <table class="rpt-table">
-            <thead><tr><th>#</th><th>العضو</th><th>المهام</th><th>التعليقات</th><th>الإنتاجية</th></tr></thead>
-            <tbody>
-              <tr><td>🥇</td><td>أحمد المالكي</td><td>34</td><td>22</td><td><span style="color:var(--green)">96%</span></td></tr>
-              <tr><td>🥈</td><td>سارة الحربي</td><td>28</td><td>31</td><td><span style="color:var(--green)">92%</span></td></tr>
-              <tr><td>🥉</td><td>محمد العتيبي</td><td>26</td><td>15</td><td><span style="color:var(--green)">88%</span></td></tr>
-              <tr><td>4</td><td>نورة السبيعي</td><td>22</td><td>18</td><td><span style="color:var(--primary)">85%</span></td></tr>
-            </tbody>
+            <thead><tr><th>المنظور</th><th>عدد الأهداف</th><th>متوسط الإنجاز</th></tr></thead>
+            <tbody>${hasRealData() && reportData.objSummary ? Object.values(reportData.objSummary.byPerspective).map(p =>
+                `<tr><td style="font-weight:700">${p.name}</td><td>${p.count}</td><td><div class="rpt-progress"><div class="rpt-progress-fill" style="width:${p.avgProgress}%;background:${p.avgProgress >= 70 ? 'var(--green)' : p.avgProgress >= 40 ? 'var(--yellow)' : 'var(--red)'}"></div></div> ${p.avgProgress}%</td></tr>`
+            ).join('') :
+                    `<tr><td>مالي</td><td>2</td><td><div class="rpt-progress"><div class="rpt-progress-fill" style="width:85%;background:var(--green)"></div></div> 85%</td></tr>
+                <tr><td>عملاء</td><td>2</td><td><div class="rpt-progress"><div class="rpt-progress-fill" style="width:78%;background:var(--green)"></div></div> 78%</td></tr>
+                <tr><td>عمليات</td><td>2</td><td><div class="rpt-progress"><div class="rpt-progress-fill" style="width:60%;background:var(--yellow)"></div></div> 60%</td></tr>
+                <tr><td>تعلم ونمو</td><td>2</td><td><div class="rpt-progress"><div class="rpt-progress-fill" style="width:70%;background:var(--green)"></div></div> 70%</td></tr>`
+                }</tbody>
           </table>
         </div>
       `;
         }
 
         function executiveReport() {
+            const health = hasRealData() ? reportData.healthScore : 78;
+            const healthLevel = health >= 80 ? 'ممتاز' : health >= 60 ? 'جيد' : health >= 40 ? 'يحتاج تحسين' : 'حرج';
+            const healthColor = health >= 80 ? 'var(--green)' : health >= 60 ? 'var(--primary)' : 'var(--red)';
+
+            let achievements = '', challenges = '', decisions = '';
+
+            if (hasRealData()) {
+                const d = reportData;
+                const achs = [];
+                if (d.iniSummary.completed > 0) achs.push(`✅ تم إكمال ${d.iniSummary.completed} مبادرة بنجاح`);
+                if (d.kpiSummary.onTrack > 0) achs.push(`✅ ${d.kpiSummary.onTrack} مؤشر أداء يحقق المستهدف`);
+                if (d.overallProgress >= 50) achs.push(`✅ نسبة إنجاز الأهداف: ${d.overallProgress}%`);
+                if (achs.length === 0) achs.push('✅ بداية مرحلة التخطيط الاستراتيجي');
+                achievements = achs.join('<br>');
+
+                const chals = [];
+                if (d.iniSummary.overdue > 0) chals.push(`⚠️ ${d.iniSummary.overdue} مبادرة متأخرة`);
+                if (d.kpiSummary.critical > 0) chals.push(`⚠️ ${d.kpiSummary.critical} مؤشرات في المنطقة الحرجة`);
+                if (d.riskSummary.critical > 0) chals.push(`⚠️ ${d.riskSummary.critical} مخاطر حرجة`);
+                if (chals.length === 0) chals.push('🟢 لا توجد تحديات حرجة حالياً');
+                challenges = chals.join('<br>');
+
+                const decs = [];
+                if (d.iniSummary.overdue > 0) decs.push(recItem('🔴', `اتخاذ قرار بشأن ${d.iniSummary.overdue} مبادرة متأخرة`, 'عاجل', 'var(--red)'));
+                if (d.kpiSummary.critical > 0) decs.push(recItem('🟡', 'مراجعة المؤشرات الحرجة وتحديد خطط التحسين', 'مهم', 'var(--yellow)'));
+                decs.push(recItem('🟢', 'جدولة المراجعة الاستراتيجية القادمة', 'تخطيطي', 'var(--green)'));
+                decisions = decs.join('');
+            } else {
+                achievements = '✅ التوسع الإقليمي وصل 88%<br>✅ رضا العملاء ارتفع لـ 82%<br>✅ الإيرادات تجاوزت المستهدف 20%';
+                challenges = '⚠️ التحول الرقمي متأخر 45%<br>⚠️ دوران الموظفين مرتفع 18%';
+                decisions = recItem('🔴', 'الموافقة على ميزانية إضافية لتسريع التحول الرقمي', 'عاجل', 'var(--red)') +
+                    recItem('🟡', 'اعتماد خطة استقطاب 5 محللي بيانات', 'مهم', 'var(--yellow)') +
+                    recItem('🟢', 'الموافقة على توسيع برنامج إحالة العملاء', 'فرصة', 'var(--green)');
+            }
+
             return `
         <div class="rpt-summary-box" style="margin-bottom:24px">
-          <strong>الخلاصة:</strong> الأداء العام <span style="color:var(--green);font-weight:800">جيد (78/100)</span> مع تحسن مستمر. 3 إنجازات كبيرة هذا الربع. تحدٍّ واحد يحتاج قراراً عاجلاً.
+          <strong>الخلاصة:</strong> الأداء العام <span style="color:${healthColor};font-weight:800">${healthLevel} (${health}/100)</span>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
           <div>
             <h4 style="font-size:14px;font-weight:800;margin-bottom:10px;color:var(--green)"><i class="bi bi-check-circle"></i> أبرز الإنجازات</h4>
-            <div style="font-size:13px;line-height:2;color:var(--muted)">
-              ✅ التوسع الإقليمي وصل 88%<br>
-              ✅ رضا العملاء ارتفع لـ 82%<br>
-              ✅ الإيرادات تجاوزت المستهدف 20%
-            </div>
+            <div style="font-size:13px;line-height:2;color:var(--muted)">${achievements}</div>
           </div>
           <div>
             <h4 style="font-size:14px;font-weight:800;margin-bottom:10px;color:var(--red)"><i class="bi bi-exclamation-circle"></i> أبرز التحديات</h4>
-            <div style="font-size:13px;line-height:2;color:var(--muted)">
-              ⚠️ التحول الرقمي متأخر 45%<br>
-              ⚠️ دوران الموظفين مرتفع 18%<br>
-              ⚠️ وقت الاستجابة ضعف المستهدف
-            </div>
+            <div style="font-size:13px;line-height:2;color:var(--muted)">${challenges}</div>
           </div>
         </div>
         <div class="rpt-section">
           <div class="rpt-section-title"><i class="bi bi-hand-index" style="color:var(--yellow)"></i> قرارات مطلوبة</div>
-          ${recItem('🔴', 'الموافقة على ميزانية إضافية لتسريع التحول الرقمي (500K ر.س)', 'عاجل', 'var(--red)')}
-          ${recItem('🟡', 'اعتماد خطة استقطاب 5 محللي بيانات', 'مهم', 'var(--yellow)')}
-          ${recItem('🟢', 'الموافقة على توسيع برنامج إحالة العملاء', 'فرصة', 'var(--green)')}
+          ${decisions}
         </div>
       `;
         }
@@ -900,6 +1050,64 @@
         function animateNum(el, target) {
             let cur = 0; const step = Math.max(1, Math.ceil(target / 25));
             const iv = setInterval(() => { cur += step; if (cur >= target) { cur = target; clearInterval(iv); } el.textContent = cur + (el.closest('.rpt-kpi')?.querySelector('.rpt-kpi-label')?.textContent.includes('%') ? '' : ''); }, 30);
+        }
+
+        // === PDF Download ===
+        async function downloadPDF() {
+            const reportDoc = document.getElementById('reportDoc');
+            if (!reportDoc || !reportDoc.innerHTML.trim()) {
+                alert('يرجى توليد التقرير أولاً');
+                return;
+            }
+
+            const btn = document.getElementById('downloadPdfBtn');
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> جاري التحميل...';
+
+            try {
+                // Clone the report for PDF generation
+                const clone = reportDoc.cloneNode(true);
+
+                // Apply print-friendly styles
+                clone.style.cssText = 'direction:rtl;font-family:Tajawal,sans-serif;color:#222;background:#fff;padding:30px;max-width:800px;margin:0 auto';
+
+                // Fix colors for PDF readability
+                clone.querySelectorAll('[style]').forEach(el => {
+                    const s = el.style;
+                    if (s.color && s.color.includes('var(--')) {
+                        s.color = '#333';
+                    }
+                });
+
+                // Make KPI values visible
+                clone.querySelectorAll('.rpt-kpi-val').forEach(el => {
+                    if (el.dataset.target) el.textContent = el.dataset.target;
+                });
+
+                const tmpl = templates.find(t => t.id === selectedTemplate);
+                const period = document.getElementById('reportPeriod');
+                const periodText = period.options[period.selectedIndex].text;
+                const fileName = `ستارتكس_${tmpl.title}_${periodText}`.replace(/\s+/g, '_');
+
+                const opt = {
+                    margin: [15, 15, 20, 15],
+                    filename: `${fileName}.pdf`,
+                    image: { type: 'jpeg', quality: 0.95 },
+                    html2canvas: { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+                };
+
+                await html2pdf().set(opt).from(clone).save();
+
+            } catch (err) {
+                console.error('PDF generation error:', err);
+                alert('حدث خطأ أثناء توليد PDF — جرّب زر الطباعة كبديل');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
         }
 
         renderTemplates();

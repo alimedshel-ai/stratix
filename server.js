@@ -455,6 +455,11 @@ app.get('/beginner-path', (req, res) => {
   res.sendFile(path.join(__dirname, 'src', 'beginner-path.html'));
 });
 
+// Serve Founder Diagnostic (Pre-Startup Path)
+app.get('/founder-diagnostic', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'founder-diagnostic.html'));
+});
+
 // Serve Path 1 journey (moved) — redirect to landing
 app.get('/path1', (req, res) => {
   res.redirect(302, '/');
@@ -583,6 +588,71 @@ app.get('/internal-env', (req, res) => {
 // Serve Admin Panel
 app.get('/admin-panel', (req, res) => {
   res.sendFile(path.join(__dirname, 'src', 'admin-panel.html'));
+});
+
+// Serve Scenarios page
+app.get('/scenarios', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'scenarios.html'));
+});
+
+// Serve Account Suspended page
+app.get('/account-suspended', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'account-suspended.html'));
+});
+
+// Serve Admin Dashboard
+app.get('/admin-dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'admin-dashboard.html'));
+});
+
+// Serve Board Dashboard
+app.get('/board-dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'board-dashboard.html'));
+});
+
+// Serve Consultant Dashboard
+app.get('/consultant-dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'consultant-dashboard.html'));
+});
+
+// Serve Department Dashboard
+app.get('/dept-dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'dept-dashboard.html'));
+});
+
+// Serve SMO Dashboard
+app.get('/smo-dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'smo-dashboard.html'));
+});
+
+// Serve Data Entry page
+app.get('/data-entry', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'data-entry.html'));
+});
+
+// Serve Data Forms page
+app.get('/data-forms', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'data-forms.html'));
+});
+
+// Serve Free Diagnostic page
+app.get('/free-diagnostic', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'free-diagnostic.html'));
+});
+
+// Serve Select Type page
+app.get('/select-type', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'select-type.html'));
+});
+
+// Serve Tools Guide page
+app.get('/tools-guide', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'tools-guide.html'));
+});
+
+// Serve Viewer Hub page
+app.get('/viewer-hub', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'viewer-hub.html'));
 });
 
 // 🏥 Health check endpoint (for Railway)

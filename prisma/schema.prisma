@@ -124,11 +124,22 @@ model User {
   email      String    @unique
   password   String
   name       String
+  phone      String?   @unique  // ✨ معرّف رئيسي — رقم الجوال
+  phoneVerified Boolean @default(false) // ✨ هل تم التحقق من الجوال
   systemRole String    @default("USER") // SUPER_ADMIN, USER
   avatarUrl  String?
   lastLogin  DateTime? // آخر تسجيل دخول
   disabled   Boolean   @default(false) // تعطيل الحساب
   onboardingCompleted Boolean @default(false) // هل أكمل خطوات التأسيس
+
+  // ✨ التحقق من الجوال (SMS)
+  verificationCode   String?   // كود التحقق (6 أرقام)
+  verificationExpiry DateTime? // صلاحية الكود
+
+  // ✨ بيانات التشخيص (محفوظة من قبل التسجيل)
+  diagnosticData String? // JSON: نتيجة التشخيص (مبتدئ أو ألم وطموح)
+  userCategory   String? // INDIVIDUAL_DEV, INDIVIDUAL_IDEA, NEW_PROJECT, COMPANY_SMALL, COMPANY_MEDIUM, COMPANY_LARGE
+
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
@@ -156,6 +167,9 @@ model Entity {
   size    String? // MICRO, SMALL, MEDIUM, LARGE, ENTERPRISE
   school  String? // المدرسة الإدارية (BALANCED_SCORECARD, OKR, HOSHIN_KANRI, etc.)
   culture String? // الثقافة المؤسسية: AMERICAN, JAPANESE, EUROPEAN, ISLAMIC
+
+  // ✨ السجل التجاري
+  commercialRegNo String? @unique // رقم السجل التجاري — فريد لمنع التكرار
 
   logoUrl   String?
   metadata  String? // JSON field for extra data (pain/ambition, preferences, etc.)

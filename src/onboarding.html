@@ -634,7 +634,7 @@
                         <button class="btn-wizard secondary" onclick="prevStep(1)">
                             <i class="bi bi-arrow-right"></i> السابق
                         </button>
-                        <button class="btn-wizard primary" onclick="nextStep(3)" id="btnStep2Next" disabled>
+                        <button class="btn-wizard primary" onclick="nextStep(3)" id="btnStep2Next">
                             التالي <i class="bi bi-arrow-left"></i>
                         </button>
                     </div>
@@ -760,20 +760,7 @@
         let members = [];
 
         function nextStep(step) {
-            // Validate current step
-            if (currentStep === 1) {
-                const orgName = document.getElementById('orgName').value.trim();
-                if (!orgName) {
-                    document.getElementById('orgName').style.borderColor = '#e53e3e';
-                    document.getElementById('orgName').focus();
-                    return;
-                }
-                document.getElementById('orgName').style.borderColor = '#e2e8f0';
-            }
-
-            if (currentStep === 2 && !selectedSector) {
-                return;
-            }
+            // مرحلة اختبار — كل شي اختياري، بس نتنقل بين الخطوات
 
             // Save data on final step
             if (step === 4) {
@@ -902,9 +889,9 @@
             btn.closest('.d-flex').remove();
         }
 
-        function saveOnboardingData() {
+        async function saveOnboardingData() {
             const data = {
-                orgName: document.getElementById('orgName').value.trim(),
+                orgName: document.getElementById('orgName').value.trim() || 'منشأتي',
                 orgType: document.getElementById('orgType').value,
                 orgSize: document.getElementById('orgSize').value,
                 orgEmail: document.getElementById('orgEmail').value.trim(),
@@ -914,23 +901,45 @@
             };
 
             localStorage.setItem('onboarding_data', JSON.stringify(data));
-            localStorage.setItem('onboarding_completed', 'true');
 
-            // Try to save to backend
+            // حفظ في الباك إند — إنشاء Company + Entity + Member + Version
             const token = localStorage.getItem('token');
             if (token) {
-                fetch('/api/entities', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + token
-                    },
-                    body: JSON.stringify({
-                        legalName: data.orgName,
-                        displayName: data.orgName,
-                        sectorId: null // Will be resolved later
-                    })
-                }).catch(e => console.log('Onboarding save skipped:', e));
+                try {
+                    const res = await fetch('/api/auth/complete-onboarding', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token
+                        },
+                        body: JSON.stringify({
+                            companyName: data.orgName,
+                            sector: data.sector,
+                            orgSize: data.orgSize,
+                            orgType: data.orgType,
+                        })
+                    });
+                    const result = await res.json();
+                    if (res.ok) {
+                        console.log('✅ Onboarding saved:', result);
+                        // تحديث localStorage
+                        localStorage.setItem('onboarding_completed', 'true');
+                        const user = JSON.parse(localStorage.getItem('user') || '{}');
+                        user.onboardingCompleted = true;
+                        if (result.entity) user.entity = result.entity;
+                        if (result.entityId) user.entityId = result.entityId;
+                        localStorage.setItem('user', JSON.stringify(user));
+                        // تحديث التوكن لو رجع واحد جديد
+                        if (result.token) localStorage.setItem('token', result.token);
+                    } else {
+                        console.warn('⚠️ Onboarding save warning:', result);
+                    }
+                } catch (e) {
+                    console.log('Onboarding save fallback:', e);
+                    localStorage.setItem('onboarding_completed', 'true');
+                }
+            } else {
+                localStorage.setItem('onboarding_completed', 'true');
             }
         }
 
@@ -991,7 +1000,7 @@
             if (e.key === 'Enter') nextStep(2);
         });
     </script>
-<script src="/assets/js/ai-advisor.js"></script>
+    <script src="/assets/js/ai-advisor.js"></script>
 </body>
 
 </html>

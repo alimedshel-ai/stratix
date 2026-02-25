@@ -614,4 +614,174 @@ router.get('/consultant-overview', verifyToken, async (req, res) => {
     }
 });
 
+// ============ REPORT DATA API ============
+// بيانات التقارير — يجمع كل المعلومات للتقرير في طلب واحد
+router.get('/report-data', verifyToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const entityId = req.user.entityId;
+
+        if (!entityId) {
+            return res.status(400).json({ error: 'لا يوجد كيان مرتبط بحسابك' });
+        }
+
+        // Get entity info
+        const entity = await prisma.entity.findUnique({
+            where: { id: entityId },
+            select: { id: true, legalName: true, displayName: true, size: true }
+        });
+
+        // Get active version
+        const activeVersion = await prisma.strategyVersion.findFirst({
+            where: { entityId, isActive: true }
+        });
+
+        if (!activeVersion) {
+            return res.json({ entity, hasData: false, message: 'لا توجد خطة استراتيجية نشطة' });
+        }
+
+        const versionId = activeVersion.id;
+
+        // Fetch all data in parallel
+        const [objectives, kpis, kpiEntries, initiatives, risks, reviews, directions, members] = await Promise.all([
+            prisma.strategicObjective.findMany({
+                where: { versionId },
+                select: { id: true, title: true, perspective: true, weight: true, progress: true, status: true }
+            }),
+            prisma.kPI.findMany({
+                where: { versionId },
+                select: {
+                    id: true, name: true, actual: true, target: true, unit: true,
+                    warningThreshold: true, criticalThreshold: true,
+                    frequency: true, objective: { select: { title: true, perspective: true } }
+                }
+            }),
+            prisma.kPIEntry.findMany({
+                where: { kpi: { versionId } },
+                select: { value: true, periodStart: true, createdAt: true, kpi: { select: { name: true } } },
+                orderBy: { createdAt: 'desc' },
+                take: 100
+            }),
+            prisma.strategicInitiative.findMany({
+                where: { versionId },
+                select: {
+                    id: true, title: true, status: true, progress: true,
+                    budget: true, budgetSpent: true, startDate: true, endDate: true,
+                    owner: true, priority: true
+                }
+            }),
+            prisma.strategicRisk.findMany({
+                where: { versionId },
+                select: {
+                    id: true, title: true, status: true, category: true,
+                    probabilityScore: true, impactScore: true, riskScore: true,
+                    mitigation: true
+                }
+            }),
+            prisma.strategicReview.findMany({
+                where: { versionId },
+                select: {
+                    id: true, title: true, status: true, decision: true,
+                    overallScore: true, createdAt: true
+                },
+                orderBy: { createdAt: 'desc' },
+                take: 10
+            }),
+            prisma.strategicDirection.findMany({
+                where: { versionId },
+                select: { id: true, type: true, content: true },
+                take: 20
+            }),
+            prisma.member.findMany({
+                where: { entityId },
+                select: { id: true, role: true, user: { select: { name: true, email: true } } }
+            })
+        ]);
+
+        // === KPI Summary ===
+        const kpiSummary = { total: kpis.length, onTrack: 0, warning: 0, critical: 0, noData: 0 };
+        kpis.forEach(kpi => {
+            if (!kpi.actual || !kpi.target) { kpiSummary.noData++; return; }
+            const pct = (kpi.actual / kpi.target) * 100;
+            if (kpi.criticalThreshold && pct <= kpi.criticalThreshold) kpiSummary.critical++;
+            else if (kpi.warningThreshold && pct <= kpi.warningThreshold) kpiSummary.warning++;
+            else kpiSummary.onTrack++;
+        });
+
+        // === Objectives Summary ===
+        const objSummary = { total: objectives.length, byPerspective: {} };
+        const perspNames = { FINANCIAL: 'مالي', CUSTOMER: 'عملاء', INTERNAL: 'عمليات', INTERNAL_PROCESS: 'عمليات', LEARNING: 'تعلم ونمو', LEARNING_GROWTH: 'تعلم ونمو' };
+        objectives.forEach(obj => {
+            const p = obj.perspective || 'INTERNAL';
+            if (!objSummary.byPerspective[p]) objSummary.byPerspective[p] = { name: perspNames[p] || p, count: 0, avgProgress: 0, total: 0 };
+            objSummary.byPerspective[p].count++;
+            objSummary.byPerspective[p].total += (obj.progress || 0);
+        });
+        Object.values(objSummary.byPerspective).forEach(v => { v.avgProgress = v.count > 0 ? Math.round(v.total / v.count) : 0; });
+        const overallProgress = objectives.length > 0
+            ? Math.round(objectives.reduce((s, o) => s + (o.progress || 0), 0) / objectives.length)
+            : 0;
+
+        // === Initiative Summary ===
+        const iniSummary = { total: initiatives.length, completed: 0, inProgress: 0, planned: 0, overdue: 0 };
+        let totalBudget = 0, totalActualCost = 0;
+        initiatives.forEach(ini => {
+            if (ini.status === 'COMPLETED') iniSummary.completed++;
+            else if (ini.status === 'IN_PROGRESS') iniSummary.inProgress++;
+            else iniSummary.planned++;
+            if (ini.endDate && new Date(ini.endDate) < new Date() && ini.status !== 'COMPLETED') iniSummary.overdue++;
+            totalBudget += (ini.budget || 0);
+            totalActualCost += (ini.budgetSpent || 0);
+        });
+        const budgetUtilization = totalBudget > 0 ? Math.round((totalActualCost / totalBudget) * 100) : 0;
+
+        // === Risk Summary ===
+        const riskSummary = { total: risks.length, critical: 0, high: 0, medium: 0, low: 0, mitigated: 0 };
+        risks.forEach(r => {
+            const score = r.riskScore || ((r.probabilityScore || 3) * (r.impactScore || 3));
+            if (score >= 20) riskSummary.critical++;
+            else if (score >= 15) riskSummary.high++;
+            else if (score >= 8) riskSummary.medium++;
+            else riskSummary.low++;
+            if (r.status === 'MITIGATED' || r.status === 'CLOSED') riskSummary.mitigated++;
+        });
+
+        // === Health Score (simplified) ===
+        const measured = kpis.filter(k => k.actual != null && k.target != null && k.target > 0);
+        const kpiScore = measured.length > 0 ? Math.min(measured.reduce((s, k) => s + Math.min((k.actual / k.target) * 100, 120), 0) / measured.length, 100) : 0;
+        const iniScore = initiatives.length > 0 ? initiatives.reduce((s, i) => s + (i.progress || 0), 0) / initiatives.length : 0;
+        const healthScore = Math.round(kpiScore * 0.5 + iniScore * 0.5);
+
+        res.json({
+            hasData: true,
+            entity,
+            version: { id: activeVersion.id, name: activeVersion.name, number: activeVersion.versionNumber },
+            healthScore,
+            overallProgress,
+            kpiSummary,
+            kpis: kpis.map(k => ({
+                name: k.name, actual: k.actual, target: k.target, unit: k.unit,
+                pct: k.target ? Math.round((k.actual / k.target) * 100) : 0,
+                objective: k.objective?.title, perspective: k.objective?.perspective
+            })),
+            objSummary,
+            objectives: objectives.map(o => ({ name: o.title, perspective: perspNames[o.perspective] || o.perspective, progress: o.progress || 0, status: o.status })),
+            iniSummary,
+            initiatives: initiatives.map(i => ({ name: i.title, status: i.status, progress: i.progress || 0, owner: i.owner, budget: i.budget, actualCost: i.budgetSpent, priority: i.priority })),
+            budgetUtilization,
+            totalBudget, totalActualCost,
+            riskSummary,
+            risks: risks.map(r => ({ name: r.title, status: r.status, category: r.category, score: r.riskScore || ((r.probabilityScore || 3) * (r.impactScore || 3)), mitigation: r.mitigation })),
+            reviews,
+            directions,
+            teamSize: members.length,
+            generatedAt: new Date().toISOString()
+        });
+
+    } catch (error) {
+        console.error('Error fetching report data:', error);
+        res.status(500).json({ error: 'فشل في جلب بيانات التقرير' });
+    }
+});
+
 module.exports = router;

@@ -1332,7 +1332,7 @@
 
     async function viewEntity(id) {
       const d = await api(`/api/entities/${id}`);
-      if (!d?.entity) return;
+      if (!d?.entity) { alert('خطأ في تحميل البيانات'); return; }
       const ent = d.entity;
       const sectorName = ent.sector ? (ent.sector.nameAr || ent.sector.nameEn) : '—';
       const industryName = ent.industry ? (ent.industry.nameAr || ent.industry.nameEn) : '—';
@@ -1341,16 +1341,69 @@
       const membersCount = ent.members?.length || 0;
       const versionsCount = ent.strategyVersions?.length || 0;
 
-      alert(
-        `📋 ${ent.legalName}\n` +
-        `${ent.displayName ? '(' + ent.displayName + ')' : ''}\n\n` +
-        `🏢 القطاع: ${sectorName}\n` +
-        `📊 النشاط: ${industryName}\n` +
-        `📏 الحجم: ${sizeName}\n` +
-        `🎓 المدرسة: ${schoolName}\n\n` +
-        `👥 الأعضاء: ${membersCount}\n` +
-        `📑 النسخ الاستراتيجية: ${versionsCount}`
-      );
+      // عرض في Modal بدل alert
+      let viewModal = document.getElementById('viewEntityModal');
+      if (!viewModal) {
+        viewModal = document.createElement('div');
+        viewModal.id = 'viewEntityModal';
+        viewModal.className = 'modal fade';
+        viewModal.tabIndex = -1;
+        viewModal.innerHTML = `
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="viewModalTitle"></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body" id="viewModalBody"></div>
+              <div class="modal-footer">
+                <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">إغلاق</button>
+                <button type="button" class="btn-modal-save" id="viewGoToDashBtn">📍 لوحة التحكم</button>
+              </div>
+            </div>
+          </div>`;
+        document.body.appendChild(viewModal);
+      }
+
+      document.getElementById('viewModalTitle').textContent = `📋 ${ent.legalName}`;
+      document.getElementById('viewModalBody').innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div style="background:rgba(255,255,255,0.03);padding:14px;border-radius:12px;border:1px solid var(--border)">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">🏢 القطاع</div>
+            <div style="font-weight:700">${sectorName}</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.03);padding:14px;border-radius:12px;border:1px solid var(--border)">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">📊 النشاط</div>
+            <div style="font-weight:700">${industryName}</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.03);padding:14px;border-radius:12px;border:1px solid var(--border)">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">📏 الحجم</div>
+            <div style="font-weight:700">${sizeName}</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.03);padding:14px;border-radius:12px;border:1px solid var(--border)">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">🎓 المدرسة</div>
+            <div style="font-weight:700">${schoolName}</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.03);padding:14px;border-radius:12px;border:1px solid var(--border)">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">👥 الأعضاء</div>
+            <div style="font-weight:700">${membersCount} عضو</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.03);padding:14px;border-radius:12px;border:1px solid var(--border)">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">📑 النسخ الاستراتيجية</div>
+            <div style="font-weight:700">${versionsCount} نسخة</div>
+          </div>
+        </div>`;
+
+      document.getElementById('viewGoToDashBtn').onclick = () => {
+        // حفظ الكيان كـ active وروح الداشبورد
+        const u = JSON.parse(localStorage.getItem('user') || '{}');
+        if (u.entity) u.entity.id = id; else u.entity = { id };
+        u.activeEntityId = id;
+        localStorage.setItem('user', JSON.stringify(u));
+        location.href = '/dashboard.html';
+      };
+
+      new bootstrap.Modal(viewModal).show();
     }
 
     async function deleteEntity(id) {
@@ -1400,8 +1453,8 @@
     init();
   </script>
   <script src="/assets/js/api.js"></script>
-    <script src="/assets/js/sidebar.js"></script>
-    <script src="/assets/js/ai-advisor.js"></script>
+  <script src="/assets/js/sidebar.js"></script>
+  <script src="/assets/js/ai-advisor.js"></script>
 </body>
 
 </html>

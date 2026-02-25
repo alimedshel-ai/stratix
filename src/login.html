@@ -352,7 +352,7 @@
                         <i class="bi bi-info-circle info-icon" data-bs-toggle="tooltip"
                             title="اكتب اسمك كما تحب أن يظهر في لوحة التحكم"></i>
                     </label>
-                    <input type="text" id="signup-name" class="form-control" placeholder="مثال: أحمد محمد" required>
+                    <input type="text" id="signup-name" class="form-control" placeholder="مثال: أحمد محمد (اختياري)">
                 </div>
 
                 <div class="mb-3">
@@ -366,12 +366,14 @@
 
                 <div class="mb-3">
                     <label class="form-label">
-                        اسم المنشأة
+                        رقم الجوال
                         <i class="bi bi-info-circle info-icon" data-bs-toggle="tooltip"
-                            title="اسم شركتك أو مؤسستك لإنشاء مساحة العمل الخاصة بك"></i>
+                            title="رقم الجوال يساعدك في استرجاع حسابك والتحقق من هويتك"></i>
                     </label>
-                    <input type="text" id="signup-company" class="form-control" placeholder="شركة التقنية الحديثة"
-                        required>
+                    <input type="tel" id="signup-phone" class="form-control" placeholder="05xxxxxxxx" dir="ltr"
+                        style="text-align:left">
+                    <div class="form-text" style="color:var(--text-muted);font-size:0.78rem">اختياري — يمكنك إضافته
+                        لاحقاً</div>
                 </div>
 
                 <div class="mb-4">
@@ -478,20 +480,17 @@
                     const role = data.user.role || 'VIEWER';
                     const sysRole = data.user.systemRole || 'USER';
                     const uType = data.user.userType || 'EXPLORER';
-                    const hasChosenType = localStorage.getItem('userTypeChosen');
                     const onboardingDone = data.user.onboardingCompleted || false;
 
                     if (sysRole !== 'SUPER_ADMIN' && (role === 'VIEWER' || role === 'DATA_ENTRY')) {
                         window.location.href = '/viewer-hub.html';
-                    } else if (uType === 'EXPLORER' && !hasChosenType && sysRole !== 'SUPER_ADMIN') {
-                        window.location.href = '/select-type.html';
+                    } else if (!onboardingDone && sysRole !== 'SUPER_ADMIN') {
+                        // لم يكمل التأسيس → يكمله أولاً
+                        window.location.href = '/onboarding.html';
                     } else if (uType === 'CONSULTANT') {
                         window.location.href = '/consultant-dashboard.html';
                     } else if (uType === 'DEPT_MANAGER') {
                         window.location.href = '/dept-dashboard.html';
-                    } else if (!onboardingDone && sysRole !== 'SUPER_ADMIN') {
-                        const hasDiagnosis = localStorage.getItem('painAmbition');
-                        window.location.href = hasDiagnosis ? '/onboarding.html' : '/pain-ambition.html';
                     } else {
                         window.location.href = '/dashboard.html';
                     }
@@ -534,29 +533,30 @@
 
             const name = document.getElementById('signup-name').value.trim();
             const email = document.getElementById('signup-email').value.trim();
-            const companyName = document.getElementById('signup-company').value.trim();
+            const phone = document.getElementById('signup-phone').value.trim();
             const password = document.getElementById('signup-password').value;
+
+            // قراءة بيانات التشخيص من localStorage (من الخطوة السابقة)
+            const userCategory = localStorage.getItem('stratix_category') || null;
+            let diagnosticData = null;
+            try {
+                const pa = localStorage.getItem('painAmbition');
+                if (pa) diagnosticData = JSON.parse(pa);
+            } catch (e) { }
 
             try {
                 const res = await fetch('/api/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, companyName, password })
+                    body: JSON.stringify({ name, email, phone: phone || undefined, password, userCategory, diagnosticData })
                 });
                 const data = await res.json();
 
                 if (res.ok && data.token) {
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
-                    // Check if diagnosis was already completed before signup
-                    const painAmbition = localStorage.getItem('painAmbition');
-                    if (painAmbition) {
-                        // Diagnosis done → go to onboarding
-                        window.location.href = '/onboarding.html';
-                    } else {
-                        // No diagnosis → go to pain/ambition
-                        window.location.href = '/pain-ambition.html';
-                    }
+                    // دائماً نروح للتأسيس (إنشاء الشركة والكيان)
+                    window.location.href = data.redirectTo || '/onboarding';
                 } else {
                     let errDiv = document.getElementById('signupError');
                     if (!errDiv) {

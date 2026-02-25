@@ -73,7 +73,6 @@
       emoji: '🏗️',
       color: '#667eea',
       items: [
-        { label: 'إعداد المنظمة', href: '/onboarding.html', icon: 'bi-rocket-takeoff-fill' },
         { label: 'الكيانات', href: '/entities.html', icon: 'bi-building-fill' },
         { label: 'القطاعات والأنشطة', href: '/sectors.html', icon: 'bi-grid-3x3-gap-fill' },
         { label: 'الإعدادات', href: '/settings.html', icon: 'bi-gear-fill' },
@@ -253,18 +252,6 @@
     // ╚═══════════════════════════════════════════╝
     html += '<div class="stx-section-label"><i class="bi bi-lightning-charge-fill" style="color:#667eea;margin-left:4px"></i> مساري</div>';
 
-    // --- زر المبتدئ — بارز ودائم ---
-    if (!isViewerOrDE) {
-      const isBegActive = isActive('/beginner-path.html');
-      html += `
-      <a href="/beginner-path.html" class="stx-item stx-beginner-btn ${isBegActive ? 'active' : ''}" style="margin:0 10px 6px;padding:10px 14px !important;border-radius:12px;font-weight:700;font-size:12.5px;border-right:none !important;background:linear-gradient(135deg,rgba(245,158,11,0.12),rgba(249,115,22,0.08));border:1.5px solid rgba(245,158,11,0.3);display:flex;align-items:center;gap:10px;transition:all 0.3s;">
-        <i class="bi bi-signpost-split-fill" style="color:#f59e0b;font-size:17px"></i>
-        <span style="color:#f59e0b">مسار المبتدئ</span>
-        <span style="margin-right:auto;font-size:10px;padding:2px 8px;border-radius:6px;background:rgba(245,158,11,0.15);color:#f59e0b;font-weight:800">مجاني</span>
-      </a>
-      `;
-    }
-
     html += `
       <a href="${homeHref}" class="stx-item stx-mypath ${isHomeActive ? 'active' : ''}">
         <i class="bi bi-crosshair" style="color:#667eea"></i>
@@ -339,11 +326,23 @@
       html += '<div class="stx-divider"></div>';
       html += '<div class="stx-section-label"><i class="bi bi-compass-fill" style="color:#667eea;margin-left:4px"></i> رحلتي الاستراتيجية</div>';
 
-      // --- الألم والطموح (المرحلة صفر) + بادج النمط + رابط DNA ---
+      // --- حالة البيانات ---
       const hasPainAmbition = !!localStorage.getItem('painAmbition');
       const isPainActive = isActive('/pain-ambition.html');
+      const isBegPathActive = isActive('/beginner-path.html');
+      const isOnboardingActive = isActive('/onboarding.html');
       const isDnaActive = isActive('/org-dna.html');
 
+      // === الخطوة 1: مسار المبتدئ (لتأسيس مشروع / شركة ناشئة / دخول شريك) ===
+      html += `
+      <a href="/beginner-path.html" class="stx-item stx-phase0 ${isBegPathActive ? 'active' : ''}" style="margin:2px 10px;border-radius:10px;padding:10px 14px !important;border-right:none !important;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);">
+        <i class="bi bi-signpost-split-fill" style="font-size:15px;color:#f59e0b"></i>
+        <span style="font-weight:700;font-size:12.5px;color:#f59e0b">مسار المبتدئ</span>
+        <span style="margin-right:auto;font-size:9px;padding:2px 7px;border-radius:5px;background:rgba(245,158,11,0.15);color:#f59e0b;font-weight:800">مشروع جديد</span>
+      </a>
+      `;
+
+      // === الخطوة 2: الألم والطموح (للشركات القائمة — النظام يتكيف حسب النمط) ===
       // Extract pattern info for badge
       let patternBadgeHTML = '';
       if (hasPainAmbition && patternKey !== 'default') {
@@ -373,17 +372,20 @@
       }
 
       html += `
-      <a href="/pain-ambition.html" class="stx-item stx-phase0 ${isPainActive ? 'active' : ''}" style="margin:2px 10px;border-radius:10px;padding:10px 14px !important;border-right:none !important;background:${hasPainAmbition ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)'};border:1px solid ${hasPainAmbition ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.15)'};">
-        <i class="bi ${hasPainAmbition ? 'bi-check-circle-fill' : 'bi-record-circle'}" style="font-size:15px;color:${hasPainAmbition ? '#22c55e' : '#ef4444'}"></i>
+      <a href="/pain-ambition.html" class="stx-item stx-phase0 ${isPainActive ? 'active' : ''}" style="margin:2px 10px;border-radius:10px;padding:10px 14px !important;border-right:none !important;background:${hasPainAmbition ? 'rgba(34,197,94,0.08)' : 'rgba(124,58,237,0.08)'};border:1px solid ${hasPainAmbition ? 'rgba(34,197,94,0.2)' : 'rgba(124,58,237,0.15)'};">
+        <i class="bi ${hasPainAmbition ? 'bi-check-circle-fill' : 'bi-record-circle'}" style="font-size:15px;color:${hasPainAmbition ? '#22c55e' : '#7c3aed'}"></i>
         <span style="font-weight:700;font-size:12.5px">الألم والطموح</span>
+        <span style="margin-right:auto;font-size:9px;padding:2px 7px;border-radius:5px;background:${hasPainAmbition ? 'rgba(34,197,94,0.15)' : 'rgba(124,58,237,0.15)'};color:${hasPainAmbition ? '#22c55e' : '#7c3aed'};font-weight:800">${hasPainAmbition ? 'مكتمل ✓' : 'شركة قائمة'}</span>
       </a>
       ${patternBadgeHTML}
-      ${!hasPainAmbition ? `
-      <a href="/beginner-path.html" class="stx-item" style="margin:-2px 18px 4px;padding:6px 12px !important;border-radius:8px;font-size:11.5px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.12)">
-        <i class="bi bi-signpost-split" style="color:#f59e0b;font-size:13px"></i>
-        <span style="color:#f59e0b;font-weight:600">مبتدئ؟ ابدأ من هنا</span>
+      `;
+
+      // === الخطوة 3: إعداد المنظمة (بعد اختيار المسار) ===
+      html += `
+      <a href="/onboarding.html" class="stx-item stx-phase0 ${isOnboardingActive ? 'active' : ''}" style="margin:2px 10px 4px;border-radius:10px;padding:10px 14px !important;border-right:none !important;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);">
+        <i class="bi bi-rocket-takeoff-fill" style="font-size:15px;color:#667eea"></i>
+        <span style="font-weight:700;font-size:12.5px">إعداد المنظمة</span>
       </a>
-      ` : ''}
       <a href="/org-dna.html" class="stx-item stx-dna-link ${isDnaActive ? 'active' : ''}" style="margin:-2px 18px 4px;padding:6px 12px !important;border-radius:8px;font-size:11.5px;opacity:0.85">
         <i class="bi bi-fingerprint" style="color:#ec4899;font-size:13px"></i>
         <span>هوية المنظمة (DNA)</span>

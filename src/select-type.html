@@ -4,19 +4,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ستارتكس — اختر نوعك</title>
-    <meta name="description" content="اختر نوع حسابك في ستارتكس لتجربة مخصصة">
+    <title>ستارتكس — اختر فئتك</title>
+    <meta name="description" content="اختر فئتك وابدأ تشخيصك الاستراتيجي المجاني بدون تسجيل">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
     <style>
         :root {
-            --bg: #0f1219;
-            --bg-card: #1a1d2e;
+            --bg: #0a0d14;
+            --bg-card: #141825;
             --text: #e2e8f0;
             --text-muted: #8b8ba7;
             --border: rgba(255, 255, 255, 0.06);
-            --accent: #a78bfa;
-            --accent-glow: rgba(167, 139, 250, 0.15);
         }
 
         * {
@@ -33,74 +32,138 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 24px;
+            padding: 32px 20px;
             overflow-y: auto;
         }
 
-        .welcome-header {
-            text-align: center;
-            margin-bottom: 40px;
-            animation: fadeIn 0.6s ease;
+        /* === Background === */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(124, 58, 237, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(59, 130, 246, 0.06) 0%, transparent 50%);
+            z-index: 0;
+            pointer-events: none;
         }
 
-        .welcome-header .logo {
+        /* === Header === */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 1;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .header .logo {
             font-size: 28px;
-            font-weight: 800;
+            font-weight: 900;
             background: linear-gradient(135deg, #a78bfa, #38bdf8);
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 12px;
         }
 
-        .welcome-header h1 {
-            font-size: 26px;
-            font-weight: 700;
+        .header h1 {
+            font-size: 28px;
+            font-weight: 800;
             margin-bottom: 8px;
         }
 
-        .welcome-header p {
+        .header p {
             color: var(--text-muted);
             font-size: 15px;
-            max-width: 480px;
+            max-width: 520px;
+            line-height: 1.7;
         }
 
-        .types-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
-            max-width: 720px;
+        .header .free-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 12px;
+            padding: 6px 18px;
+            border-radius: 20px;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        /* === Section Labels === */
+        .section-label {
+            position: relative;
+            z-index: 1;
             width: 100%;
+            max-width: 800px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        @media (max-width: 600px) {
+        .section-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* === Grid === */
+        .types-grid {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            max-width: 800px;
+            width: 100%;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .types-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 500px) {
             .types-grid {
                 grid-template-columns: 1fr;
             }
         }
 
+        /* === Card === */
         .type-card {
             background: var(--bg-card);
             border: 2px solid var(--border);
             border-radius: 16px;
-            padding: 28px 24px;
+            padding: 24px 20px;
             cursor: pointer;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            text-align: center;
         }
 
         .type-card::before {
             content: '';
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle at 50% 0%, var(--card-glow, rgba(167, 139, 250, 0.05)), transparent 70%);
+            background: radial-gradient(circle at 50% 0%, var(--glow) 0%, transparent 70%);
             opacity: 0;
             transition: opacity 0.3s;
         }
 
         .type-card:hover {
-            border-color: var(--card-color, var(--accent));
+            border-color: var(--color);
             transform: translateY(-4px);
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
         }
@@ -110,76 +173,102 @@
         }
 
         .type-card.selected {
-            border-color: var(--card-color, var(--accent));
-            background: rgba(167, 139, 250, 0.06);
+            border-color: var(--color);
+            background: color-mix(in srgb, var(--color) 6%, var(--bg-card));
         }
 
         .type-card.selected::after {
             content: '✓';
             position: absolute;
-            top: 12px;
-            left: 12px;
-            width: 28px;
-            height: 28px;
+            top: 10px;
+            left: 10px;
+            width: 26px;
+            height: 26px;
             border-radius: 50%;
-            background: var(--card-color, var(--accent));
+            background: var(--color);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
             animation: popIn 0.3s ease;
         }
 
         .type-emoji {
-            font-size: 42px;
-            margin-bottom: 16px;
+            font-size: 40px;
+            margin-bottom: 12px;
             display: block;
         }
 
         .type-title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
             margin-bottom: 6px;
-            color: var(--card-color, var(--text));
+            color: var(--color, var(--text));
         }
 
         .type-desc {
-            font-size: 13px;
+            font-size: 12px;
             color: var(--text-muted);
             line-height: 1.6;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
-        .type-features {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-        }
-
-        .type-features span {
-            font-size: 10.5px;
-            padding: 3px 8px;
-            border-radius: 6px;
+        .type-route {
+            font-size: 10px;
+            padding: 3px 10px;
+            border-radius: 8px;
             background: rgba(255, 255, 255, 0.04);
-            color: var(--text-muted);
+            color: var(--color, var(--text-muted));
+            display: inline-block;
+            font-weight: 600;
         }
 
-        .type-company-size {
-            font-size: 11px;
-            color: var(--card-color, var(--text-muted));
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
+        /* Card Colors */
+        .type-card:nth-child(1) {
+            --color: #22c55e;
+            --glow: rgba(34, 197, 94, 0.06);
+            animation: fadeIn 0.4s ease both;
         }
 
-        /* CTA */
+        .type-card:nth-child(2) {
+            --color: #3b82f6;
+            --glow: rgba(59, 130, 246, 0.06);
+            animation: fadeIn 0.4s ease 0.05s both;
+        }
+
+        .type-card:nth-child(3) {
+            --color: #f59e0b;
+            --glow: rgba(245, 158, 11, 0.06);
+            animation: fadeIn 0.4s ease 0.1s both;
+        }
+
+        .type-card:nth-child(4) {
+            --color: #a78bfa;
+            --glow: rgba(167, 139, 250, 0.06);
+            animation: fadeIn 0.4s ease 0.15s both;
+        }
+
+        .type-card:nth-child(5) {
+            --color: #ec4899;
+            --glow: rgba(236, 72, 153, 0.06);
+            animation: fadeIn 0.4s ease 0.2s both;
+        }
+
+        .type-card:nth-child(6) {
+            --color: #0891b2;
+            --glow: rgba(8, 145, 178, 0.06);
+            animation: fadeIn 0.4s ease 0.25s both;
+        }
+
+        /* === CTA === */
         .cta-section {
-            margin-top: 32px;
+            position: relative;
+            z-index: 1;
             text-align: center;
-            animation: fadeIn 0.8s ease;
+            margin-top: 8px;
+            animation: fadeIn 0.6s ease;
         }
 
         .cta-btn {
@@ -187,13 +276,13 @@
             color: white;
             border: none;
             border-radius: 14px;
-            padding: 16px 48px;
-            font-size: 16px;
+            padding: 16px 52px;
+            font-size: 17px;
             font-weight: 700;
             font-family: 'Tajawal', sans-serif;
             cursor: pointer;
             transition: all 0.3s;
-            opacity: 0.4;
+            opacity: 0.3;
             pointer-events: none;
         }
 
@@ -213,21 +302,7 @@
             margin-top: 12px;
         }
 
-        .skip-link {
-            margin-top: 16px;
-            font-size: 12px;
-            color: var(--text-muted);
-            cursor: pointer;
-            text-decoration: underline;
-            opacity: 0.6;
-            transition: opacity 0.2s;
-        }
-
-        .skip-link:hover {
-            opacity: 1;
-        }
-
-        /* Animations */
+        /* === Animations === */
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -249,239 +324,131 @@
                 transform: scale(1);
             }
         }
-
-        .type-card:nth-child(1) {
-            animation: fadeIn 0.5s ease both;
-            --card-color: #22c55e;
-            --card-glow: rgba(34, 197, 94, 0.08);
-        }
-
-        .type-card:nth-child(2) {
-            animation: fadeIn 0.5s ease 0.1s both;
-            --card-color: #3b82f6;
-            --card-glow: rgba(59, 130, 246, 0.08);
-        }
-
-        .type-card:nth-child(3) {
-            animation: fadeIn 0.5s ease 0.2s both;
-            --card-color: #f59e0b;
-            --card-glow: rgba(245, 158, 11, 0.08);
-        }
-
-        .type-card:nth-child(4) {
-            animation: fadeIn 0.5s ease 0.3s both;
-            --card-color: #a78bfa;
-            --card-glow: rgba(167, 139, 250, 0.08);
-        }
-
-        /* Loading */
-        .loading-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 18, 25, 0.9);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 999;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
-        }
-
-        .loading-overlay.show {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .loading-overlay .spinner {
-            width: 48px;
-            height: 48px;
-            border: 3px solid var(--border);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        .loading-overlay p {
-            margin-top: 16px;
-            font-size: 15px;
-            color: var(--text-muted);
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
     </style>
 </head>
 
 <body>
 
-    <div class="welcome-header">
+    <div class="header">
         <div class="logo">◈ ستارتكس</div>
-        <h1>👋 أهلاً بك! من أنت؟</h1>
-        <p>اختر النوع الأقرب لوضعك — سنخصص تجربتك بالكامل بناءً على اختيارك</p>
+        <h1>🔍 ابدأ تشخيصك المجاني</h1>
+        <p>اختر الفئة الأقرب لوضعك الحالي — سنوجهك لتشخيص مخصص يكشف لك أين أنت وكيف تتطور</p>
+        <div class="free-badge">
+            <i class="bi bi-shield-check"></i>
+            بدون تسجيل — مجاني بالكامل
+        </div>
     </div>
 
-    <div class="types-grid" id="typesGrid">
-        <!-- 🧑‍💼 مستكشف -->
-        <div class="type-card" data-type="EXPLORER" onclick="selectType(this)">
-            <span class="type-emoji">🧑‍💼</span>
-            <div class="type-title">مستكشف</div>
-            <div class="type-company-size"><i class="bi bi-people"></i> 1-20 موظف • شركة ناشئة</div>
-            <div class="type-desc">أبدأ رحلتي الاستراتيجية لأول مرة. أحتاج توجيه خطوة بخطوة.</div>
-            <div class="type-features">
-                <span>مسار مبسط</span>
-                <span>توجيه ذكي</span>
-                <span>أدوات أساسية</span>
-            </div>
+    <!-- === الأفراد === -->
+    <div class="section-label">
+        <i class="bi bi-person-fill"></i>
+        للأفراد
+    </div>
+    <div class="types-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 28px;">
+        <div class="type-card" data-category="INDIVIDUAL_DEV" data-route="beginner" onclick="selectCategory(this)">
+            <span class="type-emoji">🧑‍💻</span>
+            <div class="type-title">تطوير شخصي</div>
+            <div class="type-desc">أبي أطور نفسي مهنياً وأبني خارطة طريق شخصية</div>
+            <span class="type-route">3 أسئلة سريعة</span>
         </div>
 
-        <!-- 👔 مدير شركة -->
-        <div class="type-card" data-type="COMPANY_MANAGER" onclick="selectType(this)">
-            <span class="type-emoji">👔</span>
-            <div class="type-title">مدير شركة</div>
-            <div class="type-company-size"><i class="bi bi-building"></i> 20-200+ موظف • شركة متوسطة/كبيرة</div>
-            <div class="type-desc">أدير شركة وأريد بناء استراتيجية شاملة مع كل الأدوات.</div>
-            <div class="type-features">
-                <span>جميع الأدوات</span>
-                <span>9 أدوات تشخيصية</span>
-                <span>تقارير متقدمة</span>
-                <span>محاكاة</span>
-            </div>
+        <div class="type-card" data-category="INDIVIDUAL_IDEA" data-route="beginner" onclick="selectCategory(this)">
+            <span class="type-emoji">💡</span>
+            <div class="type-title">عندي فكرة مشروع</div>
+            <div class="type-desc">أفكر أبدأ مشروع جديد وأبي أعرف من وين أبدأ</div>
+            <span class="type-route">3 أسئلة سريعة</span>
+        </div>
+    </div>
+
+    <!-- === المشاريع والشركات === -->
+    <div class="section-label">
+        <i class="bi bi-building-fill"></i>
+        للمشاريع والشركات
+    </div>
+    <div class="types-grid">
+        <div class="type-card" data-category="NEW_PROJECT" data-route="founder" onclick="selectCategory(this)">
+            <span class="type-emoji">🌱</span>
+            <div class="type-title">مؤسس جديد / مشروع جديد</div>
+            <div class="type-desc">عندك فكرة وتبي تعرف جاهزيتك والمسار المناسب للانطلاق</div>
+            <span class="type-route">15 سؤال تقييمي ✨</span>
         </div>
 
-        <!-- 📊 مدير إدارة -->
-        <div class="type-card" data-type="DEPT_MANAGER" onclick="selectType(this)">
-            <span class="type-emoji">📊</span>
-            <div class="type-title">مدير إدارة</div>
-            <div class="type-company-size"><i class="bi bi-diagram-3"></i> مسؤول عن قسم محدد</div>
-            <div class="type-desc">أركز على مؤشرات إدارتي ومهام فريقي. أحتاج Dashboard عملي.</div>
-            <div class="type-features">
-                <span>مؤشرات القسم</span>
-                <span>إدارة المهام</span>
-                <span>تقارير الأداء</span>
-            </div>
+        <div class="type-card" data-category="COMPANY_SMALL" data-route="pain" onclick="selectCategory(this)">
+            <span class="type-emoji">🏢</span>
+            <div class="type-title">شركة صغيرة</div>
+            <div class="type-desc">1 - 50 موظف — نبي ننظم استراتيجيتنا</div>
+            <span class="type-route">تحليل الألم والطموح</span>
         </div>
 
-        <!-- 🧠 مستشار -->
-        <div class="type-card" data-type="CONSULTANT" onclick="selectType(this)">
-            <span class="type-emoji">🧠</span>
-            <div class="type-title">مستشار استراتيجي</div>
-            <div class="type-company-size"><i class="bi bi-globe2"></i> أدير عدة شركات لعملاء</div>
-            <div class="type-desc">أقدم استشارات لعدة شركات. أحتاج رؤية شاملة ومقارنة.</div>
-            <div class="type-features">
-                <span>تعدد الشركات</span>
-                <span>مقارنة أداء</span>
-                <span>كل الأدوات</span>
-                <span>تقارير للعملاء</span>
-            </div>
+        <div class="type-card" data-category="COMPANY_MEDIUM" data-route="pain" onclick="selectCategory(this)">
+            <span class="type-emoji">🏗️</span>
+            <div class="type-title">شركة متوسطة</div>
+            <div class="type-desc">50 - 500 موظف — نبي تحول استراتيجي شامل</div>
+            <span class="type-route">تحليل الألم والطموح</span>
+        </div>
+
+        <div class="type-card" data-category="COMPANY_LARGE" data-route="pain" onclick="selectCategory(this)">
+            <span class="type-emoji">🏛️</span>
+            <div class="type-title">شركة كبيرة / حكومية</div>
+            <div class="type-desc">500+ موظف — إدارة استراتيجية متقدمة</div>
+            <span class="type-route">تحليل الألم والطموح</span>
         </div>
     </div>
 
     <div class="cta-section">
-        <button class="cta-btn" id="confirmBtn" onclick="confirmType()">
-            <i class="bi bi-arrow-left"></i> تأكيد وبدء الرحلة
+        <button class="cta-btn" id="confirmBtn" onclick="confirmCategory()">
+            ابدأ التشخيص <i class="bi bi-arrow-left"></i>
         </button>
-        <div class="cta-hint" id="ctaHint">اختر نوعك أولاً</div>
-        <div class="skip-link" onclick="skipSelection()">تخطي الآن — يمكنك التغيير لاحقاً من الإعدادات</div>
-    </div>
-
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner"></div>
-        <p>جاري تخصيص تجربتك...</p>
+        <div class="cta-hint" id="ctaHint">اختر فئتك أولاً</div>
     </div>
 
     <script>
-        let selectedType = null;
+        let selectedCard = null;
 
-        // Auth check
-        const token = localStorage.getItem('token');
-        if (!token) {
-            location.href = '/login.html';
-        }
-
-        // If userType is already set (not EXPLORER), redirect
-        try {
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
-            if (user.userType && user.userType !== 'EXPLORER' && !location.search.includes('force')) {
-                location.href = '/dashboard.html';
-            }
-        } catch (e) { }
-
-        function selectType(card) {
-            // Deselect all
+        function selectCategory(card) {
             document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
-            // Select this one
             card.classList.add('selected');
-            selectedType = card.dataset.type;
+            selectedCard = card;
 
-            // Enable CTA
             const btn = document.getElementById('confirmBtn');
             btn.classList.add('active');
 
-            const typeNames = {
-                EXPLORER: 'مستكشف',
-                COMPANY_MANAGER: 'مدير شركة',
-                DEPT_MANAGER: 'مدير إدارة',
-                CONSULTANT: 'مستشار'
-            };
-            document.getElementById('ctaHint').textContent = `✨ ستراتكيس سيتكيف مع احتياجاتك كـ "${typeNames[selectedType]}"`;
+            const catName = card.querySelector('.type-title').textContent;
+            document.getElementById('ctaHint').textContent = `✨ سنجهّز تشخيصاً مخصصاً لـ "${catName}"`;
         }
 
-        async function confirmType() {
-            if (!selectedType) return;
+        function confirmCategory() {
+            if (!selectedCard) return;
 
-            const overlay = document.getElementById('loadingOverlay');
-            overlay.classList.add('show');
+            const category = selectedCard.dataset.category;
+            const route = selectedCard.dataset.route;
 
-            try {
-                const res = await fetch('/api/auth/user-type', {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ userType: selectedType })
-                });
+            // حفظ الفئة في localStorage (قبل التسجيل)
+            localStorage.setItem('stratix_category', category);
+            localStorage.setItem('stratix_diagnostic_started', 'true');
 
-                const data = await res.json();
-
-                if (res.ok) {
-                    // Update localStorage
-                    const user = JSON.parse(localStorage.getItem('user') || '{}');
-                    user.userType = selectedType;
-                    localStorage.setItem('user', JSON.stringify(user));
-                    localStorage.setItem('userTypeChosen', 'true');
-
-                    // Redirect based on type
-                    setTimeout(() => {
-                        if (selectedType === 'CONSULTANT') {
-                            location.href = '/consultant-dashboard.html';
-                        } else if (selectedType === 'DEPT_MANAGER') {
-                            location.href = '/dept-dashboard.html';
-                        } else {
-                            location.href = '/dashboard.html';
-                        }
-                    }, 1200);
-                } else {
-                    overlay.classList.remove('show');
-                    alert(data.error || 'حدث خطأ');
-                }
-            } catch (err) {
-                overlay.classList.remove('show');
-                console.error(err);
-                alert('فشل الاتصال بالسيرفر');
+            // التوجيه حسب النوع
+            if (route === 'beginner') {
+                // الأفراد → تشخيص المبتدئ
+                window.location.href = '/beginner-path?from=diagnostic&category=' + category;
+            } else if (route === 'founder') {
+                // مؤسس جديد → تقييم جاهزية المؤسس
+                window.location.href = '/founder-diagnostic?from=diagnostic&category=' + category;
+            } else {
+                // الشركات القائمة → الألم والطموح
+                window.location.href = '/pain-ambition?from=diagnostic&category=' + category;
             }
         }
 
-        function skipSelection() {
-            // Keep as EXPLORER and go to dashboard
-            localStorage.setItem('userTypeChosen', 'true');
-            location.href = '/dashboard.html';
-        }
+        // لو مسجل دخول ومكمل التأسيس → Dashboard
+        try {
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (token && user.onboardingCompleted) {
+                // لا نعيد توجيهه إلا إذا ما جاء من landing بنفسه
+                // نخليه يختار لو حاب يعيد التشخيص
+            }
+        } catch (e) { }
     </script>
 </body>
 
