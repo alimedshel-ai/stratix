@@ -490,8 +490,21 @@
                     if (sysRole !== 'SUPER_ADMIN' && (role === 'VIEWER' || role === 'DATA_ENTRY')) {
                         window.location.href = '/viewer-hub.html';
                     } else if (!onboardingDone && sysRole !== 'SUPER_ADMIN') {
-                        // لم يكمل التأسيس → يكمله أولاً
-                        window.location.href = '/onboarding.html';
+                        // كشف نوع المستخدم: فرد أو شركة
+                        let _isIndvLogin = false;
+                        try {
+                            const sgRaw = localStorage.getItem('stratix_smart_guide');
+                            if (sgRaw) _isIndvLogin = (JSON.parse(sgRaw).category || '').startsWith('INDIVIDUAL_');
+                            if (!_isIndvLogin) _isIndvLogin = (localStorage.getItem('stratix_category') || '').startsWith('INDIVIDUAL_');
+                        } catch (e) { }
+
+                        if (_isIndvLogin) {
+                            // الأفراد → الداشبورد مباشرة (لا يحتاجون إعداد منظمة)
+                            window.location.href = '/dashboard.html';
+                        } else {
+                            // الشركات → يكملون التأسيس أولاً
+                            window.location.href = '/onboarding.html';
+                        }
                     } else if (uType === 'CONSULTANT') {
                         window.location.href = '/consultant-dashboard.html';
                     } else if (uType === 'DEPT_MANAGER') {
@@ -578,9 +591,22 @@
                     else if (data.redirectTo) {
                         window.location.href = data.redirectTo;
                     }
-                    // 3. الافتراضي: الإعداد
+                    // 3. الافتراضي: حسب نوع المستخدم
                     else {
-                        window.location.href = '/onboarding';
+                        let _isIndvSignup = false;
+                        try {
+                            const sgRaw = localStorage.getItem('stratix_smart_guide');
+                            if (sgRaw) _isIndvSignup = (JSON.parse(sgRaw).category || '').startsWith('INDIVIDUAL_');
+                            if (!_isIndvSignup) _isIndvSignup = (localStorage.getItem('stratix_category') || '').startsWith('INDIVIDUAL_');
+                        } catch (e) { }
+
+                        if (_isIndvSignup) {
+                            // الأفراد → الداشبورد مباشرة
+                            window.location.href = '/dashboard.html';
+                        } else {
+                            // الشركات → إعداد المنظمة
+                            window.location.href = '/onboarding.html';
+                        }
                     }
                 } else {
                     let errDiv = document.getElementById('signupError');
