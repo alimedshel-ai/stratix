@@ -529,8 +529,15 @@
                 <div class="wizard-card">
                     <div class="step-header">
                         <div class="step-icon"><i class="bi bi-diagram-3"></i></div>
-                        <h2>اختر قطاع منظمتك</h2>
-                        <p>حدد القطاع الرئيسي لمنظمتك لنخصص التجربة</p>
+                        <h2>اختر قطاعات منظمتك</h2>
+                        <p>حدد القطاعات التي تعمل فيها منظمتك <span
+                                style="font-size:13px;color:rgba(255,255,255,0.5)">(يمكنك اختيار أكثر من قطاع)</span>
+                        </p>
+                        <div id="sectorCounter"
+                            style="display:none;margin-top:8px;padding:6px 16px;background:rgba(102,126,234,0.2);border:1px solid rgba(102,126,234,0.3);border-radius:20px;font-size:13px;color:#a5b4fc;width:fit-content;margin-inline:auto">
+                            <i class="bi bi-check-circle-fill" style="margin-left:4px"></i>
+                            <span id="sectorCountText">0 قطاعات محددة</span>
+                        </div>
                     </div>
                     <div class="selection-grid" id="sectorGrid">
                         <div class="selection-card" data-sector="technology" onclick="selectSector(this)">
@@ -756,7 +763,7 @@
 
     <script>
         let currentStep = 1;
-        let selectedSector = null;
+        let selectedSectors = [];
         let members = [];
 
         function nextStep(step) {
@@ -814,35 +821,61 @@
         }
 
         function selectSector(card) {
-            document.querySelectorAll('.selection-card').forEach(c => c.classList.remove('selected'));
-            card.classList.add('selected');
-            selectedSector = card.dataset.sector;
-            document.getElementById('btnStep2Next').disabled = false;
+            const sector = card.dataset.sector;
 
-            // Show/hide custom sector input
-            const customBox = document.getElementById('customSectorBox');
-            if (selectedSector === 'other') {
-                customBox.style.display = 'block';
-                const customInput = document.getElementById('customSectorName');
-                customInput.focus();
-                // Disable next if custom name is empty
-                if (!customInput.value.trim()) {
-                    document.getElementById('btnStep2Next').disabled = true;
+            // "أخرى" — تبديل خاص
+            if (sector === 'other') {
+                card.classList.toggle('selected');
+                const customBox = document.getElementById('customSectorBox');
+                if (card.classList.contains('selected')) {
+                    if (!selectedSectors.includes('other')) selectedSectors.push('other');
+                    customBox.style.display = 'block';
+                    document.getElementById('customSectorName').focus();
+                } else {
+                    selectedSectors = selectedSectors.filter(s => s !== 'other' && !s.startsWith('custom:'));
+                    customBox.style.display = 'none';
                 }
             } else {
-                customBox.style.display = 'none';
+                // تبديل الاختيار (toggle)
+                if (card.classList.contains('selected')) {
+                    card.classList.remove('selected');
+                    selectedSectors = selectedSectors.filter(s => s !== sector);
+                } else {
+                    card.classList.add('selected');
+                    selectedSectors.push(sector);
+                }
             }
+
+            // تحديث العدّاد
+            const count = selectedSectors.filter(s => s !== 'other').length;
+            const counter = document.getElementById('sectorCounter');
+            const countText = document.getElementById('sectorCountText');
+            if (count > 0) {
+                counter.style.display = 'block';
+                countText.textContent = count === 1 ? 'قطاع واحد محدد' : count + ' قطاعات محددة';
+            } else {
+                counter.style.display = 'none';
+            }
+
+            // تفعيل/تعطيل زر التالي
+            const hasValidSelection = selectedSectors.some(s => s !== 'other');
+            const otherSelected = selectedSectors.includes('other');
+            const customName = document.getElementById('customSectorName').value.trim();
+            document.getElementById('btnStep2Next').disabled = !hasValidSelection && !(otherSelected && customName);
         }
 
         function updateCustomSector() {
             const name = document.getElementById('customSectorName').value.trim();
+            // إزالة أي custom سابق
+            selectedSectors = selectedSectors.filter(s => !s.startsWith('custom:') && s !== 'other');
             if (name) {
-                selectedSector = 'custom:' + name;
-                document.getElementById('btnStep2Next').disabled = false;
+                selectedSectors.push('custom:' + name);
             } else {
-                selectedSector = 'other';
-                document.getElementById('btnStep2Next').disabled = true;
+                selectedSectors.push('other');
             }
+            // تحديث حالة الزر
+            const hasValidSelection = selectedSectors.some(s => s !== 'other');
+            document.getElementById('btnStep2Next').disabled = !hasValidSelection;
         }
 
         function addMember() {
@@ -895,7 +928,7 @@
                 orgType: document.getElementById('orgType').value,
                 orgSize: document.getElementById('orgSize').value,
                 orgEmail: document.getElementById('orgEmail').value.trim(),
-                sector: selectedSector,
+                sector: selectedSectors.join(','),
                 members: members,
                 completedAt: new Date().toISOString()
             };
