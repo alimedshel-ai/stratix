@@ -1159,9 +1159,18 @@
                     <h2 id="welcomeMsg">👋 مرحباً بك في ستارتكس</h2>
                     <p id="welcomeDesc">إليك ملخص حالة استراتيجيتك اليوم — تابع المؤشرات واتخذ القرارات.</p>
                 </div>
-                <div class="welcome-date">
-                    <div class="date-big" id="dateDisplay"></div>
-                    <div class="date-small" id="timeDisplay"></div>
+                <div style="display:flex;align-items:center;gap:16px;">
+                    <!-- زر تغيير المسار -->
+                    <button onclick="changePath()" id="changePathBtn"
+                        style="display:none;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:var(--text-muted);padding:8px 16px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.3s;white-space:nowrap;"
+                        onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'"
+                        onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';this.style.color='var(--text-muted)'">
+                        <i class="bi bi-arrow-repeat" style="margin-left:4px;"></i> تغيير المسار
+                    </button>
+                    <div class="welcome-date">
+                        <div class="date-big" id="dateDisplay"></div>
+                        <div class="date-small" id="timeDisplay"></div>
+                    </div>
                 </div>
             </div>
 
@@ -1827,13 +1836,43 @@
                     { id: 'signup', label: 'التسجيل', icon: '✍️', href: '/login?tab=signup' },
                     { id: 'dashboard', label: 'لوحة القيادة', icon: '📊', href: '/dashboard.html' }
                 ],
-                organization: [
+                founder: [
                     { id: 'select', label: 'اختيار المسار', icon: '🧭', href: '/select-type' },
                     { id: 'diagnostic', label: 'التشخيص', icon: '🔍', href: '/pain-ambition' },
                     { id: 'onboard', label: 'تأسيس الكيان', icon: '🏗️', href: '/onboarding.html' },
                     { id: 'swot', label: 'تحليل SWOT', icon: '📊', href: '/swot.html' },
-                    { id: 'plan', label: 'الخطة الاستراتيجية', icon: '🎯', href: '/directions.html' },
+                    { id: 'goals', label: 'الأهداف والمؤشرات', icon: '🎯', href: '/objectives.html' },
                     { id: 'execute', label: 'التنفيذ', icon: '🚀', href: '/initiatives.html' }
+                ],
+                small: [
+                    { id: 'select', label: 'اختيار المسار', icon: '🧭', href: '/select-type' },
+                    { id: 'diagnostic', label: 'التشخيص', icon: '🔍', href: '/pain-ambition' },
+                    { id: 'onboard', label: 'تأسيس الكيان', icon: '🏗️', href: '/onboarding.html' },
+                    { id: 'swot', label: 'تحليل SWOT', icon: '📊', href: '/swot.html' },
+                    { id: 'plan', label: 'الأهداف والمؤشرات', icon: '🎯', href: '/objectives.html' },
+                    { id: 'execute', label: 'المبادرات', icon: '🚀', href: '/initiatives.html' },
+                    { id: 'monitor', label: 'المتابعة', icon: '📈', href: '/reviews.html' }
+                ],
+                medium: [
+                    { id: 'select', label: 'اختيار المسار', icon: '🧭', href: '/select-type' },
+                    { id: 'diagnostic', label: 'التشخيص', icon: '🔍', href: '/pain-ambition' },
+                    { id: 'onboard', label: 'تأسيس الكيان', icon: '🏗️', href: '/onboarding.html' },
+                    { id: 'swot', label: 'التحليل الاستراتيجي', icon: '📊', href: '/swot.html' },
+                    { id: 'directions', label: 'التوجهات', icon: '🧭', href: '/directions.html' },
+                    { id: 'plan', label: 'الأهداف والمؤشرات', icon: '🎯', href: '/objectives.html' },
+                    { id: 'execute', label: 'المبادرات والمشاريع', icon: '🚀', href: '/initiatives.html' },
+                    { id: 'monitor', label: 'المتابعة والتقييم', icon: '📈', href: '/reviews.html' }
+                ],
+                large: [
+                    { id: 'select', label: 'اختيار المسار', icon: '🧭', href: '/select-type' },
+                    { id: 'diagnostic', label: 'التشخيص الشامل', icon: '🔍', href: '/pain-ambition' },
+                    { id: 'onboard', label: 'تأسيس الكيان', icon: '🏗️', href: '/onboarding.html' },
+                    { id: 'swot', label: 'التحليل الاستراتيجي', icon: '📊', href: '/analysis.html' },
+                    { id: 'stakeholders', label: 'أصحاب المصلحة', icon: '👥', href: '/stakeholders.html' },
+                    { id: 'directions', label: 'التوجهات والخيارات', icon: '🧭', href: '/directions.html' },
+                    { id: 'plan', label: 'الأهداف والمؤشرات', icon: '🎯', href: '/objectives.html' },
+                    { id: 'execute', label: 'المبادرات والمشاريع', icon: '🚀', href: '/initiatives.html' },
+                    { id: 'governance', label: 'الحوكمة والمتابعة', icon: '🛡️', href: '/reviews.html' }
                 ],
                 leadership: [
                     { id: 'select', label: 'اختيار المسار', icon: '🧭', href: '/select-type' },
@@ -1844,25 +1883,32 @@
                 ]
             };
 
-            // Choose roadmap type
-            let rmType = 'organization';
-            if (category.startsWith('INDIVIDUAL') || category === 'INDIVIDUAL_PERSONAL' || category === 'INDIVIDUAL_DEV' || category === 'INDIVIDUAL_IDEA') {
+            // Choose roadmap type — مطابق لمستوى الشركة
+            let rmType = 'medium';
+            const companyLevel = localStorage.getItem('_sidebarCompanyLevel') || '';
+            if (category.startsWith('INDIVIDUAL')) {
                 rmType = 'individual';
             } else if (category === 'CEO' || category.startsWith('DEPT_')) {
                 rmType = 'leadership';
-            } else if (category.startsWith('COMPANY') || category === 'NEW_PROJECT') {
-                rmType = 'organization';
+            } else if (companyLevel === 'FOUNDER' || category === 'NEW_PROJECT') {
+                rmType = 'founder';
+            } else if (companyLevel === 'SMALL' || category === 'COMPANY_SMALL') {
+                rmType = 'small';
+            } else if (companyLevel === 'LARGE' || category === 'COMPANY_LARGE') {
+                rmType = 'large';
+            } else {
+                rmType = 'medium';
             }
 
             const steps = ROADMAPS[rmType];
 
             // Determine current step
             let currentIdx = 0;
-            if (category) currentIdx = 1; // selected path
+            if (category) currentIdx = 1;
             if (smartGuide) currentIdx = Math.min(2, steps.length - 1);
             if (pa || founderDiag || beginnerDiag) currentIdx = Math.min(rmType === 'individual' ? 3 : 2, steps.length - 1);
             if (user && user.id) currentIdx = Math.min(rmType === 'individual' ? 4 : 3, steps.length - 1);
-            if (hasEntity) currentIdx = Math.min(steps.length - 1, rmType === 'organization' ? 3 : steps.length - 1);
+            if (hasEntity) currentIdx = Math.min(steps.length - 1, ['founder', 'small', 'medium', 'large'].includes(rmType) ? 3 : steps.length - 1);
 
             // Save current step
             const savedStep = parseInt(localStorage.getItem('stratix_roadmap_step') || '0');
@@ -1876,7 +1922,7 @@
             const fillPct = steps.length > 1 ? Math.round((currentIdx / (steps.length - 1)) * 100) : 0;
             document.getElementById('rmFill').style.width = fillPct + '%';
 
-            // Path badge
+            // Path badge + level badge
             const PATH_LABELS = {
                 INDIVIDUAL_PERSONAL: '👤 تخطيط شخصي', INDIVIDUAL_DEV: '🎓 تطوير مهني',
                 INDIVIDUAL_IDEA: '💡 فكرة مشروع', NEW_PROJECT: '🌱 مؤسس جديد',
@@ -1908,16 +1954,40 @@
             trailEl.insertAdjacentHTML('beforeend', stepsHtml);
             document.getElementById('rmFill').style.width = fillPct + '%';
 
-            // Next step CTA
+            // Next step CTA — مخصصة حسب المستوى
             const nextIdx = Math.min(currentIdx, steps.length - 1);
             const nextStep = steps[nextIdx];
             if (nextStep) {
+                const STEP_HINTS = {
+                    'select': 'حدد نوع مسارك — هالخطوة تاخذ أقل من دقيقة',
+                    'guide': 'أجب على سؤالين سريعين عشان نخصص لك التجربة',
+                    'diagnostic': 'اكتشف تحدياتك وطموحاتك — 3 دقائق فقط',
+                    'onboard': 'سجّل بيانات منظمتك الأساسية',
+                    'swot': 'حلّل نقاط قوتك وضعفك — بمساعدة الذكاء الاصطناعي',
+                    'stakeholders': 'حدد أصحاب المصلحة الرئيسيين وتوقعاتهم',
+                    'directions': 'اختر التوجهات الاستراتيجية بناءً على تحليلك',
+                    'goals': 'حدد أهدافاً واضحة وقابلة للقياس',
+                    'plan': 'حدد أهدافاً واضحة ومؤشرات أداء قابلة للقياس',
+                    'execute': 'ابدأ تنفيذ مبادراتك الاستراتيجية',
+                    'monitor': 'تابع تقدمك وقيّم أداء فريقك',
+                    'governance': 'فعّل الحوكمة ونظام الرقابة والمتابعة',
+                    'signup': 'أنشئ حسابك لحفظ تقدمك',
+                    'ceoDash': 'لوحة القيادة التنفيذية جاهزة',
+                    'tools': 'استكشف الأدوات الاستراتيجية المتاحة',
+                    'dashboard': 'تابع ملخص حالة استراتيجيتك'
+                };
+                const hint = STEP_HINTS[nextStep.id] || 'أكمل هذه الخطوة للتقدم في رحلتك الاستراتيجية';
+
+                const LEVEL_LABELS = { FOUNDER: '⚡ مؤسس', SMALL: '🏢 صغيرة', MEDIUM: '🏗️ متوسطة', LARGE: '🏛️ كبيرة' };
+                const lvlLabel = LEVEL_LABELS[companyLevel] || '';
+                const lvlBadge = lvlLabel ? `<span style="font-size:10px;padding:3px 10px;border-radius:8px;background:rgba(124,58,237,0.15);color:#a78bfa;font-weight:700;margin-left:8px;">${lvlLabel}</span>` : '';
+
                 document.getElementById('rmNextStep').innerHTML = `
                     <a href="${nextStep.href}" class="next-step-cta">
                         <div class="nsc-icon">${nextStep.icon}</div>
                         <div class="nsc-info">
-                            <div class="nsc-title">الخطوة الحالية: ${nextStep.label}</div>
-                            <div class="nsc-desc">أكمل هذه الخطوة للتقدم في رحلتك الاستراتيجية</div>
+                            <div class="nsc-title">الخطوة الحالية: ${nextStep.label}${lvlBadge}</div>
+                            <div class="nsc-desc">${hint}</div>
                         </div>
                         <i class="bi bi-arrow-left nsc-arrow"></i>
                     </a>`;
@@ -1971,6 +2041,34 @@
                 document.getElementById('roadmapWidget').style.display = 'none';
             }
         })();
+
+        // ===== زر تغيير المسار =====
+        (function () {
+            const cat = localStorage.getItem('stratix_category');
+            const btn = document.getElementById('changePathBtn');
+            if (cat && btn) btn.style.display = 'inline-flex';
+        })();
+
+        function changePath() {
+            const msg = 'هل تريد تغيير المسار؟\nسيتم الاحتفاظ ببياناتك المحفوظة.';
+            if (confirm(msg)) {
+                try {
+                    const backup = {
+                        category: localStorage.getItem('stratix_category'),
+                        smartGuide: localStorage.getItem('stratix_smart_guide'),
+                        roadmapStep: localStorage.getItem('stratix_roadmap_step'),
+                        savedAt: new Date().toISOString()
+                    };
+                    localStorage.setItem('stratix_path_backup', JSON.stringify(backup));
+                } catch (e) { }
+                localStorage.removeItem('stratix_category');
+                localStorage.removeItem('stratix_original_route');
+                localStorage.removeItem('stratix_smart_guide');
+                localStorage.removeItem('stratix_roadmap_step');
+                localStorage.removeItem('_sidebarCompanyLevel');
+                window.location.href = '/select-type';
+            }
+        }
 
         // ===== Quick Start Widget =====
         (function buildQuickStart() {

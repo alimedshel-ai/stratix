@@ -62,30 +62,59 @@
     }
   } catch (e) { /* ignore */ }
 
-  // === كشف نوع المستخدم: فرد أو شركة ===
+  // === كشف نوع المستخدم: 5 مستويات ===
+  // INDIVIDUAL = فرد | FOUNDER = مؤسس (0-10) | SMALL = صغيرة (11-50) | MEDIUM = متوسطة (51-200) | LARGE = كبيرة (200+)
   let _sidebarIsIndividual = false;
+  let _sidebarCompanyLevel = 'MEDIUM'; // افتراضي آمن — كل الأدوات ظاهرة
+
+  function _detectLevelFromCategory(cat) {
+    if (cat.startsWith('INDIVIDUAL_')) { _sidebarIsIndividual = true; return; }
+    if (cat === 'NEW_PROJECT') _sidebarCompanyLevel = 'FOUNDER';
+    else if (cat === 'COMPANY_SMALL') _sidebarCompanyLevel = 'SMALL';
+    else if (cat === 'COMPANY_MEDIUM') _sidebarCompanyLevel = 'MEDIUM';
+    else if (cat === 'COMPANY_LARGE') _sidebarCompanyLevel = 'LARGE';
+    else if (cat === 'CEO' || cat.startsWith('DEPT_')) _sidebarCompanyLevel = 'LARGE';
+  }
+
   try {
     // 1. من بيانات Smart Guide
     const sgRaw = localStorage.getItem('stratix_smart_guide');
     if (sgRaw) {
       const sgParsed = JSON.parse(sgRaw);
-      _sidebarIsIndividual = (sgParsed.category || '').startsWith('INDIVIDUAL_');
+      _detectLevelFromCategory(sgParsed.category || '');
     }
     // 2. من stratix_category
     if (!_sidebarIsIndividual) {
       const cat = localStorage.getItem('stratix_category') || '';
-      _sidebarIsIndividual = cat.startsWith('INDIVIDUAL_');
+      if (cat) _detectLevelFromCategory(cat);
     }
-    // 3. من بيانات اليوزر المحفوظة من السيرفر
+    // 3. من onboarding_data (حجم المنظمة الفعلي)
+    const obRaw = localStorage.getItem('onboarding_data');
+    if (obRaw && !_sidebarIsIndividual) {
+      const ob = JSON.parse(obRaw);
+      const size = (ob.orgSize || '').toLowerCase();
+      if (['1-10', 'micro', '1_10'].includes(size)) _sidebarCompanyLevel = 'FOUNDER';
+      else if (['11-50', 'small', '11_50'].includes(size)) _sidebarCompanyLevel = 'SMALL';
+      else if (['51-200', 'medium', '51_200'].includes(size)) _sidebarCompanyLevel = 'MEDIUM';
+      else if (['200+', '201-500', '500+', 'large', 'enterprise', '201_500'].includes(size)) _sidebarCompanyLevel = 'LARGE';
+    }
+    // 4. من بيانات اليوزر المحفوظة من السيرفر
     if (!_sidebarIsIndividual) {
       const stored = localStorage.getItem('user');
       if (stored) {
         const u = JSON.parse(stored);
         const uCat = u.userCategory || u.category || '';
-        _sidebarIsIndividual = uCat.startsWith('INDIVIDUAL_');
+        if (uCat) _detectLevelFromCategory(uCat);
       }
     }
   } catch (e) { /* ignore */ }
+
+  // حفظ المستوى للاستخدام في الداشبورد
+  try { localStorage.setItem('_sidebarCompanyLevel', _sidebarIsIndividual ? 'INDIVIDUAL' : _sidebarCompanyLevel); } catch (e) { }
+
+  // === ترتيب المستويات للفلترة ===
+  const LEVEL_ORDER = { FOUNDER: 1, SMALL: 2, MEDIUM: 3, LARGE: 4 };
+  const _lvl = LEVEL_ORDER[_sidebarCompanyLevel] || 3;
 
   // === محرك المسارات الذكية (يُقرأ ديناميكياً داخل buildSidebar) ===
 
@@ -120,11 +149,11 @@
       ] : [
         { label: 'التحليل الاستراتيجي', href: '/analysis.html', icon: 'bi-binoculars-fill' },
         { label: 'التقييمات', href: '/assessments.html', icon: 'bi-clipboard-check-fill' },
-        { label: 'البيئة الداخلية', href: '/internal-env.html', icon: 'bi-building-fill-check' },
-        { label: 'أصحاب المصلحة', href: '/stakeholders.html', icon: 'bi-people-fill' },
-        { label: 'خريطة المخاطر', href: '/risk-map.html', icon: 'bi-exclamation-triangle-fill' },
-        { label: 'البيانات الإحصائية', href: '/statistical-data.html', icon: 'bi-bar-chart-steps' },
-      ]
+        _lvl >= 3 ? { label: 'البيئة الداخلية', href: '/internal-env.html', icon: 'bi-building-fill-check' } : null,
+        _lvl >= 4 ? { label: 'أصحاب المصلحة', href: '/stakeholders.html', icon: 'bi-people-fill' } : null,
+        _lvl >= 3 ? { label: 'خريطة المخاطر', href: '/risk-map.html', icon: 'bi-exclamation-triangle-fill' } : null,
+        _lvl >= 4 ? { label: 'البيانات الإحصائية', href: '/statistical-data.html', icon: 'bi-bar-chart-steps' } : null,
+      ].filter(Boolean)
     },
     {
       id: 'PLANNING',
@@ -138,11 +167,11 @@
         { label: 'مؤشرات تقدّمي', href: '/kpis.html', icon: 'bi-graph-up-arrow' },
       ] : [
         { label: 'مصفوفة TOWS', href: '/tows.html', icon: 'bi-arrows-fullscreen' },
-        { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass-fill' },
+        _lvl >= 3 ? { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass-fill' } : null,
         { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye' },
         { label: 'مؤشرات الأداء', href: '/kpis.html', icon: 'bi-graph-up-arrow' },
-        { label: 'OKRs', href: '/okrs.html', icon: 'bi-layers-fill' },
-      ]
+        _lvl >= 3 ? { label: 'OKRs', href: '/okrs.html', icon: 'bi-layers-fill' } : null,
+      ].filter(Boolean)
     },
     {
       id: 'EXECUTION',
@@ -156,10 +185,10 @@
         { label: 'تسجيل التقدم', href: '/kpi-entries.html', icon: 'bi-pencil-square' },
       ] : [
         { label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban-fill' },
-        { label: 'المشاريع', href: '/projects.html', icon: 'bi-folder2-open' },
+        _lvl >= 3 ? { label: 'المشاريع', href: '/projects.html', icon: 'bi-folder2-open' } : null,
         { label: 'المهام', href: '/tasks.html', icon: 'bi-check2-square' },
         { label: 'إدخال المؤشرات', href: '/kpi-entries.html', icon: 'bi-pencil-square' },
-      ]
+      ].filter(Boolean)
     },
     {
       id: 'ADAPTATION',
@@ -174,9 +203,9 @@
       ] : [
         { label: 'المراجعات الدورية', href: '/reviews.html', icon: 'bi-journal-check' },
         { label: 'الذكاء الاستراتيجي', href: '/intelligence.html', icon: 'bi-stars' },
-        { label: 'التصحيحات', href: '/corrections.html', icon: 'bi-arrow-repeat' },
-        { label: 'التقويم الاستراتيجي', href: '/strategic-calendar.html', icon: 'bi-calendar-event-fill' },
-      ]
+        _lvl >= 4 ? { label: 'التصحيحات', href: '/corrections.html', icon: 'bi-arrow-repeat' } : null,
+        _lvl >= 3 ? { label: 'التقويم الاستراتيجي', href: '/strategic-calendar.html', icon: 'bi-calendar-event-fill' } : null,
+      ].filter(Boolean)
     }
   ];
 
