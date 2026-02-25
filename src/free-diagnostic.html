@@ -645,13 +645,13 @@
         <span id="timer-text">0:00</span>
     </div>
 
-    <a href="/landing.html" class="back-btn">
+    <a href="/" class="back-btn">
         <i class="bi bi-arrow-right"></i> العودة
     </a>
 
     <div class="diagnostic-container">
         <div class="diag-header">
-            <a href="/landing.html" class="diag-logo">🚀 ستارتكس</a>
+            <a href="/" class="diag-logo">🚀 ستارتكس</a>
             <div class="diag-subtitle">التشخيص الاستراتيجي المجاني — 5 أسئلة بدون تسجيل</div>
         </div>
 
@@ -785,11 +785,11 @@
                 </div>
 
                 <div class="cta-buttons">
-                    <a href="/signup.html" class="btn-cta-primary" id="cta-register">
+                    <a href="/login?tab=signup&from=diagnostic" class="btn-cta-primary" id="cta-register">
                         <i class="bi bi-rocket-takeoff"></i>
                         سجّل الآن مجاناً — ابدأ خطتك
                     </a>
-                    <a href="/landing.html#pricing" class="btn-cta-secondary">
+                    <a href="/#pricing" class="btn-cta-secondary">
                         <i class="bi bi-tag"></i> شاهد خطط الأسعار
                     </a>
                     <button class="btn-cta-secondary" onclick="restart()" style="border:none;">
@@ -1156,6 +1156,24 @@
             cta.innerHTML = `<i class="bi bi-rocket-takeoff"></i> ${r.ctaText}`;
             document.getElementById('slide-result').classList.add('active');
             launchConfetti();
+
+            // ═══ حفظ النتيجة في localStorage للاستخدام بعد التسجيل ═══
+            try {
+                localStorage.setItem('stratix_free_diagnostic', JSON.stringify({
+                    answers,
+                    result: {
+                        role: r.roleLabel,
+                        stage: r.stageLabel,
+                        challenge: r.challengeLabel,
+                        path: r.pathLabel,
+                        scenarioName: r.scenarioName,
+                        layer: r.layer
+                    },
+                    completedAt: new Date().toISOString()
+                }));
+                // حفظ وجهة ما بعد التسجيل
+                localStorage.setItem('stratix_redirect_after_login', '/onboarding');
+            } catch (e) { console.warn('localStorage save failed', e); }
         }
 
         function calculateResult() {

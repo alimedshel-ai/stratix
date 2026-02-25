@@ -271,11 +271,16 @@
             // السماح إذا كان لديه token بالفعل (مستخدم مسجل)
             if (localStorage.getItem('token')) return;
 
-            // السماح إذا جاء من صفحة الهبوط عبر parameter
+            // السماح إذا جاء من أي مصدر معروف في المنصة
             const params = new URLSearchParams(window.location.search);
-            if (params.get('from') === 'landing') return;
+            const from = params.get('from') || '';
+            const allowedSources = ['landing', 'smart-guide', 'diagnostic', 'ceo', 'dept', 'restore', 'beginner', 'founder', 'pain'];
+            if (allowedSources.includes(from)) return;
 
-            // السماح إذا كان الـ referrer من نفس الموقع (صفحة الهبوط)
+            // السماح إذا كان لديه tab parameter (رابط مباشر)
+            if (params.get('tab')) return;
+
+            // السماح إذا كان الـ referrer من نفس الموقع
             const ref = document.referrer;
             if (ref) {
                 try {
@@ -543,20 +548,40 @@
                 const pa = localStorage.getItem('painAmbition');
                 if (pa) diagnosticData = JSON.parse(pa);
             } catch (e) { }
+            // بيانات Smart Guide
+            let smartGuideData = null;
+            try {
+                const sg = localStorage.getItem('stratix_smart_guide');
+                if (sg) smartGuideData = JSON.parse(sg);
+            } catch (e) { }
 
             try {
                 const res = await fetch('/api/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, phone: phone || undefined, password, userCategory, diagnosticData })
+                    body: JSON.stringify({ name, email, phone: phone || undefined, password, userCategory, diagnosticData, smartGuideData })
                 });
                 const data = await res.json();
 
                 if (res.ok && data.token) {
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
-                    // دائماً نروح للتأسيس (إنشاء الشركة والكيان)
-                    window.location.href = data.redirectTo || '/onboarding';
+
+                    // ═══ توجيه ذكي بعد التسجيل ═══
+                    // 1. أولاً: هل في وجهة محفوظة من المسار السابق؟
+                    const savedRedirect = localStorage.getItem('stratix_redirect_after_login');
+                    if (savedRedirect) {
+                        localStorage.removeItem('stratix_redirect_after_login');
+                        window.location.href = savedRedirect;
+                    }
+                    // 2. وجهة من السيرفر
+                    else if (data.redirectTo) {
+                        window.location.href = data.redirectTo;
+                    }
+                    // 3. الافتراضي: الإعداد
+                    else {
+                        window.location.href = '/onboarding';
+                    }
                 } else {
                     let errDiv = document.getElementById('signupError');
                     if (!errDiv) {

@@ -965,23 +965,98 @@
             setTimeout(() => container.remove(), 5000);
         }
 
+        // ═══ Adaptive Onboarding — المرحلة 5 ═══
+        const sgData = JSON.parse(localStorage.getItem('stratix_smart_guide') || 'null');
+        const userCategory = sgData?.category || localStorage.getItem('stratix_category') || '';
+        const isIndividual = userCategory.startsWith('INDIVIDUAL_');
+
+        if (isIndividual) {
+            // ═══ مسار الأفراد: خطوتين فقط (القطاع → الانطلاق) ═══
+
+            // إخفاء خطوة المنظمة والفريق في شريط التقدم
+            const indicators = document.querySelectorAll('.step-indicator');
+            const lines = document.querySelectorAll('.step-line');
+
+            // إخفاء Step 1 (المنظمة) و Step 3 (الفريق) indicators + الخطوط
+            if (indicators[0]) indicators[0].style.display = 'none'; // المنظمة
+            if (indicators[2]) indicators[2].style.display = 'none'; // الفريق
+            if (lines[0]) lines[0].style.display = 'none'; // line1
+            if (lines[1]) lines[1].style.display = 'none'; // line2
+
+            // تحديث labels
+            if (indicators[1]) {
+                indicators[1].querySelector('.step-label').textContent = 'اختر مجالك';
+                indicators[1].querySelector('.step-circle').classList.add('active');
+                indicators[1].classList.add('active');
+            }
+            if (indicators[3]) indicators[3].querySelector('.step-label').textContent = 'ابدأ!';
+
+            // البدء مباشرة من الخطوة 2 (القطاع)
+            document.getElementById('step1').classList.remove('active');
+            document.getElementById('step2').classList.add('active');
+
+            // تعديل الخطوة 2 header للأفراد
+            const step2Header = document.querySelector('#step2 .step-header');
+            if (step2Header) {
+                step2Header.querySelector('h2').textContent = 'اختر مجال اهتمامك';
+                step2Header.querySelector('p').textContent = 'هذا يساعدنا نخصص الأدوات والمحتوى لك';
+            }
+
+            // عند الضغط على "التالي" في القطاع → يروح direct للخطوة 4 (الاكتمال)
+            const step2NextBtn = document.getElementById('btnStep2Next');
+            if (step2NextBtn) {
+                step2NextBtn.setAttribute('onclick', 'nextStep(4)');
+            }
+
+            // Auto-fill org name as "شخصي"
+            document.getElementById('orgName').value = 'شخصي';
+
+        } else {
+            // ═══ مسار الشركات: auto-fill من Smart Guide ═══
+            if (sgData) {
+                const categoryNames = {
+                    'COMPANY_SMALL': 'شركة صغيرة',
+                    'COMPANY_MEDIUM': 'شركة متوسطة',
+                    'COMPANY_LARGE': 'شركة كبيرة',
+                    'NEW_PROJECT': 'مشروع جديد',
+                    'CEO': 'شركة'
+                };
+                const autoName = categoryNames[userCategory];
+                if (autoName && !document.getElementById('orgName').value) {
+                    // لا نملأ الاسم تلقائياً لكن نضع placeholder مفيد
+                    document.getElementById('orgName').placeholder = 'مثال: ' + autoName + ' التقنية';
+                }
+
+                // Auto-select org size
+                const sizeMap = { 'COMPANY_SMALL': '1-10', 'COMPANY_MEDIUM': '51-200', 'COMPANY_LARGE': '500+', 'NEW_PROJECT': '1-10' };
+                if (sizeMap[userCategory]) {
+                    document.getElementById('orgSize').value = sizeMap[userCategory];
+                }
+            }
+        }
+
         // Show pattern if pain/ambition was completed
         const painAmbition = JSON.parse(localStorage.getItem('painAmbition') || 'null');
         if (painAmbition && painAmbition.pattern) {
-            const patternColors = { 'ناشئة': '#22c55e', 'نامية': '#3b82f6', 'ناضجة': '#8b5cf6', 'متعثرة': '#ef4444' };
+            // Phase 6: إعادة تسمية الأنماط السلبية
+            const patternRenames = { 'متعثرة': 'في مرحلة التحول' };
+            const displayPattern = patternRenames[painAmbition.pattern] || painAmbition.pattern;
+
+            const patternColors = { 'ناشئة': '#22c55e', 'نامية': '#3b82f6', 'ناضجة': '#8b5cf6', 'في مرحلة التحول': '#f59e0b', 'متعثرة': '#f59e0b' };
             const patternTips = {
                 'ناشئة': 'ركّز على بناء الأساس أولاً — لا تتوسع قبل ما تستقر',
                 'نامية': 'عندك أساس جيد — الآن تحتاج هيكلة وتنظيم قبل التوسع',
                 'ناضجة': 'التحدي عندك مو البناء — بل التجديد والابتكار',
-                'متعثرة': 'أولوية واحدة: أوقف النزيف — ركّز على أهم ٣ أشياء فقط'
+                'في مرحلة التحول': '🌟 أولويتك: التركيز على 3 نقاط قوة رئيسية وبناء عليها',
+                'متعثرة': '🌟 أولويتك: التركيز على 3 نقاط قوة رئيسية وبناء عليها'
             };
-            const color = patternColors[painAmbition.pattern] || '#667eea';
+            const color = patternColors[displayPattern] || '#667eea';
             const box = document.getElementById('patternBox');
             if (box) {
                 box.style.display = 'block';
-                document.getElementById('patternBadge').innerHTML = `نمط شركتك: <strong>${painAmbition.pattern}</strong>`;
+                document.getElementById('patternBadge').innerHTML = `نمط شركتك: <strong>${displayPattern}</strong>`;
                 document.getElementById('patternBadge').style.cssText = `display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:30px;font-size:14px;font-weight:700;background:${color}18;border:1px solid ${color}35;color:${color}`;
-                document.getElementById('patternTip').textContent = '💡 ' + (patternTips[painAmbition.pattern] || '');
+                document.getElementById('patternTip').textContent = '💡 ' + (patternTips[displayPattern] || '');
             }
         }
 

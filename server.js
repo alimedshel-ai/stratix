@@ -645,6 +645,11 @@ app.get('/select-type', (req, res) => {
   res.sendFile(path.join(__dirname, 'src', 'select-type.html'));
 });
 
+// Serve Smart Guide page
+app.get('/smart-guide', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'smart-guide.html'));
+});
+
 // Serve Tools Guide page
 app.get('/tools-guide', (req, res) => {
   res.sendFile(path.join(__dirname, 'src', 'tools-guide.html'));

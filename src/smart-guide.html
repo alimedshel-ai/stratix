@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس — الموجه الذكي</title>
+    <meta name="description" content="ساعدنا في فهم أولويتك لنخصص تجربتك الاستراتيجية">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0d14;
+            --bg-card: #141825;
+            --text: #e2e8f0;
+            --text-muted: #8b8ba7;
+            --border: rgba(255, 255, 255, 0.06);
+            --primary: #7c3aed;
+            --primary-light: #a78bfa;
+            --primary-glow: rgba(124, 58, 237, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 20px;
+            overflow-y: auto;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 30% 20%, rgba(124, 58, 237, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(59, 130, 246, 0.06) 0%, transparent 50%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .guide-container {
+            position: relative;
+            z-index: 1;
+            max-width: 640px;
+            width: 100%;
+            animation: slideUp 0.6s ease;
+        }
+
+        /* === Header === */
+        .guide-header {
+            text-align: center;
+            margin-bottom: 36px;
+        }
+
+        .guide-icon {
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 32px;
+            box-shadow: 0 8px 32px rgba(124, 58, 237, 0.3);
+            transform: rotate(3deg);
+        }
+
+        .guide-header h1 {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 8px;
+        }
+
+        .guide-header p {
+            color: var(--text-muted);
+            font-size: 15px;
+            line-height: 1.7;
+        }
+
+        .guide-header .path-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+            padding: 5px 16px;
+            border-radius: 20px;
+            background: var(--primary-glow);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            color: var(--primary-light);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        /* === Progress Dots === */
+        .progress-dots {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            margin-bottom: 28px;
+        }
+
+        .dot {
+            height: 6px;
+            border-radius: 10px;
+            transition: all 0.4s ease;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .dot.active {
+            width: 32px;
+            background: var(--primary);
+        }
+
+        .dot.done {
+            width: 8px;
+            background: var(--primary-light);
+            opacity: 0.5;
+        }
+
+        .dot.pending {
+            width: 8px;
+        }
+
+        /* === Question Box === */
+        .question-box {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(59, 130, 246, 0.05));
+            border: 1px solid rgba(124, 58, 237, 0.15);
+            border-radius: 20px;
+            padding: 28px 24px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .question-box h2 {
+            font-size: 20px;
+            font-weight: 800;
+            line-height: 1.7;
+            color: var(--text);
+        }
+
+        /* === Options === */
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .option-btn {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 18px 20px;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text);
+            text-align: right;
+            width: 100%;
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary);
+            background: color-mix(in srgb, var(--primary) 5%, var(--bg-card));
+            transform: translateX(-4px);
+        }
+
+        .option-btn .opt-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+            transition: background 0.3s;
+        }
+
+        .option-btn:hover .opt-icon {
+            background: var(--primary-glow);
+        }
+
+        .option-btn .opt-text {
+            flex: 1;
+        }
+
+        .option-btn .opt-arrow {
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 18px;
+            transition: all 0.3s;
+        }
+
+        .option-btn:hover .opt-arrow {
+            color: var(--primary-light);
+            transform: translateX(-6px);
+        }
+
+        /* === Manual Input === */
+        .manual-section {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .manual-section.show {
+            display: block;
+        }
+
+        .manual-textarea {
+            width: 100%;
+            min-height: 140px;
+            padding: 18px 20px;
+            background: var(--bg-card);
+            border: 2px solid var(--primary);
+            border-radius: 16px;
+            color: var(--text);
+            font-family: 'Tajawal', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            outline: none;
+            resize: vertical;
+            margin-bottom: 12px;
+            line-height: 1.8;
+        }
+
+        .manual-textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .manual-textarea:focus {
+            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+        }
+
+        .manual-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-confirm {
+            flex: 1;
+            padding: 16px;
+            border-radius: 14px;
+            border: none;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-confirm:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(124, 58, 237, 0.4);
+        }
+
+        .btn-confirm:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-back {
+            padding: 16px 24px;
+            border-radius: 14px;
+            border: none;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-muted);
+            font-family: 'Tajawal', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* === Custom Button === */
+        .custom-btn {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 18px 20px;
+            background: var(--bg-card);
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-align: right;
+            width: 100%;
+        }
+
+        .custom-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary-light);
+        }
+
+        /* === Skip Link === */
+        .skip-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 4px;
+            transition: color 0.3s;
+            border: none;
+            background: none;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .skip-link:hover {
+            color: var(--primary-light);
+        }
+
+        /* === Loading === */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 100;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(255, 255, 255, 0.08);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        /* === Animations === */
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 500px) {
+            .guide-header h1 {
+                font-size: 22px;
+            }
+
+            .question-box h2 {
+                font-size: 17px;
+            }
+        }
+
+        /* === Result Overlay === */
+        .result-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 100;
+            overflow-y: auto;
+            padding: 40px 20px;
+        }
+
+        .result-overlay.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .result-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .result-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .result-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(74, 222, 128, 0.1);
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .result-pattern {
+            font-size: 2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary), #f093fb);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .result-score-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            margin: 16px auto;
+            max-width: 300px;
+            overflow: hidden;
+        }
+
+        .result-score-fill {
+            height: 100%;
+            border-radius: 10px;
+            background: linear-gradient(90deg, var(--primary), #f093fb);
+            transition: width 1.5s ease;
+            width: 0%;
+        }
+
+        .result-score-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        .result-insight {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        .result-insight .insight-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .result-insight .insight-text {
+            font-size: 1rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.8;
+        }
+
+        .free-steps {
+            margin: 28px 0;
+        }
+
+        .free-steps-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--primary-light);
+            text-align: center;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .free-step {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+        }
+
+        .free-step:hover {
+            background: rgba(124, 58, 237, 0.06);
+            border-color: rgba(124, 58, 237, 0.2);
+        }
+
+        .free-step .step-num {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), #f093fb);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.85rem;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .free-step .step-info .step-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #fff;
+        }
+
+        .free-step .step-info .step-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .result-cta {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-top: 28px;
+        }
+
+        .btn-result-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 16px 40px;
+            background: linear-gradient(135deg, var(--primary), #f093fb);
+            color: #fff;
+            font-weight: 800;
+            font-size: 1.05rem;
+            border-radius: 16px;
+            border: none;
+            cursor: pointer;
+            font-family: 'Tajawal', sans-serif;
+            transition: all 0.3s;
+            width: 100%;
+            max-width: 400px;
+            text-decoration: none;
+        }
+
+        .btn-result-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(124, 58, 237, 0.3);
+            color: #fff;
+        }
+
+        .btn-result-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 24px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.88rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: 'Tajawal', sans-serif;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .btn-result-secondary:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="guide-container">
+        <div class="guide-header">
+            <div class="guide-icon">🧭</div>
+            <h1>الموجه الذكي</h1>
+            <p>ساعدنا في فهم أولويتك لنخصص تجربتك</p>
+            <div class="path-badge" id="pathBadge">
+                <i class="bi bi-compass"></i>
+                <span id="pathLabel">تحميل المسار...</span>
+            </div>
+        </div>
+
+        <!-- Progress Dots -->
+        <div class="progress-dots" id="progressDots"></div>
+
+        <!-- Question Area -->
+        <div id="questionArea">
+            <div class="question-box">
+                <h2 id="questionText">جاري التحميل...</h2>
+            </div>
+
+            <div class="options-list" id="optionsList"></div>
+
+            <button class="custom-btn" id="customBtn" onclick="showManual()">
+                <span class="opt-icon">✏️</span>
+                <span>أخرى — أكتب أولويتي بنفسي</span>
+            </button>
+        </div>
+
+        <!-- Manual Input Section -->
+        <div class="manual-section" id="manualSection">
+            <div class="question-box">
+                <h2>اكتب أولويتك أو التحدي الذي تواجهه</h2>
+            </div>
+            <textarea class="manual-textarea" id="manualInput"
+                placeholder="مثال: أبي أنظم فريق العمل ونحقق أهدافنا بمؤشرات واضحة..."
+                oninput="updateConfirmBtn()"></textarea>
+            <div class="manual-btns">
+                <button class="btn-confirm" id="confirmBtn" disabled onclick="submitManual()">
+                    تأكيد ومتابعة <i class="bi bi-arrow-left"></i>
+                </button>
+                <button class="btn-back" onclick="hideManual()">
+                    <i class="bi bi-arrow-right"></i> رجوع
+                </button>
+            </div>
+        </div>
+
+        <button class="skip-link" onclick="skipGuide()">
+            تخطي الموجه الذكي وفتح الداشبورد الافتراضي
+        </button>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">نحلّل إجاباتك...</div>
+    </div>
+
+    <!-- Result Overlay -->
+    <div class="result-overlay" id="resultOverlay">
+        <div class="result-container">
+            <div class="result-header">
+                <div class="result-badge"><i class="bi bi-check-circle-fill"></i> تم التحليل بنجاح</div>
+                <div class="result-pattern" id="resultPattern">—</div>
+                <div class="result-score-bar">
+                    <div class="result-score-fill" id="resultScoreFill"></div>
+                </div>
+                <div class="result-score-label" id="resultScoreLabel">—</div>
+            </div>
+
+            <div class="result-insight">
+                <div class="insight-icon">💡</div>
+                <div class="insight-text" id="resultInsight">—</div>
+            </div>
+
+            <div class="free-steps">
+                <div class="free-steps-title">🎯 خطواتك الثلاث المجانية القادمة</div>
+                <div class="free-step">
+                    <div class="step-num">1</div>
+                    <div class="step-info">
+                        <div class="step-name">حدد هدفك الذهبي</div>
+                        <div class="step-desc">هدف واحد واضح يوجّه كل خطواتك</div>
+                    </div>
+                </div>
+                <div class="free-step">
+                    <div class="step-num">2</div>
+                    <div class="step-info">
+                        <div class="step-name">ابدأ تشخيص SWOT</div>
+                        <div class="step-desc">اكتشف نقاط قوتك وفرصك الحقيقية</div>
+                    </div>
+                </div>
+                <div class="free-step">
+                    <div class="step-num">3</div>
+                    <div class="step-info">
+                        <div class="step-name">أنشئ أول مبادرة</div>
+                        <div class="step-desc">حوّل التحليل لخطوة تنفيذية واحدة</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="result-cta">
+                <button class="btn-result-primary" id="resultCTA" onclick="proceedFromResult()">
+                    <i class="bi bi-arrow-left"></i>
+                    ابدأ الخطوات المجانية
+                </button>
+                <a href="/#pricing" class="btn-result-secondary">
+                    <i class="bi bi-tag"></i> شاهد الباقات
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ═══ إعدادات ═══
+        const params = new URLSearchParams(window.location.search);
+        const category = params.get('category') || localStorage.getItem('stratix_category') || 'INDIVIDUAL_DEV';
+        let currentStep = 0;
+        const guideAnswers = {};
+
+        // ═══ تعريف الأسئلة حسب نوع المستخدم ═══
+        const GUIDE_QUESTIONS = {
+            // === أفراد ===
+            INDIVIDUAL_PERSONAL: [
+                {
+                    q: "ما هو الجانب الذي يحتاج تنظيم أكثر في حياتك؟",
+                    opts: [
+                        { icon: "❤️", label: "الصحة واللياقة البدنية", score: 40, insight: "صحتك أساس نجاحك" },
+                        { icon: "💰", label: "التوازن المالي والادخار", score: 50, insight: "الأمان المالي يبني الثقة" },
+                        { icon: "🎓", label: "تطوير الذات والتعلم", score: 60, insight: "الاستثمار في نفسك هو الأذكى" }
+                    ]
+                },
+                {
+                    q: "ما هي أولويتك خلال الـ 6 أشهر القادمة؟",
+                    opts: [
+                        { icon: "📋", label: "وضع خطة واضحة لحياتي", score: 50, insight: "التخطيط يحول الأحلام لواقع" },
+                        { icon: "⏰", label: "تنظيم وقتي وعاداتي", score: 40, insight: "العادات اليومية تصنع النتائج" },
+                        { icon: "🎯", label: "تحقيق هدف محدد أعمل عليه", score: 70, insight: "التركيز على هدف واحد يسرّع النتائج" }
+                    ]
+                }
+            ],
+            INDIVIDUAL_DEV: [
+                {
+                    q: "ما هي أولويتك في التطوير المهني حالياً؟",
+                    opts: [
+                        { icon: "🧠", label: "مهارات القيادة والإدارة", score: 60, insight: "القيادة مهارة مكتسبة، ابدأ بالتطبيق" },
+                        { icon: "📊", label: "التفكير الاستراتيجي والتحليل", score: 70, insight: "التحليل الاستراتيجي يميز القائد الحقيقي" },
+                        { icon: "🤝", label: "التواصل وبناء العلاقات المهنية", score: 50, insight: "شبكتك المهنية هي رأس مالك" }
+                    ]
+                },
+                {
+                    q: "كيف تصف مستوى خبرتك الحالي؟",
+                    opts: [
+                        { icon: "🌱", label: "مبتدئ — لسه في البداية", score: 30, insight: "كلنا بدأنا من هنا، استمر!" },
+                        { icon: "📐", label: "متوسط — عندي خبرة لا بأس بها", score: 55, insight: "وقت التخصص والتعمق" },
+                        { icon: "🏆", label: "متقدم — أبي أنتقل للمستوى التالي", score: 80, insight: "التميز يحتاج منك مشاركة خبرتك" }
+                    ]
+                }
+            ],
+            INDIVIDUAL_IDEA: [
+                {
+                    q: "وين أنت بالضبط مع فكرة مشروعك؟",
+                    opts: [
+                        { icon: "💭", label: "فكرة أولية — لسه ما حددتها", score: 25, insight: "لا بأس! التوضيح أول خطوة" },
+                        { icon: "📝", label: "فكرة مكتوبة — بس ما بدأت", score: 45, insight: "عندك أساس، وقت التنفيذ" },
+                        { icon: "🚀", label: "بدأت خطوات في التنفيذ", score: 70, insight: "ممتاز! ركز على أول عميل" }
+                    ]
+                },
+                {
+                    q: "ما هو أكبر عائق يواجهك حالياً؟",
+                    opts: [
+                        { icon: "🤷", label: "ما أعرف من وين أبدأ", score: 30, insight: "الموجه الذكي يرسم لك خارطة الطريق" },
+                        { icon: "💸", label: "الميزانية والموارد محدودة", score: 45, insight: "ابدأ صغير، النمو يأتي بالتدريج" },
+                        { icon: "😰", label: "الخوف من الفشل", score: 35, insight: "كل مؤسس ناجح فشل قبل أن ينجح" }
+                    ]
+                }
+            ],
+            // === مؤسس ===
+            NEW_PROJECT: [
+                {
+                    q: "ما هي الأولوية العاجلة التي دفعتك لاستخدام ستارتكس؟",
+                    opts: [
+                        { icon: "📋", label: "أحتاج خطة عمل مكتوبة فوراً", score: 40, insight: "الخطة الجيدة نصف الطريق" },
+                        { icon: "🎯", label: "أبي أعرف جاهزيتي بالضبط", score: 55, insight: "معرفة نقطة البداية أهم من الوجهة" },
+                        { icon: "💰", label: "أبحث عن تمويل وأحتاج وثائق", score: 70, insight: "المستثمر يبحث عن مؤسس منظم" }
+                    ]
+                },
+                {
+                    q: "كيف تصف مستوى الوضوح الاستراتيجي لديك؟",
+                    opts: [
+                        { icon: "🌱", label: "منخفض — أحتاج توجيه من الصفر", score: 20, insight: "سنبني معك الأساس خطوة بخطوة" },
+                        { icon: "📐", label: "متوسط — عندي أفكار مبعثرة", score: 50, insight: "وقت التنظيم وترتيب الأولويات" },
+                        { icon: "🎯", label: "عالي — أعرف ماذا أريد بالتحديد", score: 85, insight: "ممتاز! ركز على التنفيذ والمؤشرات" }
+                    ]
+                }
+            ],
+            // === شركات ===
+            COMPANY_SMALL: [
+                {
+                    q: "ما هو الهاجس الأكبر الذي يواجه شركتك حالياً؟",
+                    opts: [
+                        { icon: "📋", label: "بناء خطة استراتيجية شاملة", score: 40, insight: "الخطة الاستراتيجية هي البوصلة" },
+                        { icon: "🚀", label: "تنظيم المبادرات وضبط التنفيذ", score: 60, insight: "التنفيذ المنظم يفرق عن الفوضى" },
+                        { icon: "📊", label: "قياس الأداء بمؤشرات واضحة", score: 75, insight: "ما لا يُقاس لا يُدار" }
+                    ]
+                },
+                {
+                    q: "كم نسبة الفريق الذي يفهم الاستراتيجية الحالية؟",
+                    opts: [
+                        { icon: "😥", label: "أقل من 20% — الرؤية غير واضحة", score: 25, insight: "التواصل الاستراتيجي أولوية قصوى" },
+                        { icon: "🤔", label: "20-60% — فيه فجوة", score: 50, insight: "نحتاج ربط الجميع بالأهداف" },
+                        { icon: "💪", label: "أكثر من 60% — الفريق متوحد", score: 80, insight: "فريق رائع! ركز على المؤشرات" }
+                    ]
+                }
+            ],
+            COMPANY_MEDIUM: [
+                {
+                    q: "ما التحدي الاستراتيجي الأبرز لشركتكم؟",
+                    opts: [
+                        { icon: "🔄", label: "إعادة هيكلة وتحول استراتيجي", score: 60, insight: "التحول يحتاج خطة واضحة ومرحلية" },
+                        { icon: "📈", label: "تسريع النمو والتوسع", score: 75, insight: "النمو السريع يحتاج أنظمة قوية" },
+                        { icon: "⚙️", label: "تحسين الكفاءة التشغيلية", score: 55, insight: "الكفاءة = أرباح أعلى بنفس الموارد" }
+                    ]
+                },
+                {
+                    q: "هل يوجد إدارة استراتيجية متخصصة في الشركة؟",
+                    opts: [
+                        { icon: "❌", label: "لا — الاستراتيجية مسؤولية الإدارة العليا فقط", score: 30, insight: "حان وقت بناء وظيفة استراتيجية" },
+                        { icon: "🔸", label: "جزئياً — مهام مبعثرة بين الإدارات", score: 55, insight: "توحيد الجهود يعطي نتائج أقوى" },
+                        { icon: "✅", label: "نعم — لكن نحتاج أدوات أفضل", score: 80, insight: "ستارتكس سيرفع كفاءة فريقكم" }
+                    ]
+                }
+            ],
+            COMPANY_LARGE: [
+                {
+                    q: "ما هو المحرك الرئيسي لاعتماد ستارتكس في مؤسستكم؟",
+                    opts: [
+                        { icon: "🏛️", label: "متطلبات حوكمة ورقابة", score: 70, insight: "الحوكمة أساس المؤسسات الكبرى" },
+                        { icon: "🔗", label: "ربط الاستراتيجية بالتشغيل", score: 80, insight: "الخيط الذهبي يوحد كل المستويات" },
+                        { icon: "📊", label: "تقارير ولوحات قيادة تنفيذية", score: 85, insight: "القرارات المبنية على البيانات هي الأنجح" }
+                    ]
+                },
+                {
+                    q: "كم عدد الأهداف الاستراتيجية التي تتابعونها حالياً؟",
+                    opts: [
+                        { icon: "3️⃣", label: "أقل من 5 أهداف", score: 50, insight: "تركيز جيد، لكن الربط مهم" },
+                        { icon: "🔟", label: "5 - 15 هدف", score: 70, insight: "نطاق مناسب، نحتاج تتبع دقيق" },
+                        { icon: "📈", label: "أكثر من 15 هدف", score: 90, insight: "تحتاج نظام ذكي لإدارة هذا الحجم" }
+                    ]
+                }
+            ],
+            // === قيادة ===
+            CEO: [
+                {
+                    q: "بصفتك مديراً تنفيذياً، ما هو الهاجس الأكبر لنمو المؤسسة؟",
+                    opts: [
+                        { icon: "🛡️", label: "حوكمة العمليات والرقابة", score: 80, insight: "الحوكمة القوية = مؤسسة مستدامة" },
+                        { icon: "📈", label: "تحقيق الرؤية الاستراتيجية", score: 90, insight: "القائد يرى ما لا يراه الآخرون" },
+                        { icon: "👥", label: "بناء ثقافة العمل والفريق", score: 70, insight: "الثقافة تأكل الاستراتيجية على الإفطار" }
+                    ]
+                }
+            ],
+            // === إدارات ===
+            DEPT_HR: [
+                {
+                    q: "ما هو التحدي الأكبر في إدارة الموارد البشرية؟",
+                    opts: [
+                        { icon: "📊", label: "متابعة مؤشرات أداء الموظفين", score: 60, insight: "الأداء يُقاس ليُحسّن" },
+                        { icon: "🎯", label: "ربط أهداف الموظفين بالاستراتيجية", score: 75, insight: "كل موظف يجب أن يعرف دوره في الصورة الكبرى" },
+                        { icon: "📝", label: "تخطيط القوى العاملة", score: 55, insight: "التخطيط المبكر يمنع الأزمات" }
+                    ]
+                }
+            ],
+            DEPT_SALES: [
+                {
+                    q: "ما أولوية فريق المبيعات حالياً؟",
+                    opts: [
+                        { icon: "📈", label: "زيادة الإيرادات وتحقيق المستهدفات", score: 80, insight: "المبيعات هي شريان الحياة" },
+                        { icon: "🎯", label: "تحسين معدل التحويل", score: 65, insight: "التحويل الأعلى = نمو أسرع" },
+                        { icon: "📊", label: "تتبع أداء الفريق بمؤشرات", score: 60, insight: "البيانات تكشف فرص التحسين" }
+                    ]
+                }
+            ],
+            DEPT_MARKETING: [
+                {
+                    q: "ما التحدي الأكبر في التسويق حالياً؟",
+                    opts: [
+                        { icon: "📊", label: "قياس عائد الاستثمار التسويقي (ROI)", score: 70, insight: "كل ريال يُحسب ويُقاس" },
+                        { icon: "🎯", label: "استهداف الجمهور الصحيح", score: 60, insight: "التسويق الذكي = الرسالة + الجمهور" },
+                        { icon: "📈", label: "بناء العلامة التجارية", score: 55, insight: "العلامة القوية تبيع نفسها" }
+                    ]
+                }
+            ],
+            DEPT_FINANCE: [
+                {
+                    q: "ما هو التحدي الأكبر في الإدارة المالية؟",
+                    opts: [
+                        { icon: "💰", label: "التخطيط المالي والموازنات", score: 65, insight: "الموازنة الذكية تمنع المفاجآت" },
+                        { icon: "📊", label: "التقارير المالية وتحليل الأداء", score: 75, insight: "الأرقام تروي قصة المؤسسة" },
+                        { icon: "⚠️", label: "إدارة المخاطر والتدفقات النقدية", score: 70, insight: "السيولة أهم من الربحية" }
+                    ]
+                }
+            ],
+            DEPT_OPS: [
+                {
+                    q: "ما أولوية العمليات حالياً؟",
+                    opts: [
+                        { icon: "⚙️", label: "تحسين كفاءة العمليات", score: 65, insight: "كل تحسين صغير = وفر كبير" },
+                        { icon: "📋", label: "توثيق وتوحيد الإجراءات", score: 55, insight: "التوثيق يمنع تكرار الأخطاء" },
+                        { icon: "📊", label: "مؤشرات الجودة والتسليم", score: 70, insight: "الجودة بالأرقام لا بالانطباعات" }
+                    ]
+                }
+            ],
+            DEPT_SERVICE: [
+                {
+                    q: "ما التحدي الأكبر في خدمة العملاء؟",
+                    opts: [
+                        { icon: "⭐", label: "رفع مستوى رضا العملاء (NPS)", score: 70, insight: "العميل الراضي يجلب عميلين" },
+                        { icon: "⏱️", label: "تقليل وقت الاستجابة", score: 60, insight: "السرعة تبني الولاء" },
+                        { icon: "📊", label: "تحليل شكاوى العملاء وتحسين الجودة", score: 65, insight: "كل شكوى = فرصة تحسين" }
+                    ]
+                }
+            ]
+        };
+
+        // ═══ أسماء المسارات ═══
+        const PATH_LABELS = {
+            INDIVIDUAL_PERSONAL: '👤 تخطيط شخصي',
+            INDIVIDUAL_DEV: '🎓 تطوير مهني',
+            INDIVIDUAL_IDEA: '💡 فكرة مشروع',
+            NEW_PROJECT: '🌱 مؤسس جديد',
+            COMPANY_SMALL: '🏢 شركة صغيرة',
+            COMPANY_MEDIUM: '🏗️ شركة متوسطة',
+            COMPANY_LARGE: '🏛️ شركة كبيرة',
+            CEO: '🛡️ مدير تنفيذي',
+            DEPT_HR: '👥 الموارد البشرية',
+            DEPT_SALES: '📈 المبيعات',
+            DEPT_MARKETING: '📣 التسويق',
+            DEPT_FINANCE: '💰 المالية',
+            DEPT_OPS: '⚙️ العمليات',
+            DEPT_SERVICE: '🎧 خدمة العملاء'
+        };
+
+        // ═══ أنماط حسب النوع ═══
+        const PATTERN_NAMES = {
+            INDIVIDUAL_PERSONAL: 'المتوازن الطموح',
+            INDIVIDUAL_DEV: 'القائد المتطور',
+            INDIVIDUAL_IDEA: 'المبتكر المستكشف',
+            NEW_PROJECT: 'المؤسس المخطط',
+            COMPANY_SMALL: 'المنشأة المُنظّمة',
+            COMPANY_MEDIUM: 'الشركة المتحولة',
+            COMPANY_LARGE: 'المؤسسة الناضجة',
+            CEO: 'القائد الاستراتيجي',
+            DEPT_HR: 'إدارة بشرية ذكية',
+            DEPT_SALES: 'مبيعات مستهدفة',
+            DEPT_MARKETING: 'تسويق قائم على البيانات',
+            DEPT_FINANCE: 'إدارة مالية محكمة',
+            DEPT_OPS: 'عمليات عالية الكفاءة',
+            DEPT_SERVICE: 'خدمة عملاء متميزة'
+        };
+
+        // ═══ تهيئة الصفحة ═══
+        function init() {
+            document.getElementById('pathLabel').textContent = PATH_LABELS[category] || 'مسار عام';
+
+            const questions = GUIDE_QUESTIONS[category] || GUIDE_QUESTIONS.INDIVIDUAL_DEV;
+
+            // Build progress dots
+            const dotsHtml = questions.map((_, i) =>
+                `<div class="dot ${i === 0 ? 'active' : 'pending'}" id="dot${i}"></div>`
+            ).join('');
+            document.getElementById('progressDots').innerHTML = dotsHtml;
+
+            renderStep(0);
+        }
+
+        function renderStep(step) {
+            currentStep = step;
+            const questions = GUIDE_QUESTIONS[category] || GUIDE_QUESTIONS.INDIVIDUAL_DEV;
+
+            if (step >= questions.length) {
+                completeGuide();
+                return;
+            }
+
+            const q = questions[step];
+            document.getElementById('questionText').textContent = q.q;
+
+            // Update dots
+            questions.forEach((_, i) => {
+                const dot = document.getElementById('dot' + i);
+                if (dot) {
+                    dot.className = 'dot ' + (i < step ? 'done' : i === step ? 'active' : 'pending');
+                }
+            });
+
+            // Build options
+            let optsHtml = '';
+            q.opts.forEach((opt, i) => {
+                optsHtml += `
+                    <button class="option-btn" onclick="selectOption(${step}, ${i})">
+                        <span class="opt-icon">${opt.icon}</span>
+                        <span class="opt-text">${opt.label}</span>
+                        <i class="bi bi-arrow-left opt-arrow"></i>
+                    </button>`;
+            });
+            document.getElementById('optionsList').innerHTML = optsHtml;
+
+            // Show elements
+            document.getElementById('questionArea').style.display = 'block';
+            document.getElementById('manualSection').classList.remove('show');
+            document.getElementById('customBtn').style.display = 'flex';
+        }
+
+        function selectOption(step, optIndex) {
+            const questions = GUIDE_QUESTIONS[category] || GUIDE_QUESTIONS.INDIVIDUAL_DEV;
+            const opt = questions[step].opts[optIndex];
+
+            guideAnswers[step] = {
+                label: opt.label,
+                score: opt.score,
+                insight: opt.insight,
+                isManual: false
+            };
+
+            // Go to next step or complete
+            renderStep(step + 1);
+        }
+
+        function showManual() {
+            document.getElementById('questionArea').style.display = 'none';
+            document.getElementById('manualSection').classList.add('show');
+            document.getElementById('manualInput').focus();
+        }
+
+        function hideManual() {
+            document.getElementById('questionArea').style.display = 'block';
+            document.getElementById('manualSection').classList.remove('show');
+        }
+
+        function updateConfirmBtn() {
+            const val = document.getElementById('manualInput').value.trim();
+            document.getElementById('confirmBtn').disabled = !val;
+        }
+
+        function submitManual() {
+            const val = document.getElementById('manualInput').value.trim();
+            if (!val) return;
+
+            guideAnswers[currentStep] = {
+                label: val,
+                score: 50,
+                insight: `تركيزك المخصص: "${val}". سنوفر لك الأدوات التي تدعم هذا التوجه.`,
+                isManual: true
+            };
+
+            renderStep(currentStep + 1);
+        }
+
+        function skipGuide() {
+            // حفظ نمط افتراضي
+            const defaultPattern = {
+                name: PATTERN_NAMES[category] || 'مستكشف',
+                plan: getDefaultPlan(),
+                score: 50,
+                insight: 'ابدأ باكتشاف الأدوات المتاحة واختر ما يناسب احتياجاتك.',
+                skipped: true
+            };
+
+            saveAndRedirect(defaultPattern);
+        }
+
+        function completeGuide() {
+            // حساب المتوسط
+            const allAnswers = Object.values(guideAnswers);
+            const avgScore = allAnswers.length > 0
+                ? Math.round(allAnswers.reduce((s, a) => s + a.score, 0) / allAnswers.length)
+                : 50;
+
+            // آخر إجابة تحدد الـ insight الأساسي
+            const lastAnswer = allAnswers[allAnswers.length - 1] || {};
+            const manualAnswer = allAnswers.find(a => a.isManual);
+
+            const pattern = {
+                name: PATTERN_NAMES[category] || 'مستكشف',
+                plan: getPlanByScore(avgScore),
+                score: avgScore,
+                insight: manualAnswer
+                    ? manualAnswer.insight
+                    : lastAnswer.insight || 'ابدأ ببناء الرؤية الاستراتيجية أولاً.',
+                answers: allAnswers.map(a => a.label),
+                category: category
+            };
+
+            saveAndRedirect(pattern);
+        }
+
+        function getDefaultPlan() {
+            if (['COMPANY_LARGE', 'CEO'].includes(category)) return 'PRO';
+            if (['COMPANY_SMALL', 'COMPANY_MEDIUM', 'NEW_PROJECT'].includes(category)) return 'STARTER';
+            if (category.startsWith('DEPT_')) return 'PRO';
+            return 'FREE';
+        }
+
+        function getPlanByScore(score) {
+            if (['COMPANY_LARGE', 'CEO'].includes(category)) return 'PRO';
+            if (category.startsWith('DEPT_')) return 'PRO';
+            if (score >= 70) return 'PRO';
+            if (score >= 40) return 'STARTER';
+            return 'FREE';
+        }
+
+        // ═══ متغير لحفظ النمط للاستخدام من زر النتيجة ═══
+        let savedPattern = null;
+
+        function saveAndRedirect(pattern) {
+            savedPattern = pattern;
+
+            // Show loading first
+            document.getElementById('loadingOverlay').classList.add('show');
+
+            // Save to localStorage
+            localStorage.setItem('stratix_smart_guide', JSON.stringify({
+                category: category,
+                pattern: pattern,
+                answers: guideAnswers,
+                timestamp: new Date().toISOString()
+            }));
+
+            // حفظ وجهة ما بعد التسجيل
+            const originalRoute = params.get('route') || localStorage.getItem('stratix_original_route') || 'pain';
+            const token = localStorage.getItem('token');
+            const redirectUrl = getRedirectUrl(originalRoute, token);
+            localStorage.setItem('stratix_redirect_after_login', redirectUrl.afterLogin || '/onboarding');
+
+            // بعد 1.5 ثانية → عرض شاشة النتيجة بدل الـ Redirect المباشر
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').classList.remove('show');
+                showResultOverlay(pattern);
+            }, 1500);
+        }
+
+        function showResultOverlay(pattern) {
+            // تعبئة البيانات
+            document.getElementById('resultPattern').textContent = pattern.name || 'مستكشف';
+            document.getElementById('resultInsight').textContent = pattern.insight || 'ابدأ ببناء خطتك الاستراتيجية خطوة بخطوة.';
+            document.getElementById('resultScoreLabel').textContent = `درجة الجاهزية: ${pattern.score || 50}/100`;
+
+            // عرض النتيجة
+            document.getElementById('resultOverlay').classList.add('show');
+
+            // تحريك شريط التقدم
+            setTimeout(() => {
+                document.getElementById('resultScoreFill').style.width = (pattern.score || 50) + '%';
+            }, 300);
+        }
+
+        function getRedirectUrl(originalRoute, token) {
+            const result = { direct: '', afterLogin: '/onboarding' };
+
+            if (originalRoute === 'beginner') {
+                result.direct = '/beginner-path?from=smart-guide&category=' + category;
+                result.afterLogin = result.direct;
+            } else if (originalRoute === 'founder') {
+                result.direct = '/founder-diagnostic?from=smart-guide&category=' + category;
+                result.afterLogin = result.direct;
+            } else if (originalRoute === 'pain') {
+                result.direct = '/pain-ambition?from=smart-guide&category=' + category;
+                result.afterLogin = result.direct;
+            } else if (originalRoute === 'ceo') {
+                result.direct = '/ceo-dashboard';
+                result.afterLogin = '/ceo-dashboard';
+            } else if (originalRoute === 'dept') {
+                const dept = category.replace('DEPT_', '').toLowerCase();
+                result.direct = '/dept-dashboard?dept=' + dept;
+                result.afterLogin = result.direct;
+            } else {
+                result.direct = '/dashboard.html';
+                result.afterLogin = '/onboarding';
+            }
+
+            return result;
+        }
+
+        function proceedFromResult() {
+            const originalRoute = params.get('route') || localStorage.getItem('stratix_original_route') || 'pain';
+            const token = localStorage.getItem('token');
+            const urls = getRedirectUrl(originalRoute, token);
+
+            if (!token) {
+                // غير مسجّل → صفحة التسجيل
+                window.location.href = '/login?tab=signup&from=smart-guide';
+            } else {
+                // مسجّل → الوجهة المباشرة
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                if (!user.onboardingCompleted && ['ceo', 'dept', ''].includes(originalRoute)) {
+                    window.location.href = '/onboarding';
+                } else {
+                    window.location.href = urls.direct;
+                }
+            }
+        }
+
+        // ═══ تشغيل ═══
+        init();
+    </script>
+</body>
+
+</html>
