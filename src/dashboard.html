@@ -1414,6 +1414,57 @@
                 </div>
             </div>
 
+            <!-- 📊 Social Proof Stats Banner — يظهر مرة واحدة -->
+            <div id="socialProofBanner" style="display:none;margin-bottom:20px;">
+                <div
+                    style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:linear-gradient(135deg,rgba(102,126,234,0.06),rgba(240,147,251,0.04));border:1px solid rgba(102,126,234,0.12);border-radius:16px;position:relative;">
+                    <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span style="font-size:20px;">🏢</span>
+                            <div>
+                                <div style="font-size:16px;font-weight:800;color:var(--text);">+500</div>
+                                <div style="font-size:10px;color:var(--text-muted);">شركة تستخدم ستارتكس</div>
+                            </div>
+                        </div>
+                        <div style="width:1px;height:28px;background:rgba(255,255,255,0.06);"></div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span style="font-size:20px;">📊</span>
+                            <div>
+                                <div style="font-size:16px;font-weight:800;color:var(--text);">+15,000</div>
+                                <div style="font-size:10px;color:var(--text-muted);">تحليل استراتيجي مُنجز</div>
+                            </div>
+                        </div>
+                        <div style="width:1px;height:28px;background:rgba(255,255,255,0.06);"></div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span style="font-size:20px;">⭐</span>
+                            <div>
+                                <div style="font-size:16px;font-weight:800;color:var(--text);">98%</div>
+                                <div style="font-size:10px;color:var(--text-muted);">نسبة رضا العملاء</div>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="dismissSocialProof()"
+                        style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:4px;"
+                        title="إخفاء">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            </div>
+            <script>
+                // إظهار Social Proof مرة واحدة للمستخدم الجديد
+                (function () {
+                    if (localStorage.getItem('stratix_social_proof_dismissed') !== 'true') {
+                        const b = document.getElementById('socialProofBanner');
+                        if (b) b.style.display = 'block';
+                    }
+                })();
+                function dismissSocialProof() {
+                    localStorage.setItem('stratix_social_proof_dismissed', 'true');
+                    const b = document.getElementById('socialProofBanner');
+                    if (b) { b.style.transition = 'all 0.3s'; b.style.opacity = '0'; b.style.transform = 'translateY(-8px)'; setTimeout(() => b.remove(), 300); }
+                }
+            </script>
+
             <!-- 🎯 Smart Recommendations from Pain/Ambition -->
             <div class="smart-recs" id="smartRecs" style="display:none;">
                 <div class="section-title" style="margin-bottom:14px">
@@ -2076,10 +2127,21 @@
             const user = JSON.parse(localStorage.getItem('user') || '{}');
             const userName = (user.name || '').split(' ')[0];
 
-            // Personalized welcome
+            // Personalized welcome — مخصص حسب المستوى
             const hour = new Date().getHours();
             const greeting = hour < 12 ? 'صباح الخير' : hour < 18 ? 'مساء الخير' : 'مساء النور';
             document.getElementById('welcomeMsg').textContent = `👋 ${greeting}${userName ? '، ' + userName : ''}`;
+
+            // رسالة مخصصة حسب مستوى الشركة
+            const cLvl = localStorage.getItem('_sidebarCompanyLevel') || 'MEDIUM';
+            const LEVEL_DESCS = {
+                INDIVIDUAL: 'تابع تطورك الشخصي والمهني — خطوة بخطوة.',
+                FOUNDER: 'ركّز على الأساسيات — ابنِ أساسات متينة قبل التوسع.',
+                SMALL: 'تابع مؤشرات نموك — كل قرار يحسب في هالمرحلة.',
+                MEDIUM: 'تابع المؤشرات واتخذ القرارات — فريقك يعتمد عليك.',
+                LARGE: 'تابع الحوكمة والأداء الاستراتيجي — في كل المستويات.',
+            };
+            document.getElementById('welcomeDesc').textContent = LEVEL_DESCS[cLvl] || LEVEL_DESCS.MEDIUM;
 
             // Pattern badge
             const badgeEl = document.getElementById('qsPatternBadge');
@@ -2097,24 +2159,49 @@
                 document.getElementById('welcomeDesc').textContent = 'توصيات مخصصة بناءً على تشخيصك — تابع خطواتك.';
             }
 
-            // Build steps based on state
+            // Build steps based on state — مخصّص حسب المستوى
             const stepsEl = document.getElementById('qsSteps');
             const hasPainAmbition = !!pa;
             const hasEntity = !!(user.entity && user.entity.id);
+
+            // وصف مخصص حسب المستوى
+            const LEVEL_STEP_DESCS = {
+                FOUNDER: {
+                    pain: 'أجب على 6 أسئلة — النظام يرسم لك مسارك كمؤسس',
+                    entity: 'سجّل بيانات مشروعك الأساسية',
+                    diagnosis: 'حلّل نقاط قوة مشروعك وفرص النمو'
+                },
+                SMALL: {
+                    pain: 'أجب على 6 أسئلة — اكتشف وضع شركتك الحقيقي',
+                    entity: 'سجّل بيانات الشركة والقطاع والفريق',
+                    diagnosis: 'حلّل نقاط القوة والضعف — الذكاء الاصطناعي يساعدك'
+                },
+                MEDIUM: {
+                    pain: 'أجب على 6 أسئلة في 3 دقائق — النظام يرسم لك مسارك المُخصّص',
+                    entity: 'سجّل بيانات الشركة والكيان والقطاع — الأساس لكل شي',
+                    diagnosis: 'ابدأ تحليل SWOT لفهم نقاط القوة والضعف والفرص'
+                },
+                LARGE: {
+                    pain: 'أجب على 6 أسئلة — تشخيص شامل للمنظمة والقرارات الاستراتيجية',
+                    entity: 'سجّل بيانات المنظمة والكيانات — الأساس لنظام حوكمة شامل',
+                    diagnosis: 'ابدأ التحليل الاستراتيجي الشامل (SWOT + أصحاب المصلحة)'
+                }
+            };
+            const lvlDescs = LEVEL_STEP_DESCS[cLvl] || LEVEL_STEP_DESCS.MEDIUM;
 
             // Determine steps dynamically
             let steps;
             if (!hasPainAmbition) {
                 steps = [
-                    { title: 'حدد ألمك وطموحك', desc: 'أجب على 6 أسئلة في 3 دقائق — النظام يرسم لك مسارك المُخصّص', icon: '🧭', href: '/pain-ambition.html', status: 'current', num: '1' },
-                    { title: 'أسّس منظمتك', desc: 'سجّل بيانات الشركة والكيان والقطاع — الأساس لكل شي', icon: '🏗️', href: '/onboarding.html', status: 'locked', num: '2' },
-                    { title: 'شخّص وضعك', desc: 'ابدأ تحليل SWOT لفهم نقاط القوة والضعف والفرص', icon: '🔍', href: '/swot.html', status: 'locked', num: '3' },
+                    { title: 'حدد ألمك وطموحك', desc: lvlDescs.pain, icon: '🧭', href: '/pain-ambition.html', status: 'current', num: '1' },
+                    { title: 'أسّس منظمتك', desc: lvlDescs.entity, icon: '🏗️', href: '/onboarding.html', status: 'locked', num: '2' },
+                    { title: 'شخّص وضعك', desc: lvlDescs.diagnosis, icon: '🔍', href: '/swot.html', status: 'locked', num: '3' },
                 ];
             } else if (!hasEntity) {
                 steps = [
                     { title: 'حدد ألمك وطموحك', desc: 'تم تحديد نمطك: ' + (pa.pattern || ''), icon: '✅', href: '/pain-ambition.html', status: 'done', num: '✓' },
-                    { title: 'أسّس منظمتك', desc: 'سجّل بيانات الشركة والكيان والقطاع — الأساس لكل شي', icon: '🏗️', href: '/onboarding.html', status: 'current', num: '2' },
-                    { title: 'شخّص وضعك', desc: 'ابدأ تحليل SWOT لفهم نقاط القوة والضعف والفرص', icon: '🔍', href: '/swot.html', status: 'locked', num: '3' },
+                    { title: 'أسّس منظمتك', desc: lvlDescs.entity, icon: '🏗️', href: '/onboarding.html', status: 'current', num: '2' },
+                    { title: 'شخّص وضعك', desc: lvlDescs.diagnosis, icon: '🔍', href: '/swot.html', status: 'locked', num: '3' },
                 ];
             } else {
                 // Has both — show next logical steps

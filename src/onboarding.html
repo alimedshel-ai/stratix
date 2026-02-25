@@ -699,7 +699,8 @@
                             <i class="bi bi-check-lg"></i>
                         </div>
                         <h2 style="font-size:1.8rem; font-weight:800; margin-bottom:12px;">🎉 تم الإعداد بنجاح!</h2>
-                        <p style="color:var(--text-muted); font-size:1.05rem; max-width:450px; margin:0 auto 24px;">
+                        <p id="onboardSuccessMsg"
+                            style="color:var(--text-muted); font-size:1.05rem; max-width:450px; margin:0 auto 24px;">
                             منظمتك جاهزة. الخطوة التالية: ابدأ تشخيص وضعك الحالي.
                         </p>
                     </div>
@@ -713,42 +714,19 @@
                             style="font-size:13px; color:var(--text-muted); max-width:400px; margin:0 auto;"></p>
                     </div>
 
-                    <!-- المسار القادم -->
+                    <!-- المسار القادم — يُبنى ديناميكياً -->
                     <div class="mb-4" style="max-width:400px; margin:0 auto;">
                         <div
                             style="font-size:13px; font-weight:700; color:var(--text-muted); margin-bottom:10px; text-align:center;">
                             🗺️ مسارك القادم</div>
-                        <div style="display:flex;flex-direction:column;gap:6px;">
-                            <div
-                                style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2)">
-                                <span style="font-size:16px">✅</span>
-                                <span style="flex:1;font-weight:700;font-size:13px;color:#667eea">التأسيس</span>
-                                <span style="font-size:11px;font-weight:700;color:#22c55e">مكتمل</span>
-                            </div>
-                            <div
-                                style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:rgba(245,158,11,0.08);border:2px solid rgba(245,158,11,0.3)">
-                                <span style="font-size:16px">👈</span>
-                                <span style="flex:1;font-weight:700;font-size:13px;color:#f59e0b">التشخيص — الخطوة
-                                    التالية</span>
-                                <span style="font-size:11px;font-weight:700;color:#f59e0b">ابدأ الآن</span>
-                            </div>
-                            <div
-                                style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid #edf2f7;opacity:0.5">
-                                <span style="font-size:16px">🔒</span>
-                                <span
-                                    style="flex:1;font-weight:600;font-size:13px;color:var(--text-muted)">التخطيط</span>
-                            </div>
-                            <div
-                                style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid #edf2f7;opacity:0.5">
-                                <span style="font-size:16px">🔒</span>
-                                <span style="flex:1;font-weight:600;font-size:13px;color:var(--text-muted)">التنفيذ →
-                                    المتابعة</span>
-                            </div>
+                        <div id="onboardRoadmapSteps" style="display:flex;flex-direction:column;gap:6px;">
+                            <!-- يُملأ بالجافاسكربت -->
                         </div>
                     </div>
 
                     <div class="text-center" style="display:flex;flex-direction:column;gap:10px;align-items:center;">
-                        <a href="/swot.html" class="btn-wizard primary" style="padding:14px 48px; font-size:1.1rem;">
+                        <a href="/swot.html" id="onboardNextBtn" class="btn-wizard primary"
+                            style="padding:14px 48px; font-size:1.1rem;">
                             <i class="bi bi-search"></i>
                             ابدأ التشخيص (SWOT)
                         </a>
@@ -974,6 +952,95 @@
             } else {
                 localStorage.setItem('onboarding_completed', 'true');
             }
+
+            // === بناء الخارطة الديناميكية حسب المستوى ===
+            buildOnboardRoadmap(data.orgSize);
+        }
+
+        function buildOnboardRoadmap(orgSize) {
+            const size = (orgSize || '').toLowerCase();
+            let level = 'MEDIUM';
+            if (['1-10', 'micro', '1_10'].includes(size)) level = 'FOUNDER';
+            else if (['11-50', 'small', '11_50'].includes(size)) level = 'SMALL';
+            else if (['51-200', 'medium', '51_200'].includes(size)) level = 'MEDIUM';
+            else if (['200+', '201-500', '500+', 'large', 'enterprise', '201_500'].includes(size)) level = 'LARGE';
+
+            const ROADMAPS = {
+                FOUNDER: [
+                    { label: 'التأسيس', done: true },
+                    { label: 'تحليل SWOT', current: true },
+                    { label: 'الأهداف والمؤشرات', locked: true },
+                    { label: 'التنفيذ', locked: true }
+                ],
+                SMALL: [
+                    { label: 'التأسيس', done: true },
+                    { label: 'التشخيص (SWOT)', current: true },
+                    { label: 'الأهداف والمؤشرات', locked: true },
+                    { label: 'المبادرات', locked: true },
+                    { label: 'المتابعة', locked: true }
+                ],
+                MEDIUM: [
+                    { label: 'التأسيس', done: true },
+                    { label: 'التحليل الاستراتيجي', current: true },
+                    { label: 'التوجهات', locked: true },
+                    { label: 'الأهداف والمؤشرات', locked: true },
+                    { label: 'المبادرات والمشاريع', locked: true },
+                    { label: 'المتابعة', locked: true }
+                ],
+                LARGE: [
+                    { label: 'التأسيس', done: true },
+                    { label: 'التحليل الشامل', current: true },
+                    { label: 'أصحاب المصلحة', locked: true },
+                    { label: 'التوجهات والخيارات', locked: true },
+                    { label: 'الأهداف والمؤشرات', locked: true },
+                    { label: 'المبادرات والمشاريع', locked: true },
+                    { label: 'الحوكمة والمتابعة', locked: true }
+                ]
+            };
+
+            const steps = ROADMAPS[level] || ROADMAPS.MEDIUM;
+            const container = document.getElementById('onboardRoadmapSteps');
+            if (!container) return;
+
+            container.innerHTML = steps.map(s => {
+                if (s.done) {
+                    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2)">
+                        <span style="font-size:16px">✅</span>
+                        <span style="flex:1;font-weight:700;font-size:13px;color:#667eea">${s.label}</span>
+                        <span style="font-size:11px;font-weight:700;color:#22c55e">مكتمل</span>
+                    </div>`;
+                } else if (s.current) {
+                    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:rgba(245,158,11,0.08);border:2px solid rgba(245,158,11,0.3)">
+                        <span style="font-size:16px">👈</span>
+                        <span style="flex:1;font-weight:700;font-size:13px;color:#f59e0b">${s.label} — الخطوة التالية</span>
+                        <span style="font-size:11px;font-weight:700;color:#f59e0b">ابدأ الآن</span>
+                    </div>`;
+                } else {
+                    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid #edf2f7;opacity:0.5">
+                        <span style="font-size:16px">🔒</span>
+                        <span style="flex:1;font-weight:600;font-size:13px;color:var(--text-muted)">${s.label}</span>
+                    </div>`;
+                }
+            }).join('');
+
+            // تخصيص رسالة النجاح وزر CTA
+            const LEVEL_MSGS = {
+                FOUNDER: 'مشروعك جاهز! ابدأ بتحليل SWOT بسيط — يكفي 5 دقائق.',
+                SMALL: 'شركتك جاهزة! الخطوة التالية: تشخيص نقاط القوة والضعف.',
+                MEDIUM: 'منظمتك جاهزة. الخطوة التالية: التحليل الاستراتيجي الشامل.',
+                LARGE: 'منظمتك جاهزة. ابدأ بالتحليل الاستراتيجي الشامل مع فريقك.'
+            };
+            const LEVEL_BTNS = {
+                FOUNDER: '🔍 ابدأ تحليل SWOT البسيط',
+                SMALL: '🔍 ابدأ التشخيص (SWOT)',
+                MEDIUM: '📊 ابدأ التحليل الاستراتيجي',
+                LARGE: '📊 ابدأ التحليل الاستراتيجي الشامل'
+            };
+
+            const msgEl = document.getElementById('onboardSuccessMsg');
+            const btnEl = document.getElementById('onboardNextBtn');
+            if (msgEl) msgEl.textContent = LEVEL_MSGS[level] || LEVEL_MSGS.MEDIUM;
+            if (btnEl) btnEl.innerHTML = `<i class="bi bi-search"></i> ${LEVEL_BTNS[level] || LEVEL_BTNS.MEDIUM}`;
         }
 
         function showConfetti() {
