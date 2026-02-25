@@ -1187,19 +1187,34 @@
         function getRedirectUrl(originalRoute, token) {
             const result = { direct: '', afterLogin: '/onboarding' };
 
-            if (originalRoute === 'beginner') {
+            // === تحديد المسار الصحيح من الفئة نفسها (لمنع التداخل) ===
+            let smartRoute = originalRoute;
+            // إذا الـ route مفقود أو غير متوافق، نحدده من الفئة
+            if (category.startsWith('INDIVIDUAL_')) {
+                smartRoute = 'beginner';
+            } else if (category === 'NEW_PROJECT') {
+                smartRoute = 'founder';
+            } else if (category.startsWith('COMPANY_')) {
+                smartRoute = 'pain';
+            } else if (category === 'CEO') {
+                smartRoute = 'ceo';
+            } else if (category.startsWith('DEPT_')) {
+                smartRoute = 'dept';
+            }
+
+            if (smartRoute === 'beginner') {
                 result.direct = '/beginner-path?from=smart-guide&category=' + category;
                 result.afterLogin = result.direct;
-            } else if (originalRoute === 'founder') {
+            } else if (smartRoute === 'founder') {
                 result.direct = '/founder-diagnostic?from=smart-guide&category=' + category;
                 result.afterLogin = result.direct;
-            } else if (originalRoute === 'pain') {
+            } else if (smartRoute === 'pain') {
                 result.direct = '/pain-ambition?from=smart-guide&category=' + category;
                 result.afterLogin = result.direct;
-            } else if (originalRoute === 'ceo') {
+            } else if (smartRoute === 'ceo') {
                 result.direct = '/ceo-dashboard';
                 result.afterLogin = '/ceo-dashboard';
-            } else if (originalRoute === 'dept') {
+            } else if (smartRoute === 'dept') {
                 const dept = category.replace('DEPT_', '').toLowerCase();
                 result.direct = '/dept-dashboard?dept=' + dept;
                 result.afterLogin = result.direct;
