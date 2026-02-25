@@ -537,7 +537,7 @@
     // ╔═══════════════════════════════════════════╗
     // ║  📈 رؤيتي — قسم جديد                       ║
     // ╚═══════════════════════════════════════════╝
-    if (!isViewerOrDE && currentRules.showVision) {
+    if (!isViewerOrDE && currentRules.showVision && !_sidebarIsIndividual) {
       html += '<div class="stx-divider"></div>';
 
       const visionFiltered = visionItems.filter(item => hasAccess(item.roles));
@@ -564,7 +564,7 @@
     // ╔═══════════════════════════════════════════╗
     // ║  💎 أدوات متقدمة                            ║
     // ╚═══════════════════════════════════════════╝
-    if (!isViewerOrDE && currentRules.showAdvanced) {
+    if (!isViewerOrDE && currentRules.showAdvanced && !_sidebarIsIndividual) {
       const advFiltered = advancedItems.filter(item => hasAccess(item.roles));
       const advHasActive = advFiltered.some(item => isActive(item.href));
 
