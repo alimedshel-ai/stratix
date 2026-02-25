@@ -65,14 +65,25 @@
   // === كشف نوع المستخدم: فرد أو شركة ===
   let _sidebarIsIndividual = false;
   try {
+    // 1. من بيانات Smart Guide
     const sgRaw = localStorage.getItem('stratix_smart_guide');
     if (sgRaw) {
       const sgParsed = JSON.parse(sgRaw);
       _sidebarIsIndividual = (sgParsed.category || '').startsWith('INDIVIDUAL_');
     }
+    // 2. من stratix_category
     if (!_sidebarIsIndividual) {
       const cat = localStorage.getItem('stratix_category') || '';
       _sidebarIsIndividual = cat.startsWith('INDIVIDUAL_');
+    }
+    // 3. من بيانات اليوزر المحفوظة من السيرفر
+    if (!_sidebarIsIndividual) {
+      const stored = localStorage.getItem('user');
+      if (stored) {
+        const u = JSON.parse(stored);
+        const uCat = u.userCategory || u.category || '';
+        _sidebarIsIndividual = uCat.startsWith('INDIVIDUAL_');
+      }
     }
   } catch (e) { /* ignore */ }
 

@@ -490,13 +490,15 @@
                     if (sysRole !== 'SUPER_ADMIN' && (role === 'VIEWER' || role === 'DATA_ENTRY')) {
                         window.location.href = '/viewer-hub.html';
                     } else if (!onboardingDone && sysRole !== 'SUPER_ADMIN') {
-                        // كشف نوع المستخدم: فرد أو شركة
-                        let _isIndvLogin = false;
-                        try {
-                            const sgRaw = localStorage.getItem('stratix_smart_guide');
-                            if (sgRaw) _isIndvLogin = (JSON.parse(sgRaw).category || '').startsWith('INDIVIDUAL_');
-                            if (!_isIndvLogin) _isIndvLogin = (localStorage.getItem('stratix_category') || '').startsWith('INDIVIDUAL_');
-                        } catch (e) { }
+                        // كشف نوع المستخدم: فرد أو شركة (من السيرفر + localStorage)
+                        let _isIndvLogin = (data.user.userCategory || '').startsWith('INDIVIDUAL_');
+                        if (!_isIndvLogin) {
+                            try {
+                                const sgRaw = localStorage.getItem('stratix_smart_guide');
+                                if (sgRaw) _isIndvLogin = (JSON.parse(sgRaw).category || '').startsWith('INDIVIDUAL_');
+                                if (!_isIndvLogin) _isIndvLogin = (localStorage.getItem('stratix_category') || '').startsWith('INDIVIDUAL_');
+                            } catch (e) { }
+                        }
 
                         if (_isIndvLogin) {
                             // الأفراد → الداشبورد مباشرة (لا يحتاجون إعداد منظمة)

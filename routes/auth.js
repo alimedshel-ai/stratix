@@ -171,8 +171,8 @@ router.post('/register', async (req, res) => {
         entity: null,
         memberships: [],
       },
-      // إخبار الفرونت بالتوجيه للـ onboarding
-      redirectTo: '/onboarding',
+      // إخبار الفرونت بالتوجيه حسب نوع المستخدم
+      redirectTo: (user.userCategory || '').startsWith('INDIVIDUAL_') ? '/dashboard.html' : '/onboarding',
     });
   } catch (error) {
     console.error('Registration Error:', error);
@@ -382,6 +382,7 @@ router.post('/login', validateLogin, async (req, res) => {
         systemRole: user.systemRole || 'USER',
         role: primaryRole,
         userType: primaryUserType,
+        userCategory: user.userCategory || null,
         onboardingCompleted: user.onboardingCompleted || false,
         entity: primaryEntity,
         memberships: user.memberships,
