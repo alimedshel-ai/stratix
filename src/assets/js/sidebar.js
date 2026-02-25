@@ -98,11 +98,15 @@
     },
     {
       id: 'DIAGNOSIS',
-      nameAr: 'تشخيصي',
-      icon: 'bi-search-heart',
+      nameAr: _sidebarIsIndividual ? 'تقييمي' : 'تشخيصي',
+      icon: _sidebarIsIndividual ? 'bi-clipboard2-pulse' : 'bi-search-heart',
       emoji: '🔍',
       color: '#f59e0b',
-      items: [
+      items: _sidebarIsIndividual ? [
+        { label: 'تحليل SWOT شخصي', href: '/analysis.html', icon: 'bi-grid-1x2-fill' },
+        { label: 'تقييم المهارات', href: '/assessments.html', icon: 'bi-clipboard-check-fill' },
+        { label: 'خريطة التحديات', href: '/risk-map.html', icon: 'bi-exclamation-triangle-fill' },
+      ] : [
         { label: 'التحليل الاستراتيجي', href: '/analysis.html', icon: 'bi-binoculars-fill' },
         { label: 'التقييمات', href: '/assessments.html', icon: 'bi-clipboard-check-fill' },
         { label: 'البيئة الداخلية', href: '/internal-env.html', icon: 'bi-building-fill-check' },
@@ -113,11 +117,15 @@
     },
     {
       id: 'PLANNING',
-      nameAr: 'خياراتي وخطتي',
-      icon: 'bi-signpost-split',
+      nameAr: _sidebarIsIndividual ? 'أهدافي وخطتي' : 'خياراتي وخطتي',
+      icon: _sidebarIsIndividual ? 'bi-flag-fill' : 'bi-signpost-split',
       emoji: '🎯',
       color: '#7c3aed',
-      items: [
+      items: _sidebarIsIndividual ? [
+        { label: 'أولوياتي', href: '/tows.html', icon: 'bi-arrows-fullscreen' },
+        { label: 'أهدافي المهنية', href: '/objectives.html', icon: 'bi-bullseye' },
+        { label: 'مؤشرات تقدّمي', href: '/kpis.html', icon: 'bi-graph-up-arrow' },
+      ] : [
         { label: 'مصفوفة TOWS', href: '/tows.html', icon: 'bi-arrows-fullscreen' },
         { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass-fill' },
         { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye' },
@@ -127,11 +135,15 @@
     },
     {
       id: 'EXECUTION',
-      nameAr: 'تنفيذي',
-      icon: 'bi-rocket-takeoff',
-      emoji: '🚀',
+      nameAr: _sidebarIsIndividual ? 'خطواتي' : 'تنفيذي',
+      icon: _sidebarIsIndividual ? 'bi-person-walking' : 'bi-rocket-takeoff',
+      emoji: _sidebarIsIndividual ? '🏃' : '🚀',
       color: '#059669',
-      items: [
+      items: _sidebarIsIndividual ? [
+        { label: 'خطة العمل', href: '/initiatives.html', icon: 'bi-kanban-fill' },
+        { label: 'مهامي', href: '/tasks.html', icon: 'bi-check2-square' },
+        { label: 'تسجيل التقدم', href: '/kpi-entries.html', icon: 'bi-pencil-square' },
+      ] : [
         { label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban-fill' },
         { label: 'المشاريع', href: '/projects.html', icon: 'bi-folder2-open' },
         { label: 'المهام', href: '/tasks.html', icon: 'bi-check2-square' },
@@ -140,11 +152,15 @@
     },
     {
       id: 'ADAPTATION',
-      nameAr: 'متابعتي',
+      nameAr: _sidebarIsIndividual ? 'مراجعتي' : 'متابعتي',
       icon: 'bi-bar-chart-line',
       emoji: '📊',
       color: '#0891b2',
-      items: [
+      items: _sidebarIsIndividual ? [
+        { label: 'مراجعة أسبوعية', href: '/reviews.html', icon: 'bi-journal-check' },
+        { label: 'تطوير مستمر', href: '/intelligence.html', icon: 'bi-stars' },
+        { label: 'تقويمي', href: '/strategic-calendar.html', icon: 'bi-calendar-event-fill' },
+      ] : [
         { label: 'المراجعات الدورية', href: '/reviews.html', icon: 'bi-journal-check' },
         { label: 'الذكاء الاستراتيجي', href: '/intelligence.html', icon: 'bi-stars' },
         { label: 'التصحيحات', href: '/corrections.html', icon: 'bi-arrow-repeat' },
