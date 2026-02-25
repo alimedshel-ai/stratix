@@ -62,17 +62,34 @@
     }
   } catch (e) { /* ignore */ }
 
+  // === كشف نوع المستخدم: فرد أو شركة ===
+  let _sidebarIsIndividual = false;
+  try {
+    const sgRaw = localStorage.getItem('stratix_smart_guide');
+    if (sgRaw) {
+      const sgParsed = JSON.parse(sgRaw);
+      _sidebarIsIndividual = (sgParsed.category || '').startsWith('INDIVIDUAL_');
+    }
+    if (!_sidebarIsIndividual) {
+      const cat = localStorage.getItem('stratix_category') || '';
+      _sidebarIsIndividual = cat.startsWith('INDIVIDUAL_');
+    }
+  } catch (e) { /* ignore */ }
+
   // === محرك المسارات الذكية (يُقرأ ديناميكياً داخل buildSidebar) ===
 
   // === رحلتي الاستراتيجية: 5 مراحل (بالتسميات الجديدة) ===
   const journeyPhases = [
     {
       id: 'FOUNDATION',
-      nameAr: 'بنيتنا',
-      icon: 'bi-building-gear',
-      emoji: '🏗️',
+      nameAr: _sidebarIsIndividual ? 'أساسياتي' : 'بنيتنا',
+      icon: _sidebarIsIndividual ? 'bi-person-gear' : 'bi-building-gear',
+      emoji: _sidebarIsIndividual ? '🧩' : '🏗️',
       color: '#667eea',
-      items: [
+      items: _sidebarIsIndividual ? [
+        { label: 'ملفي الشخصي', href: '/settings.html', icon: 'bi-person-circle' },
+        { label: 'الإعدادات', href: '/settings-data.html', icon: 'bi-gear-fill' },
+      ] : [
         { label: 'الكيانات', href: '/entities.html', icon: 'bi-building-fill' },
         { label: 'القطاعات والأنشطة', href: '/sectors.html', icon: 'bi-grid-3x3-gap-fill' },
         { label: 'الإعدادات', href: '/settings.html', icon: 'bi-gear-fill' },
@@ -224,7 +241,7 @@
           ${userRoleLabel ? `<span class="stx-user-role">${userRoleLabel}</span>` : ''}
         </div>
       </div>
-      ${orgLine ? `
+      ${(orgLine && !_sidebarIsIndividual) ? `
       <div class="stx-org-badge">
         <i class="bi bi-building"></i>
         <span>${orgLine}</span>
@@ -333,12 +350,12 @@
       const isOnboardingActive = isActive('/onboarding.html');
       const isDnaActive = isActive('/org-dna.html');
 
-      // === الخطوة 1: مسار المبتدئ (لتأسيس مشروع / شركة ناشئة / دخول شريك) ===
+      // === الخطوة 1: مسار المبتدئ / مسار التطوير ===
       html += `
       <a href="/beginner-path.html" class="stx-item stx-phase0 ${isBegPathActive ? 'active' : ''}" style="margin:2px 10px;border-radius:10px;padding:10px 14px !important;border-right:none !important;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);">
-        <i class="bi bi-signpost-split-fill" style="font-size:15px;color:#f59e0b"></i>
-        <span style="font-weight:700;font-size:12.5px;color:#f59e0b">مسار المبتدئ</span>
-        <span style="margin-right:auto;font-size:9px;padding:2px 7px;border-radius:5px;background:rgba(245,158,11,0.15);color:#f59e0b;font-weight:800">مشروع جديد</span>
+        <i class="bi ${_sidebarIsIndividual ? 'bi-person-lines-fill' : 'bi-signpost-split-fill'}" style="font-size:15px;color:#f59e0b"></i>
+        <span style="font-weight:700;font-size:12.5px;color:#f59e0b">${_sidebarIsIndividual ? 'مسار التطوير' : 'مسار المبتدئ'}</span>
+        <span style="margin-right:auto;font-size:9px;padding:2px 7px;border-radius:5px;background:rgba(245,158,11,0.15);color:#f59e0b;font-weight:800">${_sidebarIsIndividual ? 'تطوير مهني' : 'مشروع جديد'}</span>
       </a>
       `;
 
@@ -374,23 +391,34 @@
       html += `
       <a href="/pain-ambition.html" class="stx-item stx-phase0 ${isPainActive ? 'active' : ''}" style="margin:2px 10px;border-radius:10px;padding:10px 14px !important;border-right:none !important;background:${hasPainAmbition ? 'rgba(34,197,94,0.08)' : 'rgba(124,58,237,0.08)'};border:1px solid ${hasPainAmbition ? 'rgba(34,197,94,0.2)' : 'rgba(124,58,237,0.15)'};">
         <i class="bi ${hasPainAmbition ? 'bi-check-circle-fill' : 'bi-record-circle'}" style="font-size:15px;color:${hasPainAmbition ? '#22c55e' : '#7c3aed'}"></i>
-        <span style="font-weight:700;font-size:12.5px">الألم والطموح</span>
-        <span style="margin-right:auto;font-size:9px;padding:2px 7px;border-radius:5px;background:${hasPainAmbition ? 'rgba(34,197,94,0.15)' : 'rgba(124,58,237,0.15)'};color:${hasPainAmbition ? '#22c55e' : '#7c3aed'};font-weight:800">${hasPainAmbition ? 'مكتمل ✓' : 'شركة قائمة'}</span>
+        <span style="font-weight:700;font-size:12.5px">${_sidebarIsIndividual ? 'التحديات والأهداف' : 'الألم والطموح'}</span>
+        <span style="margin-right:auto;font-size:9px;padding:2px 7px;border-radius:5px;background:${hasPainAmbition ? 'rgba(34,197,94,0.15)' : 'rgba(124,58,237,0.15)'};color:${hasPainAmbition ? '#22c55e' : '#7c3aed'};font-weight:800">${hasPainAmbition ? 'مكتمل ✓' : (_sidebarIsIndividual ? 'تقييم ذاتي' : 'شركة قائمة')}</span>
       </a>
       ${patternBadgeHTML}
       `;
 
-      // === الخطوة 3: إعداد المنظمة (بعد اختيار المسار) ===
-      html += `
-      <a href="/onboarding.html" class="stx-item stx-phase0 ${isOnboardingActive ? 'active' : ''}" style="margin:2px 10px 4px;border-radius:10px;padding:10px 14px !important;border-right:none !important;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);">
-        <i class="bi bi-rocket-takeoff-fill" style="font-size:15px;color:#667eea"></i>
-        <span style="font-weight:700;font-size:12.5px">إعداد المنظمة</span>
-      </a>
-      <a href="/org-dna.html" class="stx-item stx-dna-link ${isDnaActive ? 'active' : ''}" style="margin:-2px 18px 4px;padding:6px 12px !important;border-radius:8px;font-size:11.5px;opacity:0.85">
-        <i class="bi bi-fingerprint" style="color:#ec4899;font-size:13px"></i>
-        <span>هوية المنظمة (DNA)</span>
-      </a>
-    `;
+      // === الخطوة 3: إعداد المنظمة / الملف الشخصي ===
+      if (_sidebarIsIndividual) {
+        // للأفراد: إعداد الملف الشخصي بدل المنظمة
+        html += `
+        <a href="/onboarding.html" class="stx-item stx-phase0 ${isOnboardingActive ? 'active' : ''}" style="margin:2px 10px 4px;border-radius:10px;padding:10px 14px !important;border-right:none !important;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);">
+          <i class="bi bi-person-check-fill" style="font-size:15px;color:#667eea"></i>
+          <span style="font-weight:700;font-size:12.5px">إعداد ملفي</span>
+        </a>
+        `;
+        // لا نعرض هوية المنظمة (DNA) للأفراد
+      } else {
+        html += `
+        <a href="/onboarding.html" class="stx-item stx-phase0 ${isOnboardingActive ? 'active' : ''}" style="margin:2px 10px 4px;border-radius:10px;padding:10px 14px !important;border-right:none !important;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);">
+          <i class="bi bi-rocket-takeoff-fill" style="font-size:15px;color:#667eea"></i>
+          <span style="font-weight:700;font-size:12.5px">إعداد المنظمة</span>
+        </a>
+        <a href="/org-dna.html" class="stx-item stx-dna-link ${isDnaActive ? 'active' : ''}" style="margin:-2px 18px 4px;padding:6px 12px !important;border-radius:8px;font-size:11.5px;opacity:0.85">
+          <i class="bi bi-fingerprint" style="color:#ec4899;font-size:13px"></i>
+          <span>هوية المنظمة (DNA)</span>
+        </a>
+        `;
+      }
 
       // --- المراحل الخمس ---
       journeyPhases.forEach((phase, idx) => {
