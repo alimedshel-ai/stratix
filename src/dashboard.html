@@ -1174,42 +1174,7 @@
                 </div>
             </div>
 
-            <!-- 🌱 بانر مسار المبتدئ — يظهر لمن لم يكمل التشخيص -->
-            <div id="beginnerBanner" style="display:none; margin-bottom:20px;">
-                <a href="/beginner-path.html"
-                    style="display:flex;align-items:center;gap:18px;padding:22px 28px;background:linear-gradient(135deg,rgba(245,158,11,0.12),rgba(249,115,22,0.06));border:2px solid rgba(245,158,11,0.3);border-radius:20px;text-decoration:none;color:inherit;transition:all 0.3s;position:relative;overflow:hidden;"
-                    onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 30px rgba(245,158,11,0.15)'"
-                    onmouseout="this.style.transform='';this.style.boxShadow=''">
-                    <div
-                        style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#f59e0b,#f97316);display:flex;align-items:center;justify-content:center;font-size:26px;color:#fff;flex-shrink:0;">
-                        <i class="bi bi-signpost-split-fill"></i>
-                    </div>
-                    <div style="flex:1;">
-                        <div style="font-size:17px;font-weight:800;color:var(--text,#e2e8f0);margin-bottom:4px;">
-                            🌱 مبتدئ في الاستراتيجية؟ ابدأ من هنا
-                        </div>
-                        <div style="font-size:13px;color:var(--text-muted,#94a3b8);line-height:1.6;">
-                            مسار مبسّط من 3 أسئلة فقط — اكتشف وضع شركتك واحصل على خطة مخصصة في أقل من 5 دقائق
-                        </div>
-                    </div>
-                    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-                        <span
-                            style="padding:6px 16px;background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff;border-radius:10px;font-weight:700;font-size:13px;white-space:nowrap;">ابدأ
-                            الآن</span>
-                        <span style="font-size:10px;color:#f59e0b;font-weight:700;">مجاني</span>
-                    </div>
-                </a>
-            </div>
-            <script>
-                // إظهار بانر المبتدئ فقط إذا لم يكمل الألم والطموح
-                try {
-                    const pa = localStorage.getItem('painAmbition');
-                    if (!pa) {
-                        const banner = document.getElementById('beginnerBanner');
-                        if (banner) banner.style.display = 'block';
-                    }
-                } catch (e) { }
-            </script>
+            <!-- 🌱 بانر المبتدئ: تم نقله للسايدبار -->
 
             <!-- 🎉 Welcome Card للمستخدم الجديد -->
             <div id="welcomeCard" style="display:none; margin-bottom:20px;">
@@ -1311,6 +1276,21 @@
                     if (card) { card.style.transition = 'all 0.4s'; card.style.opacity = '0'; card.style.transform = 'translateY(-10px)'; setTimeout(() => card.remove(), 400); }
                 }
 
+                // ═══ Toggle Dashboard Sections ═══
+                function toggleDashSection(id) {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    const chevronId = id + 'Chevron';
+                    const chevron = document.getElementById(chevronId);
+                    if (el.style.maxHeight && el.style.maxHeight !== '0px') {
+                        el.style.maxHeight = '0';
+                        if (chevron) chevron.style.transform = 'rotate(0deg)';
+                    } else {
+                        el.style.maxHeight = el.scrollHeight + 'px';
+                        if (chevron) chevron.style.transform = 'rotate(180deg)';
+                    }
+                }
+
                 // ═══ Guided Tour ═══
                 let tourStep = 0;
                 const tourSteps = [
@@ -1366,27 +1346,8 @@
                 }
             </script>
 
-            <!-- 🎯 Pattern Insight + Score -->
-            <div class="pattern-insight" id="patternInsight" style="display:none;">
-                <div class="pi-score-ring" id="piScoreRing">
-                    <svg width="72" height="72" viewBox="0 0 72 72">
-                        <circle cx="36" cy="36" r="30" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6" />
-                        <circle id="piCircle" cx="36" cy="36" r="30" fill="none" stroke="#7c3aed" stroke-width="6"
-                            stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="188.5"
-                            style="transition:stroke-dashoffset 1s ease" />
-                    </svg>
-                    <span class="pi-val" id="piScore">0</span>
-                    <span class="pi-label-sm">نقطة</span>
-                </div>
-                <div class="pi-info">
-                    <div class="pi-name">
-                        <span id="piPatternName">—</span>
-                        <span id="piPatternBadge"
-                            style="font-size:11px;padding:3px 10px;border-radius:8px;font-weight:700"></span>
-                    </div>
-                    <div class="pi-insight" id="piInsight">—</div>
-                </div>
-            </div>
+            <!-- 🎯 Pattern Insight: تم دمجه مع Quick Start -->
+            <div id="patternInsight" style="display:none;"></div>
 
             <!-- 🗺️ Interactive Roadmap -->
             <div class="roadmap-widget" id="roadmapWidget">
@@ -1465,69 +1426,52 @@
                 }
             </script>
 
-            <!-- 🎯 Smart Recommendations from Pain/Ambition -->
+            <!-- 🎯 Smart Recommendations — قابل للطي -->
             <div class="smart-recs" id="smartRecs" style="display:none;">
-                <div class="section-title" style="margin-bottom:14px">
+                <div class="section-title" style="margin-bottom:14px;cursor:pointer;user-select:none;"
+                    onclick="toggleDashSection('smartRecsBody')">
                     <i class="bi bi-lightbulb-fill" style="color:var(--warning)"></i> توصيات مخصصة لك
+                    <i class="bi bi-chevron-down" id="smartRecsChevron"
+                        style="float:left;font-size:14px;color:var(--text-muted);transition:transform 0.3s;"></i>
                 </div>
-                <div id="smartRecsList"></div>
+                <div id="smartRecsBody" style="overflow:hidden;transition:max-height 0.3s ease;">
+                    <div id="smartRecsList"></div>
+                </div>
             </div>
 
-            <!-- 💔 Pain & Ambition Summary Card -->
+            <!-- 💔 Pain & Ambition Summary — قابل للطي -->
             <div class="pa-summary" id="paSummaryCard" style="display:none;">
-                <div class="pa-header">
+                <div class="pa-header" style="cursor:pointer;" onclick="toggleDashSection('paSummaryBody')">
                     <div class="pa-title">
                         <span>💔 ملخص التشخيص</span>
                         <span id="paPatternBadge"></span>
+                        <i class="bi bi-chevron-down" id="paSummaryChevron"
+                            style="font-size:14px;color:var(--text-muted);transition:transform 0.3s;margin-right:8px;"></i>
                     </div>
-                    <a href="/pain-ambition.html" class="pa-reassess" id="paReassessBtn">
+                    <a href="/pain-ambition.html" class="pa-reassess" id="paReassessBtn"
+                        onclick="event.stopPropagation()">
                         <i class="bi bi-arrow-repeat"></i> أعِد التقييم
                     </a>
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-                    <div>
-                        <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--text-muted)">😤
-                            التحديات المحددة</div>
-                        <div class="pa-tags" id="paPainTags"></div>
+                <div id="paSummaryBody" style="max-height:0;overflow:hidden;transition:max-height 0.3s ease;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:12px;">
+                        <div>
+                            <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--text-muted)">😤
+                                التحديات المحددة</div>
+                            <div class="pa-tags" id="paPainTags"></div>
+                        </div>
+                        <div>
+                            <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--text-muted)">🎯
+                                الطموحات المختارة</div>
+                            <div class="pa-tags" id="paAmbTags"></div>
+                        </div>
                     </div>
-                    <div>
-                        <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--text-muted)">🎯
-                            الطموحات المختارة</div>
-                        <div class="pa-tags" id="paAmbTags"></div>
-                    </div>
+                    <div class="pa-date" id="paDate"></div>
                 </div>
-                <div class="pa-date" id="paDate"></div>
             </div>
 
-            <!-- Progress Card -->
-            <div id="progressCard" style="margin-bottom:20px;">
-                <div
-                    style="background:linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.08));border:1px solid rgba(102,126,234,0.15);border-radius:16px;padding:20px;">
-                    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
-                        <div
-                            style="width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff">
-                            <i class="bi bi-flag-fill"></i>
-                        </div>
-                        <div style="flex:1">
-                            <div style="font-weight:800;font-size:17px">📌 رحلتك الاستراتيجية</div>
-                            <div id="progressSummary" style="font-size:13px;color:var(--text-muted);margin-top:4px">جارٍ
-                                تحميل التقدم...</div>
-                        </div>
-                        <div id="progressPct" style="font-weight:800;font-size:22px;color:var(--primary)">--%</div>
-                    </div>
-                    <!-- شريط المراحل -->
-                    <div id="progressStages"
-                        style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:14px;"></div>
-                    <!-- زر الخطوة التالية -->
-                    <div id="nextStepContainer" style="display:none;">
-                        <a id="nextStepBtn" href="#"
-                            style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;transition:all .2s;justify-content:center;">
-                            <i class="bi bi-arrow-left-circle"></i>
-                            <span id="nextStepLabel">الخطوة التالية</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
+            <!-- Progress Card: تم دمجه مع الخارطة -->
+            <div id="progressCard" style="display:none;"></div>
 
             <!-- Quick Stats (Live) -->
             <div class="quick-stats" id="liveStats">
