@@ -209,36 +209,24 @@
     }
   ];
 
-  // === رؤيتي (قسم جديد) ===
-  const visionItems = [
+  // === الأدوات والتقارير (دمج رؤيتي + أدوات متقدمة) ===
+  const toolsAndReportsItems = [
     { label: 'تقاريري', href: '/auto-reports.html', icon: 'bi-file-earmark-bar-graph', roles: [] },
-    { label: 'إصداراتي', href: '/versions.html', icon: 'bi-clock-history', roles: [] },
+    { label: 'الأدوات الاستراتيجية', href: '/tools.html', icon: 'bi-tools', roles: [] },
+    { label: 'الذكاء الاستراتيجي', href: '/intelligence.html', icon: 'bi-robot', roles: [] },
+    { label: 'المقارنة المعيارية', href: '/benchmarking.html', icon: 'bi-bar-chart-line-fill', roles: [] },
     { label: 'مختبر المحاكاة', href: '/simulation-lab.html', icon: 'bi-bezier2', roles: ['OWNER', 'ADMIN', 'EDITOR'] },
     { label: 'اللوحة الحية', href: '/live-board.html', icon: 'bi-display-fill', roles: ['OWNER', 'ADMIN'] },
-  ];
-
-  // === أدواتي المتقدمة ===
-  const advancedItems = [
-    { label: 'المستشار الذكي', href: '/intelligence.html', icon: 'bi-robot', roles: [] },
     { label: 'مركز الذكاء', href: '/ai-center.html', icon: 'bi-cpu-fill', roles: ['OWNER', 'ADMIN'] },
-    { label: 'القرارات المالية', href: '/financial.html', icon: 'bi-cash-stack', roles: ['OWNER', 'ADMIN'] },
-    { label: 'القرارات الإدارية', href: '/admin-decisions.html', icon: 'bi-clipboard2-check', roles: ['OWNER', 'ADMIN'] },
-    { label: 'المقارنة المعيارية', href: '/benchmarking.html', icon: 'bi-bar-chart-line-fill', roles: [] },
-    { label: 'الأدوات الاستراتيجية', href: '/tools.html', icon: 'bi-tools', roles: [] },
   ];
 
-  // === نظام (OWNER/ADMIN فقط) ===
+  // === نظام (OWNER/ADMIN فقط) — مختصر ===
   const systemItems = [
     { label: 'لوحة الإدارة', href: '/admin-panel.html', icon: 'bi-shield-lock-fill' },
     { label: 'المستخدمون', href: '/users.html', icon: 'bi-people-fill' },
     { label: 'استيراد البيانات', href: '/import.html', icon: 'bi-cloud-upload-fill' },
-    { label: 'العرض التقديمي', href: '/ai-presentation.html', icon: 'bi-easel2-fill' },
-    { label: 'سجل النشاطات', href: '/activity-feed.html', icon: 'bi-activity' },
     { label: 'DNA المنظمة', href: '/org-dna.html', icon: 'bi-fingerprint' },
-    { label: 'التكاملات', href: '/integrations.html', icon: 'bi-plug-fill' },
-    { label: 'مفتش النظام', href: '/inspector.html', icon: 'bi-shield-fill-check' },
-    { label: 'مركز API', href: '/api-docs.html', icon: 'bi-braces' },
-    { label: 'الأسعار', href: '/pricing.html', icon: 'bi-credit-card-2-front-fill' },
+    { label: 'سجل النشاطات', href: '/activity-feed.html', icon: 'bi-activity' },
     { label: 'الإعدادات', href: '/admin-dashboard.html#settings', icon: 'bi-gear-wide-connected' },
   ];
 
@@ -406,14 +394,16 @@
       const isOnboardingActive = isActive('/onboarding.html');
       const isDnaActive = isActive('/org-dna.html');
 
-      // === الخطوة 1: مسار المبتدئ / مسار التطوير ===
-      html += `
-      <a href="/beginner-path.html" class="stx-item stx-phase0 ${isBegPathActive ? 'active' : ''}" style="margin:2px 10px;border-radius:10px;padding:10px 14px !important;border-right:none !important;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);">
-        <i class="bi ${_sidebarIsIndividual ? 'bi-person-lines-fill' : 'bi-signpost-split-fill'}" style="font-size:15px;color:#f59e0b"></i>
-        <span style="font-weight:700;font-size:12.5px;color:#f59e0b">${_sidebarIsIndividual ? 'مسار التطوير' : 'مسار المبتدئ'}</span>
-        <span style="margin-right:auto;font-size:9px;padding:2px 7px;border-radius:5px;background:rgba(245,158,11,0.15);color:#f59e0b;font-weight:800">${_sidebarIsIndividual ? 'تطوير مهني' : 'مشروع جديد'}</span>
-      </a>
-      `;
+      // === الخطوة 1: مسار المبتدئ / مسار التطوير — يختفي بعد إكمال الألم والطموح ===
+      if (!hasPainAmbition) {
+        html += `
+        <a href="/beginner-path.html" class="stx-item stx-phase0 ${isBegPathActive ? 'active' : ''}" style="margin:2px 10px;border-radius:10px;padding:10px 14px !important;border-right:none !important;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);">
+          <i class="bi ${_sidebarIsIndividual ? 'bi-person-lines-fill' : 'bi-signpost-split-fill'}" style="font-size:15px;color:#f59e0b"></i>
+          <span style="font-weight:700;font-size:12.5px;color:#f59e0b">${_sidebarIsIndividual ? 'مسار التطوير' : 'مسار المبتدئ'}</span>
+          <span style="margin-right:auto;font-size:9px;padding:2px 7px;border-radius:5px;background:rgba(245,158,11,0.15);color:#f59e0b;font-weight:800">${_sidebarIsIndividual ? 'تطوير مهني' : 'مشروع جديد'}</span>
+        </a>
+        `;
+      }
 
       // === الخطوة 2: الألم والطموح (للشركات القائمة — النظام يتكيف حسب النمط) ===
       // Extract pattern info for badge
@@ -503,7 +493,8 @@
 
         const hasActiveItem = !isLocked && phase.items.some(item => isActive(item.href));
         const isCurrentPhase = !isLocked && (statusClass === 'in-progress' || hasActiveItem);
-        const isOpen = isCurrentPhase || hasActiveItem;
+        // ✅ مطوي افتراضياً — يفتح فقط إذا المستخدم في هالقسم أو فيه عنصر نشط
+        const isOpen = hasActiveItem;
 
         if (isLocked) {
           html += `
@@ -591,47 +582,22 @@
     }
 
     // ╔═══════════════════════════════════════════╗
-    // ║  📈 رؤيتي — قسم جديد                       ║
+    // ║  🧰 الأدوات والتقارير (مدمج)                ║
     // ╚═══════════════════════════════════════════╝
-    if (!isViewerOrDE && currentRules.showVision && !_sidebarIsIndividual) {
+    if (!isViewerOrDE && !_sidebarIsIndividual) {
       html += '<div class="stx-divider"></div>';
 
-      const visionFiltered = visionItems.filter(item => hasAccess(item.roles));
-      const visionHasActive = visionFiltered.some(item => isActive(item.href));
+      const toolsFiltered = toolsAndReportsItems.filter(item => hasAccess(item.roles));
+      const toolsHasActive = toolsFiltered.some(item => isActive(item.href));
 
       html += `
-        <div class="stx-section ${visionHasActive ? 'open' : ''}" data-section="vision">
-          <div class="stx-section-header" onclick="toggleSection('vision')">
-            <span><i class="bi bi-eye-fill" style="color:#0891b2"></i> رؤيتي</span>
+        <div class="stx-section ${toolsHasActive ? 'open' : ''}" data-section="tools">
+          <div class="stx-section-header" onclick="toggleSection('tools')">
+            <span><i class="bi bi-grid-3x3-gap-fill" style="color:#a78bfa"></i> الأدوات والتقارير</span>
             <i class="bi bi-chevron-down stx-chevron"></i>
           </div>
-          <div class="stx-section-items" ${visionHasActive ? 'style="max-height:400px"' : ''}>
-            ${visionFiltered.map(item => `
-              <a href="${item.href}" class="stx-item ${isActive(item.href) ? 'active' : ''}">
-                <i class="bi ${item.icon}"></i>
-                <span class="stx-item-label">${item.label}</span>
-              </a>
-            `).join('')}
-          </div>
-        </div>
-      `;
-    }
-
-    // ╔═══════════════════════════════════════════╗
-    // ║  💎 أدوات متقدمة                            ║
-    // ╚═══════════════════════════════════════════╝
-    if (!isViewerOrDE && currentRules.showAdvanced && !_sidebarIsIndividual) {
-      const advFiltered = advancedItems.filter(item => hasAccess(item.roles));
-      const advHasActive = advFiltered.some(item => isActive(item.href));
-
-      html += `
-        <div class="stx-section ${advHasActive ? 'open' : ''}" data-section="advanced">
-          <div class="stx-section-header" onclick="toggleSection('advanced')">
-            <span><i class="bi bi-gem" style="color:#a78bfa"></i> أدواتي المتقدمة</span>
-            <i class="bi bi-chevron-down stx-chevron"></i>
-          </div>
-          <div class="stx-section-items" ${advHasActive ? 'style="max-height:1200px"' : ''}>
-            ${advFiltered.map(item => `
+          <div class="stx-section-items" ${toolsHasActive ? 'style="max-height:600px"' : ''}>
+            ${toolsFiltered.map(item => `
               <a href="${item.href}" class="stx-item ${isActive(item.href) ? 'active' : ''}">
                 <i class="bi ${item.icon}"></i>
                 <span class="stx-item-label">${item.label}</span>
@@ -666,14 +632,8 @@
       `;
     }
 
-    // --- الإنجازات ---
-    html += `
-      <div class="stx-divider"></div>
-      <a href="/achievements.html" class="stx-item stx-achievements ${isActive('/achievements.html') ? 'active' : ''}">
-        <i class="bi bi-trophy-fill" style="color:#f59e0b"></i>
-        <span>الإنجازات</span>
-      </a>
-    `;
+    // --- الإنجازات (مدمجة مع الخروج) ---
+    html += '<div class="stx-divider"></div>';
 
     // --- تسجيل الخروج ---
     html += `
