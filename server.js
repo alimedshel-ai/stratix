@@ -247,6 +247,17 @@ app.use('/api/company-pattern', companyPatternRoutes);
 const planLimitsRoutes = require('./routes/plan-limits');
 app.use('/api/plan-limits', planLimitsRoutes);
 
+// 🏢 الفريق الاستراتيجي — Phase 0
+const departmentsRoutes = require('./routes/departments');
+const invitationsRoutes = require('./routes/invitations');
+const deptDataRoutes = require('./routes/dept-data');
+const rulesEngineRoutes = require('./routes/rules-engine');
+app.use('/api/departments', departmentsRoutes);
+app.use('/api/invitations', invitationsRoutes);
+app.use('/api/dept-data', deptDataRoutes);
+app.use('/api/rules-engine', rulesEngineRoutes);
+
+
 // Serve pain-ambition page
 app.get('/pain-ambition', (req, res) => {
   res.sendFile(path.join(__dirname, 'src', 'pain-ambition.html'));
@@ -424,7 +435,7 @@ app.get('/alerts', (req, res) => {
 
 // Serve TOWS Matrix page
 app.get('/tows', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'tows.html'));
+  res.sendFile(path.join(__dirname, 'public', 'tows.html'));
 });
 
 // Serve Strategy Map / Causal Links page
@@ -548,6 +559,26 @@ app.get('/benchmarking', (req, res) => {
 // Serve Stakeholders
 app.get('/stakeholders', (req, res) => {
   res.sendFile(path.join(__dirname, 'src', 'stakeholders.html'));
+});
+
+// Serve Team Management
+app.get('/team', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'team.html'));
+});
+
+// Serve Join via Invitation
+app.get('/join', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'join.html'));
+});
+
+// Serve Department Questionnaire
+app.get('/dept-questionnaire', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'dept-questionnaire.html'));
+});
+
+// Serve Strategic Advisor
+app.get('/strategic-advisor', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'strategic-advisor.html'));
 });
 
 // Serve AI Presentation

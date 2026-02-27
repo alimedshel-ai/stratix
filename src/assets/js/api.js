@@ -86,8 +86,15 @@
     // === Entity Context ===
     function getEntityContext() {
         const u = getUserData();
+        let entityId = u.entity?.id || u.activeEntityId || localStorage.getItem('entityId') || '';
+
+        // Safety: auto-save entityId if found in user data but missing from localStorage
+        if (entityId && !localStorage.getItem('entityId')) {
+            localStorage.setItem('entityId', entityId);
+        }
+
         return {
-            entityId: u.entity?.id || u.activeEntityId || '',
+            entityId,
             entityName: u.entity?.displayName || u.entity?.legalName || '',
             companyName: u.entity?.company?.nameAr || u.entity?.company?.nameEn || '',
             sectorName: u.entity?.sector?.nameAr || '',

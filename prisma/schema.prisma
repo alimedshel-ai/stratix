@@ -191,6 +191,8 @@ model Entity {
   stakeholders       Stakeholder[] // ✨ أصحاب المصلحة
   financialDecisions FinancialDecision[] // ✨ القرارات المالية
   integrations       Integration[] // ✨ التكاملات
+  departments        Department[] // ✨ الأقسام
+  invitations        Invitation[] // ✨ الدعوات
 
   @@index([companyId])
   @@index([sectorId])
@@ -208,13 +210,70 @@ model Member {
   userType String   @default("EXPLORER") // EXPLORER, COMPANY_MANAGER, DEPT_MANAGER, CONSULTANT
   joinedAt DateTime @default(now())
 
+  // ✨ Phase 0 — الفريق الاستراتيجي
+  departmentRole String? // CEO, CFO, CMO, COO, CTO, CHRO, CSO, CCO, CLO
+  departmentId   String?
+  department     Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  invitedBy      String? // userId اللي أرسل الدعوة
+
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   entity Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
 
   @@unique([userId, entityId])
   @@index([userId])
   @@index([entityId])
+  @@index([departmentId])
   @@map("members")
+}
+
+/// Department model - الأقسام/الإدارات داخل الكيان
+model Department {
+  id       String @id @default(cuid())
+  entityId String
+  name     String // "المالية", "التسويق", "العمليات"
+  code     String // FINANCE, MARKETING, OPERATIONS, HR, TECH, SALES, SUPPORT, LEGAL
+  icon     String? // bi-cash-coin, bi-megaphone, etc.
+  color    String? // لون البطاقة
+
+  // حالة بيانات القسم
+  dataStatus  String @default("EMPTY") // EMPTY, IN_PROGRESS, COMPLETED
+  dataPercent Int    @default(0) // 0-100 نسبة الإكمال
+  dataSummary String? // JSON — ملخص ما ملأه القسم
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  entity  Entity   @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  members Member[]
+
+  @@unique([entityId, code])
+  @@index([entityId])
+  @@map("departments")
+}
+
+/// Invitation model - دعوات الانضمام للفريق
+model Invitation {
+  id             String   @id @default(cuid())
+  entityId       String
+  email          String
+  name           String? // اسم المدعو
+  departmentRole String  // CEO, CFO, CMO, COO, CTO, CHRO, CSO, CCO, CLO
+  role           String   @default("EDITOR") // الصلاحية المبدئية
+  token          String   @unique @default(cuid()) // رابط الدعوة الفريد
+  status         String   @default("PENDING") // PENDING, ACCEPTED, EXPIRED, CANCELLED
+  invitedBy      String  // userId اللي أرسل الدعوة
+  message        String? // رسالة شخصية مع الدعوة
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  createdAt      DateTime @default(now())
+
+  entity Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  @@unique([entityId, email])
+  @@index([token])
+  @@index([entityId])
+  @@index([status])
+  @@map("invitations")
 }
 
 // DataEntryPermission — DISABLED (removed for simplification)
@@ -534,6 +593,7 @@ model Assessment {
   entity         Entity          @relation(fields: [entityId], references: [id], onDelete: Cascade)
   dimensions     Dimension[]
   analysisPoints AnalysisPoint[]
+  towsStrategies TOWSStrategy[]
 
   @@index([entityId])
   @@map("assessments")
@@ -765,8 +825,10 @@ model AnalysisPoint {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  assessment  Assessment         @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  corrections CorrectionAction[]
+  assessment    Assessment         @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  corrections   CorrectionAction[]
+  towsInternal  TOWSStrategy[]     @relation("InternalPoint")
+  towsExternal  TOWSStrategy[]     @relation("ExternalPoint")
 
   @@index([assessmentId])
   @@index([type])
@@ -779,9 +841,31 @@ model AnalysisPoint {
 // CausalLink model removed for simplification
 
 // =========================================
-// 13c. TOWS STRATEGY MATRIX — DISABLED  
+// 13c. TOWS STRATEGY MATRIX
 // =========================================
-// TOWSStrategy model removed for simplification
+
+model TOWSStrategy {
+  id              String   @id @default(cuid())
+  assessmentId    String
+  quadrant        String   // SO, ST, WO, WT
+  internalPointId String
+  externalPointId String
+  strategy        String
+  priority        String   @default("MEDIUM") // HIGH, MEDIUM, LOW
+  status          String   @default("PROPOSED") // PROPOSED, APPROVED, REJECTED
+  notes           String?
+  initiativeId    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  assessment    Assessment   @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  internalPoint AnalysisPoint @relation("InternalPoint", fields: [internalPointId], references: [id], onDelete: Cascade)
+  externalPoint AnalysisPoint @relation("ExternalPoint", fields: [externalPointId], references: [id], onDelete: Cascade)
+
+  @@index([assessmentId])
+  @@index([quadrant])
+  @@map("tows_strategies")
+}
 
 // =========================================
 // 14. FINANCIAL DECISIONS — DISABLED

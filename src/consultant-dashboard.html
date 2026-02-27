@@ -76,6 +76,7 @@
 
         .page-header h1 span {
             background: linear-gradient(135deg, #a78bfa, #38bdf8);
+            -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
             color: transparent;
@@ -128,8 +129,8 @@
         /* ===== Summary Cards ===== */
         .summary-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 14px;
+            grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+            gap: 12px;
             margin-bottom: 28px;
         }
 
@@ -137,7 +138,7 @@
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 14px;
-            padding: 20px;
+            padding: 18px 16px;
             text-align: center;
             transition: all 0.3s;
             position: relative;
@@ -158,15 +159,15 @@
         }
 
         .summary-value {
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 800;
             color: var(--card-color, var(--accent));
             line-height: 1;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
 
         .summary-label {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-muted);
             font-weight: 500;
         }
@@ -394,27 +395,114 @@
         /* Entity stats row */
         .entity-stats {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
             margin-bottom: 12px;
         }
 
         .entity-stat {
             text-align: center;
             background: rgba(255, 255, 255, 0.02);
-            padding: 8px 4px;
+            padding: 7px 3px;
             border-radius: 8px;
         }
 
         .entity-stat-value {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
             color: var(--accent);
         }
 
         .entity-stat-label {
+            font-size: 9px;
+            color: var(--text-muted);
+        }
+
+        /* Dept coverage mini */
+        .dept-mini-bar {
+            margin: 10px 0 0;
+            padding: 10px 12px;
+            background: rgba(167, 139, 250, 0.04);
+            border: 1px solid rgba(167, 139, 250, 0.1);
+            border-radius: 10px;
+        }
+
+        .dept-mini-label {
             font-size: 10px;
             color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .dept-mini-progress {
+            width: 100%;
+            height: 5px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .dept-mini-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1s ease;
+            background: linear-gradient(135deg, #a78bfa, #38bdf8);
+        }
+
+        /* Consultant Insights Panel */
+        .insights-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 28px;
+        }
+
+        .insights-panel-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .insight-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 12px;
+        }
+
+        .insight-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-right: 3px solid var(--insight-color, var(--accent));
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.3s;
+        }
+
+        .insight-card:hover {
+            background: rgba(255, 255, 255, 0.04);
+            transform: translateY(-1px);
+        }
+
+        .insight-icon {
+            font-size: 20px;
+            margin-bottom: 6px;
+        }
+
+        .insight-title {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .insight-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.6;
         }
 
         /* Entity actions */
@@ -688,6 +776,12 @@
             <!-- Average Health -->
             <div class="avg-health fade-in-delay" id="avgHealthSection"></div>
 
+            <!-- Consultant Insights -->
+            <div class="insights-panel fade-in-delay" id="insightsPanel" style="display:none">
+                <div class="insights-panel-title">💡 رؤى وتوصيات المستشار</div>
+                <div class="insight-cards" id="insightCards"></div>
+            </div>
+
             <!-- Comparison Charts -->
             <div class="charts-section fade-in-delay" id="chartsSection">
                 <div class="chart-card">
@@ -763,8 +857,9 @@
                         `مرحباً ${user.name} — إليك نظرة على جميع عملائك`;
                 }
 
-                renderSummary(data.summary);
+                renderSummary(data.summary, data.entities);
                 renderAvgHealth(data.summary, data.entities);
+                renderInsights(data.entities, data.summary);
                 renderCharts(data.entities, data.summary);
                 renderGrid(data.entities);
                 renderTable(data.entities);
@@ -781,14 +876,21 @@
         }
 
         // === Render Summary Cards ===
-        function renderSummary(summary) {
+        function renderSummary(summary, entities) {
             const grid = document.getElementById('summaryGrid');
+
+            // Calculate average dept coverage across all entities
+            const avgDeptCoverage = entities.length > 0
+                ? Math.round(entities.reduce((s, e) => s + (e.deptCoverage?.avgProgress || 0), 0) / entities.length)
+                : 0;
+
             const cards = [
                 { value: summary.total || 0, label: 'إجمالي الكيانات', icon: '🏢', color: '#a78bfa', glow: 'rgba(167,139,250,0.08)' },
                 { value: summary.averageScore || 0, label: 'متوسط الصحة', icon: '💚', color: getHealthColor(summary.averageScore), glow: 'rgba(34,197,94,0.08)' },
+                { value: avgDeptCoverage + '%', label: 'تغطية البيانات', icon: '📋', color: avgDeptCoverage >= 60 ? '#22c55e' : avgDeptCoverage >= 30 ? '#f59e0b' : '#ef4444', glow: 'rgba(167,139,250,0.08)' },
                 { value: summary.totalKpis || 0, label: 'إجمالي KPIs', icon: '📊', color: '#3b82f6', glow: 'rgba(59,130,246,0.08)' },
-                { value: summary.totalInitiatives || 0, label: 'إجمالي المبادرات', icon: '🚀', color: '#f59e0b', glow: 'rgba(245,158,11,0.08)' },
-                { value: summary.totalAlerts || 0, label: 'تنبيهات غير مقروءة', icon: '🔔', color: summary.totalAlerts > 0 ? '#ef4444' : '#22c55e', glow: summary.totalAlerts > 0 ? 'rgba(239,68,68,0.08)' : 'rgba(34,197,94,0.08)' },
+                { value: summary.totalInitiatives || 0, label: 'المبادرات', icon: '🚀', color: '#f59e0b', glow: 'rgba(245,158,11,0.08)' },
+                { value: summary.totalAlerts || 0, label: 'تنبيهات', icon: '🔔', color: summary.totalAlerts > 0 ? '#ef4444' : '#22c55e', glow: summary.totalAlerts > 0 ? 'rgba(239,68,68,0.08)' : 'rgba(34,197,94,0.08)' },
             ];
 
             grid.innerHTML = cards.map(c => `
@@ -853,6 +955,8 @@
                 const healthColor = getHealthColor(e.healthScore);
                 const levelClass = (e.level || 'unknown').toLowerCase();
                 const levelText = getLevelText(e.level);
+                const dc = e.deptCoverage || { total: 0, filled: 0, completed: 0, avgProgress: 0 };
+                const dcColor = dc.avgProgress >= 60 ? 'var(--green)' : dc.avgProgress >= 30 ? 'var(--yellow)' : dc.avgProgress > 0 ? 'var(--orange)' : 'var(--text-muted)';
 
                 return `
                 <div class="entity-card" onclick="goToEntity('${e.entityId}')" style="animation-delay:${i * 0.08}s;animation: fadeIn 0.5s ease ${i * 0.08}s both;">
@@ -881,9 +985,23 @@
                             <div class="entity-stat-value" style="color:${e.alerts > 0 ? 'var(--red)' : 'var(--green)'}">${e.alerts}</div>
                             <div class="entity-stat-label">تنبيهات</div>
                         </div>
+                        <div class="entity-stat">
+                            <div class="entity-stat-value" style="color:${dcColor}">${dc.avgProgress}%</div>
+                            <div class="entity-stat-label">تغطية البيانات</div>
+                        </div>
                     </div>
 
-                    ${!e.hasStrategy ? '<div style="margin-bottom:8px"><span class="no-strategy-tag">⚪ لا توجد استراتيجية نشطة</span></div>' : ''}
+                    <div class="dept-mini-bar">
+                        <div class="dept-mini-label">
+                            <span>📋 تغطية الأقسام</span>
+                            <span style="color:${dcColor}">${dc.filled}/${dc.total} أقسام</span>
+                        </div>
+                        <div class="dept-mini-progress">
+                            <div class="dept-mini-fill" style="width:${dc.avgProgress}%"></div>
+                        </div>
+                    </div>
+
+                    ${!e.hasStrategy ? '<div style="margin:8px 0"><span class="no-strategy-tag">⚪ لا توجد استراتيجية نشطة</span></div>' : ''}
 
                     <div class="entity-footer">
                         ${e.alerts > 0 ? `<span class="entity-alert"><i class="bi bi-exclamation-triangle-fill"></i> ${e.alerts} تنبيه</span>` : '<span></span>'}
@@ -997,6 +1115,101 @@
             if (score >= 40) return 'يحتاج بعض الانتباه في عدة كيانات';
             if (score >= 20) return 'وضع حرج — تدخل مطلوب';
             return 'يحتاج إعادة تقييم شاملة';
+        }
+
+        // === Consultant Smart Insights ===
+        function renderInsights(entities, summary) {
+            const insights = [];
+            const panel = document.getElementById('insightsPanel');
+            const container = document.getElementById('insightCards');
+
+            if (!entities.length) return;
+
+            // 1. Data Coverage — entities with low dept data
+            const lowDataEntities = entities.filter(e => (e.deptCoverage?.avgProgress || 0) < 30);
+            if (lowDataEntities.length > 0) {
+                insights.push({
+                    icon: '📋',
+                    title: `${lowDataEntities.length} كيان${lowDataEntities.length > 1 ? 'ات' : ''} بحاجة لإكمال البيانات`,
+                    desc: `${lowDataEntities.map(e => e.entityName).join('، ')} — تغطية الأقسام أقل من 30%. أرسل تذكير لملء الاستبيانات.`,
+                    color: '#f59e0b',
+                });
+            }
+
+            // 2. No Strategy
+            const noStrategy = entities.filter(e => !e.hasStrategy);
+            if (noStrategy.length > 0) {
+                insights.push({
+                    icon: '🎯',
+                    title: `${noStrategy.length} كيان بدون خطة استراتيجية نشطة`,
+                    desc: `${noStrategy.map(e => e.entityName).join('، ')} — ابدأ بإنشاء خطة استراتيجية لتفعيل المتابعة والتقارير.`,
+                    color: '#ef4444',
+                });
+            }
+
+            // 3. Alerts concentration
+            const alertEntities = entities.filter(e => e.alerts > 0).sort((a, b) => b.alerts - a.alerts);
+            if (alertEntities.length > 0) {
+                const topAlert = alertEntities[0];
+                insights.push({
+                    icon: '🔔',
+                    title: `${summary.totalAlerts} تنبيه مفتوح — الأعلى: ${topAlert.entityName}`,
+                    desc: `راجع التنبيهات أولاً في "${topAlert.entityName}" (${topAlert.alerts} تنبيه). التدخل المبكر يمنع تفاقم المشاكل.`,
+                    color: '#ef4444',
+                });
+            }
+
+            // 4. Health distribution insight
+            if (entities.length >= 2) {
+                const healthScores = entities.map(e => e.healthScore);
+                const maxH = Math.max(...healthScores);
+                const minH = Math.min(...healthScores);
+                const gap = maxH - minH;
+
+                if (gap > 30) {
+                    const best = entities.find(e => e.healthScore === maxH);
+                    const worst = entities.find(e => e.healthScore === minH);
+                    insights.push({
+                        icon: '📊',
+                        title: `فجوة ${gap}% في الصحة بين أفضل وأضعف كيان`,
+                        desc: `"${best.entityName}" (${maxH}%) vs "${worst.entityName}" (${minH}%). ادرس أسباب التفاوت وانقل أفضل الممارسات.`,
+                        color: '#3b82f6',
+                    });
+                }
+            }
+
+            // 5. Good data coverage
+            const goodData = entities.filter(e => (e.deptCoverage?.avgProgress || 0) >= 60);
+            if (goodData.length > 0 && goodData.length < entities.length) {
+                insights.push({
+                    icon: '✅',
+                    title: `${goodData.length} كيان${goodData.length > 1 ? 'ات' : ''} بتغطية بيانات ممتازة`,
+                    desc: `${goodData.map(e => e.entityName).join('، ')} — جاهزة لتحليل المستشار الذكي والتقارير الاستراتيجية.`,
+                    color: '#22c55e',
+                });
+            }
+
+            // 6. All entities at 0% — first time advice
+            const allZero = entities.every(e => (e.deptCoverage?.avgProgress || 0) === 0);
+            if (allZero && entities.length > 0) {
+                insights.push({
+                    icon: '🚀',
+                    title: 'ابدأ بجمع البيانات!',
+                    desc: 'كل الكيانات بحاجة لملء استبيانات الأقسام. ابدأ بالقسم المالي والتسويق — يعطي المحرك الذكي أول تحليل بقسمين فقط.',
+                    color: '#a78bfa',
+                });
+            }
+
+            if (insights.length > 0) {
+                panel.style.display = 'block';
+                container.innerHTML = insights.map(ins => `
+                    <div class="insight-card" style="--insight-color:${ins.color}">
+                        <div class="insight-icon">${ins.icon}</div>
+                        <div class="insight-title">${ins.title}</div>
+                        <div class="insight-desc">${ins.desc}</div>
+                    </div>
+                `).join('');
+            }
         }
 
         // === Charts ===

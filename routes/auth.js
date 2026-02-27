@@ -389,7 +389,8 @@ router.post('/login', validateLogin, async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ message: 'Login failed', error: error.message });
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Login failed' });
   }
 });
 
@@ -663,7 +664,25 @@ router.post('/complete-onboarding', verifyToken, async (req, res) => {
         },
       });
 
-      // 5. تحديث المستخدم — التأسيس مكتمل
+      // 5. إنشاء 8 أقسام تلقائياً (للمستشار الذكي ومحرك القواعد)
+      const DEFAULT_DEPARTMENTS = [
+        { code: 'FINANCE', name: 'المالية', icon: 'bi-cash-coin', color: '#f59e0b' },
+        { code: 'MARKETING', name: 'التسويق', icon: 'bi-megaphone', color: '#8b5cf6' },
+        { code: 'OPERATIONS', name: 'العمليات', icon: 'bi-gear', color: '#3b82f6' },
+        { code: 'HR', name: 'الموارد البشرية', icon: 'bi-people', color: '#10b981' },
+        { code: 'TECH', name: 'التقنية', icon: 'bi-cpu', color: '#06b6d4' },
+        { code: 'SALES', name: 'المبيعات', icon: 'bi-cart3', color: '#ef4444' },
+        { code: 'SUPPORT', name: 'خدمة العملاء', icon: 'bi-headset', color: '#ec4899' },
+        { code: 'LEGAL', name: 'الشؤون القانونية والإدارية', icon: 'bi-shield-check', color: '#6366f1' },
+      ];
+
+      for (const dept of DEFAULT_DEPARTMENTS) {
+        await tx.department.create({
+          data: { entityId: entity.id, ...dept }
+        });
+      }
+
+      // 6. تحديث المستخدم — التأسيس مكتمل
       await tx.user.update({
         where: { id: userId },
         data: { onboardingCompleted: true }

@@ -131,6 +131,7 @@
         { label: 'الإعدادات', href: '/settings-data.html', icon: 'bi-gear-fill' },
       ] : [
         { label: 'الكيانات', href: '/entities.html', icon: 'bi-building-fill' },
+        { label: 'الفريق الاستراتيجي', href: '/team.html', icon: 'bi-person-lines-fill' },
         { label: 'القطاعات والأنشطة', href: '/sectors.html', icon: 'bi-grid-3x3-gap-fill' },
         { label: 'الإعدادات', href: '/settings.html', icon: 'bi-gear-fill' },
         { label: 'البيانات الأساسية', href: '/settings-data.html', icon: 'bi-database-fill-gear' },
@@ -203,6 +204,7 @@
       ] : [
         { label: 'المراجعات الدورية', href: '/reviews.html', icon: 'bi-journal-check' },
         { label: 'الذكاء الاستراتيجي', href: '/intelligence.html', icon: 'bi-stars' },
+        { label: 'المستشار الاستراتيجي', href: '/strategic-advisor.html', icon: 'bi-robot' },
         _lvl >= 4 ? { label: 'التصحيحات', href: '/corrections.html', icon: 'bi-arrow-repeat' } : null,
         _lvl >= 3 ? { label: 'التقويم الاستراتيجي', href: '/strategic-calendar.html', icon: 'bi-calendar-event-fill' } : null,
       ].filter(Boolean)

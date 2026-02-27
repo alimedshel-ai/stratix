@@ -415,7 +415,7 @@ router.get('/health-overview', verifyToken, async (req, res) => {
                 id: true,
                 legalName: true,
                 displayName: true,
-                versions: {
+                strategyVersions: {
                     where: { isActive: true },
                     take: 1,
                     select: {
@@ -429,7 +429,7 @@ router.get('/health-overview', verifyToken, async (req, res) => {
         });
 
         const results = entities.map(entity => {
-            const activeVersion = entity.versions[0];
+            const activeVersion = entity.strategyVersions[0];
             if (!activeVersion) {
                 return { entityId: entity.id, entityName: entity.legalName || entity.displayName, healthScore: 0, level: 'UNKNOWN', hasStrategy: false };
             }
@@ -517,6 +517,21 @@ router.get('/consultant-overview', verifyToken, async (req, res) => {
             let kpiSummary = { onTrack: 0, warning: 0, critical: 0, total: 0 };
             let iniSummary = { completed: 0, inProgress: 0, overdue: 0, total: 0 };
 
+            // Fetch department coverage for this entity
+            const departments = await prisma.department.findMany({
+                where: { entityId: entity.id },
+                select: { id: true, name: true, code: true, dataPercent: true, dataStatus: true }
+            });
+
+            const deptCoverage = {
+                total: departments.length,
+                filled: departments.filter(d => (d.dataPercent || 0) > 0).length,
+                completed: departments.filter(d => d.dataStatus === 'COMPLETE').length,
+                avgProgress: departments.length > 0
+                    ? Math.round(departments.reduce((s, d) => s + (d.dataPercent || 0), 0) / departments.length)
+                    : 0,
+            };
+
             if (activeVersion) {
                 const [kpis, initiatives, alerts] = await Promise.all([
                     prisma.kPI.findMany({
@@ -579,7 +594,7 @@ router.get('/consultant-overview', verifyToken, async (req, res) => {
                 healthScore, level,
                 hasStrategy: !!activeVersion,
                 kpis: kpiCount, initiatives: iniCount, alerts: alertCount,
-                kpiSummary, iniSummary,
+                kpiSummary, iniSummary, deptCoverage,
                 joinedAt: membership.joinedAt,
             };
         }));

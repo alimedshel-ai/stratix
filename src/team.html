@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس - إدارة الفريق الاستراتيجي</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0b10;
+            --bg2: #12141f;
+            --card: #171a2a;
+            --card-hover: #1e2236;
+            --text: #e2e8f0;
+            --muted: #7a8599;
+            --border: rgba(255, 255, 255, 0.06);
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --green: #22c55e;
+            --red: #ef4444;
+            --yellow: #f59e0b;
+            --blue: #38bdf8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .page-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .team-header {
+            padding: 32px 40px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .team-title {
+            font-size: 28px;
+            font-weight: 900;
+        }
+
+        .team-title span {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .team-subtitle {
+            font-size: 14px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        /* Summary Cards */
+        .summary-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            padding: 0 40px 24px;
+        }
+
+        .summary-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .summary-number {
+            font-size: 32px;
+            font-weight: 900;
+        }
+
+        .summary-label {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .progress-bar-custom {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 6px;
+            margin-top: 12px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 1s ease;
+        }
+
+        /* Department Grid */
+        .dept-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            padding: 0 40px 24px;
+        }
+
+        .dept-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s;
+            cursor: default;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dept-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 3px;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .dept-card:hover {
+            border-color: rgba(102, 126, 234, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .dept-top {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .dept-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: white;
+        }
+
+        .dept-name {
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .dept-role {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .dept-member {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+
+        .dept-member-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 14px;
+            color: white;
+        }
+
+        .dept-member-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .dept-member-email {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .dept-empty {
+            text-align: center;
+            padding: 16px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .dept-progress {
+            margin-top: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dept-progress-bar {
+            flex: 1;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .dept-progress-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 1s ease;
+        }
+
+        .dept-progress-label {
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* Invite Button */
+        .btn-invite {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-invite:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .dept-invite-btn {
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed rgba(102, 126, 234, 0.3);
+            background: transparent;
+            color: var(--primary);
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 8px;
+        }
+
+        .dept-invite-btn:hover {
+            background: rgba(102, 126, 234, 0.08);
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+
+        /* Pending Invitations */
+        .pending-section {
+            padding: 0 40px 40px;
+        }
+
+        .pending-title {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pending-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 8px;
+        }
+
+        .pending-info {
+            flex: 1;
+        }
+
+        .pending-name {
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .pending-email {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .pending-role {
+            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .pending-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .pending-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pending-btn.copy {
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary);
+        }
+
+        .pending-btn.cancel {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--red);
+        }
+
+        .pending-btn.resend {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--green);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px;
+            width: 480px;
+            max-width: 95vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            display: block;
+            color: var(--muted);
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-select option {
+            background: var(--card);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal-btn.primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .modal-btn.secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--muted);
+        }
+
+        /* Link Copied Toast */
+        .toast-box {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            padding: 14px 24px;
+            border-radius: 12px;
+            background: rgba(34, 197, 94, 0.9);
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+            z-index: 99999;
+            display: none;
+            animation: slideUp 0.3s ease;
+            backdrop-filter: blur(8px);
+        }
+
+        /* Status badges */
+        .status-empty {
+            color: var(--muted);
+        }
+
+        .status-progress {
+            color: var(--yellow);
+        }
+
+        .status-completed {
+            color: var(--green);
+        }
+
+        @media(max-width:768px) {
+            .summary-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .dept-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .team-header,
+            .summary-row,
+            .dept-grid,
+            .pending-section {
+                padding-right: 16px;
+                padding-left: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <div id="sidebar-container"></div>
+        <div class="main-content">
+
+            <!-- Header -->
+            <div class="team-header">
+                <div>
+                    <h1 class="team-title"><i class="bi bi-people-fill"></i> إدارة الفريق <span>الاستراتيجي</span>
+                    </h1>
+                    <div class="team-subtitle">ادعُ فريقك — وكل مدير يملأ بيانات قسمه لبناء خطة استراتيجية متكاملة</div>
+                </div>
+                <button class="btn-invite" onclick="openInviteModal()">
+                    <i class="bi bi-person-plus-fill"></i> دعوة مدير جديد
+                </button>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="summary-row">
+                <div class="summary-card">
+                    <div class="summary-number" style="color:var(--primary)" id="totalDepts">0</div>
+                    <div class="summary-label">إدارة</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-number" style="color:var(--green)" id="filledDepts">0</div>
+                    <div class="summary-label">إدارة مشغولة</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-number" style="color:var(--yellow)" id="pendingCount">0</div>
+                    <div class="summary-label">دعوة معلّقة</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-number" style="color:var(--blue)" id="avgProgress">0%</div>
+                    <div class="summary-label">إكمال البيانات</div>
+                    <div class="progress-bar-custom">
+                        <div class="progress-bar-fill" id="avgProgressBar"
+                            style="width:0%;background:linear-gradient(90deg,var(--primary),var(--secondary))"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Department Grid -->
+            <div class="dept-grid" id="deptGrid">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Pending Invitations -->
+            <div class="pending-section" id="pendingSection" style="display:none">
+                <div class="pending-title">
+                    <i class="bi bi-envelope-paper" style="color:var(--yellow)"></i>
+                    دعوات في الانتظار
+                </div>
+                <div id="pendingList"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Invite Modal -->
+    <div class="modal-overlay" id="inviteModal">
+        <div class="modal-box">
+            <div class="modal-title"><i class="bi bi-person-plus-fill" style="color:var(--primary)"></i> دعوة مدير
+                جديد</div>
+
+            <div class="form-group">
+                <label class="form-label">البريد الإلكتروني *</label>
+                <input type="email" class="form-input" id="inviteEmail" placeholder="ahmed@company.com">
+            </div>
+            <div class="form-group">
+                <label class="form-label">الاسم (اختياري)</label>
+                <input type="text" class="form-input" id="inviteName" placeholder="أحمد محمد">
+            </div>
+            <div class="form-group">
+                <label class="form-label">الدور الوظيفي *</label>
+                <select class="form-select" id="inviteRole">
+                    <option value="">اختر الدور...</option>
+                    <option value="CFO">💰 المدير المالي (CFO)</option>
+                    <option value="CMO">📢 مدير التسويق (CMO)</option>
+                    <option value="COO">⚙️ مدير العمليات (COO)</option>
+                    <option value="CHRO">👥 مدير الموارد البشرية (CHRO)</option>
+                    <option value="CTO">💻 مدير التقنية (CTO)</option>
+                    <option value="CSO">📦 مدير المبيعات (CSO)</option>
+                    <option value="CCO">🎧 مدير خدمة العملاء (CCO)</option>
+                    <option value="CLO">📋 مدير الشؤون القانونية (CLO)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">مستوى الصلاحية</label>
+                <select class="form-select" id="invitePermission">
+                    <option value="EDITOR">محرر — يملأ بيانات قسمه</option>
+                    <option value="ADMIN">مدير — يرى ويعدّل كل الأقسام</option>
+                    <option value="VIEWER">مشاهد — يرى فقط</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">رسالة شخصية (اختياري)</label>
+                <input type="text" class="form-input" id="inviteMessage"
+                    placeholder="مرحباً، أحتاج بياناتك المالية لبناء الخطة...">
+            </div>
+
+            <div id="inviteResult" style="display:none;margin-top:16px"></div>
+
+            <div class="modal-actions">
+                <button class="modal-btn primary" id="sendInviteBtn" onclick="sendInvitation()">
+                    <i class="bi bi-send"></i> إرسال الدعوة
+                </button>
+                <button class="modal-btn secondary" onclick="closeInviteModal()">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast-box" id="toastBox"></div>
+
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/sidebar.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        let entityId = localStorage.getItem('entityId');
+
+        const DEPT_COLORS = {
+            FINANCE: '#f59e0b', MARKETING: '#8b5cf6', OPERATIONS: '#3b82f6',
+            HR: '#10b981', TECH: '#06b6d4', SALES: '#ef4444',
+            SUPPORT: '#ec4899', LEGAL: '#6366f1'
+        };
+
+        const ROLE_LABELS = {
+            CEO: 'المدير التنفيذي', CFO: 'المدير المالي', CMO: 'مدير التسويق',
+            COO: 'مدير العمليات', CTO: 'مدير التقنية', CHRO: 'مدير الموارد البشرية',
+            CSO: 'مدير المبيعات', CCO: 'مدير خدمة العملاء', CLO: 'مدير الشؤون القانونية'
+        };
+
+        // ========== Load Team Data ==========
+        async function loadTeam() {
+            if (!token || !entityId) {
+                setDemoData();
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/departments/${entityId}/team-overview`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!res.ok) { setDemoData(); return; }
+                const data = await res.json();
+                renderTeam(data);
+            } catch (e) {
+                console.error(e);
+                setDemoData();
+            }
+        }
+
+        function renderTeam(data) {
+            // Summary
+            document.getElementById('totalDepts').textContent = data.summary.totalDepartments;
+            document.getElementById('filledDepts').textContent = data.summary.filledDepartments;
+            document.getElementById('pendingCount').textContent = data.summary.pendingInvitations;
+            document.getElementById('avgProgress').textContent = data.summary.averageProgress + '%';
+            document.getElementById('avgProgressBar').style.width = data.summary.averageProgress + '%';
+
+            // Department Grid
+            const grid = document.getElementById('deptGrid');
+            grid.innerHTML = data.departments.map(dept => {
+                const color = dept.color || DEPT_COLORS[dept.code] || '#667eea';
+                const hasMember = dept.hasMember;
+                const statusClass = dept.dataStatus === 'COMPLETED' ? 'status-completed' :
+                    dept.dataStatus === 'IN_PROGRESS' ? 'status-progress' : 'status-empty';
+                const statusText = dept.dataStatus === 'COMPLETED' ? '✅ مكتمل' :
+                    dept.dataStatus === 'IN_PROGRESS' ? '⏳ قيد العمل' : '⬜ لم يبدأ';
+
+                return `
+                <div class="dept-card" style="--dept-color:${color}">
+                    <div style="position:absolute;top:0;right:0;left:0;height:3px;background:${color};border-radius:16px 16px 0 0"></div>
+                    <div class="dept-top">
+                        <div class="dept-icon" style="background:${color}20;color:${color}">
+                            <i class="bi ${dept.icon || 'bi-building'}"></i>
+                        </div>
+                        <div>
+                            <div class="dept-name">${dept.name}</div>
+                            <div class="dept-role">${dept.expectedRole ? ROLE_LABELS[dept.expectedRole] || dept.expectedRole : ''}</div>
+                        </div>
+                    </div>
+
+                    ${hasMember ? dept.members.map(m => `
+                        <div class="dept-member">
+                            <div class="dept-member-avatar" style="background:${color}">
+                                ${(m.user?.name || '?')[0]}
+                            </div>
+                            <div>
+                                <div class="dept-member-name">${m.user?.name || 'غير معروف'}</div>
+                                <div class="dept-member-email">${m.user?.email || ''}</div>
+                            </div>
+                        </div>
+                    `).join('') : `
+                        <div class="dept-empty">
+                            <i class="bi bi-person-dash" style="font-size:24px;display:block;margin-bottom:6px"></i>
+                            لا يوجد مدير معيّن
+                        </div>
+                    `}
+
+                    <div class="dept-progress">
+                        <div class="dept-progress-bar">
+                            <div class="dept-progress-fill" style="width:${dept.dataPercent}%;background:${color}"></div>
+                        </div>
+                        <span class="dept-progress-label ${statusClass}">${dept.dataPercent}%</span>
+                    </div>
+
+                    ${!hasMember ? `
+                        <button class="dept-invite-btn" onclick="openInviteForDept('${dept.code}','${dept.expectedRole || ''}')">
+                            <i class="bi bi-plus-circle"></i> دعوة مدير
+                        </button>
+                    ` : `
+                        <a href="/dept-questionnaire.html?dept=${dept.code}&id=${dept.id}" class="dept-invite-btn"
+                            style="text-decoration:none;display:block;text-align:center;border-style:solid;border-color:${color}30;color:${color}">
+                            <i class="bi ${dept.dataStatus === 'COMPLETED' ? 'bi-eye' : 'bi-pencil-square'}"></i>
+                            ${dept.dataStatus === 'COMPLETED' ? 'عرض البيانات' :
+                        dept.dataStatus === 'IN_PROGRESS' ? 'إكمال البيانات' : 'ملء الاستبيان'}
+                        </a>
+                    `}
+                </div>
+                `;
+            }).join('');
+
+            // Pending Invitations
+            if (data.pendingInvitations && data.pendingInvitations.length > 0) {
+                document.getElementById('pendingSection').style.display = 'block';
+                document.getElementById('pendingList').innerHTML = data.pendingInvitations.map(inv => `
+                    <div class="pending-card" id="inv-${inv.id}">
+                        <div style="width:40px;height:40px;border-radius:10px;background:rgba(250,204,21,0.1);display:flex;align-items:center;justify-content:center;font-size:18px">
+                            ✉️
+                        </div>
+                        <div class="pending-info">
+                            <div class="pending-name">${inv.name || inv.email}</div>
+                            <div class="pending-email">${inv.email} — ${ROLE_LABELS[inv.departmentRole] || inv.departmentRole}</div>
+                        </div>
+                        <span class="pending-role" style="background:rgba(250,204,21,0.1);color:var(--yellow)">⏳ في الانتظار</span>
+                        <div class="pending-actions">
+                            <button class="pending-btn copy" onclick="copyInviteLink('${inv.token}')">
+                                <i class="bi bi-link-45deg"></i> نسخ الرابط
+                            </button>
+                            <button class="pending-btn resend" onclick="resendInvite('${inv.id}')">
+                                <i class="bi bi-arrow-repeat"></i>
+                            </button>
+                            <button class="pending-btn cancel" onclick="cancelInvite('${inv.id}')">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                document.getElementById('pendingSection').style.display = 'none';
+            }
+        }
+
+        // ========== Demo Data ==========
+        function setDemoData() {
+            document.getElementById('totalDepts').textContent = '8';
+            document.getElementById('filledDepts').textContent = '0';
+            document.getElementById('pendingCount').textContent = '0';
+            document.getElementById('avgProgress').textContent = '0%';
+
+            const demoData = {
+                departments: [
+                    { code: 'FINANCE', name: 'المالية', icon: 'bi-cash-coin', color: '#f59e0b', expectedRole: 'CFO', hasMember: false, members: [], dataStatus: 'EMPTY', dataPercent: 0 },
+                    { code: 'MARKETING', name: 'التسويق', icon: 'bi-megaphone', color: '#8b5cf6', expectedRole: 'CMO', hasMember: false, members: [], dataStatus: 'EMPTY', dataPercent: 0 },
+                    { code: 'OPERATIONS', name: 'العمليات', icon: 'bi-gear', color: '#3b82f6', expectedRole: 'COO', hasMember: false, members: [], dataStatus: 'EMPTY', dataPercent: 0 },
+                    { code: 'HR', name: 'الموارد البشرية', icon: 'bi-people', color: '#10b981', expectedRole: 'CHRO', hasMember: false, members: [], dataStatus: 'EMPTY', dataPercent: 0 },
+                    { code: 'TECH', name: 'التقنية', icon: 'bi-cpu', color: '#06b6d4', expectedRole: 'CTO', hasMember: false, members: [], dataStatus: 'EMPTY', dataPercent: 0 },
+                    { code: 'SALES', name: 'المبيعات', icon: 'bi-cart3', color: '#ef4444', expectedRole: 'CSO', hasMember: false, members: [], dataStatus: 'EMPTY', dataPercent: 0 },
+                    { code: 'SUPPORT', name: 'خدمة العملاء', icon: 'bi-headset', color: '#ec4899', expectedRole: 'CCO', hasMember: false, members: [], dataStatus: 'EMPTY', dataPercent: 0 },
+                    { code: 'LEGAL', name: 'الشؤون القانونية', icon: 'bi-shield-check', color: '#6366f1', expectedRole: 'CLO', hasMember: false, members: [], dataStatus: 'EMPTY', dataPercent: 0 },
+                ],
+                pendingInvitations: [],
+                summary: { totalDepartments: 8, filledDepartments: 0, completedDepartments: 0, averageProgress: 0, pendingInvitations: 0 }
+            };
+            renderTeam(demoData);
+        }
+
+        // ========== Invite Modal ==========
+        function openInviteModal() {
+            document.getElementById('inviteModal').classList.add('active');
+            document.getElementById('inviteResult').style.display = 'none';
+            document.getElementById('inviteEmail').value = '';
+            document.getElementById('inviteName').value = '';
+            document.getElementById('inviteRole').value = '';
+            document.getElementById('inviteMessage').value = '';
+        }
+
+        function openInviteForDept(deptCode, role) {
+            openInviteModal();
+            if (role) {
+                document.getElementById('inviteRole').value = role;
+            }
+        }
+
+        function closeInviteModal() {
+            document.getElementById('inviteModal').classList.remove('active');
+        }
+
+        async function sendInvitation() {
+            const email = document.getElementById('inviteEmail').value.trim();
+            const name = document.getElementById('inviteName').value.trim();
+            const departmentRole = document.getElementById('inviteRole').value;
+            const role = document.getElementById('invitePermission').value;
+            const message = document.getElementById('inviteMessage').value.trim();
+            const resultEl = document.getElementById('inviteResult');
+
+            if (!email || !departmentRole) {
+                resultEl.style.display = 'block';
+                resultEl.innerHTML = `<div style="padding:10px;background:rgba(239,68,68,0.1);border-radius:8px;color:var(--red);font-size:13px">
+                    <i class="bi bi-exclamation-circle"></i> يرجى إدخال البريد واختيار الدور الوظيفي
+                </div>`;
+                return;
+            }
+
+            const btn = document.getElementById('sendInviteBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> جارٍ الإرسال...';
+
+            try {
+                const res = await fetch('/api/invitations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ entityId, email, name, departmentRole, role, message })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    resultEl.style.display = 'block';
+                    resultEl.innerHTML = `<div style="padding:10px;background:rgba(239,68,68,0.1);border-radius:8px;color:var(--red);font-size:13px">
+                        <i class="bi bi-exclamation-circle"></i> ${data.error || 'فشل في إنشاء الدعوة'}
+                    </div>`;
+                    return;
+                }
+
+                // Success — show link
+                resultEl.style.display = 'block';
+                resultEl.innerHTML = `
+                    <div style="padding:14px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:12px">
+                        <div style="font-weight:700;color:var(--green);margin-bottom:8px">
+                            ✅ تم إنشاء الدعوة بنجاح!
+                        </div>
+                        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">
+                            انسخ الرابط التالي وأرسله لـ ${name || email}:
+                        </div>
+                        <div style="display:flex;gap:8px;align-items:center">
+                            <input type="text" value="${data.inviteLink}" readonly
+                                style="flex:1;padding:8px 12px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-family:monospace"
+                                id="inviteLinkInput">
+                            <button onclick="copyLink()" style="padding:8px 14px;background:var(--primary);color:white;border:none;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer">
+                                <i class="bi bi-clipboard"></i> نسخ
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                // Reload team data
+                setTimeout(() => loadTeam(), 500);
+
+            } catch (e) {
+                resultEl.style.display = 'block';
+                resultEl.innerHTML = `<div style="padding:10px;background:rgba(239,68,68,0.1);border-radius:8px;color:var(--red);font-size:13px">
+                    <i class="bi bi-exclamation-circle"></i> خطأ في الاتصال بالخادم
+                </div>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-send"></i> إرسال الدعوة';
+            }
+        }
+
+        function copyLink() {
+            const input = document.getElementById('inviteLinkInput');
+            input.select();
+            navigator.clipboard.writeText(input.value);
+            showToast('✅ تم نسخ رابط الدعوة!');
+        }
+
+        function copyInviteLink(invToken) {
+            const link = `${location.origin}/join?token=${invToken}`;
+            navigator.clipboard.writeText(link);
+            showToast('✅ تم نسخ الرابط!');
+        }
+
+        async function cancelInvite(id) {
+            if (!confirm('هل تريد إلغاء هذه الدعوة؟')) return;
+            try {
+                await fetch(`/api/invitations/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                document.getElementById(`inv-${id}`).remove();
+                showToast('تم إلغاء الدعوة');
+                loadTeam();
+            } catch (e) { }
+        }
+
+        async function resendInvite(id) {
+            try {
+                const res = await fetch(`/api/invitations/${id}/resend`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    showToast('✅ تم تجديد الدعوة');
+                    copyInviteLink(data.inviteLink?.split('token=')[1] || '');
+                }
+            } catch (e) { }
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toastBox');
+            t.textContent = msg;
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 3000);
+        }
+
+        // ========== Init ==========
+        loadTeam();
+
+        // Close modal on outside click
+        document.getElementById('inviteModal').addEventListener('click', function (e) {
+            if (e.target === this) closeInviteModal();
+        });
+    </script>
+</body>
+
+</html>
