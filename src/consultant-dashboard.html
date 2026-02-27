@@ -876,7 +876,11 @@
                     return;
                 }
 
-                if (!res.ok) throw new Error('API error: ' + res.status);
+                if (!res.ok) {
+                    let errBody = '';
+                    try { const j = await res.json(); errBody = j.error || j.message || ''; } catch(_) {}
+                    throw new Error(`API error ${res.status}${errBody ? ': ' + errBody : ''}`);
+                }
                 const data = await res.json();
                 entitiesData = data.entities || [];
 
@@ -891,17 +895,20 @@
                 renderSummary(data.summary, data.entities);
                 renderAvgHealth(data.summary, data.entities);
                 renderInsights(data.entities, data.summary);
-                renderCharts(data.entities, data.summary);
+                try { renderCharts(data.entities, data.summary); } catch(chartErr) { console.warn('Charts failed:', chartErr); document.getElementById('chartsSection').style.display = 'none'; }
                 renderGrid(data.entities);
                 renderTable(data.entities);
                 document.getElementById('entityCount').textContent = `(${data.entities.length} كيان)`;
 
             } catch (err) {
                 console.error('Error loading consultant data:', err);
-                document.getElementById('loadingState').innerHTML = `
+                const ls = document.getElementById('loadingState');
+                ls.style.display = 'flex';
+                document.getElementById('contentArea').style.display = 'none';
+                ls.innerHTML = `
                     <i class="bi bi-exclamation-triangle" style="font-size:48px;color:var(--red);margin-bottom:16px"></i>
                     <p>فشل في تحميل البيانات</p>
-                    <p style="font-size:12px;color:var(--text-muted);margin-top:4px">${err.message || 'خطأ غير معروف'}</p>
+                    <p style="font-size:13px;color:var(--yellow);margin-top:4px;font-weight:600">${err.message || 'خطأ غير معروف'}</p>
                     <div style="display:flex;gap:8px;margin-top:16px">
                         <button class="btn" onclick="location.reload()"><i class="bi bi-arrow-clockwise"></i> إعادة المحاولة</button>
                         <button class="btn" onclick="location.href='/login.html'" style="background:transparent;border:1px solid var(--border)"><i class="bi bi-box-arrow-in-left"></i> تسجيل الدخول</button>

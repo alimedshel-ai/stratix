@@ -517,20 +517,24 @@ router.get('/consultant-overview', verifyToken, async (req, res) => {
             let kpiSummary = { onTrack: 0, warning: 0, critical: 0, total: 0 };
             let iniSummary = { completed: 0, inProgress: 0, overdue: 0, total: 0 };
 
-            // Fetch department coverage for this entity
-            const departments = await prisma.department.findMany({
-                where: { entityId: entity.id },
-                select: { id: true, name: true, code: true, dataPercent: true, dataStatus: true }
-            });
-
-            const deptCoverage = {
-                total: departments.length,
-                filled: departments.filter(d => (d.dataPercent || 0) > 0).length,
-                completed: departments.filter(d => d.dataStatus === 'COMPLETE').length,
-                avgProgress: departments.length > 0
-                    ? Math.round(departments.reduce((s, d) => s + (d.dataPercent || 0), 0) / departments.length)
-                    : 0,
-            };
+            // Fetch department coverage for this entity (graceful if table doesn't exist)
+            let deptCoverage = { total: 0, filled: 0, completed: 0, avgProgress: 0 };
+            try {
+                const departments = await prisma.department.findMany({
+                    where: { entityId: entity.id },
+                    select: { id: true, name: true, code: true, dataPercent: true, dataStatus: true }
+                });
+                deptCoverage = {
+                    total: departments.length,
+                    filled: departments.filter(d => (d.dataPercent || 0) > 0).length,
+                    completed: departments.filter(d => d.dataStatus === 'COMPLETE').length,
+                    avgProgress: departments.length > 0
+                        ? Math.round(departments.reduce((s, d) => s + (d.dataPercent || 0), 0) / departments.length)
+                        : 0,
+                };
+            } catch (_deptErr) {
+                // Department table may not exist in older deployments — skip gracefully
+            }
 
             if (activeVersion) {
                 const [kpis, initiatives, alerts] = await Promise.all([
