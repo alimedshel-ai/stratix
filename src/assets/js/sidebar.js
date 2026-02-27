@@ -70,9 +70,11 @@
   function _detectLevelFromCategory(cat) {
     if (cat.startsWith('INDIVIDUAL_') || cat === 'CONSULTANT_SOLO') { _sidebarIsIndividual = true; return; }
     if (cat === 'NEW_PROJECT') _sidebarCompanyLevel = 'FOUNDER';
+    else if (cat === 'COMPANY_MICRO') _sidebarCompanyLevel = 'FOUNDER';
     else if (cat === 'COMPANY_SMALL') _sidebarCompanyLevel = 'SMALL';
     else if (cat === 'COMPANY_MEDIUM') _sidebarCompanyLevel = 'MEDIUM';
     else if (cat === 'COMPANY_LARGE') _sidebarCompanyLevel = 'LARGE';
+    else if (cat === 'COMPANY_ENTERPRISE') _sidebarCompanyLevel = 'LARGE';
     else if (cat === 'CEO' || cat.startsWith('DEPT_')) _sidebarCompanyLevel = 'LARGE';
     else if (cat === 'CONSULTANT_AGENCY') _sidebarCompanyLevel = 'MEDIUM';
   }
