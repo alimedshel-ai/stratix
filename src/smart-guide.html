@@ -1087,16 +1087,19 @@
         }
 
         function skipGuide() {
-            // حفظ نمط افتراضي
-            const defaultPattern = {
-                name: PATTERN_NAMES[category] || 'مستكشف',
-                plan: getDefaultPlan(),
-                score: 50,
-                insight: 'ابدأ باكتشاف الأدوات المتاحة واختر ما يناسب احتياجاتك.',
-                skipped: true
-            };
-
-            saveAndRedirect(defaultPattern);
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login?tab=signup&from=smart-guide';
+                return;
+            }
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.userType === 'CONSULTANT') {
+                window.location.href = '/consultant-dashboard.html';
+            } else if (user.onboardingCompleted) {
+                window.location.href = '/dashboard.html';
+            } else {
+                window.location.href = '/onboarding';
+            }
         }
 
         function completeGuide() {
