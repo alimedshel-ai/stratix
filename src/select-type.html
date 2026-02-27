@@ -660,6 +660,74 @@
         استرجاع تشخيص سابق؟
     </button>
 
+    <!-- ═══ بوب-أب بيانات الشركة (لغير الأفراد) ═══ -->
+    <div id="companyModal"
+        style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.7); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; padding:20px;">
+        <div
+            style="background:#1a1d2e; border:1px solid rgba(255,255,255,0.1); border-radius:20px; padding:32px 28px; max-width:440px; width:100%; animation:slideUp 0.4s ease;">
+            <div style="text-align:center; margin-bottom:20px;">
+                <div style="font-size:40px; margin-bottom:8px;" id="modalIcon">🏢</div>
+                <h3 style="font-size:18px; font-weight:800; color:#e2e8f0; margin:0;" id="modalTitle">بيانات شركتك</h3>
+                <p style="font-size:13px; color:#94a3b8; margin:6px 0 0;" id="modalDesc">نحتاجها عشان نخصص التشخيص لك
+                </p>
+            </div>
+
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-size:13px; font-weight:700; color:#cbd5e1; margin-bottom:6px;"
+                    id="companyNameLabel">🏢 اسم المنشأة</label>
+                <input type="text" id="modalCompanyName" placeholder="مثال: شركة التقنية الحديثة"
+                    style="width:100%; padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.06); color:#e2e8f0; font-family:'Tajawal'; font-size:14px; outline:none;" />
+            </div>
+
+            <div style="margin-bottom:14px;" id="sectorField">
+                <label style="display:block; font-size:13px; font-weight:700; color:#cbd5e1; margin-bottom:6px;">🏗️
+                    القطاع</label>
+                <select id="modalSector"
+                    style="width:100%; padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.06); color:#e2e8f0; font-family:'Tajawal'; font-size:14px; outline:none; appearance:none;">
+                    <option value="">اختر القطاع</option>
+                    <option value="tech">💻 تقنية</option>
+                    <option value="health">🏥 صحة</option>
+                    <option value="education">🎓 تعليم</option>
+                    <option value="finance">💰 مالية</option>
+                    <option value="retail">🛒 تجزئة</option>
+                    <option value="industrial">🏭 صناعة</option>
+                    <option value="realestate">🏠 عقارات</option>
+                    <option value="food">🍜 أغذية</option>
+                    <option value="energy">⚡ طاقة</option>
+                    <option value="logistics">🚚 لوجستيات</option>
+                    <option value="government">🏛️ حكومي</option>
+                    <option value="services">🤝 خدمات مهنية</option>
+                    <option value="ecommerce">🛒 تجارة إلكترونية</option>
+                    <option value="tourism">✈️ سياحة</option>
+                    <option value="other">📁 أخرى</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom:20px;" id="deptField" hidden>
+                <label style="display:block; font-size:13px; font-weight:700; color:#cbd5e1; margin-bottom:6px;">🏛️
+                    إدارتك</label>
+                <select id="modalDept"
+                    style="width:100%; padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.06); color:#e2e8f0; font-family:'Tajawal'; font-size:14px; outline:none; appearance:none;">
+                    <option value="DEPT_HR">📊 موارد بشرية</option>
+                    <option value="DEPT_FINANCE">💰 مالية</option>
+                    <option value="DEPT_MARKETING">📢 تسويق</option>
+                    <option value="DEPT_OPS">⚙️ عمليات</option>
+                    <option value="DEPT_SERVICE">🤝 خدمة عملاء</option>
+                    <option value="DEPT_SALES">📈 مبيعات</option>
+                </select>
+            </div>
+
+            <button onclick="submitCompanyModal()"
+                style="width:100%; padding:14px; border:none; border-radius:12px; background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; font-family:'Tajawal'; font-size:15px; font-weight:700; cursor:pointer;">
+                <i class="bi bi-arrow-left"></i> تابع للتشخيص
+            </button>
+            <button onclick="closeCompanyModal()"
+                style="width:100%; padding:10px; border:none; background:none; color:#94a3b8; font-family:'Tajawal'; font-size:13px; cursor:pointer; margin-top:8px;">
+                إلغاء
+            </button>
+        </div>
+    </div>
+
     <script>
         let selectedCard = null;
         let selectedRoute = null;
@@ -704,11 +772,9 @@
             localStorage.setItem('stratix_category', category);
             localStorage.setItem('stratix_original_route', route);
             localStorage.setItem('stratix_diagnostic_started', 'true');
-
-            // حفظ diagnosticPath (login.html يقرأه)
             localStorage.setItem('diagnosticPath', category);
 
-            // تحديد نوع المستخدم للتسجيل لاحقاً
+            // تحديد نوع المستخدم
             if (category === 'CONSULTANT_SOLO') {
                 localStorage.setItem('stratix_user_type', 'INDIVIDUAL');
             } else if (category === 'CONSULTANT_AGENCY') {
@@ -721,7 +787,88 @@
                 localStorage.setItem('stratix_user_type', 'BUSINESS');
             }
 
-            // جميع المسارات تمر بالموجه الذكي
+            // الأفراد → يروحون مباشرة للتشخيص
+            if (category.startsWith('INDIVIDUAL_') || category === 'CONSULTANT_SOLO') {
+                window.location.href = '/smart-guide?category=' + category + '&route=' + route;
+                return;
+            }
+
+            // غير الأفراد → نعرض بوب-أب بيانات الشركة أول
+            showCompanyModal(category, route);
+        }
+
+        function showCompanyModal(category, route) {
+            const modal = document.getElementById('companyModal');
+            const deptField = document.getElementById('deptField');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalDesc = document.getElementById('modalDesc');
+            const modalIcon = document.getElementById('modalIcon');
+            const companyNameLabel = document.getElementById('companyNameLabel');
+
+            // تخصيص حسب النوع
+            if (category.startsWith('DEPT_')) {
+                modalIcon.textContent = '🏛️';
+                modalTitle.textContent = 'بيانات شركتك';
+                modalDesc.textContent = 'عشان نخصص تشخيص إدارتك';
+                companyNameLabel.textContent = '🏢 اسم الشركة التي تعمل بها';
+                deptField.hidden = false;
+                // تحديد الإدارة تلقائياً
+                const deptSelect = document.getElementById('modalDept');
+                if (deptSelect) deptSelect.value = category;
+            } else if (category === 'CONSULTANT_AGENCY') {
+                modalIcon.textContent = '🧠';
+                modalTitle.textContent = 'بيانات شركة الاستشارات';
+                modalDesc.textContent = 'عشان نخصص أدوات إدارة العملاء لك';
+                companyNameLabel.textContent = '🏢 اسم شركة الاستشارات';
+                deptField.hidden = true;
+            } else {
+                modalIcon.textContent = '🏢';
+                modalTitle.textContent = 'بيانات منشأتك';
+                modalDesc.textContent = 'نحتاجها عشان نخصص التشخيص لك';
+                companyNameLabel.textContent = '🏢 اسم المنشأة';
+                deptField.hidden = true;
+            }
+
+            // حفظ بيانات التوجيه
+            modal.dataset.category = category;
+            modal.dataset.route = route;
+            modal.style.display = 'flex';
+        }
+
+        function closeCompanyModal() {
+            document.getElementById('companyModal').style.display = 'none';
+        }
+
+        function submitCompanyModal() {
+            const companyName = document.getElementById('modalCompanyName').value.trim();
+            const sector = document.getElementById('modalSector').value;
+            const modal = document.getElementById('companyModal');
+            const category = modal.dataset.category;
+            const route = modal.dataset.route;
+
+            if (!companyName) {
+                document.getElementById('modalCompanyName').style.borderColor = '#ef4444';
+                document.getElementById('modalCompanyName').focus();
+                return;
+            }
+            if (!sector) {
+                document.getElementById('modalSector').style.borderColor = '#ef4444';
+                return;
+            }
+
+            // حفظ البيانات
+            localStorage.setItem('stratix_company_name', companyName);
+            localStorage.setItem('stratix_sector', sector);
+
+            // إذا مدير إدارة → حفظ الإدارة
+            if (category.startsWith('DEPT_')) {
+                const dept = document.getElementById('modalDept').value;
+                localStorage.setItem('stratix_dept', dept);
+            }
+
+            modal.style.display = 'none';
+
+            // انطلق للتشخيص
             window.location.href = '/smart-guide?category=' + category + '&route=' + route;
         }
 

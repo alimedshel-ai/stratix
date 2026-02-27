@@ -628,6 +628,17 @@
             if (selectedUserType !== 'INDIVIDUAL') {
                 const cs = document.getElementById('companySection');
                 if (cs) cs.style.display = 'block';
+
+                // لو اسم الشركة محفوظ من select-type → تعبئة تلقائية
+                const savedCompany = localStorage.getItem('stratix_company_name');
+                if (savedCompany) {
+                    const companyInput = document.getElementById('signup-company');
+                    if (companyInput) {
+                        companyInput.value = savedCompany;
+                        companyInput.readOnly = true;
+                        companyInput.style.opacity = '0.7';
+                    }
+                }
             }
         }
 
@@ -709,7 +720,9 @@
                         companyName: companyName || null,
                         userCategory,
                         diagnosticData,
-                        smartGuideData
+                        smartGuideData,
+                        sector: localStorage.getItem('stratix_sector') || undefined,
+                        department: localStorage.getItem('stratix_dept') || undefined
                     })
                 });
                 const data = await res.json();
@@ -728,11 +741,18 @@
                     } else if (['INDIVIDUAL', 'PERSONAL', 'CAREER', 'IDEA', 'CONSULTANT_SOLO'].includes(userCategory) || userCategory.startsWith('INDIVIDUAL_')) {
                         // فرد أو مستشار مستقل → يدخل مباشرة
                         window.location.href = '/individual-dashboard.html';
-                    } else if (userCategory.startsWith('DEPT_')) {
-                        // مدير إدارة → onboarding مختصر
-                        window.location.href = '/onboarding.html?mode=dept';
+                    } else if (userCategory.startsWith('DEPT_') || selectedUserType === 'DEPT_MANAGER') {
+                        // مدير إدارة → داشبورد مباشرة (بياناته اكتملت)
+                        window.location.href = '/dept-dashboard.html';
+                    } else if (localStorage.getItem('stratix_company_name') && localStorage.getItem('stratix_sector')) {
+                        // منشأة + بيانات الشركة كاملة → داشبورد مباشرة
+                        if (userCategory === 'CONSULTANT_AGENCY') {
+                            window.location.href = '/consultant-dashboard.html';
+                        } else {
+                            window.location.href = '/dashboard.html';
+                        }
                     } else {
-                        // منشأة أو شركة استشارات → onboarding كامل
+                        // منشأة بدون بيانات كاملة → onboarding
                         window.location.href = '/onboarding.html';
                     }
                 } else {
