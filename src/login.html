@@ -377,19 +377,19 @@
                             style="background:rgba(255,255,255,0.05); border:2px solid var(--border); border-radius:12px; padding:14px 10px; text-align:center; cursor:pointer; transition:all 0.3s;">
                             <div style="font-size:24px; margin-bottom:4px;">🧑</div>
                             <div style="font-size:0.8rem; font-weight:700;">فرد</div>
-                            <div style="font-size:0.7rem; color:var(--text-muted);">تطوير شخصي أو فكرة</div>
+                            <div style="font-size:0.7rem; color:var(--text-muted);">تطوير شخصي أو استشاري مستقل</div>
                         </div>
                         <div class="user-type-option" data-utype="BUSINESS" onclick="selectUserType(this)"
                             style="background:rgba(255,255,255,0.05); border:2px solid var(--border); border-radius:12px; padding:14px 10px; text-align:center; cursor:pointer; transition:all 0.3s;">
                             <div style="font-size:24px; margin-bottom:4px;">🏢</div>
                             <div style="font-size:0.8rem; font-weight:700;">منشأة</div>
-                            <div style="font-size:0.7rem; color:var(--text-muted);">شركة أو مؤسسة</div>
+                            <div style="font-size:0.7rem; color:var(--text-muted);">شركة أو مؤسسة أو شركة استشارات</div>
                         </div>
-                        <div class="user-type-option" data-utype="CONSULTANT" onclick="selectUserType(this)"
+                        <div class="user-type-option" data-utype="DEPT_MANAGER" onclick="selectUserType(this)"
                             style="background:rgba(255,255,255,0.05); border:2px solid var(--border); border-radius:12px; padding:14px 10px; text-align:center; cursor:pointer; transition:all 0.3s;">
-                            <div style="font-size:24px; margin-bottom:4px;">🧠</div>
-                            <div style="font-size:0.8rem; font-weight:700;">مستشار</div>
-                            <div style="font-size:0.7rem; color:var(--text-muted);">أخدم عملاء</div>
+                            <div style="font-size:24px; margin-bottom:4px;">🏛️</div>
+                            <div style="font-size:0.8rem; font-weight:700;">مدير إدارة</div>
+                            <div style="font-size:0.7rem; color:var(--text-muted);">أشخّص إدارتي</div>
                         </div>
                     </div>
                 </div>
@@ -536,23 +536,27 @@
                     else if (role === 'VIEWER' || role === 'DATA_ENTRY') {
                         window.location.href = '/viewer-hub.html';
                     }
-                    // 3. الفرد (ما يحتاج كيان)
-                    else if (['INDIVIDUAL', 'PERSONAL', 'CAREER', 'IDEA'].includes(uCategory) || uCategory.startsWith('INDIVIDUAL_')) {
+                    // 3. الفرد أو المستشار المستقل (ما يحتاج كيان)
+                    else if (['INDIVIDUAL', 'PERSONAL', 'CAREER', 'IDEA', 'CONSULTANT_SOLO'].includes(uCategory) || uCategory.startsWith('INDIVIDUAL_')) {
                         window.location.href = '/individual-dashboard.html';
                     }
-                    // 4. المستشار
-                    else if (uType === 'CONSULTANT' || uCategory === 'CONSULTANT') {
-                        window.location.href = hasEntity ? '/consultant-dashboard.html' : '/onboarding.html';
+                    // 4. مدير إدارة
+                    else if (uType === 'DEPT_MANAGER' || uCategory.startsWith('DEPT_')) {
+                        window.location.href = hasEntity ? '/dept-dashboard.html' : '/onboarding.html?mode=dept';
                     }
-                    // 5. عنده كيان + التأسيس مكتمل
+                    // 5. شركة استشارات (عندها كيان)
+                    else if ((uType === 'CONSULTANT' || uCategory === 'CONSULTANT_AGENCY') && hasEntity) {
+                        window.location.href = '/consultant-dashboard.html';
+                    }
+                    // 6. عنده كيان + التأسيس مكتمل
                     else if (hasEntity && onboardingDone) {
                         window.location.href = '/dashboard.html';
                     }
-                    // 6. ما أكمل التأسيس
+                    // 7. ما أكمل التأسيس
                     else if (!onboardingDone) {
                         window.location.href = '/onboarding.html';
                     }
-                    // 7. Default
+                    // 8. Default
                     else {
                         window.location.href = '/dashboard.html';
                     }
@@ -590,16 +594,26 @@
 
         // إذا جاي من تشخيص → أخفي سؤال النوع وأحدده تلقائياً
         const diagPath = localStorage.getItem('diagnosticPath') || localStorage.getItem('stratix_category') || '';
+        const savedUserType = localStorage.getItem('stratix_user_type') || '';
         if (diagPath) {
             const typeSection = document.getElementById('userTypeSection');
             if (typeSection) typeSection.style.display = 'none';
-            if (['PERSONAL', 'CAREER', 'IDEA'].includes(diagPath) || diagPath.startsWith('INDIVIDUAL_')) {
+
+            // أولاً: إذا select-type حدد النوع مسبقاً
+            if (savedUserType) {
+                selectedUserType = savedUserType;
+            }
+            // ثانياً: استنتاج من الكاتيجوري
+            else if (['PERSONAL', 'CAREER', 'IDEA'].includes(diagPath) || diagPath.startsWith('INDIVIDUAL_') || diagPath === 'CONSULTANT_SOLO') {
                 selectedUserType = 'INDIVIDUAL';
-            } else if (diagPath === 'CONSULTANT') {
-                selectedUserType = 'CONSULTANT';
+            } else if (diagPath.startsWith('DEPT_')) {
+                selectedUserType = 'DEPT_MANAGER';
+            } else if (diagPath === 'CONSULTANT_AGENCY') {
+                selectedUserType = 'BUSINESS';
             } else {
                 selectedUserType = 'BUSINESS';
             }
+
             // أظهر حقل المنشأة إذا مطلوب
             if (selectedUserType !== 'INDIVIDUAL') {
                 const cs = document.getElementById('companySection');
@@ -688,11 +702,14 @@
                         window.location.href = savedRedirect;
                     } else if (data.redirectTo) {
                         window.location.href = data.redirectTo;
-                    } else if (['INDIVIDUAL', 'PERSONAL', 'CAREER', 'IDEA'].includes(userCategory) || userCategory.startsWith('INDIVIDUAL_')) {
+                    } else if (['INDIVIDUAL', 'PERSONAL', 'CAREER', 'IDEA', 'CONSULTANT_SOLO'].includes(userCategory) || userCategory.startsWith('INDIVIDUAL_')) {
+                        // فرد أو مستشار مستقل → يدخل مباشرة
                         window.location.href = '/individual-dashboard.html';
-                    } else if (userCategory === 'CONSULTANT') {
-                        window.location.href = '/onboarding.html';
+                    } else if (userCategory.startsWith('DEPT_')) {
+                        // مدير إدارة → onboarding مختصر
+                        window.location.href = '/onboarding.html?mode=dept';
                     } else {
+                        // منشأة أو شركة استشارات → onboarding كامل
                         window.location.href = '/onboarding.html';
                     }
                 } else {

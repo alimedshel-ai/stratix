@@ -1113,31 +1113,88 @@
         // ═══ Adaptive Onboarding — المرحلة 5 ═══
         const sgData = JSON.parse(localStorage.getItem('stratix_smart_guide') || 'null');
         const userCategory = sgData?.category || localStorage.getItem('stratix_category') || '';
-        const isIndividual = userCategory.startsWith('INDIVIDUAL_');
-        const isConsultant = userCategory.startsWith('CONSULTANT') ||
-            (JSON.parse(localStorage.getItem('user') || '{}').userType === 'CONSULTANT');
+        const isIndividual = userCategory.startsWith('INDIVIDUAL_') || userCategory === 'CONSULTANT_SOLO';
+        const isConsultant = (userCategory === 'CONSULTANT_AGENCY') ||
+            (JSON.parse(localStorage.getItem('user') || '{}').userType === 'CONSULTANT' && !isIndividual);
+        const isDeptManager = userCategory.startsWith('DEPT_') ||
+            new URLSearchParams(window.location.search).get('mode') === 'dept';
+        const deptCategory = userCategory.startsWith('DEPT_') ? userCategory : '';
 
-        // ═══ مسار المستشار: لا يحتاج إنشاء منظمة — يذهب للوحة المستشار ═══
-        if (isConsultant) {
-            document.querySelector('.wizard-wrapper').innerHTML = `
-                <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);font-family:'Tajawal',sans-serif;">
-                    <div style="text-align:center;max-width:480px;padding:40px 24px;">
-                        <div style="font-size:64px;margin-bottom:16px;">🤝</div>
-                        <h2 style="font-size:24px;font-weight:800;color:var(--text);margin-bottom:12px;">مرحباً بك كمستشار!</h2>
-                        <p style="color:var(--text-muted);font-size:15px;line-height:1.8;margin-bottom:8px;">
-                            كمستشار، لا تحتاج لإنشاء منظمة — ستصلك دعوات من الشركات التي تعمل معها،
-                            وستظهر ضمن لوحة المستشار الخاصة بك.
-                        </p>
-                        <p style="color:var(--text-muted);font-size:13px;margin-bottom:28px;">
-                            بمجرد قبولك الدعوة، ستتمكن من متابعة الصحة الاستراتيجية لعملائك من مكان واحد.
-                        </p>
-                        <a href="/consultant-dashboard.html" style="display:inline-block;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;text-decoration:none;padding:14px 36px;border-radius:12px;font-size:16px;font-weight:700;">
-                            <i class="bi bi-speedometer2"></i> انتقل للوحة المستشار
-                        </a>
-                    </div>
-                </div>
-            `;
-            // لا تكمل بقية الكود
+        // ═══ مسار مدير الإدارة: خطوتين فقط (الشركة + القطاع) ═══
+        if (isDeptManager) {
+            // إخفاء خطوة الفريق من شريط التقدم
+            const indicators = document.querySelectorAll('.step-indicator');
+            const lines = document.querySelectorAll('.step-line');
+            if (indicators[2]) indicators[2].style.display = 'none'; // الفريق
+            if (lines[2]) lines[2].style.display = 'none'; // line3
+
+            // تحديث عنوان الخطوة 1 لمدير الإدارة
+            const step1Header = document.querySelector('#step1 .step-header');
+            if (step1Header) {
+                step1Header.querySelector('h2').textContent = 'معلومات شركتك';
+                step1Header.querySelector('p').textContent = 'نحتاج نعرف شركتك عشان نخصص تشخيص إدارتك';
+            }
+
+            // أسماء الإدارات
+            const deptNames = {
+                'DEPT_HR': 'الموارد البشرية', 'DEPT_FINANCE': 'المالية',
+                'DEPT_MARKETING': 'التسويق', 'DEPT_OPS': 'العمليات',
+                'DEPT_SERVICE': 'خدمة العملاء', 'DEPT_SALES': 'المبيعات'
+            };
+            const deptName = deptNames[deptCategory] || 'إدارتك';
+
+            // تحديث الخطوة 4 (الانطلاق) لمدير الإدارة
+            const step4Header = document.querySelector('#step4 .step-header');
+            if (step4Header) {
+                step4Header.querySelector('h2').textContent = '🎉 جاهز لتشخيص ' + deptName;
+            }
+
+            // عند الانتهاء من القطاع (خطوة 2) → تخطي الفريق → الانطلاق
+            const step2NextBtn = document.getElementById('btnStep2Next');
+            if (step2NextBtn) {
+                step2NextBtn.setAttribute('onclick', 'nextStep(4)');
+            }
+
+            // تعديل زر CTA النهائي → dept-dashboard
+            const ctaBtn = document.getElementById('onboardNextBtn');
+            if (ctaBtn) {
+                ctaBtn.innerHTML = '<i class="bi bi-speedometer2"></i> انتقل للوحة إدارتك';
+                ctaBtn.setAttribute('href', '/dept-dashboard.html');
+            }
+            const dashBtn = document.getElementById('onboardDashBtn');
+            if (dashBtn) {
+                dashBtn.setAttribute('href', '/dept-dashboard.html');
+                dashBtn.innerHTML = '<i class="bi bi-grid"></i> لوحة الإدارة';
+            }
+        }
+        // ═══ مسار المستشار (شركة استشارات): يحتاج تأسيس كامل كمنشأة ═══
+        // المستشار المستقل (CONSULTANT_SOLO) يُعامل كفرد ↓ else if (isIndividual)
+        else if (isConsultant) {
+            // شركة استشارات → onboarding كامل مثل المنشأة
+            // تخصيص العناوين لشركة الاستشارات
+            const step1Header = document.querySelector('#step1 .step-header');
+            if (step1Header) {
+                step1Header.querySelector('h2').textContent = 'معلومات شركة الاستشارات';
+                step1Header.querySelector('p').textContent = 'أدخل بيانات شركتك الاستشارية لتفعيل لوحة إدارة العملاء';
+            }
+
+            // Auto-fill placeholders
+            const orgNameEl = document.getElementById('orgName');
+            if (orgNameEl && !orgNameEl.value) {
+                orgNameEl.placeholder = 'مثال: شركة الخبراء للاستشارات';
+            }
+
+            // تعديل الـ CTA النهائي
+            const ctaBtn = document.getElementById('onboardNextBtn');
+            if (ctaBtn) {
+                ctaBtn.innerHTML = '<i class="bi bi-person-workspace"></i> انتقل للوحة العملاء';
+                ctaBtn.setAttribute('href', '/consultant-dashboard.html');
+            }
+            const dashBtn = document.getElementById('onboardDashBtn');
+            if (dashBtn) {
+                dashBtn.setAttribute('href', '/consultant-dashboard.html');
+                dashBtn.innerHTML = '<i class="bi bi-speedometer2"></i> لوحة العملاء';
+            }
         } else if (isIndividual) {
             // ═══ مسار الأفراد: خطوتين فقط (القطاع → الانطلاق) ═══
 

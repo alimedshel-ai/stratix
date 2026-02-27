@@ -68,12 +68,13 @@
   let _sidebarCompanyLevel = 'MEDIUM'; // افتراضي آمن — كل الأدوات ظاهرة
 
   function _detectLevelFromCategory(cat) {
-    if (cat.startsWith('INDIVIDUAL_')) { _sidebarIsIndividual = true; return; }
+    if (cat.startsWith('INDIVIDUAL_') || cat === 'CONSULTANT_SOLO') { _sidebarIsIndividual = true; return; }
     if (cat === 'NEW_PROJECT') _sidebarCompanyLevel = 'FOUNDER';
     else if (cat === 'COMPANY_SMALL') _sidebarCompanyLevel = 'SMALL';
     else if (cat === 'COMPANY_MEDIUM') _sidebarCompanyLevel = 'MEDIUM';
     else if (cat === 'COMPANY_LARGE') _sidebarCompanyLevel = 'LARGE';
     else if (cat === 'CEO' || cat.startsWith('DEPT_')) _sidebarCompanyLevel = 'LARGE';
+    else if (cat === 'CONSULTANT_AGENCY') _sidebarCompanyLevel = 'MEDIUM';
   }
 
   try {
@@ -333,8 +334,8 @@
       `;
     }
 
-    // لوحة المستشار (CONSULTANT فقط أو SUPER_ADMIN)
-    if (userType === 'CONSULTANT' || isSuperAdmin) {
+    // لوحة المستشار (شركة استشارات فقط — CONSULTANT_AGENCY — أو SUPER_ADMIN)
+    if ((userType === 'CONSULTANT' && !_sidebarIsIndividual) || isSuperAdmin) {
       const isConsultantActive = isActive('/consultant-dashboard.html');
       html += `
       <a href="/consultant-dashboard.html" class="stx-item stx-mypath ${isConsultantActive ? 'active' : ''}" style="border-right:3px solid #a78bfa !important">

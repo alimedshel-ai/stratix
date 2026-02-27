@@ -590,6 +590,7 @@
                 'INDIVIDUAL_PERSONAL': '🧭 تخطيط شخصي',
                 'INDIVIDUAL_DEV': '🎓 تطوير مهني',
                 'INDIVIDUAL_IDEA': '💡 فكرة مشروع',
+                'CONSULTANT_SOLO': '💼 مستشار مستقل',
                 'NEW_PROJECT': '🌱 مؤسس جديد',
                 'COMPANY_SMALL': '🏢 شركة صغيرة',
                 'COMPANY_MEDIUM': '🏗️ شركة متوسطة',
@@ -598,6 +599,12 @@
                 'CONSULTANT_AGENCY': '🏢 شركة استشارات',
                 'CONSULTANT_EXPERT': '🎓 خبير أعمال',
                 'CEO': '🛡️ مدير تنفيذي',
+                'DEPT_HR': '📊 موارد بشرية',
+                'DEPT_FINANCE': '💰 مالية',
+                'DEPT_MARKETING': '📢 تسويق',
+                'DEPT_OPS': '⚙️ عمليات',
+                'DEPT_SERVICE': '🤝 خدمة عملاء',
+                'DEPT_SALES': '📈 مبيعات',
                 'PERSONAL': '🧭 تخطيط شخصي',
                 'CAREER': '🎓 تطوير مهني',
                 'IDEA': '💡 فكرة مشروع'
@@ -690,8 +697,8 @@
         }
 
         function getDefaultInsights(category, score) {
-            const isIndividual = category.startsWith('INDIVIDUAL_') || ['PERSONAL', 'CAREER', 'IDEA'].includes(category);
-            const isConsultant = category.startsWith('CONSULTANT');
+            const isIndividual = category.startsWith('INDIVIDUAL_') || ['PERSONAL', 'CAREER', 'IDEA', 'CONSULTANT_SOLO'].includes(category);
+            const isConsultant = category === 'CONSULTANT_AGENCY' || category === 'CONSULTANT';
             const isBusiness = ['NEW_PROJECT', 'COMPANY_SMALL', 'COMPANY_MEDIUM', 'COMPANY_LARGE'].includes(category);
 
             if (isIndividual) {
@@ -765,8 +772,8 @@
         }
 
         function getDefaultRecommendations(category, score) {
-            const isIndividual = category.startsWith('INDIVIDUAL_') || ['PERSONAL', 'CAREER', 'IDEA'].includes(category);
-            const isConsultant = category.startsWith('CONSULTANT');
+            const isIndividual = category.startsWith('INDIVIDUAL_') || ['PERSONAL', 'CAREER', 'IDEA', 'CONSULTANT_SOLO'].includes(category);
+            const isConsultant = category === 'CONSULTANT_AGENCY' || category === 'CONSULTANT';
 
             if (isIndividual) {
                 return [
@@ -805,8 +812,9 @@
 
         function updateCTA(category) {
             const ctaBtn = document.getElementById('ctaBtn');
-            const isIndividual = category.startsWith('INDIVIDUAL_') || ['PERSONAL', 'CAREER', 'IDEA'].includes(category);
-            const isConsultant = category.startsWith('CONSULTANT');
+            const isIndividual = category.startsWith('INDIVIDUAL_') || ['PERSONAL', 'CAREER', 'IDEA', 'CONSULTANT_SOLO'].includes(category);
+            const isConsultant = category === 'CONSULTANT_AGENCY' || category === 'CONSULTANT';
+            const isDeptManager = category.startsWith('DEPT_');
             const token = localStorage.getItem('token');
 
             if (token) {
@@ -822,16 +830,19 @@
                     if (isIndividual) {
                         dashboardUrl = '/individual-dashboard.html';
                         btnText = `<i class="bi bi-grid-1x2-fill"></i> ${firstName ? firstName + '، ' : ''}انتقل للوحتك`;
+                    } else if (isDeptManager) {
+                        dashboardUrl = '/dept-dashboard.html';
+                        btnText = `<i class="bi bi-speedometer2"></i> ${firstName ? firstName + '، ' : ''}لوحة إدارتك`;
                     } else if (isConsultant) {
                         dashboardUrl = '/consultant-dashboard.html';
-                        btnText = `<i class="bi bi-people-fill"></i> ${firstName ? firstName + '، ' : ''}لوحة المستشار`;
-                    } else if (category === 'CEO') {
-                        dashboardUrl = '/ceo-dashboard.html';
-                        btnText = `<i class="bi bi-speedometer2"></i> ${firstName ? firstName + '، ' : ''}اللوحة التنفيذية`;
+                        btnText = `<i class="bi bi-people-fill"></i> ${firstName ? firstName + '، ' : ''}لوحة العملاء`;
                     } else {
                         dashboardUrl = '/dashboard.html';
                         btnText = `<i class="bi bi-layout-wtf"></i> ${firstName ? firstName + '، ' : ''}لوحة التحكم`;
                     }
+                } else if (isDeptManager) {
+                    dashboardUrl = '/onboarding.html?mode=dept';
+                    btnText = '<i class="bi bi-layout-wtf"></i> أكمل إعداد إدارتك';
                 }
 
                 ctaBtn.href = dashboardUrl;
@@ -841,14 +852,20 @@
                 ctaBtn.href = '/login?tab=signup&from=diagnostic&category=' + category;
 
                 // حفظ وجهة ما بعد التسجيل
-                localStorage.setItem('stratix_redirect_after_login',
-                    isIndividual ? '/individual-dashboard.html' : '/onboarding.html'
-                );
+                if (isIndividual) {
+                    localStorage.setItem('stratix_redirect_after_login', '/individual-dashboard.html');
+                } else if (isDeptManager) {
+                    localStorage.setItem('stratix_redirect_after_login', '/onboarding.html?mode=dept');
+                } else {
+                    localStorage.setItem('stratix_redirect_after_login', '/onboarding.html');
+                }
 
                 if (isIndividual) {
                     ctaBtn.innerHTML = '<i class="bi bi-rocket-takeoff"></i> سجّل الآن — وابدأ رحلتك';
+                } else if (isDeptManager) {
+                    ctaBtn.innerHTML = '<i class="bi bi-rocket-takeoff"></i> سجّل — وابدأ تشخيص إدارتك';
                 } else if (isConsultant) {
-                    ctaBtn.innerHTML = '<i class="bi bi-rocket-takeoff"></i> سجّل كمستشار — مجاناً';
+                    ctaBtn.innerHTML = '<i class="bi bi-rocket-takeoff"></i> سجّل شركتك الاستشارية — مجاناً';
                 } else {
                     ctaBtn.innerHTML = '<i class="bi bi-rocket-takeoff"></i> سجّل شركتك — مجاناً';
                 }
