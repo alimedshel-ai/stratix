@@ -841,11 +841,42 @@
 
         async function init() {
             try {
+                // Check token validity first
+                if (!token) {
+                    location.href = '/login.html?redirect=consultant-dashboard.html';
+                    return;
+                }
+
                 const res = await fetch('/api/dashboard/consultant-overview', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
-                if (!res.ok) throw new Error('API error');
+                if (res.status === 401) {
+                    // Token expired or invalid
+                    localStorage.removeItem('token');
+                    document.getElementById('loadingState').innerHTML = `
+                        <i class="bi bi-shield-lock" style="font-size:48px;color:var(--yellow);margin-bottom:16px"></i>
+                        <p>انتهت صلاحية الجلسة — يرجى تسجيل الدخول مرة أخرى</p>
+                        <button class="btn" onclick="location.href='/login.html?redirect=consultant-dashboard.html'" style="margin-top:16px">
+                            <i class="bi bi-box-arrow-in-left"></i> تسجيل الدخول
+                        </button>
+                    `;
+                    return;
+                }
+
+                if (res.status === 403) {
+                    document.getElementById('loadingState').innerHTML = `
+                        <i class="bi bi-person-x" style="font-size:48px;color:var(--red);margin-bottom:16px"></i>
+                        <p>ليس لديك صلاحية الوصول لهذه الصفحة</p>
+                        <p style="font-size:12px;color:var(--text-muted);margin-top:8px">هذه الصفحة مخصصة للمستشارين فقط</p>
+                        <button class="btn" onclick="location.href='/dashboard.html'" style="margin-top:16px">
+                            <i class="bi bi-speedometer2"></i> الذهاب للوحة التحكم
+                        </button>
+                    `;
+                    return;
+                }
+
+                if (!res.ok) throw new Error('API error: ' + res.status);
                 const data = await res.json();
                 entitiesData = data.entities || [];
 
@@ -870,7 +901,11 @@
                 document.getElementById('loadingState').innerHTML = `
                     <i class="bi bi-exclamation-triangle" style="font-size:48px;color:var(--red);margin-bottom:16px"></i>
                     <p>فشل في تحميل البيانات</p>
-                    <button class="btn" onclick="location.reload()" style="margin-top:16px"><i class="bi bi-arrow-clockwise"></i> إعادة المحاولة</button>
+                    <p style="font-size:12px;color:var(--text-muted);margin-top:4px">${err.message || 'خطأ غير معروف'}</p>
+                    <div style="display:flex;gap:8px;margin-top:16px">
+                        <button class="btn" onclick="location.reload()"><i class="bi bi-arrow-clockwise"></i> إعادة المحاولة</button>
+                        <button class="btn" onclick="location.href='/login.html'" style="background:transparent;border:1px solid var(--border)"><i class="bi bi-box-arrow-in-left"></i> تسجيل الدخول</button>
+                    </div>
                 `;
             }
         }
