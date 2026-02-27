@@ -171,6 +171,16 @@
                 <input type="text" id="companyName" class="form-control" placeholder="شركة التقنية الحديثة" required>
             </div>
 
+            <div class="mb-3">
+                <label class="form-label">
+                    رقم الجوال
+                    <i class="bi bi-info-circle info-icon" data-bs-toggle="tooltip"
+                        title="لتسهيل التواصل مع فريقك ودعوتهم عبر واتساب"></i>
+                </label>
+                <input type="tel" id="phone" class="form-control" placeholder="05xxxxxxxx" dir="ltr"
+                    style="text-align:left">
+            </div>
+
             <div class="mb-4">
                 <label class="form-label">
                     كلمة المرور
@@ -226,20 +236,37 @@
             const name = document.getElementById('name').value.trim();
             const email = document.getElementById('email').value.trim();
             const companyName = document.getElementById('companyName').value.trim();
+            const phone = document.getElementById('phone').value.trim();
             const password = document.getElementById('password').value;
 
             try {
                 const res = await fetch('/api/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, companyName, password })
+                    body: JSON.stringify({ name, email, companyName, phone, password })
                 });
                 const data = await res.json();
 
                 if (res.ok && data.token) {
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
-                    window.location.href = '/pain-ambition.html';
+
+                    // === Smart Redirect بعد التسجيل ===
+                    const diagPath = localStorage.getItem('diagnosticPath');
+                    const hasDiagData = localStorage.getItem('stratix_smart_guide');
+                    const category = localStorage.getItem('stratix_category') || '';
+
+                    if (hasDiagData) {
+                        // عنده نتيجة تشخيص → يكمل Onboarding أولاً
+                        window.location.href = '/onboarding.html';
+                    } else if (diagPath) {
+                        // عنده مسار تشخيص محفوظ → يكمله
+                        localStorage.removeItem('diagnosticPath');
+                        window.location.href = diagPath;
+                    } else {
+                        // ما عنده شي → Onboarding
+                        window.location.href = '/onboarding.html';
+                    }
                 } else {
                     // عرض رسالة الخطأ التفصيلية من الـ validation
                     let errorMsg = data.error || 'فشل إنشاء الحساب';

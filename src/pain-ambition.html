@@ -2774,10 +2774,25 @@
             const token = localStorage.getItem('token');
 
             // ═══ المسار الصحيح ═══
-            // 1. لو ما مسجل → سجّل أولاً
+            // 1. لو ما مسجل → صفحة النتيجة الموحّدة
             if (!token) {
                 clearDraft();
-                window.location.href = '/login?tab=signup&from=diagnostic';
+                // حفظ بيانات التشخيص بصيغة موحّدة لصفحة النتيجة
+                const category = localStorage.getItem('stratix_category') || 'COMPANY_SMALL';
+                const patternKey = detectPattern();
+                const deepResults = getDeepDiagResults();
+                const overallScore = deepResults ? deepResults.overallPct : 55;
+
+                localStorage.setItem('stratix_smart_guide', JSON.stringify({
+                    category: category,
+                    pattern: { name: PATTERNS[patternKey].name, score: overallScore },
+                    score: overallScore,
+                    answers: { pains, ambs, depth },
+                    patternKey: patternKey,
+                    timestamp: new Date().toISOString()
+                }));
+
+                window.location.href = '/diagnostic-result?from=pain-ambition&category=' + category;
                 return;
             }
 

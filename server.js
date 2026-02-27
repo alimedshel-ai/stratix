@@ -252,10 +252,14 @@ const departmentsRoutes = require('./routes/departments');
 const invitationsRoutes = require('./routes/invitations');
 const deptDataRoutes = require('./routes/dept-data');
 const rulesEngineRoutes = require('./routes/rules-engine');
+const sectorConfigsRoutes = require('./routes/sector-configs');
+const breakEvenRoutes = require('./routes/break-even');
 app.use('/api/departments', departmentsRoutes);
 app.use('/api/invitations', invitationsRoutes);
 app.use('/api/dept-data', deptDataRoutes);
 app.use('/api/rules-engine', rulesEngineRoutes);
+app.use('/api/sector-configs', sectorConfigsRoutes);
+app.use('/api/break-even', breakEvenRoutes);
 
 
 // Serve pain-ambition page
@@ -591,6 +595,22 @@ app.get('/live-board', (req, res) => {
   res.sendFile(path.join(__dirname, 'src', 'live-board.html'));
 });
 
+// Serve Contradictions Analysis
+app.get('/contradictions', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'contradictions.html'));
+});
+app.get('/contradictions.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'contradictions.html'));
+});
+
+// Serve Break-Even Result
+app.get('/break-even-result', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'break-even-result.html'));
+});
+app.get('/break-even-result.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'break-even-result.html'));
+});
+
 // Serve API Docs
 app.get('/api-docs-page', (req, res) => {
   res.sendFile(path.join(__dirname, 'src', 'api-docs.html'));
@@ -674,6 +694,16 @@ app.get('/free-diagnostic', (req, res) => {
 // Serve Select Type page
 app.get('/select-type', (req, res) => {
   res.sendFile(path.join(__dirname, 'src', 'select-type.html'));
+});
+
+// Serve Diagnostic Result page
+app.get('/diagnostic-result', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'diagnostic-result.html'));
+});
+
+// Serve Individual Dashboard
+app.get('/individual-dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'individual-dashboard.html'));
 });
 
 // Serve Smart Guide page

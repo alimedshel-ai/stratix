@@ -119,8 +119,45 @@ const QUESTIONNAIRES = {
 };
 
 // ========== GET questionnaire template ==========
-router.get('/questionnaire/:role', verifyToken, (req, res) => {
+// يدعم أسئلة مخصصة حسب القطاع (SectorConfig) مع fallback للأسئلة العامة
+router.get('/questionnaire/:role', verifyToken, async (req, res) => {
     const { role } = req.params;
+    const { entityId } = req.query;
+
+    // 1. Try sector-specific questions if entityId provided
+    if (entityId) {
+        try {
+            const entity = await prisma.entity.findUnique({
+                where: { id: entityId },
+                include: { sectorConfig: true }
+            });
+
+            if (entity?.sectorConfig) {
+                const roleFieldMap = { CFO: 'cfoQuestions', CMO: 'cmoQuestions', COO: 'cooQuestions' };
+                const fieldName = roleFieldMap[role.toUpperCase()];
+
+                if (fieldName && entity.sectorConfig[fieldName]) {
+                    const sectorQuestions = JSON.parse(entity.sectorConfig[fieldName]);
+                    return res.json({
+                        ...sectorQuestions,
+                        _sectorConfig: {
+                            code: entity.sectorConfig.code,
+                            nameAr: entity.sectorConfig.nameAr,
+                            icon: entity.sectorConfig.icon,
+                            unitLabel: entity.sectorConfig.unitLabelAr,
+                            benchmarks: entity.sectorConfig.benchmarks ? JSON.parse(entity.sectorConfig.benchmarks) : {},
+                            formulas: entity.sectorConfig.formulas ? JSON.parse(entity.sectorConfig.formulas) : null,
+                            breakEvenFields: entity.sectorConfig.breakEvenFields ? JSON.parse(entity.sectorConfig.breakEvenFields) : [],
+                        }
+                    });
+                }
+            }
+        } catch (err) {
+            console.error('Sector questions lookup failed, falling back:', err.message);
+        }
+    }
+
+    // 2. Fallback to generic questions
     const questionnaire = QUESTIONNAIRES[role.toUpperCase()];
 
     if (!questionnaire) {

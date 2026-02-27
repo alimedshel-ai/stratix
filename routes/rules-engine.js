@@ -451,6 +451,239 @@ const CROSS_FUNCTIONAL_RULES = [
             return { triggered: false };
         }
     },
+
+    // ═══════════════════════════════════════════
+    // 📊 BREAK-EVEN RULES (11-12)
+    // ═══════════════════════════════════════════
+
+    {
+        id: 'RULE_11_BELOW_BREAK_EVEN',
+        name: 'تحت نقطة التعادل',
+        type: 'CRITICAL',
+        severity: 'CRITICAL',
+        departments: ['CFO'],
+        deptCodes: ['FINANCE'],
+        icon: '🔴',
+        evaluate: (data) => {
+            const cfo = data.CFO;
+            if (!cfo) return { triggered: false };
+
+            const beResult = cfo._breakEvenResult?.results;
+            if (!beResult || beResult.safetyMargin === null || beResult.safetyMargin === undefined) return { triggered: false };
+
+            if (beResult.safetyMargin < 0) {
+                const deficit = Math.abs(beResult.safetyMargin).toFixed(1);
+                return {
+                    triggered: true,
+                    title: `الشركة تحت نقطة التعادل بنسبة ${deficit}%`,
+                    description: 'الإيرادات الفعلية أقل من نقطة التعادل. المصاريف الثابتة تتجاوز هامش المساهمة.',
+                    evidence: [
+                        `نقطة التعادل: ${new Intl.NumberFormat('ar-SA').format(Math.round(beResult.breakEvenRevenue))} ريال`,
+                        `الإيرادات المتوقعة: ${new Intl.NumberFormat('ar-SA').format(Math.round(beResult.annualRevenue))} ريال`,
+                        `هامش المساهمة: ${beResult.contributionMarginPct?.toFixed(1)}%`,
+                        `العجز: ${deficit}%`
+                    ],
+                    suggestedOKR: {
+                        objective: 'تجاوز نقطة التعادل خلال الربع القادم',
+                        keyResults: [
+                            `زيادة الإيرادات بنسبة ${Math.ceil(Math.abs(beResult.safetyMargin) + 5)}%`,
+                            'تخفيض المصاريف الثابتة بنسبة 10%',
+                            'رفع هامش المساهمة بتحسين أسعار الموردين'
+                        ],
+                        timeline: '3 أشهر',
+                        owner: 'CFO + CEO'
+                    }
+                };
+            }
+            return { triggered: false };
+        }
+    },
+    {
+        id: 'RULE_12_MARGIN_SQUEEZE',
+        name: 'ضغط على الهوامش',
+        type: 'RISK',
+        severity: 'HIGH',
+        departments: ['CFO', 'CMO'],
+        deptCodes: ['FINANCE', 'MARKETING'],
+        icon: '📉',
+        evaluate: (data) => {
+            const cfo = data.CFO;
+            const cmo = data.CMO;
+            if (!cfo || !cmo) return { triggered: false };
+
+            const marketingBudget = parseFloat(cmo.monthly_marketing_budget || cmo.marketing_spend || 0);
+            const beResult = cfo._breakEvenResult?.results;
+
+            if (beResult && beResult.safetyMargin !== null && beResult.safetyMargin < 20 && marketingBudget > 0) {
+                const annualMarketing = marketingBudget * 12;
+                const marketingPctOfRevenue = beResult.annualRevenue > 0
+                    ? ((annualMarketing / beResult.annualRevenue) * 100).toFixed(1)
+                    : 0;
+
+                if (parseFloat(marketingPctOfRevenue) > 8) {
+                    return {
+                        triggered: true,
+                        title: 'تناقض: ميزانية تسويق عالية مع هوامش ضيقة',
+                        description: `الإنفاق التسويقي يمثل ${marketingPctOfRevenue}% من الإيرادات بينما هامش الأمان ${beResult.safetyMargin.toFixed(1)}% فقط.`,
+                        evidence: [
+                            `ميزانية التسويق السنوية: ${new Intl.NumberFormat('ar-SA').format(annualMarketing)} ريال`,
+                            `نسبة التسويق من الإيرادات: ${marketingPctOfRevenue}%`,
+                            `هامش الأمان: ${beResult.safetyMargin.toFixed(1)}%`
+                        ],
+                        suggestedOKR: {
+                            objective: 'تحسين العائد على الاستثمار التسويقي',
+                            keyResults: [
+                                `تخفيض نسبة التسويق من ${marketingPctOfRevenue}% إلى ${Math.max(5, parseFloat(marketingPctOfRevenue) - 3)}%`,
+                                'التركيز على القنوات ذات ROI أعلى',
+                                `رفع هامش الأمان إلى ${Math.min(30, beResult.safetyMargin + 10).toFixed(0)}%`
+                            ],
+                            timeline: '3 أشهر',
+                            owner: 'CMO + CFO'
+                        }
+                    };
+                }
+            }
+            return { triggered: false };
+        }
+    },
+
+    // ═══════════════════════════════════════════
+    // 🔗 CROSS-DEPARTMENT RULES (13-15) — V2.0
+    // ═══════════════════════════════════════════
+
+    {
+        id: 'RULE_13_OPS_DELAYS_VS_REVENUE',
+        name: 'تأخر تشغيلي يهدد الإيرادات',
+        type: 'CROSS_DEPT',
+        severity: 'HIGH',
+        departments: ['COO', 'CFO'],
+        deptCodes: ['OPERATIONS', 'FINANCE'],
+        icon: '⏱️',
+        evaluate: (data) => {
+            const coo = data.COO;
+            const cfo = data.CFO;
+            if (!coo || !cfo) return { triggered: false };
+
+            const ontimeDelivery = parseFloat(coo.ontime_delivery_pct || 100);
+            const reworkRate = parseFloat(coo.rework_pct || 0);
+
+            if (ontimeDelivery < 75 || reworkRate > 10) {
+                const beResult = cfo._breakEvenResult?.results;
+                const revenueImpact = beResult?.annualRevenue
+                    ? Math.round(beResult.annualRevenue * (100 - ontimeDelivery) / 100 * 0.3)
+                    : null;
+
+                return {
+                    triggered: true,
+                    title: 'تأخر المشاريع يؤثر على الإيرادات',
+                    description: `نسبة التسليم في الوقت ${ontimeDelivery}% فقط${reworkRate > 10 ? ` مع إعادة عمل بنسبة ${reworkRate}%` : ''}. هذا يؤخر تحصيل الإيرادات ويضغط على التدفق النقدي.`,
+                    evidence: [
+                        `نسبة التسليم في الوقت: ${ontimeDelivery}% (المستهدف > 85%)`,
+                        reworkRate > 5 ? `نسبة إعادة العمل: ${reworkRate}%` : null,
+                        revenueImpact ? `الأثر المالي التقديري: ${new Intl.NumberFormat('ar-SA').format(revenueImpact)} ريال خسارة محتملة` : null,
+                    ].filter(Boolean),
+                    suggestedOKR: {
+                        objective: 'تحسين كفاءة التنفيذ لحماية الإيرادات',
+                        keyResults: [
+                            `رفع نسبة التسليم في الوقت من ${ontimeDelivery}% إلى ${Math.min(90, ontimeDelivery + 15)}%`,
+                            reworkRate > 10 ? `تخفيض إعادة العمل من ${reworkRate}% إلى ${Math.max(5, reworkRate - 5)}%` : 'تطبيق نظام مراقبة جودة أسبوعي',
+                            'إنشاء تقرير مشروع أسبوعي مرتبط بالتحصيل المالي'
+                        ],
+                        timeline: '3 أشهر',
+                        owner: 'COO + CFO'
+                    }
+                };
+            }
+            return { triggered: false };
+        }
+    },
+    {
+        id: 'RULE_14_CAC_VS_UNIT_ECONOMICS',
+        name: 'تكلفة اكتساب العميل مرتفعة',
+        type: 'CROSS_DEPT',
+        severity: 'HIGH',
+        departments: ['CMO', 'CFO'],
+        deptCodes: ['MARKETING', 'FINANCE'],
+        icon: '💸',
+        evaluate: (data) => {
+            const cmo = data.CMO;
+            const cfo = data.CFO;
+            if (!cmo || !cfo) return { triggered: false };
+
+            const cac = parseFloat(cmo.cac || 0);
+            const ltv = parseFloat(cmo.ltv || 0);
+            const beResult = cfo._breakEvenResult?.results;
+
+            // LTV:CAC ratio check (should be > 3)
+            if (cac > 0 && ltv > 0 && ltv / cac < 3) {
+                const ratio = (ltv / cac).toFixed(1);
+                return {
+                    triggered: true,
+                    title: `نسبة LTV:CAC = ${ratio}:1 (خطر)`,
+                    description: `تكلفة اكتساب العميل (${new Intl.NumberFormat('ar-SA').format(cac)} ريال) مرتفعة مقارنة بالقيمة الدائمة (${new Intl.NumberFormat('ar-SA').format(ltv)} ريال). النسبة الصحية هي 3:1 أو أعلى.`,
+                    evidence: [
+                        `CAC: ${new Intl.NumberFormat('ar-SA').format(cac)} ريال`,
+                        `LTV: ${new Intl.NumberFormat('ar-SA').format(ltv)} ريال`,
+                        `النسبة الحالية: ${ratio}:1 (المستهدف > 3:1)`,
+                        beResult ? `هامش الأمان: ${beResult.safetyMargin?.toFixed(1)}%` : null,
+                    ].filter(Boolean),
+                    suggestedOKR: {
+                        objective: 'تحسين اقتصاديات اكتساب العملاء',
+                        keyResults: [
+                            `رفع LTV:CAC Ratio من ${ratio} إلى ${Math.min(4, parseFloat(ratio) + 1).toFixed(1)}`,
+                            `تخفيض CAC بنسبة 20% عبر تحسين القنوات العضوية`,
+                            `رفع LTV بنسبة 15% عبر برامج ولاء`
+                        ],
+                        timeline: '4 أشهر',
+                        owner: 'CMO + CFO'
+                    }
+                };
+            }
+            return { triggered: false };
+        }
+    },
+    {
+        id: 'RULE_15_TURNOVER_VS_SATISFACTION',
+        name: 'دوران الموظفين يؤثر على رضا العملاء',
+        type: 'CROSS_DEPT',
+        severity: 'MEDIUM',
+        departments: ['COO', 'CMO'],
+        deptCodes: ['OPERATIONS', 'MARKETING'],
+        icon: '🔄',
+        evaluate: (data) => {
+            const coo = data.COO;
+            const cmo = data.CMO;
+            if (!coo || !cmo) return { triggered: false };
+
+            const turnover = parseFloat(coo.staff_turnover_pct || coo.worker_turnover_pct || coo.turnover_rate || 0);
+            const satisfaction = parseFloat(cmo.google_rating || cmo.patient_satisfaction || cmo.client_satisfaction || 0);
+            const complaintRate = parseFloat(cmo.complaint_rate || 0);
+
+            if (turnover > 30 && (satisfaction < 4 || complaintRate > 5)) {
+                return {
+                    triggered: true,
+                    title: 'ارتباط: دوران موظفين عالي + رضا عملاء منخفض',
+                    description: `معدل دوران الموظفين ${turnover}% مرتفع، مما يؤثر على جودة الخدمة (التقييم: ${satisfaction}/5${complaintRate > 0 ? `، الشكاوى: ${complaintRate}%` : ''}).`,
+                    evidence: [
+                        `معدل دوران الموظفين: ${turnover}% (المستهدف < 20%)`,
+                        satisfaction > 0 ? `تقييم العملاء: ${satisfaction}/5` : null,
+                        complaintRate > 0 ? `نسبة الشكاوى: ${complaintRate}%` : null,
+                    ].filter(Boolean),
+                    suggestedOKR: {
+                        objective: 'تحسين بيئة العمل لرفع جودة الخدمة',
+                        keyResults: [
+                            `تخفيض دوران الموظفين من ${turnover}% إلى ${Math.max(15, turnover - 15)}%`,
+                            `رفع رضا العملاء من ${satisfaction} إلى ${Math.min(5, satisfaction + 0.5).toFixed(1)}/5`,
+                            'تطبيق برنامج تدريب وإشراك الموظفين (8 ساعات/شهر)'
+                        ],
+                        timeline: '4 أشهر',
+                        owner: 'COO + HR + CMO'
+                    }
+                };
+            }
+            return { triggered: false };
+        }
+    },
 ];
 
 // ========== API: Run Analysis ==========

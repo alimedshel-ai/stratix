@@ -357,7 +357,7 @@
                         <i class="bi bi-info-circle info-icon" data-bs-toggle="tooltip"
                             title="اكتب اسمك كما تحب أن يظهر في لوحة التحكم"></i>
                     </label>
-                    <input type="text" id="signup-name" class="form-control" placeholder="مثال: أحمد محمد (اختياري)">
+                    <input type="text" id="signup-name" class="form-control" placeholder="مثال: أحمد محمد">
                 </div>
 
                 <div class="mb-3">
@@ -369,23 +369,56 @@
                     <input type="email" id="signup-email" class="form-control" placeholder="name@company.com" required>
                 </div>
 
+                <!-- ═══ اختيار النوع (يظهر فقط إذا ما سوى تشخيص) ═══ -->
+                <div class="mb-3" id="userTypeSection">
+                    <label class="form-label">وش يوصفك أكثر؟</label>
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
+                        <div class="user-type-option" data-utype="INDIVIDUAL" onclick="selectUserType(this)"
+                            style="background:rgba(255,255,255,0.05); border:2px solid var(--border); border-radius:12px; padding:14px 10px; text-align:center; cursor:pointer; transition:all 0.3s;">
+                            <div style="font-size:24px; margin-bottom:4px;">🧑</div>
+                            <div style="font-size:0.8rem; font-weight:700;">فرد</div>
+                            <div style="font-size:0.7rem; color:var(--text-muted);">تطوير شخصي أو فكرة</div>
+                        </div>
+                        <div class="user-type-option" data-utype="BUSINESS" onclick="selectUserType(this)"
+                            style="background:rgba(255,255,255,0.05); border:2px solid var(--border); border-radius:12px; padding:14px 10px; text-align:center; cursor:pointer; transition:all 0.3s;">
+                            <div style="font-size:24px; margin-bottom:4px;">🏢</div>
+                            <div style="font-size:0.8rem; font-weight:700;">منشأة</div>
+                            <div style="font-size:0.7rem; color:var(--text-muted);">شركة أو مؤسسة</div>
+                        </div>
+                        <div class="user-type-option" data-utype="CONSULTANT" onclick="selectUserType(this)"
+                            style="background:rgba(255,255,255,0.05); border:2px solid var(--border); border-radius:12px; padding:14px 10px; text-align:center; cursor:pointer; transition:all 0.3s;">
+                            <div style="font-size:24px; margin-bottom:4px;">🧠</div>
+                            <div style="font-size:0.8rem; font-weight:700;">مستشار</div>
+                            <div style="font-size:0.7rem; color:var(--text-muted);">أخدم عملاء</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══ اسم المنشأة (يظهر فقط للمنشآت والمستشار) ═══ -->
+                <div class="mb-3" id="companySection" style="display:none;">
+                    <label class="form-label">
+                        اسم المنشأة
+                        <i class="bi bi-info-circle info-icon" data-bs-toggle="tooltip" title="اسم شركتك أو مؤسستك"></i>
+                    </label>
+                    <input type="text" id="signup-company" class="form-control" placeholder="شركة التقنية الحديثة">
+                </div>
+
                 <div class="mb-3">
                     <label class="form-label">
                         رقم الجوال
                         <i class="bi bi-info-circle info-icon" data-bs-toggle="tooltip"
-                            title="رقم الجوال يساعدك في استرجاع حسابك والتحقق من هويتك"></i>
+                            title="رقم الجوال يساعدك في استرجاع حسابك"></i>
                     </label>
                     <input type="tel" id="signup-phone" class="form-control" placeholder="05xxxxxxxx" dir="ltr"
                         style="text-align:left">
-                    <div class="form-text" style="color:var(--text-muted);font-size:0.78rem">اختياري — يمكنك إضافته
-                        لاحقاً</div>
+                    <div class="form-text" style="color:var(--text-muted);font-size:0.78rem">اختياري</div>
                 </div>
 
                 <div class="mb-4">
                     <label class="form-label">
                         كلمة المرور
                         <i class="bi bi-info-circle info-icon" data-bs-toggle="tooltip"
-                            title="كلمة المرور القوية تحمي بيانات شركتك الاستراتيجية"></i>
+                            title="كلمة المرور القوية تحمي بياناتك"></i>
                     </label>
                     <input type="password" class="form-control" id="signup-password" placeholder="••••••••" required>
                     <div class="password-rules">
@@ -491,33 +524,36 @@
                     const role = data.user.role || 'VIEWER';
                     const sysRole = data.user.systemRole || 'USER';
                     const uType = data.user.userType || 'EXPLORER';
+                    const uCategory = data.user.userCategory || '';
+                    const hasEntity = !!data.user.entity;
                     const onboardingDone = data.user.onboardingCompleted || false;
 
-                    if (sysRole !== 'SUPER_ADMIN' && (role === 'VIEWER' || role === 'DATA_ENTRY')) {
+                    // 1. SUPER_ADMIN → دائماً الداشبورد
+                    if (sysRole === 'SUPER_ADMIN') {
+                        window.location.href = '/dashboard.html';
+                    }
+                    // 2. VIEWER/DATA_ENTRY → صفحة المشاهد
+                    else if (role === 'VIEWER' || role === 'DATA_ENTRY') {
                         window.location.href = '/viewer-hub.html';
-                    } else if (!onboardingDone && sysRole !== 'SUPER_ADMIN') {
-                        // كشف نوع المستخدم: فرد أو شركة (من السيرفر + localStorage)
-                        let _isIndvLogin = (data.user.userCategory || '').startsWith('INDIVIDUAL_');
-                        if (!_isIndvLogin) {
-                            try {
-                                const sgRaw = localStorage.getItem('stratix_smart_guide');
-                                if (sgRaw) _isIndvLogin = (JSON.parse(sgRaw).category || '').startsWith('INDIVIDUAL_');
-                                if (!_isIndvLogin) _isIndvLogin = (localStorage.getItem('stratix_category') || '').startsWith('INDIVIDUAL_');
-                            } catch (e) { }
-                        }
-
-                        if (_isIndvLogin) {
-                            // الأفراد → الداشبورد مباشرة (لا يحتاجون إعداد منظمة)
-                            window.location.href = '/dashboard.html';
-                        } else {
-                            // الشركات → يكملون التأسيس أولاً
-                            window.location.href = '/onboarding.html';
-                        }
-                    } else if (uType === 'CONSULTANT') {
-                        window.location.href = '/consultant-dashboard.html';
-                    } else if (uType === 'DEPT_MANAGER') {
-                        window.location.href = '/dept-dashboard.html';
-                    } else {
+                    }
+                    // 3. الفرد (ما يحتاج كيان)
+                    else if (['INDIVIDUAL', 'PERSONAL', 'CAREER', 'IDEA'].includes(uCategory) || uCategory.startsWith('INDIVIDUAL_')) {
+                        window.location.href = '/individual-dashboard.html';
+                    }
+                    // 4. المستشار
+                    else if (uType === 'CONSULTANT' || uCategory === 'CONSULTANT') {
+                        window.location.href = hasEntity ? '/consultant-dashboard.html' : '/onboarding.html';
+                    }
+                    // 5. عنده كيان + التأسيس مكتمل
+                    else if (hasEntity && onboardingDone) {
+                        window.location.href = '/dashboard.html';
+                    }
+                    // 6. ما أكمل التأسيس
+                    else if (!onboardingDone) {
+                        window.location.href = '/onboarding.html';
+                    }
+                    // 7. Default
+                    else {
                         window.location.href = '/dashboard.html';
                     }
                 } else {
@@ -549,9 +585,55 @@
             }
         });
 
+        // ═══ اختيار نوع المستخدم ═══
+        let selectedUserType = null;
+
+        // إذا جاي من تشخيص → أخفي سؤال النوع وأحدده تلقائياً
+        const diagPath = localStorage.getItem('diagnosticPath') || localStorage.getItem('stratix_category') || '';
+        if (diagPath) {
+            const typeSection = document.getElementById('userTypeSection');
+            if (typeSection) typeSection.style.display = 'none';
+            if (['PERSONAL', 'CAREER', 'IDEA'].includes(diagPath) || diagPath.startsWith('INDIVIDUAL_')) {
+                selectedUserType = 'INDIVIDUAL';
+            } else if (diagPath === 'CONSULTANT') {
+                selectedUserType = 'CONSULTANT';
+            } else {
+                selectedUserType = 'BUSINESS';
+            }
+            // أظهر حقل المنشأة إذا مطلوب
+            if (selectedUserType !== 'INDIVIDUAL') {
+                const cs = document.getElementById('companySection');
+                if (cs) cs.style.display = 'block';
+            }
+        }
+
+        function selectUserType(el) {
+            document.querySelectorAll('.user-type-option').forEach(o => {
+                o.style.borderColor = 'var(--border)';
+                o.style.background = 'rgba(255,255,255,0.05)';
+            });
+            el.style.borderColor = 'var(--primary)';
+            el.style.background = 'rgba(102,126,234,0.12)';
+            selectedUserType = el.dataset.utype;
+
+            const companySection = document.getElementById('companySection');
+            companySection.style.display = (selectedUserType === 'INDIVIDUAL') ? 'none' : 'block';
+        }
+
         // ═══ إنشاء حساب ═══
         document.getElementById('signupForm').addEventListener('submit', async function (e) {
             e.preventDefault();
+
+            // التحقق من اختيار النوع
+            if (!selectedUserType && !diagPath) {
+                const sec = document.getElementById('userTypeSection');
+                sec.style.border = '2px solid #ef4444';
+                sec.style.borderRadius = '14px';
+                sec.style.padding = '8px';
+                setTimeout(() => { sec.style.border = 'none'; sec.style.padding = '0'; }, 2000);
+                return;
+            }
+
             const btn = this.querySelector('button[type="submit"]');
             const originalText = btn.innerHTML;
             btn.disabled = true;
@@ -560,16 +642,20 @@
             const name = document.getElementById('signup-name').value.trim();
             const email = document.getElementById('signup-email').value.trim();
             const phone = document.getElementById('signup-phone').value.trim();
+            const companyEl = document.getElementById('signup-company');
+            const companyName = companyEl ? companyEl.value.trim() : '';
             const password = document.getElementById('signup-password').value;
 
-            // قراءة بيانات التشخيص من localStorage (من الخطوة السابقة)
-            const userCategory = localStorage.getItem('stratix_category') || null;
+            // تحديد userCategory
+            let userCategory = diagPath || selectedUserType || 'EXPLORER';
+
+            // جمع بيانات التشخيص
             let diagnosticData = null;
             try {
-                const pa = localStorage.getItem('painAmbition');
+                const pa = localStorage.getItem('painAmbition') || localStorage.getItem('diagnosticData');
                 if (pa) diagnosticData = JSON.parse(pa);
             } catch (e) { }
-            // بيانات Smart Guide
+
             let smartGuideData = null;
             try {
                 const sg = localStorage.getItem('stratix_smart_guide');
@@ -580,7 +666,14 @@
                 const res = await fetch('/api/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, phone: phone || undefined, password, userCategory, diagnosticData, smartGuideData })
+                    body: JSON.stringify({
+                        name, email, password,
+                        phone: phone || undefined,
+                        companyName: companyName || null,
+                        userCategory,
+                        diagnosticData,
+                        smartGuideData
+                    })
                 });
                 const data = await res.json();
 
@@ -588,33 +681,19 @@
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
 
-                    // ═══ توجيه ذكي بعد التسجيل ═══
-                    // 1. أولاً: هل في وجهة محفوظة من المسار السابق؟
+                    // التوجيه حسب النوع
                     const savedRedirect = localStorage.getItem('stratix_redirect_after_login');
                     if (savedRedirect) {
                         localStorage.removeItem('stratix_redirect_after_login');
                         window.location.href = savedRedirect;
-                    }
-                    // 2. وجهة من السيرفر
-                    else if (data.redirectTo) {
+                    } else if (data.redirectTo) {
                         window.location.href = data.redirectTo;
-                    }
-                    // 3. الافتراضي: حسب نوع المستخدم
-                    else {
-                        let _isIndvSignup = false;
-                        try {
-                            const sgRaw = localStorage.getItem('stratix_smart_guide');
-                            if (sgRaw) _isIndvSignup = (JSON.parse(sgRaw).category || '').startsWith('INDIVIDUAL_');
-                            if (!_isIndvSignup) _isIndvSignup = (localStorage.getItem('stratix_category') || '').startsWith('INDIVIDUAL_');
-                        } catch (e) { }
-
-                        if (_isIndvSignup) {
-                            // الأفراد → الداشبورد مباشرة
-                            window.location.href = '/dashboard.html';
-                        } else {
-                            // الشركات → إعداد المنظمة
-                            window.location.href = '/onboarding.html';
-                        }
+                    } else if (['INDIVIDUAL', 'PERSONAL', 'CAREER', 'IDEA'].includes(userCategory) || userCategory.startsWith('INDIVIDUAL_')) {
+                        window.location.href = '/individual-dashboard.html';
+                    } else if (userCategory === 'CONSULTANT') {
+                        window.location.href = '/onboarding.html';
+                    } else {
+                        window.location.href = '/onboarding.html';
                     }
                 } else {
                     let errDiv = document.getElementById('signupError');

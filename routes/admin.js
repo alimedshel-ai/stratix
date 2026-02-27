@@ -644,4 +644,163 @@ router.patch('/companies/:id/activate', async (req, res) => {
     }
 });
 
+// ═══════════════════════════════════════════
+// 🚧 GET /api/admin/stalled — العملاء المتوقفين
+// ═══════════════════════════════════════════
+router.get('/stalled', async (req, res) => {
+    try {
+        const now = new Date();
+
+        // جلب كل المستخدمين (غير SUPER_ADMIN) مع بياناتهم
+        const users = await prisma.user.findMany({
+            where: {
+                systemRole: { not: 'SUPER_ADMIN' },
+                disabled: false
+            },
+            orderBy: { createdAt: 'desc' },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+                createdAt: true,
+                lastLogin: true,
+                onboardingCompleted: true,
+                userCategory: true,
+                memberships: {
+                    include: {
+                        entity: {
+                            include: {
+                                company: { select: { id: true, nameAr: true, nameEn: true, status: true } },
+                                sectorConfig: { select: { code: true, nameAr: true, icon: true } },
+                                strategyVersions: {
+                                    take: 1,
+                                    orderBy: { createdAt: 'desc' },
+                                    include: {
+                                        _count: { select: { objectives: true, kpis: true, initiatives: true } }
+                                    }
+                                },
+                                departments: {
+                                    select: { code: true, dataStatus: true }
+                                }
+                            }
+                        }
+                    },
+                    take: 1
+                }
+            }
+        });
+
+        const stalledUsers = [];
+
+        users.forEach(u => {
+            const daysSinceSignup = Math.floor((now - new Date(u.createdAt)) / (1000 * 60 * 60 * 24));
+            const daysSinceLogin = u.lastLogin
+                ? Math.floor((now - new Date(u.lastLogin)) / (1000 * 60 * 60 * 24))
+                : daysSinceSignup;
+            const membership = u.memberships[0];
+            const entity = membership?.entity;
+            const company = entity?.company;
+            const version = entity?.strategyVersions?.[0];
+            const counts = version?._count || {};
+            const departments = entity?.departments || [];
+            const hasDeptData = departments.some(d => d.dataStatus !== 'EMPTY');
+            const sector = entity?.sectorConfig;
+
+            // تحديد مرحلة التوقف
+            let stallStage = '';
+            let stallCode = '';
+            let severity = 'info';
+            let isStalled = false;
+
+            if (!u.onboardingCompleted) {
+                // ——— المرحلة 1: لم يكمل التسجيل (Onboarding) ———
+                stallStage = '🔴 لم يكمل التسجيل';
+                stallCode = 'NO_ONBOARDING';
+                severity = 'critical';
+                isStalled = true;
+            } else if (!company) {
+                // ——— المرحلة 2: أكمل التسجيل لكن بدون شركة ———
+                stallStage = '🟠 بدون شركة / كيان';
+                stallCode = 'NO_COMPANY';
+                severity = 'high';
+                isStalled = true;
+            } else if (counts.objectives === 0 && !hasDeptData) {
+                // ——— المرحلة 3: عنده شركة لكن ما بدأ أي نشاط ———
+                if (daysSinceSignup >= 3) {
+                    stallStage = '🟡 لم يبدأ أي نشاط';
+                    stallCode = 'NO_ACTIVITY';
+                    severity = daysSinceSignup >= 7 ? 'high' : 'medium';
+                    isStalled = true;
+                }
+            } else if (counts.objectives > 0 && counts.kpis === 0) {
+                // ——— المرحلة 4: أهداف بدون مؤشرات ———
+                if (daysSinceLogin >= 7) {
+                    stallStage = '🟡 متوقف عند الأهداف';
+                    stallCode = 'STUCK_OBJECTIVES';
+                    severity = 'medium';
+                    isStalled = true;
+                }
+            } else if (daysSinceLogin >= 14) {
+                // ——— المرحلة 5: كان نشط ثم توقف ———
+                stallStage = '⚪ غير نشط (14+ يوم)';
+                stallCode = 'INACTIVE';
+                severity = 'low';
+                isStalled = true;
+            }
+
+            if (isStalled) {
+                stalledUsers.push({
+                    id: u.id,
+                    name: u.name,
+                    email: u.email,
+                    phone: u.phone || null,
+                    createdAt: u.createdAt,
+                    lastLogin: u.lastLogin,
+                    daysSinceSignup,
+                    daysSinceLogin,
+                    onboardingCompleted: u.onboardingCompleted,
+                    userCategory: u.userCategory,
+                    company: company?.nameAr || null,
+                    companyId: company?.id || null,
+                    sector: sector ? `${sector.icon} ${sector.nameAr}` : null,
+                    stallStage,
+                    stallCode,
+                    severity,
+                    progress: {
+                        hasCompany: !!company,
+                        hasObjectives: (counts.objectives || 0) > 0,
+                        hasKpis: (counts.kpis || 0) > 0,
+                        hasInitiatives: (counts.initiatives || 0) > 0,
+                        hasDeptData: hasDeptData,
+                        hasSector: !!sector
+                    }
+                });
+            }
+        });
+
+        // ترتيب: الأكثر خطورة أولاً ثم الأقدم
+        const sevOrder = { critical: 0, high: 1, medium: 2, low: 3, info: 4 };
+        stalledUsers.sort((a, b) => {
+            const diff = (sevOrder[a.severity] || 4) - (sevOrder[b.severity] || 4);
+            return diff !== 0 ? diff : b.daysSinceSignup - a.daysSinceSignup;
+        });
+
+        // إحصائيات ملخصة
+        const summary = {
+            total: stalledUsers.length,
+            noOnboarding: stalledUsers.filter(u => u.stallCode === 'NO_ONBOARDING').length,
+            noCompany: stalledUsers.filter(u => u.stallCode === 'NO_COMPANY').length,
+            noActivity: stalledUsers.filter(u => u.stallCode === 'NO_ACTIVITY').length,
+            stuckObjectives: stalledUsers.filter(u => u.stallCode === 'STUCK_OBJECTIVES').length,
+            inactive: stalledUsers.filter(u => u.stallCode === 'INACTIVE').length,
+        };
+
+        res.json({ success: true, data: stalledUsers, summary });
+    } catch (error) {
+        console.error('Admin stalled error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 module.exports = router;

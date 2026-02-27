@@ -35,6 +35,12 @@
             return;
         }
 
+        // Offline check
+        if (!navigator.onLine) {
+            showToast('⚡ لا يوجد اتصال بالإنترنت — سنحاول تلقائياً عند عودة الاتصال', 5000);
+            await waitForOnline();
+        }
+
         // Auto-inject entity context for SUPER_ADMIN impersonation
         const extraHeaders = {};
         const userData = getUserData();
@@ -42,45 +48,79 @@
             extraHeaders['X-Entity-Id'] = userData.entity.id;
         }
 
-        const res = await fetch(url, {
-            ...opts,
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-                ...extraHeaders,
-                ...opts.headers
-            }
-        });
+        const maxRetries = opts._noRetry ? 0 : 2;
+        let lastError = null;
 
-        if (res.status === 401) {
-            clearToken();
-            window.location.href = '/login';
-            return;
-        }
-
-        // فحص تعليق الحساب
-        if (res.status === 403) {
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
             try {
-                const errData = await res.clone().json();
-                if (errData.suspended) {
-                    localStorage.setItem('suspendReason', errData.reason || '');
-                    window.location.href = '/account-suspended.html';
+                const res = await fetch(url, {
+                    ...opts,
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        ...extraHeaders,
+                        ...opts.headers
+                    }
+                });
+
+                if (res.status === 401) {
+                    clearToken();
+                    window.location.href = '/login';
                     return;
                 }
-            } catch (e) { /* not JSON */ }
+
+                // فحص تعليق الحساب
+                if (res.status === 403) {
+                    try {
+                        const errData = await res.clone().json();
+                        if (errData.suspended) {
+                            localStorage.setItem('suspendReason', errData.reason || '');
+                            window.location.href = '/account-suspended.html';
+                            return;
+                        }
+                    } catch (e) { /* not JSON */ }
+                }
+
+                if (!res.ok) {
+                    const errorText = await res.text().catch(() => '');
+                    let errorMsg = `API ${res.status}: ${url}`;
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        errorMsg = errorJson.error || errorJson.message || errorMsg;
+                    } catch (e) { /* not JSON */ }
+                    // Don't retry 4xx client errors (except 408, 429)
+                    if (res.status >= 400 && res.status < 500 && res.status !== 408 && res.status !== 429) {
+                        throw new Error(errorMsg);
+                    }
+                    throw new Error(errorMsg);
+                }
+
+                return res.json();
+            } catch (err) {
+                lastError = err;
+                if (attempt < maxRetries) {
+                    // Exponential backoff: 500ms, 1500ms
+                    const delay = 500 * Math.pow(3, attempt);
+                    await new Promise(r => setTimeout(r, delay));
+                    continue;
+                }
+            }
         }
 
-        if (!res.ok) {
-            const errorText = await res.text().catch(() => '');
-            let errorMsg = `API ${res.status}: ${url}`;
-            try {
-                const errorJson = JSON.parse(errorText);
-                errorMsg = errorJson.error || errorJson.message || errorMsg;
-            } catch (e) { /* not JSON */ }
-            throw new Error(errorMsg);
-        }
+        throw lastError || new Error(`فشل الاتصال: ${url}`);
+    }
 
-        return res.json();
+    // === Wait for Online ===
+    function waitForOnline() {
+        return new Promise(resolve => {
+            if (navigator.onLine) return resolve();
+            const handler = () => {
+                window.removeEventListener('online', handler);
+                showToast('✅ عاد الاتصال — يتم استئناف العملية');
+                resolve();
+            };
+            window.addEventListener('online', handler);
+        });
     }
 
     // === Entity Context ===

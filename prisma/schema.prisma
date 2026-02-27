@@ -62,6 +62,45 @@ model EntityType {
 }
 
 // =========================================
+// 1b. SECTOR CONFIG (Industry Intelligence)
+// تخصيص ذكي حسب القطاع التجاري
+// =========================================
+
+/// إعدادات القطاع — أسئلة مخصصة + معادلات Break-Even + متوسطات
+model SectorConfig {
+  id   String @id @default(cuid())
+  code String @unique // CONSTRUCTION, RESTAURANT, RETAIL, etc.
+
+  // الأسماء
+  nameAr String // المقاولات والبناء
+  nameEn String // Construction
+  icon   String? // 🏗️
+  color  String? // #f59e0b
+
+  // الوحدة الأساسية للقطاع
+  unitLabelAr String? // المشروع / المستخلص المالي
+  unitLabelEn String? // Project / Financial Statement
+
+  // أسئلة مخصصة لكل دور (JSON strings)
+  cfoQuestions String? // أسئلة CFO المخصصة للقطاع
+  cmoQuestions String? // أسئلة CMO
+  cooQuestions String? // أسئلة COO
+
+  // حساب نقطة التعادل (Break-Even)
+  breakEvenFields String? // الحقول المطلوبة (JSON)
+  formulas        String? // معادلات الحساب (JSON)
+  benchmarks      String? // متوسطات القطاع (JSON)
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  entities Entity[]
+
+  @@map("sector_configs")
+}
+
+// =========================================
 // 2. COMPANY & SUBSCRIPTION (NEW — Evolution)
 // =========================================
 
@@ -159,9 +198,10 @@ model Entity {
   companyId String?
 
   // 🔗 الربط بشجرة التصنيف (اختياري)
-  sectorId   String?
-  industryId String?
-  typeId     String?
+  sectorId       String?
+  industryId     String?
+  typeId         String?
+  sectorConfigId String? // ✨ ربط بالقطاع الذكي
 
   // ✨ حقول جديدة — Phase 1
   size    String? // MICRO, SMALL, MEDIUM, LARGE, ENTERPRISE
@@ -178,10 +218,11 @@ model Entity {
   updatedAt DateTime @updatedAt
 
   // العلاقات
-  company    Company?    @relation(fields: [companyId], references: [id], onDelete: SetNull)
-  sector     Sector?     @relation(fields: [sectorId], references: [id], onDelete: SetNull)
-  industry   Industry?   @relation(fields: [industryId], references: [id], onDelete: SetNull)
-  entityType EntityType? @relation(fields: [typeId], references: [id], onDelete: SetNull)
+  company      Company?      @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  sector       Sector?       @relation(fields: [sectorId], references: [id], onDelete: SetNull)
+  industry     Industry?     @relation(fields: [industryId], references: [id], onDelete: SetNull)
+  entityType   EntityType?   @relation(fields: [typeId], references: [id], onDelete: SetNull)
+  sectorConfig SectorConfig? @relation(fields: [sectorConfigId], references: [id], onDelete: SetNull)
 
   // العلاقات مع النظام
   members            Member[]
@@ -198,6 +239,7 @@ model Entity {
   @@index([sectorId])
   @@index([industryId])
   @@index([typeId])
+  @@index([sectorConfigId])
   @@map("entities")
 }
 

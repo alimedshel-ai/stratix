@@ -765,7 +765,10 @@
                         <span class="pending-role" style="background:rgba(250,204,21,0.1);color:var(--yellow)">⏳ في الانتظار</span>
                         <div class="pending-actions">
                             <button class="pending-btn copy" onclick="copyInviteLink('${inv.token}')">
-                                <i class="bi bi-link-45deg"></i> نسخ الرابط
+                                <i class="bi bi-link-45deg"></i> نسخ
+                            </button>
+                            <button class="pending-btn" style="background:rgba(37,211,102,0.1);color:#25d366" onclick="shareWhatsAppByToken('${inv.token}', '${inv.name || inv.email}')">
+                                <i class="bi bi-whatsapp"></i>
                             </button>
                             <button class="pending-btn resend" onclick="resendInvite('${inv.id}')">
                                 <i class="bi bi-arrow-repeat"></i>
@@ -883,6 +886,9 @@
                             <button onclick="copyLink()" style="padding:8px 14px;background:var(--primary);color:white;border:none;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer">
                                 <i class="bi bi-clipboard"></i> نسخ
                             </button>
+                            <button onclick="shareWhatsApp('${data.inviteLink}', '${name || email}')" style="padding:8px 14px;background:#25d366;color:white;border:none;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:4px">
+                                <i class="bi bi-whatsapp"></i> واتساب
+                            </button>
                         </div>
                     </div>
                 `;
@@ -912,6 +918,16 @@
             const link = `${location.origin}/join?token=${invToken}`;
             navigator.clipboard.writeText(link);
             showToast('✅ تم نسخ الرابط!');
+        }
+
+        function shareWhatsApp(link, name) {
+            const msg = `مرحباً ${name || ''}،\nتمت دعوتك للانضمام إلى منصة ستراتيكس للتخطيط الاستراتيجي.\nاضغط الرابط لقبول الدعوة:\n${link}`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        function shareWhatsAppByToken(invToken, name) {
+            const link = `${location.origin}/join?token=${invToken}`;
+            shareWhatsApp(link, name);
         }
 
         async function cancelInvite(id) {

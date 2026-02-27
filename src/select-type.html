@@ -99,14 +99,14 @@
             font-weight: 700;
         }
 
-        /* === 3 Column Layout === */
+        /* === 4 Column Layout === */
         .columns-grid {
             position: relative;
             z-index: 1;
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
             gap: 16px;
-            max-width: 1100px;
+            max-width: 1300px;
             width: 100%;
             margin-bottom: 28px;
         }
@@ -486,7 +486,46 @@
             </div>
         </div>
 
-        <!-- العمود 3: القيادة -->
+        <!-- العمود 3: المستشار -->
+        <div class="col-card"
+            style="background: linear-gradient(160deg, #0f172a 0%, #1a2332 100%); border-color: rgba(56,189,248,0.15);">
+            <div class="col-header" style="color: #38bdf8;">
+                <span class="col-icon">🧠</span>
+                المستشارون والخبراء
+            </div>
+
+            <div class="type-item" data-category="CONSULTANT" data-route="consultant" style="--item-color: #38bdf8;"
+                onclick="selectCategory(this)">
+                <div class="item-emoji">💼</div>
+                <div class="item-info">
+                    <div class="item-title">مستشار مستقل</div>
+                    <div class="item-desc">أخدم عملائي وأبي أنظّم شغلي</div>
+                </div>
+                <span class="item-badge">8 أسئلة</span>
+            </div>
+
+            <div class="type-item" data-category="CONSULTANT_AGENCY" data-route="consultant"
+                style="--item-color: #0ea5e9;" onclick="selectCategory(this)">
+                <div class="item-emoji">🏢</div>
+                <div class="item-info">
+                    <div class="item-title">شركة استشارات</div>
+                    <div class="item-desc">عندي فريق وأبي أرتقي بخدماتي</div>
+                </div>
+                <span class="item-badge">8 أسئلة</span>
+            </div>
+
+            <div class="type-item" data-category="CONSULTANT_EXPERT" data-route="consultant"
+                style="--item-color: #06b6d4;" onclick="selectCategory(this)">
+                <div class="item-emoji">🎓</div>
+                <div class="item-info">
+                    <div class="item-title">خبير / مدرب أعمال</div>
+                    <div class="item-desc">أقدم تدريب أو إرشاد متخصص</div>
+                </div>
+                <span class="item-badge">8 أسئلة</span>
+            </div>
+        </div>
+
+        <!-- العمود 4: القيادة -->
         <div class="col-card dark-col">
             <div class="col-header leadership-header">
                 <span class="col-icon">🎯</span>
@@ -539,6 +578,13 @@
             ابدأ التشخيص <i class="bi bi-arrow-left"></i>
         </button>
         <div class="cta-hint" id="ctaHint">اختر مسارك أولاً</div>
+        <div style="margin-top:16px;">
+            <a href="/login?tab=signup&from=landing"
+                style="color:var(--text-muted); font-size:13px; text-decoration:underline; text-underline-offset:4px;">
+                <i class="bi bi-arrow-left-circle"></i>
+                ما أبي تشخيص — سجّلني مباشرة
+            </a>
+        </div>
     </div>
 
     <!-- استرجاع تشخيص سابق -->
@@ -587,12 +633,23 @@
             const category = selectedCard.dataset.category;
             const route = selectedRoute;
 
-            // حفظ الفئة والمسار الأصلي
+            // حفظ الفئة والمسار
             localStorage.setItem('stratix_category', category);
             localStorage.setItem('stratix_original_route', route);
             localStorage.setItem('stratix_diagnostic_started', 'true');
 
-            // ═══ جميع المسارات تمر بالموجه الذكي أولاً ═══
+            // حفظ diagnosticPath للمسار الجديد (login.html يقرأه)
+            if (category.startsWith('INDIVIDUAL_') || ['PERSONAL', 'CAREER', 'IDEA'].includes(category)) {
+                localStorage.setItem('diagnosticPath', category);
+            } else if (category.startsWith('CONSULTANT')) {
+                localStorage.setItem('diagnosticPath', 'CONSULTANT');
+            } else if (['CEO', 'DEPT_HR', 'DEPT_SALES', 'DEPT_MARKETING', 'DEPT_FINANCE', 'DEPT_OPS', 'DEPT_SERVICE'].includes(category)) {
+                localStorage.setItem('diagnosticPath', category);
+            } else {
+                localStorage.setItem('diagnosticPath', category);
+            }
+
+            // جميع المسارات تمر بالموجه الذكي
             window.location.href = '/smart-guide?category=' + category + '&route=' + route;
         }
 

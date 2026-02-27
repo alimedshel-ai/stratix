@@ -410,6 +410,9 @@
                     <div>
                         <h1 class="q-title" id="qTitle">جارٍ التحميل...</h1>
                         <div class="q-subtitle" id="qSubtitle"></div>
+                        <div id="sectorBadge"
+                            style="display:none;margin-top:6px;padding:4px 12px;border-radius:8px;font-size:12px;font-weight:700;width:fit-content">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -491,9 +494,10 @@
                 return;
             }
 
-            // 1. Load questionnaire template
+            // 1. Load questionnaire template (with entityId for sector-specific)
             try {
-                const res = await fetch(`/api/dept-data/questionnaire/${role}`, {
+                const qUrl = `/api/dept-data/questionnaire/${role}${entityId ? '?entityId=' + entityId : ''}`;
+                const res = await fetch(qUrl, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (!res.ok) throw new Error('Failed to load questionnaire');
@@ -534,11 +538,21 @@
 
             // 4. Render
             const color = DEPT_COLORS[deptCode?.toUpperCase()] || '#667eea';
-            document.getElementById('qIcon').textContent = questionnaire.icon;
+            document.getElementById('qIcon').textContent = questionnaire.icon || questionnaire._sectorConfig?.icon || '📊';
             document.getElementById('qIcon').style.background = `${color}20`;
             document.getElementById('qIcon').style.color = color;
             document.getElementById('qTitle').innerHTML = `<span>${questionnaire.title}</span>`;
             document.getElementById('qSubtitle').textContent = questionnaire.description;
+
+            // Show sector badge if sector-specific
+            if (questionnaire._sectorConfig) {
+                const badge = document.getElementById('sectorBadge');
+                badge.style.display = 'block';
+                badge.style.background = `${questionnaire._sectorConfig.color || color}15`;
+                badge.style.color = questionnaire._sectorConfig.color || color;
+                badge.style.border = `1px solid ${questionnaire._sectorConfig.color || color}30`;
+                badge.innerHTML = `${questionnaire._sectorConfig.icon || ''} ${questionnaire._sectorConfig.nameAr} — الوحدة: ${questionnaire._sectorConfig.unitLabel || ''}`;
+            }
 
             renderQuestions(savedData);
             document.getElementById('qActions').style.display = 'flex';
@@ -546,45 +560,93 @@
 
         function renderQuestions(saved) {
             const container = document.getElementById('qContainer');
-            container.innerHTML = questionnaire.questions.map((q, i) => {
-                const val = saved[q.id] || '';
-                const isFilled = val !== '' && val !== undefined && val !== null;
 
-                return `
-                <div class="q-card ${isFilled ? 'filled' : ''}" id="card-${q.id}">
-                    <div class="q-label-row">
-                        <span class="q-label">${q.label}</span>
-                        <div style="display:flex;align-items:center;gap:8px">
-                            <div class="q-filled-dot"></div>
-                            <span class="q-number">${i + 1}/${questionnaire.questions.length}</span>
-                        </div>
-                    </div>
+            // Flatten questions — support both flat (generic) and sections (sector-specific)
+            let allQuestions = [];
+            const benchmarks = questionnaire._sectorConfig?.benchmarks || questionnaire.benchmarks || {};
 
-                    ${q.type === 'select' ? `
-                        <select class="q-select" id="q-${q.id}" onchange="onInputChange('${q.id}')">
-                            <option value="">اختر...</option>
-                            ${q.options.map(opt => `
-                                <option value="${opt}" ${val === opt ? 'selected' : ''}>${opt}</option>
-                            `).join('')}
-                        </select>
-                    ` : `
-                        <div class="q-input-row">
-                            <input type="${q.type === 'percent' ? 'number' : 'number'}"
-                                class="q-input" id="q-${q.id}"
-                                value="${val}"
-                                placeholder="${q.placeholder || ''}"
-                                step="${q.type === 'percent' ? '0.1' : '1'}"
-                                oninput="onInputChange('${q.id}')">
-                            <span class="q-unit">${q.unit || ''}</span>
-                        </div>
-                    `}
+            if (questionnaire.sections) {
+                // Sector-specific format with sections
+                let html = '';
+                questionnaire.sections.forEach((section, si) => {
+                    html += `<div style="margin-top:${si > 0 ? '28' : '0'}px;margin-bottom:12px;font-size:14px;font-weight:800;color:var(--primary);display:flex;align-items:center;gap:8px">
+                        <div style="flex:1;height:1px;background:rgba(102,126,234,0.15)"></div>
+                        ${section.title}
+                        <div style="flex:3;height:1px;background:rgba(102,126,234,0.15)"></div>
+                    </div>`;
 
-                    ${q.hint ? `<div class="q-hint"><i class="bi bi-info-circle"></i> ${q.hint}</div>` : ''}
-                </div>
-                `;
-            }).join('');
+                    section.questions.forEach(q => {
+                        allQuestions.push(q);
+                        html += renderSingleQuestion(q, allQuestions.length, saved, benchmarks);
+                    });
+                });
+                container.innerHTML = html;
+            } else if (questionnaire.questions) {
+                // Generic flat format
+                allQuestions = questionnaire.questions;
+                container.innerHTML = allQuestions.map((q, i) =>
+                    renderSingleQuestion(q, i + 1, saved, benchmarks)
+                ).join('');
+            }
 
+            // Store for progress tracking
+            questionnaire._allQuestions = allQuestions;
             updateProgress();
+        }
+
+        function renderSingleQuestion(q, index, saved, benchmarks) {
+            const val = saved[q.id] || '';
+            const isFilled = val !== '' && val !== undefined && val !== null;
+            const total = questionnaire._allQuestions?.length || questionnaire.questions?.length || '?';
+            const bm = benchmarks[q.id];
+
+            let benchmarkHtml = '';
+            if (bm && isFilled && q.type !== 'select') {
+                const numVal = parseFloat(val);
+                const status = numVal <= bm.good ? 'good' : numVal >= bm.bad ? 'bad' : 'avg';
+                const statusColors = { good: '#22c55e', avg: '#f59e0b', bad: '#ef4444' };
+                const statusLabels = { good: 'أفضل من المتوسط', avg: 'ضمن المتوسط', bad: 'أعلى من المتوسط' };
+                benchmarkHtml = `
+                    <div style="margin-top:8px;display:flex;align-items:center;gap:8px;font-size:11px">
+                        <div style="width:8px;height:8px;border-radius:50%;background:${statusColors[status]}"></div>
+                        <span style="color:${statusColors[status]};font-weight:700">${statusLabels[status]}</span>
+                        <span style="color:var(--muted)">• متوسط القطاع: ${bm.avg}${q.unit || ''}</span>
+                    </div>`;
+            }
+
+            return `
+            <div class="q-card ${isFilled ? 'filled' : ''}" id="card-${q.id}">
+                <div class="q-label-row">
+                    <span class="q-label">${q.label}</span>
+                    <div style="display:flex;align-items:center;gap:8px">
+                        <div class="q-filled-dot"></div>
+                        <span class="q-number">${index}/${total}</span>
+                    </div>
+                </div>
+
+                ${q.type === 'select' ? `
+                    <select class="q-select" id="q-${q.id}" onchange="onInputChange('${q.id}')">
+                        <option value="">اختر...</option>
+                        ${q.options.map(opt => `
+                            <option value="${opt}" ${val === opt ? 'selected' : ''}>${opt}</option>
+                        `).join('')}
+                    </select>
+                ` : `
+                    <div class="q-input-row">
+                        <input type="number"
+                            class="q-input" id="q-${q.id}"
+                            value="${val}"
+                            placeholder="${q.placeholder || ''}"
+                            step="${q.type === 'percent' ? '0.1' : '1'}"
+                            oninput="onInputChange('${q.id}')">
+                        <span class="q-unit">${q.unit || ''}</span>
+                    </div>
+                `}
+
+                ${q.hint ? `<div class="q-hint"><i class="bi bi-info-circle"></i> ${q.hint}</div>` : ''}
+                ${benchmarkHtml}
+            </div>
+            `;
         }
 
         function onInputChange(questionId) {
@@ -606,15 +668,16 @@
         }
 
         function updateProgress() {
-            const total = questionnaire.questions.length;
+            const questions = questionnaire._allQuestions || questionnaire.questions || [];
+            const total = questions.length;
             let filled = 0;
 
-            questionnaire.questions.forEach(q => {
+            questions.forEach(q => {
                 const input = document.getElementById(`q-${q.id}`);
                 if (input && input.value && input.value !== '') filled++;
             });
 
-            const pct = Math.round((filled / total) * 100);
+            const pct = total > 0 ? Math.round((filled / total) * 100) : 0;
             document.getElementById('progressFill').style.width = pct + '%';
             document.getElementById('progressLabel').textContent = pct + '%';
             document.getElementById('progressText').textContent = `${filled} من ${total} سؤال مكتمل`;
@@ -632,7 +695,8 @@
 
         function collectAnswers() {
             const answers = {};
-            questionnaire.questions.forEach(q => {
+            const questions = questionnaire._allQuestions || questionnaire.questions || [];
+            questions.forEach(q => {
                 const input = document.getElementById(`q-${q.id}`);
                 if (input && input.value) {
                     answers[q.id] = input.value;

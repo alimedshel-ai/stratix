@@ -172,6 +172,10 @@ function showSection(sectionId) {
         overview: ['نظرة عامة', 'ملخص حالة النظام والإحصائيات'],
         users: ['إدارة المستخدمين', 'عرض وتعديل وإضافة المستخدمين'],
         companies: ['إدارة الشركات', 'عرض وإدارة الشركات والاشتراكات'],
+        sectors: ['إدارة القطاعات', 'عرض القطاعات وربطها بالكيانات'],
+        coverage: ['تغطية الاستبيانات', 'حالة ملء بيانات الأقسام لكل كيان'],
+        system: ['صحة النظام', 'مراقبة أداء الخادم وقاعدة البيانات'],
+        stalled: ['العملاء المتوقفين', 'عملاء لم يكملوا التسجيل أو توقفوا عن الاستخدام'],
         progress: ['العمليات الاستراتيجية', 'مراقبة تقدم الشركات في رحلتها الاستراتيجية'],
         alerts: ['التنبيهات المركزية', 'كل التنبيهات والإشعارات في مكان واحد'],
         settings: ['إعدادات النظام', 'أمان وسجلات ونسخ احتياطي']
@@ -186,6 +190,10 @@ function showSection(sectionId) {
         case 'overview': renderOverview(); break;
         case 'users': renderUsers(); break;
         case 'companies': renderCompanies(); break;
+        case 'sectors': renderSectors(); break;
+        case 'coverage': renderCoverage(); break;
+        case 'system': renderSystemHealth(); break;
+        case 'stalled': renderStalled(); break;
         case 'progress': renderProgress(); break;
         case 'alerts': renderAlerts(); break;
     }
@@ -799,6 +807,360 @@ function showToast(message, type = 'success') {
     setTimeout(() => {
         if (toast.parentNode) toast.parentNode.removeChild(toast);
     }, 4000);
+}
+
+// ═══ Render Sectors ═══
+async function renderSectors() {
+    const grid = document.getElementById('sectors-grid');
+    if (!grid) return;
+    grid.innerHTML = '<div class="loading-placeholder">⏳ جار التحميل...</div>';
+
+    try {
+        const res = await fetch('/api/sector-configs', { headers: getHeaders() });
+        const data = await res.json();
+        const sectors = data.data || data || [];
+
+        // Update sidebar badge
+        const badge = document.getElementById('nav-sectors-count');
+        if (badge) badge.textContent = sectors.length;
+
+        if (sectors.length === 0) {
+            grid.innerHTML = '<div class="loading-placeholder">لا توجد قطاعات مزروعة بعد</div>';
+            return;
+        }
+
+        grid.innerHTML = sectors.map(s => {
+            const hasQ = (field) => s[field] ? '✅' : '❌';
+            return `
+            <div style="background:#12141f;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:16px;border-top:3px solid ${s.color || '#667eea'}">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                    <span style="font-size:28px">${s.icon || '📊'}</span>
+                    <div>
+                        <div style="font-size:14px;font-weight:800">${s.nameAr}</div>
+                        <div style="font-size:11px;color:#7a8599">${s.code} — ${s.nameEn}</div>
+                    </div>
+                </div>
+                <div style="font-size:12px;color:#7a8599;line-height:1.8">
+                    الأسئلة: CFO ${hasQ('cfoQuestions')} | CMO ${hasQ('cmoQuestions')} | COO ${hasQ('cooQuestions')}<br>
+                    الوحدة: ${s.unitLabelAr || '—'}<br>
+                    الكيانات المرتبطة: <strong style="color:#e2e8f0">${s._count?.entities ?? s.entitiesCount ?? '—'}</strong>
+                </div>
+            </div>
+            `;
+        }).join('');
+
+        // Populate dropdowns for linking
+        const sectorSelect = document.getElementById('link-sector-select');
+        if (sectorSelect) {
+            sectorSelect.innerHTML = '<option value="">اختر قطاع...</option>' +
+                sectors.map(s => `<option value="${s.code}">${s.icon} ${s.nameAr} (${s.code})</option>`).join('');
+        }
+
+        // Load entities for linking
+        const entitySelect = document.getElementById('link-entity-select');
+        if (entitySelect && entitySelect.options.length <= 1) {
+            try {
+                const eRes = await fetch('/api/admin/companies?limit=200', { headers: getHeaders() });
+                const eData = await eRes.json();
+                const companies = eData.data || [];
+                companies.forEach(c => {
+                    if (c.entities) {
+                        c.entities.forEach(ent => {
+                            const opt = document.createElement('option');
+                            opt.value = ent.id;
+                            opt.textContent = `${ent.legalName || ent.displayName || c.name} (${c.name})`;
+                            entitySelect.appendChild(opt);
+                        });
+                    }
+                });
+            } catch (e) {
+                console.warn('Could not load entities:', e);
+            }
+        }
+    } catch (e) {
+        grid.innerHTML = '<div class="loading-placeholder">❌ فشل تحميل القطاعات</div>';
+    }
+}
+
+async function linkEntityToSector() {
+    const entityId = document.getElementById('link-entity-select')?.value;
+    const sectorCode = document.getElementById('link-sector-select')?.value;
+    const resultEl = document.getElementById('link-result');
+
+    if (!entityId || !sectorCode) {
+        if (resultEl) resultEl.innerHTML = '<span style="color:#ef4444">اختر كيان وقطاع أولاً</span>';
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/sector-configs/link-entity', {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({ entityId, sectorConfigCode: sectorCode })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            if (resultEl) resultEl.innerHTML = `<span style="color:#22c55e">✅ تم الربط بنجاح: ${data.entity?.legalName || entityId} ← ${sectorCode}</span>`;
+            showToast('تم ربط القطاع بنجاح ✅', 'success');
+            renderSectors(); // refresh
+        } else {
+            if (resultEl) resultEl.innerHTML = `<span style="color:#ef4444">❌ ${data.error || 'فشل الربط'}</span>`;
+        }
+    } catch (e) {
+        if (resultEl) resultEl.innerHTML = '<span style="color:#ef4444">❌ خطأ في الاتصال</span>';
+    }
+}
+
+// ═══ Render Coverage ═══
+async function renderCoverage() {
+    const container = document.getElementById('coverage-list');
+    if (!container) return;
+    container.innerHTML = '<div class="loading-placeholder">⏳ جار التحميل...</div>';
+
+    try {
+        const res = await fetch('/api/admin/companies?limit=200', { headers: getHeaders() });
+        const data = await res.json();
+        const companies = data.data || [];
+
+        if (companies.length === 0) {
+            container.innerHTML = '<div class="loading-placeholder">لا توجد شركات</div>';
+            return;
+        }
+
+        let html = `<table style="width:100%;border-collapse:collapse;font-size:13px">
+            <thead>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.08);color:#7a8599">
+                    <th style="text-align:right;padding:10px">الشركة</th>
+                    <th style="text-align:center;padding:10px">القطاع</th>
+                    <th style="text-align:center;padding:10px">CFO</th>
+                    <th style="text-align:center;padding:10px">CMO</th>
+                    <th style="text-align:center;padding:10px">COO</th>
+                    <th style="text-align:center;padding:10px">اكتمال</th>
+                </tr>
+            </thead>
+            <tbody>`;
+
+        for (const c of companies) {
+            const hasSector = c.sectorCode || c.sector ? '✅' : '—';
+            const depts = c.departments || [];
+            const hasCFO = depts.some(d => d.code === 'FINANCE' && d.hasData) ? '✅' : '❌';
+            const hasCMO = depts.some(d => d.code === 'MARKETING' && d.hasData) ? '✅' : '❌';
+            const hasCOO = depts.some(d => d.code === 'OPERATIONS' && d.hasData) ? '✅' : '❌';
+            const filled = [hasCFO, hasCMO, hasCOO].filter(x => x === '✅').length;
+            const pct = Math.round((filled / 3) * 100);
+            const barColor = pct >= 100 ? '#22c55e' : pct >= 66 ? '#f59e0b' : '#ef4444';
+
+            html += `
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
+                <td style="padding:10px;font-weight:700">${c.name || '—'}</td>
+                <td style="text-align:center;padding:10px">${hasSector}</td>
+                <td style="text-align:center;padding:10px">${hasCFO}</td>
+                <td style="text-align:center;padding:10px">${hasCMO}</td>
+                <td style="text-align:center;padding:10px">${hasCOO}</td>
+                <td style="text-align:center;padding:10px">
+                    <div style="display:flex;align-items:center;gap:6px;justify-content:center">
+                        <div style="width:50px;height:6px;border-radius:3px;background:rgba(255,255,255,0.06);overflow:hidden">
+                            <div style="width:${pct}%;height:100%;background:${barColor};border-radius:3px"></div>
+                        </div>
+                        <span style="font-size:11px;color:${barColor}">${pct}%</span>
+                    </div>
+                </td>
+            </tr>`;
+        }
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    } catch (e) {
+        container.innerHTML = '<div class="loading-placeholder">❌ فشل التحميل</div>';
+    }
+}
+
+// ═══ Render System Health ═══
+async function renderSystemHealth() {
+    const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+
+    // System info
+    try {
+        const res = await fetch('/api/admin/stats', { headers: getHeaders() });
+        const data = await res.json();
+        const s = data.data || {};
+
+        // Count tables
+        const tables = Object.keys(s).filter(k => k.startsWith('total')).length;
+        el('sys-tables', `${tables}+`);
+
+        // Uptime
+        const uptime = process?.uptime ? process.uptime() : null;
+        el('sys-uptime', '—');
+
+        // Sector count
+        try {
+            const sRes = await fetch('/api/sector-configs', { headers: getHeaders() });
+            const sData = await sRes.json();
+            const sectorCount = (sData.data || sData || []).length;
+            el('sys-sectors', sectorCount);
+        } catch (e) {
+            el('sys-sectors', '—');
+        }
+
+        el('sys-db-size', 'SQLite');
+
+        // System info panel
+        const infoEl = document.getElementById('system-info');
+        if (infoEl) {
+            infoEl.innerHTML = `
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px">
+                <div style="background:#12141f;padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,0.06)">
+                    <div style="font-size:11px;color:#667eea;font-weight:700;margin-bottom:6px">📊 إحصائيات قاعدة البيانات</div>
+                    👥 المستخدمين: <strong style="color:#e2e8f0">${s.totalUsers || 0}</strong><br>
+                    🏢 الشركات: <strong style="color:#e2e8f0">${s.totalCompanies || 0}</strong><br>
+                    📦 الكيانات: <strong style="color:#e2e8f0">${s.totalEntities || 0}</strong><br>
+                    📋 التقييمات: <strong style="color:#e2e8f0">${s.totalAssessments || 0}</strong><br>
+                    🎯 الأهداف: <strong style="color:#e2e8f0">${s.totalObjectives || 0}</strong><br>
+                    📈 المؤشرات: <strong style="color:#e2e8f0">${s.totalKpis || 0}</strong>
+                </div>
+                <div style="background:#12141f;padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,0.06)">
+                    <div style="font-size:11px;color:#22c55e;font-weight:700;margin-bottom:6px">🟢 النشاط</div>
+                    نشطين اليوم: <strong style="color:#e2e8f0">${s.activeToday || 0}</strong><br>
+                    مستخدمين جدد (شهر): <strong style="color:#e2e8f0">${s.newUsersThisMonth || 0}</strong><br>
+                    شركات جديدة (شهر): <strong style="color:#e2e8f0">${s.newCompaniesThisMonth || 0}</strong><br>
+                    اشتراكات تنتهي: <strong style="color:${s.expiringSubscriptions > 0 ? '#ef4444' : '#e2e8f0'}">${s.expiringSubscriptions || 0}</strong>
+                </div>
+                <div style="background:#12141f;padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,0.06)">
+                    <div style="font-size:11px;color:#f59e0b;font-weight:700;margin-bottom:6px">⚡ التقدم الاستراتيجي</div>
+                    مكتمل: <strong style="color:#22c55e">${s.swotCompleted || 0}</strong><br>
+                    قيد التنفيذ: <strong style="color:#f59e0b">${s.inDiagnosis || 0}</strong><br>
+                    متعثرة: <strong style="color:#ef4444">${s.stuck || 0}</strong><br>
+                    لم تبدأ: <strong style="color:#7a8599">${s.notStarted || 0}</strong>
+                </div>
+            </div>
+            `;
+        }
+    } catch (e) {
+        console.error('System health error:', e);
+    }
+}
+
+// ═══ Render Stalled Users ═══
+let stalledData = [];
+let stalledFilter = 'all';
+
+async function renderStalled(filter) {
+    const container = document.getElementById('stalled-list');
+    if (!container) return;
+    container.innerHTML = '<div class="loading-placeholder">⏳ جار تحميل البيانات...</div>';
+
+    try {
+        const res = await fetch('/api/admin/stalled', { headers: getHeaders() });
+        const data = await res.json();
+
+        if (!data.success) {
+            container.innerHTML = '<div class="loading-placeholder">❌ فشل التحميل</div>';
+            return;
+        }
+
+        stalledData = data.data || [];
+        const summary = data.summary || {};
+
+        // Update stats
+        const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+        el('stalled-total', summary.total || 0);
+        el('stalled-onboarding', summary.noOnboarding || 0);
+        el('stalled-company', summary.noCompany || 0);
+        el('stalled-activity', (summary.noActivity || 0) + (summary.stuckObjectives || 0) + (summary.inactive || 0));
+        el('nav-stalled-count', summary.total || '0');
+
+        renderStalledTable(filter || stalledFilter);
+    } catch (e) {
+        container.innerHTML = '<div class="loading-placeholder">❌ خطأ في الاتصال</div>';
+    }
+}
+
+function filterStalled(code) {
+    stalledFilter = code;
+    renderStalledTable(code);
+}
+
+function renderStalledTable(filter) {
+    const container = document.getElementById('stalled-list');
+    if (!container) return;
+
+    let filtered = [...stalledData];
+    if (filter && filter !== 'all') {
+        filtered = filtered.filter(u => u.stallCode === filter);
+    }
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="loading-placeholder">✅ لا يوجد عملاء متوقفين في هذا التصنيف</div>';
+        return;
+    }
+
+    const sevColors = {
+        critical: { bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.2)', color: '#ef4444' },
+        high: { bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)', color: '#f59e0b' },
+        medium: { bg: 'rgba(56,189,248,0.08)', border: 'rgba(56,189,248,0.2)', color: '#38bdf8' },
+        low: { bg: 'rgba(148,163,184,0.08)', border: 'rgba(148,163,184,0.2)', color: '#94a3b8' },
+    };
+
+    container.innerHTML = filtered.map(u => {
+        const sc = sevColors[u.severity] || sevColors.low;
+        const p = u.progress || {};
+
+        // Pipeline progress dots
+        const steps = [
+            { label: 'تسجيل', done: u.onboardingCompleted },
+            { label: 'شركة', done: p.hasCompany },
+            { label: 'قطاع', done: p.hasSector },
+            { label: 'أقسام', done: p.hasDeptData },
+            { label: 'أهداف', done: p.hasObjectives },
+            { label: 'مؤشرات', done: p.hasKpis },
+        ];
+
+        const pipeline = steps.map(s =>
+            `<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+                <div style="width:18px;height:18px;border-radius:50%;background:${s.done ? '#22c55e' : 'rgba(255,255,255,0.08)'};display:flex;align-items:center;justify-content:center;font-size:10px">${s.done ? '✓' : ''}</div>
+                <span style="font-size:9px;color:${s.done ? '#22c55e' : '#525d73'}">${s.label}</span>
+            </div>`
+        ).join('<div style="width:16px;height:2px;background:rgba(255,255,255,0.06);margin-top:-10px;flex-shrink:0"></div>');
+
+        const timeAgo = u.daysSinceSignup === 0 ? 'اليوم' :
+            u.daysSinceSignup === 1 ? 'أمس' :
+                u.daysSinceSignup < 30 ? `${u.daysSinceSignup} يوم` :
+                    `${Math.floor(u.daysSinceSignup / 30)} شهر`;
+
+        return `
+        <div style="display:flex;gap:14px;padding:14px;border-radius:12px;background:${sc.bg};border:1px solid ${sc.border};margin-bottom:10px;align-items:center;flex-wrap:wrap">
+            <!-- Avatar + Info -->
+            <div style="flex-shrink:0;width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,${sc.color}40,${sc.color}20);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:${sc.color}">
+                ${(u.name || '?').substring(0, 2)}
+            </div>
+            <div style="flex:1;min-width:200px">
+                <div style="font-size:14px;font-weight:700">${u.name}</div>
+                <div style="font-size:11px;color:#7a8599;direction:ltr;text-align:right">${u.email}</div>
+                ${u.phone ? `<div style="font-size:11px;color:#7a8599;direction:ltr;text-align:right">📱 ${u.phone}</div>` : ''}
+                ${u.company ? `<div style="font-size:11px;color:#94a3b8;margin-top:2px">🏢 ${u.company}</div>` : ''}
+            </div>
+
+            <!-- Stage Badge -->
+            <div style="flex-shrink:0">
+                <span style="padding:4px 12px;border-radius:8px;font-size:11px;font-weight:700;background:${sc.bg};color:${sc.color};border:1px solid ${sc.border};white-space:nowrap">
+                    ${u.stallStage}
+                </span>
+                <div style="font-size:10px;color:#525d73;margin-top:4px;text-align:center">منذ ${timeAgo}</div>
+            </div>
+
+            <!-- Pipeline -->
+            <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+                ${pipeline}
+            </div>
+
+            <!-- Actions -->
+            <div style="flex-shrink:0;display:flex;gap:6px">
+                ${u.email ? `<a href="mailto:${u.email}" style="padding:5px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:#e2e8f0;font-size:11px;text-decoration:none;cursor:pointer">📧 تواصل</a>` : ''}
+                <button onclick="deleteUser('${u.id}', '${u.name}')" style="padding:5px 10px;border-radius:8px;border:1px solid rgba(239,68,68,0.2);background:transparent;color:#ef4444;font-size:11px;font-family:inherit;cursor:pointer">🗑️</button>
+            </div>
+        </div>`;
+    }).join('');
 }
 
 // ═══ CSS Animation for refresh ═══

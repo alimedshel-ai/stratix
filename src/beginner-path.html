@@ -985,14 +985,19 @@
             const data = { ...state, patternKey: pk, pattern: PATTERNS[pk].name, selectedPlan: plan.plan, timestamp: new Date().toISOString() };
             localStorage.setItem('beginnerDiagnostic', JSON.stringify(data));
             localStorage.setItem('stratix_selected_plan', plan.plan);
-            const token = localStorage.getItem('token');
-            if (token) {
-                const user = JSON.parse(localStorage.getItem('user') || '{}');
-                if (user.onboardingCompleted) { window.location.href = '/dashboard.html'; }
-                else { window.location.href = '/onboarding.html'; }
-            } else {
-                window.location.href = '/login?tab=signup&from=diagnostic';
-            }
+
+            // حفظ بيانات التشخيص بصيغة موحّدة لصفحة النتيجة
+            const category = localStorage.getItem('stratix_category') || 'INDIVIDUAL_PERSONAL';
+            localStorage.setItem('stratix_smart_guide', JSON.stringify({
+                category: category,
+                pattern: { name: PATTERNS[pk].name, score: pk === 'dreamer' ? 35 : pk === 'cautious' ? 40 : pk === 'learner' ? 55 : pk === 'planner' ? 65 : pk === 'hustler' ? 70 : 60 },
+                score: pk === 'dreamer' ? 35 : pk === 'cautious' ? 40 : pk === 'learner' ? 55 : pk === 'planner' ? 65 : pk === 'hustler' ? 70 : 60,
+                answers: data,
+                timestamp: new Date().toISOString()
+            }));
+
+            // التوجيه لصفحة النتيجة الموحّدة
+            window.location.href = '/diagnostic-result?from=beginner-path&category=' + category;
         }
     </script>
 </body>

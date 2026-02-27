@@ -600,6 +600,11 @@
                             <div class="sel-title">الطاقة</div>
                             <div class="sel-desc">نفط وغاز وطاقة متجددة</div>
                         </div>
+                        <div class="selection-card" data-sector="ecommerce" onclick="selectSector(this)">
+                            <i class="bi bi-cart4"></i>
+                            <div class="sel-title">التجارة الإلكترونية</div>
+                            <div class="sel-desc">متاجر إلكترونية وتطبيقات</div>
+                        </div>
                         <div class="selection-card" data-sector="professional_services" onclick="selectSector(this)">
                             <i class="bi bi-briefcase"></i>
                             <div class="sel-title">الخدمات المهنية</div>
@@ -948,6 +953,40 @@
                         localStorage.setItem('user', JSON.stringify(user));
                         // تحديث التوكن لو رجع واحد جديد
                         if (result.token) localStorage.setItem('token', result.token);
+
+                        // ✨ S1.5: ربط القطاع بـ SectorConfig
+                        if (result.entityId && selectedSectors.length > 0) {
+                            const SECTOR_MAP = {
+                                'construction': 'CONSTRUCTION',
+                                'restaurant': 'RESTAURANT', 'food_beverage': 'RESTAURANT',
+                                'retail': 'RETAIL',
+                                'manufacturing': 'MANUFACTURING', 'industrial': 'MANUFACTURING',
+                                'ecommerce': 'ECOMMERCE',
+                                'healthcare': 'HEALTHCARE', 'medical': 'HEALTHCARE',
+                                'tech': 'TECH', 'technology': 'TECH', 'it': 'TECH',
+                                'professional_services': 'SERVICES', 'consulting': 'SERVICES', 'services': 'SERVICES',
+                            };
+                            const primarySector = selectedSectors.find(s => s !== 'other' && !s.startsWith('custom:'));
+                            const configCode = SECTOR_MAP[primarySector];
+                            if (configCode) {
+                                try {
+                                    await fetch('/api/sector-configs/link-entity', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Authorization': 'Bearer ' + token
+                                        },
+                                        body: JSON.stringify({
+                                            entityId: result.entityId,
+                                            sectorConfigCode: configCode
+                                        })
+                                    });
+                                    console.log(`✅ Entity linked to sector: ${configCode}`);
+                                } catch (e) {
+                                    console.warn('Sector link failed:', e);
+                                }
+                            }
+                        }
                     } else {
                         console.warn('⚠️ Onboarding save warning:', result);
                     }
