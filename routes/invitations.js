@@ -3,6 +3,7 @@ const prisma = require('../lib/prisma');
 const bcrypt = require('bcryptjs');
 const { verifyToken } = require('../middleware/auth');
 const { checkPermission } = require('../middleware/permission');
+const { sendMail, invitationEmail } = require('../lib/mailer');
 
 const router = express.Router();
 
@@ -89,12 +90,28 @@ router.post('/', verifyToken, checkPermission('ADMIN'), async (req, res) => {
                 invitedBy: req.user.id,
                 message: message || null,
                 expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 أيام
-            }
+            },
+            include: { entity: { select: { displayName: true, legalName: true } } }
         });
 
         // بناء رابط الدعوة
         const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
         const inviteLink = `${baseUrl}/join?token=${invitation.token}`;
+
+        // Send invitation email (non-blocking)
+        const roleLabel = DEPARTMENT_ROLES[departmentRole]?.label || departmentRole;
+        const entityName = invitation.entity?.displayName || invitation.entity?.legalName || 'الشركة';
+        const inviterName = req.user?.name || 'أحد الأعضاء';
+        const tmpl = invitationEmail({
+            inviteeName: name || '',
+            invitedByName: inviterName,
+            entityName,
+            role: roleLabel,
+            inviteLink,
+            message: message || null,
+            expiresAt: invitation.expiresAt,
+        });
+        sendMail({ to: email, ...tmpl }).catch(() => {});
 
         res.status(201).json({
             invitation,
@@ -333,6 +350,22 @@ router.post('/:id/resend', verifyToken, checkPermission('ADMIN'), async (req, re
 
         const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
         const inviteLink = `${baseUrl}/join?token=${invitation.token}`;
+
+        // Re-send invitation email (non-blocking)
+        const resendEntity = await prisma.entity.findUnique({
+            where: { id: invitation.entityId },
+            select: { displayName: true, legalName: true }
+        });
+        const resendTmpl = invitationEmail({
+            inviteeName: invitation.name || '',
+            invitedByName: req.user?.name || 'أحد الأعضاء',
+            entityName: resendEntity?.displayName || resendEntity?.legalName || 'الشركة',
+            role: invitation.departmentRole,
+            inviteLink,
+            message: invitation.message,
+            expiresAt: invitation.expiresAt,
+        });
+        sendMail({ to: invitation.email, ...resendTmpl }).catch(() => {});
 
         res.json({
             message: 'تم تجديد الدعوة بنجاح',
