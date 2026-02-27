@@ -249,6 +249,41 @@
       allowedPages: null, // null = كل الصفحات مسموحة (المسار الكلاسيكي)
     },
 
+    // ─── 9. المسار الذهبي (خيط ذهبي — 6 مراحل متكاملة) ───
+    golden_express: {
+      name: 'المسار الذهبي',
+      nameEn: 'Golden Path',
+      emoji: '✨',
+      color: '#f59e0b',
+      description: '6 مراحل متكاملة: الألم → البنية → التشخيص → الخيارات → التنفيذ → المتابعة',
+      estimatedTime: '4-6 ساعات',
+      steps: [
+        { label: '💔 الألم والطموح', href: '/pain-ambition.html', icon: 'bi-heart-pulse', phase: 'FOUNDATION_START' },
+        { label: '🏗️ بنيتنا', href: '/onboarding.html', icon: 'bi-building-gear', phase: 'FOUNDATION' },
+        { label: '🔍 تشخيصي', href: '/analysis.html', icon: 'bi-search-heart', phase: 'DIAGNOSIS' },
+        { label: '🎯 خياراتي', href: '/tows.html', icon: 'bi-signpost-split', phase: 'PLANNING' },
+        { label: '🚀 تنفيذي', href: '/initiatives.html', icon: 'bi-rocket-takeoff', phase: 'EXECUTION' },
+        { label: '📊 متابعتي', href: '/reviews.html', icon: 'bi-bar-chart-line', phase: 'ADAPTATION' },
+      ],
+      allowedPages: [
+        // الألم والطموح
+        '/pain-ambition.html',
+        // بنيتنا
+        '/onboarding.html', '/entities.html', '/sectors.html', '/settings-data.html',
+        // تشخيصي
+        '/analysis.html', '/assessments.html', '/internal-env.html',
+        '/stakeholders.html', '/risk-map.html', '/statistical-data.html',
+        // خياراتي
+        '/tows.html', '/directions.html', '/objectives.html', '/kpis.html', '/okrs.html',
+        // تنفيذي
+        '/initiatives.html', '/projects.html', '/tasks.html', '/kpi-entries.html',
+        // متابعتي
+        '/reviews.html', '/intelligence.html', '/corrections.html', '/strategic-calendar.html',
+        // نظامية دائمة
+        '/dashboard.html', '/settings.html', '/tools.html', '/tool-detail.html',
+      ],
+    },
+
   };
 
   // ═══════════════════════════════════════════════
