@@ -602,6 +602,21 @@
         // ═══ اختيار نوع المستخدم ═══
         let selectedUserType = null;
 
+        // تنظيف بيانات قديمة إذا مو جاي من تشخيص حالي
+        const signupParams = new URLSearchParams(window.location.search);
+        const comingFromDiag = signupParams.get('from') === 'diagnostic' || signupParams.get('from') === 'smart-guide' || signupParams.get('from') === 'dept';
+        if (!comingFromDiag && !localStorage.getItem('token')) {
+            // مستخدم جديد بدون تشخيص → ننظف بيانات جلسة قديمة
+            localStorage.removeItem('diagnosticPath');
+            localStorage.removeItem('stratix_category');
+            localStorage.removeItem('stratix_user_type');
+            localStorage.removeItem('stratix_company_name');
+            localStorage.removeItem('stratix_sector');
+            localStorage.removeItem('stratix_dept');
+            localStorage.removeItem('stratix_smart_guide');
+            localStorage.removeItem('stratix_diagnostic_started');
+        }
+
         // إذا جاي من تشخيص → أخفي سؤال النوع وأحدده تلقائياً
         const diagPath = localStorage.getItem('diagnosticPath') || localStorage.getItem('stratix_category') || '';
         const savedUserType = localStorage.getItem('stratix_user_type') || '';
