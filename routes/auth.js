@@ -171,8 +171,7 @@ router.post('/register', async (req, res) => {
         entity: null,
         memberships: [],
       },
-      // إخبار الفرونت بالتوجيه حسب نوع المستخدم
-      redirectTo: (user.userCategory || '').startsWith('INDIVIDUAL_') ? '/dashboard.html' : '/onboarding',
+      // التوجيه يتم من الفرونت (login.html) حسب نوع المستخدم وبياناته
     });
   } catch (error) {
     console.error('Registration Error:', error);
