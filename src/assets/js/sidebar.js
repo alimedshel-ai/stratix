@@ -218,6 +218,7 @@
   const toolsAndReportsItems = [
     { label: 'تقاريري', href: '/auto-reports.html', icon: 'bi-file-earmark-bar-graph', roles: [] },
     { label: 'الأدوات الاستراتيجية', href: '/tools.html', icon: 'bi-tools', roles: [] },
+    { label: 'الفحص المالي', href: '/finance-audit.html', icon: 'bi-clipboard2-pulse-fill', roles: [] },
     { label: 'الذكاء الاستراتيجي', href: '/intelligence.html', icon: 'bi-robot', roles: [] },
     { label: 'المقارنة المعيارية', href: '/benchmarking.html', icon: 'bi-bar-chart-line-fill', roles: [] },
     { label: 'مختبر المحاكاة', href: '/simulation-lab.html', icon: 'bi-bezier2', roles: ['OWNER', 'ADMIN', 'EDITOR'] },
@@ -274,7 +275,9 @@
         entityLegalName = u.entity?.legalName || u.entity?.displayName || '';
         companyNameAr = u.entity?.company?.nameAr || u.entity?.company?.nameEn || '';
         const roleMap = { OWNER: 'مالك', ADMIN: 'مدير', EDITOR: 'محرر', VIEWER: 'مشاهد' };
-        userRoleLabel = roleMap[u.role] || u.role || '';
+        // أولاً: التسمية حسب userType (أدق من role)
+        const typeMap = { DEPT_MANAGER: 'مدير إدارة', CONSULTANT: 'مستشار', INDIVIDUAL: 'فرد', COMPANY_MANAGER: 'مالك' };
+        userRoleLabel = typeMap[u.userType] || roleMap[u.role] || u.role || '';
         if (u.systemRole === 'SUPER_ADMIN') userRoleLabel = 'مدير النظام';
       }
     } catch (e) { /* ignore */ }
@@ -382,6 +385,92 @@
           html += PE.buildClassicToggleHTML();
         }
       }
+    }
+
+    // ╔═══════════════════════════════════════════╗
+    // ║  🏢 رحلة مدير الإدارة (DEPT_MANAGER)       ║
+    // ╚═══════════════════════════════════════════╝
+    if (!isViewerOrDE && userType === 'DEPT_MANAGER' && !isSmartPath) {
+      html += '<div class="stx-divider"></div>';
+      html += '<div class="stx-section-label"><i class="bi bi-compass-fill" style="color:#f59e0b;margin-left:4px"></i> رحلة إدارتي</div>';
+
+      const deptJourney = [
+        {
+          id: 'DEPT_ANALYSIS',
+          nameAr: 'تحليل الوضع',
+          icon: 'bi-search-heart',
+          emoji: '🔍',
+          color: '#3b82f6',
+          items: [
+            { label: 'البيئة الداخلية', href: '/internal-env.html', icon: 'bi-building-fill-check' },
+            { label: 'تحليل SWOT', href: '/swot.html', icon: 'bi-grid-1x2-fill' },
+            { label: 'تحليل الفجوات', href: '/gap-analysis.html', icon: 'bi-arrows-expand' },
+            { label: 'خريطة المخاطر', href: '/risk-map.html', icon: 'bi-exclamation-triangle-fill' },
+          ]
+        },
+        {
+          id: 'DEPT_PLANNING',
+          nameAr: 'التخطيط',
+          icon: 'bi-signpost-split',
+          emoji: '🎯',
+          color: '#a78bfa',
+          items: [
+            { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass-fill' },
+            { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye' },
+            { label: 'مؤشرات الأداء', href: '/kpis.html', icon: 'bi-graph-up-arrow' },
+          ]
+        },
+        {
+          id: 'DEPT_EXECUTION',
+          nameAr: 'التنفيذ',
+          icon: 'bi-rocket-takeoff',
+          emoji: '🚀',
+          color: '#22c55e',
+          items: [
+            { label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban-fill' },
+            { label: 'المهام', href: '/tasks.html', icon: 'bi-check2-square' },
+            { label: 'إدخال المؤشرات', href: '/kpi-entries.html', icon: 'bi-pencil-square' },
+          ]
+        },
+        {
+          id: 'DEPT_REVIEW',
+          nameAr: 'المتابعة',
+          icon: 'bi-bar-chart-line',
+          emoji: '📊',
+          color: '#0891b2',
+          items: [
+            { label: 'المراجعات الدورية', href: '/reviews.html', icon: 'bi-journal-check' },
+            { label: 'التقارير', href: '/auto-reports.html', icon: 'bi-file-earmark-bar-graph' },
+            { label: 'الذكاء الاستراتيجي', href: '/intelligence.html', icon: 'bi-stars' },
+          ]
+        },
+      ];
+
+      deptJourney.forEach((phase, idx) => {
+        const hasActiveItem = phase.items.some(item => isActive(item.href));
+        const isOpen = hasActiveItem;
+
+        html += `
+          <div class="stx-phase ${isOpen ? 'in-progress open' : ''}" data-phase="dept-${idx}">
+            <div class="stx-phase-header" onclick="togglePhase('dept-${idx}')" style="--phase-color: ${phase.color}">
+              <span class="stx-phase-status"><i class="bi bi-circle-fill" style="font-size:10px;color:${phase.color}"></i></span>
+              <span class="stx-phase-name">
+                <i class="bi ${phase.icon}" style="color:${phase.color}"></i>
+                ${phase.nameAr}
+              </span>
+              <i class="bi bi-chevron-down stx-chevron"></i>
+            </div>
+            <div class="stx-phase-items" ${isOpen ? 'style="max-height:500px"' : ''}>
+              ${phase.items.map(item => `
+                <a href="${item.href}" class="stx-item ${isActive(item.href) ? 'active' : ''}" title="${item.label}">
+                  <i class="bi ${item.icon}"></i>
+                  <span class="stx-item-label">${item.label}</span>
+                </a>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      });
     }
 
     // ╔═══════════════════════════════════════════╗

@@ -254,12 +254,14 @@ const deptDataRoutes = require('./routes/dept-data');
 const rulesEngineRoutes = require('./routes/rules-engine');
 const sectorConfigsRoutes = require('./routes/sector-configs');
 const breakEvenRoutes = require('./routes/break-even');
+const cfoAuditRoutes = require('./routes/cfo-audit');
 app.use('/api/departments', departmentsRoutes);
 app.use('/api/invitations', invitationsRoutes);
 app.use('/api/dept-data', deptDataRoutes);
 app.use('/api/rules-engine', rulesEngineRoutes);
 app.use('/api/sector-configs', sectorConfigsRoutes);
 app.use('/api/break-even', breakEvenRoutes);
+app.use('/api/cfo', cfoAuditRoutes);
 
 
 // Serve pain-ambition page
@@ -611,6 +613,18 @@ app.get('/break-even-result.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'src', 'break-even-result.html'));
 });
 
+// Redirect old CFO Board Pitch URLs to new Finance Audit page
+app.get('/cfo-board-pitch', (req, res) => res.redirect('/finance-audit'));
+app.get('/cfo-board-pitch.html', (req, res) => res.redirect('/finance-audit'));
+
+// Serve Finance Audit page (new CFO flow)
+app.get('/finance-audit', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'finance-audit.html'));
+});
+app.get('/finance-audit.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'finance-audit.html'));
+});
+
 // Serve API Docs
 app.get('/api-docs-page', (req, res) => {
   res.sendFile(path.join(__dirname, 'src', 'api-docs.html'));
@@ -709,6 +723,11 @@ app.get('/individual-dashboard', (req, res) => {
 // Serve Smart Guide page
 app.get('/smart-guide', (req, res) => {
   res.sendFile(path.join(__dirname, 'src', 'smart-guide.html'));
+});
+
+// Serve Department Diagnostic page
+app.get('/dept-diagnostic', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'dept-diagnostic.html'));
 });
 
 // Serve Tools Guide page

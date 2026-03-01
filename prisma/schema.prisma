@@ -182,8 +182,9 @@ model User {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
-  memberships Member[]
-  auditLogs   AuditLog[]
+  memberships     Member[]
+  auditLogs       AuditLog[]
+  financialAudits FinancialAudit[]
 
   @@map("users")
 }
@@ -285,8 +286,9 @@ model Department {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  entity  Entity   @relation(fields: [entityId], references: [id], onDelete: Cascade)
-  members Member[]
+  entity          Entity             @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  members         Member[]
+  financialAudits FinancialAudit[]
 
   @@unique([entityId, code])
   @@index([entityId])
@@ -1315,4 +1317,94 @@ model Integration {
   @@index([entityId])
   @@index([type])
   @@map("integrations")
+}
+
+// =========================================
+// CFO BOARD PITCH — الفحص المالي + الخطة الآلية
+// =========================================
+
+/// المعايير المرجعية لكل قطاع
+model FinancialBenchmark {
+  id               String   @id @default(cuid())
+  sectorId         String   @unique
+  sectorName       String
+
+  collectionDays   Int      @default(45)
+  profitMargin     Float    @default(0.15)
+  cashRunwayMonths Int      @default(3)
+  debtToEquity     Float    @default(0.5)
+  currentRatio     Float    @default(1.5)
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("financial_benchmarks")
+}
+
+/// إدخالات الفحص المالي — 3 أرقام + 5 نوعية
+model FinancialAudit {
+  id               String   @id @default(cuid())
+  departmentId     String
+  userId           String
+
+  // الأرقام الثلاثة
+  netMargin        Float
+  collectionDays   Int
+  cashRunwayMonths Float
+
+  // الاستبيان النوعي
+  automationLevel  String   // high / medium / low
+  dataSpeed        String   // instant / days / weeks
+  strategicRole    String   // full / limited / recorder
+  teamSkill        String   // advanced / basic
+  executionBarrier String   // authority / culture / resources
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  department       Department         @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  strategicPlan    AutoStrategicPlan?
+
+  @@index([departmentId])
+  @@index([userId])
+  @@map("financial_audits")
+}
+
+/// الخطة الاستراتيجية المولّدة آلياً من محرك الاستنتاج
+model AutoStrategicPlan {
+  id                    String    @id @default(cuid())
+  departmentId          String
+  auditId               String    @unique
+
+  // SWOT (JSON strings — متوافق مع SQLite)
+  strengths             String    // JSON array
+  weaknesses            String    // JSON array
+  opportunities         String    // JSON array
+  threats               String    // JSON array
+
+  // الأهداف المقترحة
+  suggestedGoals        String    // JSON array of objects
+
+  // خطاب مجلس الإدارة
+  boardPitchText        String
+
+  // الأرقام المحسوبة فعلياً
+  calculatedRisk        String
+  calculatedSaving      Float
+  calculatedImprovement Float
+
+  maturityLevel         String    // Operational / Tactical / Strategic
+  score                 Int       // 0-100
+
+  isApproved            Boolean   @default(false)
+  approvedAt            DateTime?
+
+  audit                 FinancialAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([departmentId])
+  @@map("auto_strategic_plans")
 }
