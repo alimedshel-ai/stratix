@@ -15,7 +15,8 @@
   // === قراءة الدور ونوع المستخدم من localStorage ===
   let userRole = 'VIEWER';
   let systemRole = 'USER';
-  let userType = 'EXPLORER'; // EXPLORER, COMPANY_MANAGER, DEPT_MANAGER, CONSULTANT
+  let userType = 'COMPANY_MANAGER'; // [SIMPLIFIED] كل المستخدمين = شركات حالياً
+  // [BACKUP] let userType = 'EXPLORER'; // EXPLORER, COMPANY_MANAGER, DEPT_MANAGER, CONSULTANT
   let entityId = '';
   let token = '';
   try {
@@ -24,7 +25,8 @@
       const parsed = JSON.parse(stored);
       userRole = parsed.role || 'VIEWER';
       systemRole = parsed.systemRole || 'USER';
-      userType = parsed.userType || 'EXPLORER';
+      userType = 'COMPANY_MANAGER'; // [SIMPLIFIED] فرض مسار الشركة للكل
+      // [BACKUP] userType = parsed.userType || 'EXPLORER';
       entityId = (parsed.entity && parsed.entity.id) || parsed.activeEntityId || '';
     }
     token = localStorage.getItem('token') || '';
@@ -43,7 +45,8 @@
     DEPT_MANAGER: { showJourney: false, showVision: true, showAdvanced: false, limitedDiagnosis: false },
     CONSULTANT: { showJourney: true, showVision: true, showAdvanced: true, limitedDiagnosis: false },
   };
-  const currentRules = typeRules[userType] || typeRules.EXPLORER;
+  const currentRules = typeRules['COMPANY_MANAGER']; // [SIMPLIFIED] دايماً مسار الشركة
+  // [BACKUP] const currentRules = typeRules[userType] || typeRules.EXPLORER;
   // SUPER_ADMIN and OWNER always see everything
   if (isSuperAdmin || userRole === 'OWNER') {
     currentRules.showJourney = true;
@@ -64,11 +67,13 @@
 
   // === كشف نوع المستخدم: 5 مستويات ===
   // INDIVIDUAL = فرد | FOUNDER = مؤسس (0-10) | SMALL = صغيرة (11-50) | MEDIUM = متوسطة (51-200) | LARGE = كبيرة (200+)
-  let _sidebarIsIndividual = false;
+  let _sidebarIsIndividual = false; // [SIMPLIFIED] لا وضع شخصي حالياً
   let _sidebarCompanyLevel = 'MEDIUM'; // افتراضي آمن — كل الأدوات ظاهرة
 
   function _detectLevelFromCategory(cat) {
-    if (cat.startsWith('INDIVIDUAL_') || cat === 'CONSULTANT_SOLO') { _sidebarIsIndividual = true; return; }
+    // [SIMPLIFIED] تجاهل الوضع الشخصي حالياً
+    // [BACKUP] if (cat.startsWith('INDIVIDUAL_') || cat === 'CONSULTANT_SOLO') { _sidebarIsIndividual = true; return; }
+    if (cat.startsWith('INDIVIDUAL_') || cat === 'CONSULTANT_SOLO') { _sidebarIsIndividual = false; return; }
     if (cat === 'NEW_PROJECT') _sidebarCompanyLevel = 'FOUNDER';
     else if (cat === 'COMPANY_MICRO') _sidebarCompanyLevel = 'FOUNDER';
     else if (cat === 'COMPANY_SMALL') _sidebarCompanyLevel = 'SMALL';
