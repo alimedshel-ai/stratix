@@ -99,7 +99,7 @@ const router = express.Router();
 // ═══════════════════════════════════════════════════════
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name, phone, userCategory, diagnosticData } = req.body;
+    const { email, password, name, phone, userCategory, userType: reqUserType, diagnosticData } = req.body;
 
     // 1. التحقق من البيانات المطلوبة (إيميل + باسورد فقط — الباقي اختياري للاختبار)
     if (!email || !password) {
@@ -128,7 +128,16 @@ router.post('/register', async (req, res) => {
     // 4. تشفير كلمة المرور
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 5. إنشاء المستخدم فقط (بدون شركة/كيان)
+    // 5. تحديد userType من المرسل أو من userCategory
+    let detectedUserType = reqUserType || 'EXPLORER';
+    if (!reqUserType && userCategory) {
+      if (userCategory.startsWith('DEPT_')) detectedUserType = 'DEPT_MANAGER';
+      else if (userCategory.startsWith('INDIVIDUAL_') || userCategory === 'CONSULTANT_SOLO') detectedUserType = 'INDIVIDUAL';
+      else if (userCategory === 'CONSULTANT_AGENCY') detectedUserType = 'CONSULTANT';
+      else if (['COMPANY_MICRO', 'COMPANY_SMALL', 'COMPANY_MEDIUM', 'COMPANY_LARGE', 'COMPANY_ENTERPRISE', 'NEW_PROJECT', 'CEO'].includes(userCategory)) detectedUserType = 'COMPANY_MANAGER';
+    }
+
+    // 6. إنشاء المستخدم فقط (بدون شركة/كيان)
     const user = await prisma.user.create({
       data: {
         email,
@@ -142,7 +151,7 @@ router.post('/register', async (req, res) => {
       },
     });
 
-    // 6. إنشاء JWT token
+    // 7. إنشاء JWT token
     const token = jwt.sign(
       {
         id: user.id,
@@ -150,12 +159,13 @@ router.post('/register', async (req, res) => {
         name: user.name,
         systemRole: 'USER',
         role: 'OWNER', // سيصبح OWNER عند إنشاء الكيان
+        userType: detectedUserType,
       },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
-    // 7. الرد
+    // 8. الرد
     res.status(201).json({
       message: 'تم إنشاء الحساب بنجاح',
       token,
@@ -166,6 +176,7 @@ router.post('/register', async (req, res) => {
         phone: user.phone,
         systemRole: 'USER',
         role: 'OWNER',
+        userType: detectedUserType,
         userCategory: user.userCategory,
         onboardingCompleted: false,
         entity: null,
@@ -352,7 +363,16 @@ router.post('/login', validateLogin, async (req, res) => {
     // SUPER_ADMIN يحصل على OWNER تلقائياً لو ما عنده membership
     const isSA = user.systemRole === 'SUPER_ADMIN';
     const primaryRole = user.memberships[0]?.role || (isSA ? 'OWNER' : 'VIEWER');
-    const primaryUserType = user.memberships[0]?.userType || 'EXPLORER';
+    let primaryUserType = user.memberships[0]?.userType || null;
+    // إذا ما عنده membership — نستنتج من userCategory
+    if (!primaryUserType) {
+      const cat = user.userCategory || '';
+      if (cat.startsWith('DEPT_')) primaryUserType = 'DEPT_MANAGER';
+      else if (cat.startsWith('INDIVIDUAL_') || cat === 'CONSULTANT_SOLO') primaryUserType = 'INDIVIDUAL';
+      else if (cat === 'CONSULTANT_AGENCY') primaryUserType = 'CONSULTANT';
+      else if (['COMPANY_MICRO', 'COMPANY_SMALL', 'COMPANY_MEDIUM', 'COMPANY_LARGE', 'COMPANY_ENTERPRISE', 'NEW_PROJECT', 'CEO'].includes(cat)) primaryUserType = 'COMPANY_MANAGER';
+      else primaryUserType = 'EXPLORER';
+    }
     const primaryEntity = user.memberships[0]?.entity || null;
 
     // Generate JWT token
@@ -617,6 +637,13 @@ router.post('/complete-onboarding', verifyToken, async (req, res) => {
     // إنشاء كل شي في Transaction واحد
     const entityName = companyName || 'منشأتي';
 
+    // تحديد نوع المستخدم الفعلي من userCategory
+    const currentUser = await prisma.user.findUnique({ where: { id: userId }, select: { userCategory: true } });
+    const cat = currentUser?.userCategory || '';
+    let actualUserType = 'COMPANY_MANAGER';
+    if (cat.startsWith('DEPT_')) actualUserType = 'DEPT_MANAGER';
+    else if (cat === 'CONSULTANT_AGENCY') actualUserType = 'CONSULTANT';
+
     const result = await prisma.$transaction(async (tx) => {
       // 1. إنشاء الشركة
       const company = await tx.company.create({
@@ -639,13 +666,13 @@ router.post('/complete-onboarding', verifyToken, async (req, res) => {
         },
       });
 
-      // 3. إنشاء العضوية (المستخدم = مالك)
+      // 3. إنشاء العضوية (بالنوع الفعلي)
       await tx.member.create({
         data: {
           userId,
           entityId: entity.id,
           role: 'OWNER',
-          userType: 'COMPANY_MANAGER',
+          userType: actualUserType,
         },
       });
 
@@ -699,7 +726,7 @@ router.post('/complete-onboarding', verifyToken, async (req, res) => {
         name: user.name,
         systemRole: user.systemRole || 'USER',
         role: 'OWNER',
-        userType: 'COMPANY_MANAGER',
+        userType: actualUserType,
         entityId: result.entity.id,
         companyId: result.company.id,
       },

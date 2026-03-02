@@ -950,9 +950,17 @@
                         if (result.companyId) {
                             localStorage.setItem('companyId', result.companyId);
                         }
-                        localStorage.setItem('user', JSON.stringify(user));
                         // تحديث التوكن لو رجع واحد جديد
-                        if (result.token) localStorage.setItem('token', result.token);
+                        if (result.token) {
+                            localStorage.setItem('token', result.token);
+                            // استخراج userType من التوكن الجديد
+                            try {
+                                const payload = JSON.parse(atob(result.token.split('.')[1]));
+                                if (payload.userType) user.userType = payload.userType;
+                                if (payload.role) user.role = payload.role;
+                            } catch (e) { }
+                        }
+                        localStorage.setItem('user', JSON.stringify(user));
 
                         // ✨ S1.5: ربط القطاع بـ SectorConfig
                         if (result.entityId && selectedSectors.length > 0) {

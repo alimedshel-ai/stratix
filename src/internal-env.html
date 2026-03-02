@@ -967,7 +967,8 @@
             const count = state.selectedDepts.length;
             const arabicCount = ['٠', '١', '٢', '٣', '٤', '٥', '٦'][count] || count;
             document.getElementById('selectedCount').textContent = arabicCount;
-            document.getElementById('btnStartQuestions').disabled = count < 3;
+            const minDepts = window._isDeptManager ? 1 : 3;
+            document.getElementById('btnStartQuestions').disabled = count < minDepts;
 
             // Update button text dynamically
             const totalQ = count * 4;
@@ -1619,6 +1620,43 @@
         async function init() {
             renderDepartments();
 
+            // ═══ مدير إدارة: اختيار تلقائي لإدارته فقط ═══
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const savedDept = localStorage.getItem('stratix_dept') || user.userCategory || '';
+            const isDeptManager = user.userType === 'DEPT_MANAGER' || savedDept.startsWith('DEPT_');
+            window._isDeptManager = isDeptManager;
+
+            if (isDeptManager) {
+                // ربط DEPT_FINANCE → finance
+                const DEPT_MAP = {
+                    'DEPT_HR': 'hr', 'DEPT_FINANCE': 'finance', 'DEPT_MARKETING': 'marketing',
+                    'DEPT_OPS': 'operations', 'DEPT_SERVICE': 'cs', 'DEPT_SALES': 'sales',
+                    'DEPT_IT': 'it', 'DEPT_LEGAL': 'quality', 'DEPT_RND': 'projects',
+                    'DEPT_PROCUREMENT': 'operations', 'DEPT_QUALITY': 'quality', 'DEPT_PMO': 'projects'
+                };
+                const mappedDept = DEPT_MAP[savedDept] || null;
+                const deptObj = mappedDept ? DEPARTMENTS.find(d => d.id === mappedDept) : null;
+                const deptName = deptObj ? deptObj.nameAr : 'إدارتك';
+
+                // تحديث العنوان والوصف ليناسب مدير إدارة واحدة
+                document.querySelector('.hero h1').textContent = `🏢 تحليل ${deptName}`;
+                document.getElementById('heroDesc').innerHTML = `
+                    حلل أداء <strong>${deptName}</strong> بعمق — أجب على ٤ أسئلة وشوف النتائج والتوصيات الذكية.
+                `;
+
+                if (mappedDept) {
+                    // اختيار الإدارة تلقائياً
+                    state.selectedDepts = [mappedDept];
+
+                    // إخفاء شاشة الاختيار وتشغيل الأسئلة مباشرة
+                    document.getElementById('screen1').style.display = 'none';
+                    // تأخير بسيط عشان الـ rendering يخلص
+                    setTimeout(() => {
+                        startQuestions();
+                    }, 300);
+                }
+            }
+
             // Try to load existing analysis
             if (!state.versionId) {
                 try {
@@ -1656,9 +1694,11 @@
                             showReminderBanner(data);
 
                             // Update hero description
-                            document.getElementById('heroDesc').innerHTML = `
-                                لديك تحليل سابق. يمكنك <strong>إعادة التحليل</strong> لنفس الإدارات أو إدارات مختلفة — وسنعرض لك <span style="color:var(--teal)">المقارنة مع آخر تحليل تلقائياً</span>.
-                            `;
+                            if (!isDeptManager) {
+                                document.getElementById('heroDesc').innerHTML = `
+                                    لديك تحليل سابق. يمكنك <strong>إعادة التحليل</strong> لنفس الإدارات أو إدارات مختلفة — وسنعرض لك <span style="color:var(--teal)">المقارنة مع آخر تحليل تلقائياً</span>.
+                                `;
+                            }
                         }
                     }
                 } catch (e) {

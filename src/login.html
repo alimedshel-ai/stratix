@@ -639,8 +639,8 @@
                 selectedUserType = 'BUSINESS';
             }
 
-            // أظهر حقل المنشأة إذا مطلوب
-            if (selectedUserType !== 'INDIVIDUAL') {
+            // أظهر حقل المنشأة إذا مطلوب (مدير الإدارة لا يحتاجه هنا — الـ onboarding بعدين يسأله)
+            if (selectedUserType !== 'INDIVIDUAL' && selectedUserType !== 'DEPT_MANAGER') {
                 const cs = document.getElementById('companySection');
                 if (cs) cs.style.display = 'block';
 
@@ -673,9 +673,8 @@
             if (selectedUserType === 'INDIVIDUAL') {
                 companySection.style.display = 'none';
             } else if (selectedUserType === 'DEPT_MANAGER') {
-                companySection.style.display = 'block';
-                companyLabel.innerHTML = 'اسم الشركة التي تعمل بها <i class="bi bi-info-circle info-icon" data-bs-toggle="tooltip" title="اسم الشركة اللي إدارتك فيها"></i>';
-                companyInput.placeholder = 'مثال: شركة المراعي';
+                // مدير الإدارة — ما يحتاج اسم الشركة هنا (بياخذه في صفحة التأسيس)
+                companySection.style.display = 'none';
             } else {
                 companySection.style.display = 'block';
                 companyLabel.innerHTML = 'اسم المنشأة <i class="bi bi-info-circle info-icon" data-bs-toggle="tooltip" title="اسم شركتك أو مؤسستك"></i>';
@@ -734,6 +733,7 @@
                         phone: phone || undefined,
                         companyName: companyName || null,
                         userCategory,
+                        userType: selectedUserType || undefined,
                         diagnosticData,
                         smartGuideData,
                         sector: localStorage.getItem('stratix_sector') || undefined,
@@ -744,6 +744,10 @@
 
                 if (res.ok && data.token) {
                     localStorage.setItem('token', data.token);
+                    // إضافة userType للـ user data إذا ما كان موجود
+                    if (selectedUserType && !data.user.userType) {
+                        data.user.userType = selectedUserType;
+                    }
                     localStorage.setItem('user', JSON.stringify(data.user));
 
                     // التوجيه حسب النوع
@@ -757,8 +761,9 @@
                         // فرد أو مستشار مستقل → يدخل مباشرة
                         window.location.href = '/individual-dashboard.html';
                     } else if (userCategory.startsWith('DEPT_') || selectedUserType === 'DEPT_MANAGER') {
-                        // مدير إدارة → داشبورد مباشرة (بياناته اكتملت)
-                        window.location.href = '/dept-dashboard.html';
+                        // مدير إدارة → تحقق من وجود كيان
+                        const hasEntity = !!(data.user?.entity?.id);
+                        window.location.href = hasEntity ? '/dept-dashboard.html' : '/onboarding.html?mode=dept';
                     } else if (localStorage.getItem('stratix_company_name') && localStorage.getItem('stratix_sector')) {
                         // منشأة + بيانات الشركة كاملة → داشبورد مباشرة
                         if (userCategory === 'CONSULTANT_AGENCY') {

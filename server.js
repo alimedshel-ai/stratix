@@ -46,6 +46,7 @@ const commentsRoutes = require('./routes/comments');
 const activitiesRoutes = require('./routes/activities');
 const aiAdvisorRoutes = require('./routes/ai-advisor');
 const adminRoutes = require('./routes/admin');
+const financialEngineRoutes = require('./routes/financial-engine');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -120,6 +121,15 @@ const sensitiveLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Financial Engine limiter (guest-accessible, moderate protection)
+const engineLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: process.env.NODE_ENV === 'production' ? 30 : 200,
+  message: { error: 'طلبات تحليل كثيرة. حاول بعد 15 دقيقة.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Apply rate limiting to all routes
 app.use('/api/', limiter);
 
@@ -161,6 +171,9 @@ app.use('/api/auth', authLimiter, authRoutes);
 
 // 🔓 Path — المسار الاستراتيجي
 app.use('/api/path', pathRoutes);
+
+// 🧠 Financial Engine — محرك الترجمة المالية (Guest-accessible — بدون login)
+app.use('/api/financial-engine', engineLimiter, financialEngineRoutes);
 
 // 📊 Dashboard — كل مستخدم مسجل
 app.use('/api/dashboard', dashboardApiRoutes);
@@ -264,9 +277,39 @@ app.use('/api/break-even', breakEvenRoutes);
 app.use('/api/cfo', cfoAuditRoutes);
 
 
-// Serve pain-ambition page
+// Serve pain-screen page (v4-A — شاشة الألم)
+app.get('/pain-screen', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'pain-screen.html'));
+});
+
+// Backward compat: pain-ambition → pain-screen
 app.get('/pain-ambition', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'pain-ambition.html'));
+  res.redirect('/pain-screen' + (req.query.category ? '?category=' + req.query.category : ''));
+});
+
+// Serve financial-input page (v4-A — صفحة إدخال الأرقام المالية)
+app.get('/financial-input', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'financial-input.html'));
+});
+
+// Serve financial-result page (v4-A — نتيجة الفحص المالي)
+app.get('/financial-result', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'financial-result.html'));
+});
+
+// Serve financial-report page (v4-A — التقرير المالي الكامل)
+app.get('/financial-report', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'financial-report.html'));
+});
+
+// Serve strategy-hub page (v4-A — مركز القيادة الاستراتيجي)
+app.get('/strategy-hub', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'strategy-hub.html'));
+});
+
+// Serve action-plan page (v4-A — خطة العمل الاستراتيجية)
+app.get('/action-plan', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'action-plan.html'));
 });
 
 // Serve import page
@@ -441,7 +484,7 @@ app.get('/alerts', (req, res) => {
 
 // Serve TOWS Matrix page
 app.get('/tows', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'tows.html'));
+  res.sendFile(path.join(__dirname, 'src', 'tows.html'));
 });
 
 // Serve Strategy Map / Causal Links page

@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس — مركز القيادة الاستراتيجي</title>
+    <meta name="description" content="لوحة تحكم شاملة لمتابعة تشخيصك الاستراتيجي عبر جميع الإدارات">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0d14;
+            --bg-card: #141825;
+            --bg-card-light: #1a1f30;
+            --text: #e2e8f0;
+            --text-muted: #8b8ba7;
+            --border: rgba(255, 255, 255, 0.06);
+            --primary: #7c3aed;
+            --accent: #38bdf8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-y: auto;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 15% 15%, rgba(124, 58, 237, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 85% 85%, rgba(56, 189, 248, 0.04) 0%, transparent 50%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* === Top Bar === */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(10, 13, 20, 0.88);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .top-bar .logo {
+            font-size: 20px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #a78bfa, #38bdf8);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .user-pill i {
+            color: var(--primary);
+        }
+
+        /* === Main Layout === */
+        .dashboard {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 80px 20px 60px;
+        }
+
+        /* === Welcome Section === */
+        .welcome {
+            margin-bottom: 28px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .welcome h1 {
+            font-size: 26px;
+            font-weight: 900;
+            margin-bottom: 6px;
+        }
+
+        .welcome h1 .name {
+            color: var(--accent);
+        }
+
+        .welcome p {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+
+        /* === Resume Banner === */
+        .resume-banner {
+            display: none;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 20px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(245, 158, 11, 0.04));
+            border: 1px solid rgba(251, 191, 36, 0.2);
+            margin-bottom: 24px;
+            animation: fadeIn 0.5s ease 0.1s both;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .resume-banner.active {
+            display: flex;
+        }
+
+        .resume-banner:hover {
+            border-color: rgba(251, 191, 36, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .resume-banner .rb-icon {
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .resume-banner .rb-body {
+            flex: 1;
+        }
+
+        .resume-banner .rb-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: #fbbf24;
+            margin-bottom: 2px;
+        }
+
+        .resume-banner .rb-desc {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .resume-banner .rb-arrow {
+            color: rgba(251, 191, 36, 0.5);
+            font-size: 18px;
+        }
+
+        /* === Score + Radar Row === */
+        .top-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+            animation: fadeIn 0.5s ease 0.15s both;
+        }
+
+        .overall-score-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .os-ring {
+            width: 120px;
+            height: 120px;
+            position: relative;
+            margin-bottom: 14px;
+        }
+
+        .os-ring svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .os-ring svg circle {
+            fill: none;
+            stroke-width: 8;
+        }
+
+        .os-ring .ring-bg {
+            stroke: rgba(255, 255, 255, 0.06);
+        }
+
+        .os-ring .ring-fill {
+            stroke-linecap: round;
+            transform: rotate(-90deg);
+            transform-origin: center;
+            stroke-dasharray: 314;
+            stroke-dashoffset: 314;
+            transition: stroke-dashoffset 1.2s ease;
+        }
+
+        .os-ring .ring-num {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .os-ring .ring-num .num {
+            font-size: 36px;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .os-ring .ring-num .sub {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .os-label {
+            font-size: 14px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .os-sublabel {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .os-completed {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 10px;
+            padding: 4px 12px;
+            border-radius: 10px;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        /* === Radar Card === */
+        .radar-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .radar-card .rc-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .radar-card canvas {
+            max-width: 220px;
+            width: 100%;
+            height: auto;
+        }
+
+        .radar-card .rc-hint {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.25);
+            margin-top: 10px;
+        }
+
+        /* === Section Title === */
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 16px;
+        }
+
+        .section-title i {
+            color: var(--primary);
+        }
+
+        .section-title .count-badge {
+            margin-right: auto;
+            font-size: 10px;
+            padding: 2px 10px;
+            border-radius: 8px;
+            background: rgba(124, 58, 237, 0.1);
+            color: #a78bfa;
+            font-weight: 700;
+        }
+
+        /* === Department Grid === */
+        .dept-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 28px;
+            animation: fadeIn 0.5s ease 0.25s both;
+        }
+
+        .dept-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 22px 20px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .dept-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 3px;
+            background: var(--dept-color, var(--border));
+        }
+
+        .dept-card.completed {
+            border-color: rgba(16, 185, 129, 0.15);
+        }
+
+        .dept-card.completed::before {
+            background: var(--success);
+        }
+
+        .dept-card.locked:hover {
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .dept-card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .dc-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .dc-header .dc-icon-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dc-header .dc-icon {
+            font-size: 24px;
+        }
+
+        .dc-header .dc-title {
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .dc-header .dc-status {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 8px;
+        }
+
+        .dc-status.done {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .dc-status.soon {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+        }
+
+        .dc-body {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 14px;
+        }
+
+        .dc-score-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .dc-score-bar .dsb-track {
+            flex: 1;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .dc-score-bar .dsb-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1s ease;
+        }
+
+        .dc-score-bar .dsb-num {
+            font-size: 14px;
+            font-weight: 900;
+            min-width: 36px;
+            text-align: left;
+        }
+
+        .dc-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .dc-btn.primary {
+            background: linear-gradient(135deg, var(--primary), #a78bfa);
+            color: #fff;
+        }
+
+        .dc-btn.primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(124, 58, 237, 0.3);
+        }
+
+        .dc-btn.view {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.15);
+        }
+
+        .dc-btn.view:hover {
+            background: rgba(16, 185, 129, 0.18);
+        }
+
+        .dc-btn.locked {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-muted);
+            cursor: default;
+        }
+
+        .dc-btn .lock-icon {
+            font-size: 11px;
+            opacity: 0.5;
+        }
+
+        /* === Quick Actions === */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 28px;
+            animation: fadeIn 0.5s ease 0.35s both;
+        }
+
+        .qa-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .qa-card:hover {
+            border-color: rgba(124, 58, 237, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .qa-card .qa-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .qa-card .qa-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        /* === Responsive === */
+        @media (max-width: 768px) {
+            .dashboard {
+                padding: 72px 16px 40px;
+            }
+
+            .welcome h1 {
+                font-size: 22px;
+            }
+
+            .top-row {
+                grid-template-columns: 1fr;
+            }
+
+            .dept-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* === Animations === */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="logo">◈ ستارتكس</div>
+        <div class="top-bar-left">
+            <div class="user-pill">
+                <i class="bi bi-person-circle"></i>
+                <span id="userEmail">—</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard">
+
+        <!-- Welcome -->
+        <div class="welcome">
+            <h1>أهلاً <span class="name" id="welcomeName">بك</span> 👋</h1>
+            <p>هنا مركز قيادتك الاستراتيجي — تابع تشخيص كل إدارة وراقب تقدّمك</p>
+        </div>
+
+        <!-- Resume Banner -->
+        <div class="resume-banner" id="resumeBanner" onclick="resumeAction()">
+            <div class="rb-icon">🔄</div>
+            <div class="rb-body">
+                <div class="rb-title" id="resumeTitle">أكمل من حيث توقفت</div>
+                <div class="rb-desc" id="resumeDesc">—</div>
+            </div>
+            <div class="rb-arrow"><i class="bi bi-arrow-left"></i></div>
+        </div>
+
+        <!-- Score + Radar -->
+        <div class="top-row">
+            <!-- Overall Score -->
+            <div class="overall-score-card">
+                <div class="os-ring">
+                    <svg viewBox="0 0 120 120">
+                        <circle class="ring-bg" cx="60" cy="60" r="50"></circle>
+                        <circle class="ring-fill" id="scoreRing" cx="60" cy="60" r="50"></circle>
+                    </svg>
+                    <div class="ring-num">
+                        <div class="num" id="overallScore">—</div>
+                        <div class="sub">/ 100</div>
+                    </div>
+                </div>
+                <div class="os-label" id="overallLabel">درجة النضج الاستراتيجي</div>
+                <div class="os-sublabel" id="overallSub">استناداً للإدارات المكتملة</div>
+                <div class="os-completed">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span id="completedCount">1</span> من 5 إدارات
+                </div>
+            </div>
+
+            <!-- Radar -->
+            <div class="radar-card">
+                <div class="rc-title">الرادار الاستراتيجي</div>
+                <canvas id="radarCanvas" width="240" height="240"></canvas>
+                <div class="rc-hint">أكمل المزيد من الإدارات لتتوسع الخريطة</div>
+            </div>
+        </div>
+
+        <!-- Department Cards -->
+        <div class="section-title">
+            <i class="bi bi-grid-3x3-gap-fill"></i>
+            الإدارات
+            <span class="count-badge" id="deptBadge">1/5 مكتمل</span>
+        </div>
+        <div class="dept-grid" id="deptGrid">
+            <!-- Built by JS -->
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="section-title">
+            <i class="bi bi-lightning-charge-fill"></i>
+            إجراءات سريعة
+        </div>
+        <div class="quick-actions">
+            <a class="qa-card" href="/financial-report">
+                <div class="qa-icon">📊</div>
+                <div class="qa-label">التقرير المالي</div>
+            </a>
+            <a class="qa-card" href="/financial-input">
+                <div class="qa-icon">🔄</div>
+                <div class="qa-label">إعادة التحليل</div>
+            </a>
+            <a class="qa-card" href="/select-type">
+                <div class="qa-icon">🧭</div>
+                <div class="qa-label">تشخيص جديد</div>
+            </a>
+        </div>
+
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════
+        // تحميل البيانات
+        // ═══════════════════════════════════════════
+
+        const companyName = localStorage.getItem('stratix_company_name') || 'منشأتك';
+        const email = localStorage.getItem('stratix_email') || '';
+        const redirectedFrom = localStorage.getItem('stratix_redirected_from') || '';
+        const pain = localStorage.getItem('stratix_pain') || '';
+        const analysisRaw = localStorage.getItem('stratix_analysis');
+
+        // بيانات المستخدم
+        document.getElementById('welcomeName').textContent = companyName;
+        document.getElementById('userEmail').textContent = email || 'ضيف';
+
+        // تحليل النتيجة المالية
+        let financeScore = 0;
+        if (analysisRaw) {
+            try {
+                const analysis = JSON.parse(analysisRaw);
+                financeScore = analysis.score || 0;
+            } catch (e) { }
+        }
+
+        // ═══════════════════════════════════════════
+        // الإدارات
+        // ═══════════════════════════════════════════
+
+        const DEPTS = [
+            {
+                id: 'FINANCE',
+                icon: '💰',
+                title: 'المالية',
+                color: '#10b981',
+                completed: !!analysisRaw,
+                score: financeScore,
+                desc: 'تحليل السيولة والربحية والكفاءة التشغيلية',
+                viewHref: '/financial-report',
+                actionHref: '/financial-input',
+            },
+            {
+                id: 'HR',
+                icon: '👥',
+                title: 'الموارد البشرية',
+                color: '#8b5cf6',
+                completed: false,
+                score: 0,
+                desc: 'تحليل الفريق — توظيف، استقالات، إنتاجية، رضا الموظفين',
+                viewHref: null,
+                actionHref: null,
+            },
+            {
+                id: 'OPS',
+                icon: '⚙️',
+                title: 'العمليات',
+                color: '#f59e0b',
+                completed: false,
+                score: 0,
+                desc: 'تحليل الكفاءة التشغيلية — هدر، جودة، سلسلة توريد',
+                viewHref: null,
+                actionHref: null,
+            },
+            {
+                id: 'SALES',
+                icon: '📈',
+                title: 'المبيعات',
+                color: '#3b82f6',
+                completed: false,
+                score: 0,
+                desc: 'تحليل النمو — قنوات البيع، تحصيل، معدلات التحويل',
+                viewHref: null,
+                actionHref: null,
+            },
+            {
+                id: 'COMPLIANCE',
+                icon: '⚖️',
+                title: 'الامتثال',
+                color: '#ef4444',
+                completed: false,
+                score: 0,
+                desc: 'تحليل المخاطر — تراخيص، أنظمة، غرامات، متطلبات حكومية',
+                viewHref: null,
+                actionHref: null,
+            },
+        ];
+
+        // بناء البطاقات
+        const deptGrid = document.getElementById('deptGrid');
+        const completedDepts = DEPTS.filter(d => d.completed);
+        const totalScore = completedDepts.length > 0
+            ? Math.round(completedDepts.reduce((sum, d) => sum + d.score, 0) / completedDepts.length)
+            : 0;
+
+        DEPTS.forEach((dept, i) => {
+            const card = document.createElement('div');
+            card.className = `dept-card ${dept.completed ? 'completed' : 'locked'}`;
+            if (i === 0) card.classList.add('full-width');
+            card.style.setProperty('--dept-color', dept.color);
+
+            let btnHtml = '';
+            let scoreBarHtml = '';
+
+            if (dept.completed) {
+                scoreBarHtml = `
+                    <div class="dc-score-bar">
+                        <div class="dsb-track">
+                            <div class="dsb-fill" style="width:${dept.score}%;background:${dept.color}"></div>
+                        </div>
+                        <div class="dsb-num" style="color:${dept.color}">${dept.score}</div>
+                    </div>
+                `;
+                btnHtml = `<a class="dc-btn view" href="${dept.viewHref}"><i class="bi bi-file-earmark-text"></i> عرض التقرير</a>`;
+            } else {
+                btnHtml = `<div class="dc-btn locked"><i class="bi bi-lock lock-icon"></i> قريباً</div>`;
+            }
+
+            card.innerHTML = `
+                <div class="dc-header">
+                    <div class="dc-icon-title">
+                        <span class="dc-icon">${dept.icon}</span>
+                        <span class="dc-title">${dept.title}</span>
+                    </div>
+                    <span class="dc-status ${dept.completed ? 'done' : 'soon'}">
+                        ${dept.completed ? '✓ مكتمل' : 'قريباً'}
+                    </span>
+                </div>
+                <div class="dc-body">${dept.desc}</div>
+                ${scoreBarHtml}
+                ${btnHtml}
+            `;
+
+            deptGrid.appendChild(card);
+        });
+
+        // ═══════════════════════════════════════════
+        // الدرجة الكلية
+        // ═══════════════════════════════════════════
+
+        function getScoreColor(s) {
+            if (s >= 85) return '#10b981';
+            if (s >= 70) return '#38bdf8';
+            if (s >= 55) return '#f59e0b';
+            if (s >= 40) return '#f97316';
+            return '#ef4444';
+        }
+
+        const scoreColor = getScoreColor(totalScore);
+        if (completedDepts.length === 0) {
+            document.getElementById('overallScore').textContent = '—';
+            document.getElementById('overallSub').textContent = 'أكمل إدارة واحدة على الأقل';
+        } else {
+            document.getElementById('overallScore').textContent = totalScore;
+            document.getElementById('overallScore').style.color = scoreColor;
+        }
+        document.getElementById('completedCount').textContent = completedDepts.length;
+        document.getElementById('deptBadge').textContent = `${completedDepts.length}/5 مكتمل`;
+
+        // Ring animation
+        setTimeout(() => {
+            const ring = document.getElementById('scoreRing');
+            ring.style.stroke = scoreColor;
+            ring.style.strokeDashoffset = 314 * (1 - totalScore / 100);
+        }, 300);
+
+        // ═══════════════════════════════════════════
+        // Radar
+        // ═══════════════════════════════════════════
+
+        function drawRadar() {
+            const canvas = document.getElementById('radarCanvas');
+            const ctx = canvas.getContext('2d');
+            const W = canvas.width;
+            const H = canvas.height;
+            const cx = W / 2;
+            const cy = H / 2;
+            const maxR = 90;
+            const n = 5;
+            const labels = ['المالية', 'HR', 'العمليات', 'المبيعات', 'الامتثال'];
+            const values = DEPTS.map(d => d.score / 100);
+
+            ctx.clearRect(0, 0, W, H);
+
+            // الشبكة
+            for (let ring = 1; ring <= 4; ring++) {
+                const r = (maxR / 4) * ring;
+                ctx.beginPath();
+                for (let i = 0; i <= n; i++) {
+                    const a = (Math.PI * 2 / n) * i - Math.PI / 2;
+                    const x = cx + Math.cos(a) * r;
+                    const y = cy + Math.sin(a) * r;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+                ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+
+            // المحاور
+            for (let i = 0; i < n; i++) {
+                const a = (Math.PI * 2 / n) * i - Math.PI / 2;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(cx + Math.cos(a) * maxR, cy + Math.sin(a) * maxR);
+                ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+                ctx.stroke();
+            }
+
+            // المساحة
+            ctx.beginPath();
+            for (let i = 0; i < n; i++) {
+                const a = (Math.PI * 2 / n) * i - Math.PI / 2;
+                const r = values[i] * maxR;
+                const x = cx + Math.cos(a) * r;
+                const y = cy + Math.sin(a) * r;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(16,185,129,0.15)';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(16,185,129,0.6)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // النقاط
+            for (let i = 0; i < n; i++) {
+                const a = (Math.PI * 2 / n) * i - Math.PI / 2;
+                const r = values[i] * maxR;
+                const x = cx + Math.cos(a) * r;
+                const y = cy + Math.sin(a) * r;
+                ctx.beginPath();
+                ctx.arc(x, y, values[i] > 0 ? 4 : 2.5, 0, Math.PI * 2);
+                ctx.fillStyle = values[i] > 0 ? DEPTS[i].color : 'rgba(255,255,255,0.15)';
+                ctx.fill();
+            }
+
+            // الأسماء
+            ctx.font = '700 11px Tajawal';
+            ctx.textAlign = 'center';
+            for (let i = 0; i < n; i++) {
+                const a = (Math.PI * 2 / n) * i - Math.PI / 2;
+                const lr = maxR + 18;
+                const x = cx + Math.cos(a) * lr;
+                const y = cy + Math.sin(a) * lr;
+                ctx.fillStyle = values[i] > 0 ? DEPTS[i].color : 'rgba(255,255,255,0.25)';
+                ctx.fillText(labels[i], x, y + 4);
+            }
+        }
+
+        // انتظر تحميل خط Tajawal قبل رسم الرادار
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(() => drawRadar());
+        } else {
+            setTimeout(drawRadar, 300);
+        }
+
+        // ═══════════════════════════════════════════
+        // بانر "أكمل من حيث توقفت"
+        // ═══════════════════════════════════════════
+
+        const DEPT_RESUME = {
+            HR: { title: 'أكمل تشخيص الموارد البشرية', desc: 'اخترت ألم الفريق — بعد ما فحصنا المالية، حان وقت HR', href: '/strategy-hub' },
+            OPS: { title: 'أكمل تشخيص العمليات', desc: 'اخترت ألم العمليات — الأرقام المالية كشفت نقاط الهدر', href: '/strategy-hub' },
+            SALES: { title: 'أكمل تشخيص المبيعات', desc: 'اخترت ألم المبيعات — بعد المالية، نفحص قنوات البيع', href: '/strategy-hub' },
+            COMPLIANCE: { title: 'أكمل تشخيص الامتثال', desc: 'اخترت ألم الامتثال — المناعة المالية تم فحصها', href: '/strategy-hub' },
+        };
+
+        let resumeHref = null;
+
+        if (redirectedFrom && DEPT_RESUME[redirectedFrom]) {
+            const r = DEPT_RESUME[redirectedFrom];
+            document.getElementById('resumeTitle').textContent = r.title;
+            document.getElementById('resumeDesc').textContent = r.desc;
+            document.getElementById('resumeBanner').classList.add('active');
+            resumeHref = r.href;
+        } else if (!analysisRaw) {
+            // لم يكمل حتى المالية
+            document.getElementById('resumeTitle').textContent = 'ابدأ أول تشخيص';
+            document.getElementById('resumeDesc').textContent = 'لم تبدأ بعد — ابدأ من الفحص المالي السريع';
+            document.getElementById('resumeBanner').classList.add('active');
+            resumeHref = '/select-type';
+        } else if (analysisRaw && !redirectedFrom) {
+            // أكمل المالية فقط بدون redirect — وجّهه للإدارة التالية
+            document.getElementById('resumeTitle').textContent = 'أكمل الصورة الاستراتيجية';
+            document.getElementById('resumeDesc').textContent = 'أكملت ضلع المالية — باقي 4 إدارات لتكتمل رؤيتك';
+            document.getElementById('resumeBanner').classList.add('active');
+            resumeHref = '/strategy-hub';
+        }
+
+        function resumeAction() {
+            if (resumeHref) window.location.href = resumeHref;
+        }
+
+        // ═══════════════════════════════════════════
+        // حماية — لو ما عنده token نخليه يكمل كضيف
+        // ═══════════════════════════════════════════
+
+        // لا نعيد توجيهه — الداشبورد يعمل حتى بدون token
+    </script>
+</body>
+
+</html>

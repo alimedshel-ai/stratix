@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس — خطة العمل الاستراتيجية</title>
+    <meta name="description" content="خطة العمل الكاملة لمنشأتك مع SWOT الموحد وجدول التنفيذ والأولويات">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0d14;
+            --bg-card: #141825;
+            --bg-card-light: #1a1f30;
+            --text: #e2e8f0;
+            --text-muted: #8b8ba7;
+            --border: rgba(255, 255, 255, 0.06);
+            --primary: #7c3aed;
+            --accent: #38bdf8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 30% 10%, rgba(124, 58, 237, 0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 90%, rgba(16, 185, 129, 0.04) 0%, transparent 50%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ═══ [1] Loading State (جديد) ═══ */
+        #loadingState {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(124, 58, 237, 0.15);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        #loadingState p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* ═══ [2] No-Data State (جديد) ═══ */
+        #noDataState {
+            display: none;
+            position: relative;
+            z-index: 1;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        #noDataState .nd-icon {
+            font-size: 4rem;
+            opacity: 0.15;
+            margin-bottom: 1rem;
+        }
+
+        #noDataState h3 {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        #noDataState p {
+            font-size: 13px;
+            color: var(--text-muted);
+            max-width: 380px;
+            margin: 0 auto 1.5rem auto;
+            line-height: 1.7;
+        }
+
+        #noDataState a {
+            color: #a78bfa;
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        /* ═══ Top Bar ═══ */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(10, 13, 20, 0.88);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: var(--text);
+        }
+
+        .step-pill {
+            padding: 5px 14px;
+            border-radius: 16px;
+            background: rgba(124, 58, 237, 0.12);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            color: #a78bfa;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        /* ═══ Container ═══ */
+        .plan-container {
+            position: relative;
+            z-index: 1;
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 76px 20px 80px;
+        }
+
+        /* ═══ Page Header ═══ */
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .page-header .badge-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .page-header .company-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 16px;
+            border-radius: 20px;
+            background: rgba(124, 58, 237, 0.1);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            color: #a78bfa;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .page-header .score-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 6px;
+        }
+
+        .page-header p {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+
+        .page-header .date {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.2);
+            margin-top: 8px;
+        }
+
+        /* ═══ Section ═══ */
+        .section {
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .section-title i {
+            color: var(--primary);
+            font-size: 18px;
+        }
+
+        .section-title .st-badge {
+            margin-right: auto;
+            font-size: 10px;
+            padding: 2px 10px;
+            border-radius: 8px;
+            font-weight: 700;
+        }
+
+        /* ═══ Executive Summary ═══ */
+        .exec-summary {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(56, 189, 248, 0.05));
+            border: 1px solid rgba(124, 58, 237, 0.15);
+            border-radius: 20px;
+            padding: 28px 24px;
+            margin-bottom: 32px;
+            animation: fadeIn 0.5s ease 0.1s both;
+        }
+
+        .exec-summary .es-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: #a78bfa;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .exec-summary .es-text {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.9;
+        }
+
+        .exec-summary .es-text strong {
+            color: var(--text);
+        }
+
+        /* ═══ Ratios Mini ═══ */
+        .ratios-mini {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 32px;
+            animation: fadeIn 0.5s ease 0.15s both;
+        }
+
+        .rm-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .rm-card .rm-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .rm-card .rm-value {
+            font-size: 22px;
+            font-weight: 900;
+        }
+
+        .rm-card .rm-status {
+            font-size: 9px;
+            margin-top: 4px;
+            font-weight: 700;
+        }
+
+        /* ═══ SWOT Unified ═══ */
+        .swot-unified {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            animation: fadeIn 0.5s ease 0.2s both;
+        }
+
+        .su-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 18px 16px;
+            border-top: 3px solid;
+        }
+
+        .su-card.strength {
+            border-top-color: var(--success);
+        }
+
+        .su-card.weakness {
+            border-top-color: var(--danger);
+        }
+
+        .su-card.opportunity {
+            border-top-color: var(--accent);
+        }
+
+        .su-card.threat {
+            border-top-color: var(--warning);
+        }
+
+        .su-card .su-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .su-card .su-count {
+            margin-right: auto;
+            font-size: 10px;
+            padding: 1px 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        /* ═══ [3] SWOT Item — textContent-safe ═══ */
+        .su-card .su-item {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            padding: 7px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            line-height: 1.7;
+            display: flex;
+            gap: 6px;
+        }
+
+        .su-card .su-item:last-child {
+            border-bottom: none;
+        }
+
+        .su-card .su-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 7px;
+        }
+
+        .strength .su-dot {
+            background: var(--success);
+        }
+
+        .weakness .su-dot {
+            background: var(--danger);
+        }
+
+        .opportunity .su-dot {
+            background: var(--accent);
+        }
+
+        .threat .su-dot {
+            background: var(--warning);
+        }
+
+        .su-empty {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.2);
+            font-style: italic;
+            padding: 8px 0;
+        }
+
+        /* ═══ Action Timeline ═══ */
+        .timeline {
+            position: relative;
+            padding-right: 28px;
+            animation: fadeIn 0.5s ease 0.25s both;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            right: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 1px;
+        }
+
+        .tl-group {
+            margin-bottom: 24px;
+        }
+
+        .tl-group-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            position: relative;
+        }
+
+        .tl-group-header .tl-dot {
+            position: absolute;
+            right: -28px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            border: 2px solid var(--bg);
+        }
+
+        .tl-group-header .tl-dot.now {
+            background: var(--danger);
+        }
+
+        .tl-group-header .tl-dot.month {
+            background: var(--warning);
+        }
+
+        .tl-group-header .tl-dot.quarter {
+            background: var(--accent);
+        }
+
+        .tl-group-header .tl-label {
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .tl-group-header .tl-count {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .tl-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+
+        .tl-item:hover {
+            border-color: rgba(124, 58, 237, 0.15);
+            background: var(--bg-card-light);
+        }
+
+        .tl-item .tl-text {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.7;
+        }
+
+        .tl-item .tl-dept {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .tl-empty {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 24px;
+            font-size: 13px;
+        }
+
+        /* ═══ Cross-Link ═══ */
+        .crosslink-box {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(56, 189, 248, 0.05));
+            border: 1px solid rgba(124, 58, 237, 0.15);
+            border-radius: 16px;
+            animation: fadeIn 0.5s ease 0.3s both;
+        }
+
+        .crosslink-box .cl-icon {
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+
+        .crosslink-box .cl-body {
+            flex: 1;
+        }
+
+        .crosslink-box .cl-text {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.7;
+        }
+
+        .crosslink-box .cl-dept {
+            font-size: 12px;
+            font-weight: 700;
+            color: #a78bfa;
+            margin-top: 4px;
+        }
+
+        /* ═══ Bottom Actions ═══ */
+        .bottom-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 36px;
+            animation: fadeIn 0.5s ease 0.35s both;
+        }
+
+        .ba-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 16px;
+            border: none;
+            border-radius: 14px;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .ba-btn.primary {
+            background: linear-gradient(135deg, var(--primary), #a78bfa);
+            color: #fff;
+            grid-column: 1 / -1;
+        }
+
+        .ba-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.35);
+        }
+
+        .ba-btn.secondary {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        .ba-btn.secondary:hover {
+            border-color: rgba(255, 255, 255, 0.12);
+            color: var(--text);
+        }
+
+        /* ═══ [4] Print CSS محسّن ═══ */
+        @media print {
+
+            #loadingState,
+            #noDataState,
+            .top-bar,
+            .bottom-actions {
+                display: none !important;
+            }
+
+            body {
+                background: #fff !important;
+                color: #111 !important;
+            }
+
+            body::before {
+                display: none;
+            }
+
+            .plan-container {
+                padding: 20px;
+                max-width: 100%;
+            }
+
+            .su-card,
+            .tl-item,
+            .exec-summary,
+            .rm-card,
+            .crosslink-box {
+                background: #fff !important;
+                border: 1px solid #ccc !important;
+                color: #333 !important;
+                box-shadow: none !important;
+            }
+
+            .su-card .su-item,
+            .tl-item .tl-text,
+            .tl-item .tl-dept,
+            .exec-summary .es-text,
+            .rm-card .rm-label {
+                color: #444 !important;
+            }
+
+            .rm-card .rm-value {
+                color: #111 !important;
+            }
+
+            .page-header .company-badge,
+            .page-header .score-badge {
+                border: 1px solid #ccc !important;
+                color: #333 !important;
+                background: #f5f5f5 !important;
+            }
+
+            .exec-summary .es-title,
+            .section-title {
+                color: #111 !important;
+            }
+
+            .su-card.strength {
+                border-top-color: #10b981 !important;
+            }
+
+            .su-card.weakness {
+                border-top-color: #ef4444 !important;
+            }
+
+            .su-card.opportunity {
+                border-top-color: #38bdf8 !important;
+            }
+
+            .su-card.threat {
+                border-top-color: #f59e0b !important;
+            }
+        }
+
+        /* ═══ Responsive ═══ */
+        @media (max-width: 768px) {
+            .plan-container {
+                padding: 68px 16px 60px;
+            }
+
+            .page-header h1 {
+                font-size: 22px;
+            }
+
+            .ratios-mini {
+                grid-template-columns: 1fr;
+            }
+
+            .swot-unified {
+                grid-template-columns: 1fr;
+            }
+
+            .bottom-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .italic {
+            font-style: italic;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- [1] Loading State -->
+    <div id="loadingState">
+        <div class="spinner"></div>
+        <p>جاري تحضير خطة العمل...</p>
+    </div>
+
+    <!-- [2] No-Data State -->
+    <div id="noDataState">
+        <div class="nd-icon">📋</div>
+        <h3 id="errorTitle">خطة العمل بانتظار البيانات</h3>
+        <p id="errorDesc">أكمل المدخلات المالية في منصة ستارتكس لتوليد خطة العمل الاستراتيجية المخصصة لمنشأتك.</p>
+        <a href="/financial-input">انتقل لصفحة المدخلات ←</a>
+    </div>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="top-bar-right">
+            <a href="/strategy-hub" class="back-link">
+                <i class="bi bi-arrow-right"></i> مركز القيادة
+            </a>
+            <div class="step-pill">
+                <i class="bi bi-clipboard-check-fill"></i> خطة العمل
+            </div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted)">الخطوة 7 من 7</div>
+    </div>
+
+    <div class="plan-container" id="reportContent" style="display:none;">
+
+        <!-- Header -->
+        <div class="page-header">
+            <div class="badge-row">
+                <div class="company-badge">
+                    <i class="bi bi-building"></i>
+                    <span id="companyName">منشأتك</span>
+                </div>
+                <div class="score-badge" id="scoreBadge">
+                    <span id="scoreBadgeNum">—</span>/100
+                </div>
+            </div>
+            <h1>خطة العمل الاستراتيجية</h1>
+            <p>SWOT الموحد + جدول الأولويات + الخطوة القادمة — كل ما تحتاجه في صفحة واحدة</p>
+            <div class="date" id="reportDate"></div>
+        </div>
+
+        <!-- Executive Summary -->
+        <div class="exec-summary">
+            <div class="es-title"><i class="bi bi-stars"></i> الملخص التنفيذي</div>
+            <div class="es-text" id="execSummary">—</div>
+        </div>
+
+        <!-- Ratios Mini -->
+        <div class="ratios-mini" id="ratiosMini"></div>
+
+        <!-- SWOT Unified -->
+        <div class="section">
+            <div class="section-title">
+                <i class="bi bi-grid-3x3-gap-fill"></i>
+                SWOT الموحد
+                <span class="st-badge" style="background:rgba(16,185,129,0.1);color:var(--success);">المالية</span>
+            </div>
+            <div class="swot-unified" id="swotGrid"></div>
+        </div>
+
+        <!-- Action Timeline -->
+        <div class="section">
+            <div class="section-title">
+                <i class="bi bi-calendar3"></i>
+                جدول التنفيذ
+                <span class="st-badge" id="recoCountBadge"
+                    style="background:rgba(124,58,237,0.1);color:#a78bfa;">—</span>
+            </div>
+            <div class="timeline" id="timeline"></div>
+        </div>
+
+        <!-- Cross-Link -->
+        <div class="section" id="crosslinkSection" style="display:none;">
+            <div class="section-title">
+                <i class="bi bi-link-45deg"></i>
+                الإدارة المرتبطة
+            </div>
+            <div class="crosslink-box">
+                <div class="cl-icon" id="clIcon">🔗</div>
+                <div class="cl-body">
+                    <div class="cl-text" id="clText">—</div>
+                    <div class="cl-dept" id="clDept">—</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Actions -->
+        <div class="bottom-actions">
+            <a class="ba-btn primary" href="/strategy-hub">
+                <i class="bi bi-arrow-left"></i>
+                العودة لمركز القيادة
+            </a>
+            <button class="ba-btn secondary" onclick="window.print()">
+                <i class="bi bi-printer"></i>
+                طباعة الخطة
+            </button>
+            <a class="ba-btn secondary" href="/financial-report">
+                <i class="bi bi-file-earmark-text"></i>
+                التقرير المالي
+            </a>
+        </div>
+
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════
+        // Helpers
+        // ═══════════════════════════════════════════
+
+        function showNoData(errorMsg = null) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('reportContent').style.display = 'none';
+            document.getElementById('noDataState').style.display = 'flex';
+            if (errorMsg) {
+                document.getElementById('errorTitle').textContent = 'حدث خطأ في معالجة البيانات';
+                document.getElementById('errorDesc').textContent = errorMsg;
+            }
+        }
+
+        function getScoreColor(s) {
+            if (s >= 85) return '#10b981';
+            if (s >= 70) return '#38bdf8';
+            if (s >= 55) return '#f59e0b';
+            if (s >= 40) return '#f97316';
+            return '#ef4444';
+        }
+
+        // دالة موحدة لتلوين المؤشرات مع حماية القيم غير المعرفة
+        function getMetricColor(val, thresholdLow, thresholdHigh) {
+            if (val === undefined || val === null || isNaN(val)) return 'var(--text-muted)';
+            return val > thresholdHigh ? 'var(--success)' : (val > thresholdLow ? 'var(--warning)' : 'var(--danger)');
+        }
+
+        // ═══════════════════════════════════════════
+        // Init
+        // ═══════════════════════════════════════════
+
+        function init() {
+            try {
+                const analysisRaw = localStorage.getItem('stratix_analysis');
+
+                if (!analysisRaw) {
+                    showNoData();
+                    return;
+                }
+
+                const analysis = JSON.parse(analysisRaw);
+
+                if (!analysis || !analysis.ratios) {
+                    showNoData();
+                    return;
+                }
+
+                // إخفاء Loading وإظهار المحتوى
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('reportContent').style.display = 'block';
+
+                renderPage(analysis);
+
+            } catch (err) {
+                console.error('Storage Error:', err);
+                showNoData('تعذر قراءة بيانات خطة العمل. يرجى إعادة إدخال البيانات المالية.');
+            }
+        }
+
+        // ═══════════════════════════════════════════
+        // Render Page
+        // ═══════════════════════════════════════════
+
+        function renderPage(analysis) {
+            const companyName = localStorage.getItem('stratix_company_name') || 'منشأتك';
+            const analysisAt = localStorage.getItem('stratix_analysis_at') || '';
+            const redirectedFrom = localStorage.getItem('stratix_redirected_from') || '';
+
+            const ratios = analysis.ratios || {};
+            const swot = analysis.swot || {};
+            const recs = analysis.recommendations || [];
+            const crossLink = analysis.crossLink || null;
+            const score = analysis.score || 0;
+            const scoreLabel = analysis.scoreLabel || '';
+            const rawInputs = analysis.raw_inputs || {};
+
+            // [3] حساب Runway من raw_inputs إذا كانت متوفرة
+            const monthlyBurn = (Number(rawInputs.salaries) || 0) + (Number(rawInputs.cogs) || 0);
+            const runway = monthlyBurn > 0 ? (Number(rawInputs.cash) || 0) / monthlyBurn : null;
+            const employees = typeof rawInputs.employees === 'number' ? rawInputs.employees : null;
+
+            // Company Name
+            document.getElementById('companyName').textContent = companyName;
+
+            // Date
+            if (analysisAt) {
+                const d = new Date(analysisAt);
+                document.getElementById('reportDate').textContent =
+                    `صدر في: ${d.toLocaleDateString('ar-SA')} — ${d.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}`;
+            }
+
+            // Score Badge
+            const sc = getScoreColor(score);
+            const badge = document.getElementById('scoreBadge');
+            badge.style.background = sc + '18';
+            badge.style.border = `1px solid ${sc}33`;
+            badge.style.color = sc;
+            document.getElementById('scoreBadgeNum').textContent = score;
+
+            buildExecSummary(companyName, score, scoreLabel, swot, recs, redirectedFrom, employees, ratios.operating_margin, runway);
+            buildRatiosMini(ratios, runway);
+            buildSWOT(swot, employees, runway, ratios);
+            buildTimeline(recs);
+            buildCrossLink(crossLink);
+        }
+
+        // ═══════════════════════════════════════════
+        // Executive Summary (محسّن + سياقي)
+        // ═══════════════════════════════════════════
+
+        function buildExecSummary(companyName, score, scoreLabel, swot, recs, redirectedFrom, employees, operatingMargin, runway) {
+            const el = document.getElementById('execSummary');
+            const strengths = (swot.strengths || []).length;
+            const weaknesses = (swot.weaknesses || []).length;
+            const nowRecs = recs.filter(r => r.priority === 'NOW').length;
+            const totalRecs = recs.length;
+
+            // الملخص الأساسي
+            let text = `حصلت ${companyName} على درجة ${score}/100 (${scoreLabel}). `;
+
+            if (score >= 85) {
+                text += `الوضع المالي ممتاز مع ${strengths} نقطة قوة واضحة. ركّز على استثمار هذه القوة في التوسع والنمو.`;
+            } else if (score >= 70) {
+                text += `الأساس المالي جيد مع ${strengths} نقطة قوة و${weaknesses} نقطة ضعف. `;
+                text += totalRecs > 0 ? `هناك ${totalRecs} توصية لتحسين الأداء.` : '';
+            } else if (score >= 55) {
+                text += `الوضع مقبول لكن يحتاج انتباه — ${weaknesses} نقطة ضعف مكتشفة. `;
+                text += nowRecs > 0 ? `${nowRecs} إجراء يحتاج تنفيذ فوري.` : '';
+            } else {
+                text += `الوضع يحتاج تدخل عاجل — ${weaknesses} نقطة ضعف و${nowRecs} إجراء فوري. ابدأ من الأولوية الحمراء أولاً.`;
+            }
+
+            // [3] إضافة سياق Runway وحجم الفريق إذا توفرت
+            if (runway !== null && runway < 3) {
+                text += ` ⚠️ تنبيه: هامش الأمان المالي أقل من 3 أشهر — هذا يستوجب تدخلاً فورياً لرفع السيولة.`;
+            }
+
+            if (employees !== null && employees >= 11 && employees <= 50 && operatingMargin < 0.08) {
+                text += ` الفريق الحالي (${employees} موظف) كبير نسبياً مقارنة بالهامش التشغيلي — راجع توزيع المهام وكفاءة الإنتاجية.`;
+            }
+
+            if (redirectedFrom) {
+                const deptNames = { HR: 'الموارد البشرية', OPS: 'العمليات', SALES: 'المبيعات', COMPLIANCE: 'الامتثال' };
+                text += `\n\n⚡ ملاحظة: ألمك الأصلي كان في ${deptNames[redirectedFrom] || redirectedFrom} — بعد إكمال المالية، الخطوة التالية هي فحص تلك الإدارة.`;
+            }
+
+            el.textContent = text;
+        }
+
+        // ═══════════════════════════════════════════
+        // Ratios Mini (4 مؤشرات مع Runway)
+        // ═══════════════════════════════════════════
+
+        function buildRatiosMini(ratios, runway) {
+            const container = document.getElementById('ratiosMini');
+
+            const items = [
+                {
+                    label: 'نسبة التداول',
+                    value: ratios.current_ratio === null ? '∞' : (ratios.current_ratio !== undefined ? ratios.current_ratio.toFixed(2) : '—'),
+                    status: ratios.current_ratio === null ? 'ممتاز' : (ratios.current_ratio >= 1.5 ? 'صحي' : ratios.current_ratio >= 1.0 ? 'مقبول' : 'خطر'),
+                    color: getMetricColor(ratios.current_ratio, 1.0, 1.5),
+                },
+                {
+                    label: 'هامش الربح الإجمالي',
+                    value: ratios.gross_margin !== undefined ? (ratios.gross_margin * 100).toFixed(1) + '%' : '—',
+                    status: ratios.gross_margin > 0.40 ? 'ممتاز' : ratios.gross_margin > 0.20 ? 'مقبول' : 'ضعيف',
+                    color: getMetricColor(ratios.gross_margin, 0.20, 0.40),
+                },
+                {
+                    label: 'هامش التشغيل',
+                    value: ratios.operating_margin !== undefined ? (ratios.operating_margin * 100).toFixed(1) + '%' : '—',
+                    status: ratios.operating_margin > 0.15 ? 'عالي' : ratios.operating_margin > 0.05 ? 'مقبول' : (ratios.operating_margin < 0 ? 'خسارة' : 'ضعيف'),
+                    color: getMetricColor(ratios.operating_margin, 0.05, 0.15),
+                },
+            ];
+
+            // إضافة Runway إذا كان متوفراً
+            if (runway !== null && runway > 0) {
+                items.push({
+                    label: 'هامش الأمان',
+                    value: runway.toFixed(1) + ' شهر',
+                    status: runway > 5 ? 'آمن' : runway > 2 ? 'تحذير' : 'خطر',
+                    color: runway > 5 ? 'var(--success)' : runway > 2 ? 'var(--warning)' : 'var(--danger)',
+                });
+                // تعديل الـ grid لـ 4 أعمدة
+                container.style.gridTemplateColumns = 'repeat(4, 1fr)';
+            }
+
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'rm-card';
+
+                const lbl = document.createElement('div');
+                lbl.className = 'rm-label';
+                lbl.textContent = item.label;
+
+                const val = document.createElement('div');
+                val.className = 'rm-value';
+                val.style.color = item.color;
+                val.textContent = item.value;
+
+                const sts = document.createElement('div');
+                sts.className = 'rm-status';
+                sts.style.color = item.color;
+                sts.textContent = item.status;
+
+                card.appendChild(lbl);
+                card.appendChild(val);
+                card.appendChild(sts);
+                container.appendChild(card);
+            });
+        }
+
+        // ═══════════════════════════════════════════
+        // [3] SWOT مع الحقن السياقي + XSS-safe
+        // ═══════════════════════════════════════════
+
+        const SWOT_CFG = [
+            { key: 'strengths', cls: 'strength', icon: '💪', label: 'نقاط القوة' },
+            { key: 'weaknesses', cls: 'weakness', icon: '⚠️', label: 'نقاط الضعف' },
+            { key: 'opportunities', cls: 'opportunity', icon: '🚀', label: 'الفرص' },
+            { key: 'threats', cls: 'threat', icon: '🔥', label: 'التهديدات' },
+        ];
+
+        function buildSWOT(swot, employees, runway, ratios) {
+            const grid = document.getElementById('swotGrid');
+
+            SWOT_CFG.forEach(cfg => {
+                let items = [...(swot[cfg.key] || [])];
+
+                // حقن المنطق السياقي
+                const hasEmpData = typeof employees === 'number';
+                if (cfg.key === 'weaknesses' && hasEmpData && employees > 20 && ratios?.operating_margin < 0.1) {
+                    items.unshift('ارتفاع كلفة التواصل الإداري وتداخل المهام في الفريق الحالي.');
+                }
+                if (cfg.key === 'threats' && runway !== null && runway < 2) {
+                    items.unshift('خطر داهم في الوفاء بالالتزامات المالية والرواتب القصيرة الأجل.');
+                }
+                if (cfg.key === 'strengths' && runway !== null && runway > 6) {
+                    items.unshift('احتياطي سيولة قوي يمنح المنشأة نفساً استراتيجياً طويلاً.');
+                }
+
+                // بناء الكارد بـ createElement (XSS-safe)
+                const card = document.createElement('div');
+                card.className = `su-card ${cfg.cls}`;
+
+                const header = document.createElement('div');
+                header.className = 'su-header';
+
+                const iconSpan = document.createElement('span');
+                iconSpan.textContent = cfg.icon;
+                header.appendChild(iconSpan);
+                header.appendChild(document.createTextNode(` ${cfg.label}`));
+
+                const countBadge = document.createElement('span');
+                countBadge.className = 'su-count';
+                countBadge.textContent = items.length;
+                header.appendChild(countBadge);
+
+                card.appendChild(header);
+
+                if (items.length === 0) {
+                    const empty = document.createElement('div');
+                    empty.className = 'su-empty';
+                    empty.textContent = 'لا توجد ملاحظات';
+                    card.appendChild(empty);
+                } else {
+                    items.forEach(item => {
+                        const row = document.createElement('div');
+                        row.className = 'su-item';
+
+                        const dot = document.createElement('span');
+                        dot.className = 'su-dot';
+
+                        const txt = document.createElement('span');
+                        txt.textContent = item.text || item;
+
+                        row.appendChild(dot);
+                        row.appendChild(txt);
+                        card.appendChild(row);
+                    });
+                }
+
+                grid.appendChild(card);
+            });
+        }
+
+        // ═══════════════════════════════════════════
+        // Timeline (محفوظ من action-plan الأصلي)
+        // ═══════════════════════════════════════════
+
+        const PRIO_CONFIG = {
+            'NOW': { label: '🔴 تنفيذ فوري', cls: 'now', color: 'var(--danger)' },
+            'MONTH': { label: '🟡 خلال شهر', cls: 'month', color: 'var(--warning)' },
+            'QUARTER': { label: '🔵 خلال ربع سنة', cls: 'quarter', color: 'var(--accent)' },
+        };
+
+        function buildTimeline(recs) {
+            const container = document.getElementById('timeline');
+
+            if (recs.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'tl-empty';
+                empty.textContent = '🏆 لا توجد توصيات — وضعك المالي ممتاز!';
+                container.appendChild(empty);
+                document.getElementById('recoCountBadge').textContent = '0 توصيات';
+                return;
+            }
+
+            document.getElementById('recoCountBadge').textContent = `${recs.length} توصية`;
+
+            const groups = {};
+            recs.forEach(rec => {
+                const p = rec.priority || 'QUARTER';
+                if (!groups[p]) groups[p] = [];
+                groups[p].push(rec);
+            });
+
+            ['NOW', 'MONTH', 'QUARTER'].forEach(prio => {
+                if (!groups[prio]) return;
+                const cfg = PRIO_CONFIG[prio];
+                const groupItems = groups[prio];
+
+                const group = document.createElement('div');
+                group.className = 'tl-group';
+
+                const groupHeader = document.createElement('div');
+                groupHeader.className = 'tl-group-header';
+
+                const dot = document.createElement('div');
+                dot.className = `tl-dot ${cfg.cls}`;
+
+                const lbl = document.createElement('span');
+                lbl.className = 'tl-label';
+                lbl.textContent = cfg.label;
+
+                const cnt = document.createElement('span');
+                cnt.className = 'tl-count';
+                cnt.textContent = `${groupItems.length} إجراء`;
+
+                groupHeader.appendChild(dot);
+                groupHeader.appendChild(lbl);
+                groupHeader.appendChild(cnt);
+                group.appendChild(groupHeader);
+
+                groupItems.forEach(rec => {
+                    const item = document.createElement('div');
+                    item.className = 'tl-item';
+
+                    const txt = document.createElement('div');
+                    txt.className = 'tl-text';
+                    txt.textContent = rec.text;
+                    item.appendChild(txt);
+
+                    if (rec.linkedDept) {
+                        const dept = document.createElement('div');
+                        dept.className = 'tl-dept';
+                        dept.textContent = `← مرتبطة بـ: ${rec.linkedDept}`;
+                        item.appendChild(dept);
+                    }
+
+                    group.appendChild(item);
+                });
+
+                container.appendChild(group);
+            });
+        }
+
+        // ═══════════════════════════════════════════
+        // Cross-Link (محفوظ من action-plan الأصلي)
+        // ═══════════════════════════════════════════
+
+        function buildCrossLink(crossLink) {
+            if (!crossLink) return;
+            document.getElementById('crosslinkSection').style.display = 'block';
+            document.getElementById('clIcon').textContent = crossLink.linkedDeptIcon || '🔗';
+            document.getElementById('clText').textContent = crossLink.text || '';
+            document.getElementById('clDept').textContent =
+                `${crossLink.ctaText || 'اكتشف'} → ${crossLink.linkedDeptLabel || ''}`;
+        }
+
+        // ═══════════════════════════════════════════
+        // Start
+        // ═══════════════════════════════════════════
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>

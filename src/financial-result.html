@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس — نتيجة الفحص المالي</title>
+    <meta name="description" content="نتيجة التشخيص المالي لمنشأتك — درجة النضج والتوصيات">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0d14;
+            --bg-card: #141825;
+            --text: #e2e8f0;
+            --text-muted: #8b8ba7;
+            --border: rgba(255, 255, 255, 0.06);
+            --primary: #7c3aed;
+            --accent: #38bdf8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-y: auto;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 50% 0%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 100%, rgba(124, 58, 237, 0.06) 0%, transparent 50%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* === Top Bar === */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(10, 13, 20, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .back-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: var(--text);
+        }
+
+        .step-pill {
+            padding: 5px 14px;
+            border-radius: 16px;
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        /* === Container === */
+        .result-container {
+            position: relative;
+            z-index: 1;
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 72px 20px 60px;
+        }
+
+        /* === Analysis Complete Banner === */
+        .complete-banner {
+            text-align: center;
+            margin-bottom: 32px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .complete-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 22px;
+            border-radius: 24px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .complete-banner h1 {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 6px;
+        }
+
+        .complete-banner p {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* === Score Ring === */
+        .score-section {
+            text-align: center;
+            margin-bottom: 32px;
+            animation: fadeIn 0.5s ease 0.15s both;
+        }
+
+        .score-ring-wrapper {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            margin: 0 auto 16px;
+        }
+
+        .score-ring-bg,
+        .score-ring-fill {
+            position: absolute;
+            inset: 0;
+        }
+
+        .score-ring-bg circle,
+        .score-ring-fill circle {
+            fill: none;
+            stroke-width: 10;
+            cx: 90;
+            cy: 90;
+            r: 76;
+        }
+
+        .score-ring-bg circle {
+            stroke: rgba(255, 255, 255, 0.06);
+        }
+
+        .score-ring-fill circle {
+            stroke: var(--score-color, var(--success));
+            stroke-dasharray: 477.5;
+            stroke-dashoffset: 477.5;
+            stroke-linecap: round;
+            transform: rotate(-90deg);
+            transform-origin: center;
+            transition: stroke-dashoffset 1.5s ease;
+        }
+
+        .score-number {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .score-number .num {
+            font-size: 48px;
+            font-weight: 900;
+            line-height: 1;
+            color: var(--text);
+        }
+
+        .score-number .out-of {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .score-label {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .score-sublabel {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* === Ratios Bar === */
+        .ratios-bar {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 32px;
+            animation: fadeIn 0.5s ease 0.25s both;
+        }
+
+        .ratio-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px 14px;
+            text-align: center;
+        }
+
+        .ratio-card .rc-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .ratio-card .rc-value {
+            font-size: 22px;
+            font-weight: 900;
+        }
+
+        .ratio-card .rc-status {
+            font-size: 10px;
+            font-weight: 700;
+            margin-top: 4px;
+            padding: 2px 10px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .rc-status.good {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .rc-status.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .rc-status.danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        /* === SWOT Preview (Blurred) === */
+        .swot-section {
+            margin-bottom: 32px;
+            animation: fadeIn 0.5s ease 0.35s both;
+        }
+
+        .swot-section-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .swot-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            position: relative;
+        }
+
+        .swot-quadrant {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px 16px;
+            filter: blur(4px);
+            user-select: none;
+            pointer-events: none;
+        }
+
+        .swot-quadrant .sq-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .swot-quadrant .sq-item {
+            font-size: 12px;
+            color: var(--text-muted);
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            line-height: 1.5;
+        }
+
+        .swot-quadrant .sq-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Lock Overlay */
+        .swot-lock {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            text-align: center;
+        }
+
+        .lock-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(124, 58, 237, 0.15);
+            border: 2px solid rgba(124, 58, 237, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #a78bfa;
+            margin-bottom: 12px;
+        }
+
+        .lock-text {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .lock-subtext {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* === Recommendations Preview === */
+        .reco-preview {
+            margin-bottom: 32px;
+            animation: fadeIn 0.5s ease 0.4s both;
+        }
+
+        .reco-item-preview {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            margin-bottom: 8px;
+        }
+
+        .reco-item-preview:first-child {
+            border-color: rgba(16, 185, 129, 0.2);
+            background: rgba(16, 185, 129, 0.04);
+        }
+
+        .reco-item-preview .rip-priority {
+            flex-shrink: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .rip-priority.now {
+            background: rgba(239, 68, 68, 0.12);
+            color: var(--danger);
+        }
+
+        .rip-priority.month {
+            background: rgba(245, 158, 11, 0.12);
+            color: var(--warning);
+        }
+
+        .rip-priority.quarter {
+            background: rgba(59, 130, 246, 0.12);
+            color: var(--accent);
+        }
+
+        .reco-item-preview .rip-text {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+            flex: 1;
+        }
+
+        .reco-item-preview.blurred {
+            filter: blur(3px);
+            user-select: none;
+            pointer-events: none;
+        }
+
+        /* === Cross-Link Preview === */
+        .crosslink-card {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(56, 189, 248, 0.06));
+            border: 1px solid rgba(124, 58, 237, 0.15);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 32px;
+            filter: blur(3px);
+            user-select: none;
+            pointer-events: none;
+            animation: fadeIn 0.5s ease 0.45s both;
+        }
+
+        .crosslink-card .cl-icon {
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+
+        .crosslink-card .cl-text {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.6;
+        }
+
+        .crosslink-card .cl-cta {
+            font-weight: 800;
+            color: #a78bfa;
+            display: block;
+            margin-top: 4px;
+        }
+
+        /* === CTA Section === */
+        .cta-section {
+            animation: fadeIn 0.5s ease 0.5s both;
+        }
+
+        .cta-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            border-radius: 20px;
+            padding: 32px 28px;
+            text-align: center;
+        }
+
+        .cta-card .cta-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+
+        .cta-card h2 {
+            font-size: 20px;
+            font-weight: 900;
+            margin-bottom: 6px;
+        }
+
+        .cta-card .cta-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            line-height: 1.7;
+        }
+
+        .email-form {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .email-form input {
+            flex: 1;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1.5px solid var(--border);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+            font-family: 'Tajawal', sans-serif;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.3s;
+            direction: ltr;
+            text-align: left;
+        }
+
+        .email-form input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        .email-form input::placeholder {
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        .email-form button {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary), #a78bfa);
+            color: #fff;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .email-form button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4);
+        }
+
+        .email-form button:disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .email-error {
+            font-size: 12px;
+            color: var(--danger);
+            display: none;
+            margin-bottom: 8px;
+        }
+
+        .email-error.visible {
+            display: block;
+        }
+
+        .cta-legal {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.25);
+            line-height: 1.6;
+        }
+
+        .cta-legal i {
+            color: var(--success);
+        }
+
+        /* === Return Dept Banner === */
+        .return-banner {
+            display: none;
+            margin-top: 20px;
+            padding: 14px 18px;
+            border-radius: 14px;
+            background: rgba(251, 191, 36, 0.06);
+            border: 1px solid rgba(251, 191, 36, 0.15);
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            text-align: center;
+            line-height: 1.7;
+            animation: fadeIn 0.5s ease 0.6s both;
+        }
+
+        .return-banner.active {
+            display: block;
+        }
+
+        .return-banner .dept-name {
+            font-weight: 800;
+            color: #fbbf24;
+        }
+
+        /* === Responsive === */
+        @media (max-width: 768px) {
+            .result-container {
+                padding: 66px 16px 40px;
+            }
+
+            .complete-banner h1 {
+                font-size: 24px;
+            }
+
+            .score-ring-wrapper {
+                width: 150px;
+                height: 150px;
+            }
+
+            .ratios-bar {
+                grid-template-columns: 1fr;
+            }
+
+            .swot-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .email-form {
+                flex-direction: column;
+            }
+        }
+
+        /* === Animations === */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes countUp {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spinner-sm {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2.5px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div style="display:flex;align-items:center;gap:12px;">
+            <a href="/financial-input" class="back-link">
+                <i class="bi bi-arrow-right"></i> تعديل الأرقام
+            </a>
+            <div class="step-pill">
+                <i class="bi bi-check-circle-fill"></i> تم التحليل
+            </div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted)">
+            الخطوة 4 من 7
+        </div>
+    </div>
+
+    <div class="result-container">
+
+        <!-- Complete Banner -->
+        <div class="complete-banner">
+            <div class="complete-badge">
+                <i class="bi bi-check-circle-fill"></i>
+                تم تحليل 100% من بياناتك المالية
+            </div>
+            <h1>نتيجة الفحص المالي لـ <span id="companyName">منشأتك</span></h1>
+            <p>هذا ملخص سريع — التقرير الكامل والتوصيات التفصيلية تنتظرك بعد خطوة واحدة</p>
+        </div>
+
+        <!-- Score Ring -->
+        <div class="score-section">
+            <div class="score-ring-wrapper" id="scoreRing">
+                <svg class="score-ring-bg" viewBox="0 0 180 180">
+                    <circle></circle>
+                </svg>
+                <svg class="score-ring-fill" viewBox="0 0 180 180">
+                    <circle id="ringCircle"></circle>
+                </svg>
+                <div class="score-number">
+                    <div class="num" id="scoreNum">0</div>
+                    <div class="out-of">/ 100</div>
+                </div>
+            </div>
+            <div class="score-label" id="scoreLabel">—</div>
+            <div class="score-sublabel" id="scoreSub">جاري التحميل...</div>
+        </div>
+
+        <!-- Ratios -->
+        <div class="ratios-bar" id="ratiosBar">
+            <div class="ratio-card">
+                <div class="rc-label">نسبة التداول</div>
+                <div class="rc-value" id="ratioCR">—</div>
+                <div class="rc-status" id="statusCR">—</div>
+            </div>
+            <div class="ratio-card">
+                <div class="rc-label">هامش الربح الإجمالي</div>
+                <div class="rc-value" id="ratioGM">—</div>
+                <div class="rc-status" id="statusGM">—</div>
+            </div>
+            <div class="ratio-card">
+                <div class="rc-label">هامش الربح التشغيلي</div>
+                <div class="rc-value" id="ratioOM">—</div>
+                <div class="rc-status" id="statusOM">—</div>
+            </div>
+        </div>
+
+        <!-- SWOT Preview (Blurred) -->
+        <div class="swot-section">
+            <div class="swot-section-title">
+                <i class="bi bi-grid-3x3-gap-fill"></i>
+                تحليل SWOT المالي
+            </div>
+            <div class="swot-grid">
+                <div class="swot-quadrant" id="swotS">
+                    <div class="sq-header" style="color: var(--success);">💪 نقاط القوة</div>
+                    <div class="sq-item" id="swotS1">—</div>
+                    <div class="sq-item" id="swotS2">—</div>
+                </div>
+                <div class="swot-quadrant" id="swotW">
+                    <div class="sq-header" style="color: var(--danger);">⚠️ نقاط الضعف</div>
+                    <div class="sq-item" id="swotW1">—</div>
+                    <div class="sq-item" id="swotW2">—</div>
+                </div>
+                <div class="swot-quadrant" id="swotO">
+                    <div class="sq-header" style="color: var(--accent);">🚀 الفرص</div>
+                    <div class="sq-item" id="swotO1">—</div>
+                    <div class="sq-item" id="swotO2">—</div>
+                </div>
+                <div class="swot-quadrant" id="swotT">
+                    <div class="sq-header" style="color: var(--warning);">🔥 التهديدات</div>
+                    <div class="sq-item" id="swotT1">—</div>
+                    <div class="sq-item" id="swotT2">—</div>
+                </div>
+                <!-- Lock overlay -->
+                <div class="swot-lock">
+                    <div class="lock-icon"><i class="bi bi-lock-fill"></i></div>
+                    <div class="lock-text">التحليل الكامل جاهز</div>
+                    <div class="lock-subtext">أدخل إيميلك لفتح التقرير التفصيلي</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendations Preview -->
+        <div class="reco-preview">
+            <div class="swot-section-title">
+                <i class="bi bi-list-check"></i>
+                التوصيات ذات الأولوية
+            </div>
+            <div id="recoList">
+                <!-- Built by JS -->
+            </div>
+        </div>
+
+        <!-- Cross-Link Preview -->
+        <div class="crosslink-card" id="crosslinkCard">
+            <div class="cl-icon" id="clIcon">—</div>
+            <div>
+                <div class="cl-text" id="clText">—</div>
+                <div class="cl-cta" id="clCta">—</div>
+            </div>
+        </div>
+
+        <!-- CTA: Email for unlock -->
+        <div class="cta-section">
+            <div class="cta-card">
+                <div class="cta-icon">🔓</div>
+                <h2>خطوة واحدة لفتح تقريرك الكامل</h2>
+                <div class="cta-desc">
+                    أدخل إيميلك وسنحفظ نتيجتك ونفتح لك التقرير الكامل مع خطة العمل
+                </div>
+
+                <div class="email-form" id="emailForm">
+                    <input type="email" id="emailInput" placeholder="name@company.com" dir="ltr">
+                    <button id="unlockBtn" onclick="submitEmail()">
+                        <i class="bi bi-unlock-fill"></i> افتح التقرير
+                    </button>
+                </div>
+                <div class="email-error" id="emailError"></div>
+
+                <div class="cta-legal">
+                    <i class="bi bi-shield-check"></i>
+                    لن نرسل لك سبام — فقط تقريرك وتوصيات مخصصة لمنشأتك
+                </div>
+            </div>
+
+            <!-- Return to original dept -->
+            <div class="return-banner" id="returnBanner">
+                <i class="bi bi-arrow-return-left"></i>
+                بعد فتح التقرير، سنوصلك لتشخيص <span class="dept-name" id="returnDeptName">—</span> الذي طلبته
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════
+        // تحميل البيانات
+        // ═══════════════════════════════════════════
+
+        const companyName = localStorage.getItem('stratix_company_name') || 'منشأتك';
+        const redirectedFrom = localStorage.getItem('stratix_redirected_from') || '';
+        const analysisRaw = localStorage.getItem('stratix_analysis');
+
+        document.getElementById('companyName').textContent = companyName;
+
+        if (!analysisRaw) {
+            window.location.replace('/financial-input');
+        }
+
+        const analysis = JSON.parse(analysisRaw || '{}');
+        const ratios = analysis.ratios || {};
+        const swot = analysis.swot || {};
+        const recs = analysis.recommendations || [];
+        const crossLink = analysis.crossLink || null;
+        const score = analysis.score || 0;
+        const scoreLabel = analysis.scoreLabel || '';
+
+        // ═══════════════════════════════════════════
+        // عرض الدرجة مع أنيميشن
+        // ═══════════════════════════════════════════
+
+        function getScoreColor(s) {
+            if (s >= 85) return '#10b981';
+            if (s >= 70) return '#38bdf8';
+            if (s >= 55) return '#f59e0b';
+            if (s >= 40) return '#f97316';
+            return '#ef4444';
+        }
+
+        const scoreColor = getScoreColor(score);
+        document.getElementById('scoreRing').style.setProperty('--score-color', scoreColor);
+
+        // Animate score number
+        let currentScore = 0;
+        const scoreEl = document.getElementById('scoreNum');
+        const scoreInterval = setInterval(() => {
+            currentScore += Math.ceil(score / 40);
+            if (currentScore >= score) {
+                currentScore = score;
+                clearInterval(scoreInterval);
+            }
+            scoreEl.textContent = currentScore;
+        }, 40);
+
+        // Animate ring
+        setTimeout(() => {
+            const circle = document.getElementById('ringCircle');
+            const circumference = 2 * Math.PI * 76; // r=76
+            const offset = circumference * (1 - score / 100);
+            circle.style.strokeDashoffset = offset;
+        }, 200);
+
+        // Labels
+        document.getElementById('scoreLabel').textContent = scoreLabel;
+        document.getElementById('scoreSub').textContent =
+            score >= 70 ? 'أساس قوي — فرص تحسين واضحة بالداخل' :
+                score >= 40 ? 'يحتاج انتباه — التوصيات بالأسفل ستساعدك' :
+                    'يحتاج تدخل فوري — ابدأ من التوصية الأولى';
+
+        // ═══════════════════════════════════════════
+        // عرض النسب
+        // ═══════════════════════════════════════════
+
+        // CR
+        const cr = ratios.current_ratio;
+        if (cr === null) {
+            document.getElementById('ratioCR').textContent = '∞';
+            document.getElementById('statusCR').textContent = 'لا التزامات';
+            document.getElementById('statusCR').className = 'rc-status good';
+        } else {
+            document.getElementById('ratioCR').textContent = cr.toFixed(2);
+            if (cr >= 1.5) {
+                document.getElementById('statusCR').textContent = 'صحي';
+                document.getElementById('statusCR').className = 'rc-status good';
+            } else if (cr >= 1.0) {
+                document.getElementById('statusCR').textContent = 'مقبول';
+                document.getElementById('statusCR').className = 'rc-status warning';
+            } else {
+                document.getElementById('statusCR').textContent = 'خطر';
+                document.getElementById('statusCR').className = 'rc-status danger';
+            }
+        }
+
+        // GM
+        const gm = ratios.gross_margin;
+        document.getElementById('ratioGM').textContent = (gm * 100).toFixed(0) + '%';
+        if (gm > 0.40) {
+            document.getElementById('statusGM').textContent = 'ممتاز';
+            document.getElementById('statusGM').className = 'rc-status good';
+        } else if (gm > 0.20) {
+            document.getElementById('statusGM').textContent = 'مقبول';
+            document.getElementById('statusGM').className = 'rc-status warning';
+        } else {
+            document.getElementById('statusGM').textContent = 'ضعيف';
+            document.getElementById('statusGM').className = 'rc-status danger';
+        }
+
+        // OM
+        const om = ratios.operating_margin;
+        document.getElementById('ratioOM').textContent = (om * 100).toFixed(0) + '%';
+        if (om > 0.15) {
+            document.getElementById('statusOM').textContent = 'ممتاز';
+            document.getElementById('statusOM').className = 'rc-status good';
+        } else if (om > 0.05) {
+            document.getElementById('statusOM').textContent = 'مقبول';
+            document.getElementById('statusOM').className = 'rc-status warning';
+        } else {
+            document.getElementById('statusOM').textContent = om < 0 ? 'خسارة' : 'ضعيف';
+            document.getElementById('statusOM').className = 'rc-status danger';
+        }
+
+        // ═══════════════════════════════════════════
+        // SWOT (blurred — just fill text)
+        // ═══════════════════════════════════════════
+
+        function fillSwotQuadrant(prefix, items) {
+            if (!items || items.length === 0) {
+                document.getElementById(prefix + '1').textContent = 'لا توجد ملاحظات في هذا المحور';
+                document.getElementById(prefix + '2').style.display = 'none';
+                return;
+            }
+            document.getElementById(prefix + '1').textContent = items[0]?.text || '—';
+            if (items[1]) {
+                document.getElementById(prefix + '2').textContent = items[1].text;
+            } else {
+                document.getElementById(prefix + '2').style.display = 'none';
+            }
+        }
+
+        fillSwotQuadrant('swotS', swot.strengths);
+        fillSwotQuadrant('swotW', swot.weaknesses);
+        fillSwotQuadrant('swotO', swot.opportunities);
+        fillSwotQuadrant('swotT', swot.threats);
+
+        // ═══════════════════════════════════════════
+        // التوصيات (أول 2 واضحة + الباقي مشوشة)
+        // ═══════════════════════════════════════════
+
+        const PRIORITY_MAP = {
+            'NOW': { label: 'الآن', cls: 'now' },
+            'MONTH': { label: 'شهر', cls: 'month' },
+            'QUARTER': { label: 'ربع', cls: 'quarter' },
+        };
+
+        const recoListEl = document.getElementById('recoList');
+        const displayRecs = recs.slice(0, 4);
+
+        displayRecs.forEach((rec, i) => {
+            const prio = PRIORITY_MAP[rec.priority] || PRIORITY_MAP['QUARTER'];
+            const div = document.createElement('div');
+            div.className = 'reco-item-preview';
+            // تشويش من التوصية الثالثة فأكثر — فقط لو عددهم 3+
+            if (i >= 2 && recs.length >= 3) {
+                div.classList.add('blurred');
+            }
+            div.innerHTML = `
+                <div class="rip-priority ${prio.cls}">${prio.label}</div>
+                <div class="rip-text">${rec.text}</div>
+            `;
+            recoListEl.appendChild(div);
+        });
+
+        // ═══════════════════════════════════════════
+        // Cross-Link
+        // ═══════════════════════════════════════════
+
+        if (crossLink) {
+            document.getElementById('clIcon').textContent = crossLink.linkedDeptIcon || '🔗';
+            document.getElementById('clText').textContent = crossLink.text || '';
+            document.getElementById('clCta').textContent = crossLink.ctaText || 'اكتشف المزيد';
+        }
+
+        // ═══════════════════════════════════════════
+        // بانر العودة للإدارة الأصلية
+        // ═══════════════════════════════════════════
+
+        const DEPT_NAMES = {
+            HR: 'الموارد البشرية',
+            OPS: 'العمليات',
+            SALES: 'المبيعات',
+            COMPLIANCE: 'الامتثال',
+        };
+
+        if (redirectedFrom && DEPT_NAMES[redirectedFrom]) {
+            document.getElementById('returnDeptName').textContent = DEPT_NAMES[redirectedFrom];
+            document.getElementById('returnBanner').classList.add('active');
+        }
+
+        // ═══════════════════════════════════════════
+        // إرسال الإيميل (حساب صامت)
+        // ═══════════════════════════════════════════
+
+        async function submitEmail() {
+            const emailInput = document.getElementById('emailInput');
+            const email = emailInput.value.trim();
+            const btn = document.getElementById('unlockBtn');
+            const errEl = document.getElementById('emailError');
+
+            // Validation
+            errEl.classList.remove('visible');
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!email) {
+                errEl.textContent = 'أدخل بريدك الإلكتروني';
+                errEl.classList.add('visible');
+                emailInput.focus();
+                return;
+            }
+            if (!emailRegex.test(email)) {
+                errEl.textContent = 'البريد الإلكتروني غير صحيح';
+                errEl.classList.add('visible');
+                emailInput.focus();
+                return;
+            }
+
+            // Loading
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-sm"></span> جاري الحفظ...';
+
+            try {
+                // جمع كل البيانات لإرسالها
+                const payload = {
+                    email: email,
+                    company_name: companyName,
+                    sector: localStorage.getItem('stratix_sector') || '',
+                    country: localStorage.getItem('stratix_country') || '',
+                    category: localStorage.getItem('stratix_category') || '',
+                    pain: localStorage.getItem('stratix_pain') || '',
+                    redirected_from: redirectedFrom,
+                    raw_inputs: JSON.parse(localStorage.getItem('stratix_raw_inputs') || '{}'),
+                    analysis_result: analysis,
+                };
+
+                const res = await fetch('/api/financial-engine/save-result', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    // حفظ بيانات الحساب
+                    if (data.token) {
+                        localStorage.setItem('token', data.token);
+                    }
+                    if (data.user) {
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                    }
+                    localStorage.setItem('stratix_email', email);
+                    localStorage.setItem('stratix_account_created', 'true');
+
+                    // نجاح
+                    btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> تم!';
+                    btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+
+                    setTimeout(() => {
+                        window.location.href = '/financial-report';
+                    }, 800);
+                } else {
+                    throw new Error(data.message || 'خطأ في الحفظ');
+                }
+
+            } catch (error) {
+                console.error('Save error:', error);
+
+                // Fallback: حفظ محلياً والمتابعة
+                localStorage.setItem('stratix_email', email);
+                localStorage.setItem('stratix_account_pending', 'true');
+
+                btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> تم!';
+                btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+
+                setTimeout(() => {
+                    window.location.href = '/financial-report';
+                }, 800);
+            }
+        }
+
+        // Enter key
+        document.getElementById('emailInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') submitEmail();
+        });
+    </script>
+</body>
+
+</html>
