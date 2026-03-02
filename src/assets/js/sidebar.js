@@ -361,52 +361,10 @@
       html += '<div class="stx-section-label"><i class="bi bi-compass-fill" style="color:#667eea;margin-left:4px"></i> رحلتي الاستراتيجية</div>';
 
       // --- حالة البيانات ---
-      const hasPainAmbition = !!localStorage.getItem('painAmbition');
-      const isPainActive = isActive('/pain-ambition.html');
       const isOnboardingActive = isActive('/onboarding.html');
       const isDnaActive = isActive('/org-dna.html');
 
-      // === [DEFERRED] مسار المبتدئ — مؤجل حالياً، فقط شركات ===
-      // الألم والطموح هو نقطة البداية
-
-      // === الخطوة 2: الألم والطموح (للشركات القائمة — النظام يتكيف حسب النمط) ===
-      // Extract pattern info for badge
-      let patternBadgeHTML = '';
-      if (hasPainAmbition && patternKey !== 'default') {
-        try {
-          const paData = JSON.parse(localStorage.getItem('painAmbition'));
-          const patternName = paData?.pattern || '';
-          const PATTERN_COLORS_SIDEBAR = {
-            nascent_struggling: '#ef4444', nascent_cautious: '#22c55e',
-            growing_chaotic: '#f59e0b', growing_ambitious: '#3b82f6',
-            financial_struggling: '#dc2626', mature_renewing: '#8b5cf6',
-            mature_competitive: '#6366f1', default_strategic: '#667eea',
-            startup: '#22c55e', growing: '#3b82f6', mature: '#8b5cf6', struggling: '#ef4444'
-          };
-          const pColor = PATTERN_COLORS_SIDEBAR[patternKey] || '#667eea';
-          if (patternName) {
-            patternBadgeHTML = `
-              <div style="margin:0 14px 6px;padding:6px 12px;border-radius:8px;background:${pColor}12;border:1px solid ${pColor}25;display:flex;align-items:center;gap:6px;font-size:11px;">
-                <span style="width:8px;height:8px;border-radius:50%;background:${pColor};flex-shrink:0"></span>
-                <span style="font-weight:700;color:${pColor};flex:1">${patternName}</span>
-                <a href="/pain-ambition.html" style="color:var(--text-muted);font-size:10px;text-decoration:none;opacity:0.7" title="أعد التقييم">
-                  <i class="bi bi-arrow-repeat"></i>
-                </a>
-              </div>
-            `;
-          }
-        } catch (e) { /* ignore */ }
-      }
-
-      // [SIMPLIFIED] بدون ternary للأفراد
-      html += `
-      <a href="/pain-ambition.html" class="stx-item stx-phase0 ${isPainActive ? 'active' : ''}" style="margin:2px 10px;border-radius:10px;padding:10px 14px !important;border-right:none !important;background:${hasPainAmbition ? 'rgba(34,197,94,0.08)' : 'rgba(124,58,237,0.08)'};border:1px solid ${hasPainAmbition ? 'rgba(34,197,94,0.2)' : 'rgba(124,58,237,0.15)'};"> 
-        <i class="bi ${hasPainAmbition ? 'bi-check-circle-fill' : 'bi-record-circle'}" style="font-size:15px;color:${hasPainAmbition ? '#22c55e' : '#7c3aed'}"></i>
-        <span style="font-weight:700;font-size:12.5px">الألم والطموح</span>
-        <span style="margin-right:auto;font-size:9px;padding:2px 7px;border-radius:5px;background:${hasPainAmbition ? 'rgba(34,197,94,0.15)' : 'rgba(124,58,237,0.15)'};color:${hasPainAmbition ? '#22c55e' : '#7c3aed'};font-weight:800">${hasPainAmbition ? 'مكتمل ✓' : 'شركة قائمة'}</span>
-      </a>
-      ${patternBadgeHTML}
-      `;
+      // [DEFERRED] الألم والطموح — مؤجل حالياً
 
       // إعداد المنظمة
       html += `
