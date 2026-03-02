@@ -247,6 +247,7 @@ app.use('/api/activities', activitiesRoutes);
 // 🤖 المستشار الذكي
 app.use('/api/ai-advisor', aiAdvisorRoutes);
 app.use('/api/ai-insight', aiInsightRoutes); // Public — no auth (lead gen page)
+app.use('/api/leads', require('./routes/leads')); // Public — no auth (lead gen page)
 
 // 👥 أصحاب المصلحة + ⚠️ المخاطر (NEW — التكامل)
 const stakeholdersRoutes = require('./routes/stakeholders');
