@@ -154,20 +154,7 @@
         _lvl >= 4 ? { label: 'البيانات الإحصائية', href: '/statistical-data.html', icon: 'bi-bar-chart-steps' } : null,
       ].filter(Boolean)
     },
-    {
-      id: 'PLANNING',
-      nameAr: 'خياراتي وخطتي',
-      icon: 'bi-signpost-split',
-      emoji: '🎯',
-      color: '#7c3aed',
-      items: [
-        { label: 'مصفوفة TOWS', href: '/tows.html', icon: 'bi-arrows-fullscreen' },
-        _lvl >= 3 ? { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass-fill' } : null,
-        { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye' },
-        { label: 'مؤشرات الأداء', href: '/kpis.html', icon: 'bi-graph-up-arrow' },
-        _lvl >= 3 ? { label: 'OKRs', href: '/okrs.html', icon: 'bi-layers-fill' } : null,
-      ].filter(Boolean)
-    },
+
     {
       id: 'EXECUTION',
       nameAr: 'تنفيذي',
@@ -202,10 +189,15 @@
     { label: 'المقارنة المعيارية', href: '/benchmarking.html', icon: 'bi-bar-chart-line-fill', roles: [] },
   ];
 
-  // === 🧰 الأدوات ===
+  // === � الأدوات ===
   const toolsItems = [
     { label: 'التحليل الاستراتيجي', href: '/analysis.html', icon: 'bi-binoculars-fill', roles: [] },
     { label: 'البيئة الداخلية', href: '/internal-env.html', icon: 'bi-building-fill-check', roles: [] },
+    { label: 'مصفوفة TOWS', href: '/tows.html', icon: 'bi-arrows-fullscreen', roles: [] },
+    { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass-fill', roles: [] },
+    { label: 'الأهداف الاستراتيجية', href: '/objectives.html', icon: 'bi-bullseye', roles: [] },
+    { label: 'مؤشرات الأداء (KPIs)', href: '/kpis.html', icon: 'bi-graph-up-arrow', roles: [] },
+    { label: 'OKRs', href: '/okrs.html', icon: 'bi-layers-fill', roles: [] },
     { label: 'الأدوات الاستراتيجية', href: '/tools.html', icon: 'bi-tools', roles: [] },
     { label: 'الذكاء الاستراتيجي', href: '/intelligence.html', icon: 'bi-robot', roles: [] },
     { label: 'المستشار الاستراتيجي', href: '/strategic-advisor.html', icon: 'bi-cpu-fill', roles: [] },
