@@ -72,6 +72,17 @@ function buildPrompt(pains, sector, details) {
     }
 
     if (pain === 'compliance') {
+        const ctx = details.complianceContext;
+        if (ctx && ctx.missingItems) {
+            // من صفحة محلل الامتثال — بيانات تفصيلية
+            const sCount = parseInt(ctx.saudiCount) || 0;
+            const eCount = parseInt(ctx.expatCount) || 0;
+            const area = parseFloat(ctx.area) || 0;
+            const missing = (ctx.missingItems || '').replace(/[<>{}]/g, '').substring(0, 800);
+            const uType = ctx.userType === 'new' ? 'منشأة جديدة تحت التأسيس' : 'كيان قائم يحتاج تصحيح';
+            return `بصفتك مستشار امتثال سعودي خبير في 2026، حلل هذه البيانات الميدانية: النشاط ${safeSector}، الحالة: ${uType}، فريق ${sCount} سعودي و${eCount} وافد، مساحة المقر ${area}م². البنود الناقصة: "${missing}". قدم: 1) صدمة واقع عن الخطر الأكبر (عمالة أو تراخيص تخصصية)، 2) الأولوية القصوى للتصحيح غداً، 3) خطة 90 يوم للامتثال الكامل مع تقدير التكلفة.`;
+        }
+        // من صفحة ambition-gap — بيانات أساسية
         const rev = parseFloat(details.revenue) || 0;
         const emp = parseInt(details.employees) || 0;
         const loc = parseInt(details.locations) || 0;

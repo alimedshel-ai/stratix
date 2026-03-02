@@ -280,6 +280,11 @@ app.use('/api/break-even', breakEvenRoutes);
 app.use('/api/cfo', cfoAuditRoutes);
 
 
+// Serve compliance analyzer page (محلل فجوة الامتثال)
+app.get('/compliance-analyzer', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'compliance-analyzer.html'));
+});
+
 // Serve pain-screen page (v4-A — شاشة الألم)
 app.get('/pain-screen', (req, res) => {
   res.sendFile(path.join(__dirname, 'src', 'pain-screen.html'));
