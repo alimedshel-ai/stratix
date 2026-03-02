@@ -1,11 +1,11 @@
 /**
  * AI Insight API — Backend Proxy for Gemini
- * يستخدم في صفحة "صدمة الواقع" (Ambition Gap Analysis)
+ * يدعم تحليل الألم المتعدد (Multi-Pain) + فجوة الطموح المالية
  * 
  * ✅ API key server-side فقط
  * ✅ Rate limiting حقيقي (3 req/min per IP)
- * ✅ Input validation + sanitization
- * ✅ 20s timeout للباكند
+ * ✅ Prompt يُبنى في الباكند (لا prompt injection)
+ * ✅ 20s timeout
  * ✅ Error handling واضح
  */
 const express = require('express');
@@ -17,7 +17,7 @@ const router = express.Router();
 //  Rate Limiting — 3 طلبات/دقيقة لكل IP
 // ═══════════════════════════════════════════
 const aiLimiter = rateLimit({
-    windowMs: 60 * 1000, // 1 دقيقة
+    windowMs: 60 * 1000,
     max: 3,
     standardHeaders: true,
     legacyHeaders: false,
@@ -29,8 +29,54 @@ const aiLimiter = rateLimit({
 });
 
 // ═══════════════════════════════════════════
+//  Prompt Builders (server-side only)
+// ═══════════════════════════════════════════
+function buildPrompt(pains, sector, details) {
+    const safeSector = sector.replace(/[^\u0600-\u06FFa-zA-Z0-9\s&]/g, '').substring(0, 50);
+
+    // Multi-pain compound analysis
+    if (pains.length > 1) {
+        const painLabels = pains.map(p => {
+            return { strategic: 'استراتيجية', managerial: 'إدارية', operational: 'تشغيلية', financial: 'مالية' }[p] || p;
+        }).join(' و ');
+        const desc = (details.multiDesc || '').replace(/[<>{}]/g, '').substring(0, 500);
+        return `بصفتك مستشاراً استراتيجياً وخبيراً في حل الأزمات، قم بتحليل هذا "الألم المركب" لشركة في قطاع ${safeSector}. الشركة تعاني من مشاكل ${painLabels} مدمجة. وصف العميل للوضع هو: "${desc}". حدد فوراً الأولوية الكبرى (ما الذي يجب حله غداً؟)، اشرح كيف تغذي هذه المشاكل بعضها، وأعط 3 نصائح قاسية لكسر هذه الدائرة.`;
+    }
+
+    // Single pain analysis
+    const pain = pains[0];
+
+    if (pain === 'strategic') {
+        const goal = (details.goal || '').replace(/[<>{}]/g, '').substring(0, 200);
+        const obstacle = (details.obstacle || '').replace(/[<>{}]/g, '').substring(0, 200);
+        return `بصفتك مستشاراً استراتيجياً، حلل التحدي التالي لشركة في قطاع ${safeSector}: الهدف هو "${goal}" والعائق هو "${obstacle}". أعط صدمة واقع قوية بخصوص هذا الطموح، 3 عوائق خفية لا يراها العميل، ونصيحة واحدة للبدء.`;
+    }
+
+    if (pain === 'managerial') {
+        const emp = parseInt(details.emp) || 0;
+        const bottleneck = { decisions: 'سرعة اتخاذ القرار', team: 'كفاءة وتناغم الفريق', processes: 'وضوح الأدوار والمسؤوليات' }[details.bottleneck] || details.bottleneck;
+        return `بصفتك خبيراً إدارياً، حلل مشكلة شركة في قطاع ${safeSector} مع ${emp} موظفاً، حيث يتعطل العمل في "${bottleneck}". كيف سيؤدي هذا العطل لفشل استراتيجية الشركة؟ أعط 3 نقاط نقدية لاذعة وحلاً إدارياً واحداً.`;
+    }
+
+    if (pain === 'operational') {
+        const issue = (details.issue || '').replace(/[<>{}]/g, '').substring(0, 500);
+        return `بصفتك مدير عمليات محترف، حلل هذا الاختناق في شركة ${safeSector}: "${issue}". اشرح للعميل كم يخسر من المال والوقت بسبب هذا الهدر. أعط 3 نقاط لتحسين الكفاءة فوراً.`;
+    }
+
+    if (pain === 'financial') {
+        const curr = parseFloat(details.curr) || 0;
+        const target = parseFloat(details.target) || 0;
+        const gap = target > curr ? Math.round(((target - curr) / curr) * 100) : 0;
+        const problem = { revenue: 'ضعف الإيراد', costs: 'ارتفاع التكاليف', cashflow: 'التدفق النقدي والسيولة' }[details.problem] || 'مالية عامة';
+        return `بصفتك CFO، حلل فجوة نمو بنسبة ${gap}% لشركة في قطاع ${safeSector}. المبيعات الحالية ${curr.toLocaleString()} ريال والمستهدف ${target.toLocaleString()}. المشكلة الأساسية هي "${problem}". أعط 3 نقاط مخاطرة تشغيلية ونصيحة توازن واحدة.`;
+    }
+
+    return `حلل الوضع الاستراتيجي لشركة في قطاع ${safeSector}. أعط 3 نقاط تشخيصية ونصيحة واحدة.`;
+}
+
+// ═══════════════════════════════════════════
 //  POST /api/ai-insight
-//  تحليل فجوة الطموح عبر Gemini
+//  تحليل ذكي عبر Gemini
 // ═══════════════════════════════════════════
 router.post('/', aiLimiter, async (req, res) => {
     try {
@@ -44,41 +90,38 @@ router.post('/', aiLimiter, async (req, res) => {
         }
 
         // === Input Validation ===
-        const { sector, currentSales, targetSales, gapPercent } = req.body;
+        const { pains, sector, details } = req.body;
 
+        // Validate pains
+        const validPains = ['strategic', 'managerial', 'operational', 'financial'];
+        if (!Array.isArray(pains) || pains.length === 0 || pains.length > 4) {
+            return res.status(400).json({ error: 'invalid_input', message: 'يجب اختيار تحدي واحد على الأقل' });
+        }
+        const safePains = pains.filter(p => validPains.includes(p));
+        if (safePains.length === 0) {
+            return res.status(400).json({ error: 'invalid_input', message: 'نوع التحدي غير صالح' });
+        }
+
+        // Validate sector
         if (!sector || typeof sector !== 'string' || sector.length > 100) {
             return res.status(400).json({ error: 'invalid_input', message: 'القطاع غير صالح' });
         }
-        if (!currentSales || !targetSales || typeof currentSales !== 'number' || typeof targetSales !== 'number') {
-            return res.status(400).json({ error: 'invalid_input', message: 'أرقام المبيعات مطلوبة' });
-        }
-        if (currentSales < 10000 || currentSales > 10000000000) {
-            return res.status(400).json({ error: 'invalid_input', message: 'المبيعات الحالية خارج النطاق المدعوم' });
-        }
-        if (targetSales <= currentSales) {
-            return res.status(400).json({ error: 'invalid_input', message: 'المستهدف يجب أن يكون أكبر من الحالي' });
-        }
-        if (typeof gapPercent !== 'number' || gapPercent < 0 || gapPercent > 10000) {
-            return res.status(400).json({ error: 'invalid_input', message: 'نسبة الفجوة غير صالحة' });
-        }
 
-        // === Sanitize sector name (prevent prompt injection) ===
-        const safeSector = sector.replace(/[^\u0600-\u06FFa-zA-Z0-9\s&]/g, '').substring(0, 50);
+        // Details is optional object
+        const safeDetails = (details && typeof details === 'object') ? details : {};
 
-        // === Build Gemini Prompt ===
+        // === Build prompt server-side ===
+        const promptText = buildPrompt(safePains, sector, safeDetails);
+
         const payload = {
-            contents: [{
-                parts: [{
-                    text: `بصفتك CFO، حلل فجوة نمو بنسبة ${gapPercent}% لشركة في قطاع ${safeSector}. المبيعات الحالية ${currentSales.toLocaleString()} ريال. أعط 3 نقاط مخاطرة تشغيلية ونصيحة توازن واحدة باللغة العربية بأسلوب نقاط مختصرة.`
-                }]
-            }],
+            contents: [{ parts: [{ text: promptText }] }],
             systemInstruction: {
                 parts: [{
-                    text: 'أنت مستشار مالي صادق جداً. ركز على التوازن التشغيلي الداخلي فقط. لا تقترح حلولاً تسويقية عشوائية، ركز على الكفاءة والقدرة التشغيلية. الرد أقل من 200 كلمة.'
+                    text: 'أنت مستشار استراتيجي صادق جداً وصريح حد القسوة (صدمة الواقع). رد باللغة العربية بأسلوب نقاط مركزة. ركز على التوازن التشغيلي والمنطق العملي. في حال تعدد الآلام، ركز على فك الاشتباك بين المشاكل وتحديد نقطة الانطلاق الأولى. الرد أقل من 250 كلمة.'
                 }]
             },
             generationConfig: {
-                maxOutputTokens: 500,
+                maxOutputTokens: 600,
                 temperature: 0.7,
             }
         };
@@ -117,12 +160,11 @@ router.post('/', aiLimiter, async (req, res) => {
             });
         }
 
-        // === Success ===
         res.json({
             insight: text,
             meta: {
-                sector: safeSector,
-                gapPercent,
+                pains: safePains,
+                sector,
                 timestamp: new Date().toISOString(),
             }
         });
