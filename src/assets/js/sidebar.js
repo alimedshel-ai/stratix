@@ -139,8 +139,6 @@
         { label: 'الكيانات', href: '/entities.html', icon: 'bi-building-fill' },
         { label: 'الفريق الاستراتيجي', href: '/team.html', icon: 'bi-person-lines-fill' },
         { label: 'القطاعات والأنشطة', href: '/sectors.html', icon: 'bi-grid-3x3-gap-fill' },
-        { label: 'الإعدادات', href: '/settings.html', icon: 'bi-gear-fill' },
-        { label: 'البيانات الأساسية', href: '/settings-data.html', icon: 'bi-database-fill-gear' },
       ]
     },
     {
@@ -216,14 +214,15 @@
     { label: 'مركز الذكاء', href: '/ai-center.html', icon: 'bi-cpu-fill', roles: ['OWNER', 'ADMIN'] },
   ];
 
-  // === نظام (OWNER/ADMIN فقط) — مختصر ===
-  // [REMOVED DUPLICATE] DNA المنظمة — موجود في رحلتي الاستراتيجية
+  // === ⚙️ النظام (OWNER/ADMIN فقط) ===
   const systemItems = [
     { label: 'لوحة الإدارة', href: '/admin-panel.html', icon: 'bi-shield-lock-fill' },
     { label: 'المستخدمون', href: '/users.html', icon: 'bi-people-fill' },
     { label: 'استيراد البيانات', href: '/import.html', icon: 'bi-cloud-upload-fill' },
     { label: 'سجل النشاطات', href: '/activity-feed.html', icon: 'bi-activity' },
-    { label: 'الإعدادات', href: '/admin-dashboard.html#settings', icon: 'bi-gear-wide-connected' },
+    { label: 'الإعدادات', href: '/settings.html', icon: 'bi-gear-fill' },
+    { label: 'البيانات الأساسية', href: '/settings-data.html', icon: 'bi-database-fill-gear' },
+    { label: 'إعدادات النظام', href: '/admin-dashboard.html#settings', icon: 'bi-gear-wide-connected' },
   ];
 
   // === Helper: صلاحيات ===
