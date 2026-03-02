@@ -148,9 +148,7 @@
       emoji: '🔍',
       color: '#f59e0b',
       items: [
-        { label: 'التحليل الاستراتيجي', href: '/analysis.html', icon: 'bi-binoculars-fill' },
         { label: 'التقييمات', href: '/assessments.html', icon: 'bi-clipboard-check-fill' },
-        _lvl >= 3 ? { label: 'البيئة الداخلية', href: '/internal-env.html', icon: 'bi-building-fill-check' } : null,
         _lvl >= 4 ? { label: 'أصحاب المصلحة', href: '/stakeholders.html', icon: 'bi-people-fill' } : null,
         _lvl >= 3 ? { label: 'خريطة المخاطر', href: '/risk-map.html', icon: 'bi-exclamation-triangle-fill' } : null,
         _lvl >= 4 ? { label: 'البيانات الإحصائية', href: '/statistical-data.html', icon: 'bi-bar-chart-steps' } : null,
@@ -206,6 +204,8 @@
 
   // === 🧰 الأدوات ===
   const toolsItems = [
+    { label: 'التحليل الاستراتيجي', href: '/analysis.html', icon: 'bi-binoculars-fill', roles: [] },
+    { label: 'البيئة الداخلية', href: '/internal-env.html', icon: 'bi-building-fill-check', roles: [] },
     { label: 'الأدوات الاستراتيجية', href: '/tools.html', icon: 'bi-tools', roles: [] },
     { label: 'الذكاء الاستراتيجي', href: '/intelligence.html', icon: 'bi-robot', roles: [] },
     { label: 'المستشار الاستراتيجي', href: '/strategic-advisor.html', icon: 'bi-cpu-fill', roles: [] },
