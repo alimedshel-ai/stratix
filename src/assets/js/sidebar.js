@@ -493,16 +493,8 @@
       const isOnboardingActive = isActive('/onboarding.html');
       const isDnaActive = isActive('/org-dna.html');
 
-      // === الخطوة 1: مسار المبتدئ / مسار التطوير — يختفي بعد إكمال الألم والطموح ===
-      if (!hasPainAmbition) {
-        html += `
-        <a href="/beginner-path.html" class="stx-item stx-phase0 ${isBegPathActive ? 'active' : ''}" style="margin:2px 10px;border-radius:10px;padding:10px 14px !important;border-right:none !important;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);">
-          <i class="bi ${_sidebarIsIndividual ? 'bi-person-lines-fill' : 'bi-signpost-split-fill'}" style="font-size:15px;color:#f59e0b"></i>
-          <span style="font-weight:700;font-size:12.5px;color:#f59e0b">${_sidebarIsIndividual ? 'مسار التطوير' : 'مسار المبتدئ'}</span>
-          <span style="margin-right:auto;font-size:9px;padding:2px 7px;border-radius:5px;background:rgba(245,158,11,0.15);color:#f59e0b;font-weight:800">${_sidebarIsIndividual ? 'تطوير مهني' : 'مشروع جديد'}</span>
-        </a>
-        `;
-      }
+      // === [DEFERRED] مسار المبتدئ — مؤجل حالياً، فقط شركات ===
+      // الألم والطموح هو نقطة البداية
 
       // === الخطوة 2: الألم والطموح (للشركات القائمة — النظام يتكيف حسب النمط) ===
       // Extract pattern info for badge
