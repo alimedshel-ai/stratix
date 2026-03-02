@@ -156,19 +156,6 @@
     },
 
     {
-      id: 'EXECUTION',
-      nameAr: 'تنفيذي',
-      icon: 'bi-rocket-takeoff',
-      emoji: '🚀',
-      color: '#059669',
-      items: [
-        { label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban-fill' },
-        _lvl >= 3 ? { label: 'المشاريع', href: '/projects.html', icon: 'bi-folder2-open' } : null,
-        { label: 'المهام', href: '/tasks.html', icon: 'bi-check2-square' },
-        { label: 'إدخال المؤشرات', href: '/kpi-entries.html', icon: 'bi-pencil-square' },
-      ].filter(Boolean)
-    },
-    {
       id: 'ADAPTATION',
       nameAr: 'متابعتي',
       icon: 'bi-bar-chart-line',
@@ -189,15 +176,23 @@
     { label: 'المقارنة المعيارية', href: '/benchmarking.html', icon: 'bi-bar-chart-line-fill', roles: [] },
   ];
 
-  // === � الأدوات ===
+  // === 💎 الأدوات ===
   const toolsItems = [
+    // ـــ التحليل والتشخيص ـــ
     { label: 'التحليل الاستراتيجي', href: '/analysis.html', icon: 'bi-binoculars-fill', roles: [] },
     { label: 'البيئة الداخلية', href: '/internal-env.html', icon: 'bi-building-fill-check', roles: [] },
     { label: 'مصفوفة TOWS', href: '/tows.html', icon: 'bi-arrows-fullscreen', roles: [] },
+    // ـــ التخطيط والأهداف ـــ
     { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass-fill', roles: [] },
     { label: 'الأهداف الاستراتيجية', href: '/objectives.html', icon: 'bi-bullseye', roles: [] },
     { label: 'مؤشرات الأداء (KPIs)', href: '/kpis.html', icon: 'bi-graph-up-arrow', roles: [] },
+    { label: 'إدخال المؤشرات', href: '/kpi-entries.html', icon: 'bi-pencil-square', roles: [] },
     { label: 'OKRs', href: '/okrs.html', icon: 'bi-layers-fill', roles: [] },
+    // ـــ إدارة المهام ـــ
+    { label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban-fill', roles: [] },
+    { label: 'المشاريع', href: '/projects.html', icon: 'bi-folder2-open', roles: [] },
+    { label: 'المهام', href: '/tasks.html', icon: 'bi-check2-square', roles: [] },
+    // ـــ أدوات ذكية ـــ
     { label: 'الأدوات الاستراتيجية', href: '/tools.html', icon: 'bi-tools', roles: [] },
     { label: 'الذكاء الاستراتيجي', href: '/intelligence.html', icon: 'bi-robot', roles: [] },
     { label: 'المستشار الاستراتيجي', href: '/strategic-advisor.html', icon: 'bi-cpu-fill', roles: [] },
