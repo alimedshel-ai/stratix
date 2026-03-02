@@ -193,21 +193,24 @@
       color: '#0891b2',
       items: [
         { label: 'المراجعات الدورية', href: '/reviews.html', icon: 'bi-journal-check' },
-        { label: 'الذكاء الاستراتيجي', href: '/intelligence.html', icon: 'bi-stars' },
-        { label: 'المستشار الاستراتيجي', href: '/strategic-advisor.html', icon: 'bi-robot' },
         _lvl >= 4 ? { label: 'التصحيحات', href: '/corrections.html', icon: 'bi-arrow-repeat' } : null,
         _lvl >= 3 ? { label: 'التقويم الاستراتيجي', href: '/strategic-calendar.html', icon: 'bi-calendar-event-fill' } : null,
       ].filter(Boolean)
     }
   ];
 
-  // === الأدوات والتقارير (بدون تكرار — الذكاء الاستراتيجي موجود في متابعتي) ===
-  const toolsAndReportsItems = [
+  // === 📊 التقارير ===
+  const reportsItems = [
     { label: 'تقاريري', href: '/auto-reports.html', icon: 'bi-file-earmark-bar-graph', roles: [] },
-    { label: 'الأدوات الاستراتيجية', href: '/tools.html', icon: 'bi-tools', roles: [] },
     { label: 'الفحص المالي', href: '/finance-audit.html', icon: 'bi-clipboard2-pulse-fill', roles: [] },
-    // [REMOVED DUPLICATE] الذكاء الاستراتيجي — موجود في مرحلة "متابعتي"
     { label: 'المقارنة المعيارية', href: '/benchmarking.html', icon: 'bi-bar-chart-line-fill', roles: [] },
+  ];
+
+  // === 🧰 الأدوات ===
+  const toolsItems = [
+    { label: 'الأدوات الاستراتيجية', href: '/tools.html', icon: 'bi-tools', roles: [] },
+    { label: 'الذكاء الاستراتيجي', href: '/intelligence.html', icon: 'bi-robot', roles: [] },
+    { label: 'المستشار الاستراتيجي', href: '/strategic-advisor.html', icon: 'bi-cpu-fill', roles: [] },
     { label: 'مختبر المحاكاة', href: '/simulation-lab.html', icon: 'bi-bezier2', roles: ['OWNER', 'ADMIN', 'EDITOR'] },
     { label: 'اللوحة الحية', href: '/live-board.html', icon: 'bi-display-fill', roles: ['OWNER', 'ADMIN'] },
     { label: 'مركز الذكاء', href: '/ai-center.html', icon: 'bi-cpu-fill', roles: ['OWNER', 'ADMIN'] },
@@ -494,22 +497,47 @@
     }
 
     // ╔═══════════════════════════════════════════╗
-    // ║  🧰 الأدوات والتقارير (مدمج)                ║
+    // ║  📊 التقارير                                ║
     // ╚═══════════════════════════════════════════╝
-    if (!isViewerOrDE && !_sidebarIsIndividual) {
+    if (!isViewerOrDE) {
       html += '<div class="stx-divider"></div>';
 
-      const toolsFiltered = toolsAndReportsItems.filter(item => hasAccess(item.roles));
-      const toolsHasActive = toolsFiltered.some(item => isActive(item.href));
+      const rFiltered = reportsItems.filter(item => hasAccess(item.roles));
+      const rHasActive = rFiltered.some(item => isActive(item.href));
 
       html += `
-        <div class="stx-section ${toolsHasActive ? 'open' : ''}" data-section="tools">
-          <div class="stx-section-header" onclick="toggleSection('tools')">
-            <span><i class="bi bi-grid-3x3-gap-fill" style="color:#a78bfa"></i> الأدوات والتقارير</span>
+        <div class="stx-section ${rHasActive ? 'open' : ''}" data-section="reports">
+          <div class="stx-section-header" onclick="toggleSection('reports')">
+            <span><i class="bi bi-file-earmark-bar-graph" style="color:#22c55e"></i> التقارير</span>
             <i class="bi bi-chevron-down stx-chevron"></i>
           </div>
-          <div class="stx-section-items" ${toolsHasActive ? 'style="max-height:600px"' : ''}>
-            ${toolsFiltered.map(item => `
+          <div class="stx-section-items" ${rHasActive ? 'style="max-height:600px"' : ''}>
+            ${rFiltered.map(item => `
+              <a href="${item.href}" class="stx-item ${isActive(item.href) ? 'active' : ''}">
+                <i class="bi ${item.icon}"></i>
+                <span class="stx-item-label">${item.label}</span>
+              </a>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // ╔═══════════════════════════════════════════╗
+    // ║  🧰 الأدوات                                ║
+    // ╚═══════════════════════════════════════════╝
+    if (!isViewerOrDE) {
+      const tFiltered = toolsItems.filter(item => hasAccess(item.roles));
+      const tHasActive = tFiltered.some(item => isActive(item.href));
+
+      html += `
+        <div class="stx-section ${tHasActive ? 'open' : ''}" data-section="tools">
+          <div class="stx-section-header" onclick="toggleSection('tools')">
+            <span><i class="bi bi-tools" style="color:#a78bfa"></i> الأدوات</span>
+            <i class="bi bi-chevron-down stx-chevron"></i>
+          </div>
+          <div class="stx-section-items" ${tHasActive ? 'style="max-height:600px"' : ''}>
+            ${tFiltered.map(item => `
               <a href="${item.href}" class="stx-item ${isActive(item.href) ? 'active' : ''}">
                 <i class="bi ${item.icon}"></i>
                 <span class="stx-item-label">${item.label}</span>
