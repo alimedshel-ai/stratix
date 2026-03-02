@@ -127,17 +127,15 @@
   // === محرك المسارات الذكية (يُقرأ ديناميكياً داخل buildSidebar) ===
 
   // === رحلتي الاستراتيجية: 5 مراحل (بالتسميات الجديدة) ===
+  // [SIMPLIFIED] المراحل للشركات فقط — بدون ternary للأفراد
   const journeyPhases = [
     {
       id: 'FOUNDATION',
-      nameAr: _sidebarIsIndividual ? 'أساسياتي' : 'بنيتنا',
-      icon: _sidebarIsIndividual ? 'bi-person-gear' : 'bi-building-gear',
-      emoji: _sidebarIsIndividual ? '🧩' : '🏗️',
+      nameAr: 'بنيتنا',
+      icon: 'bi-building-gear',
+      emoji: '🏗️',
       color: '#667eea',
-      items: _sidebarIsIndividual ? [
-        { label: 'ملفي الشخصي', href: '/settings.html', icon: 'bi-person-circle' },
-        { label: 'الإعدادات', href: '/settings-data.html', icon: 'bi-gear-fill' },
-      ] : [
+      items: [
         { label: 'الكيانات', href: '/entities.html', icon: 'bi-building-fill' },
         { label: 'الفريق الاستراتيجي', href: '/team.html', icon: 'bi-person-lines-fill' },
         { label: 'القطاعات والأنشطة', href: '/sectors.html', icon: 'bi-grid-3x3-gap-fill' },
@@ -147,15 +145,11 @@
     },
     {
       id: 'DIAGNOSIS',
-      nameAr: _sidebarIsIndividual ? 'تقييمي' : 'تشخيصي',
-      icon: _sidebarIsIndividual ? 'bi-clipboard2-pulse' : 'bi-search-heart',
+      nameAr: 'تشخيصي',
+      icon: 'bi-search-heart',
       emoji: '🔍',
       color: '#f59e0b',
-      items: _sidebarIsIndividual ? [
-        { label: 'تحليل SWOT شخصي', href: '/analysis.html', icon: 'bi-grid-1x2-fill' },
-        { label: 'تقييم المهارات', href: '/assessments.html', icon: 'bi-clipboard-check-fill' },
-        { label: 'خريطة التحديات', href: '/risk-map.html', icon: 'bi-exclamation-triangle-fill' },
-      ] : [
+      items: [
         { label: 'التحليل الاستراتيجي', href: '/analysis.html', icon: 'bi-binoculars-fill' },
         { label: 'التقييمات', href: '/assessments.html', icon: 'bi-clipboard-check-fill' },
         _lvl >= 3 ? { label: 'البيئة الداخلية', href: '/internal-env.html', icon: 'bi-building-fill-check' } : null,
@@ -166,15 +160,11 @@
     },
     {
       id: 'PLANNING',
-      nameAr: _sidebarIsIndividual ? 'أهدافي وخطتي' : 'خياراتي وخطتي',
-      icon: _sidebarIsIndividual ? 'bi-flag-fill' : 'bi-signpost-split',
+      nameAr: 'خياراتي وخطتي',
+      icon: 'bi-signpost-split',
       emoji: '🎯',
       color: '#7c3aed',
-      items: _sidebarIsIndividual ? [
-        { label: 'أولوياتي', href: '/tows.html', icon: 'bi-arrows-fullscreen' },
-        { label: 'أهدافي المهنية', href: '/objectives.html', icon: 'bi-bullseye' },
-        { label: 'مؤشرات تقدّمي', href: '/kpis.html', icon: 'bi-graph-up-arrow' },
-      ] : [
+      items: [
         { label: 'مصفوفة TOWS', href: '/tows.html', icon: 'bi-arrows-fullscreen' },
         _lvl >= 3 ? { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass-fill' } : null,
         { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye' },
@@ -184,15 +174,11 @@
     },
     {
       id: 'EXECUTION',
-      nameAr: _sidebarIsIndividual ? 'خطواتي' : 'تنفيذي',
-      icon: _sidebarIsIndividual ? 'bi-person-walking' : 'bi-rocket-takeoff',
-      emoji: _sidebarIsIndividual ? '🏃' : '🚀',
+      nameAr: 'تنفيذي',
+      icon: 'bi-rocket-takeoff',
+      emoji: '🚀',
       color: '#059669',
-      items: _sidebarIsIndividual ? [
-        { label: 'خطة العمل', href: '/initiatives.html', icon: 'bi-kanban-fill' },
-        { label: 'مهامي', href: '/tasks.html', icon: 'bi-check2-square' },
-        { label: 'تسجيل التقدم', href: '/kpi-entries.html', icon: 'bi-pencil-square' },
-      ] : [
+      items: [
         { label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban-fill' },
         _lvl >= 3 ? { label: 'المشاريع', href: '/projects.html', icon: 'bi-folder2-open' } : null,
         { label: 'المهام', href: '/tasks.html', icon: 'bi-check2-square' },
@@ -201,15 +187,11 @@
     },
     {
       id: 'ADAPTATION',
-      nameAr: _sidebarIsIndividual ? 'مراجعتي' : 'متابعتي',
+      nameAr: 'متابعتي',
       icon: 'bi-bar-chart-line',
       emoji: '📊',
       color: '#0891b2',
-      items: _sidebarIsIndividual ? [
-        { label: 'مراجعة أسبوعية', href: '/reviews.html', icon: 'bi-journal-check' },
-        { label: 'تطوير مستمر', href: '/intelligence.html', icon: 'bi-stars' },
-        { label: 'تقويمي', href: '/strategic-calendar.html', icon: 'bi-calendar-event-fill' },
-      ] : [
+      items: [
         { label: 'المراجعات الدورية', href: '/reviews.html', icon: 'bi-journal-check' },
         { label: 'الذكاء الاستراتيجي', href: '/intelligence.html', icon: 'bi-stars' },
         { label: 'المستشار الاستراتيجي', href: '/strategic-advisor.html', icon: 'bi-robot' },
@@ -219,12 +201,12 @@
     }
   ];
 
-  // === الأدوات والتقارير (دمج رؤيتي + أدوات متقدمة) ===
+  // === الأدوات والتقارير (بدون تكرار — الذكاء الاستراتيجي موجود في متابعتي) ===
   const toolsAndReportsItems = [
     { label: 'تقاريري', href: '/auto-reports.html', icon: 'bi-file-earmark-bar-graph', roles: [] },
     { label: 'الأدوات الاستراتيجية', href: '/tools.html', icon: 'bi-tools', roles: [] },
     { label: 'الفحص المالي', href: '/finance-audit.html', icon: 'bi-clipboard2-pulse-fill', roles: [] },
-    { label: 'الذكاء الاستراتيجي', href: '/intelligence.html', icon: 'bi-robot', roles: [] },
+    // [REMOVED DUPLICATE] الذكاء الاستراتيجي — موجود في مرحلة "متابعتي"
     { label: 'المقارنة المعيارية', href: '/benchmarking.html', icon: 'bi-bar-chart-line-fill', roles: [] },
     { label: 'مختبر المحاكاة', href: '/simulation-lab.html', icon: 'bi-bezier2', roles: ['OWNER', 'ADMIN', 'EDITOR'] },
     { label: 'اللوحة الحية', href: '/live-board.html', icon: 'bi-display-fill', roles: ['OWNER', 'ADMIN'] },
@@ -232,11 +214,11 @@
   ];
 
   // === نظام (OWNER/ADMIN فقط) — مختصر ===
+  // [REMOVED DUPLICATE] DNA المنظمة — موجود في رحلتي الاستراتيجية
   const systemItems = [
     { label: 'لوحة الإدارة', href: '/admin-panel.html', icon: 'bi-shield-lock-fill' },
     { label: 'المستخدمون', href: '/users.html', icon: 'bi-people-fill' },
     { label: 'استيراد البيانات', href: '/import.html', icon: 'bi-cloud-upload-fill' },
-    { label: 'DNA المنظمة', href: '/org-dna.html', icon: 'bi-fingerprint' },
     { label: 'سجل النشاطات', href: '/activity-feed.html', icon: 'bi-activity' },
     { label: 'الإعدادات', href: '/admin-dashboard.html#settings', icon: 'bi-gear-wide-connected' },
   ];
@@ -322,16 +304,11 @@
     `;
 
     // ╔═══════════════════════════════════════════╗
-    // ║  ⚡ مساري — القسم الأول الجديد             ║
+    // ║  ⚡ مساري — القسم الأول                     ║
     // ╚═══════════════════════════════════════════╝
     html += '<div class="stx-section-label"><i class="bi bi-lightning-charge-fill" style="color:#667eea;margin-left:4px"></i> مساري</div>';
 
-    html += `
-      <a href="${homeHref}" class="stx-item stx-mypath ${isHomeActive ? 'active' : ''}">
-        <i class="bi bi-crosshair" style="color:#667eea"></i>
-        <span>أولويتي اليوم</span>
-      </a>
-    `;
+    // [REMOVED DUPLICATE] أولويتي اليوم — كان نفس رابط الرئيسية
 
     // لوحة القيادة التنفيذية (OWNER/ADMIN)
     if (hasAccess(['OWNER', 'ADMIN'])) {
@@ -344,27 +321,8 @@
       `;
     }
 
-    // لوحة المستشار (شركة استشارات فقط — CONSULTANT_AGENCY — أو SUPER_ADMIN)
-    if ((userType === 'CONSULTANT' && !_sidebarIsIndividual) || isSuperAdmin) {
-      const isConsultantActive = isActive('/consultant-dashboard.html');
-      html += `
-      <a href="/consultant-dashboard.html" class="stx-item stx-mypath ${isConsultantActive ? 'active' : ''}" style="border-right:3px solid #a78bfa !important">
-        <i class="bi bi-person-workspace" style="color:#a78bfa"></i>
-        <span>لوحة العملاء</span>
-      </a>
-      `;
-    }
-
-    // لوحة مدير الإدارة (DEPT_MANAGER فقط أو SUPER_ADMIN)
-    if (userType === 'DEPT_MANAGER' || isSuperAdmin) {
-      const isDeptActive = isActive('/dept-dashboard.html');
-      html += `
-      <a href="/dept-dashboard.html" class="stx-item stx-mypath ${isDeptActive ? 'active' : ''}" style="border-right:3px solid #f59e0b !important">
-        <i class="bi bi-diagram-3-fill" style="color:#f59e0b"></i>
-        <span>لوحة إدارتي</span>
-      </a>
-      `;
-    }
+    // [DEFERRED] لوحة المستشار — مؤجلة
+    // [DEFERRED] لوحة مدير الإدارة — مؤجلة
 
     // --- شريط التقدم (ذكي أو عام) ---
     if (!isViewerOrDE) {
@@ -392,91 +350,7 @@
       }
     }
 
-    // ╔═══════════════════════════════════════════╗
-    // ║  🏢 رحلة مدير الإدارة (DEPT_MANAGER)       ║
-    // ╚═══════════════════════════════════════════╝
-    if (!isViewerOrDE && userType === 'DEPT_MANAGER' && !isSmartPath) {
-      html += '<div class="stx-divider"></div>';
-      html += '<div class="stx-section-label"><i class="bi bi-compass-fill" style="color:#f59e0b;margin-left:4px"></i> رحلة إدارتي</div>';
-
-      const deptJourney = [
-        {
-          id: 'DEPT_ANALYSIS',
-          nameAr: 'تحليل الوضع',
-          icon: 'bi-search-heart',
-          emoji: '🔍',
-          color: '#3b82f6',
-          items: [
-            { label: 'البيئة الداخلية', href: '/internal-env.html', icon: 'bi-building-fill-check' },
-            { label: 'تحليل SWOT', href: '/swot.html', icon: 'bi-grid-1x2-fill' },
-            { label: 'تحليل الفجوات', href: '/gap-analysis.html', icon: 'bi-arrows-expand' },
-            { label: 'خريطة المخاطر', href: '/risk-map.html', icon: 'bi-exclamation-triangle-fill' },
-          ]
-        },
-        {
-          id: 'DEPT_PLANNING',
-          nameAr: 'التخطيط',
-          icon: 'bi-signpost-split',
-          emoji: '🎯',
-          color: '#a78bfa',
-          items: [
-            { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass-fill' },
-            { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye' },
-            { label: 'مؤشرات الأداء', href: '/kpis.html', icon: 'bi-graph-up-arrow' },
-          ]
-        },
-        {
-          id: 'DEPT_EXECUTION',
-          nameAr: 'التنفيذ',
-          icon: 'bi-rocket-takeoff',
-          emoji: '🚀',
-          color: '#22c55e',
-          items: [
-            { label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban-fill' },
-            { label: 'المهام', href: '/tasks.html', icon: 'bi-check2-square' },
-            { label: 'إدخال المؤشرات', href: '/kpi-entries.html', icon: 'bi-pencil-square' },
-          ]
-        },
-        {
-          id: 'DEPT_REVIEW',
-          nameAr: 'المتابعة',
-          icon: 'bi-bar-chart-line',
-          emoji: '📊',
-          color: '#0891b2',
-          items: [
-            { label: 'المراجعات الدورية', href: '/reviews.html', icon: 'bi-journal-check' },
-            { label: 'التقارير', href: '/auto-reports.html', icon: 'bi-file-earmark-bar-graph' },
-            { label: 'الذكاء الاستراتيجي', href: '/intelligence.html', icon: 'bi-stars' },
-          ]
-        },
-      ];
-
-      deptJourney.forEach((phase, idx) => {
-        const hasActiveItem = phase.items.some(item => isActive(item.href));
-        const isOpen = hasActiveItem;
-
-        html += `
-          <div class="stx-phase ${isOpen ? 'in-progress open' : ''}" data-phase="dept-${idx}">
-            <div class="stx-phase-header" onclick="togglePhase('dept-${idx}')" style="--phase-color: ${phase.color}">
-              <span class="stx-phase-status"><i class="bi bi-circle-fill" style="font-size:10px;color:${phase.color}"></i></span>
-              <span class="stx-phase-name">
-                <i class="bi ${phase.icon}" style="color:${phase.color}"></i>
-                ${phase.nameAr}
-              </span>
-              <i class="bi bi-chevron-down stx-chevron"></i>
-            </div>
-            <div class="stx-phase-items" ${isOpen ? 'style="max-height:500px"' : ''}>
-              ${phase.items.map(item => `
-                <a href="${item.href}" class="stx-item ${isActive(item.href) ? 'active' : ''}" title="${item.label}">
-                  <i class="bi ${item.icon}"></i>
-                  <span class="stx-item-label">${item.label}</span>
-                </a>
-              `).join('')}
-            </div>
-          </div>
-        `;
-      });
-    }
+    // [DEFERRED] رحلة مدير الإدارة — مؤجلة حالياً
 
     // ╔═══════════════════════════════════════════╗
     // ║  🧭 رحلتي الاستراتيجية                     ║
@@ -489,7 +363,6 @@
       // --- حالة البيانات ---
       const hasPainAmbition = !!localStorage.getItem('painAmbition');
       const isPainActive = isActive('/pain-ambition.html');
-      const isBegPathActive = isActive('/beginner-path.html');
       const isOnboardingActive = isActive('/onboarding.html');
       const isDnaActive = isActive('/org-dna.html');
 
@@ -525,37 +398,27 @@
         } catch (e) { /* ignore */ }
       }
 
+      // [SIMPLIFIED] بدون ternary للأفراد
       html += `
-      <a href="/pain-ambition.html" class="stx-item stx-phase0 ${isPainActive ? 'active' : ''}" style="margin:2px 10px;border-radius:10px;padding:10px 14px !important;border-right:none !important;background:${hasPainAmbition ? 'rgba(34,197,94,0.08)' : 'rgba(124,58,237,0.08)'};border:1px solid ${hasPainAmbition ? 'rgba(34,197,94,0.2)' : 'rgba(124,58,237,0.15)'};">
+      <a href="/pain-ambition.html" class="stx-item stx-phase0 ${isPainActive ? 'active' : ''}" style="margin:2px 10px;border-radius:10px;padding:10px 14px !important;border-right:none !important;background:${hasPainAmbition ? 'rgba(34,197,94,0.08)' : 'rgba(124,58,237,0.08)'};border:1px solid ${hasPainAmbition ? 'rgba(34,197,94,0.2)' : 'rgba(124,58,237,0.15)'};"> 
         <i class="bi ${hasPainAmbition ? 'bi-check-circle-fill' : 'bi-record-circle'}" style="font-size:15px;color:${hasPainAmbition ? '#22c55e' : '#7c3aed'}"></i>
-        <span style="font-weight:700;font-size:12.5px">${_sidebarIsIndividual ? 'التحديات والأهداف' : 'الألم والطموح'}</span>
-        <span style="margin-right:auto;font-size:9px;padding:2px 7px;border-radius:5px;background:${hasPainAmbition ? 'rgba(34,197,94,0.15)' : 'rgba(124,58,237,0.15)'};color:${hasPainAmbition ? '#22c55e' : '#7c3aed'};font-weight:800">${hasPainAmbition ? 'مكتمل ✓' : (_sidebarIsIndividual ? 'تقييم ذاتي' : 'شركة قائمة')}</span>
+        <span style="font-weight:700;font-size:12.5px">الألم والطموح</span>
+        <span style="margin-right:auto;font-size:9px;padding:2px 7px;border-radius:5px;background:${hasPainAmbition ? 'rgba(34,197,94,0.15)' : 'rgba(124,58,237,0.15)'};color:${hasPainAmbition ? '#22c55e' : '#7c3aed'};font-weight:800">${hasPainAmbition ? 'مكتمل ✓' : 'شركة قائمة'}</span>
       </a>
       ${patternBadgeHTML}
       `;
 
-      // === الخطوة 3: إعداد المنظمة / الملف الشخصي ===
-      if (_sidebarIsIndividual) {
-        // للأفراد: إعداد الملف الشخصي بدل المنظمة
-        html += `
-        <a href="/onboarding.html" class="stx-item stx-phase0 ${isOnboardingActive ? 'active' : ''}" style="margin:2px 10px 4px;border-radius:10px;padding:10px 14px !important;border-right:none !important;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);">
-          <i class="bi bi-person-check-fill" style="font-size:15px;color:#667eea"></i>
-          <span style="font-weight:700;font-size:12.5px">إعداد ملفي</span>
-        </a>
-        `;
-        // لا نعرض هوية المنظمة (DNA) للأفراد
-      } else {
-        html += `
-        <a href="/onboarding.html" class="stx-item stx-phase0 ${isOnboardingActive ? 'active' : ''}" style="margin:2px 10px 4px;border-radius:10px;padding:10px 14px !important;border-right:none !important;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);">
-          <i class="bi bi-rocket-takeoff-fill" style="font-size:15px;color:#667eea"></i>
-          <span style="font-weight:700;font-size:12.5px">إعداد المنظمة</span>
-        </a>
-        <a href="/org-dna.html" class="stx-item stx-dna-link ${isDnaActive ? 'active' : ''}" style="margin:-2px 18px 4px;padding:6px 12px !important;border-radius:8px;font-size:11.5px;opacity:0.85">
-          <i class="bi bi-fingerprint" style="color:#ec4899;font-size:13px"></i>
-          <span>هوية المنظمة (DNA)</span>
-        </a>
-        `;
-      }
+      // إعداد المنظمة
+      html += `
+      <a href="/onboarding.html" class="stx-item stx-phase0 ${isOnboardingActive ? 'active' : ''}" style="margin:2px 10px 4px;border-radius:10px;padding:10px 14px !important;border-right:none !important;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);">
+        <i class="bi bi-rocket-takeoff-fill" style="font-size:15px;color:#667eea"></i>
+        <span style="font-weight:700;font-size:12.5px">إعداد المنظمة</span>
+      </a>
+      <a href="/org-dna.html" class="stx-item stx-dna-link ${isDnaActive ? 'active' : ''}" style="margin:-2px 18px 4px;padding:6px 12px !important;border-radius:8px;font-size:11.5px;opacity:0.85">
+        <i class="bi bi-fingerprint" style="color:#ec4899;font-size:13px"></i>
+        <span>هوية المنظمة (DNA)</span>
+      </a>
+      `;
 
       // --- المراحل الخمس ---
       journeyPhases.forEach((phase, idx) => {
