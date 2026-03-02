@@ -37,7 +37,7 @@ function buildPrompt(pains, sector, details) {
     // Multi-pain compound analysis
     if (pains.length > 1) {
         const painLabels = pains.map(p => {
-            return { strategic: 'استراتيجية', managerial: 'إدارية', operational: 'تشغيلية', financial: 'مالية' }[p] || p;
+            return { strategic: 'استراتيجية', managerial: 'إدارية', operational: 'تشغيلية', financial: 'مالية', compliance: 'امتثالية' }[p] || p;
         }).join(' و ');
         const desc = (details.multiDesc || '').replace(/[<>{}]/g, '').substring(0, 500);
         return `بصفتك مستشاراً استراتيجياً وخبيراً في حل الأزمات، قم بتحليل هذا "الألم المركب" لشركة في قطاع ${safeSector}. الشركة تعاني من مشاكل ${painLabels} مدمجة. وصف العميل للوضع هو: "${desc}". حدد فوراً الأولوية الكبرى (ما الذي يجب حله غداً؟)، اشرح كيف تغذي هذه المشاكل بعضها، وأعط 3 نصائح قاسية لكسر هذه الدائرة.`;
@@ -71,6 +71,13 @@ function buildPrompt(pains, sector, details) {
         return `بصفتك CFO، حلل فجوة نمو بنسبة ${gap}% لشركة في قطاع ${safeSector}. المبيعات الحالية ${curr.toLocaleString()} ريال والمستهدف ${target.toLocaleString()}. المشكلة الأساسية هي "${problem}". أعط 3 نقاط مخاطرة تشغيلية ونصيحة توازن واحدة.`;
     }
 
+    if (pain === 'compliance') {
+        const rev = parseFloat(details.revenue) || 0;
+        const emp = parseInt(details.employees) || 0;
+        const loc = parseInt(details.locations) || 0;
+        return `بصفتك خبير امتثال وحوكمة، حلل مخاطر شركة في قطاع ${safeSector} بإيراد ${rev.toLocaleString()} ريال و${emp} موظف و${loc} موقع. أعط صدمة واقع عن المخاطر التنظيمية (قوى عاملة، مدد، ضريبة، تأمينات)، الغرامات المحتملة، وتكلفة عدم الامتثال. أعط 3 مخاطر عاجلة ونصيحة واحدة للبدء.`;
+    }
+
     return `حلل الوضع الاستراتيجي لشركة في قطاع ${safeSector}. أعط 3 نقاط تشخيصية ونصيحة واحدة.`;
 }
 
@@ -93,7 +100,7 @@ router.post('/', aiLimiter, async (req, res) => {
         const { pains, sector, details } = req.body;
 
         // Validate pains
-        const validPains = ['strategic', 'managerial', 'operational', 'financial'];
+        const validPains = ['strategic', 'managerial', 'operational', 'financial', 'compliance'];
         if (!Array.isArray(pains) || pains.length === 0 || pains.length > 4) {
             return res.status(400).json({ error: 'invalid_input', message: 'يجب اختيار تحدي واحد على الأقل' });
         }

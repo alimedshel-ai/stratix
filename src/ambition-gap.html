@@ -685,6 +685,13 @@
                     <p>مشاكل في التدفق النقدي، التكاليف، أو ضعف الإيراد.</p>
                 </div>
             </div>
+            <div onclick="selectPain('compliance')" id="pain-compliance" class="pain-card">
+                <span class="icon">⚖️</span>
+                <div class="info">
+                    <h3>تحدي الامتثال</h3>
+                    <p>تراخيص، أنظمة حكومية، غرامات، أو متطلبات تنظيمية.</p>
+                </div>
+            </div>
         </div>
 
         <div id="multiPainHint" class="hidden text-center fade-in" style="margin-top:1rem">
@@ -936,7 +943,7 @@
             }
 
             const pain = Array.from(appState.pains)[0];
-            const titles = { strategic: 'المسار الاستراتيجي', managerial: 'المسار الإداري', operational: 'المسار التشغيلي', financial: 'المسار المالي' };
+            const titles = { strategic: 'المسار الاستراتيجي', managerial: 'المسار الإداري', operational: 'المسار التشغيلي', financial: 'المسار المالي', compliance: 'مسار الامتثال' };
             document.getElementById('detailsTitle').textContent = titles[pain];
             sub.textContent = 'سؤالان فقط يفصلانك عن صدمة الواقع.';
 
@@ -948,6 +955,9 @@
                 fields.innerHTML = '<div class="fade-in"><span class="label">أين تخسر الوقت أو الجودة غالباً؟</span><textarea id="opsIssue" placeholder="وصف سريع للمشكلة التشغيلية..." style="min-height:100px"></textarea></div>';
             } else if (pain === 'financial') {
                 fields.innerHTML = '<div class="space-y fade-in"><div class="grid-2"><div><span class="label">المبيعات الحالية</span><input type="number" id="currSales" placeholder="5,000,000" style="text-align:left"></div><div><span class="label">المبيعات المستهدفة</span><input type="number" id="targetSales" placeholder="8,000,000" style="text-align:left"></div></div><div><span class="label">أين تكمن المشكلة المالية؟</span><select id="finProblem"><option value="revenue">ضعف الإيراد</option><option value="costs">ارتفاع التكاليف</option><option value="cashflow">التدفق النقدي والسيولة</option></select></div></div>';
+            } else if (pain === 'compliance') {
+                sub.textContent = 'أجب على 3 أسئلة سريعة عن وضع الامتثال في منشأتك.';
+                fields.innerHTML = '<div class="space-y fade-in"><div><span class="label">الإيراد السنوي التقريبي (ريال)</span><input type="number" id="compRevenue" placeholder="2,000,000" style="text-align:left"></div><div><span class="label">عدد الموظفين</span><input type="number" id="compEmployees" placeholder="25" style="text-align:left"></div><div><span class="label">عدد الفروع / المواقع</span><input type="number" id="compLocations" placeholder="3" style="text-align:left"></div></div>';
             }
         }
 
@@ -988,6 +998,14 @@
                     const p = (document.getElementById('finProblem') || {}).value || '';
                     if (isNaN(c) || c < 10000 || t <= c) { errDiv.textContent = 'أرقام مالية منطقية (أكبر من 10 آلاف والمستهدف أعلى).'; errDiv.classList.remove('hidden'); return; }
                     appState.details = { curr: c, target: t, problem: p };
+                } else if (pain === 'compliance') {
+                    const rev = parseFloat((document.getElementById('compRevenue') || {}).value || 0);
+                    const emp = parseInt((document.getElementById('compEmployees') || {}).value || 0);
+                    const loc = parseInt((document.getElementById('compLocations') || {}).value || 0);
+                    if (isNaN(rev) || rev < 10000) { errDiv.textContent = 'يرجى إدخال إيراد سنوي منطقي (أكبر من 10,000 ريال).'; errDiv.classList.remove('hidden'); return; }
+                    if (isNaN(emp) || emp <= 0 || emp > 10000) { errDiv.textContent = 'يرجى إدخال عدد موظفين منطقي (1-10,000).'; errDiv.classList.remove('hidden'); return; }
+                    if (isNaN(loc) || loc <= 0 || loc > 500) { errDiv.textContent = 'يرجى إدخال عدد مواقع منطقي (1-500).'; errDiv.classList.remove('hidden'); return; }
+                    appState.details = { revenue: rev, employees: emp, locations: loc };
                 }
             }
 
@@ -1009,7 +1027,21 @@
                 } else {
                     document.getElementById('userGapBar').style.width = '0%';
                     document.getElementById('userGapLabel').textContent = appState.pains.size > 1 ? 'تحليل مركّب — انظر التشخيص' : 'تحليل نوعي — انظر التشخيص';
-                    if (appState.pains.size > 1) document.getElementById('resultTypeTitle').textContent = 'صدمة الواقع: ألم مركّب ⚠️';
+                }
+
+                // عناوين ديناميكية حسب المسار
+                const titleMap = {
+                    strategic: 'صدمة الواقع الاستراتيجية ⚠️',
+                    managerial: 'صدمة الواقع الإدارية ⚠️',
+                    operational: 'صدمة الواقع التشغيلية ⚠️',
+                    financial: 'صدمة الواقع المالية ⚠️',
+                    compliance: 'صدمة واقع الامتثال ⚠️'
+                };
+                if (appState.pains.size > 1) {
+                    document.getElementById('resultTypeTitle').textContent = 'صدمة الواقع: ألم مركّب ⚠️';
+                } else {
+                    const singleP = Array.from(appState.pains)[0];
+                    document.getElementById('resultTypeTitle').textContent = titleMap[singleP] || 'صدمة الواقع الاستراتيجية ⚠️';
                 }
 
                 btn.disabled = false;
