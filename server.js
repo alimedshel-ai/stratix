@@ -45,6 +45,7 @@ const scenariosRoutes = require('./routes/scenarios');
 const commentsRoutes = require('./routes/comments');
 const activitiesRoutes = require('./routes/activities');
 const aiAdvisorRoutes = require('./routes/ai-advisor');
+const aiInsightRoutes = require('./routes/ai-insight');
 const adminRoutes = require('./routes/admin');
 const financialEngineRoutes = require('./routes/financial-engine');
 
@@ -245,6 +246,7 @@ app.use('/api/activities', activitiesRoutes);
 
 // 🤖 المستشار الذكي
 app.use('/api/ai-advisor', aiAdvisorRoutes);
+app.use('/api/ai-insight', aiInsightRoutes); // Public — no auth (lead gen page)
 
 // 👥 أصحاب المصلحة + ⚠️ المخاطر (NEW — التكامل)
 const stakeholdersRoutes = require('./routes/stakeholders');
