@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مركز التشخيص الاستراتيجي - ستارتكس</title>
+    <meta name="description" content="شخّص نضج إدارتك ضد معايير 2026 — 7 إدارات × تقييم متعدد المحاور مع Radar Chart">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #0a0d14;
+            --card: rgba(17, 24, 39, 0.7);
+            --accent: #4f46e5;
+            --accent-h: #6366f1;
+            --accent-10: rgba(79, 70, 229, 0.1);
+            --accent-20: rgba(79, 70, 229, 0.2);
+            --txt: #fff;
+            --dim: #94a3b8;
+            --emerald: #10b981;
+            --rose: #f43f5e;
+            --amber: #f59e0b;
+            --border: rgba(255, 255, 255, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg);
+            color: var(--txt);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at 30% 20%, rgba(79, 70, 229, 0.06) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(239, 68, 68, 0.04) 0%, transparent 50%);
+            z-index: 0;
+            pointer-events: none
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            position: relative;
+            z-index: 1
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem
+        }
+
+        .brand {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: var(--accent);
+            letter-spacing: -1px;
+            font-style: italic;
+            text-transform: uppercase
+        }
+
+        .divider {
+            height: 1px;
+            width: 80px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            margin: .5rem auto 1rem
+        }
+
+        .sub-tag {
+            font-size: .55rem;
+            font-weight: 800;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: 3px
+        }
+
+        .glass {
+            background: var(--card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 2rem;
+            padding: 2rem
+        }
+
+        .phase {
+            display: none;
+            animation: up .4s ease-out forwards
+        }
+
+        .active {
+            display: block
+        }
+
+        @keyframes up {
+            from {
+                opacity: 0;
+                transform: translateY(15px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .btn-p {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 1rem 2.5rem;
+            border-radius: 1rem;
+            font-weight: 800;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all .3s;
+            box-shadow: 0 10px 20px -5px rgba(79, 70, 229, .4)
+        }
+
+        .btn-p:hover {
+            transform: translateY(-2px);
+            background: var(--accent-h)
+        }
+
+        .btn-p:disabled {
+            opacity: .3;
+            cursor: not-allowed;
+            transform: none
+        }
+
+        .btn-o {
+            background: transparent;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: .5rem 1.5rem;
+            border-radius: .8rem;
+            font-size: .8rem;
+            font-weight: 700;
+            font-family: 'Tajawal', sans-serif;
+            cursor: pointer;
+            transition: all .3s
+        }
+
+        .btn-o:hover {
+            background: var(--accent-10)
+        }
+
+        /* Selection items */
+        .sel {
+            padding: 1.2rem;
+            border-radius: 1.5rem;
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid var(--border);
+            text-align: center;
+            cursor: pointer;
+            transition: all .3s;
+            font-weight: 700;
+            font-size: .85rem;
+            color: var(--dim)
+        }
+
+        .sel:hover {
+            border-color: var(--accent);
+            background: rgba(79, 70, 229, .08);
+            color: #fff
+        }
+
+        .sel.on {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+            box-shadow: 0 10px 20px -5px rgba(79, 70, 229, .4)
+        }
+
+        /* Pain cards */
+        .pain {
+            padding: 1.2rem 1.5rem;
+            border-radius: 1.5rem;
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all .3s;
+            position: relative
+        }
+
+        .pain:hover {
+            border-color: var(--accent);
+            background: rgba(79, 70, 229, .05)
+        }
+
+        .pain.on {
+            border: 2px solid var(--rose);
+            background: rgba(244, 63, 94, .05)
+        }
+
+        .pain * {
+            pointer-events: none
+        }
+
+        .pain .chk {
+            display: none;
+            width: 22px;
+            height: 22px;
+            background: var(--rose);
+            color: #fff;
+            border-radius: 50%;
+            position: absolute;
+            right: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 900
+        }
+
+        .pain.on .chk {
+            display: flex
+        }
+
+        /* Score buttons */
+        .sbtn {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            transition: all .2s;
+            cursor: pointer;
+            background: rgba(255, 255, 255, .03);
+            font-size: .75rem;
+            color: var(--dim)
+        }
+
+        .sbtn:hover {
+            border-color: var(--accent);
+            color: #fff
+        }
+
+        .sbtn.on {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(79, 70, 229, .4)
+        }
+
+        /* Input */
+        .ipt {
+            width: 100%;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: .9rem 1.2rem;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 700;
+            font-family: 'Tajawal', sans-serif;
+            outline: none;
+            text-align: left;
+            transition: border-color .3s
+        }
+
+        .ipt:focus {
+            border-color: var(--accent)
+        }
+
+        .ipt::-webkit-outer-spin-button,
+        .ipt::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0
+        }
+
+        input[type=number].ipt {
+            -moz-appearance: textfield;
+            appearance: textfield
+        }
+
+        /* Grids */
+        .g2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem
+        }
+
+        .g3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem
+        }
+
+        .g4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem
+        }
+
+        .g5 {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem
+        }
+
+        /* Stepper */
+        .stepper {
+            display: flex;
+            justify-content: center;
+            gap: .8rem;
+            margin-bottom: 2rem;
+            overflow-x: auto;
+            padding-bottom: .5rem
+        }
+
+        .step-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .6rem;
+            font-weight: 800;
+            color: rgba(255, 255, 255, .2);
+            flex-shrink: 0;
+            transition: all .3s
+        }
+
+        .step-dot.current {
+            border-color: var(--accent);
+            background: var(--accent-20);
+            color: #fff
+        }
+
+        .step-dot.done {
+            border-color: var(--emerald);
+            background: var(--emerald);
+            color: #fff
+        }
+
+        /* Results */
+        .m-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0
+        }
+
+        .m-card {
+            padding: 2rem;
+            border-right: 4px solid var(--accent)
+        }
+
+        .m-label {
+            font-size: .65rem;
+            font-weight: 800;
+            color: var(--dim);
+            margin-bottom: .5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px
+        }
+
+        .m-val {
+            font-size: 1.8rem;
+            font-weight: 900
+        }
+
+        .m-sub {
+            font-size: .65rem;
+            color: var(--dim);
+            font-style: italic;
+            margin-top: .3rem
+        }
+
+        .chart-box {
+            position: relative;
+            width: 100%;
+            height: 280px
+        }
+
+        .cost-row {
+            border-bottom: 1px solid var(--border);
+            padding: .6rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center
+        }
+
+        .badge {
+            font-size: .6rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 800
+        }
+
+        .badge-r {
+            background: rgba(244, 63, 94, .2);
+            color: #fb7185
+        }
+
+        .badge-a {
+            background: rgba(245, 158, 11, .2);
+            color: #fbbf24
+        }
+
+        /* CTA */
+        .cta-box {
+            margin-top: 3rem;
+            padding: 3rem;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            border-radius: 2.5rem;
+            text-align: center;
+            box-shadow: 0 20px 40px -10px rgba(79, 70, 229, .3)
+        }
+
+        .cta-box h3 {
+            font-size: 1.5rem;
+            font-weight: 900;
+            margin-bottom: 1rem
+        }
+
+        .cta-box p {
+            font-size: .85rem;
+            color: rgba(255, 255, 255, .8);
+            margin-bottom: 1.5rem;
+            line-height: 1.8
+        }
+
+        .cta-ipt {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 1rem;
+            border: 2px solid transparent;
+            outline: none;
+            font-size: 1rem;
+            font-family: 'Tajawal', sans-serif;
+            margin-bottom: .8rem;
+            text-align: left
+        }
+
+        .cta-ipt.err {
+            border-color: var(--rose)
+        }
+
+        .pdpl-row {
+            display: flex;
+            align-items: flex-start;
+            gap: .5rem;
+            font-size: .65rem;
+            color: rgba(255, 255, 255, .7);
+            margin-bottom: 1rem;
+            text-align: right
+        }
+
+        .pdpl-row input {
+            margin-top: 3px;
+            flex-shrink: 0
+        }
+
+        .err-msg {
+            font-size: .7rem;
+            color: #fecaca;
+            margin-bottom: .5rem;
+            font-weight: 700
+        }
+
+        .cta-submit {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 1rem;
+            background: #fff;
+            color: var(--accent);
+            border: none;
+            font-weight: 900;
+            font-size: 1rem;
+            font-family: 'Tajawal', sans-serif;
+            cursor: pointer;
+            transition: all .3s
+        }
+
+        .cta-submit:hover {
+            background: #f1f5f9
+        }
+
+        .cta-submit:disabled {
+            opacity: .5;
+            cursor: not-allowed
+        }
+
+        .spinner {
+            border: 2px solid rgba(79, 70, 229, .3);
+            border-radius: 50%;
+            border-top: 2px solid var(--accent);
+            width: 14px;
+            height: 14px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg)
+            }
+
+            100% {
+                transform: rotate(360deg)
+            }
+        }
+
+        .tc {
+            text-align: center
+        }
+
+        .hidden {
+            display: none !important
+        }
+
+        /* AI card */
+        .ai-card {
+            background: rgba(79, 70, 229, .05);
+            border: 1px solid var(--accent-20);
+            padding: 2rem;
+            border-radius: 2rem;
+            margin-top: 2rem
+        }
+
+        .ai-resp {
+            font-size: .85rem;
+            color: var(--dim);
+            font-style: italic;
+            line-height: 1.8;
+            white-space: pre-wrap
+        }
+
+        /* Responsive */
+        @media(max-width:768px) {
+
+            .g2,
+            .g3,
+            .g4,
+            .g5 {
+                grid-template-columns: 1fr 1fr
+            }
+
+            .g5 {
+                grid-template-columns: repeat(3, 1fr)
+            }
+
+            .m-grid {
+                grid-template-columns: 1fr
+            }
+
+            .cta-box {
+                padding: 2rem 1.5rem
+            }
+        }
+
+        @media(max-width:480px) {
+
+            .g2,
+            .g3,
+            .g4 {
+                grid-template-columns: 1fr
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg)
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #1f2937;
+            border-radius: 10px
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <span class="brand">Startix</span>
+            <div class="divider"></div>
+            <p class="sub-tag">مركز التشخيص والربط الاستراتيجي الموحد</p>
+        </header>
+
+        <!-- ═══ 1: نوع الكيان ═══ -->
+        <section id="ph-1" class="phase active">
+            <div class="tc">
+                <h1 style="font-size:2rem;font-weight:900">طبيعة الكيان القانونية 🏛️</h1>
+                <p style="color:var(--dim);margin-top:.5rem">هذا الاختيار يضبط المسارات الضريبية والرقابية آلياً.</p>
+            </div>
+            <div class="g4" style="margin-top:2rem">
+                <div onclick="setEntity('G')" class="sel" id="ent-G">🏛️ حكومي (G)</div>
+                <div onclick="setEntity('P')" class="sel" id="ent-P">💰 ربحي خاص (P)</div>
+                <div onclick="setEntity('N')" class="sel" id="ent-N">🤝 غير ربحي (N)</div>
+                <div onclick="setEntity('M')" class="sel" id="ent-M">🏢 مختلط (M)</div>
+            </div>
+        </section>
+
+        <!-- ═══ 2: القطاع ═══ -->
+        <section id="ph-2" class="phase">
+            <div class="tc">
+                <button onclick="go(1)" class="btn-o">← العودة للكيان</button>
+                <h2 style="margin-top:1.5rem;font-weight:800">ما هو نوع القطاع؟ 📂</h2>
+            </div>
+            <div class="g3" style="margin-top:2rem">
+                <div onclick="setSector('commercial')" class="sel" style="padding:2.5rem 1rem">🛍️ تجاري</div>
+                <div onclick="setSector('industrial')" class="sel" style="padding:2.5rem 1rem">🏭 صناعي</div>
+                <div onclick="setSector('tech')" class="sel" style="padding:2.5rem 1rem">💻 تقني</div>
+                <div onclick="setSector('service')" class="sel" style="padding:2.5rem 1rem">🛠️ خدمي</div>
+                <div onclick="setSector('health')" class="sel" style="padding:2.5rem 1rem">🏥 صحي</div>
+                <div onclick="setSector('other')" class="sel" style="padding:2.5rem 1rem">✨ أخرى</div>
+            </div>
+        </section>
+
+        <!-- ═══ 3: الحجم ═══ -->
+        <section id="ph-3" class="phase">
+            <div class="tc">
+                <button onclick="go(2)" class="btn-o">← العودة للقطاع</button>
+                <h2 style="margin-top:1.5rem;font-weight:800">ما هو حجم المنشأة؟ 📊</h2>
+            </div>
+            <div class="g5" style="margin-top:2rem">
+                <div onclick="setSize('micro')" class="sel">متناهية<br><span
+                        style="font-size:.6rem;color:var(--dim)">(1-5)</span></div>
+                <div onclick="setSize('small')" class="sel">صغيرة<br><span
+                        style="font-size:.6rem;color:var(--dim)">(6-49)</span></div>
+                <div onclick="setSize('medium')" class="sel">متوسطة<br><span
+                        style="font-size:.6rem;color:var(--dim)">(50-249)</span></div>
+                <div onclick="setSize('large')" class="sel">كبيرة<br><span
+                        style="font-size:.6rem;color:var(--dim)">(250-499)</span></div>
+                <div onclick="setSize('giant')" class="sel">عملاقة<br><span
+                        style="font-size:.6rem;color:var(--dim)">(+500)</span></div>
+            </div>
+        </section>
+
+        <!-- ═══ 4: اختيار الإدارة ═══ -->
+        <section id="ph-4" class="phase">
+            <div class="tc">
+                <button onclick="go(3)" class="btn-o">← العودة للحجم</button>
+                <h2 style="margin-top:1.5rem;font-weight:800">حدد <span
+                        style="color:var(--rose);text-decoration:underline">الإدارة</span> التي تود تشخيصها</h2>
+                <p style="color:var(--dim);font-size:.8rem;margin-top:.5rem">سيتم عرض المعايير التخصصية المستقلة لكل
+                    محور.</p>
+            </div>
+            <div class="g4" style="margin-top:2rem" id="painGrid">
+                <!-- injected -->
+            </div>
+            <div class="tc" style="margin-top:2rem">
+                <button onclick="go(5)" id="startBtn" disabled class="btn-p">تحليل البيانات التشغيلية ←</button>
+            </div>
+        </section>
+
+        <!-- ═══ 5: بيانات OPEX ═══ -->
+        <section id="ph-5" class="phase">
+            <div class="glass" style="max-width:650px;margin:0 auto">
+                <h2 style="text-align:center;font-weight:800;color:var(--accent);margin-bottom:2rem">تثبيت ميزانية
+                    التشغيل ⚙️</h2>
+                <div class="g2">
+                    <div><label
+                            style="font-size:.6rem;font-weight:800;color:var(--dim);display:block;margin-bottom:.4rem">عدد
+                            المندوبين / الفريق</label><input type="number" id="repCount" value="1" class="ipt" min="1">
+                    </div>
+                    <div><label
+                            style="font-size:.6rem;font-weight:800;color:var(--dim);display:block;margin-bottom:.4rem">متوسط
+                            الراتب الأساسي</label><input type="number" id="avgSalary" value="6000" class="ipt" min="0">
+                    </div>
+                    <div><label
+                            style="font-size:.6rem;font-weight:800;color:var(--dim);display:block;margin-bottom:.4rem">بدل
+                            محروقات (شهري/فرد)</label><input type="number" id="fuelCost" value="800" class="ipt"
+                            min="0"></div>
+                    <div><label
+                            style="font-size:.6rem;font-weight:800;color:var(--dim);display:block;margin-bottom:.4rem">ميزانية
+                            الضيافة (شهري)</label><input type="number" id="hospCost" value="2000" class="ipt" min="0">
+                    </div>
+                </div>
+                <div style="margin-top:1rem"><label
+                        style="font-size:.6rem;font-weight:800;color:var(--dim);display:block;margin-bottom:.4rem">المبيعات
+                        المستهدفة سنوياً (ريال)</label><input type="number" id="targetRev" value="1000000" class="ipt"
+                        min="0"></div>
+                <button onclick="go(6)" class="btn-p" style="width:100%;margin-top:1.5rem">توليد المصفوفة التخصصية
+                    ⚡</button>
+            </div>
+        </section>
+
+        <!-- ═══ 6: مصفوفة التقييم ═══ -->
+        <section id="ph-6" class="phase">
+            <div class="stepper" id="stepper"></div>
+            <div class="glass" id="axisArea"></div>
+        </section>
+
+        <!-- ═══ 7: النتائج ═══ -->
+        <section id="ph-7" class="phase">
+            <div class="tc">
+                <h2 style="font-size:2rem;font-weight:900;color:var(--accent);font-style:italic">صدمة الواقع
+                    الاستراتيجية ⚖️</h2>
+                <p style="color:var(--rose);font-weight:700;font-size:.85rem;margin-top:.5rem">تحليل الميزانية وفجوات
+                    النضج لعام 2026</p>
+            </div>
+            <div class="m-grid" id="metricsGrid"></div>
+            <div class="g2" style="margin-top:2rem">
+                <div>
+                    <p style="font-size:.7rem;font-weight:800;color:var(--dim);margin-bottom:.8rem">رادار النضج
+                        والميزانية (OPEX)</p>
+                    <div class="glass" style="padding:1.5rem">
+                        <div class="chart-box"><canvas id="radarCanvas"></canvas></div>
+                        <div id="budgetBox" style="margin-top:1rem"></div>
+                    </div>
+                </div>
+                <div>
+                    <p style="font-size:.7rem;font-weight:800;color:var(--dim);margin-bottom:.8rem">مصفوفة مبادرات
+                        التحول (Top 5)</p>
+                    <div class="glass" style="padding:0;overflow:hidden">
+                        <table style="width:100%;border-collapse:collapse;text-align:right;font-size:.7rem">
+                            <thead>
+                                <tr style="background:rgba(255,255,255,.03)">
+                                    <th style="padding:.8rem">المبادرة</th>
+                                    <th style="padding:.8rem;text-align:center">الأولوية</th>
+                                    <th style="padding:.8rem;text-align:center">الأثر</th>
+                                </tr>
+                            </thead>
+                            <tbody id="initBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="m-grid" style="margin-top:2rem">
+                <div class="glass m-card" style="border-right-color:var(--emerald);text-align:center">
+                    <p class="m-label">درجة النضج الإجمالية</p>
+                    <p class="m-val" id="finalScore">0/100</p>
+                </div>
+                <div class="glass m-card" style="border-right-color:var(--amber);text-align:center">
+                    <p class="m-label">نسبة كلفة المبيعات من الإيراد</p>
+                    <p class="m-val" id="ratioText" style="font-size:1.4rem">---</p>
+                </div>
+                <div class="glass m-card" style="border-right-color:var(--rose);text-align:center">
+                    <p class="m-label">إنتاجية المندوب المطلوبة</p>
+                    <p class="m-val" id="prodText" style="font-size:1.4rem">---</p>
+                </div>
+            </div>
+
+            <!-- AI -->
+            <div class="ai-card">
+                <div
+                    style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;margin-bottom:1rem">
+                    <div>
+                        <h3 style="font-weight:800;font-size:1rem">🧠 تحليل المستشار الاستراتيجي</h3>
+                        <p style="color:var(--dim);font-size:.65rem;margin-top:.3rem">مدعوم بالذكاء الاصطناعي — يحلل
+                            بياناتك ضد معايير 2026</p>
+                    </div>
+                    <div style="text-align:left"><button class="btn-o" onclick="getAI()" id="aiBtn">اطلب تحليل
+                            المستشار</button><span id="cdTimer" class="hidden"
+                            style="display:block;font-size:.65rem;color:var(--rose);margin-top:.3rem">انتظر 30
+                            ثانية...</span></div>
+                </div>
+                <div id="aiResp" class="ai-resp">بانتظار تحليل بيانات منشأتك لتقديم صدمة الواقع وخطة الـ 90 يوماً...
+                </div>
+            </div>
+
+            <!-- CTA -->
+            <div class="cta-box">
+                <div id="ctaInit">
+                    <h3>🚀 احصل على الدليل التشغيلي الموحد لعام 2026</h3>
+                    <p>يتضمن قوالب الـ Playbook، نماذج حماية العمولات، وأدوات تحليل التناقضات الاستراتيجية.</p>
+                    <div style="max-width:400px;margin:0 auto">
+                        <input type="email" id="leadEmail" placeholder="البريد الإلكتروني للشركة" class="cta-ipt">
+                        <div id="emailErr" class="err-msg hidden">يرجى إدخال بريد إلكتروني صحيح.</div>
+                        <div class="pdpl-row"><input type="checkbox" id="pdplChk"><span>أوافق على سياسة الخصوصية
+                                واستخدام بياناتي وفقاً لنظام حماية البيانات الشخصية (PDPL).</span></div>
+                        <div id="pdplErr" class="err-msg hidden">يجب الموافقة على سياسة الخصوصية.</div>
+                        <button onclick="doLead(this)" class="cta-submit">أرسل لي الخطة مجاناً</button>
+                        <p style="font-size:.55rem;color:rgba(255,255,255,.4);margin-top:.5rem">مجاني بالكامل — لا يتطلب
+                            بطاقة دفع</p>
+                    </div>
+                </div>
+                <div id="ctaOk" class="hidden" style="padding:2rem 0"><span
+                        style="font-size:3rem;display:block;margin-bottom:1rem">✅</span>
+                    <h3>تم التسجيل بنجاح!</h3>
+                    <p>جاري تحويلك للفحص الكامل...</p>
+                    <div class="spinner" style="margin:1rem auto"></div>
+                </div>
+            </div>
+
+            <div class="tc" style="margin-top:3rem"><button onclick="location.reload()" class="btn-o">← تشخيص إدارة
+                    أخرى</button></div>
+        </section>
+    </div>
+
+    <script>
+        /* ═══════════════════════════════════════════
+           STATE & DATA
+           ═══════════════════════════════════════════ */
+        let S = { entity: '', sector: '', size: '', pain: '', axis: 0, scores: {} };
+        let lastAI = 0, radarInst = null;
+
+        const PAINS = [
+            { id: 'growth', icon: '🎯', name: 'النمو والاستراتيجية', sub: 'الخارطة، الأهداف، والتنسيق.' },
+            { id: 'financial', icon: '💰', name: 'الوضع المالي', sub: 'السيولة، التدفقات، والزكاة.' },
+            { id: 'marketing', icon: '📢', name: 'التسويق وجذب العملاء', sub: 'الوصول، CAC، والهوية.' },
+            { id: 'sales', icon: '📈', name: 'إدارة المبيعات', sub: 'الفريق، الإغلاق، والتحويل.' },
+            { id: 'hr', icon: '👥', name: 'الموارد البشرية', sub: 'التوطين، الرواتب، والتأهيل.' },
+            { id: 'support', icon: '🚛', name: 'الخدمات المساندة', sub: 'سلاسل التوريد، المقر، والموردين.' },
+            { id: 'compliance', icon: '⚖️', name: 'الامتثال والحوكمة', sub: 'التراخيص، الغرامات، والأنظمة.' }
+        ];
+
+        const MAT = {
+            sales: [
+                {
+                    key: 'strategy', title: 'الاستراتيجية', criteria: [
+                        { id: 's1', label: 'خطة مبيعات سنوية مكتوبة', risk: 40000, ideal: 'خطة 20 صفحة موقعة من CEO' },
+                        { id: 's2', label: 'ربط الأهداف بالـ OKRs', risk: 30000, ideal: 'كل موظف يعرف هدف الشركة العام' },
+                        { id: 's3', label: 'تحليل TAM/SAM/SOM', risk: 20000, ideal: 'دراسة سوق محدثة لعام 2026' }
+                    ]
+                },
+                {
+                    key: 'ops', title: 'المنهجية', criteria: [
+                        { id: 'o1', label: 'منهجية بيع موحدة (Methodology)', risk: 50000, ideal: 'اعتماد MEDDPICC أو SPIN' },
+                        { id: 'o2', label: 'Sales Playbook شامل', risk: 35000, ideal: 'دليل 50+ صفحة لخطوات البيع' },
+                        { id: 'o3', label: 'إدارة اعتراضات موحدة', risk: 15000, ideal: 'قائمة Top 10 Objections مع الردود' }
+                    ]
+                },
+                {
+                    key: 'team', title: 'الفريق', criteria: [
+                        { id: 't1', label: 'برنامج Onboarding 90 يوم', risk: 30000, ideal: 'خطة تأهيل مهيكلة للموظف الجديد' },
+                        { id: 't2', label: 'نظام Coaching 1-on-1', risk: 25000, ideal: 'جلسة أسبوعية لمراجعة المهارات' },
+                        { id: 't3', label: 'خطة تدريب سنوية', risk: 20000, ideal: 'تدريب مهارات وليس فقط منتج' }
+                    ]
+                },
+                {
+                    key: 'perf', title: 'الأداء', criteria: [
+                        { id: 'p1', label: 'هيكل عمولات شفاف', risk: 30000, ideal: 'تحفيز النجوم وحماية Clawback' },
+                        { id: 'p2', label: 'عدالة توزيع الحصص', risk: 25000, ideal: 'توزيع بناءً على بيانات تاريخية' },
+                        { id: 'p3', label: 'نظام التحفيز SPIFFs', risk: 10000, ideal: 'مسابقات شهرية للروح المعنوية' }
+                    ]
+                },
+                {
+                    key: 'data', title: 'البيانات', criteria: [
+                        { id: 'd1', label: 'نظافة وامتثال الـ CRM', risk: 50000, ideal: 'اكتمال البيانات بنسبة >90%' },
+                        { id: 'd2', label: 'دقة التوقع (Forecast)', risk: 40000, ideal: 'هامش خطأ أقل من 10%' },
+                        { id: 'd3', label: 'تكامل التقنية', risk: 20000, ideal: 'ربط CRM مع التسويق والمالية' }
+                    ]
+                }
+            ],
+            growth: [
+                {
+                    key: 'roadmap', title: 'خارطة النمو', criteria: [
+                        { id: 'g1', label: 'خارطة طريق سنوية', risk: 50000, ideal: 'أهداف ربع سنوية محددة' },
+                        { id: 'g2', label: 'نموذج النمو (AARRR)', risk: 40000, ideal: 'تحديد نقاط التسرب' }
+                    ]
+                },
+                {
+                    key: 'exec', title: 'تنفيذ التوسع', criteria: [
+                        { id: 'g3', label: 'توزيع الموارد', risk: 30000, ideal: 'ميزانية حسب عائد الاستثمار' },
+                        { id: 'g4', label: 'التكامل التقني', risk: 25000, ideal: 'ترابط أنظمة الأقسام' }
+                    ]
+                }
+            ],
+            financial: [
+                {
+                    key: 'cash', title: 'إدارة السيولة', criteria: [
+                        { id: 'f1', label: 'تحليل التدفق النقدي', risk: 60000, ideal: 'تحصيل الذمم < 45 يوماً' },
+                        { id: 'f2', label: 'تحليل نقطة التعادل', risk: 40000, ideal: 'معرفة سقف المصاريف الثابتة' }
+                    ]
+                },
+                {
+                    key: 'comp', title: 'الامتثال المالي', criteria: [
+                        { id: 'f3', label: 'الالتزام الزكوي والضريبي', risk: 25000, ideal: 'رفع الإقرارات في المواعيد' },
+                        { id: 'f4', label: 'المراجعة والتدقيق', risk: 50000, ideal: 'تدقيق مالي سنوي مستقل' }
+                    ]
+                }
+            ],
+            marketing: [
+                {
+                    key: 'leads', title: 'جذب العملاء', criteria: [
+                        { id: 'm1', label: 'خطة الوصول للسوق (GTM)', risk: 40000, ideal: 'تحديد قنوات الاستحواذ المربحة' },
+                        { id: 'm2', label: 'كفاءة تكلفة العميل (CAC)', risk: 30000, ideal: 'كلفة الجلب أقل من ربحه' }
+                    ]
+                },
+                {
+                    key: 'brand', title: 'العلامة والسمعة', criteria: [
+                        { id: 'm3', label: 'حماية العلامة التجارية', risk: 30000, ideal: 'تسجيل الملكية الفكرية والشعار' },
+                        { id: 'm4', label: 'هوية بصرية موحدة', risk: 15000, ideal: 'دليل هوية يطبق في كافة المنصات' }
+                    ]
+                }
+            ],
+            hr: [
+                {
+                    key: 'legal', title: 'الامتثال العمالي', criteria: [
+                        { id: 'h1', label: 'نظام حماية الأجور (WPS)', risk: 20000, ideal: 'سداد الرواتب بنسبة 100%' },
+                        { id: 'h2', label: 'التأمينات الاجتماعية (GOSI)', risk: 20000, ideal: 'سداد الحصة في المواعيد' }
+                    ]
+                },
+                {
+                    key: 'talent', title: 'بناء الموهبة', criteria: [
+                        { id: 'h3', label: 'برنامج تأهيل الموظفين', risk: 30000, ideal: 'خطة تأهيل مهيكلة' },
+                        { id: 'h4', label: 'لائحة تنظيم العمل المعتمدة', risk: 25000, ideal: 'توثيق سياسات الشركة' }
+                    ]
+                }
+            ],
+            support: [
+                {
+                    key: 'ops', title: 'العمليات المساندة', criteria: [
+                        { id: 'u1', label: 'عقود الموردين (SLAs)', risk: 25000, ideal: 'تأمين سلاسل التوريد' },
+                        { id: 'u2', label: 'إدارة صيانة المقر', risk: 15000, ideal: 'جودة التشغيل الميداني' }
+                    ]
+                },
+                {
+                    key: 'log', title: 'الخدمات اللوجستية', criteria: [
+                        { id: 'u3', label: 'رخصة البلدية سارية', risk: 15000, ideal: 'ترخيص مطابق للنشاط' },
+                        { id: 'u4', label: 'تصريح الدفاع المدني', risk: 30000, ideal: 'امتثال اشتراطات السلامة' }
+                    ]
+                }
+            ],
+            compliance: [
+                {
+                    key: 'gov', title: 'الامتثال السيادي', criteria: [
+                        { id: 'c1', label: 'تجديد السجل والتراخيص', risk: 5000, ideal: 'هوية قانونية سارية' },
+                        { id: 'c2', label: 'الأمن السيبراني وحماية البيانات', risk: 150000, ideal: 'سجل PDPL وامتثال NCA' },
+                        { id: 'c3', label: 'الهيكل التنظيمي واللوائح', risk: 15000, ideal: 'وضوح خطوط التقارير' },
+                        { id: 'c4', label: 'سياسات الحوكمة الأساسية', risk: 20000, ideal: 'فصل الصلاحيات والرقابة' }
+                    ]
+                }
+            ]
+        };
+
+        /* ═══════════════════════════════════════════
+           NAVIGATION
+           ═══════════════════════════════════════════ */
+        function go(n) {
+            if (n === 4) renderPains();
+            if (n === 6) { S.axis = 0; renderStepper(); renderAxis(); }
+            document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+            document.getElementById('ph-' + n).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function setEntity(t) { S.entity = t; go(2) }
+        function setSector(s) { S.sector = s; go(3) }
+        function setSize(sz) { S.size = sz; go(4) }
+
+        function renderPains() {
+            document.getElementById('painGrid').innerHTML = PAINS.map(p =>
+                '<div onclick="pickPain(\'' + p.id + '\')" id="pain-' + p.id + '" class="pain">' +
+                '<div class="chk">✓</div>' +
+                '<div style="text-align:right"><h3 style="font-size:.85rem;font-weight:700">' + p.name + '</h3><p style="font-size:.6rem;color:var(--dim)">' + p.sub + '</p></div>' +
+                '<span style="font-size:1.8rem">' + p.icon + '</span></div>'
+            ).join('');
+        }
+
+        function pickPain(id) {
+            S.pain = id;
+            document.querySelectorAll('.pain').forEach(c => c.classList.remove('on'));
+            document.getElementById('pain-' + id).classList.add('on');
+            document.getElementById('startBtn').disabled = false;
+        }
+
+        /* ═══════════════════════════════════════════
+           ASSESSMENT ENGINE
+           ═══════════════════════════════════════════ */
+        function renderStepper() {
+            const axes = MAT[S.pain] || [];
+            document.getElementById('stepper').innerHTML = axes.map((a, i) =>
+                '<div class="step-dot ' + (i === S.axis ? 'current' : (i < S.axis ? 'done' : '')) + '">' + (i < S.axis ? '✓' : (i + 1)) + '</div>'
+            ).join('');
+        }
+
+        function renderAxis() {
+            const axes = MAT[S.pain] || [];
+            const ax = axes[S.axis];
+            if (!ax) return;
+            const area = document.getElementById('axisArea');
+            area.innerHTML = '<div style="border-right:4px solid var(--accent);padding-right:1rem;margin-bottom:2rem">' +
+                '<h2 style="font-weight:800;font-size:1.2rem">' + ax.title + '</h2>' +
+                '<p style="color:var(--dim);font-size:.65rem;margin-top:.3rem">تحليل معايير النضج المستقلة.</p></div>' +
+                ax.criteria.map(c =>
+                    '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;border-bottom:1px solid var(--border);padding:1.2rem 0">' +
+                    '<div style="text-align:right;flex:1"><h4 style="font-weight:700;font-size:.85rem">' + c.label + '</h4>' +
+                    '<p style="font-size:.6rem;color:var(--dim);margin-top:.3rem">المعيار: ' + c.ideal + '</p></div>' +
+                    '<div style="display:flex;gap:6px" data-id="' + c.id + '" data-risk="' + c.risk + '" data-label="' + c.label + '" data-val="' + (S.scores[c.id]?.val || 1) + '">' +
+                    [1, 2, 3, 4, 5].map(v => '<div onclick="pick(this,' + v + ')" class="sbtn ' + (v === (S.scores[c.id]?.val || 1) ? 'on' : '') + '">' + v + '</div>').join('') +
+                    '</div></div>'
+                ).join('') +
+                '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border)">' +
+                '<button onclick="prevAx()" class="btn-o" ' + (S.axis === 0 ? 'style="visibility:hidden"' : '') + '>← السابق</button>' +
+                '<button onclick="nextAx()" class="btn-p" style="padding:.8rem 2rem;font-size:.85rem">' + (S.axis === axes.length - 1 ? 'إصدار التقرير النهائي 👁️' : 'المحور التالي ←') + '</button></div>';
+        }
+
+        function pick(el, v) {
+            const p = el.parentElement;
+            p.querySelectorAll('.sbtn').forEach(b => b.classList.remove('on'));
+            el.classList.add('on');
+            p.dataset.val = v;
+        }
+
+        function saveAxis() {
+            document.querySelectorAll('[data-id]').forEach(el => {
+                S.scores[el.dataset.id] = { val: parseInt(el.dataset.val), risk: parseInt(el.dataset.risk), label: el.dataset.label };
+            });
+        }
+
+        function nextAx() {
+            const axes = MAT[S.pain] || [];
+            saveAxis();
+            if (S.axis < axes.length - 1) { S.axis++; renderStepper(); renderAxis(); }
+            else calcResults();
+        }
+
+        function prevAx() { if (S.axis > 0) { saveAxis(); S.axis--; renderStepper(); renderAxis(); } }
+
+        /* ═══════════════════════════════════════════
+           RESULTS ENGINE
+           ═══════════════════════════════════════════ */
+        function calcResults() {
+            saveAxis();
+            let gap = 0, total = 0, tScore = 0, inits = [];
+            Object.values(S.scores).forEach(item => {
+                total++; tScore += item.val;
+                if (item.val < 4) { gap += item.risk * (1 - item.val / 5); inits.push({ t: item.label, p: item.val < 3 ? 'عاجل' : 'مهم', impact: 'عالي', s: (10 - item.val) * 2 }) }
+            });
+
+            const mat = total > 0 ? Math.round(tScore / (total * 5) * 100) : 0;
+            const reps = parseInt(document.getElementById('repCount').value) || 1;
+            const sal = parseFloat(document.getElementById('avgSalary').value) || 0;
+            const fuel = parseFloat(document.getElementById('fuelCost').value) || 0;
+            const hosp = parseFloat(document.getElementById('hospCost').value) || 0;
+            const target = parseFloat(document.getElementById('targetRev').value) || 1000000;
+            const payroll = sal * 12 * reps;
+            const opex = payroll + (reps * fuel * 12) + (hosp * 12) + (target * 0.05);
+
+            document.getElementById('metricsGrid').innerHTML =
+                '<div class="glass m-card"><p class="m-label">ميزانية القسم التشغيلية</p><p class="m-val">' + Math.round(opex).toLocaleString() + ' ريال</p></div>' +
+                '<div class="glass m-card" style="border-right-color:var(--rose)"><p class="m-label">مخاطر النقص المكتشفة</p><p class="m-val" style="color:var(--rose)">' + Math.round(gap).toLocaleString() + ' ريال</p></div>' +
+                '<div class="glass m-card" style="border-right-color:var(--emerald)"><p class="m-label">مؤشر نضج الإدارة</p><p class="m-val" style="color:var(--emerald)">' + mat + '%</p></div>';
+
+            document.getElementById('budgetBox').innerHTML =
+                '<div class="cost-row"><span style="color:var(--dim);font-size:.75rem">الرواتب الأساسية</span><span style="font-weight:700">' + Math.round(payroll).toLocaleString() + ' ريال</span></div>' +
+                '<div class="cost-row"><span style="color:var(--dim);font-size:.75rem">المحروقات والاتصال</span><span style="font-weight:700;color:var(--emerald)">' + Math.round(reps * fuel * 12).toLocaleString() + ' ريال</span></div>' +
+                '<div class="cost-row"><span style="color:var(--dim);font-size:.75rem">الضيافة</span><span style="font-weight:700;color:var(--amber)">' + Math.round(hosp * 12).toLocaleString() + ' ريال</span></div>' +
+                '<div class="cost-row"><span style="color:var(--dim);font-size:.75rem">العمولات المتوقعة (5%)</span><span style="font-weight:700">' + Math.round(target * 0.05).toLocaleString() + ' ريال</span></div>';
+
+            document.getElementById('initBody').innerHTML = inits.sort((a, b) => b.s - a.s).slice(0, 5).map(i =>
+                '<tr style="border-bottom:1px solid var(--border)"><td style="padding:.8rem;font-weight:700">' + i.t + '</td>' +
+                '<td style="padding:.8rem;text-align:center"><span class="badge ' + (i.p === 'عاجل' ? 'badge-r' : 'badge-a') + '">' + i.p + '</span></td>' +
+                '<td style="padding:.8rem;text-align:center;color:var(--dim)">' + i.impact + '</td></tr>'
+            ).join('');
+
+            document.getElementById('finalScore').innerText = mat + '/100';
+            document.getElementById('ratioText').innerText = (opex / target * 100).toFixed(1) + '%';
+            document.getElementById('prodText').innerText = Math.round(target / reps).toLocaleString() + ' ريال/سنة';
+
+            drawRadar();
+            go(7);
+        }
+
+        function drawRadar() {
+            const axes = MAT[S.pain] || [];
+            const vals = axes.map(ax => { const sc = ax.criteria.map(c => S.scores[c.id]?.val || 1); return sc.reduce((a, b) => a + b, 0) / sc.length });
+            const labels = axes.map(a => a.title);
+            const ctx = document.getElementById('radarCanvas')?.getContext('2d');
+            if (!ctx) return;
+            if (radarInst) radarInst.destroy();
+            radarInst = new Chart(ctx, {
+                type: 'radar', data: { labels, datasets: [{ label: 'مستواك', data: vals, backgroundColor: 'rgba(79,70,229,.2)', borderColor: 'rgb(79,70,229)', pointBackgroundColor: 'rgb(79,70,229)', pointBorderColor: '#fff' }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { r: { angleLines: { color: 'rgba(255,255,255,.05)' }, grid: { color: 'rgba(255,255,255,.05)' }, pointLabels: { color: '#94a3b8', font: { family: 'Tajawal', size: 10 } }, ticks: { display: false, stepSize: 1, min: 0, max: 5 } } }, plugins: { legend: { display: false } } }
+            });
+        }
+
+        /* ═══════════════════════════════════════════
+           AI (Backend Proxy)
+           ═══════════════════════════════════════════ */
+        async function getAI() {
+            const now = Date.now();
+            if (now - lastAI < 30000) { document.getElementById('cdTimer').classList.remove('hidden'); setTimeout(() => document.getElementById('cdTimer').classList.add('hidden'), 3000); return; }
+            const btn = document.getElementById('aiBtn'), resp = document.getElementById('aiResp');
+            btn.disabled = true; btn.innerText = 'جاري التحليل...';
+            resp.innerHTML = '<span style="color:var(--accent);font-weight:700">المستشار يحلل بياناتك...</span>';
+            const weak = Object.values(S.scores).filter(i => i.val < 3).map(i => i.label).join('، ');
+            const painName = (PAINS.find(p => p.id === S.pain) || {}).name || S.pain;
+            try {
+                const r = await fetch('/api/ai-insight', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pains: [S.pain], sector: S.sector, details: {
+                            employees: parseInt(document.getElementById('repCount').value) || 1, revenue: parseFloat(document.getElementById('targetRev').value) || 0, locations: 1,
+                            complianceContext: { userType: 'diagnostic', saudiCount: 0, expatCount: 0, area: 0, missingItems: weak || 'لا يوجد نقاط ضعف حرجة' }
+                        }
+                    })
+                });
+                const d = await r.json();
+                resp.innerText = d.insight || d.message || 'فشل التحليل.';
+                lastAI = Date.now();
+            } catch (e) { resp.innerText = 'المستشار مشغول — حاول مرة أخرى.'; }
+            finally { btn.innerText = 'اطلب تحليل المستشار'; btn.disabled = false; }
+        }
+
+        /* ═══════════════════════════════════════════
+           LEAD CAPTURE (Backend)
+           ═══════════════════════════════════════════ */
+        async function doLead(btn) {
+            const email = document.getElementById('leadEmail').value.trim();
+            const pdpl = document.getElementById('pdplChk').checked;
+            const eE = document.getElementById('emailErr'), pE = document.getElementById('pdplErr');
+            eE.classList.add('hidden'); pE.classList.add('hidden');
+            document.getElementById('leadEmail').classList.remove('err');
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { eE.classList.remove('hidden'); document.getElementById('leadEmail').classList.add('err'); return }
+            if (!pdpl) { pE.classList.remove('hidden'); return }
+            const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> جاري التسجيل...';
+            try {
+                const r = await fetch('/api/leads', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, sector: S.sector, pains: [S.pain], details: { entityType: S.entity, sector: S.sector, size: S.size, pain: S.pain }, pdplConsent: true })
+                });
+                const d = await r.json();
+                if (r.ok && d.success) {
+                    document.getElementById('ctaInit').classList.add('hidden');
+                    document.getElementById('ctaOk').classList.remove('hidden');
+                    localStorage.setItem('stratix_pain', S.pain.toUpperCase());
+                    localStorage.setItem('stratix_sector', S.sector);
+                    localStorage.setItem('stratix_category', 'company_manager');
+                    setTimeout(() => { window.location.href = '/pain-screen' }, 2000);
+                } else { eE.textContent = d.message || 'حدث خطأ'; eE.classList.remove('hidden'); btn.disabled = false; btn.innerHTML = orig }
+            } catch (e) { eE.textContent = 'تعذر الاتصال'; eE.classList.remove('hidden'); btn.disabled = false; btn.innerHTML = orig }
+        }
+
+        renderPains();
+    </script>
+</body>
+
+</html>

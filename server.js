@@ -280,6 +280,11 @@ app.use('/api/break-even', breakEvenRoutes);
 app.use('/api/cfo', cfoAuditRoutes);
 
 
+// Serve diagnostic center page (مركز التشخيص الاستراتيجي)
+app.get('/diagnostic-center', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'diagnostic-center.html'));
+});
+
 // Serve compliance analyzer page (محلل فجوة الامتثال)
 app.get('/compliance-analyzer', (req, res) => {
   res.sendFile(path.join(__dirname, 'src', 'compliance-analyzer.html'));
