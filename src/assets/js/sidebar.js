@@ -607,7 +607,7 @@
     return new Promise((resolve) => {
       if (window.PathEngine) { resolve(); return; }
       const script = document.createElement('script');
-      script.src = '/js/path-engine.js';
+      script.src = '/assets/js/path-engine.js';
       script.onload = () => resolve();
       script.onerror = () => resolve(); // fail silently
       document.head.appendChild(script);
@@ -619,7 +619,7 @@
     return new Promise((resolve) => {
       if (window.SuggestedTools) { resolve(); return; }
       const script = document.createElement('script');
-      script.src = '/js/suggested-tools.js';
+      script.src = '/assets/js/suggested-tools.js';
       script.onload = () => {
         if (window.SuggestedTools) window.SuggestedTools.injectCSS();
         resolve();
