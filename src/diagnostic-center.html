@@ -1261,6 +1261,128 @@
             const radarLabels = hasSector ? ['مالي', 'عمالة', 'إداري', 'تنظيمي', 'قطاعي'] : ['مالي', 'عمالة', 'إداري', 'تنظيمي'];
             const radarData = hasSector ? rd : rd.slice(0, 4);
             radarChart = new Chart(ctx, { type: 'radar', data: { labels: radarLabels, datasets: [{ label: 'النضج', data: radarData, backgroundColor: 'rgba(79,70,229,.2)', borderColor: '#4f46e5', borderWidth: 2, pointBackgroundColor: '#4f46e5' }] }, options: { scales: { r: { min: 0, max: 100, ticks: { display: false, stepSize: 25 }, grid: { color: 'rgba(255,255,255,.1)' }, angleLines: { color: 'rgba(255,255,255,.05)' }, pointLabels: { color: '#94a3b8', font: { size: 11, weight: 'bold' } } } }, plugins: { legend: { display: false } } } });
+
+            // ═══════════════════════════════════════════════════════
+            // 🌉 BRIDGE: حفظ بيانات التشخيص للأدوات اللاحقة
+            // هذا الكود إضافي 100% — لا يُعدّل أي منطق أعلاه
+            // ═══════════════════════════════════════════════════════
+            saveDiagnosticBridge(maturity, totalRisk, totalCost, rd, radarLabels, {
+                sa, ex, emp, sal, fuel, hosp, area, target, opex, levyCost
+            }, nqResult, narrative, gaps, allItems, sectorName);
+        }
+
+        /* ═══════════════════════════════════════════════════════════
+           🌉 DIAGNOSTIC BRIDGE — localStorage unified payload
+           يحفظ كل بيانات Phase 0-5 بصيغة موحدة تقرأها الأدوات اللاحقة
+           Phase 6 (dept-diagnostic) | Phase 7 (directions) | Phase 8 (SWOT)
+           Phase 9 (gap-analysis) | Phase 11 (dashboard)
+        ═══════════════════════════════════════════════════════════ */
+        function saveDiagnosticBridge(maturity, totalRisk, totalCost, radarData, radarLabels, opexData, nitaqatResult, narrative, gaps, allItems, sectorName) {
+
+            // 1. بناء قائمة نقاط القوة (مكتمل) والضعف (ناقص/بدون)
+            const strengths = [];
+            const weaknesses = [];
+            const allChecklist = [...MAT.finance, ...MAT.hr, ...MAT.admin, ...MAT.regulatory, ...(SECTOR_ITEMS[S.sector] || [])];
+
+            allChecklist.forEach(item => {
+                const r = S.res[item.id];
+                if (!r) return;
+                if (r.status === 'done') {
+                    strengths.push({ id: item.id, label: item.label, category: item.id.charAt(0) === 'f' ? 'finance' : item.id.charAt(0) === 'h' ? 'hr' : item.id.charAt(0) === 'a' ? 'admin' : item.id.charAt(0) === 'r' ? 'regulatory' : 'sector' });
+                } else {
+                    weaknesses.push({ id: item.id, label: item.label, status: r.status, risk: r.risk, cost: r.cost, category: item.id.charAt(0) === 'f' ? 'finance' : item.id.charAt(0) === 'h' ? 'hr' : item.id.charAt(0) === 'a' ? 'admin' : item.id.charAt(0) === 'r' ? 'regulatory' : 'sector' });
+                }
+            });
+
+            // 2. أهم 3 أولويات مع تفاصيل
+            const topPriorities = gaps.map((id, i) => {
+                const item = allItems.find(x => x.id === id);
+                return item ? { rank: i + 1, id, label: item.label, risk: S.res[id]?.risk || 0, cost: S.res[id]?.cost || 0 } : null;
+            }).filter(Boolean);
+
+            // 3. درجات المحاور
+            const axisScores = {};
+            radarLabels.forEach((label, i) => {
+                axisScores[label] = radarData[i];
+            });
+
+            // 4. بناء الـ payload الموحد
+            const payload = {
+                // === بيانات أساسية ===
+                version: '2.0',
+                source: 'diagnostic-center',
+                timestamp: new Date().toISOString(),
+
+                // === بيانات المنشأة ===
+                company: {
+                    entityType: S.entity,   // P=ربحي, G=حكومي, N=غير ربحي, M=مختلط
+                    sector: S.sector,       // commercial, fnb, tech, etc.
+                    sectorName: sectorName, // الاسم العربي
+                    size: S.size            // micro, small, medium, large
+                },
+
+                // === النتائج الجوهرية ===
+                results: {
+                    maturity: maturity,      // 0-100 نسبة النضج
+                    totalRisk: Math.round(totalRisk),   // إجمالي المخاطر بالريال
+                    totalCost: Math.round(totalCost),   // كلفة التصحيح بالريال
+                    complianceGap: 100 - maturity       // فجوة الامتثال
+                },
+
+                // === محاور الرادار ===
+                radar: {
+                    labels: radarLabels,
+                    scores: radarData,
+                    axisScores: axisScores
+                },
+
+                // === بيانات OPEX ===
+                opex: {
+                    saudiEmployees: opexData.sa,
+                    expatEmployees: opexData.ex,
+                    totalEmployees: opexData.emp,
+                    avgSalary: opexData.sal,
+                    fuelCost: opexData.fuel,
+                    hospitalityCost: opexData.hosp,
+                    officeArea: opexData.area,
+                    revenueTarget: opexData.target,
+                    monthlyOpex: opexData.opex,
+                    annualLevy: opexData.levyCost,
+                    opexToRevenueRatio: ((opexData.opex * 12 / opexData.target) * 100).toFixed(1)
+                },
+
+                // === نطاقات ===
+                nitaqat: {
+                    band: nitaqatResult.band,
+                    label: nitaqatResult.label,
+                    saudizationPct: nitaqatResult.pct,
+                    risk: nitaqatResult.risk || 0,
+                    description: nitaqatResult.desc
+                },
+
+                // === نقاط القوة والضعف ===
+                strengths: strengths,
+                weaknesses: weaknesses,
+                topPriorities: topPriorities,
+
+                // === التحليل النصي ===
+                aiNarrative: narrative,
+
+                // === البيانات الخام ===
+                rawResponses: S.res
+            };
+
+            // 5. حفظ في localStorage
+            localStorage.setItem('stratix_diagnostic_payload', JSON.stringify(payload));
+            localStorage.setItem('stratix_diagnostic_completed', 'true');
+            localStorage.setItem('stratix_diagnostic_date', new Date().toISOString());
+
+            console.log('🌉 Diagnostic Bridge: بيانات التشخيص محفوظة بنجاح', {
+                maturity: payload.results.maturity + '%',
+                strengths: strengths.length,
+                weaknesses: weaknesses.length,
+                sector: sectorName
+            });
         }
     </script>
 </body>
