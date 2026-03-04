@@ -1003,25 +1003,30 @@
         /* ═══════════════════════════════════════════
            V4 DIAGNOSTIC ENGINE — DATA
         ═══════════════════════════════════════════ */
-        const MAT = {
+        const MAT_BASE = {
             finance: [
-                { id: 'f1', label: 'الزكاة والضريبة (ZATCA)', cost: 15000, risk: 50000, desc: 'الربط التقني مع المرحلة الثانية للفوترة الإلكترونية' },
-                { id: 'f2', label: 'الفوترة الإلكترونية (فاتورة)', cost: 3000, risk: 10000, desc: 'نظام ربط معتمد للمرحلة الثانية — إلزامي لجميع المنشآت' }
+                { id: 'f1', label: 'الزكاة والضريبة (ZATCA)', cost: 15000, risk: 50000, max: 100, desc: 'الربط التقني مع المرحلة الثانية للفوترة الإلكترونية' }
             ],
             hr: [
-                { id: 'h1', label: 'التأمينات الاجتماعية (GOSI)', cost: 2000, risk: 20000, desc: 'مطابقة الأجور المسجلة مع الواقع الفعلي' },
-                { id: 'h2', label: 'منصة قوى (Qiwa)', cost: 3000, risk: 25000, desc: 'توثيق العقود ونسب التوطين وإدارة العمالة' },
-                { id: 'h3', label: 'نظام مدد (Mudad)', cost: 1200, risk: 15000, desc: 'حماية الأجور والالتزام الشهري بالملف' }
+                { id: 'h1', label: 'التأمينات الاجتماعية (GOSI)', cost: 1000, risk: 20000, max: 100, desc: 'مطابقة الأجور المسجلة مع الواقع الفعلي' },
+                { id: 'h2', label: 'منصة قوى (Qiwa)', cost: 3000, risk: 25000, max: 100, desc: 'توثيق العقود ونسب التوطين وإدارة العمالة' },
+                { id: 'h3', label: 'نظام مدد (Mudad)', cost: 1200, risk: 15000, max: 100, desc: 'حماية الأجور والالتزام الشهري بالملف' },
+                { id: 'h4', label: 'التأمين الطبي (CHI)', cost: 15000, risk: 50000, max: 100, dynamic: true, desc: 'تغطية طبية إلزامية لجميع الموظفين والتابعين' },
+                { id: 'h5', label: 'المقابل المالي للوافدين', cost: 9600, risk: 25000, max: 100, dynamic: true, desc: 'رسوم سنوية لكل وافد (9,600 ﷼/عامل)' },
+                { id: 'h6', label: 'منصة مقيم', cost: 800, risk: 5000, max: 100, dynamic: true, desc: 'اشتراك ساري لإصدار وتجديد إقامات الوافدين' },
+                { id: 'h7', label: 'نطاقات — تصنيف التوطين', cost: 0, risk: 50000, max: 100, dynamic: true, desc: 'نسبة التوطين وتصنيف برنامج نطاقات' }
             ],
             admin: [
-                { id: 'a1', label: 'منصة بلدي (Balady)', cost: 4000, risk: 15000, desc: 'الرخص البلدية واللوحات المطابقة للنشاط' },
-                { id: 'a2', label: 'منصة إيجار (Ejar)', cost: 500, risk: 5000, desc: 'توثيق العقود التجارية إلزامياً' },
-                { id: 'a3', label: 'الغرفة التجارية', cost: 2000, risk: 3000, desc: 'الاشتراكات والتصاديق السنوية' }
+                { id: 'a1', label: 'منصة بلدي (Balady)', cost: 4000, risk: 15000, max: 100, desc: 'الرخص البلدية واللوحات المطابقة للنشاط' },
+                { id: 'a2', label: 'منصة إيجار (Ejar)', cost: 500, risk: 5000, max: 100, desc: 'توثيق العقود التجارية إلزامياً' },
+                { id: 'a3', label: 'الغرفة التجارية', cost: 2000, risk: 3000, max: 100, desc: 'الاشتراكات والتصاديق السنوية' },
+                { id: 'a4', label: 'الدفاع المدني', cost: 5000, risk: 30000, max: 100, dynamic: true, desc: 'اشتراطات السلامة والإطفاء للمقر' }
             ],
             regulatory: [
-                { id: 'r1', label: 'حماية البيانات (PDPL)', cost: 25000, risk: 100000, desc: 'سجل المعالجة وسياسة الخصوصية والموافقة' },
-                { id: 'r2', label: 'الأمن السيبراني (NCA)', cost: 30000, risk: 80000, desc: 'الضوابط الأساسية للأمن السيبراني' }
-            ]
+                { id: 'r1', label: 'حماية البيانات (PDPL)', cost: 20000, risk: 100000, max: 100, desc: 'سجل المعالجة وسياسة الخصوصية والموافقة' },
+                { id: 'r2', label: 'الأمن السيبراني (NCA)', cost: 30000, risk: 80000, max: 100, desc: 'الضوابط الأساسية للأمن السيبراني' }
+            ],
+            sector: [] // ← يُملأ ديناميكياً من SECTOR_ITEMS
         };
         const SECTOR_ITEMS = {
             commercial: [{ id: 'sc1', label: 'جهاز مدى ونقاط البيع', cost: 500, risk: 5000, desc: 'قبول الدفع الإلكتروني إلزامي' }, { id: 'sc2', label: 'رخصة لوحة المحل', cost: 600, risk: 2000, desc: 'مطابقة اللوحة لاشتراطات البلدية' }, { id: 'sc3', label: 'الفاتورة الإلكترونية', cost: 3000, risk: 10000, desc: 'نظام ربط معتمد للمرحلة الثانية' }],
@@ -1079,6 +1084,44 @@
         let S = { entity: 'P', sector: 'commercial', size: 'micro', tab: 'finance', res: {}, email: '', isLead: false };
         let radarChart = null;
 
+        /* ═══ MAT ENGINE v2 ═══ */
+        function prepareMAT(entity, sector, size) {
+            const mat = JSON.parse(JSON.stringify(MAT_BASE));
+            if (Array.isArray(SECTOR_ITEMS[sector]) && SECTOR_ITEMS[sector].length > 0) {
+                mat.sector = SECTOR_ITEMS[sector].map(item => ({ ...item, max: item.max || 100 }));
+            }
+            // مستقبلاً: منطق الكيان هنا
+            // if (entity === 'G') { mat.finance = [...]; }
+            return mat;
+        }
+
+        function getTabs(mat) {
+            const tabs = [
+                { key: 'finance', label: '💰 مالي', weight: 25 },
+                { key: 'hr', label: '🧑‍💼 عمالة', weight: 25 },
+                { key: 'admin', label: '📋 إداري', weight: 25 },
+                { key: 'regulatory', label: '⚙️ تنظيمي', weight: 25 }
+            ];
+            if (Array.isArray(mat.sector) && mat.sector.length > 0) {
+                tabs.push({ key: 'sector', label: '🏭 قطاعي', weight: 15 });
+                const remaining = 85 / 4;
+                tabs.forEach(t => { if (t.key !== 'sector') t.weight = remaining; });
+            }
+            return tabs;
+        }
+
+        function getMaxScore(items) {
+            if (!Array.isArray(items)) return 100;
+            return items.reduce((sum, item) => sum + (item.max || 100), 0);
+        }
+
+        function getPoints(status) {
+            const map = { 'done': 100, 'complete': 100, 'partial': 50, 'none': 0, 'delayed': 20, 'na': -1 };
+            return map[status] ?? 0;
+        }
+
+        let MAT = prepareMAT(S.entity, S.sector, S.size);
+
         /* ═══ NAVIGATION ═══ */
         function go(p) {
             document.querySelectorAll('.phase').forEach(el => el.classList.remove('active'));
@@ -1098,6 +1141,10 @@
             S[key] = val;
             el.parentElement.querySelectorAll('.sel').forEach(b => b.classList.remove('on'));
             el.classList.add('on');
+            // إعادة بناء MAT عند تغيير القطاع أو الكيان
+            if (key === 'sector' || key === 'entity') {
+                MAT = prepareMAT(S.entity, S.sector, S.size);
+            }
         }
 
         /* ═══ LEAD GATE ═══ */
