@@ -992,8 +992,7 @@
                         style="padding:.6rem 1.5rem;font-size:.75rem">حجز موعد مجاني</button>
                 </div>
                 <div class="glass act-card">
-                    <h4>🚀 دخول منصة المتابعة</h4><button onclick="window.location.href='/pain-screen'"
-                        class="btn-o">ابدأ المتابعة</button>
+                    <h4>🚀 دخول منصة المتابعة</h4><button onclick="enterPlatform()" class="btn-o">ابدأ المتابعة</button>
                 </div>
             </div>
             <div class="tc" style="margin-top:2rem"><button onclick="go(0)" class="btn-o">← تشخيص جديد</button></div>
@@ -1383,6 +1382,50 @@
                 weaknesses: weaknesses.length,
                 sector: sectorName
             });
+        }
+
+        /* ═══════════════════════════════════════════
+           ENTER PLATFORM — تجاوز pain-screen تلقائياً
+           يحدد أضعف محور من نتائج التشخيص ويوجّه مباشرة
+        ═══════════════════════════════════════════ */
+        function enterPlatform() {
+            try {
+                const payload = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || '{}');
+                const axis = payload.radar?.axisScores || {};
+
+                // تحديد أضعف محور كـ "ألم" تلقائي
+                const AXIS_TO_PAIN = {
+                    'مالي': 'FINANCE',
+                    'عمالة': 'HR',
+                    'إداري': 'OPERATIONS',
+                    'تنظيمي': 'COMPLIANCE',
+                    'قطاعي': 'SALES'
+                };
+
+                let weakestAxis = 'COMPLIANCE'; // default
+                let lowestScore = Infinity;
+
+                for (const [label, score] of Object.entries(axis)) {
+                    if (score < lowestScore) {
+                        lowestScore = score;
+                        weakestAxis = AXIS_TO_PAIN[label] || 'COMPLIANCE';
+                    }
+                }
+
+                // حفظ البيانات التي يحتاجها باقي المنصة
+                localStorage.setItem('stratix_pain', weakestAxis);
+                localStorage.setItem('stratix_category', payload.company?.entityType === 'P' ? 'private' : 'government');
+                localStorage.setItem('stratix_sector', payload.company?.sector || '');
+                localStorage.setItem('stratix_diagnostic_completed', 'true');
+
+                console.log('🚀 دخول المنصة — المحور الأضعف:', weakestAxis, '(', lowestScore, ')');
+
+                // توجيه مباشر للمدخلات المالية (تجاوز pain-screen)
+                window.location.href = '/financial-input';
+            } catch (e) {
+                console.warn('⚠️ خطأ في قراءة بيانات التشخيص — توجيه افتراضي', e);
+                window.location.href = '/pain-screen';
+            }
         }
     </script>
 </body>
