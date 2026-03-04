@@ -826,18 +826,29 @@
                         <label
                             style="font-size:.55rem;font-weight:800;color:var(--dim);display:block;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:1px">قطاع
                             النشاط</label>
-                        <select id="sectorSel" class="slt" onchange="S.sector=this.value">
-                            <option value="commercial">🛍️ تجاري وتجزئة</option>
-                            <option value="fnb">🍴 مطاعم ومقاهي</option>
-                            <option value="tech">💻 تقني ورقمي</option>
-                            <option value="construction">🏗️ مقاولات وإنشاءات</option>
-                            <option value="logistics">🚚 خدمات لوجستية</option>
-                            <option value="health">🏥 خدمات صحية</option>
-                            <option value="education">🎓 تعليم وتدريب</option>
-                            <option value="tourism">🏨 سياحة وضيافة</option>
-                            <option value="industrial">🏭 صناعة وتصنيع</option>
-                            <option value="professional">⚖️ خدمات مهنية</option>
-                        </select>
+                        <!-- Phase 9 — 3-Column Sector Picker -->
+                        <div id="mainSectorRow" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">
+                            <div class="sel" onclick="selectMainSector('services',this)" id="ms-services" style="text-align:center;flex-direction:column;gap:4px;padding:10px 6px">
+                                <span style="font-size:1.2rem">🏢</span>
+                                <strong style="font-size:.6rem;display:block">الخدمي</strong>
+                                <span style="font-size:.5rem;color:var(--dim)">8 قطاعات</span>
+                            </div>
+                            <div class="sel" onclick="selectMainSector('commercial',this)" id="ms-commercial" style="text-align:center;flex-direction:column;gap:4px;padding:10px 6px">
+                                <span style="font-size:1.2rem">🛒</span>
+                                <strong style="font-size:.6rem;display:block">التجاري</strong>
+                                <span style="font-size:.5rem;color:var(--dim)">تجزئة وبيع</span>
+                            </div>
+                            <div class="sel" onclick="selectMainSector('industrial',this)" id="ms-industrial" style="text-align:center;flex-direction:column;gap:4px;padding:10px 6px">
+                                <span style="font-size:1.2rem">🏭</span>
+                                <strong style="font-size:.6rem;display:block">الصناعي</strong>
+                                <span style="font-size:.5rem;color:var(--dim)">تصنيع وإنتاج</span>
+                            </div>
+                        </div>
+                        <div id="subSectorRow" style="display:none">
+                            <label style="font-size:.5rem;font-weight:700;color:var(--dim);display:block;margin-bottom:6px">القطاع التخصصي</label>
+                            <select id="sectorSel" class="slt" onchange="S.sector=this.value"></select>
+                            <div id="sectorFocusHint" style="font-size:.55rem;color:var(--dim);margin-top:6px;padding:6px 10px;background:rgba(79,70,229,.08);border-radius:8px;display:none"></div>
+                        </div>
                     </div>
                     <div>
                         <label
@@ -1113,7 +1124,67 @@
         }
 
         /* ═══ STATE ═══ */
-        let S = { entity: 'P', sector: 'commercial', size: 'micro', tab: 'finance', res: {}, email: '', isLead: false };
+        let S = { entity: 'P', sector: 'commercial', mainSector: 'commercial', size: 'micro', tab: 'finance', res: {}, email: '', isLead: false };
+
+        /* ═══ 3-COLUMN SECTOR PICKER ═══ */
+        const MAIN_SECTOR_MAP = {
+            services: {
+                label: 'الخدمي', icon: '🏢',
+                hint: 'يركز النظام على: هيئة الاتصالات / سدايا / وزارة التعليم والصحة / البلدية',
+                subsectors: [
+                    { val: 'tech',         label: '💻 تقني ورقمي' },
+                    { val: 'health',       label: '🏥 خدمات صحية' },
+                    { val: 'education',    label: '🎓 تعليم وتدريب' },
+                    { val: 'tourism',      label: '🏨 سياحة وضيافة' },
+                    { val: 'logistics',    label: '🚚 لوجستي ونقل' },
+                    { val: 'professional', label: '⚖️ مهني واستشاري' },
+                    { val: 'fnb',          label: '🍴 مطاعم ومقاهي' },
+                    { val: 'construction', label: '🏗️ مقاولات وإنشاءات' },
+                ]
+            },
+            commercial: {
+                label: 'التجاري', icon: '🛒',
+                hint: 'يركز النظام على: نقاط البيع (مدى) / رخص البلدية / اشتراطات التخزين',
+                subsectors: [
+                    { val: 'commercial', label: '🛍️ تجاري وتجزئة' }
+                ]
+            },
+            industrial: {
+                label: 'الصناعي', icon: '🏭',
+                hint: 'يركز النظام على: رخص مدن صناعية / الأمن والسلامة / تصاريح البيئة (NCEC)',
+                subsectors: [
+                    { val: 'industrial', label: '🏭 صناعي وإنتاجي' }
+                ]
+            }
+        };
+
+        window.selectMainSector = function(mainKey, el) {
+            S.mainSector = mainKey;
+            document.querySelectorAll('#mainSectorRow .sel').forEach(b => b.classList.remove('on'));
+            el.classList.add('on');
+
+            const cfg = MAIN_SECTOR_MAP[mainKey];
+            const sel = document.getElementById('sectorSel');
+            sel.innerHTML = cfg.subsectors.map(s =>
+                `<option value="${s.val}">${s.label}</option>`
+            ).join('');
+            S.sector = cfg.subsectors[0].val;
+            sel.value = S.sector;
+            MAT = prepareMAT(S.entity, S.sector, S.size);
+
+            // Show hint
+            const hint = document.getElementById('sectorFocusHint');
+            hint.textContent = '🔍 تركيز التشخيص: ' + cfg.hint;
+            hint.style.display = 'block';
+
+            document.getElementById('subSectorRow').style.display = 'block';
+        };
+
+        // Auto-init commercial (default)
+        document.addEventListener('DOMContentLoaded', function() {
+            const defaultEl = document.getElementById('ms-commercial');
+            if (defaultEl) selectMainSector('commercial', defaultEl);
+        });
         let radarChart = null;
 
         /* ═══ MAT ENGINE v2 ═══ */
@@ -1393,10 +1464,11 @@
 
                 // === بيانات المنشأة ===
                 company: {
-                    entityType: S.entity,   // P=ربحي, G=حكومي, N=غير ربحي, M=مختلط
-                    sector: S.sector,       // commercial, fnb, tech, etc.
-                    sectorName: sectorName, // الاسم العربي
-                    size: S.size            // micro, small, medium, large
+                    entityType: S.entity,           // P=ربحي, G=حكومي, N=غير ربحي, M=مختلط
+                    mainSector: S.mainSector,        // services, commercial, industrial
+                    sector: S.sector,                // commercial, fnb, tech, etc.
+                    sectorName: sectorName,          // الاسم العربي
+                    size: S.size                     // micro, small, medium, large
                 },
 
                 // === النتائج الجوهرية ===

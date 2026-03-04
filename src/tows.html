@@ -591,6 +591,22 @@
         </div>
     </div>
 
+    <!-- Phase 6B: Bridge Banner -->
+    <div id="towsBridgeBanner" style="display:none;margin-bottom:16px;padding:14px 18px;
+        background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25);
+        border-radius:12px;align-items:center;gap:14px;flex-wrap:wrap">
+        <div style="font-size:22px">🔗</div>
+        <div style="flex:1;font-size:13px">
+            <strong>بيانات التشخيص متاحة</strong>
+            <div id="towsBridgeSummary" style="color:#8b8ba7;font-size:12px;margin-top:2px"></div>
+        </div>
+        <button onclick="injectTowsFromBridge()" style="padding:8px 16px;border-radius:9px;border:none;
+            background:linear-gradient(135deg,#6366f1,#a78bfa);color:#fff;
+            font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer">
+            ⚡ دمج في TOWS
+        </button>
+    </div>
+
     <!-- ===== CONTROLS ===== -->
     <div class="control-bar">
         <select id="assessmentSelect" onchange="loadMatrix()">
@@ -681,10 +697,83 @@
         const priorityLabel = { HIGH: 'عالية', MEDIUM: 'متوسطة', LOW: 'منخفضة' };
 
         // ===== INIT =====
+        // ── Phase 6B: TOWS Bridge from Diagnostic ──
+        function checkTowsBridge() {
+            const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
+            const dept = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
+            if (!diag && !dept) return;
+            const banner = document.getElementById('towsBridgeBanner');
+            const summary = document.getElementById('towsBridgeSummary');
+            banner.style.display = 'flex';
+            const parts = [];
+            if (diag) parts.push(`نضج ${diag.results?.maturity ?? '?'}%`);
+            if (dept) {
+                const n = Object.values(dept).filter(v => v?.completed).length;
+                if (n) parts.push(`${n} إدارات`);
+            }
+            summary.textContent = parts.join(' · ');
+        }
+
+        function injectTowsFromBridge() {
+            const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
+            const dept = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
+            const STRENGTH_RULES_T = {
+                compliance_officer:   { strength:['نعم — موظف متفرغ','مستشار خارجي'], weakness:['لا — أنا أتولى ذلك'], sL:'مسؤول امتثال متخصص', wL:'لا يوجد مسؤول امتثال' },
+                profit_margin:        { strength:['نعم بدقة'], weakness:['لا'], sL:'وعي مالي دقيق', wL:'جهل بهامش الربح' },
+                crm:                  { strength:['نعم متكامل'], weakness:['لا'], sL:'نظام CRM متكامل', wL:'لا يوجد CRM' },
+                repeat_clients:       { strength:['أكثر من 60%'], weakness:['أقل من 30%'], sL:'قاعدة عملاء متكررة', wL:'ضعف الاحتفاظ بالعملاء' },
+                salary_structure:     { strength:['نعم موثق'], weakness:['لا'], sL:'هيكل رواتب واضح', wL:'غياب هيكل تعويضات' },
+                performance_eval:     { strength:['نعم — دوري'], weakness:['لا'], sL:'تقييم أداء منتظم', wL:'لا يوجد تقييم أداء' },
+                brand_identity:       { strength:['نعم — احترافية'], weakness:['لا'], sL:'هوية بصرية احترافية', wL:'لا توجد هوية بصرية' },
+                sops:                 { strength:['نعم كاملة'], weakness:['في الأذهان فقط'], sL:'إجراءات موثقة', wL:'عمليات غير موثقة' },
+                infra_growth:         { strength:['نعم'], weakness:['ضعيفة'], sL:'بنية تحتية قابلة للنمو', wL:'بنية تحتية ضعيفة' },
+            };
+            const S = [], W = [], O = [], T = [];
+            // من التشخيص
+            if (diag?.radar?.axisScores) {
+                const LABELS = { 'مالي':'الأداء المالي','عمالة':'الموارد البشرية','إداري':'الكفاءة التشغيلية','تنظيمي':'الامتثال','قطاعي':'الأداء القطاعي' };
+                for (const [k,v] of Object.entries(diag.radar.axisScores)) {
+                    const l = LABELS[k]||k;
+                    if (v >= 70) S.push(`أداء قوي: ${l}`);
+                    else if (v <= 40) W.push(`فجوة: ${l} (${v}%)`);
+                }
+            }
+            if (diag?.company?.sector) O.push(`فرص نمو في قطاع ${diag.company.sector}`);
+            if (diag?.results?.complianceGap > 50) T.push('مخاطر امتثال — تراخيص معلقة');
+            // من الإدارات
+            if (dept) {
+                for (const deptData of Object.values(dept)) {
+                    if (!deptData?.answers) continue;
+                    for (const [qId, val] of Object.entries(deptData.answers)) {
+                        const rule = STRENGTH_RULES_T[qId]; if (!rule) continue;
+                        const vals = Array.isArray(val)?val:[val];
+                        if (vals.some(v => rule.strength.includes(v))) { if (!S.includes(rule.sL)) S.push(rule.sL); }
+                        else if (vals.some(v => rule.weakness.includes(v))) { if (!W.includes(rule.wL)) W.push(rule.wL); }
+                    }
+                    (deptData.challenges||[]).forEach(c => { if(!T.includes(c)) T.push(c); });
+                }
+            }
+            // عرض نتيجة
+            const html = `<div style="padding:16px;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:12px;font-size:13px;">
+                <strong style="color:#a78bfa">✅ تم استخراج ${S.length+W.length+O.length+T.length} عنصر من التشخيص</strong>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
+                    <div><div style="color:#22c55e;font-weight:700;margin-bottom:6px">💪 القوى (${S.length})</div>${S.map(x=>`<div style="font-size:12px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)">${x}</div>`).join('')||'—'}</div>
+                    <div><div style="color:#ef4444;font-weight:700;margin-bottom:6px">⚠️ الضعف (${W.length})</div>${W.map(x=>`<div style="font-size:12px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)">${x}</div>`).join('')||'—'}</div>
+                    <div><div style="color:#3b82f6;font-weight:700;margin-bottom:6px">🚀 الفرص (${O.length})</div>${O.map(x=>`<div style="font-size:12px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)">${x}</div>`).join('')||'—'}</div>
+                    <div><div style="color:#f59e0b;font-weight:700;margin-bottom:6px">🔴 التهديدات (${T.length})</div>${T.map(x=>`<div style="font-size:12px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)">${x}</div>`).join('')||'—'}</div>
+                </div>
+                <div style="margin-top:12px;font-size:11px;color:#8b8ba7">← هذه النقاط جاهزة للاستخدام في بناء استراتيجيات TOWS أعلاه</div>
+            </div>`;
+            document.getElementById('matrixArea').innerHTML = html;
+            document.getElementById('towsBridgeBanner').style.display = 'none';
+        }
+
         async function init() {
             await loadAssessments();
             // Show SWOT → TOWS connection banner
             showSwotConnectionBanner();
+            // Phase 6B: check diagnostic bridge
+            checkTowsBridge();
         }
 
         async function loadAssessments() {

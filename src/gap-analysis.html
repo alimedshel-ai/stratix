@@ -632,13 +632,69 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadEntities();
-            if (dimensions.length === 0) {
+            // Phase 6B: محاولة تعبئة من جسر التشخيص أولاً
+            const filled = fillFromDiagnosticBridge();
+            if (!filled && dimensions.length === 0) {
                 // Default dimensions
                 ['الموارد البشرية', 'التقنية والأنظمة', 'العمليات والإجراءات', 'الثقافة التنظيمية', 'الابتكار'].forEach(name => {
                     addDimension({ name, current: 2, target: 4, actions: [] });
                 });
             }
         });
+
+        // Phase 6B: تعبئة أبعاد الرادار من درجات المحاور
+        function fillFromDiagnosticBridge() {
+            try {
+                const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
+                const dept = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
+                if (!diag?.radar?.axisScores) return false;
+
+                const AXIS_TO_DIM = {
+                    'مالي':    { name:'الأداء المالي',       target:5 },
+                    'عمالة':   { name:'الموارد البشرية',      target:5 },
+                    'إداري':   { name:'الكفاءة التشغيلية',    target:5 },
+                    'تنظيمي':  { name:'الامتثال التنظيمي',    target:5 },
+                    'قطاعي':   { name:'الأداء في القطاع',     target:5 },
+                };
+
+                Object.entries(diag.radar.axisScores).forEach(([axis, score]) => {
+                    const cfg = AXIS_TO_DIM[axis]; if (!cfg) return;
+                    // تحويل النسبة المئوية (0-100) لمقياس (0-5)
+                    const current = parseFloat((score / 20).toFixed(1));
+                    addDimension({ name: cfg.name, current, target: cfg.target, actions: [] });
+                });
+
+                // إضافة أبعاد من الإدارات (dept-deep goals)
+                if (dept) {
+                    const DEPT_LABELS = { compliance:'الامتثال', finance:'المالية', sales:'المبيعات', hr:'الموارد البشرية', marketing:'التسويق', operations:'العمليات', support:'الخدمات المساندة' };
+                    Object.entries(dept).forEach(([key, data]) => {
+                        if (!data?.completed) return;
+                        const exists = dimensions.some(d => d.name.includes(DEPT_LABELS[key]||key));
+                        if (!exists) {
+                            // درجة من إجابات الإدارة (تقدير بسيط)
+                            const answerCount = Object.keys(data.answers||{}).length;
+                            const current = Math.min(4, Math.max(1, Math.round(answerCount / 2)));
+                            addDimension({ name: `إدارة ${DEPT_LABELS[key]||key}`, current, target: 5, actions: [] });
+                        }
+                    });
+                }
+
+                // عرض بانر التأكيد
+                showBridgeBanner(diag.results?.maturity);
+                return true;
+            } catch(e) { console.warn('Gap bridge error:', e); return false; }
+        }
+
+        function showBridgeBanner(maturity) {
+            const existing = document.getElementById('gapBridgeBanner');
+            if (existing) return;
+            const b = document.createElement('div');
+            b.id = 'gapBridgeBanner';
+            b.style.cssText = 'padding:12px 16px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);border-radius:12px;margin-bottom:16px;font-size:13px;display:flex;align-items:center;gap:12px';
+            b.innerHTML = `<span style="font-size:20px">📊</span><span><strong>تم تعبئة أبعاد الرادار من التشخيص</strong> — نضج ${maturity??'?'}% — يمكنك تعديل القيم يدوياً</span>`;
+            const mainEl = document.querySelector('.main-content') || document.querySelector('main') || document.body;
+            mainEl.insertBefore(b, mainEl.firstChild);
+        }
 
         async function loadEntities() {
             try {

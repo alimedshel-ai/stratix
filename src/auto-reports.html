@@ -1112,6 +1112,435 @@
 
         renderTemplates();
     </script>
+
+    <!-- ===== PHASE 9B+C: DIAGNOSTIC REPORTS + EXCEL EXPORT ===== -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        #diagReportPanel {
+            display: none;
+            margin: 20px;
+            background: linear-gradient(135deg, rgba(102,126,234,0.06), rgba(167,139,250,0.04));
+            border: 1px solid rgba(102,126,234,0.2);
+            border-radius: 20px;
+            padding: 24px;
+        }
+        .drp-header { font-size: 16px; font-weight: 700; color: #e2e8f0; margin-bottom: 16px; }
+        .drp-type-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;
+        }
+        @media(max-width:640px) { .drp-type-grid { grid-template-columns: 1fr; } }
+        .drp-type-card {
+            background: rgba(255,255,255,0.03);
+            border: 2px solid rgba(255,255,255,0.06);
+            border-radius: 14px; padding: 18px 14px;
+            cursor: pointer; text-align: center; transition: all 0.2s;
+        }
+        .drp-type-card:hover { border-color: rgba(102,126,234,0.4); }
+        .drp-type-card.selected { border-color: #667eea; background: rgba(102,126,234,0.1); }
+        .drp-type-card .icon { font-size: 28px; margin-bottom: 6px; }
+        .drp-type-card .label { font-size: 14px; font-weight: 700; color: #e2e8f0; }
+        .drp-type-card .who { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+        .drp-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .drp-btn {
+            padding: 10px 22px; border-radius: 12px;
+            font-family: inherit; font-size: 14px; font-weight: 600;
+            cursor: pointer; border: none; transition: all 0.2s;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .drp-btn-primary { background: linear-gradient(135deg, #667eea, #a78bfa); color: white; }
+        .drp-btn-excel { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+        .drp-btn-json  { background: rgba(56,189,248,0.12); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); }
+        .drp-btn:hover { transform: translateY(-1px); opacity: 0.9; }
+
+        /* Report Document Styles */
+        .dr-doc {
+            background: white; color: #1a1a2e;
+            font-family: 'Tajawal', sans-serif; direction: rtl;
+            padding: 40px; max-width: 800px; margin: 20px auto;
+            border-radius: 8px;
+        }
+        .dr-doc * { box-sizing: border-box; }
+        .dr-cover { text-align: center; padding: 30px 0 40px; border-bottom: 3px solid #667eea; margin-bottom: 30px; }
+        .dr-cover-brand { font-size: 13px; color: #667eea; font-weight: 700; letter-spacing: 2px; margin-bottom: 16px; }
+        .dr-cover-title { font-size: 28px; font-weight: 800; color: #1a1a2e; margin-bottom: 8px; }
+        .dr-cover-sub { font-size: 14px; color: #64748b; }
+        .dr-section-title {
+            font-size: 16px; font-weight: 700; color: #667eea;
+            border-bottom: 2px solid #e8eaf0; padding-bottom: 8px;
+            margin: 28px 0 16px;
+        }
+        .dr-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+        .dr-kpi-card {
+            background: #f8fafc; border-radius: 10px; padding: 16px; text-align: center;
+        }
+        .dr-kpi-val { font-size: 26px; font-weight: 800; }
+        .dr-kpi-lbl { font-size: 12px; color: #64748b; margin-top: 4px; }
+        .dr-progress-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .dr-progress-name { font-size: 13px; min-width: 100px; color: #334155; }
+        .dr-progress-bar-wrap { flex: 1; background: #e2e8f0; border-radius: 6px; height: 10px; }
+        .dr-progress-bar { height: 100%; border-radius: 6px; }
+        .dr-progress-pct { font-size: 12px; font-weight: 700; min-width: 40px; }
+        .dr-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px; }
+        .dr-table th { background: #667eea; color: white; padding: 8px 12px; text-align: right; }
+        .dr-table td { padding: 8px 12px; border-bottom: 1px solid #e2e8f0; }
+        .dr-table tr:nth-child(even) td { background: #f8fafc; }
+        .dr-chip {
+            display: inline-block; padding: 3px 10px; border-radius: 20px;
+            font-size: 11px; margin: 2px; font-weight: 600;
+        }
+        .dr-chip-red { background: #fee2e2; color: #dc2626; }
+        .dr-chip-green { background: #dcfce7; color: #16a34a; }
+        .dr-chip-yellow { background: #fef9c3; color: #ca8a04; }
+        .dr-footer {
+            text-align: center; font-size: 11px; color: #94a3b8;
+            border-top: 1px solid #e2e8f0; padding-top: 20px; margin-top: 40px;
+        }
+        .dr-recommendation {
+            background: #f0fdf4; border-right: 4px solid #22c55e;
+            border-radius: 8px; padding: 12px 16px; margin-bottom: 10px; font-size: 13px; color: #166534;
+        }
+        .dr-warning {
+            background: #fef3c7; border-right: 4px solid #f59e0b;
+            border-radius: 8px; padding: 12px 16px; margin-bottom: 10px; font-size: 13px; color: #92400e;
+        }
+    </style>
+
+    <div id="diagReportPanel">
+      <div class="drp-header">📄 تقارير التشخيص الشامل</div>
+      <div class="drp-type-grid">
+        <div class="drp-type-card selected" id="drpCard-executive" onclick="selectDRPType('executive')">
+          <div class="icon">👔</div>
+          <div class="label">التقرير التنفيذي</div>
+          <div class="who">لمجلس الإدارة — 12 صفحة</div>
+        </div>
+        <div class="drp-type-card" id="drpCard-strategic" onclick="selectDRPType('strategic')">
+          <div class="icon">🎯</div>
+          <div class="label">التقرير الاستراتيجي</div>
+          <div class="who">للمدير التنفيذي — رادار + SWOT + TOWS</div>
+        </div>
+        <div class="drp-type-card" id="drpCard-operational" onclick="selectDRPType('operational')">
+          <div class="icon">⚙️</div>
+          <div class="label">التقرير التشغيلي</div>
+          <div class="who">لمدير العمليات — OKRs + مبادرات</div>
+        </div>
+      </div>
+      <div class="drp-actions">
+        <button class="drp-btn drp-btn-primary" onclick="generateDiagReport()">
+          <i class="bi bi-file-earmark-pdf"></i> توليد PDF
+        </button>
+        <button class="drp-btn drp-btn-excel" onclick="exportExcel()">
+          <i class="bi bi-file-earmark-excel"></i> تصدير Excel
+        </button>
+        <button class="drp-btn drp-btn-json" onclick="exportJSON()">
+          <i class="bi bi-download"></i> تصدير JSON
+        </button>
+      </div>
+      <div id="drpDocWrap" style="margin-top:24px;display:none;"></div>
+    </div>
+
+    <script>
+    // Phase 9B+C — Diagnostic Reports
+    (function initDiagReports() {
+        const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
+        if (!diag) return;
+
+        const panel = document.getElementById('diagReportPanel');
+        panel.style.display = 'block';
+
+        // Inject after toolbar
+        const toolbar = document.querySelector('.rpt-toolbar');
+        if (toolbar) {
+            toolbar.parentNode.parentNode.parentNode.insertBefore(panel, toolbar.parentNode.parentNode);
+        }
+    })();
+
+    let selectedDRPType = 'executive';
+
+    window.selectDRPType = function(type) {
+        selectedDRPType = type;
+        document.querySelectorAll('.drp-type-card').forEach(c => c.classList.remove('selected'));
+        document.getElementById('drpCard-' + type).classList.add('selected');
+    };
+
+    window.generateDiagReport = async function() {
+        const diag  = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
+        const dept  = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
+        const ident = JSON.parse(localStorage.getItem('stratix_identity_payload') || 'null');
+        const swot  = JSON.parse(localStorage.getItem('stratix_swot_data') || localStorage.getItem('stratix_swot_payload') || 'null');
+
+        if (!diag) { alert('لا توجد بيانات تشخيص. يرجى إكمال التشخيص أولاً.'); return; }
+
+        const html = buildReportHTML(selectedDRPType, diag, dept, ident, swot);
+        const wrap = document.getElementById('drpDocWrap');
+        wrap.innerHTML = html;
+        wrap.style.display = 'block';
+
+        const typeLabels = { executive: 'تنفيذي', strategic: 'استراتيجي', operational: 'تشغيلي' };
+        const opt = {
+            margin: [10, 10, 15, 10],
+            filename: `ستارتكس_تقرير_${typeLabels[selectedDRPType]}_${new Date().toISOString().slice(0,10)}.pdf`,
+            image: { type: 'jpeg', quality: 0.95 },
+            html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['avoid-all', 'css'] }
+        };
+        try {
+            await html2pdf().set(opt).from(wrap.querySelector('.dr-doc')).save();
+        } catch(e) {
+            alert('تعذّر توليد PDF — جرّب الطباعة مباشرة');
+        }
+    };
+
+    function buildReportHTML(type, diag, dept, ident, swot) {
+        const now = new Date().toLocaleDateString('ar-SA', { year:'numeric', month:'long', day:'numeric' });
+        const maturity = diag.results?.maturity || 0;
+        const compScore = diag.results?.compliance?.score || 0;
+        const riskAmt = diag.results?.totalRisk || 0;
+        const axisScores = diag.radar?.axisScores || {};
+        const critItems = diag.results?.compliance?.critical || [];
+        const company = diag.company || {};
+
+        const axisBar = (name, score, color) => `
+            <div class="dr-progress-row">
+                <span class="dr-progress-name">${name}</span>
+                <div class="dr-progress-bar-wrap">
+                    <div class="dr-progress-bar" style="width:${score}%;background:${color}"></div>
+                </div>
+                <span class="dr-progress-pct" style="color:${color}">${score}%</span>
+            </div>`;
+
+        const axisColors = { 'مالي':'#22c55e', 'عمالة':'#38bdf8', 'إداري':'#facc15', 'تنظيمي':'#ef4444', 'قطاعي':'#a78bfa' };
+
+        if (type === 'executive') {
+            return `<div class="dr-doc">
+                <div class="dr-cover">
+                    <div class="dr-cover-brand">STARTIX PRO — تقرير لمجلس الإدارة</div>
+                    <div class="dr-cover-title">التقرير التنفيذي الشامل</div>
+                    <div class="dr-cover-sub">${company.name || 'المنشأة'} | ${now}</div>
+                </div>
+
+                <div class="dr-section-title">📊 الصحة المؤسسية</div>
+                <div class="dr-grid2">
+                    <div class="dr-kpi-card">
+                        <div class="dr-kpi-val" style="color:${maturity>=70?'#16a34a':maturity>=45?'#ca8a04':'#dc2626'}">${maturity}%</div>
+                        <div class="dr-kpi-lbl">مؤشر النضج المؤسسي</div>
+                    </div>
+                    <div class="dr-kpi-card">
+                        <div class="dr-kpi-val" style="color:${compScore>=70?'#16a34a':'#dc2626'}">${compScore}%</div>
+                        <div class="dr-kpi-lbl">درجة الامتثال التنظيمي</div>
+                    </div>
+                    <div class="dr-kpi-card">
+                        <div class="dr-kpi-val" style="color:#dc2626">${riskAmt ? riskAmt.toLocaleString() + ' ﷼' : '—'}</div>
+                        <div class="dr-kpi-lbl">إجمالي المخاطر المكشوفة</div>
+                    </div>
+                    <div class="dr-kpi-card">
+                        <div class="dr-kpi-val" style="color:#dc2626">${critItems.length}</div>
+                        <div class="dr-kpi-lbl">بند حرج يتطلب قراراً</div>
+                    </div>
+                </div>
+
+                <div class="dr-section-title">🔢 المحاور الاستراتيجية</div>
+                ${Object.entries(axisScores).map(([k,v]) => axisBar(k, v, axisColors[k]||'#667eea')).join('')}
+
+                ${critItems.length ? `
+                <div class="dr-section-title">🔴 البنود الحرجة الفورية</div>
+                ${critItems.slice(0,5).map(c => `<div class="dr-warning">⚠️ ${c}</div>`).join('')}
+                ` : ''}
+
+                ${ident?.vision ? `
+                <div class="dr-section-title">🏛️ الهوية المؤسسية</div>
+                <table class="dr-table">
+                    <tr><th>العنصر</th><th>المحتوى</th></tr>
+                    <tr><td>الرؤية</td><td>${ident.vision}</td></tr>
+                    <tr><td>الرسالة</td><td>${ident.mission||'—'}</td></tr>
+                    <tr><td>الميزة التنافسية</td><td>${ident.competitiveAdvantage?.description||'—'}</td></tr>
+                </table>
+                ` : ''}
+
+                <div class="dr-section-title">✅ التوصيات لمجلس الإدارة</div>
+                ${maturity < 45 ? `<div class="dr-warning">⚠️ مستوى النضج المؤسسي منخفض (${maturity}%) — يتطلب تدخلاً استراتيجياً فورياً</div>` : ''}
+                ${compScore < 60 ? `<div class="dr-warning">⚠️ درجة الامتثال دون المعيار المقبول — خطر قانوني حقيقي</div>` : ''}
+                ${riskAmt > 50000 ? `<div class="dr-warning">⚠️ مخاطر مالية بقيمة ${riskAmt.toLocaleString()} ﷼ تحتاج إجراءات وقائية</div>` : ''}
+                ${maturity >= 70 ? `<div class="dr-recommendation">✅ أداء مؤسسي قوي — التركيز على الإبداع والتوسع الاستراتيجي</div>` : ''}
+                <div class="dr-recommendation">💡 تشكيل لجنة متابعة تنفيذية لمراجعة نتائج التشخيص والمبادرات العلاجية</div>
+
+                <div class="dr-footer">تقرير ستارتكس برو — سري — للاستخدام الداخلي فقط | ${now}</div>
+            </div>`;
+        }
+
+        if (type === 'strategic') {
+            const strengths = swot?.strengths || [];
+            const weaknesses = swot?.weaknesses || [];
+            const opportunities = swot?.opportunities || [];
+            const threats = swot?.threats || [];
+            return `<div class="dr-doc">
+                <div class="dr-cover">
+                    <div class="dr-cover-brand">STARTIX PRO — التقرير الاستراتيجي</div>
+                    <div class="dr-cover-title">التحليل الاستراتيجي الشامل</div>
+                    <div class="dr-cover-sub">${company.name || 'المنشأة'} | ${now}</div>
+                </div>
+
+                <div class="dr-section-title">📡 رادار الأداء الاستراتيجي</div>
+                ${Object.entries(axisScores).map(([k,v]) => axisBar(k, v, axisColors[k]||'#667eea')).join('')}
+
+                <div class="dr-section-title">⚡ تحليل SWOT</div>
+                <div class="dr-grid2">
+                    <div class="dr-kpi-card" style="text-align:right">
+                        <div style="font-weight:700;color:#16a34a;margin-bottom:8px">💪 نقاط القوة (${strengths.length})</div>
+                        ${strengths.slice(0,4).map(s => `<div class="dr-chip dr-chip-green">${s}</div>`).join('')}
+                    </div>
+                    <div class="dr-kpi-card" style="text-align:right">
+                        <div style="font-weight:700;color:#dc2626;margin-bottom:8px">⚠️ نقاط الضعف (${weaknesses.length})</div>
+                        ${weaknesses.slice(0,4).map(s => `<div class="dr-chip dr-chip-red">${s}</div>`).join('')}
+                    </div>
+                    <div class="dr-kpi-card" style="text-align:right">
+                        <div style="font-weight:700;color:#2563eb;margin-bottom:8px">🚀 الفرص (${opportunities.length})</div>
+                        ${opportunities.slice(0,4).map(s => `<div class="dr-chip" style="background:#eff6ff;color:#1d4ed8">${s}</div>`).join('')}
+                    </div>
+                    <div class="dr-kpi-card" style="text-align:right">
+                        <div style="font-weight:700;color:#ca8a04;margin-bottom:8px">🔴 التهديدات (${threats.length})</div>
+                        ${threats.slice(0,4).map(s => `<div class="dr-chip dr-chip-yellow">${s}</div>`).join('')}
+                    </div>
+                </div>
+
+                ${dept?.completedDepts?.length ? `
+                <div class="dr-section-title">🏢 ملخص الإدارات</div>
+                <table class="dr-table">
+                    <tr><th>الإدارة</th><th>القوى</th><th>الضعف</th><th>الأولوية</th></tr>
+                    ${dept.completedDepts.map(key => {
+                        const d = dept[key] || {};
+                        return `<tr>
+                            <td>${key}</td>
+                            <td>${(d.strengths||[]).length} نقطة</td>
+                            <td>${(d.weaknesses||[]).length} نقطة</td>
+                            <td><span class="dr-chip ${d.priority==='عاجل جداً'?'dr-chip-red':'dr-chip-green'}">${d.priority||'عادي'}</span></td>
+                        </tr>`;
+                    }).join('')}
+                </table>
+                ` : ''}
+
+                <div class="dr-footer">تقرير ستارتكس برو — سري | ${now}</div>
+            </div>`;
+        }
+
+        // operational
+        return `<div class="dr-doc">
+            <div class="dr-cover">
+                <div class="dr-cover-brand">STARTIX PRO — التقرير التشغيلي</div>
+                <div class="dr-cover-title">خطة العمل التشغيلية</div>
+                <div class="dr-cover-sub">${company.name || 'المنشأة'} | ${now}</div>
+            </div>
+
+            <div class="dr-section-title">🎯 الأولويات التشغيلية الفورية</div>
+            ${critItems.length ? critItems.slice(0,6).map(c => `
+                <div class="dr-warning">⚠️ ${c}</div>
+            `).join('') : '<div class="dr-recommendation">✅ لا توجد بنود حرجة — الأداء سليم</div>'}
+
+            ${dept?.completedDepts?.length ? `
+            <div class="dr-section-title">📋 أهداف الإدارات المحددة</div>
+            <table class="dr-table">
+                <tr><th>الإدارة</th><th>الهدف</th><th>الأولوية</th></tr>
+                ${dept.completedDepts.flatMap(key => {
+                    const d = dept[key] || {};
+                    return (d.goals||[]).slice(0,2).map(g => `
+                        <tr>
+                            <td>${key}</td>
+                            <td>${g}</td>
+                            <td><span class="dr-chip ${d.priority==='عاجل جداً'?'dr-chip-red':'dr-chip-green'}">${d.priority||'عادي'}</span></td>
+                        </tr>`);
+                }).join('')}
+            </table>
+            ` : ''}
+
+            <div class="dr-section-title">📈 مؤشرات الأداء الرئيسية</div>
+            ${Object.entries(axisScores).map(([k,v]) => axisBar(k, v, axisColors[k]||'#667eea')).join('')}
+
+            <div class="dr-section-title">✅ خطوات العمل القادمة</div>
+            <div class="dr-recommendation">1. معالجة البنود الحرجة فوراً (خلال 30 يوماً)</div>
+            <div class="dr-recommendation">2. استكمال استكشاف الإدارات غير المكتملة</div>
+            <div class="dr-recommendation">3. ربط الأهداف بـ OKRs قابلة للقياس</div>
+            <div class="dr-recommendation">4. مراجعة ربعية للتقدم والتعديل</div>
+
+            <div class="dr-footer">تقرير ستارتكس برو — سري | ${now}</div>
+        </div>`;
+    }
+
+    window.exportExcel = function() {
+        const diag  = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
+        const dept  = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
+        const ident = JSON.parse(localStorage.getItem('stratix_identity_payload') || 'null');
+        if (!diag) { alert('لا توجد بيانات للتصدير'); return; }
+
+        const wb = XLSX.utils.book_new();
+
+        // Sheet 1: Summary
+        const maturity = diag.results?.maturity || 0;
+        const compScore = diag.results?.compliance?.score || 0;
+        const riskAmt = diag.results?.totalRisk || 0;
+        const summaryData = [
+            ['البيان', 'القيمة'],
+            ['النضج المؤسسي', maturity + '%'],
+            ['درجة الامتثال', compScore + '%'],
+            ['المخاطر المكشوفة (﷼)', riskAmt],
+            ['تاريخ التشخيص', diag.completedAt || '—'],
+            ['الرؤية', ident?.vision || '—'],
+            ['الميزة التنافسية', ident?.competitiveAdvantage?.description || '—'],
+        ];
+        const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
+        XLSX.utils.book_append_sheet(wb, ws1, 'الملخص');
+
+        // Sheet 2: Axes
+        const axisRows = [['المحور', 'الدرجة']];
+        Object.entries(diag.radar?.axisScores || {}).forEach(([k,v]) => axisRows.push([k, v + '%']));
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(axisRows), 'المحاور');
+
+        // Sheet 3: Departments
+        if (dept?.completedDepts?.length) {
+            const deptRows = [['الإدارة', 'نقاط القوة', 'نقاط الضعف', 'الأهداف', 'الأولوية', 'نموذج التشغيل']];
+            dept.completedDepts.forEach(key => {
+                const d = dept[key] || {};
+                deptRows.push([
+                    key,
+                    (d.strengths||[]).join(' | '),
+                    (d.weaknesses||[]).join(' | '),
+                    (d.goals||[]).join(' | '),
+                    d.priority || '—',
+                    d.operatingModel || '—',
+                ]);
+            });
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(deptRows), 'الإدارات');
+        }
+
+        // Sheet 4: Critical Items
+        const critItems = diag.results?.compliance?.critical || [];
+        if (critItems.length) {
+            const critRows = [['البند الحرج', 'الحالة']];
+            critItems.forEach(c => critRows.push([c, 'يتطلب معالجة فورية']));
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(critRows), 'البنود الحرجة');
+        }
+
+        const fileName = `ستارتكس_تشخيص_${new Date().toISOString().slice(0,10)}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+    };
+
+    window.exportJSON = function() {
+        const payload = {
+            diagnostic: JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null'),
+            deptDeep:   JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null'),
+            identity:   JSON.parse(localStorage.getItem('stratix_identity_payload') || 'null'),
+            swot:       JSON.parse(localStorage.getItem('stratix_swot_data') || localStorage.getItem('stratix_swot_payload') || 'null'),
+            exportedAt: new Date().toISOString(),
+            version: 'stratix-pro-v3.2'
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ستارتكس_بيانات_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+    </script>
 </body>
 
 </html>

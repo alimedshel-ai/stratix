@@ -786,6 +786,11 @@ app.get('/dept-diagnostic', (req, res) => {
   res.sendFile(path.join(__dirname, 'src', 'dept-diagnostic.html'));
 });
 
+// Phase 6A — استكشاف الإدارات العميق
+app.get('/dept-deep', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'dept-deep.html'));
+});
+
 // Serve Tools Guide page
 app.get('/tools-guide', (req, res) => {
   res.sendFile(path.join(__dirname, 'src', 'tools-guide.html'));

@@ -727,14 +727,16 @@ localStorage key: 'stratix_identity_payload'
 ```
 الخطوة 1: ✅ تم — الجسر (localStorage Bridge)
 الخطوة 2: ✅ تم — MAT Engine v2
-
-الخطوة 3: Phase 6A — dept-deep.html (الأكبر والأهم — 1,800 سطر)
-الخطوة 4: Phase 6B — SWOT auto-generate (200 سطر)
-الخطوة 5: Phase 6B — ربط TOWS + Gap + Radar (200 سطر)
-الخطوة 6: Phase 7 — wizard الهوية (300 سطر)
-الخطوة 7: Phase 8 — ربط OKRs + Initiatives (200 سطر)
-الخطوة 8: Phase 9 — Dashboard + تصدير + قالب (900 سطر)
+الخطوة 3: ✅ تم — Phase 6A — dept-deep.html (1,344 سطر)
+الخطوة 4: ✅ تم — Phase 6B — SWOT auto-generate
+الخطوة 5: ✅ تم — Phase 6B — ربط TOWS + Gap + Radar
+الخطوة 6: ✅ تم — Phase 7 — wizard الهوية (directions.html)
+الخطوة 7: ✅ تم — Phase 8 — ربط OKRs + Initiatives (من dept-deep)
+الخطوة 8: ✅ تم — Phase 9 — Dashboard حي + 3 تقارير + Excel/JSON تصدير
+✅ إضافي: التصنيف القطاعي 3 أعمدة (diagnostic-center.html)
 ```
+
+> 🎉 **جميع المراحل 6-9 مكتملة — تم في 2026-03-04**
 
 ---
 
@@ -742,15 +744,18 @@ localStorage key: 'stratix_identity_payload'
 
 ```
 من تقرير الخبير:
-  ① تشخيص "الجزر المنعزلة" → Phase 6B يحل هذه المشكلة بالكامل
-  ② التصدير Excel/JSON → Phase 9B
-  ③ تصميم التقرير الاحترافي → Phase 9C
+  ① ✅ تشخيص "الجزر المنعزلة" → Phase 6B يحل هذه المشكلة بالكامل
+  ② ✅ التصدير Excel/JSON → Phase 9B (SheetJS — 4 أوراق)
+  ③ ✅ تصميم التقرير الاحترافي → Phase 9C (3 أنواع تقارير)
 
 من تصور strategy-lab:
-  ④ SWOT تلقائي من 3 مصادر → Phase 6B
-  ⑤ TOWS مع أولوية ذكية → Phase 6B (موجود — يُربط)
-  ⑥ Radar محدّث مع مقارنة قطاعية → Phase 6B (يُضاف تحليل)
-  ⑦ Gap Analysis مع خارطة زمنية → Phase 6B (يُضاف timeline)
+  ④ ✅ SWOT تلقائي من 3 مصادر → Phase 6B
+  ⑤ ✅ TOWS مع أولوية ذكية → Phase 6B (موجود — مربوط)
+  ⑥ ✅ Radar محدّث مع مقارنة قطاعية → Phase 6B
+  ⑦ ✅ Gap Analysis مع خارطة زمنية → Phase 6B
+
+من تصور الإدارات المعتمد:
+  ⑧ ✅ التصنيف القطاعي 3 أعمدة (خدمي/تجاري/صناعي) + mainSector
 ```
 
 ---
@@ -759,6 +764,8 @@ localStorage key: 'stratix_identity_payload'
 
 ```
 docs/phase6-11-plan.md         ← هذا الملف (الخطة الشاملة)
+docs/sales-vision.md           ← تصور المبيعات المعتمد 🔒
+docs/compliance-vision.md      ← تصور الامتثال المعتمد 🔒
 docs/gov-fees.md               ← جدول الرسوم الحكومية (30 بند)
 docs/compliance-framework.md   ← الإطار التنظيمي (كيان+قطاع+حجم)
 ```

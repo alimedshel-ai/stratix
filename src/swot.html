@@ -787,6 +787,24 @@
                     لكل قسم. الأجوبة تتحوّل تلقائياً لمصفوفة SWOT.</p>
             </div>
 
+            <!-- Auto-Generate from Diagnostic Bridge (Phase 6A/6B) -->
+            <div id="diagnosticBridgeBanner" style="display:none;margin-bottom:16px;padding:14px 18px;
+                background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.25);
+                border-radius:14px;display:none;align-items:center;gap:14px;flex-wrap:wrap">
+                <div style="font-size:24px">🔗</div>
+                <div style="flex:1">
+                    <div style="font-weight:800;font-size:14px;margin-bottom:3px">بيانات التشخيص جاهزة للتوليد</div>
+                    <div id="bridgeSummary" style="font-size:12px;color:var(--text-muted)"></div>
+                </div>
+                <button onclick="generateFromDiagnostic()" style="
+                    padding:9px 18px;border-radius:10px;border:none;
+                    background:linear-gradient(135deg,#7c3aed,#a78bfa);
+                    color:#fff;font-family:'Tajawal',sans-serif;
+                    font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">
+                    ⚡ ولّد SWOT تلقائياً
+                </button>
+            </div>
+
             <!-- Pre-fill banner -->
             <div id="prefillBanner" style="display:none"></div>
 
@@ -1304,6 +1322,9 @@
             // 2. Pull pain/ambition data from API
             await loadPainAmbitionData();
 
+            // 2b. Phase 6B — فحص جسر التشخيص (dept-deep + diagnostic-center)
+            checkDiagnosticBridge();
+
             // 3. Show pre-fill banner if we have data
             showPrefillBanner();
 
@@ -1479,6 +1500,122 @@
                     state.prefilled.strengths.push('فريق عمل كبير ومتنوع (' + pa.depth.teamSize + ' شخص)');
                 }
             }
+        }
+
+        // ============================================================
+        //  PHASE 6B — AUTO-GENERATE SWOT FROM DIAGNOSTIC BRIDGE
+        // ============================================================
+        const AXIS_THRESHOLDS = { strong: 70, weak: 40 };
+
+        const DEPT_STRENGTH_RULES = {
+            compliance_officer:    { strength:['نعم — موظف متفرغ','مستشار خارجي'], weakness:['لا — أنا أتولى ذلك'], sL:'مسؤول امتثال متخصص', wL:'لا يوجد مسؤول امتثال' },
+            license_review:        { strength:['هذا الشهر'], weakness:['أكثر من سنة','لا أتذكر'], sL:'متابعة دورية للتراخيص', wL:'تراخيص غير محدّثة' },
+            violations:            { strength:['لا'], weakness:['نعم — لا تزال قائمة'], sL:'سجل نظيف من المخالفات', wL:'مخالفة قائمة لم تُحل' },
+            accountant:            { strength:['داخلي'], weakness:['لا'], sL:'محاسب داخلي متخصص', wL:'لا يوجد محاسب' },
+            profit_margin:         { strength:['نعم بدقة'], weakness:['لا'], sL:'وعي مالي دقيق بالهوامش', wL:'جهل بهامش الربح الصافي' },
+            client_concentration:  { strength:['أقل 20%'], weakness:['أكثر 50% (خطر)'], sL:'تنويع صحي في قاعدة العملاء', wL:'⚠️ اعتماد خطير على عميل واحد' },
+            crm:                   { strength:['نعم متكامل'], weakness:['لا'], sL:'نظام CRM متكامل', wL:'لا يوجد نظام متابعة عملاء' },
+            repeat_clients:        { strength:['أكثر من 60%'], weakness:['أقل من 30%'], sL:'قاعدة عملاء متكررة قوية', wL:'ضعف في الاحتفاظ بالعملاء' },
+            salary_structure:      { strength:['نعم موثق'], weakness:['لا'], sL:'هيكل رواتب وحوافز واضح', wL:'غياب هيكل تعويضات' },
+            performance_eval:      { strength:['نعم — دوري'], weakness:['لا'], sL:'نظام تقييم أداء منتظم', wL:'لا يوجد تقييم أداء' },
+            brand_identity:        { strength:['نعم — احترافية'], weakness:['لا'], sL:'هوية بصرية احترافية', wL:'لا توجد هوية بصرية' },
+            content_frequency:     { strength:['يومياً','أسبوعياً'], weakness:['لا'], sL:'محتوى منتظم ونشط', wL:'لا يوجد نشر محتوى' },
+            sops:                  { strength:['نعم كاملة'], weakness:['في الأذهان فقط'], sL:'إجراءات موثقة SOPs', wL:'العمليات غير موثقة' },
+            automation_level:      { strength:['معظمها أتمتة'], weakness:['كثير'], sL:'مستوى أتمتة عالي', wL:'عمليات يدوية مرهقة' },
+            infra_growth:          { strength:['نعم'], weakness:['ضعيفة'], sL:'بنية تحتية تدعم النمو', wL:'بنية تحتية ضعيفة' },
+            vendor_contracts:      { strength:['نعم'], weakness:['لا'], sL:'عقود موردين محدّثة', wL:'عقود موردين منتهية/غائبة' },
+        };
+
+        function checkDiagnosticBridge() {
+            const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
+            const dept = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
+            if (!diag && !dept) return;
+
+            const banner = document.getElementById('diagnosticBridgeBanner');
+            const summary = document.getElementById('bridgeSummary');
+            banner.style.display = 'flex';
+
+            const parts = [];
+            if (diag) parts.push(`تشخيص عام (نضج ${diag.results?.maturity ?? '?'}%)`);
+            if (dept) {
+                const doneCount = Object.values(dept).filter(v => v?.completed).length;
+                if (doneCount > 0) parts.push(`${doneCount} إدارات مكتملة`);
+            }
+            summary.textContent = parts.join(' · ') + ' — جاهز للتحويل لـ SWOT';
+        }
+
+        function generateFromDiagnostic() {
+            const diag  = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
+            const depth = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
+
+            const S = [], W = [], O = [], T = [];
+
+            // ── المصدر 1: التشخيص العام (درجات المحاور) ──
+            if (diag?.radar?.axisScores) {
+                const AXIS_LABELS = {
+                    'مالي':    'الأداء المالي',
+                    'عمالة':   'إدارة الموارد البشرية',
+                    'إداري':   'الكفاءة التشغيلية',
+                    'تنظيمي':  'الامتثال التنظيمي',
+                    'قطاعي':   'الأداء في القطاع',
+                };
+                for (const [axis, score] of Object.entries(diag.radar.axisScores)) {
+                    const label = AXIS_LABELS[axis] || axis;
+                    if (score >= AXIS_THRESHOLDS.strong) S.push(`أداء قوي في ${label} (${score}%)`);
+                    else if (score <= AXIS_THRESHOLDS.weak) W.push(`فجوة حرجة في ${label} (${score}%)`);
+                }
+            }
+
+            // ── تهديدات الامتثال من التشخيص ──
+            if (diag?.results?.complianceGap > 50) {
+                T.push('مخاطر امتثال عالية — تراخيص وتسجيلات معلقة');
+            }
+
+            // ── فرص من القطاع والحجم ──
+            const sector = diag?.company?.sector || localStorage.getItem('stratix_sector');
+            const size   = diag?.company?.size;
+            if (sector) O.push(`فرص نمو في قطاع ${sector}`);
+            if (size === 'صغيرة' || size === 'متناهية الصغر') O.push('برامج دعم المنشآت الصغيرة (منشآت، صندوق الاستثمارات)');
+
+            // ── المصدر 2: إجابات الإدارات (dept-deep) ──
+            if (depth) {
+                for (const [deptKey, deptData] of Object.entries(depth)) {
+                    if (!deptData?.answers) continue;
+                    for (const [qId, val] of Object.entries(deptData.answers)) {
+                        const rule = DEPT_STRENGTH_RULES[qId];
+                        if (!rule) continue;
+                        const vals = Array.isArray(val) ? val : [val];
+                        if (vals.some(v => rule.strength.includes(v))) { if (!S.includes(rule.sL)) S.push(rule.sL); }
+                        else if (vals.some(v => rule.weakness.includes(v))) { if (!W.includes(rule.wL)) W.push(rule.wL); }
+                    }
+                    // التحديات المختارة → تهديدات
+                    if (deptData.challenges?.length) {
+                        deptData.challenges.forEach(c => { if (!T.includes(c)) T.push(c); });
+                    }
+                    // نموذج التشغيل
+                    if (deptData.model === 'مزود خارجي — راضٍ عن الأداء') {
+                        if (!S.includes('تشغيل خارجي فعّال يقلل الأعباء')) S.push('تشغيل خارجي فعّال يقلل الأعباء');
+                    } else if (deptData.model === 'مزود خارجي — أفكر في التغيير') {
+                        if (!W.includes('مزود خارجي بأداء ضعيف')) W.push('مزود خارجي بأداء ضعيف');
+                    }
+                }
+            }
+
+            // ── دمج في state.prefilled ──
+            if (!state.prefilled) state.prefilled = { strengths:[], weaknesses:[], opportunities:[], threats:[] };
+            const merge = (arr, src) => src.forEach(x => { if (!arr.includes(x)) arr.push(x); });
+            merge(state.prefilled.strengths    ||= [], S);
+            merge(state.prefilled.weaknesses   ||= [], W);
+            merge(state.prefilled.opportunities||= [], O);
+            merge(state.prefilled.threats      ||= [], T);
+
+            // إخفاء زر التوليد بعد الاستخدام
+            document.getElementById('diagnosticBridgeBanner').style.display = 'none';
+
+            // إظهار banner العناصر المدمجة
+            showPrefillBanner();
+
+            console.log('⚡ Auto-SWOT from Diagnostic Bridge:', { S: S.length, W: W.length, O: O.length, T: T.length });
         }
 
         function showPrefillBanner() {

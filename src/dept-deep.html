@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس — استكشاف الإدارات العميق</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0d14;
+            --bg-card: #141825;
+            --bg-card-hover: #1a2035;
+            --text: #e2e8f0;
+            --text-muted: #8b8ba7;
+            --border: rgba(255,255,255,0.07);
+            --green: #22c55e; --green-glow: rgba(34,197,94,0.12);
+            --yellow: #f59e0b; --yellow-glow: rgba(245,158,11,0.12);
+            --red: #ef4444; --red-glow: rgba(239,68,68,0.12);
+            --blue: #3b82f6; --blue-glow: rgba(59,130,246,0.12);
+            --purple: #a78bfa; --purple-glow: rgba(167,139,250,0.12);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:'Tajawal',sans-serif;
+            background:var(--bg);
+            color:var(--text);
+            min-height:100vh;
+            display:flex; flex-direction:column; align-items:center;
+            padding:24px 20px 80px;
+        }
+        body::before {
+            content:''; position:fixed; inset:0;
+            background:
+                radial-gradient(ellipse at 20% 10%, rgba(124,58,237,0.07) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 90%, rgba(59,130,246,0.05) 0%, transparent 50%);
+            z-index:0; pointer-events:none;
+        }
+        .container { position:relative; z-index:1; width:100%; max-width:760px; }
+
+        /* ── Header ── */
+        .page-header {
+            text-align:center; margin-bottom:28px;
+            animation:fadeIn .4s ease;
+        }
+        .logo-text {
+            font-size:20px; font-weight:900;
+            background:linear-gradient(135deg,#a78bfa,#38bdf8);
+            -webkit-background-clip:text; background-clip:text;
+            -webkit-text-fill-color:transparent;
+            margin-bottom:6px;
+        }
+        .page-title { font-size:22px; font-weight:800; margin-bottom:4px; }
+        .dept-badge {
+            display:inline-flex; align-items:center; gap:6px;
+            padding:5px 16px; border-radius:20px;
+            font-size:13px; font-weight:700;
+            border:1px solid transparent;
+            margin-top:8px;
+        }
+
+        /* ── Dept Tabs ── */
+        .dept-tabs {
+            display:flex; gap:6px; flex-wrap:wrap;
+            justify-content:center; margin-bottom:24px;
+            animation:fadeIn .4s ease;
+        }
+        .dept-tab {
+            padding:7px 14px; border-radius:20px;
+            border:1px solid var(--border);
+            background:var(--bg-card);
+            color:var(--text-muted);
+            font-family:'Tajawal',sans-serif;
+            font-size:12px; font-weight:600;
+            cursor:pointer; transition:all .2s;
+            display:flex; align-items:center; gap:5px;
+        }
+        .dept-tab:hover { border-color:rgba(255,255,255,.15); color:var(--text); }
+        .dept-tab.active { color:#fff; }
+        .dept-tab.done::after { content:'✓'; margin-right:4px; opacity:.8; }
+
+        /* ── Section Stepper ── */
+        .stepper {
+            display:flex; align-items:center; justify-content:center;
+            gap:0; margin-bottom:28px; background:var(--bg-card);
+            border:1px solid var(--border); border-radius:14px;
+            padding:12px 16px; animation:fadeIn .4s ease;
+        }
+        .step {
+            display:flex; flex-direction:column; align-items:center;
+            gap:4px; flex:1; position:relative; cursor:pointer;
+        }
+        .step:not(:last-child)::after {
+            content:''; position:absolute;
+            top:16px; left:-50%; width:100%; height:2px;
+            background:var(--border);
+            z-index:0;
+        }
+        .step.done:not(:last-child)::after { background:rgba(34,197,94,.4); }
+        .step-num {
+            width:32px; height:32px; border-radius:50%;
+            border:2px solid var(--border);
+            display:flex; align-items:center; justify-content:center;
+            font-size:12px; font-weight:800; position:relative; z-index:1;
+            background:var(--bg); color:var(--text-muted); transition:all .3s;
+        }
+        .step.active .step-num { border-color:var(--accent); color:var(--accent); background:var(--accent-glow); }
+        .step.done .step-num { background:var(--green); border-color:var(--green); color:#000; }
+        .step-label { font-size:10px; color:var(--text-muted); font-weight:600; text-align:center; white-space:nowrap; }
+        .step.active .step-label { color:var(--accent); }
+        .step.done .step-label { color:var(--green); }
+
+        /* ── Card ── */
+        .card {
+            background:var(--bg-card);
+            border:1px solid var(--border);
+            border-radius:16px; padding:28px;
+            margin-bottom:20px;
+            animation:slideUp .3s ease;
+        }
+        .card-title {
+            font-size:17px; font-weight:800;
+            display:flex; align-items:center; gap:8px;
+            margin-bottom:6px;
+        }
+        .card-sub { font-size:13px; color:var(--text-muted); margin-bottom:20px; }
+
+        /* ── Section 1: Status ── */
+        .status-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px; }
+        .stat-box {
+            background:rgba(255,255,255,.03);
+            border:1px solid var(--border);
+            border-radius:12px; padding:16px;
+        }
+        .stat-box .s-label { font-size:11px; color:var(--text-muted); font-weight:600; margin-bottom:6px; }
+        .stat-box .s-value { font-size:22px; font-weight:900; }
+        .stat-box .s-sub { font-size:11px; color:var(--text-muted); margin-top:3px; }
+        .progress-bar { height:8px; background:rgba(255,255,255,.06); border-radius:10px; overflow:hidden; margin:8px 0; }
+        .progress-fill { height:100%; border-radius:10px; transition:width .6s ease; }
+        .items-list { list-style:none; display:flex; flex-direction:column; gap:7px; }
+        .items-list li { font-size:13px; display:flex; align-items:center; gap:7px; }
+
+        /* ── Section 2: Questions ── */
+        .question-block { margin-bottom:24px; }
+        .q-label {
+            font-size:14px; font-weight:700; margin-bottom:10px;
+            display:flex; align-items:flex-start; gap:7px;
+        }
+        .q-label .q-num {
+            width:22px; height:22px; border-radius:50%;
+            background:var(--accent-glow); border:1px solid var(--accent);
+            color:var(--accent); font-size:11px; font-weight:800;
+            display:flex; align-items:center; justify-content:center;
+            flex-shrink:0; margin-top:1px;
+        }
+        .radio-options, .check-options { display:flex; flex-direction:column; gap:8px; }
+        .radio-option, .check-option {
+            display:flex; align-items:center; gap:10px;
+            padding:10px 14px; border-radius:10px;
+            border:1px solid var(--border);
+            background:rgba(255,255,255,.02);
+            cursor:pointer; transition:all .2s;
+            font-size:13px; font-weight:600;
+        }
+        .radio-option:hover, .check-option:hover { border-color:rgba(255,255,255,.15); background:rgba(255,255,255,.04); }
+        .radio-option.selected, .check-option.selected { border-color:var(--accent); background:var(--accent-glow); color:var(--text); }
+        .radio-option input, .check-option input { display:none; }
+        .radio-dot {
+            width:16px; height:16px; border-radius:50%;
+            border:2px solid var(--text-muted); flex-shrink:0;
+            display:flex; align-items:center; justify-content:center;
+            transition:all .2s;
+        }
+        .radio-option.selected .radio-dot { border-color:var(--accent); background:var(--accent); }
+        .check-box {
+            width:16px; height:16px; border-radius:4px;
+            border:2px solid var(--text-muted); flex-shrink:0;
+            display:flex; align-items:center; justify-content:center;
+            font-size:10px; transition:all .2s;
+        }
+        .check-option.selected .check-box { border-color:var(--accent); background:var(--accent); color:#000; }
+        textarea.q-textarea {
+            width:100%; min-height:80px;
+            background:rgba(255,255,255,.03);
+            border:1px solid var(--border); border-radius:10px;
+            color:var(--text); font-family:'Tajawal',sans-serif;
+            font-size:13px; padding:12px; resize:vertical;
+            transition:border-color .2s;
+        }
+        textarea.q-textarea:focus { outline:none; border-color:var(--accent); }
+        textarea.q-textarea::placeholder { color:var(--text-muted); }
+
+        /* ── Section 3: S/W ── */
+        .sw-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+        .sw-column { }
+        .sw-col-title {
+            font-size:13px; font-weight:800; margin-bottom:12px;
+            padding:8px 12px; border-radius:8px;
+            display:flex; align-items:center; gap:6px;
+        }
+        .sw-col-title.strength { background:var(--green-glow); color:var(--green); border:1px solid rgba(34,197,94,.2); }
+        .sw-col-title.weakness { background:var(--red-glow); color:var(--red); border:1px solid rgba(239,68,68,.2); }
+        .sw-tag {
+            display:flex; align-items:center; gap:6px;
+            padding:8px 10px; border-radius:8px; margin-bottom:7px;
+            font-size:12px; font-weight:600;
+        }
+        .sw-tag.auto { background:rgba(255,255,255,.04); border:1px solid var(--border); }
+        .sw-tag.auto i { font-size:10px; color:var(--text-muted); }
+        .add-sw-input {
+            width:100%; padding:8px 10px; border-radius:8px;
+            border:1px dashed var(--border); background:transparent;
+            color:var(--text); font-family:'Tajawal',sans-serif;
+            font-size:12px; margin-top:8px;
+        }
+        .add-sw-input:focus { outline:none; border-color:var(--accent); }
+        .add-sw-input::placeholder { color:var(--text-muted); }
+
+        /* ── Section 4: Outputs ── */
+        .output-item {
+            display:flex; align-items:flex-start; gap:10px;
+            padding:10px 0; border-bottom:1px solid var(--border);
+            font-size:13px; font-weight:600;
+        }
+        .output-item:last-child { border-bottom:none; }
+        .output-item i { color:var(--green); margin-top:2px; flex-shrink:0; }
+
+        /* ── Section 5: Challenges ── */
+        .challenge-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px; }
+        .challenge-item {
+            display:flex; align-items:center; gap:8px;
+            padding:10px 12px; border-radius:10px;
+            border:1px solid var(--border);
+            background:rgba(255,255,255,.02);
+            cursor:pointer; transition:all .2s;
+            font-size:12px; font-weight:600;
+        }
+        .challenge-item:hover { border-color:rgba(239,68,68,.3); }
+        .challenge-item.selected { border-color:var(--red); background:var(--red-glow); }
+        .challenge-dot {
+            width:14px; height:14px; border-radius:3px;
+            border:2px solid var(--text-muted); flex-shrink:0;
+            transition:all .2s;
+        }
+        .challenge-item.selected .challenge-dot { background:var(--red); border-color:var(--red); }
+
+        /* ── Section 6: Goals ── */
+        .goals-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:20px; }
+        .goal-item {
+            display:flex; align-items:center; gap:8px;
+            padding:10px 12px; border-radius:10px;
+            border:1px solid var(--border);
+            background:rgba(255,255,255,.02);
+            cursor:pointer; transition:all .2s;
+            font-size:12px; font-weight:600;
+        }
+        .goal-item:hover { border-color:rgba(34,197,94,.3); }
+        .goal-item.selected { border-color:var(--green); background:var(--green-glow); }
+        .goal-dot {
+            width:14px; height:14px; border-radius:50%;
+            border:2px solid var(--text-muted); flex-shrink:0;
+            transition:all .2s;
+        }
+        .goal-item.selected .goal-dot { background:var(--green); border-color:var(--green); }
+        .priority-select {
+            width:100%; padding:10px 14px; border-radius:10px;
+            border:1px solid var(--border);
+            background:var(--bg-card); color:var(--text);
+            font-family:'Tajawal',sans-serif; font-size:13px;
+            margin-bottom:16px;
+        }
+        .priority-select:focus { outline:none; border-color:var(--accent); }
+        .model-options { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px; }
+        .model-option {
+            display:flex; align-items:center; gap:8px;
+            padding:10px 12px; border-radius:10px;
+            border:1px solid var(--border);
+            background:rgba(255,255,255,.02);
+            cursor:pointer; transition:all .2s;
+            font-size:12px; font-weight:600;
+        }
+        .model-option:hover { border-color:rgba(255,255,255,.15); }
+        .model-option.selected { border-color:var(--blue); background:var(--blue-glow); }
+        .model-dot {
+            width:14px; height:14px; border-radius:50%;
+            border:2px solid var(--text-muted); flex-shrink:0;
+            transition:all .2s;
+        }
+        .model-option.selected .model-dot { background:var(--blue); border-color:var(--blue); }
+        /* Manager question conditional */
+        .manager-conditional {
+            background:rgba(255,255,255,.03); border:1px solid var(--border);
+            border-radius:10px; padding:14px; margin-top:10px;
+            display:none;
+        }
+        .manager-conditional.show { display:block; }
+        .manager-conditional input {
+            width:100%; padding:8px 10px; border-radius:8px;
+            border:1px solid var(--border); background:transparent;
+            color:var(--text); font-family:'Tajawal',sans-serif;
+            font-size:13px; margin-top:6px;
+        }
+        .manager-conditional input:focus { outline:none; border-color:var(--accent); }
+
+        /* ── Divider label ── */
+        .section-label {
+            font-size:11px; font-weight:800; letter-spacing:.5px;
+            text-transform:uppercase; color:var(--text-muted);
+            margin-bottom:12px; margin-top:20px;
+            display:flex; align-items:center; gap:8px;
+        }
+        .section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+        /* ── Navigation ── */
+        .nav-bar {
+            display:flex; align-items:center; justify-content:space-between;
+            gap:12px; margin-top:8px;
+        }
+        .btn {
+            padding:11px 22px; border-radius:10px;
+            border:1px solid var(--border); background:var(--bg-card);
+            color:var(--text); font-family:'Tajawal',sans-serif;
+            font-size:13px; font-weight:700; cursor:pointer;
+            transition:all .2s; display:flex; align-items:center; gap:7px;
+        }
+        .btn:hover { background:var(--bg-card-hover); border-color:rgba(255,255,255,.15); }
+        .btn-primary {
+            background:var(--accent); border-color:var(--accent);
+            color:#000;
+        }
+        .btn-primary:hover { filter:brightness(1.1); }
+        .btn-ghost { background:transparent; }
+        .btn:disabled { opacity:.4; cursor:not-allowed; }
+
+        /* ── Completion Banner ── */
+        .completion-banner {
+            text-align:center; padding:40px 28px;
+            animation:fadeIn .4s ease;
+        }
+        .completion-icon { font-size:56px; margin-bottom:16px; }
+        .completion-title { font-size:24px; font-weight:900; margin-bottom:8px; }
+        .completion-sub { font-size:14px; color:var(--text-muted); margin-bottom:28px; }
+        .dept-done-list {
+            display:flex; flex-wrap:wrap; justify-content:center; gap:8px;
+            margin-bottom:28px;
+        }
+        .dept-done-tag {
+            padding:5px 14px; border-radius:20px;
+            font-size:12px; font-weight:700;
+            background:var(--green-glow); border:1px solid rgba(34,197,94,.3);
+            color:var(--green);
+        }
+
+        /* ── Alert / Info box ── */
+        .info-box {
+            padding:12px 14px; border-radius:10px;
+            font-size:12px; font-weight:600;
+            display:flex; align-items:flex-start; gap:8px;
+            margin-bottom:16px;
+        }
+        .info-box.warning { background:var(--yellow-glow); border:1px solid rgba(245,158,11,.2); color:var(--yellow); }
+        .info-box.info { background:var(--blue-glow); border:1px solid rgba(59,130,246,.2); color:var(--blue); }
+
+        @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+        @keyframes slideUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+        @media(max-width:640px) {
+            .status-grid { grid-template-columns:1fr; }
+            .sw-grid { grid-template-columns:1fr; }
+            .challenge-grid { grid-template-columns:1fr; }
+            .goals-grid { grid-template-columns:1fr; }
+            .model-options { grid-template-columns:1fr; }
+            .stepper { gap:2px; padding:10px 8px; }
+            .step-label { display:none; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- Header -->
+    <div class="page-header">
+        <div class="logo-text">Startix ✦</div>
+        <div class="page-title">استكشاف الإدارات العميق</div>
+        <div id="deptBadge" class="dept-badge"></div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:6px;" id="companyLabel"></div>
+    </div>
+
+    <!-- Dept Tabs -->
+    <div class="dept-tabs" id="deptTabs"></div>
+
+    <!-- Stepper -->
+    <div class="stepper" id="stepperEl"></div>
+
+    <!-- Main Content -->
+    <div id="mainContent"></div>
+
+    <!-- Nav -->
+    <div class="nav-bar" id="navBar"></div>
+
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   DEPT-DEEP CONFIG — 7 إدارات × 6 أقسام
+   Phase 6A | Startix
+═══════════════════════════════════════════════════════ */
+
+/* ── الإدارات السبع ── */
+const DEPTS = [
+    { key:'compliance', label:'الامتثال',      icon:'⚖️', color:'#ef4444', glow:'rgba(239,68,68,.12)',    css:'--red' },
+    { key:'finance',    label:'المالية',       icon:'💰', color:'#f59e0b', glow:'rgba(245,158,11,.12)',  css:'--yellow' },
+    { key:'sales',      label:'المبيعات',      icon:'📈', color:'#10b981', glow:'rgba(16,185,129,.12)', css:'--green' },
+    { key:'hr',         label:'الموارد البشرية',icon:'👥', color:'#3b82f6', glow:'rgba(59,130,246,.12)', css:'--blue' },
+    { key:'marketing',  label:'التسويق',       icon:'📣', color:'#8b5cf6', glow:'rgba(139,92,246,.12)', css:'--purple' },
+    { key:'operations', label:'العمليات',      icon:'⚙️', color:'#6366f1', glow:'rgba(99,102,241,.12)', css:'--purple' },
+    { key:'support',    label:'الخدمات المساندة',icon:'🛠️', color:'#64748b', glow:'rgba(100,116,139,.12)',css:'--text-muted' },
+];
+
+const SECTIONS = [
+    { id:'status',     label:'الوضع الحالي' },
+    { id:'diagnosis',  label:'التشخيص'      },
+    { id:'sw',         label:'ق/ض'          },
+    { id:'outputs',    label:'المخرجات'      },
+    { id:'challenges', label:'التحديات'      },
+    { id:'goals',      label:'الأهداف'       },
+];
+
+/* ── أسئلة كل إدارة ── */
+const QUESTIONS = {
+    compliance: [
+        { id:'compliance_officer', label:'هل لديك مسؤول امتثال داخلي؟', type:'radio',
+          opts:['نعم — موظف متفرغ','جزئي — مشترك مع مهام أخرى','لا — أنا أتولى ذلك','مستشار خارجي'] },
+        { id:'license_review', label:'ما آخر مرة راجعت تراخيصك؟', type:'radio',
+          opts:['هذا الشهر','هذه السنة','أكثر من سنة','لا أتذكر'] },
+        { id:'violations', label:'هل سبق أن تلقيت مخالفة رسمية؟', type:'radio',
+          opts:['لا','نعم — تم حلها','نعم — لا تزال قائمة'] },
+        { id:'compliance_free', label:'ما أكبر قلق امتثالي يشغل تفكيرك؟', type:'textarea',
+          placeholder:'مثال: تسجيل ZATCA، حماية البيانات...' },
+    ],
+    finance: [
+        { id:'accountant', label:'هل لديك محاسب؟', type:'radio',
+          opts:['داخلي','خارجي','لا'] },
+        { id:'profit_margin', label:'هل تعرف هامش ربحك الصافي؟', type:'radio',
+          opts:['نعم بدقة','تقريباً','لا'] },
+        { id:'debt_status', label:'هل لديك ديون أو التزامات معلقة؟', type:'radio',
+          opts:['لا','نعم — تحت السيطرة','نعم — تقلقني'] },
+        { id:'revenue_pattern', label:'هل إيراداتك منتظمة أم موسمية؟', type:'radio',
+          opts:['منتظمة','موسمية','غير منتظمة'] },
+        { id:'client_concentration', label:'ما نسبة إيرادك من أكبر عميل؟', type:'radio',
+          opts:['أقل 20%','20-50%','أكثر 50% (خطر)'] },
+        { id:'finance_free', label:'ما أكبر تحدٍ مالي تواجهه الآن؟', type:'textarea',
+          placeholder:'مثال: ضعف السيولة، هوامش منخفضة...' },
+    ],
+    sales: [
+        { id:'acquisition_channels', label:'كيف يصلك العملاء الآن؟', type:'checkbox',
+          opts:['إحالة شخصية','سوشيال ميديا','موقع إلكتروني','معارض','مناقصات','زبائن متكررون'] },
+        { id:'deal_value', label:'ما متوسط قيمة الصفقة الواحدة؟', type:'radio',
+          opts:['أقل من 10,000 ﷼','10,000 – 50,000 ﷼','50,000 – 200,000 ﷼','أكثر من 200,000 ﷼'] },
+        { id:'sales_cycle', label:'ما دورة البيع المعتادة؟', type:'radio',
+          opts:['أيام','أسابيع','1-3 أشهر','أكثر من 3 أشهر'] },
+        { id:'crm', label:'هل لديك CRM أو نظام متابعة عملاء؟', type:'radio',
+          opts:['نعم متكامل','Excel / جزئي','لا'] },
+        { id:'repeat_clients', label:'ما نسبة العملاء المتكررين؟', type:'radio',
+          opts:['أكثر من 60%','30-60%','أقل من 30%'] },
+        { id:'sales_free', label:'ما أكبر سبب لخسارة صفقة؟', type:'textarea',
+          placeholder:'مثال: السعر، تأخر في الرد، ضعف العرض...' },
+    ],
+    hr: [
+        { id:'hr_challenges', label:'ما أكبر تحدٍ في إدارة فريقك؟', type:'checkbox',
+          opts:['إيجاد كفاءات','الاحتفاظ بهم','تحفيزهم','توطين','تدريب'] },
+        { id:'salary_structure', label:'هل لديك هيكل رواتب وحوافز واضح؟', type:'radio',
+          opts:['نعم موثق','جزئي','لا'] },
+        { id:'expectations', label:'هل يعرف موظفوك توقعاتك بدقة؟', type:'radio',
+          opts:['نعم — واضحة ومكتوبة','شفهياً','لا'] },
+        { id:'performance_eval', label:'هل لديك نظام تقييم أداء؟', type:'radio',
+          opts:['نعم — دوري','أحياناً','لا'] },
+        { id:'key_person', label:'من هو "الشخص المفتاحي" الذي إذا رحل سيؤثر بشكل كبير؟', type:'textarea',
+          placeholder:'اكتب اسم الدور (مثال: مدير المبيعات، المبرمج الرئيسي...)' },
+        { id:'hr_free', label:'ما أكبر خطأ في إدارة HR ترتكبه الآن؟', type:'textarea',
+          placeholder:'تصريح صادق يساعدك على التحسين...' },
+    ],
+    marketing: [
+        { id:'brand_identity', label:'هل لديك هوية بصرية موحّدة؟', type:'radio',
+          opts:['نعم — احترافية','أساسية','لا'] },
+        { id:'marketing_channels', label:'ما القنوات التي تستخدمها؟', type:'checkbox',
+          opts:['Instagram','LinkedIn','Twitter/X','موقع إلكتروني','WhatsApp Business','لا شيء منتظم'] },
+        { id:'content_frequency', label:'هل تنشر محتوى بانتظام؟', type:'radio',
+          opts:['يومياً','أسبوعياً','أحياناً','لا'] },
+        { id:'cac_known', label:'هل تعرف تكلفة اكتساب العميل (CAC)؟', type:'radio',
+          opts:['نعم','تقريباً','لا'] },
+        { id:'brand_desc', label:'كيف يصفك عملاؤك لغيرهم؟', type:'textarea',
+          placeholder:'مثال: "سريع وموثوق"، "الأرخص"، "ذوق عالٍ"...' },
+        { id:'marketing_free', label:'ما أكبر فجوة في تسويقك؟', type:'textarea',
+          placeholder:'مثال: لا محتوى، لا هوية، لا قياس...' },
+    ],
+    operations: [
+        { id:'automation_level', label:'كم عملية تتم يدوياً يمكن أتمتتها؟', type:'radio',
+          opts:['كثير','بعض','قليل','معظمها أتمتة'] },
+        { id:'sops', label:'هل لديك إجراءات موثقة SOPs؟', type:'radio',
+          opts:['نعم كاملة','جزئية','في الأذهان فقط'] },
+        { id:'customer_satisfaction', label:'هل عملاؤك راضون عن سرعة خدمتك؟', type:'radio',
+          opts:['جداً','متوسط','يشتكون أحياناً'] },
+        { id:'time_drain', label:'ما أكثر عملية تستنزف وقتك؟', type:'textarea',
+          placeholder:'مثال: متابعة الموردين، اعتمادات، مراجعة يدوية...' },
+        { id:'bottleneck', label:'ما أكبر اختناق في عملياتك؟', type:'textarea',
+          placeholder:'مثال: قرارات مركزية، نقص أدوات، ضعف تنسيق...' },
+    ],
+    support: [
+        { id:'tech_systems', label:'ما الأنظمة التقنية التي تستخدمها؟', type:'checkbox',
+          opts:['ERP','نظام محاسبة','CRM','نظام HR','لا شيء'] },
+        { id:'infra_growth', label:'هل بنيتك التحتية تدعم النمو؟', type:'radio',
+          opts:['نعم','تحتاج تطوير','ضعيفة'] },
+        { id:'vendor_contracts', label:'هل عقود موردينك محدّثة؟', type:'radio',
+          opts:['نعم','بعضها','لا'] },
+        { id:'tech_budget', label:'كم تصرف على الصيانة والتقنية شهرياً؟ (﷼)', type:'textarea',
+          placeholder:'مثال: 5,000 ﷼ / لا أعرف بالضبط' },
+        { id:'support_free', label:'ما أكبر فجوة في خدماتك المساندة؟', type:'textarea',
+          placeholder:'مثال: لا CRM، بنية قديمة، موردين غير موثوقين...' },
+    ],
+};
+
+/* ── خرائط التحويل (S/W تلقائي) ── */
+const STRENGTH_RULES = {
+    compliance_officer: {
+        strength:['نعم — موظف متفرغ','مستشار خارجي'],
+        weakness:['لا — أنا أتولى ذلك'],
+        sLabel:'مسؤول امتثال متخصص', wLabel:'لا يوجد مسؤول امتثال',
+    },
+    license_review: {
+        strength:['هذا الشهر'],
+        weakness:['أكثر من سنة','لا أتذكر'],
+        sLabel:'متابعة دورية للتراخيص', wLabel:'تراخيص غير محدّثة',
+    },
+    violations: {
+        strength:['لا'],
+        weakness:['نعم — لا تزال قائمة'],
+        sLabel:'سجل نظيف من المخالفات', wLabel:'مخالفة قائمة لم تُحل',
+    },
+    accountant: {
+        strength:['داخلي'], weakness:['لا'],
+        sLabel:'محاسب داخلي متخصص', wLabel:'لا يوجد محاسب',
+    },
+    profit_margin: {
+        strength:['نعم بدقة'], weakness:['لا'],
+        sLabel:'وعي مالي دقيق بالهوامش', wLabel:'جهل بهامش الربح الصافي',
+    },
+    client_concentration: {
+        strength:['أقل 20%'], weakness:['أكثر 50% (خطر)'],
+        sLabel:'تنويع صحي في قاعدة العملاء', wLabel:'⚠️ اعتماد خطير على عميل واحد',
+    },
+    crm: {
+        strength:['نعم متكامل'], weakness:['لا'],
+        sLabel:'نظام CRM متكامل', wLabel:'لا يوجد نظام متابعة عملاء',
+    },
+    repeat_clients: {
+        strength:['أكثر من 60%'], weakness:['أقل من 30%'],
+        sLabel:'قاعدة عملاء متكررة قوية', wLabel:'ضعف في الاحتفاظ بالعملاء',
+    },
+    salary_structure: {
+        strength:['نعم موثق'], weakness:['لا'],
+        sLabel:'هيكل رواتب وحوافز واضح', wLabel:'غياب هيكل تعويضات',
+    },
+    performance_eval: {
+        strength:['نعم — دوري'], weakness:['لا'],
+        sLabel:'نظام تقييم أداء منتظم', wLabel:'لا يوجد تقييم أداء',
+    },
+    brand_identity: {
+        strength:['نعم — احترافية'], weakness:['لا'],
+        sLabel:'هوية بصرية احترافية', wLabel:'لا توجد هوية بصرية',
+    },
+    content_frequency: {
+        strength:['يومياً','أسبوعياً'], weakness:['لا'],
+        sLabel:'محتوى منتظم ونشط', wLabel:'لا يوجد نشر محتوى',
+    },
+    sops: {
+        strength:['نعم كاملة'], weakness:['في الأذهان فقط'],
+        sLabel:'إجراءات موثقة SOPs', wLabel:'العمليات غير موثقة',
+    },
+    automation_level: {
+        strength:['معظمها أتمتة'], weakness:['كثير'],
+        sLabel:'مستوى أتمتة عالي', wLabel:'عمليات يدوية مرهقة',
+    },
+    infra_growth: {
+        strength:['نعم'], weakness:['ضعيفة'],
+        sLabel:'بنية تحتية تدعم النمو', wLabel:'بنية تحتية ضعيفة',
+    },
+    vendor_contracts: {
+        strength:['نعم'], weakness:['لا'],
+        sLabel:'عقود موردين محدّثة', wLabel:'عقود موردين منتهية/غائبة',
+    },
+};
+
+/* ── نموذج التشغيل: أثره على SWOT ── */
+const OUTSOURCING_RULES = {
+    'داخلي بالكامل':                  'neutral',
+    'مزود خارجي — راضٍ عن الأداء':    'strength',
+    'مزود خارجي — أفكر في التغيير':   'weakness',
+    'أبحث عن مزود خارجي':             'opportunity',
+};
+const MANAGEMENT_RULES = {
+    'أنا شخصياً (صاحب العمل)':  'weakness',
+    'موظف داخلي متخصص':         'strength',
+    'مكتب خارجي / مستشار':      'strength',
+    'لا أحد — تحتاج تعيين':     'threat',
+};
+
+/* ── مخرجات كل إدارة (القسم 4) ── */
+const OUTPUTS = {
+    compliance: [
+        'تحمي المنشأة من الغرامات والإيقاف',
+        'تفتح أبواب العطاءات الحكومية',
+        'تبني ثقة العملاء والشركاء',
+        'تُقلل مخاطر النزاعات القانونية',
+        'تُعزز سمعة المنشأة في السوق',
+    ],
+    finance: [
+        'تضمن الاستمرارية والسيولة',
+        'تُمكّن من الاستثمار والنمو',
+        'تجذب الشركاء والمستثمرين',
+        'تحسن قدرتك التفاوضية',
+        'تُقلل تكاليف التمويل',
+    ],
+    sales: [
+        'شريان الحياة — بدونها لا شيء',
+        'تُحدد قدرتك على النمو والتوسع',
+        'تبني قاعدة عملاء مستدامة',
+        'تُترجم كل الجهود لإيراد حقيقي',
+        'تُمكّن التوسع لأسواق جديدة',
+    ],
+    hr: [
+        'الفريق الصحيح = كل شيء ممكن',
+        'تُقلل تكاليف التوظيف والتدريب',
+        'تحمي من النزاعات العمالية',
+        'تبني ثقافة مؤسسية قوية',
+        'تضمن الاستمرارية التشغيلية',
+    ],
+    marketing: [
+        'تصنع الوعي وتجلب العملاء',
+        'تبني علامة تجارية تدوم',
+        'تدعم المبيعات بمحتوى وقنوات',
+        'تُميّزك عن المنافسين',
+        'تُحوّل المشترين لسفراء',
+    ],
+    operations: [
+        'تضمن جودة المنتج / الخدمة',
+        'تُقلل الهدر والتكاليف',
+        'تزيد سرعة التسليم',
+        'تبني نظام قابل للتوسع',
+        'تُحسّن رضا العملاء',
+    ],
+    support: [
+        'تدعم كل الإدارات بالبنية التحتية',
+        'تضمن استمرارية الأعمال',
+        'تُقلل المخاطر التشغيلية',
+        'تُمكّن الأتمتة والتحول الرقمي',
+        'تُسهّل التوسع والنمو',
+    ],
+};
+
+/* ── تحديات كل إدارة (القسم 5) ── */
+const CHALLENGES = {
+    compliance: ['كثرة التحديثات التنظيمية','نقص الموارد المتخصصة','ضعف الوعي الداخلي','تكلفة الامتثال مرتفعة'],
+    finance:    ['ضعف السيولة النقدية','عدم وضوح هامش الربح','اعتماد كبير على عميل','غياب نظام محاسبي'],
+    sales:      ['دورة بيع طويلة','ضعف معدل التحويل','غياب CRM','منافسة سعرية شديدة'],
+    hr:         ['صعوبة استقطاب كفاءات','معدل دوران مرتفع','غياب تقييم الأداء','تحديات التوطين'],
+    marketing:  ['غياب استراتيجية واضحة','ميزانية محدودة','عدم قياس ROI','محتوى غير منتظم'],
+    operations: ['عمليات يدوية كثيرة','غياب SOPs','بطء في التسليم','مشاكل جودة'],
+    support:    ['بنية تقنية قديمة','عقود موردين غير محدّثة','غياب سياسة مشتريات','ضعف الصيانة الوقائية'],
+};
+
+/* ── أهداف كل إدارة (القسم 6) ── */
+const GOALS = {
+    compliance: ['امتثال كامل 100%','تعيين مسؤول امتثال','نظام متابعة آلي','الحصول على شهادة معتمدة'],
+    finance:    ['تحسين هامش الربح','بناء احتياطي 3 أشهر','تنويع قاعدة العملاء','تطبيق نظام محاسبي'],
+    sales:      ['استقطاب عملاء جدد','رفع متوسط قيمة الصفقة','فتح قناة جديدة','الدخول للقطاع الحكومي'],
+    hr:         ['توظيف سعوديين','تطبيق تقييم أداء','تقليل معدل الدوران','بناء برنامج تدريبي'],
+    marketing:  ['بناء هوية رقمية','محتوى منتظم','قياس ROI','إطلاق حملة مستهدفة'],
+    operations: ['توثيق العمليات SOPs','أتمتة عمليات أساسية','تقليل وقت التسليم','تطبيق نظام جودة'],
+    support:    ['ترقية البنية التقنية','تحديث عقود الموردين','سياسة مشتريات واضحة','نظام إدارة الأصول'],
+};
+
+const OPERATING_MODELS = [
+    'داخلي بالكامل',
+    'مزود خارجي — راضٍ عن الأداء',
+    'مزود خارجي — أفكر في التغيير',
+    'أبحث عن مزود خارجي',
+];
+const MANAGEMENT_OPTIONS = [
+    'أنا شخصياً (صاحب العمل)',
+    'موظف داخلي متخصص',
+    'مكتب خارجي / مستشار',
+    'لا أحد — تحتاج تعيين',
+];
+const PRIORITY_OPTIONS = [
+    { value:'urgent', label:'⭐ عاجل جداً — أولوية قصوى' },
+    { value:'important', label:'🟡 مهم — خلال 3 أشهر' },
+    { value:'later', label:'⬇️ يمكن تأجيله' },
+];
+
+/* ═══════════════════════════════════
+   STATE
+═══════════════════════════════════ */
+const STATE = {
+    currentDept: 'compliance',
+    currentSection: 0,
+    data: {},           // { compliance: { answers, sw, challenges, goals, priority, model, manager, notes }, ... }
+    bridgePayload: null,
+};
+
+const SAVE_KEY = 'stratix_dept_deep_payload';
+
+/* ═══════════════════════════════════
+   INIT
+═══════════════════════════════════ */
+function init() {
+    // قراءة dept من URL
+    const params = new URLSearchParams(location.search);
+    const urlDept = params.get('dept');
+    if (urlDept && DEPTS.find(d => d.key === urlDept)) {
+        STATE.currentDept = urlDept;
+    }
+
+    // تحميل البيانات المحفوظة
+    try {
+        const saved = localStorage.getItem(SAVE_KEY);
+        if (saved) STATE.data = JSON.parse(saved);
+    } catch(e) {}
+
+    // قراءة جسر التشخيص
+    try {
+        STATE.bridgePayload = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
+    } catch(e) {}
+
+    // ضمان وجود data لكل إدارة
+    DEPTS.forEach(d => {
+        if (!STATE.data[d.key]) {
+            STATE.data[d.key] = {
+                answers: {},
+                extraStrengths: [],
+                extraWeaknesses: [],
+                challenges: [],
+                goals: [],
+                priority: 'important',
+                model: '',
+                manager: '',
+                managerName: '',
+                managerSatisfied: '',
+                notes: '',
+                completed: false,
+            };
+        }
+    });
+
+    // عرض اسم الشركة
+    const company = STATE.bridgePayload?.company?.name
+        || localStorage.getItem('stratix_company_name')
+        || '';
+    if (company) {
+        document.getElementById('companyLabel').textContent = company;
+    }
+
+    render();
+}
+
+/* ═══════════════════════════════════
+   SAVE
+═══════════════════════════════════ */
+function save() {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(STATE.data));
+}
+
+/* ═══════════════════════════════════
+   NAV
+═══════════════════════════════════ */
+function switchDept(key) {
+    saveCurrentSection(); // حفظ قبل التبديل
+    STATE.currentDept = key;
+    STATE.currentSection = 0;
+    history.replaceState(null,'',`?dept=${key}`);
+    render();
+    window.scrollTo({top:0, behavior:'smooth'});
+}
+function goSection(idx) {
+    saveCurrentSection();
+    STATE.currentSection = idx;
+    render();
+    window.scrollTo({top:0, behavior:'smooth'});
+}
+function prevSection() { if (STATE.currentSection > 0) goSection(STATE.currentSection - 1); }
+function nextSection() {
+    if (STATE.currentSection < SECTIONS.length - 1) {
+        goSection(STATE.currentSection + 1);
+    } else {
+        completeCurrentDept();
+    }
+}
+function completeCurrentDept() {
+    saveCurrentSection();
+    STATE.data[STATE.currentDept].completed = true;
+    save();
+    const idx = DEPTS.findIndex(d => d.key === STATE.currentDept);
+    const nextDept = DEPTS[idx + 1];
+    if (nextDept) {
+        switchDept(nextDept.key);
+    } else {
+        renderCompletion();
+    }
+}
+
+/* ── حفظ حالة القسم الحالي ── */
+function saveCurrentSection() {
+    const sec = SECTIONS[STATE.currentSection].id;
+    const d = STATE.data[STATE.currentDept];
+    if (sec === 'diagnosis') collectAnswers();
+    if (sec === 'sw') collectSW();
+    if (sec === 'challenges') collectChallenges();
+    if (sec === 'goals') collectGoals();
+    save();
+}
+
+/* ═══════════════════════════════════
+   COLLECT ANSWERS
+═══════════════════════════════════ */
+function collectAnswers() {
+    const d = STATE.data[STATE.currentDept];
+    QUESTIONS[STATE.currentDept].forEach(q => {
+        if (q.type === 'radio') {
+            const sel = document.querySelector(`.q-block-${q.id} .radio-option.selected`);
+            if (sel) d.answers[q.id] = sel.dataset.val;
+        } else if (q.type === 'checkbox') {
+            const sels = [...document.querySelectorAll(`.q-block-${q.id} .check-option.selected`)];
+            d.answers[q.id] = sels.map(s => s.dataset.val);
+        } else if (q.type === 'textarea') {
+            const ta = document.querySelector(`.q-block-${q.id} textarea`);
+            if (ta) d.answers[q.id] = ta.value;
+        }
+    });
+}
+function collectSW() {
+    const d = STATE.data[STATE.currentDept];
+    const sIn = document.getElementById('extraStrengthInput');
+    const wIn = document.getElementById('extraWeaknessInput');
+    if (sIn?.value.trim()) {
+        if (!d.extraStrengths.includes(sIn.value.trim()))
+            d.extraStrengths.push(sIn.value.trim());
+        sIn.value = '';
+    }
+    if (wIn?.value.trim()) {
+        if (!d.extraWeaknesses.includes(wIn.value.trim()))
+            d.extraWeaknesses.push(wIn.value.trim());
+        wIn.value = '';
+    }
+}
+function collectChallenges() {
+    const d = STATE.data[STATE.currentDept];
+    d.challenges = [...document.querySelectorAll('.challenge-item.selected')].map(el => el.dataset.val);
+    const ta = document.getElementById('challengeExtra');
+    if (ta) d.challengeExtra = ta.value;
+}
+function collectGoals() {
+    const d = STATE.data[STATE.currentDept];
+    d.goals = [...document.querySelectorAll('.goal-item.selected')].map(el => el.dataset.val);
+    const pSel = document.getElementById('prioritySelect');
+    if (pSel) d.priority = pSel.value;
+    const modSel = document.querySelector('.model-option.selected');
+    if (modSel) d.model = modSel.dataset.val;
+    const manSel = document.querySelector('.manager-option.selected');
+    if (manSel) d.manager = manSel.dataset.val;
+    const mName = document.getElementById('managerName');
+    if (mName) d.managerName = mName.value;
+    const mSat = document.querySelector('.satisfaction-opt.selected');
+    if (mSat) d.managerSatisfied = mSat.dataset.val;
+    const notes = document.getElementById('deptNotes');
+    if (notes) d.notes = notes.value;
+}
+
+/* ═══════════════════════════════════
+   AUTO S/W GENERATOR
+═══════════════════════════════════ */
+function generateSW(deptKey) {
+    const answers = STATE.data[deptKey].answers;
+    const strengths = [], weaknesses = [];
+    for (const [id, val] of Object.entries(answers)) {
+        const rule = STRENGTH_RULES[id];
+        if (!rule) continue;
+        const v = Array.isArray(val) ? val : [val];
+        if (v.some(x => rule.strength.includes(x))) strengths.push(rule.sLabel);
+        else if (v.some(x => rule.weakness.includes(x))) weaknesses.push(rule.wLabel);
+    }
+    return { strengths, weaknesses };
+}
+
+/* ═══════════════════════════════════
+   RENDER MAIN
+═══════════════════════════════════ */
+function render() {
+    const dept = DEPTS.find(d => d.key === STATE.currentDept);
+    renderDeptBadge(dept);
+    renderDeptTabs();
+    renderStepper(dept);
+    renderSection(dept);
+    renderNav(dept);
+}
+
+function renderDeptBadge(dept) {
+    const badge = document.getElementById('deptBadge');
+    badge.style.background = dept.glow;
+    badge.style.borderColor = dept.color + '40';
+    badge.style.color = dept.color;
+    badge.innerHTML = `${dept.icon} إدارة ${dept.label}`;
+    document.documentElement.style.setProperty('--accent', dept.color);
+    document.documentElement.style.setProperty('--accent-glow', dept.glow);
+}
+
+function renderDeptTabs() {
+    const el = document.getElementById('deptTabs');
+    const completedCount = DEPTS.filter(d => STATE.data[d.key]?.completed).length;
+    el.innerHTML = DEPTS.map(d => {
+        const done = STATE.data[d.key]?.completed;
+        const active = d.key === STATE.currentDept;
+        return `<button class="dept-tab ${active?'active':''} ${done?'done':''}"
+            onclick="switchDept('${d.key}')"
+            style="${active ? `background:${d.glow};border-color:${d.color}40;color:${d.color}` : done ? 'border-color:rgba(34,197,94,.3);color:var(--green)' : ''}">
+            ${d.icon} ${d.label}${done?' ✓':''}
+        </button>`;
+    }).join('');
+}
+
+function renderStepper(dept) {
+    const el = document.getElementById('stepperEl');
+    el.innerHTML = SECTIONS.map((s, i) => {
+        const active = i === STATE.currentSection;
+        const done = i < STATE.currentSection || STATE.data[dept.key]?.completed;
+        return `<div class="step ${active?'active':''} ${done?'done':''}" onclick="goSection(${i})">
+            <div class="step-num">${done && !active ? '<i class="bi bi-check"></i>' : i+1}</div>
+            <div class="step-label">${s.label}</div>
+        </div>`;
+    }).join('');
+}
+
+function renderSection(dept) {
+    const secId = SECTIONS[STATE.currentSection].id;
+    const el = document.getElementById('mainContent');
+    const d = STATE.data[dept.key];
+
+    if (secId === 'status')     el.innerHTML = renderStatus(dept, d);
+    if (secId === 'diagnosis')  el.innerHTML = renderDiagnosis(dept, d);
+    if (secId === 'sw')         el.innerHTML = renderSW(dept, d);
+    if (secId === 'outputs')    el.innerHTML = renderOutputs(dept);
+    if (secId === 'challenges') el.innerHTML = renderChallenges(dept, d);
+    if (secId === 'goals')      el.innerHTML = renderGoals(dept, d);
+
+    attachSectionListeners(secId, dept, d);
+}
+
+/* ── القسم 1: الوضع الحالي ── */
+function renderStatus(dept, d) {
+    const p = STATE.bridgePayload;
+
+    // خريطة محاور التشخيص للإدارات
+    const AXIS_MAP = {
+        compliance:'تنظيمي', finance:'مالي', sales:'قطاعي',
+        hr:'عمالة', marketing:'قطاعي', operations:'إداري', support:'إداري',
+    };
+    const axisKey = AXIS_MAP[dept.key];
+    const axisScore = p?.radar?.axisScores?.[axisKey] ?? null;
+    const maturity = p?.results?.maturity ?? null;
+
+    let scoreHTML = '';
+    if (axisScore !== null) {
+        const pct = axisScore;
+        const color = pct >= 70 ? 'var(--green)' : pct >= 45 ? 'var(--yellow)' : 'var(--red)';
+        const status = pct >= 70 ? '🟢 جيد' : pct >= 45 ? '🟡 يحتاج تطوير' : '🔴 حرج';
+        scoreHTML = `
+        <div class="status-grid">
+            <div class="stat-box">
+                <div class="s-label">درجة ${dept.label}</div>
+                <div class="s-value" style="color:${color}">${pct}%</div>
+                <div class="progress-bar" style="margin-top:8px">
+                    <div class="progress-fill" style="width:${pct}%;background:${color}"></div>
+                </div>
+                <div class="s-sub">${status}</div>
+            </div>
+            <div class="stat-box">
+                <div class="s-label">النضج العام للمنشأة</div>
+                <div class="s-value">${maturity ?? '—'}%</div>
+                <div class="s-sub">${p?.company?.name ?? localStorage.getItem('stratix_company_name') ?? 'منشأتك'}</div>
+            </div>
+        </div>`;
+    } else {
+        scoreHTML = `
+        <div class="info-box info">
+            <i class="bi bi-info-circle"></i>
+            <span>لم يُكتمل التشخيص العام بعد — البيانات ستظهر هنا تلقائياً بعد إتمام التشخيص.</span>
+        </div>`;
+    }
+
+    // نقاط القوة والضعف من التشخيص
+    const topPriorities = p?.topPriorities ?? [];
+    const strengths = p?.strengths ?? [];
+    const weaknesses = p?.weaknesses ?? [];
+    const relStrengths = strengths.filter(s => s.axis === axisKey).slice(0,3);
+    const relWeaknesses = weaknesses.filter(w => w.axis === axisKey).slice(0,3);
+
+    let insightsHTML = '';
+    if (relStrengths.length || relWeaknesses.length) {
+        insightsHTML = `
+        <div class="section-label">من التشخيص العام</div>
+        <div class="sw-grid">
+            <div>
+                <div class="sw-col-title strength"><i class="bi bi-check-circle-fill"></i> نقاط قوة</div>
+                ${relStrengths.length ? relStrengths.map(s=>`<div class="sw-tag auto"><i class="bi bi-lightning-charge"></i>${s.label||s}</div>`).join('') : '<div style="font-size:12px;color:var(--text-muted);padding:8px 0">لا يوجد بيانات</div>'}
+            </div>
+            <div>
+                <div class="sw-col-title weakness"><i class="bi bi-exclamation-circle-fill"></i> نقاط ضعف</div>
+                ${relWeaknesses.length ? relWeaknesses.map(w=>`<div class="sw-tag auto"><i class="bi bi-exclamation"></i>${w.label||w}</div>`).join('') : '<div style="font-size:12px;color:var(--text-muted);padding:8px 0">لا يوجد بيانات</div>'}
+            </div>
+        </div>`;
+    }
+
+    return `<div class="card">
+        <div class="card-title">${dept.icon} الوضع الحالي — إدارة ${dept.label}</div>
+        <div class="card-sub">ملخص تلقائي من بيانات التشخيص — لا يحتاج إدخالاً</div>
+        ${scoreHTML}
+        ${insightsHTML}
+        <div class="info-box warning" style="margin-top:16px">
+            <i class="bi bi-arrow-left-right"></i>
+            <span>في القسم التالي ستجيب على أسئلة متخصصة توضح الصورة بشكل أدق.</span>
+        </div>
+    </div>`;
+}
+
+/* ── القسم 2: التشخيص العميق ── */
+function renderDiagnosis(dept, d) {
+    const questions = QUESTIONS[dept.key] || [];
+    const qHTML = questions.map((q, qi) => {
+        const saved = d.answers[q.id];
+        let inputHTML = '';
+        if (q.type === 'radio') {
+            inputHTML = `<div class="radio-options">${q.opts.map(opt => {
+                const sel = saved === opt;
+                return `<div class="radio-option ${sel?'selected':''} q-block-${q.id}" data-val="${opt}"
+                    onclick="selectRadio(this, '${q.id}')">
+                    <div class="radio-dot"></div>${opt}
+                </div>`;
+            }).join('')}</div>`;
+        } else if (q.type === 'checkbox') {
+            const savedArr = Array.isArray(saved) ? saved : [];
+            inputHTML = `<div class="check-options">${q.opts.map(opt => {
+                const sel = savedArr.includes(opt);
+                return `<div class="check-option ${sel?'selected':''} q-block-${q.id}" data-val="${opt}"
+                    onclick="toggleCheck(this, '${q.id}')">
+                    <div class="check-box">${sel?'✓':''}</div>${opt}
+                </div>`;
+            }).join('')}</div>`;
+        } else if (q.type === 'textarea') {
+            inputHTML = `<div class="q-block-${q.id}">
+                <textarea class="q-textarea" placeholder="${q.placeholder||''}">${saved||''}</textarea>
+            </div>`;
+        }
+        return `<div class="question-block">
+            <div class="q-label"><div class="q-num">${qi+1}</div>${q.label}</div>
+            ${inputHTML}
+        </div>`;
+    }).join('');
+
+    return `<div class="card">
+        <div class="card-title"><i class="bi bi-search"></i> التشخيص العميق</div>
+        <div class="card-sub">أسئلة متخصصة تكشف الواقع الحقيقي لإدارة ${dept.label}</div>
+        ${qHTML}
+    </div>`;
+}
+
+/* ── القسم 3: نقاط القوة والضعف ── */
+function renderSW(dept, d) {
+    const auto = generateSW(dept.key);
+    const allS = [...new Set([...auto.strengths, ...d.extraStrengths])];
+    const allW = [...new Set([...auto.weaknesses, ...d.extraWeaknesses])];
+
+    const sHTML = allS.length
+        ? allS.map(s=>`<div class="sw-tag auto"><i class="bi bi-check-circle" style="color:var(--green)"></i>${s}</div>`).join('')
+        : `<div style="font-size:12px;color:var(--text-muted);padding:8px 0">لا توجد نقاط قوة مكتشفة بعد</div>`;
+    const wHTML = allW.length
+        ? allW.map(w=>`<div class="sw-tag auto"><i class="bi bi-x-circle" style="color:var(--red)"></i>${w}</div>`).join('')
+        : `<div style="font-size:12px;color:var(--text-muted);padding:8px 0">لا توجد نقاط ضعف مكتشفة</div>`;
+
+    return `<div class="card">
+        <div class="card-title"><i class="bi bi-clipboard-data"></i> نقاط القوة والضعف</div>
+        <div class="card-sub">مُولَّدة تلقائياً من إجاباتك — يمكنك الإضافة</div>
+        <div class="sw-grid">
+            <div class="sw-column">
+                <div class="sw-col-title strength"><i class="bi bi-check-circle-fill"></i> نقاط القوة (${allS.length})</div>
+                <div id="strengthsList">${sHTML}</div>
+                <input id="extraStrengthInput" class="add-sw-input" placeholder="+ أضف نقطة قوة..." />
+            </div>
+            <div class="sw-column">
+                <div class="sw-col-title weakness"><i class="bi bi-exclamation-circle-fill"></i> نقاط الضعف (${allW.length})</div>
+                <div id="weaknessesList">${wHTML}</div>
+                <input id="extraWeaknessInput" class="add-sw-input" placeholder="+ أضف نقطة ضعف..." />
+            </div>
+        </div>
+        ${allS.length === 0 && allW.length === 0 ? `
+        <div class="info-box info" style="margin-top:16px">
+            <i class="bi bi-lightbulb"></i>
+            <span>أكمل التشخيص في القسم 2 لتوليد نقاط القوة والضعف تلقائياً.</span>
+        </div>` : ''}
+    </div>`;
+}
+
+/* ── القسم 4: المخرجات ── */
+function renderOutputs(dept) {
+    const items = OUTPUTS[dept.key] || [];
+    return `<div class="card">
+        <div class="card-title"><i class="bi bi-boxes"></i> ما تقدمه إدارة ${dept.label}</div>
+        <div class="card-sub">مخرجات هذه الإدارة وأثرها على نجاح المنشأة</div>
+        <div>${items.map(o=>`<div class="output-item">
+            <i class="bi bi-check2-circle"></i>${o}
+        </div>`).join('')}</div>
+        <div class="info-box info" style="margin-top:20px">
+            <i class="bi bi-graph-up-arrow"></i>
+            <span>هذه الإدارة <strong>ليست تكلفة</strong> — هي استثمار يُضاعف عائد بقية الإدارات.</span>
+        </div>
+    </div>`;
+}
+
+/* ── القسم 5: التحديات ── */
+function renderChallenges(dept, d) {
+    const items = CHALLENGES[dept.key] || [];
+    const challengesHTML = items.map(c => {
+        const sel = d.challenges.includes(c);
+        return `<div class="challenge-item ${sel?'selected':''}" data-val="${c}" onclick="toggleChallenge(this)">
+            <div class="challenge-dot"></div>${c}
+        </div>`;
+    }).join('');
+
+    return `<div class="card">
+        <div class="card-title"><i class="bi bi-shield-exclamation"></i> التحديات والمخاطر</div>
+        <div class="card-sub">اختر ما ينطبق على إدارة ${dept.label} في منشأتك</div>
+        <div class="challenge-grid">${challengesHTML}</div>
+        <div class="section-label" style="margin-top:8px">تحدٍ إضافي</div>
+        <textarea id="challengeExtra" class="q-textarea" placeholder="صِف تحدياً لا يوجد في القائمة...">${d.challengeExtra||''}</textarea>
+    </div>`;
+}
+
+/* ── القسم 6: الأهداف + نموذج التشغيل ── */
+function renderGoals(dept, d) {
+    const goalItems = GOALS[dept.key] || [];
+    const goalsHTML = goalItems.map(g => {
+        const sel = d.goals.includes(g);
+        return `<div class="goal-item ${sel?'selected':''}" data-val="${g}" onclick="toggleGoal(this)">
+            <div class="goal-dot"></div>${g}
+        </div>`;
+    }).join('');
+
+    const priorityHTML = PRIORITY_OPTIONS.map(p =>
+        `<option value="${p.value}" ${d.priority===p.value?'selected':''}>${p.label}</option>`
+    ).join('');
+
+    const modelsHTML = OPERATING_MODELS.map(m => {
+        const sel = d.model === m;
+        return `<div class="model-option ${sel?'selected':''}" data-val="${m}" onclick="selectModel(this)">
+            <div class="model-dot"></div><span style="font-size:12px">${m}</span>
+        </div>`;
+    }).join('');
+
+    const managerHTML = MANAGEMENT_OPTIONS.map(m => {
+        const sel = d.manager === m;
+        return `<div class="model-option manager-option ${sel?'selected':''}" data-val="${m}"
+            onclick="selectManager(this)" style="margin-bottom:8px">
+            <div class="model-dot"></div><span style="font-size:12px">${m}</span>
+        </div>`;
+    }).join('');
+
+    const showConditional = d.manager === 'مكتب خارجي / مستشار';
+
+    return `<div class="card">
+        <div class="card-title"><i class="bi bi-trophy"></i> الأهداف والأولويات</div>
+        <div class="card-sub">ما الذي تريد تحقيقه في إدارة ${dept.label}؟</div>
+
+        <div class="section-label">الأهداف المستهدفة</div>
+        <div class="goals-grid">${goalsHTML}</div>
+
+        <div class="section-label">الأولوية</div>
+        <select id="prioritySelect" class="priority-select">${priorityHTML}</select>
+
+        <div class="section-label">نموذج التشغيل</div>
+        <div class="model-options">${modelsHTML}</div>
+
+        <div class="section-label">من يدير هذه الإدارة؟</div>
+        <div style="display:flex;flex-direction:column;gap:0">${managerHTML}</div>
+
+        <div id="managerConditional" class="manager-conditional ${showConditional?'show':''}">
+            <div style="font-size:12px;color:var(--text-muted);font-weight:700">اسم المكتب / المستشار</div>
+            <input id="managerName" type="text" value="${d.managerName||''}" placeholder="مثال: مكتب X للمحاسبة..." />
+            <div style="font-size:12px;color:var(--text-muted);font-weight:700;margin-top:10px">مستوى الرضا؟</div>
+            <div style="display:flex;gap:8px;margin-top:6px">
+                ${['راضٍ','جزئياً','لا'].map(v=>`
+                <button class="btn satisfaction-opt ${d.managerSatisfied===v?'btn-primary':''}"
+                    data-val="${v}" onclick="selectSatisfaction(this)">${v}</button>`).join('')}
+            </div>
+        </div>
+
+        <div class="section-label">ملاحظات</div>
+        <textarea id="deptNotes" class="q-textarea" placeholder="أي معلومة إضافية عن هذه الإدارة...">${d.notes||''}</textarea>
+    </div>`;
+}
+
+/* ═══════════════════════════════════
+   RENDER NAV
+═══════════════════════════════════ */
+function renderNav(dept) {
+    const el = document.getElementById('navBar');
+    const isFirst = STATE.currentSection === 0;
+    const isLast = STATE.currentSection === SECTIONS.length - 1;
+    const deptIdx = DEPTS.findIndex(d => d.key === dept.key);
+    const isLastDept = deptIdx === DEPTS.length - 1;
+
+    const nextLabel = isLast
+        ? (isLastDept ? '✅ إنهاء وحفظ' : `التالي: ${DEPTS[deptIdx+1]?.label} →`)
+        : `التالي: ${SECTIONS[STATE.currentSection+1]?.label} →`;
+
+    el.innerHTML = `
+        <button class="btn btn-ghost" onclick="prevSection()" ${isFirst?'disabled':''}>
+            <i class="bi bi-arrow-right"></i> السابق
+        </button>
+        <button class="btn" onclick="saveCurrentSection();showToast()">
+            <i class="bi bi-save"></i> حفظ
+        </button>
+        <button class="btn btn-primary" onclick="nextSection()">
+            ${nextLabel} ${!isLast?'':''}
+        </button>`;
+}
+
+/* ═══════════════════════════════════
+   COMPLETION
+═══════════════════════════════════ */
+function renderCompletion() {
+    const completed = DEPTS.filter(d => STATE.data[d.key]?.completed);
+    document.getElementById('mainContent').innerHTML = `
+        <div class="card completion-banner">
+            <div class="completion-icon">🎉</div>
+            <div class="completion-title">اكتمل استكشاف الإدارات!</div>
+            <div class="completion-sub">تم جمع بيانات ${completed.length} إدارات وحفظها — جاهز للتحليل الاستراتيجي</div>
+            <div class="dept-done-list">
+                ${completed.map(d=>`<div class="dept-done-tag">${d.icon} ${d.label}</div>`).join('')}
+            </div>
+            <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+                <button class="btn btn-primary" onclick="location.href='/swot'">
+                    <i class="bi bi-grid-1x2"></i> توليد SWOT التلقائي
+                </button>
+                <button class="btn" onclick="location.href='/gap-analysis'">
+                    <i class="bi bi-bar-chart-steps"></i> تحليل الفجوات
+                </button>
+                <button class="btn" onclick="location.href='/dashboard'">
+                    <i class="bi bi-speedometer2"></i> لوحة التحكم
+                </button>
+            </div>
+        </div>`;
+    document.getElementById('navBar').innerHTML = '';
+    document.getElementById('stepperEl').style.display = 'none';
+    document.getElementById('deptTabs').style.display = 'none';
+}
+
+/* ═══════════════════════════════════
+   EVENT HANDLERS
+═══════════════════════════════════ */
+function selectRadio(el, qId) {
+    document.querySelectorAll(`.q-block-${qId}`).forEach(x => x.classList.remove('selected'));
+    el.classList.add('selected');
+}
+function toggleCheck(el, qId) {
+    el.classList.toggle('selected');
+    const box = el.querySelector('.check-box');
+    box.textContent = el.classList.contains('selected') ? '✓' : '';
+}
+function toggleChallenge(el) { el.classList.toggle('selected'); }
+function toggleGoal(el) { el.classList.toggle('selected'); }
+function selectModel(el) {
+    document.querySelectorAll('.model-option').forEach(x => x.classList.remove('selected'));
+    el.classList.add('selected');
+}
+function selectManager(el) {
+    document.querySelectorAll('.manager-option').forEach(x => x.classList.remove('selected'));
+    el.classList.add('selected');
+    const cond = document.getElementById('managerConditional');
+    if (cond) cond.classList.toggle('show', el.dataset.val === 'مكتب خارجي / مستشار');
+}
+function selectSatisfaction(el) {
+    document.querySelectorAll('.satisfaction-opt').forEach(x => {
+        x.classList.remove('btn-primary');
+    });
+    el.classList.add('btn-primary');
+}
+function attachSectionListeners(secId) {
+    // add-on-enter for SW inputs
+    if (secId === 'sw') {
+        const sIn = document.getElementById('extraStrengthInput');
+        const wIn = document.getElementById('extraWeaknessInput');
+        sIn?.addEventListener('keypress', e => {
+            if (e.key === 'Enter' && sIn.value.trim()) {
+                const v = sIn.value.trim();
+                STATE.data[STATE.currentDept].extraStrengths.push(v);
+                save();
+                renderSection(DEPTS.find(d=>d.key===STATE.currentDept));
+            }
+        });
+        wIn?.addEventListener('keypress', e => {
+            if (e.key === 'Enter' && wIn.value.trim()) {
+                const v = wIn.value.trim();
+                STATE.data[STATE.currentDept].extraWeaknesses.push(v);
+                save();
+                renderSection(DEPTS.find(d=>d.key===STATE.currentDept));
+            }
+        });
+    }
+}
+
+/* ── Toast ── */
+function showToast() {
+    let t = document.getElementById('toast');
+    if (!t) {
+        t = document.createElement('div');
+        t.id = 'toast';
+        t.style.cssText = `
+            position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+            background:#1a2035; border:1px solid rgba(34,197,94,.3); color:var(--green);
+            padding:10px 20px; border-radius:10px; font-size:13px; font-weight:700;
+            z-index:9999; animation:fadeIn .3s ease;`;
+        document.body.appendChild(t);
+    }
+    t.textContent = '✓ تم الحفظ';
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => t.remove(), 2000);
+}
+
+/* ═══════════════════════════════════
+   BOOTSTRAP
+═══════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

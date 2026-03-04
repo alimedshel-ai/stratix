@@ -1079,6 +1079,133 @@
             setTimeout(() => t.remove(), 3000);
         }
 
+        // ===== PHASE 8: BRIDGE FROM DEPT-DEEP + IDENTITY =====
+        (function checkOKRBridge() {
+            const dept  = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
+            const ident = JSON.parse(localStorage.getItem('stratix_identity_payload') || 'null');
+            if (!dept && !ident) return;
+
+            // Build banner
+            const banner = document.createElement('div');
+            banner.id = 'okrBridgeBanner';
+            banner.style.cssText = `
+                background: linear-gradient(135deg, rgba(102,126,234,0.12), rgba(167,139,250,0.08));
+                border: 1px solid rgba(102,126,234,0.3);
+                border-radius: 16px; padding: 20px 24px;
+                margin-bottom: 20px; display: flex;
+                align-items: center; justify-content: space-between;
+                flex-wrap: wrap; gap: 12px;
+            `;
+            const visionText = ident?.vision ? `"${ident.vision.slice(0,60)}${ident.vision.length>60?'…':''}"` : '';
+            banner.innerHTML = `
+                <div>
+                    <div style="font-size:15px;font-weight:700;color:#a78bfa">⚡ بيانات التشخيص جاهزة للتحويل إلى OKRs</div>
+                    <div style="font-size:13px;color:#94a3b8;margin-top:4px">
+                        ${dept ? 'أهداف ' + (dept.completedDepts||[]).length + ' إدارة من dept-deep' : ''}
+                        ${dept && ident ? ' + ' : ''}
+                        ${ident ? 'رؤية: ' + visionText : ''}
+                    </div>
+                </div>
+                <button onclick="generateOKRsFromBridge()" style="
+                    background:linear-gradient(135deg,#667eea,#a78bfa);
+                    border:none;color:white;padding:10px 20px;
+                    border-radius:10px;font-family:inherit;font-size:14px;
+                    font-weight:700;cursor:pointer;
+                ">🎯 ولّد OKRs تلقائياً</button>
+            `;
+
+            // Insert before okrList
+            const listEl = document.getElementById('okrList');
+            listEl.parentNode.insertBefore(banner, listEl);
+        })();
+
+        const DEPT_OKR_MAP = {
+            compliance: {
+                icon: 'shield-check', owner: 'مسؤول الامتثال',
+                objTemplate: 'تحقيق امتثال كامل للمتطلبات التنظيمية',
+                krs: ['الحصول على كافة التراخيص المطلوبة', 'تعيين مسؤول امتثال متخصص', 'اجتياز أول مراجعة تنظيمية بنجاح']
+            },
+            finance: {
+                icon: 'cash-stack', owner: 'المدير المالي',
+                objTemplate: 'تحسين الأداء المالي وتعزيز الاستدامة',
+                krs: ['رفع هامش الربح الصافي بنسبة 5%', 'بناء احتياطي نقدي يغطي 3 أشهر', 'تقليل الاعتماد على عميل واحد لأقل من 30%']
+            },
+            sales: {
+                icon: 'rocket-takeoff', owner: 'مدير المبيعات',
+                objTemplate: 'نمو قاعدة العملاء وزيادة الإيرادات',
+                krs: ['اكتساب 10 عملاء جدد خلال الربع', 'رفع معدل العملاء المتكررين لأكثر 60%', 'تطبيق نظام CRM متكامل']
+            },
+            hr: {
+                icon: 'people-fill', owner: 'مدير الموارد البشرية',
+                objTemplate: 'بناء فريق كفء ومحفّز',
+                krs: ['توثيق هيكل الرواتب والحوافز', 'إطلاق نظام تقييم أداء ربعي', 'تحقيق نسبة توطين المستهدفة']
+            },
+            marketing: {
+                icon: 'globe', owner: 'مدير التسويق',
+                objTemplate: 'بناء حضور رقمي قوي وهوية بصرية واضحة',
+                krs: ['إطلاق هوية بصرية احترافية موحّدة', 'نشر محتوى منتظم 3 مرات أسبوعياً', 'قياس ROI لكل حملة تسويقية']
+            },
+            operations: {
+                icon: 'gear-wide-connected', owner: 'مدير العمليات',
+                objTemplate: 'رفع كفاءة العمليات وتقليل الهدر',
+                krs: ['توثيق 80% من العمليات الأساسية كـ SOPs', 'أتمتة 3 عمليات يدوية رئيسية', 'تحسين وقت التسليم بنسبة 20%']
+            },
+            support: {
+                icon: 'mortarboard', owner: 'مدير الخدمات المساندة',
+                objTemplate: 'تطوير البنية التحتية لدعم النمو',
+                krs: ['ترقية الأنظمة التقنية الأساسية', 'تحديث كافة عقود الموردين', 'وضع سياسة مشتريات واضحة']
+            }
+        };
+
+        window.generateOKRsFromBridge = function() {
+            const dept  = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
+            const ident = JSON.parse(localStorage.getItem('stratix_identity_payload') || 'null');
+            const generatedOKRs = [];
+            let krIdBase = Date.now();
+
+            // Vision as first OKR (if identity exists)
+            if (ident?.vision) {
+                const advLabel = ident.competitiveAdvantage?.type || 'الميزة التنافسية';
+                generatedOKRs.push({
+                    id: 'gen_vision_' + Date.now(), icon: 'lightbulb', owner: 'الرئيس التنفيذي',
+                    objective: ident.vision.slice(0, 120),
+                    krs: [
+                        { id: 'gkr_' + krIdBase++, name: 'تطبيق خطة الرؤية مع KPIs قابلة للقياس', start:0, target:100, current:0, score:0 },
+                        { id: 'gkr_' + krIdBase++, name: `تعزيز الميزة التنافسية: ${advLabel}`, start:0, target:100, current:0, score:0 },
+                    ]
+                });
+            }
+
+            // Dept goals → OKRs
+            const completedDepts = dept?.completedDepts || [];
+            completedDepts.forEach(deptKey => {
+                const cfg = DEPT_OKR_MAP[deptKey];
+                if (!cfg) return;
+                const deptData = dept[deptKey] || {};
+                const selectedGoals = Array.isArray(deptData.goals) ? deptData.goals : [];
+                const krs = (selectedGoals.length ? selectedGoals : cfg.krs).slice(0, 4).map(g => ({
+                    id: 'gkr_' + krIdBase++,
+                    name: g, start: 0, target: 100, current: 0, score: 0
+                }));
+                generatedOKRs.push({
+                    id: 'gen_' + deptKey + '_' + Date.now(), icon: cfg.icon, owner: cfg.owner,
+                    objective: deptData.priority === 'عاجل جداً'
+                        ? `🔴 [عاجل] ${cfg.objTemplate}`
+                        : cfg.objTemplate,
+                    krs
+                });
+            });
+
+            if (!generatedOKRs.length) { alert('لا توجد بيانات كافية لتوليد OKRs'); return; }
+
+            if (confirm(`سيتم إضافة ${generatedOKRs.length} هدف OKR مولّد تلقائياً. هل تريد المتابعة؟`)) {
+                okrs = [...generatedOKRs, ...okrs];
+                renderAll();
+                document.getElementById('okrBridgeBanner').remove();
+                showToast(`تم إضافة ${generatedOKRs.length} هدف من التشخيص ✓`);
+            }
+        };
+
         renderAll();
     </script>
 </body>
