@@ -832,6 +832,200 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* === v3.3: Back-Sync Modal === */
+        .backsync-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .backsync-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .backsync-panel {
+            position: fixed;
+            top: 0;
+            right: -420px;
+            width: 400px;
+            max-width: 90vw;
+            height: 100vh;
+            z-index: 201;
+            background: var(--bg);
+            border-left: 1px solid var(--border);
+            padding: 24px;
+            overflow-y: auto;
+            transition: right 0.35s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        .backsync-panel.active {
+            right: 0;
+        }
+
+        .backsync-panel .bs-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .backsync-panel .bs-title {
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .backsync-panel .bs-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.06);
+            border: none;
+            color: var(--text);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .backsync-panel .bs-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .backsync-panel .bs-field {
+            margin-bottom: 16px;
+        }
+
+        .backsync-panel .bs-field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .backsync-panel .bs-field input {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1.5px solid var(--border);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text);
+            font-family: 'Tajawal', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .backsync-panel .bs-field input:focus {
+            border-color: var(--primary);
+        }
+
+        .backsync-panel .bs-save-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary), #a78bfa);
+            color: #fff;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.3s;
+        }
+
+        .backsync-panel .bs-save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.3);
+        }
+
+        .backsync-panel .bs-save-btn:disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .backsync-panel .bs-note {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+
+        /* Back-Sync Edit Button on Ref Bar */
+        .ref-bar .ref-edit-btn {
+            padding: 4px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            background: rgba(245, 158, 11, 0.08);
+            color: #fbbf24;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .ref-bar .ref-edit-btn:hover {
+            background: rgba(245, 158, 11, 0.15);
+        }
+
+        /* === v3.3: Unallocated Counter === */
+        .unallocated-card {
+            display: none;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 20px;
+            border-radius: 14px;
+            background: rgba(245, 158, 11, 0.06);
+            border: 1px solid rgba(245, 158, 11, 0.15);
+            margin-bottom: 24px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .unallocated-card.active {
+            display: flex;
+        }
+
+        .unallocated-card .uc-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .unallocated-card .uc-text {
+            flex: 1;
+        }
+
+        .unallocated-card .uc-label {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--warning);
+            margin-bottom: 2px;
+        }
+
+        .unallocated-card .uc-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .unallocated-card .uc-amount {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--warning);
+            flex-shrink: 0;
+        }
     </style>
 </head>
 
@@ -859,6 +1053,43 @@
         <div class="ref-item">💸 مصروفك: <span class="ref-val" id="refExp">—</span></div>
         <div class="ref-item">📊 ربحك: <span class="ref-val" id="refProfit">—</span></div>
         <div class="ref-item">🏦 نقدك: <span class="ref-val" id="refCash">—</span></div>
+        <button class="ref-edit-btn" onclick="openBackSync()">✏️ تعديل سريع</button>
+    </div>
+
+    <!-- ⭐ v3.3: Back-Sync Modal -->
+    <div class="backsync-overlay" id="bsOverlay" onclick="closeBackSync()"></div>
+    <div class="backsync-panel" id="bsPanel">
+        <div class="bs-header">
+            <div class="bs-title">✏️ تعديل الأرقام الكبرى</div>
+            <button class="bs-close" onclick="closeBackSync()">×</button>
+        </div>
+        <div class="bs-field">
+            <label>💰 الإيراد الشهري (ر.س)</label>
+            <input type="text" id="bsRevenue" inputmode="numeric">
+        </div>
+        <div class="bs-field">
+            <label>💸 المصروف الشهري (ر.س)</label>
+            <input type="text" id="bsExpenses" inputmode="numeric">
+        </div>
+        <div class="bs-field">
+            <label>🏦 النقد المتاح (ر.س)</label>
+            <input type="text" id="bsCash" inputmode="numeric">
+        </div>
+        <div class="bs-field">
+            <label>⏳ مستحقات العملاء (ر.س)</label>
+            <input type="text" id="bsReceivables" inputmode="numeric">
+        </div>
+        <div class="bs-field">
+            <label>💳 مستحقات الموردين (ر.س)</label>
+            <input type="text" id="bsPayables" inputmode="numeric">
+        </div>
+        <button class="bs-save-btn" id="bsSaveBtn" onclick="backSyncSave()">
+            <i class="bi bi-arrow-repeat"></i> أعد التحليل بالأرقام الجديدة
+        </button>
+        <div class="bs-note">
+            <i class="bi bi-info-circle"></i>
+            التعديل يعيد التحليل كاملاً ويحدّث كل النتائج فوراً
+        </div>
     </div>
 
     <div class="result-container" style="padding-top:100px">
@@ -870,6 +1101,17 @@
                 <div class="sb-label" id="sizeLabel">—</div>
                 <div class="sb-desc" id="sizeDesc">—</div>
             </div>
+        </div>
+
+        <!-- ⭐ v3.3: Unallocated Counter -->
+        <div class="unallocated-card" id="unallocatedCard">
+            <div class="uc-icon">🕳️</div>
+            <div class="uc-text">
+                <div class="uc-label" id="ucLabel">مصروفات غير مفسّرة</div>
+                <div class="uc-desc" id="ucDesc">الفرق بين إجمالي مصروفاتك والمصروفات المفصّلة. أين يذهب هذا المبلغ؟
+                </div>
+            </div>
+            <div class="uc-amount" id="ucAmount">—</div>
         </div>
 
         <!-- Complete Banner -->
@@ -1399,6 +1641,140 @@
         // Enter key
         document.getElementById('emailInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') submitEmail();
+        });
+
+        // ═══════════════════════════════════════════
+        // ⭐ v3.3: Back-Sync Logic
+        // ═══════════════════════════════════════════
+
+        function openBackSync() {
+            // تعبئة الحقول بالقيم الحالية
+            try {
+                const v33 = JSON.parse(localStorage.getItem('stratix_financial_v33') || '{}');
+                document.getElementById('bsRevenue').value = v33.monthlyRevenue || '';
+                document.getElementById('bsExpenses').value = v33.monthlyExpenses || '';
+                document.getElementById('bsCash').value = v33.cashBalance || '';
+                document.getElementById('bsReceivables').value = v33.receivables || '0';
+                document.getElementById('bsPayables').value = v33.payables || '0';
+            } catch (e) { /* ignore */ }
+
+            document.getElementById('bsOverlay').classList.add('active');
+            document.getElementById('bsPanel').classList.add('active');
+            document.getElementById('bsRevenue').focus();
+        }
+
+        function closeBackSync() {
+            document.getElementById('bsOverlay').classList.remove('active');
+            document.getElementById('bsPanel').classList.remove('active');
+        }
+
+        async function backSyncSave() {
+            const btn = document.getElementById('bsSaveBtn');
+            const parseNum = (id) => Number(document.getElementById(id).value.replace(/,/g, '')) || 0;
+
+            const newV33 = {
+                monthlyRevenue: parseNum('bsRevenue'),
+                monthlyExpenses: parseNum('bsExpenses'),
+                cashBalance: parseNum('bsCash'),
+                receivables: parseNum('bsReceivables'),
+                payables: parseNum('bsPayables'),
+            };
+
+            if (newV33.monthlyRevenue <= 0 || newV33.monthlyExpenses <= 0) {
+                alert('الإيراد والمصروف يجب أن يكونا أكبر من صفر');
+                return;
+            }
+
+            // حالة التحميل
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-sm"></span> جاري إعادة التحليل...';
+
+            // Mapping Layer → كود قديم
+            const codeData = {
+                total_revenue: newV33.monthlyRevenue * 12,
+                cogs: newV33.monthlyExpenses * 0.6 * 12,
+                admin_expenses: newV33.monthlyExpenses * 0.4 * 12,
+                current_assets: newV33.cashBalance + newV33.receivables,
+                current_liabilities: newV33.payables,
+            };
+
+            try {
+                const res = await fetch('/api/financial-engine/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(codeData),
+                });
+
+                const result = await res.json();
+
+                if (!result.success) {
+                    throw new Error(result.message || 'خطأ في التحليل');
+                }
+
+                // ✅ حفظ البيانات الجديدة
+                localStorage.setItem('stratix_analysis', JSON.stringify(result));
+                localStorage.setItem('stratix_financial_v33', JSON.stringify(newV33));
+                localStorage.setItem('stratix_raw_inputs', JSON.stringify(codeData));
+                localStorage.setItem('stratix_analysis_at', new Date().toISOString());
+
+                // تحديث التصنيف
+                const empCount = parseInt(localStorage.getItem('stratix_employee_count')) || 0;
+                let newSize = 'small';
+                if (newV33.monthlyRevenue < 50000 && empCount <= 9) newSize = 'micro';
+                else if (newV33.monthlyRevenue >= 500000 || empCount >= 50) newSize = 'medium';
+                localStorage.setItem('stratix_financial_size', newSize);
+
+                console.log('🔄 [Back-Sync] Re-analyzed | Size:', newSize, '| Rev:', newV33.monthlyRevenue);
+
+                // تأثير نجاح ثم إعادة تحميل
+                btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> تم! جاري التحديث...';
+                btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+
+                setTimeout(() => {
+                    window.location.reload();
+                }, 600);
+
+            } catch (error) {
+                console.error('Back-Sync error:', error);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> أعد التحليل بالأرقام الجديدة';
+                alert('حدث خطأ: ' + error.message);
+            }
+        }
+
+        // ═══════════════════════════════════════════
+        // ⭐ v3.3: Unallocated Counter
+        // ═══════════════════════════════════════════
+        // يحسب الفجوة بين إجمالي المصروفات والمصروفات المفصّلة
+        // في المرحلة الأولية: الفجوة تظهر عند وجود بيانات عمق (dept-deep)
+
+        (function initUnallocatedCounter() {
+            try {
+                const v33 = JSON.parse(localStorage.getItem('stratix_financial_v33') || '{}');
+                const codeRaw = JSON.parse(localStorage.getItem('stratix_raw_inputs') || '{}');
+                const totalExpenses = v33.monthlyExpenses || 0;
+
+                // الحساب: المصروف الإجمالي مقابل COGS + Admin (من الكود)
+                const cogs = (codeRaw.cogs || 0) / 12;
+                const admin = (codeRaw.admin_expenses || 0) / 12;
+                const itemized = cogs + admin;
+                const gap = Math.abs(totalExpenses - itemized);
+
+                // تظهر الفجوة إذا كان هناك فرق أكبر من 5%
+                if (totalExpenses > 0 && gap > totalExpenses * 0.05) {
+                    const ucCard = document.getElementById('unallocatedCard');
+                    const pct = ((gap / totalExpenses) * 100).toFixed(0);
+                    document.getElementById('ucAmount').textContent = gap.toLocaleString('en-US') + ' ﷼';
+                    document.getElementById('ucDesc').textContent =
+                        `${pct}% من مصروفاتك (${gap.toLocaleString('en-US')} ﷼) غير مُفسّرة. التحليل العميق سيكشف أين تذهب.`;
+                    ucCard.classList.add('active');
+                }
+            } catch (e) { /* ignore */ }
+        })();
+
+        // ESC key to close back-sync
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeBackSync();
         });
     </script>
 </body>
