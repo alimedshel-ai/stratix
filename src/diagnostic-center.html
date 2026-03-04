@@ -1040,6 +1040,38 @@
             industrial: [{ id: 'si1', label: 'ترخيص بيئي (NCEC)', cost: 25000, risk: 50000, desc: 'دراسة أثر بيئي فئة 1-3' }, { id: 'si2', label: 'ترخيص مياه (نما)', cost: 5000, risk: 20000, desc: 'رخصة حفر أو استخدام مياه' }, { id: 'si3', label: 'شهادة سابر (SABER)', cost: 3000, risk: 10000, desc: 'مطابقة المنتجات للمواصفات' }],
             professional: [{ id: 'sp1', label: 'ترخيص مزاولة (ناجز)', cost: 5000, risk: 10000, desc: 'عضوية الهيئة + ترخيص ساري' }, { id: 'sp2', label: 'ترخيص موثق معتمد', cost: 3000, risk: 5000, desc: 'اجتياز اختبار الكفاية + ضمان' }]
         };
+
+        /* ═══ QUESTION MAP — ربط كل بند بالمحور + الأهمية + SWOT ═══ */
+        const QUESTION_MAP = {
+            // المالي
+            f1: { axis: 'مالي', weight: 1.0, criticality: 'high', swotDone: 'strength', swotNone: 'weakness', swotLabel: 'ZATCA والفوترة الإلكترونية' },
+            // العمالة
+            h1: { axis: 'عمالة', weight: 0.8, criticality: 'high', swotDone: 'strength', swotNone: 'weakness', swotLabel: 'التأمينات الاجتماعية' },
+            h2: { axis: 'عمالة', weight: 0.8, criticality: 'high', swotDone: 'strength', swotNone: 'weakness', swotLabel: 'توثيق العقود (قوى)' },
+            h3: { axis: 'عمالة', weight: 0.7, criticality: 'medium', swotDone: 'strength', swotNone: 'weakness', swotLabel: 'حماية الأجور (مدد)' },
+            h4: { axis: 'عمالة', weight: 0.6, criticality: 'high', swotDone: 'strength', swotNone: 'threat', swotLabel: 'التأمين الطبي', dynamic: true },
+            h5: { axis: 'عمالة', weight: 0.5, criticality: 'medium', swotDone: 'neutral', swotNone: 'threat', swotLabel: 'المقابل المالي للوافدين', dynamic: true },
+            h6: { axis: 'عمالة', weight: 0.4, criticality: 'low', swotDone: 'strength', swotNone: 'weakness', swotLabel: 'إدارة الإقامات (مقيم)', dynamic: true },
+            h7: { axis: 'عمالة', weight: 0.9, criticality: 'high', swotDone: 'strength', swotNone: 'threat', swotLabel: 'تصنيف نطاقات', dynamic: true },
+            // الإداري
+            a1: { axis: 'إداري', weight: 0.8, criticality: 'high', swotDone: 'strength', swotNone: 'weakness', swotLabel: 'الترخيص البلدي' },
+            a2: { axis: 'إداري', weight: 0.5, criticality: 'medium', swotDone: 'strength', swotNone: 'weakness', swotLabel: 'توثيق عقود الإيجار' },
+            a3: { axis: 'إداري', weight: 0.4, criticality: 'low', swotDone: 'strength', swotNone: 'weakness', swotLabel: 'الغرفة التجارية' },
+            a4: { axis: 'إداري', weight: 0.7, criticality: 'high', swotDone: 'strength', swotNone: 'threat', swotLabel: 'الدفاع المدني والسلامة', dynamic: true },
+            // التنظيمي
+            r1: { axis: 'تنظيمي', weight: 1.0, criticality: 'critical', swotDone: 'strength', swotNone: 'threat', swotLabel: 'حماية البيانات PDPL' },
+            r2: { axis: 'تنظيمي', weight: 0.9, criticality: 'critical', swotDone: 'strength', swotNone: 'threat', swotLabel: 'الأمن السيبراني NCA' },
+            // القطاعي (عام — يُضاف ديناميكياً)
+            sc1: { axis: 'قطاعي', weight: 0.5, criticality: 'medium', swotDone: 'strength', swotNone: 'weakness', swotLabel: 'نقاط البيع الإلكترونية' },
+            sc2: { axis: 'قطاعي', weight: 0.3, criticality: 'low', swotDone: 'neutral', swotNone: 'weakness', swotLabel: 'لوحة المحل' },
+            sc3: { axis: 'قطاعي', weight: 0.7, criticality: 'high', swotDone: 'strength', swotNone: 'threat', swotLabel: 'الفاتورة الإلكترونية' },
+            sf1: { axis: 'قطاعي', weight: 1.0, criticality: 'critical', swotDone: 'strength', swotNone: 'threat', swotLabel: 'شهادة HACCP' },
+            sf2: { axis: 'قطاعي', weight: 0.8, criticality: 'high', swotDone: 'strength', swotNone: 'threat', swotLabel: 'الشهادات الصحية' },
+            st1: { axis: 'قطاعي', weight: 1.0, criticality: 'critical', swotDone: 'strength', swotNone: 'threat', swotLabel: 'ترخيص NCA للمزودين' },
+            st2: { axis: 'قطاعي', weight: 0.9, criticality: 'critical', swotDone: 'strength', swotNone: 'threat', swotLabel: 'ترخيص SDAIA' },
+            sh1: { axis: 'قطاعي', weight: 1.0, criticality: 'critical', swotDone: 'strength', swotNone: 'threat', swotLabel: 'اعتماد سباهي' },
+            se1: { axis: 'قطاعي', weight: 1.0, criticality: 'critical', swotDone: 'strength', swotNone: 'threat', swotLabel: 'الترخيص التعليمي' }
+        };
         const MULT = { commercial: 1, fnb: 1.3, tech: 1.2, construction: 1.5, logistics: 1.4, health: 1.8, education: 1.3, tourism: 1.5, industrial: 1.7, professional: 1.2 };
         const SIZE_DEF = { micro: { sa: 2, ex: 1, s: 5000, f: 500, h: 500, a: 50, t: 500000 }, small: { sa: 10, ex: 5, s: 6000, f: 800, h: 1500, a: 150, t: 2000000 }, medium: { sa: 50, ex: 30, s: 7500, f: 1000, h: 3000, a: 500, t: 10000000 }, large: { sa: 200, ex: 100, s: 9000, f: 1200, h: 5000, a: 2000, t: 50000000 } };
 
@@ -1413,6 +1445,9 @@
 
                 // === التحليل النصي ===
                 aiNarrative: narrative,
+
+                // === خريطة الأسئلة (لتوليد SWOT) ===
+                questionMap: QUESTION_MAP,
 
                 // === البيانات الخام ===
                 rawResponses: S.res
