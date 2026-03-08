@@ -2183,10 +2183,49 @@ function renderStatus(dept, d) {
             </div>
         </div>`;
     } else {
+        // ── محتوى تعريفي غني عند عدم وجود تشخيص ──
+        const DEPT_INTROS = {
+            compliance: { focus: 'الامتثال التنظيمي والحوكمة والمخاطر القانونية', areas: ['التراخيص والأنظمة', 'حماية البيانات (PDPL)', 'الأمن السيبراني', 'خطة استمرارية الأعمال'] },
+            finance: { focus: 'الصحة المالية والتدفق النقدي وهيكل التكاليف', areas: ['جودة الإيرادات', 'هيكل التكاليف (ثابتة/متغيرة)', 'الجاهزية للتوسع', 'إدارة المديونيات'] },
+            sales: { focus: 'أداء المبيعات وتحليل العملاء وكفاءة الفريق البيعي', areas: ['تركّز العملاء (باريتو)', 'عنق الزجاجة البيعي', 'قدرة الفريق وتأهيله', 'معدل التحويل'] },
+            hr: { focus: 'إدارة الكفاءات والتوظيف والتدريب والأداء', areas: ['تسرب الكفاءات', 'فجوة قدرات HR', 'نظام تقييم الأداء', 'خطط التأهيل والتطوير'] },
+            marketing: { focus: 'الميزة التنافسية وتكلفة الاستحواذ واستراتيجية التسويق', areas: ['الميزة التنافسية (VRIO)', 'تكلفة استحواذ العميل (CAC)', 'توازن الاكتساب والاحتفاظ', 'فعالية القنوات'] },
+            operations: { focus: 'الطاقة التشغيلية وسلسلة القيمة والكفاءة', areas: ['الطاقة الاستيعابية', 'مصادر الهدر والتأخير', 'توثيق العمليات', 'الاعتمادية التشغيلية'] },
+            support: { focus: 'خدمة العملاء والدعم الفني والتغذية الراجعة', areas: ['الشكوى الأكثر تكراراً', 'سرعة حل المشكلات', 'دورة التحسين المستمر', 'رضا العملاء'] },
+        };
+        const intro = DEPT_INTROS[dept.key] || { focus: 'تحليل شامل للإدارة', areas: [] };
         scoreHTML = `
+        <div style="background:linear-gradient(135deg,rgba(102,126,234,0.08),rgba(167,139,250,0.05));border:1px solid rgba(102,126,234,0.2);border-radius:16px;padding:20px;margin-bottom:16px">
+            <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:8px">${dept.icon} تحليل ${dept.label} العميق</div>
+            <div style="font-size:13px;color:var(--text-muted);line-height:1.8;margin-bottom:16px">
+                يركز هذا التحليل على: <strong style="color:var(--text)">${intro.focus}</strong>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px">
+                ${intro.areas.map(a => `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px">
+                    <i class="bi bi-check2" style="color:var(--primary);font-size:14px"></i> ${a}
+                </div>`).join('')}
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+            <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.15);border-radius:12px;padding:14px;text-align:center">
+                <div style="font-size:20px;margin-bottom:4px">📋</div>
+                <div style="font-size:11px;font-weight:700;color:var(--text)">6 أقسام</div>
+                <div style="font-size:10px;color:var(--text-muted)">تحليل متكامل</div>
+            </div>
+            <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.15);border-radius:12px;padding:14px;text-align:center">
+                <div style="font-size:20px;margin-bottom:4px">⏱️</div>
+                <div style="font-size:11px;font-weight:700;color:var(--text)">10-15 دقيقة</div>
+                <div style="font-size:10px;color:var(--text-muted)">الوقت المتوقع</div>
+            </div>
+            <div style="background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.15);border-radius:12px;padding:14px;text-align:center">
+                <div style="font-size:20px;margin-bottom:4px">🎯</div>
+                <div style="font-size:11px;font-weight:700;color:var(--text)">تقرير ذكي</div>
+                <div style="font-size:10px;color:var(--text-muted)">نقاط قوة + ضعف + أهداف</div>
+            </div>
+        </div>
         <div class="info-box info">
-            <i class="bi bi-info-circle"></i>
-            <span>لم يُكتمل التشخيص العام بعد — البيانات ستظهر هنا تلقائياً بعد إتمام التشخيص.</span>
+            <i class="bi bi-lightbulb"></i>
+            <span>💡 يمكنك البدء مباشرة — أجب على الأسئلة في الأقسام التالية وسيتم توليد التحليل تلقائياً.</span>
         </div>`;
     }
 
