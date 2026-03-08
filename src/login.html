@@ -514,11 +514,11 @@
                     if (sysRole === 'SUPER_ADMIN') {
                         window.location.href = '/dashboard.html';
                     }
-                    // 2. VIEWER/DATA_ENTRY → صفحة المشاهد
-                    else if (role === 'VIEWER' || role === 'DATA_ENTRY') {
-                        window.location.href = '/viewer-hub.html';
+                    // 2. ما أكمل التأسيس → onboarding أولاً (قبل أي حكم على الدور)
+                    else if (!onboardingDone && !hasEntity) {
+                        window.location.href = '/onboarding.html';
                     }
-                    // 3. الفرد أو المستشار المستقل (ما يحتاج كيان)
+                    // 3. الفرد أو المستشار المستقل
                     else if (['INDIVIDUAL', 'PERSONAL', 'CAREER', 'IDEA', 'CONSULTANT_SOLO'].includes(uCategory) || uCategory.startsWith('INDIVIDUAL_')) {
                         window.location.href = '/individual-dashboard.html';
                     }
@@ -526,17 +526,17 @@
                     else if (uType === 'DEPT_MANAGER' || uCategory.startsWith('DEPT_')) {
                         window.location.href = hasEntity ? '/dept-dashboard.html' : '/onboarding.html?mode=dept';
                     }
-                    // 5. أي مستشار (مع أو بدون كيان) → داشبورد المستشار
+                    // 5. أي مستشار
                     else if (uType === 'CONSULTANT' || uCategory.startsWith('CONSULTANT')) {
                         window.location.href = '/consultant-dashboard.html';
                     }
-                    // 6. عنده كيان + التأسيس مكتمل
+                    // 6. VIEWER/DATA_ENTRY حقيقي (عنده entity بس دور محدود)
+                    else if (hasEntity && (role === 'VIEWER' || role === 'DATA_ENTRY')) {
+                        window.location.href = '/viewer-hub.html';
+                    }
+                    // 7. عنده كيان + التأسيس مكتمل
                     else if (hasEntity && onboardingDone) {
                         window.location.href = '/dashboard.html';
-                    }
-                    // 7. ما أكمل التأسيس
-                    else if (!onboardingDone) {
-                        window.location.href = '/onboarding.html';
                     }
                     // 8. Default
                     else {
@@ -722,33 +722,24 @@
                     }
                     localStorage.setItem('user', JSON.stringify(data.user));
 
-                    // التوجيه حسب النوع
+                    // التوجيه حسب النوع — دائماً لوحة التحكم أولاً بعد التسجيل
+                    // حفظ الوجهة المقترحة (لو موجودة) عشان الداشبورد يعرضها كاقتراح
                     const savedRedirect = localStorage.getItem('stratix_redirect_after_login');
                     if (savedRedirect) {
+                        localStorage.setItem('stratix_suggested_next', savedRedirect);
                         localStorage.removeItem('stratix_redirect_after_login');
-                        window.location.href = savedRedirect;
-                    } else if (data.redirectTo) {
-                        window.location.href = data.redirectTo;
-                    } else if (['INDIVIDUAL', 'PERSONAL', 'CAREER', 'IDEA', 'CONSULTANT_SOLO'].includes(userCategory) || userCategory.startsWith('INDIVIDUAL_')) {
-                        // فرد أو مستشار مستقل → يدخل مباشرة
+                    }
+
+                    if (['INDIVIDUAL', 'PERSONAL', 'CAREER', 'IDEA', 'CONSULTANT_SOLO'].includes(userCategory) || userCategory.startsWith('INDIVIDUAL_')) {
                         window.location.href = '/individual-dashboard.html';
                     } else if (userCategory.startsWith('DEPT_') || selectedUserType === 'DEPT_MANAGER') {
-                        // مدير إدارة → تحقق من وجود كيان
                         const hasEntity = !!(data.user?.entity?.id);
                         window.location.href = hasEntity ? '/dept-dashboard.html' : '/onboarding.html?mode=dept';
-                    } else if (localStorage.getItem('stratix_company_name') && localStorage.getItem('stratix_sector')) {
-                        // منشأة + بيانات الشركة كاملة → داشبورد مباشرة
-                        if (userCategory === 'CONSULTANT_AGENCY') {
-                            window.location.href = '/consultant-dashboard.html';
-                        } else {
-                            window.location.href = '/dashboard.html';
-                        }
-                    } else if (userCategory === 'EXPLORER' || (!diagPath && !selectedUserType)) {
-                        // مستخدم بدون تشخيص أو category → اختيار المسار أولاً
-                        window.location.href = '/select-type';
+                    } else if (userCategory === 'CONSULTANT_AGENCY') {
+                        window.location.href = '/consultant-dashboard.html';
                     } else {
-                        // منشأة بدون بيانات كاملة → onboarding
-                        window.location.href = '/onboarding.html';
+                        // ✅ الافتراضي: لوحة التحكم — يشوف المسار أول
+                        window.location.href = '/dashboard.html';
                     }
                 } else {
                     let errDiv = document.getElementById('signupError');

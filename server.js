@@ -48,6 +48,7 @@ const aiAdvisorRoutes = require('./routes/ai-advisor');
 const aiInsightRoutes = require('./routes/ai-insight');
 const adminRoutes = require('./routes/admin');
 const financialEngineRoutes = require('./routes/financial-engine');
+const execDashboardApiRoutes = require('./routes/exec-dashboard-api');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -75,9 +76,9 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://cdn.tailwindcss.com", "https://unpkg.com"],
       scriptSrcAttr: ["'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com", "https://cdn.tailwindcss.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
       imgSrc: ["'self'", "data:", "https:"],
       connectSrc: ["'self'"],
@@ -179,6 +180,9 @@ app.use('/api/financial-engine', engineLimiter, financialEngineRoutes);
 // 📊 Dashboard — كل مستخدم مسجل
 app.use('/api/dashboard', dashboardApiRoutes);
 
+// 🎯 Executive Dashboard API v1 — BSC-Driven
+app.use('/api/v1', execDashboardApiRoutes);
+
 // 🔔 Alerts — كل مستخدم مسجل (قراءة)
 app.use('/api/alerts', alertsRoutes);
 
@@ -233,6 +237,10 @@ app.use('/api/stats', statsRoutes);
 // 🎯 OKRs
 app.use('/api/okrs', okrsRoutes);
 
+// 🚀 المبادرات الاستراتيجية
+const initiativesRoutes = require('./routes/initiatives');
+app.use('/api/initiatives', initiativesRoutes);
+
 // 🎯 مصفوفة الأولويات — MCDA
 app.use('/api/priority-matrix', priorityMatrixRoutes);
 app.use('/api/inspector', inspectorRoutes);
@@ -280,9 +288,9 @@ app.use('/api/break-even', breakEvenRoutes);
 app.use('/api/cfo', cfoAuditRoutes);
 
 
-// Serve diagnostic center page (مركز التشخيص الاستراتيجي)
+// Serve diagnostic center page → redirects to unified v10
 app.get('/diagnostic-center', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'diagnostic-center.html'));
+  res.redirect('/startix-v10-single');
 });
 
 // Serve compliance analyzer page (محلل فجوة الامتثال)
@@ -363,6 +371,11 @@ app.get('/ogsm', (req, res) => {
 // Serve Simulation Lab page
 app.get('/simulation-lab', (req, res) => {
   res.sendFile(path.join(__dirname, 'src', 'simulation-lab.html'));
+});
+
+// Serve Growth Plan page
+app.get('/growth-plan', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'growth-plan.html'));
 });
 
 // Serve login page
@@ -530,7 +543,7 @@ app.get('/beginner-path', (req, res) => {
 
 // Serve Founder Diagnostic (Pre-Startup Path)
 app.get('/founder-diagnostic', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'founder-diagnostic.html'));
+  res.redirect('/startix-v10-single');
 });
 
 // Serve Path 1 journey (moved) — redirect to landing
@@ -669,6 +682,14 @@ app.get('/break-even-result.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'src', 'break-even-result.html'));
 });
 
+// Serve Financial Rescue Path
+app.get('/rescue-path', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'rescue-path.html'));
+});
+app.get('/rescue-path.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'rescue-path.html'));
+});
+
 // Redirect old CFO Board Pitch URLs to new Finance Audit page
 app.get('/cfo-board-pitch', (req, res) => res.redirect('/finance-audit'));
 app.get('/cfo-board-pitch.html', (req, res) => res.redirect('/finance-audit'));
@@ -758,17 +779,21 @@ app.get('/data-forms', (req, res) => {
 
 // Serve Free Diagnostic page
 app.get('/free-diagnostic', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'free-diagnostic.html'));
+  res.redirect('/startix-v10-single');
+});
+
+app.get('/startix-v10-single', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'startix-v10-single.html'));
 });
 
 // Serve Select Type page
 app.get('/select-type', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'select-type.html'));
+  res.redirect('/startix-v10-single?new');
 });
 
 // Serve Diagnostic Result page
 app.get('/diagnostic-result', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'diagnostic-result.html'));
+  res.redirect('/startix-v10-single?new');
 });
 
 // Serve Individual Dashboard
@@ -799,6 +824,31 @@ app.get('/tools-guide', (req, res) => {
 // Serve Viewer Hub page
 app.get('/viewer-hub', (req, res) => {
   res.sendFile(path.join(__dirname, 'src', 'viewer-hub.html'));
+});
+
+// Serve RACI Matrix page
+app.get('/raci-matrix', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'raci-matrix.html'));
+});
+
+// Serve Gantt Chart page
+app.get('/gantt-chart', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'gantt-chart.html'));
+});
+
+// Serve BCG Matrix page
+app.get('/bcg-matrix', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'bcg-matrix.html'));
+});
+
+// Serve Ansoff Matrix page
+app.get('/ansoff-matrix', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'ansoff-matrix.html'));
+});
+
+// Serve Executive Dashboard (v7.7 — BSC-Driven)
+app.get('/exec-dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src', 'exec-dashboard.html'));
 });
 
 // 🏥 Health check endpoint (for Railway)

@@ -753,8 +753,8 @@
             <!-- Hero -->
             <div class="hero">
                 <h1>🏢 تحليل البيئة الداخلية</h1>
-                <p id="heroDesc">حلل أداء إداراتك بعمق — اكتشف أين القوة وأين الضعف في كل إدارة. اختر من ٣ إلى ٦ إدارات
-                    وأجب ٤ أسئلة لكل واحدة.
+                <p id="heroDesc">حلل أداء إدارتك بعمق — اختر الإدارة اللي تبي تحللها وأجب على ٤ أسئلة وشوف النتائج
+                    والتوصيات.
                 </p>
             </div>
 
@@ -762,7 +762,7 @@
             <div class="wizard-steps">
                 <div class="wiz-step active" id="wizStep1">
                     <div class="wiz-step-num">١</div>
-                    اختر الإدارات
+                    اختر الإدارة
                 </div>
                 <div class="wiz-arrow">←</div>
                 <div class="wiz-step" id="wizStep2">
@@ -779,8 +779,8 @@
             <div class="wizard-container">
                 <!-- SCREEN 1: Select Departments -->
                 <div class="wizard-screen active" id="screen1">
-                    <div class="dept-counter" id="deptCounter">اختر من ٣ إلى ٦ إدارات — <span
-                            id="selectedCount">٠</span> مختارة</div>
+                    <div class="dept-counter" id="deptCounter">اختر إدارتك — <span id="selectedCount">٠</span> مختارة
+                    </div>
                     <div class="dept-grid" id="deptGrid"></div>
 
                     <!-- Custom Department -->
@@ -797,7 +797,7 @@
 
                     <div style="text-align:center">
                         <button class="btn-q next" id="btnStartQuestions" disabled onclick="startQuestions()">
-                            <span id="btnStartText">اختر ٣ إدارات على الأقل</span> <i class="bi bi-arrow-left"></i>
+                            <span id="btnStartText">اختر إدارتك أولاً</span> <i class="bi bi-arrow-left"></i>
                         </button>
                     </div>
                 </div>
@@ -954,30 +954,30 @@
         }
 
         function toggleDept(id) {
-            const idx = state.selectedDepts.indexOf(id);
-            if (idx >= 0) {
-                state.selectedDepts.splice(idx, 1);
-            } else if (state.selectedDepts.length < 6) {
-                state.selectedDepts.push(id);
+            // ═══ إدارة وحدة فقط — single select ═══
+            if (state.selectedDepts.includes(id)) {
+                state.selectedDepts = []; // إلغاء
+            } else {
+                state.selectedDepts = [id]; // استبدال
             }
             updateDeptUI();
         }
 
         function updateDeptUI() {
             const count = state.selectedDepts.length;
-            const arabicCount = ['٠', '١', '٢', '٣', '٤', '٥', '٦'][count] || count;
+            const arabicCount = ['٠', '١'][count] || count;
             document.getElementById('selectedCount').textContent = arabicCount;
-            const minDepts = window._isDeptManager ? 1 : 3;
-            document.getElementById('btnStartQuestions').disabled = count < minDepts;
+            // إدارة وحدة كافية
+            document.getElementById('btnStartQuestions').disabled = count < 1;
 
             // Update button text dynamically
-            const totalQ = count * 4;
-            const minutes = Math.ceil(totalQ / 4);
             const btnText = document.getElementById('btnStartText');
-            if (count < 3) {
-                btnText.textContent = `اختر ${3 - count === 1 ? 'إدارة واحدة' : (3 - count) + ' إدارات'} أخرى`;
+            if (count === 0) {
+                btnText.textContent = 'اختر إدارتك أولاً';
             } else {
-                btnText.textContent = `ابدأ التحليل — ${totalQ} سؤال (${minutes} دقائق)`;
+                const deptObj = DEPARTMENTS.find(d => d.id === state.selectedDepts[0]);
+                const deptName = deptObj ? deptObj.nameAr : 'إدارتك';
+                btnText.textContent = `ابدأ تحليل ${deptName} — ٤ أسئلة (دقيقة واحدة)`;
             }
 
             DEPARTMENTS.forEach(d => {
@@ -986,8 +986,6 @@
                 el.classList.remove('selected', 'disabled');
                 if (state.selectedDepts.includes(d.id)) {
                     el.classList.add('selected');
-                } else if (count >= 6) {
-                    el.classList.add('disabled');
                 }
             });
         }
@@ -1020,10 +1018,8 @@
 
             input.value = '';
             renderDepartments();
-            // Auto-select the new department
-            if (state.selectedDepts.length < 6) {
-                state.selectedDepts.push(customId);
-            }
+            // Auto-select the new department (single select)
+            state.selectedDepts = [customId];
             updateDeptUI();
         }
 
@@ -1274,7 +1270,126 @@
             });
 
             // ===== SMART RECOMMENDATIONS =====
-            html += `
+            const isMgr = window._isDeptManager;
+            const singleDept = isMgr && sorted.length === 1;
+
+            if (singleDept) {
+                // ═══ مدير إدارة: توصيات مخصصة لإدارة واحدة ═══
+                const dept = sorted[0].dept;
+                const score = sorted[0].score;
+                const deptAnswers = state.answers[dept.id] || [];
+                const weakQuestions = dept.questions.filter((q, i) => deptAnswers[i] === 'no');
+                const partialQuestions = dept.questions.filter((q, i) => deptAnswers[i] === 'partial');
+
+                html += `
+                    <div class="smart-rec">
+                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+                            <div style="width:42px;height:42px;border-radius:12px;background:rgba(139,92,246,0.15);display:flex;align-items:center;justify-content:center;font-size:20px">🤖</div>
+                            <div>
+                                <div style="font-size:16px;font-weight:800;color:var(--text)">التوصية الذكية — ${dept.nameAr}</div>
+                                <div style="font-size:12px;color:var(--text-muted)">بناءً على نتائج تحليل إدارتك</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">
+                `;
+
+                if (weakQuestions.length > 0) {
+                    html += `
+                        <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 16px;background:rgba(239,68,68,0.04);border-radius:10px;border:1px solid rgba(239,68,68,0.12)">
+                            <span style="font-size:18px">⚡</span>
+                            <div>
+                                <div style="font-size:13px;font-weight:700;color:#ef4444">🔴 ${weakQuestions.length} نقطة تحتاج تطوير عاجل</div>
+                                <div style="font-size:12px;color:var(--text-muted);margin-top:4px">
+                                    ${weakQuestions.map(q => '• ' + q.text.replace('هل ', '').replace('؟', '')).join('<br>')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (partialQuestions.length > 0) {
+                    html += `
+                        <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 16px;background:rgba(245,158,11,0.04);border-radius:10px;border:1px solid rgba(245,158,11,0.12)">
+                            <span style="font-size:18px">🟡</span>
+                            <div>
+                                <div style="font-size:13px;font-weight:700;color:#f59e0b">${partialQuestions.length} نقطة تحتاج تحسين</div>
+                                <div style="font-size:12px;color:var(--text-muted);margin-top:4px">
+                                    ${partialQuestions.map(q => '• ' + q.text.replace('هل ', '').replace('؟', '')).join('<br>')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (score >= 80) {
+                    html += `
+                        <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 16px;background:rgba(34,197,94,0.04);border-radius:10px;border:1px solid rgba(34,197,94,0.12)">
+                            <span style="font-size:18px">🏆</span>
+                            <div>
+                                <div style="font-size:13px;font-weight:700;color:#22c55e">إدارتك بمستوى متقدم (${score}%)</div>
+                                <div style="font-size:12px;color:var(--text-muted);margin-top:4px">أداء ممتاز! حافظ على هذا المستوى وركّز على التحسين المستمر.</div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                html += `</div>`;
+
+                // ═══ الخطوات القادمة — مسار المدير فقط ═══
+                html += `
+                    <div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:16px;margin-bottom:16px">
+                        <div style="font-size:14px;font-weight:800;margin-bottom:12px;color:var(--text)">🔗 خطواتك القادمة</div>
+                        <a href="/swot.html" class="smart-link-card" onclick="if(window.stratixMgrComplete) stratixMgrComplete(1)">
+                            <div class="sl-icon" style="background:rgba(34,197,94,0.08)">📊</div>
+                            <div class="sl-content">
+                                <div class="sl-title">انقل النتائج لتحليل SWOT</div>
+                                <div class="sl-desc">${score < 60 ? 'نقاط الضعف اللي اكتشفتها → ستصبح Weaknesses في SWOT' : score >= 80 ? 'نقاط القوة اللي عندك → ستصبح Strengths في SWOT' : 'نقاط القوة والضعف → ستغذي تحليل SWOT مباشرة'}</div>
+                            </div>
+                            <div class="sl-arrow"><i class="bi bi-arrow-left"></i></div>
+                        </a>
+                        <a href="/dept-deep.html?dept=${dept.id}&single=1" class="smart-link-card" style="margin-top:8px;opacity:0.85">
+                            <div class="sl-icon" style="background:rgba(139,92,246,0.08)">🔬</div>
+                            <div class="sl-content">
+                                <div class="sl-title">تحليل أعمق لـ ${dept.nameAr}</div>
+                                <div class="sl-desc">6 محاور تفصيلية — تشخيص متقدم + نقاط قوة/ضعف تلقائية + تحديات + أهداف (اختياري)</div>
+                            </div>
+                            <div class="sl-arrow"><i class="bi bi-arrow-left"></i></div>
+                        </a>
+                    </div>
+                `;
+
+                // ═══ مؤشر الرحلة — مسار المدير ═══
+                html += `
+                    <div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:18px;margin-top:4px">
+                        <div style="font-size:15px;font-weight:900;margin-bottom:14px;color:var(--text)">🗺️ رحلتك — أكملت الخطوة ١ من ٤</div>
+                        <div style="display:flex;align-items:center;gap:0;margin-bottom:18px;justify-content:center;flex-wrap:wrap">
+                            <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900">✓</div>
+                            <div style="width:32px;height:3px;background:linear-gradient(90deg,#22c55e,#4F46E5)"></div>
+                            <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#4F46E5,#667eea);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;animation:pulse 2s infinite;box-shadow:0 0 16px rgba(79,70,229,0.4)">2</div>
+                            <div style="width:32px;height:3px;background:rgba(255,255,255,0.08)"></div>
+                            <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.06);color:var(--text-muted);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">3</div>
+                            <div style="width:32px;height:3px;background:rgba(255,255,255,0.08)"></div>
+                            <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.06);color:var(--text-muted);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">4</div>
+                        </div>
+                        <div style="display:flex;gap:8px;text-align:center;justify-content:center;margin-bottom:16px;flex-wrap:wrap">
+                            <span style="font-size:11px;color:#22c55e;font-weight:700">✅ تحليل ${dept.nameAr}</span>
+                            <span style="font-size:11px;color:#667eea;font-weight:700">👈 SWOT التالي</span>
+                            <span style="font-size:11px;color:var(--text-muted)">التوجهات</span>
+                            <span style="font-size:11px;color:var(--text-muted)">KPIs</span>
+                        </div>
+                    </div>
+
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+                        <a href="/swot.html" class="btn-main" style="background:linear-gradient(135deg,#4F46E5,#667eea);flex:1;text-align:center;font-size:15px;padding:14px 20px" onclick="if(window.stratixMgrComplete) stratixMgrComplete(1)">
+                            📊 الخطوة التالية: تحليل SWOT ←
+                        </a>
+                    </div>
+                </div>
+            `;
+
+            } else {
+                // ═══ CEO / مستشار: العرض الأصلي (عدة إدارات) ═══
+                html += `
                 <div class="smart-rec">
                     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
                         <div style="width:42px;height:42px;border-radius:12px;background:rgba(139,92,246,0.15);display:flex;align-items:center;justify-content:center;font-size:20px">🤖</div>
@@ -1306,12 +1421,35 @@
                         ${buildSmartLinks(sorted, scores)}
                     </div>
 
-                    <div style="display:flex;gap:10px;flex-wrap:wrap">
-                        <a href="/swot.html" class="btn-main" style="background:linear-gradient(135deg,#4F46E5,#667eea)">📊 انتقل لتحليل SWOT</a>
-                        <button class="btn-main" style="background:linear-gradient(135deg,#0D9488,#14B8A6)" onclick="resetWizard()">🔄 حلل إدارات أخرى</button>
+                    <!-- ===== JOURNEY PROGRESS: أنت هنا ===== -->
+                    <div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:18px;margin-top:4px">
+                        <div style="font-size:15px;font-weight:900;margin-bottom:14px;color:var(--text)">🗺️ رحلتك الاستراتيجية — وصلت الخطوة ١ من ٤</div>
+                        <div style="display:flex;align-items:center;gap:0;margin-bottom:18px;justify-content:center;flex-wrap:wrap">
+                            <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900">✓</div>
+                            <div style="width:32px;height:3px;background:linear-gradient(90deg,#22c55e,#4F46E5)"></div>
+                            <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#4F46E5,#667eea);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;animation:pulse 2s infinite;box-shadow:0 0 16px rgba(79,70,229,0.4)">2</div>
+                            <div style="width:32px;height:3px;background:rgba(255,255,255,0.08)"></div>
+                            <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.06);color:var(--text-muted);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">3</div>
+                            <div style="width:32px;height:3px;background:rgba(255,255,255,0.08)"></div>
+                            <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.06);color:var(--text-muted);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">4</div>
+                        </div>
+                        <div style="display:flex;gap:8px;text-align:center;justify-content:center;margin-bottom:16px;flex-wrap:wrap">
+                            <span style="font-size:11px;color:#22c55e;font-weight:700">✅ البيئة الداخلية</span>
+                            <span style="font-size:11px;color:#667eea;font-weight:700">👈 SWOT التالي</span>
+                            <span style="font-size:11px;color:var(--text-muted)">التوجهات</span>
+                            <span style="font-size:11px;color:var(--text-muted)">KPIs</span>
+                        </div>
+                    </div>
+
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+                        <a href="/swot.html" class="btn-main" style="background:linear-gradient(135deg,#4F46E5,#667eea);flex:1;text-align:center;font-size:15px;padding:14px 20px" onclick="if(window.stratixTrackComplete) stratixTrackComplete(1)">
+                            📊 الخطوة التالية: تحليل SWOT ←
+                        </a>
+                        <button class="btn-main" style="background:rgba(255,255,255,0.06);color:var(--text-muted);border:1px solid rgba(255,255,255,0.08);font-size:13px;padding:14px 16px" onclick="resetWizard()">🔄 حلل إدارة ثانية</button>
                     </div>
                 </div>
             `;
+            } // end else (CEO/consultant path)
 
             document.getElementById('resultsArea').innerHTML = html;
 
@@ -1462,7 +1600,7 @@
                             status: 'COMPLETED',
                             progress: 100,
                             score: avgScore,
-                            summary: `تحليل ${state.selectedDepts.length} إدارات — المتوسط: ${avgScore}%`
+                            summary: `تحليل ${DEPARTMENTS.find(d => d.id === state.selectedDepts[0])?.nameAr || 'إدارة'} — النتيجة: ${avgScore}%`
                         })
                     });
                 } else {
@@ -1480,7 +1618,7 @@
                                 status: 'COMPLETED',
                                 progress: 100,
                                 score: avgScore,
-                                summary: `تحليل ${state.selectedDepts.length} إدارات — المتوسط: ${avgScore}%`
+                                summary: `تحليل ${DEPARTMENTS.find(d => d.id === state.selectedDepts[0])?.nameAr || 'إدارة'} — النتيجة: ${avgScore}%`
                             })
                         });
                     } else {
@@ -1494,7 +1632,7 @@
                                 status: 'COMPLETED',
                                 progress: 100,
                                 score: avgScore,
-                                summary: `تحليل ${state.selectedDepts.length} إدارات — المتوسط: ${avgScore}%`
+                                summary: `تحليل ${DEPARTMENTS.find(d => d.id === state.selectedDepts[0])?.nameAr || 'إدارة'} — النتيجة: ${avgScore}%`
                             })
                         });
                     }
@@ -1622,21 +1760,63 @@
 
             // ═══ مدير إدارة: اختيار تلقائي لإدارته فقط ═══
             const user = JSON.parse(localStorage.getItem('user') || '{}');
-            const savedDept = localStorage.getItem('stratix_dept') || user.userCategory || '';
-            const isDeptManager = user.userType === 'DEPT_MANAGER' || savedDept.startsWith('DEPT_');
+            const diagPayload = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || '{}');
+            const diagComplete = JSON.parse(localStorage.getItem('stratix_diagnostic_complete') || '{}');
+
+            // ═══ ١) كشف الإدارة من كل المصادر المتاحة ═══
+            const savedDept = localStorage.getItem('stratix_dept') || '';
+            const diagDept = diagPayload.department || diagComplete.department || '';
+            const userCat = user.userCategory || '';
+            const diagRole = diagPayload.role || '';
+
+            // ═══ ٢) هل المستخدم مدير إدارة؟ ═══
+            const isDeptManager = user.userType === 'DEPT_MANAGER'
+                || userCat === 'DEPT_MANAGER'
+                || savedDept.startsWith('DEPT_')
+                || diagRole === 'manager';
             window._isDeptManager = isDeptManager;
 
             if (isDeptManager) {
-                // ربط DEPT_FINANCE → finance
+                // ربط DEPT_FINANCE → finance (من userCategory أو stratix_dept)
                 const DEPT_MAP = {
                     'DEPT_HR': 'hr', 'DEPT_FINANCE': 'finance', 'DEPT_MARKETING': 'marketing',
                     'DEPT_OPS': 'operations', 'DEPT_SERVICE': 'cs', 'DEPT_SALES': 'sales',
                     'DEPT_IT': 'it', 'DEPT_LEGAL': 'quality', 'DEPT_RND': 'projects',
                     'DEPT_PROCUREMENT': 'operations', 'DEPT_QUALITY': 'quality', 'DEPT_PMO': 'projects'
                 };
-                const mappedDept = DEPT_MAP[savedDept] || null;
+
+                // ربط أسماء الإدارات من V10 → department IDs
+                const V10_DEPT_MAP = {
+                    'finance': 'finance', 'hr': 'hr', 'marketing': 'marketing',
+                    'sales': 'sales', 'it': 'it', 'operations': 'operations',
+                    'cs': 'cs', 'quality': 'quality', 'projects': 'projects',
+                    'legal': 'quality', 'procurement': 'operations', 'rnd': 'projects',
+                    'المالية': 'finance', 'الموارد البشرية': 'hr', 'التسويق': 'marketing',
+                    'المبيعات': 'sales', 'تقنية المعلومات': 'it', 'العمليات': 'operations',
+                    'خدمة العملاء': 'cs', 'الجودة': 'quality', 'المشاريع': 'projects'
+                };
+
+                // ═══ ٣) محاولة الكشف بالترتيب: stratix_dept → diagnostic → userCategory ═══
+                let mappedDept = null;
+                if (savedDept && DEPT_MAP[savedDept]) {
+                    mappedDept = DEPT_MAP[savedDept];
+                } else if (diagDept && V10_DEPT_MAP[diagDept.toLowerCase()]) {
+                    mappedDept = V10_DEPT_MAP[diagDept.toLowerCase()];
+                    // حفظ للمرة القادمة
+                    const reverseMap = {
+                        'finance': 'DEPT_FINANCE', 'hr': 'DEPT_HR', 'marketing': 'DEPT_MARKETING',
+                        'sales': 'DEPT_SALES', 'it': 'DEPT_IT', 'operations': 'DEPT_OPS',
+                        'cs': 'DEPT_SERVICE', 'quality': 'DEPT_QUALITY', 'projects': 'DEPT_PMO'
+                    };
+                    if (reverseMap[mappedDept]) localStorage.setItem('stratix_dept', reverseMap[mappedDept]);
+                } else if (userCat && DEPT_MAP[userCat]) {
+                    mappedDept = DEPT_MAP[userCat];
+                }
+
                 const deptObj = mappedDept ? DEPARTMENTS.find(d => d.id === mappedDept) : null;
                 const deptName = deptObj ? deptObj.nameAr : 'إدارتك';
+
+                console.log('[Internal-Env] 🎯 Manager dept detection:', { savedDept, diagDept, userCat, mappedDept, deptName });
 
                 // تحديث العنوان والوصف ليناسب مدير إدارة واحدة
                 document.querySelector('.hero h1').textContent = `🏢 تحليل ${deptName}`;
@@ -1709,6 +1889,7 @@
 
         init();
     </script>
+    <script src="/assets/js/path-tracker.js"></script>
 </body>
 
 </html>

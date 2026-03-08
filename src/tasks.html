@@ -699,6 +699,11 @@
                 </div>
             </div>
 
+            <!-- Coverage Bar -->
+            <div id="coverageBar"
+                style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:16px;">
+            </div>
+
             <!-- Filter -->
             <div class="toolbar">
                 <div class="ftab active" onclick="filterTasks('all',this)">الكل</div>
@@ -727,16 +732,22 @@
                     <div class="form-group"><label>عنوان المهمة</label><input type="text" class="form-input"
                             id="formTitle" placeholder="مثال: تصميم صفحة تسجيل الدخول"></div>
                     <div class="form-row">
-                        <div class="form-group"><label>المشروع</label>
-                            <select class="form-input" id="formProject">
-                                <option value="تطوير واجهة التطبيق">تطوير واجهة التطبيق (UI/UX)</option>
-                                <option value="بناء Backend APIs">بناء الـ Backend APIs</option>
-                                <option value="أتمتة عمليات الشراء">أتمتة عمليات الشراء</option>
-                                <option value="نظام إدارة الوثائق">نظام إدارة الوثائق الرقمي</option>
+                        <div class="form-group"><label>🎯 ربط بـ OKR</label>
+                            <select class="form-input" id="formOKR">
+                                <option value="">— بدون ربط —</option>
                             </select>
                         </div>
+                        <div class="form-group"><label>🚀 المبادرة</label>
+                            <select class="form-input" id="formInitiative">
+                                <option value="">— بدون مبادرة —</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
                         <div class="form-group"><label>المكلف</label><input type="text" class="form-input"
                                 id="formAssignee" placeholder="اسم الموظف"></div>
+                        <div class="form-group"><label>تاريخ التسليم</label><input type="date" class="form-input"
+                                id="formDue"></div>
                     </div>
                     <div class="form-row">
                         <div class="form-group"><label>الأولوية</label>
@@ -754,8 +765,6 @@
                             </select>
                         </div>
                     </div>
-                    <div class="form-group"><label>تاريخ التسليم</label><input type="date" class="form-input"
-                            id="formDue"></div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn-modal-cancel" data-bs-dismiss="modal">إلغاء</button>
@@ -777,32 +786,86 @@
         }
     </script>
     <script>
+        /* ═══════════════════════════════════════
+           Phase 11A — Tasks Bridge
+           Live data from localStorage + OKRs
+        ═══════════════════════════════════════ */
         let currentFilter = 'all';
         let searchQuery = '';
         const avColors = ['#667eea', '#22c55e', '#38bdf8', '#facc15', '#ef4444', '#a78bfa', '#f97316', '#06b6d4', '#ec4899', '#14b8a6'];
 
-        let tasks = [
-            { id: '1', title: 'تصميم صفحة تسجيل الدخول', project: 'تطوير واجهة التطبيق', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', assignee: 'أحمد المطيري', priority: 'HIGH', status: 'done', due: '2026-02-10' },
-            { id: '2', title: 'تصميم لوحة التحكم الرئيسية', project: 'تطوير واجهة التطبيق', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', assignee: 'أحمد المطيري', priority: 'HIGH', status: 'done', due: '2026-02-15' },
-            { id: '3', title: 'تصميم صفحة الإشعارات', project: 'تطوير واجهة التطبيق', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', assignee: 'سارة', priority: 'MEDIUM', status: 'done', due: '2026-02-18' },
-            { id: '4', title: 'تصميم صفحة المدفوعات', project: 'تطوير واجهة التطبيق', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', assignee: 'منى', priority: 'HIGH', status: 'in_progress', due: '2026-02-25' },
-            { id: '5', title: 'اختبار الاستجابة على الجوال', project: 'تطوير واجهة التطبيق', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', assignee: 'نور', priority: 'MEDIUM', status: 'todo', due: '2026-03-05' },
-            { id: '6', title: 'بناء API المصادقة (JWT)', project: 'بناء Backend APIs', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', assignee: 'خالد العتيبي', priority: 'HIGH', status: 'done', due: '2026-02-05' },
-            { id: '7', title: 'بناء API المدفوعات الإلكترونية', project: 'بناء Backend APIs', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', assignee: 'خالد العتيبي', priority: 'HIGH', status: 'in_progress', due: '2026-02-28' },
-            { id: '8', title: 'ربط بوابة الدفع mada/VISA', project: 'بناء Backend APIs', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', assignee: 'فهد', priority: 'HIGH', status: 'in_progress', due: '2026-03-10' },
-            { id: '9', title: 'إعداد Push Notifications', project: 'بناء Backend APIs', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', assignee: 'عمر', priority: 'MEDIUM', status: 'todo', due: '2026-03-15' },
-            { id: '10', title: 'كتابة Unit Tests', project: 'بناء Backend APIs', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', assignee: 'خالد العتيبي', priority: 'LOW', status: 'todo', due: '2026-03-20' },
-            { id: '11', title: 'ربط نظام الشراء بالموردين', project: 'أتمتة عمليات الشراء', initiative: 'التحول الرقمي الداخلي', objective: 'أتمتة العمليات', assignee: 'نورة الشهري', priority: 'HIGH', status: 'done', due: '2026-01-31' },
-            { id: '12', title: 'بناء workflow الموافقات الإلكترونية', project: 'أتمتة عمليات الشراء', initiative: 'التحول الرقمي الداخلي', objective: 'أتمتة العمليات', assignee: 'رامي', priority: 'HIGH', status: 'done', due: '2026-02-10' },
-            { id: '13', title: 'اختبار تكامل النظام مع SAP', project: 'أتمتة عمليات الشراء', initiative: 'التحول الرقمي الداخلي', objective: 'أتمتة العمليات', assignee: 'نورة الشهري', priority: 'MEDIUM', status: 'in_progress', due: '2026-02-20' },
-            { id: '14', title: 'تدريب فريق المشتريات', project: 'أتمتة عمليات الشراء', initiative: 'التحول الرقمي الداخلي', objective: 'أتمتة العمليات', assignee: 'محمد', priority: 'LOW', status: 'in_progress', due: '2026-03-01' },
-            { id: '15', title: 'رقمنة أرشيف العقود', project: 'نظام إدارة الوثائق', initiative: 'التحول الرقمي الداخلي', objective: 'أتمتة العمليات', assignee: 'سارة القحطاني', priority: 'MEDIUM', status: 'in_progress', due: '2026-02-22' },
-            { id: '16', title: 'بناء محرك البحث الذكي للوثائق', project: 'نظام إدارة الوثائق', initiative: 'التحول الرقمي الداخلي', objective: 'أتمتة العمليات', assignee: 'ليلى', priority: 'HIGH', status: 'in_progress', due: '2026-03-15' },
-            { id: '17', title: 'تصميم نظام الصلاحيات للوثائق', project: 'نظام إدارة الوثائق', initiative: 'التحول الرقمي الداخلي', objective: 'أتمتة العمليات', assignee: 'سارة القحطاني', priority: 'MEDIUM', status: 'todo', due: '2026-03-20' },
-            { id: '18', title: 'رفع الوثائق المالية (2024-2025)', project: 'نظام إدارة الوثائق', initiative: 'التحول الرقمي الداخلي', objective: 'أتمتة العمليات', assignee: 'منصور', priority: 'LOW', status: 'done', due: '2026-02-15' },
-            { id: '19', title: 'مراجعة تقرير التدقيق الداخلي', project: 'أتمتة عمليات الشراء', initiative: 'التحول الرقمي الداخلي', objective: 'أتمتة العمليات', assignee: 'نورة الشهري', priority: 'HIGH', status: 'done', due: '2026-01-20' },
-            { id: '20', title: 'إعداد خطة الاختبار الشامل', project: 'تطوير واجهة التطبيق', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', assignee: 'نور', priority: 'MEDIUM', status: 'todo', due: '2026-03-10' },
-        ];
+        // ── Load from localStorage or seed defaults ──
+        function loadTasks() {
+            const saved = localStorage.getItem('stratix_tasks');
+            if (saved) return JSON.parse(saved);
+            // Seed with sample tasks (first run only)
+            return [
+                { id: '1', title: 'تصميم صفحة تسجيل الدخول', project: 'تطوير واجهة التطبيق', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', okrId: '', assignee: 'أحمد المطيري', priority: 'HIGH', status: 'done', due: '2026-02-10' },
+                { id: '2', title: 'تصميم لوحة التحكم الرئيسية', project: 'تطوير واجهة التطبيق', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', okrId: '', assignee: 'أحمد المطيري', priority: 'HIGH', status: 'done', due: '2026-02-15' },
+                { id: '3', title: 'بناء API المصادقة (JWT)', project: 'بناء Backend APIs', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', okrId: '', assignee: 'خالد العتيبي', priority: 'HIGH', status: 'done', due: '2026-02-05' },
+                { id: '4', title: 'ربط بوابة الدفع mada/VISA', project: 'بناء Backend APIs', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', okrId: '', assignee: 'فهد', priority: 'HIGH', status: 'in_progress', due: '2026-03-10' },
+                { id: '5', title: 'اختبار الاستجابة على الجوال', project: 'تطوير واجهة التطبيق', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', okrId: '', assignee: 'نور', priority: 'MEDIUM', status: 'todo', due: '2026-03-15' },
+            ];
+        }
+
+        let tasks = loadTasks();
+
+        function saveTasks() {
+            localStorage.setItem('stratix_tasks', JSON.stringify(tasks));
+        }
+
+        // ── Read OKRs from localStorage ──
+        function getOKRs() {
+            return JSON.parse(localStorage.getItem('stratix_okrs') || '[]');
+        }
+
+        // ── Read Initiatives (from localStorage or default list) ──
+        function getInitiatives() {
+            const saved = localStorage.getItem('stratix_initiatives');
+            if (saved) return JSON.parse(saved);
+            return [
+                { id: 'init_1', name: 'إطلاق التطبيق الرقمي للعملاء', objective: 'رفع رضا العملاء', status: 'IN_PROGRESS' },
+                { id: 'init_2', name: 'برنامج التحول الرقمي الداخلي', objective: 'أتمتة العمليات', status: 'IN_PROGRESS' },
+                { id: 'init_3', name: 'توسيع الفريق التقني', objective: 'تطوير الكوادر', status: 'IN_PROGRESS' },
+                { id: 'init_4', name: 'الحصول على شهادة ISO 9001', objective: 'تطبيق ISO 9001', status: 'REVIEW' },
+                { id: 'init_5', name: 'تطوير منصة التقارير الذكية', objective: 'أتمتة العمليات', status: 'PLANNED' },
+            ];
+        }
+
+        // ── TASK TEMPLATE MAP: auto-generate tasks per initiative ──
+        const TASK_TEMPLATES = {
+            'إطلاق التطبيق': [
+                { title: 'تحليل متطلبات المستخدم', priority: 'HIGH', daysOut: 14 },
+                { title: 'تصميم واجهة المستخدم (UI/UX)', priority: 'HIGH', daysOut: 30 },
+                { title: 'تطوير الـ Backend APIs', priority: 'HIGH', daysOut: 45 },
+                { title: 'اختبار الأداء والأمان', priority: 'MEDIUM', daysOut: 55 },
+                { title: 'إطلاق النسخة التجريبية', priority: 'MEDIUM', daysOut: 60 },
+            ],
+            'التحول الرقمي': [
+                { title: 'مسح العمليات اليدوية', priority: 'HIGH', daysOut: 10 },
+                { title: 'اختيار نظام ERP/CRM', priority: 'HIGH', daysOut: 20 },
+                { title: 'تدريب الفريق على النظام الجديد', priority: 'MEDIUM', daysOut: 40 },
+                { title: 'ترحيل البيانات', priority: 'HIGH', daysOut: 50 },
+            ],
+            'الفريق': [
+                { title: 'تحديد الاحتياجات الوظيفية', priority: 'HIGH', daysOut: 7 },
+                { title: 'نشر إعلانات التوظيف', priority: 'MEDIUM', daysOut: 14 },
+                { title: 'إجراء المقابلات', priority: 'HIGH', daysOut: 30 },
+                { title: 'برنامج Onboarding', priority: 'MEDIUM', daysOut: 45 },
+            ],
+            'ISO': [
+                { title: 'تحليل الفجوات مع المعايير', priority: 'HIGH', daysOut: 14 },
+                { title: 'توثيق الإجراءات والعمليات', priority: 'HIGH', daysOut: 30 },
+                { title: 'تدقيق داخلي تجريبي', priority: 'MEDIUM', daysOut: 45 },
+                { title: 'التدقيق النهائي والحصول على الشهادة', priority: 'HIGH', daysOut: 60 },
+            ],
+            'default': [
+                { title: 'وضع خطة العمل التفصيلية', priority: 'HIGH', daysOut: 7 },
+                { title: 'تحديد الموارد والميزانية', priority: 'MEDIUM', daysOut: 14 },
+                { title: 'التنفيذ والمتابعة', priority: 'HIGH', daysOut: 30 },
+                { title: 'التقييم والتقرير النهائي', priority: 'MEDIUM', daysOut: 45 },
+            ],
+        };
 
         const statusLabels = { todo: 'لم تبدأ', in_progress: 'جارية', done: 'مكتملة' };
         const priorityLabels = { HIGH: 'عالية', MEDIUM: 'متوسطة', LOW: 'منخفضة' };
@@ -814,7 +877,7 @@
         function getFiltered() {
             let data = tasks;
             if (currentFilter !== 'all') data = data.filter(t => t.status === currentFilter);
-            if (searchQuery) data = data.filter(t => t.title.includes(searchQuery) || t.project.includes(searchQuery) || t.assignee.includes(searchQuery));
+            if (searchQuery) data = data.filter(t => t.title.includes(searchQuery) || t.project?.includes(searchQuery) || t.assignee?.includes(searchQuery) || t.initiative?.includes(searchQuery));
             return data;
         }
 
@@ -838,27 +901,119 @@
             const t = tasks.find(x => x.id === id);
             if (t) {
                 t.status = t.status === 'done' ? 'todo' : 'done';
+                saveTasks();
                 renderAll();
                 showToast(t.status === 'done' ? 'تم إكمال المهمة ✓' : 'تم إعادة فتح المهمة');
             }
         }
 
-        function renderList() {
-            const data = getFiltered();
-            // Group by project
-            const groups = {};
-            data.forEach(t => {
-                if (!groups[t.project]) groups[t.project] = [];
-                groups[t.project].push(t);
+        // ── Coverage bar ──
+        function renderCoverage() {
+            const el = document.getElementById('coverageBar');
+            if (!el) return;
+            const initiatives = getInitiatives();
+            const initNames = initiatives.map(i => i.name);
+            const coveredNames = new Set(tasks.map(t => t.initiative).filter(Boolean));
+            const covered = initNames.filter(n => coveredNames.has(n)).length;
+            const total = initNames.length;
+            const pct = total > 0 ? Math.round((covered / total) * 100) : 0;
+            const uncovered = total - covered;
+
+            el.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:12px;font-weight:700;color:var(--text);">🔗 تغطية المبادرات بالمهام</span>
+                <span style="font-size:13px;font-weight:800;color:${pct >= 80 ? 'var(--success)' : pct >= 50 ? 'var(--warning)' : 'var(--danger)'};">${pct}%</span>
+            </div>
+            <div style="height:6px;border-radius:3px;background:rgba(255,255,255,.06);margin-top:6px;overflow:hidden;">
+                <div style="height:100%;width:${pct}%;border-radius:3px;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width .5s;"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+                <span style="font-size:10px;color:var(--text-muted);">${covered} من ${total} مبادرة مغطاة ${pct >= 100 ? '✅' : ''}</span>
+                ${uncovered > 0 ? `<button onclick="autoGenerateTasks()" style="font-size:10px;font-weight:700;padding:5px 12px;border-radius:6px;border:1px solid rgba(102,126,234,.3);background:rgba(102,126,234,.06);color:#818cf8;cursor:pointer;font-family:'Tajawal',sans-serif;">
+                    ⚡ ولّد مهام للـ ${uncovered} المتبقية
+                </button>` : ''}
+            </div>`;
+        }
+
+        // ── Auto-generate tasks from initiatives ──
+        function autoGenerateTasks() {
+            const initiatives = getInitiatives();
+            const coveredNames = new Set(tasks.map(t => t.initiative).filter(Boolean));
+            let count = 0;
+            const today = new Date();
+
+            initiatives.forEach(init => {
+                if (coveredNames.has(init.name)) return;
+
+                // Find best template
+                let tmplKey = 'default';
+                for (const key of Object.keys(TASK_TEMPLATES)) {
+                    if (key !== 'default' && init.name.includes(key)) { tmplKey = key; break; }
+                }
+                const templates = TASK_TEMPLATES[tmplKey];
+
+                templates.forEach(tmpl => {
+                    const dueDate = new Date(today);
+                    dueDate.setDate(dueDate.getDate() + tmpl.daysOut);
+                    tasks.push({
+                        id: 'gen_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                        title: tmpl.title,
+                        project: init.name,
+                        initiative: init.name,
+                        objective: init.objective || '',
+                        okrId: '',
+                        assignee: '',
+                        priority: tmpl.priority,
+                        status: 'todo',
+                        due: dueDate.toISOString().split('T')[0],
+                        source: 'auto',
+                    });
+                    count++;
+                });
             });
 
+            if (count === 0) { showToast('جميع المبادرات مغطاة ✅'); return; }
+            saveTasks();
+            renderAll();
+            showToast(`✅ تم إنشاء ${count} مهمة لـ ${initiatives.length} مبادرة`);
+        }
+
+        function renderList() {
+            const data = getFiltered();
+            // Group by initiative (or project)
+            const groups = {};
+            data.forEach(t => {
+                const group = t.initiative || t.project || 'بدون مبادرة';
+                if (!groups[group]) groups[group] = [];
+                groups[group].push(t);
+            });
+
+            const okrs = getOKRs();
+
             let html = '';
-            for (const [project, items] of Object.entries(groups)) {
-                html += `<div class="group-header"><i class="bi bi-folder2-open"></i> ${project} <span style="font-size:11px;font-weight:400">(${items.length} مهمة)</span></div>`;
+            for (const [group, items] of Object.entries(groups)) {
+                const doneCount = items.filter(t => t.status === 'done').length;
+                const groupPct = Math.round((doneCount / items.length) * 100);
+                html += `<div class="group-header">
+                    <i class="bi bi-rocket-takeoff"></i> ${group}
+                    <span style="font-size:11px;font-weight:400">(${items.length} مهمة — ${groupPct}% مكتمل)</span>
+                    <div style="flex:1;max-width:100px;height:4px;border-radius:2px;background:rgba(255,255,255,.06);margin-right:8px;">
+                        <div style="height:100%;width:${groupPct}%;border-radius:2px;background:${groupPct >= 70 ? 'var(--success)' : groupPct >= 40 ? 'var(--warning)' : 'var(--danger)'};"></div>
+                    </div>
+                </div>`;
                 items.forEach(t => {
                     const overdue = isOverdue(t.due, t.status);
-                    const avChar = t.assignee.charAt(0);
-                    const avColor = avColors[t.assignee.charCodeAt(0) % avColors.length];
+                    const avChar = (t.assignee || '?').charAt(0);
+                    const avColor = avColors[(t.assignee || '').charCodeAt(0) % avColors.length];
+
+                    // Source badge
+                    const okr = t.okrId ? okrs.find(o => o.id === t.okrId) : null;
+                    const okrBadge = okr ? `<span class="task-chain-tag" style="color:var(--primary)"><i class="bi bi-bullseye"></i> ${okr.objective ? okr.objective.substring(0, 30) : t.objective}</span>` :
+                        (t.objective ? `<span class="task-chain-tag" style="color:var(--primary)"><i class="bi bi-bullseye"></i> ${t.objective}</span>` : '');
+                    const initBadge = t.initiative ? `<span class="task-chain-tag" style="color:var(--warning)"><i class="bi bi-rocket-takeoff"></i> ${t.initiative.substring(0, 30)}</span>` : '';
+                    const sourceBadge = t.source === 'auto' ? `<span style="font-size:9px;padding:1px 6px;border-radius:4px;background:rgba(102,126,234,.1);color:var(--primary);font-weight:600;">⚡ تلقائي</span>` :
+                        (t.source === 'meeting' ? `<span style="font-size:9px;padding:1px 6px;border-radius:4px;background:rgba(250,204,21,.1);color:var(--warning);font-weight:600;">📋 اجتماع</span>` : '');
+
                     html += `
           <div class="task-item ${t.status === 'done' ? 'done' : ''}">
             <div class="task-check ${t.status === 'done' ? 'checked' : ''}" onclick="toggleTask('${t.id}')">
@@ -867,19 +1022,20 @@
             <div class="task-info">
               <div class="task-title">${t.title}</div>
               <div class="task-chain">
-                <span class="task-chain-tag" style="color:var(--primary)"><i class="bi bi-bullseye"></i> ${t.objective}</span>
-                <span class="task-chain-tag" style="color:var(--warning)"><i class="bi bi-rocket-takeoff"></i> ${t.initiative}</span>
+                ${okrBadge}
+                ${initBadge}
+                ${sourceBadge}
               </div>
             </div>
             <div class="task-assignee">
               <div class="task-av" style="background:${avColor}">${avChar}</div>
-              <span class="task-assignee-name">${t.assignee}</span>
+              <span class="task-assignee-name">${t.assignee || 'غير مكلف'}</span>
             </div>
             <div class="task-priority">
               <span class="task-priority-badge priority-${t.priority}">${priorityLabels[t.priority]}</span>
             </div>
             <div class="task-due ${overdue ? 'overdue' : ''}">
-              <i class="bi ${overdue ? 'bi-exclamation-triangle' : 'bi-calendar3'}"></i> ${t.due}
+              <i class="bi ${overdue ? 'bi-exclamation-triangle' : 'bi-calendar3'}"></i> ${t.due || '—'}
             </div>
             <div class="task-actions">
               <button class="task-btn edit" onclick="openEditModal('${t.id}')"><i class="bi bi-pencil"></i></button>
@@ -888,10 +1044,31 @@
           </div>`;
                 });
             }
+            if (!html) html = '<div style="text-align:center;padding:40px;color:var(--text-muted);font-size:14px;"><i class="bi bi-inbox" style="font-size:32px;display:block;margin-bottom:10px;"></i>لا توجد مهام</div>';
             document.getElementById('taskList').innerHTML = html;
         }
 
-        function renderAll() { renderStats(); renderList(); }
+        function renderAll() { renderStats(); renderCoverage(); renderList(); }
+
+        // ── Modal: populate OKR + Initiative dropdowns ──
+        function populateDropdowns() {
+            const okrs = getOKRs();
+            const initiatives = getInitiatives();
+
+            // OKR select
+            const okrSelect = document.getElementById('formOKR');
+            if (okrSelect) {
+                okrSelect.innerHTML = '<option value="">— بدون ربط —</option>' +
+                    okrs.map(o => `<option value="${o.id}">${o.objective || o.title}</option>`).join('');
+            }
+
+            // Initiative select
+            const initSelect = document.getElementById('formInitiative');
+            if (initSelect) {
+                initSelect.innerHTML = '<option value="">— بدون مبادرة —</option>' +
+                    initiatives.map(i => `<option value="${i.name}">${i.name}</option>`).join('');
+            }
+        }
 
         function openCreateModal() {
             document.getElementById('modalTitle').innerHTML = '<i class="bi bi-plus-circle"></i> مهمة جديدة';
@@ -899,6 +1076,9 @@
             ['formTitle', 'formAssignee', 'formDue'].forEach(id => document.getElementById(id).value = '');
             document.getElementById('formPriority').value = 'MEDIUM';
             document.getElementById('formStatus').value = 'todo';
+            if (document.getElementById('formOKR')) document.getElementById('formOKR').value = '';
+            if (document.getElementById('formInitiative')) document.getElementById('formInitiative').value = '';
+            populateDropdowns();
             new bootstrap.Modal(document.getElementById('taskModal')).show();
         }
 
@@ -908,24 +1088,29 @@
             document.getElementById('modalTitle').innerHTML = '<i class="bi bi-pencil-square"></i> تعديل المهمة';
             document.getElementById('editId').value = t.id;
             document.getElementById('formTitle').value = t.title;
-            document.getElementById('formProject').value = t.project;
-            document.getElementById('formAssignee').value = t.assignee;
+            document.getElementById('formAssignee').value = t.assignee || '';
             document.getElementById('formPriority').value = t.priority;
             document.getElementById('formStatus').value = t.status;
-            document.getElementById('formDue').value = t.due;
+            document.getElementById('formDue').value = t.due || '';
+            populateDropdowns();
+            if (document.getElementById('formOKR')) document.getElementById('formOKR').value = t.okrId || '';
+            if (document.getElementById('formInitiative')) document.getElementById('formInitiative').value = t.initiative || '';
             new bootstrap.Modal(document.getElementById('taskModal')).show();
         }
 
         function saveTask() {
             const id = document.getElementById('editId').value;
-            const project = document.getElementById('formProject').value;
-            // Find initiative/objective from existing tasks with same project
-            const ref = tasks.find(t => t.project === project);
+            const okrId = document.getElementById('formOKR')?.value || '';
+            const initiative = document.getElementById('formInitiative')?.value || '';
+            const okrs = getOKRs();
+            const okr = okrId ? okrs.find(o => o.id === okrId) : null;
+
             const data = {
                 title: document.getElementById('formTitle').value.trim(),
-                project,
-                initiative: ref ? ref.initiative : '',
-                objective: ref ? ref.objective : '',
+                project: initiative || 'بدون مبادرة',
+                initiative: initiative,
+                objective: okr ? (okr.objective || okr.title) : '',
+                okrId: okrId,
                 assignee: document.getElementById('formAssignee').value.trim(),
                 priority: document.getElementById('formPriority').value,
                 status: document.getElementById('formStatus').value,
@@ -940,6 +1125,7 @@
                 tasks.unshift({ id: Date.now().toString(), ...data });
                 showToast('تم إنشاء المهمة ✓');
             }
+            saveTasks();
             bootstrap.Modal.getInstance(document.getElementById('taskModal')).hide();
             renderAll();
         }
@@ -947,6 +1133,7 @@
         function deleteTask(id) {
             if (!confirm('حذف المهمة؟')) return;
             tasks = tasks.filter(x => x.id !== id);
+            saveTasks();
             renderAll(); showToast('تم الحذف ✓');
         }
 

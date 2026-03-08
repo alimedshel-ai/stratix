@@ -976,6 +976,14 @@
                 const avg = calcAvg(o.krs);
                 const pct = Math.round(avg * 100);
                 const ic = iconColors[o.icon] || iconColors['lightbulb'];
+                // ── Bidirectional link badge ──
+                const srcBadge = o.sourceDept ? `
+                    <div style="display:flex;align-items:center;gap:5px;margin-top:4px;">
+                        <span style="font-size:9px;padding:2px 8px;border-radius:6px;background:${o.sourceDeptColor || '#667eea'}15;color:${o.sourceDeptColor || '#667eea'};font-weight:700;border:1px solid ${o.sourceDeptColor || '#667eea'}25;">
+                            ${o.sourceDeptIcon || '🏢'} من إدارة ${o.sourceDeptLabel || o.sourceDept}
+                        </span>
+                        ${o.sourceGoal ? `<span style="font-size:9px;color:var(--text-muted);font-weight:600;">← ${o.sourceGoal}</span>` : ''}
+                    </div>` : '';
                 return `
         <div class="okr-card">
           <div class="okr-bar" style="background:${ic.bar}"></div>
@@ -985,6 +993,7 @@
               <div class="okr-obj-label"><i class="bi bi-flag-fill"></i> Objective</div>
               <div class="okr-obj-name">${o.objective}</div>
               <div class="okr-owner"><i class="bi bi-person"></i> ${o.owner}</div>
+              ${srcBadge}
             </div>
             <div class="okr-score">
               <div class="okr-score-value" style="color:${getScoreColor(avg)}">${avg.toFixed(2)}</div>
@@ -1081,7 +1090,7 @@
 
         // ===== PHASE 8: BRIDGE FROM DEPT-DEEP + IDENTITY =====
         (function checkOKRBridge() {
-            const dept  = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
+            const dept = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
             const ident = JSON.parse(localStorage.getItem('stratix_identity_payload') || 'null');
             if (!dept && !ident) return;
 
@@ -1096,12 +1105,12 @@
                 align-items: center; justify-content: space-between;
                 flex-wrap: wrap; gap: 12px;
             `;
-            const visionText = ident?.vision ? `"${ident.vision.slice(0,60)}${ident.vision.length>60?'…':''}"` : '';
+            const visionText = ident?.vision ? `"${ident.vision.slice(0, 60)}${ident.vision.length > 60 ? '…' : ''}"` : '';
             banner.innerHTML = `
                 <div>
                     <div style="font-size:15px;font-weight:700;color:#a78bfa">⚡ بيانات التشخيص جاهزة للتحويل إلى OKRs</div>
                     <div style="font-size:13px;color:#94a3b8;margin-top:4px">
-                        ${dept ? 'أهداف ' + (dept.completedDepts||[]).length + ' إدارة من dept-deep' : ''}
+                        ${dept ? 'أهداف ' + (dept.completedDepts || []).length + ' إدارة من dept-deep' : ''}
                         ${dept && ident ? ' + ' : ''}
                         ${ident ? 'رؤية: ' + visionText : ''}
                     </div>
@@ -1157,8 +1166,19 @@
             }
         };
 
-        window.generateOKRsFromBridge = function() {
-            const dept  = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
+        // ── Dept labels for bidirectional badges ──
+        const DEPT_LABELS = {
+            compliance: { label: 'الامتثال', icon: '🛡️', color: '#f59e0b' },
+            finance: { label: 'المالية', icon: '💰', color: '#22c55e' },
+            sales: { label: 'المبيعات', icon: '📈', color: '#3b82f6' },
+            hr: { label: 'الموارد البشرية', icon: '👥', color: '#8b5cf6' },
+            marketing: { label: 'التسويق', icon: '📢', color: '#ec4899' },
+            operations: { label: 'العمليات', icon: '⚙️', color: '#f97316' },
+            support: { label: 'الخدمات المساندة', icon: '🔧', color: '#64748b' },
+        };
+
+        window.generateOKRsFromBridge = function () {
+            const dept = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
             const ident = JSON.parse(localStorage.getItem('stratix_identity_payload') || 'null');
             const generatedOKRs = [];
             let krIdBase = Date.now();
@@ -1169,19 +1189,21 @@
                 generatedOKRs.push({
                     id: 'gen_vision_' + Date.now(), icon: 'lightbulb', owner: 'الرئيس التنفيذي',
                     objective: ident.vision.slice(0, 120),
+                    source: 'identity',
                     krs: [
-                        { id: 'gkr_' + krIdBase++, name: 'تطبيق خطة الرؤية مع KPIs قابلة للقياس', start:0, target:100, current:0, score:0 },
-                        { id: 'gkr_' + krIdBase++, name: `تعزيز الميزة التنافسية: ${advLabel}`, start:0, target:100, current:0, score:0 },
+                        { id: 'gkr_' + krIdBase++, name: 'تطبيق خطة الرؤية مع KPIs قابلة للقياس', start: 0, target: 100, current: 0, score: 0 },
+                        { id: 'gkr_' + krIdBase++, name: `تعزيز الميزة التنافسية: ${advLabel}`, start: 0, target: 100, current: 0, score: 0 },
                     ]
                 });
             }
 
-            // Dept goals → OKRs
+            // Dept goals → OKRs with bidirectional metadata
             const completedDepts = dept?.completedDepts || [];
             completedDepts.forEach(deptKey => {
                 const cfg = DEPT_OKR_MAP[deptKey];
                 if (!cfg) return;
                 const deptData = dept[deptKey] || {};
+                const deptInfo = DEPT_LABELS[deptKey] || {};
                 const selectedGoals = Array.isArray(deptData.goals) ? deptData.goals : [];
                 const krs = (selectedGoals.length ? selectedGoals : cfg.krs).slice(0, 4).map(g => ({
                     id: 'gkr_' + krIdBase++,
@@ -1192,7 +1214,14 @@
                     objective: deptData.priority === 'عاجل جداً'
                         ? `🔴 [عاجل] ${cfg.objTemplate}`
                         : cfg.objTemplate,
-                    krs
+                    krs,
+                    // ── Bidirectional metadata ──
+                    source: 'dept-deep',
+                    sourceDept: deptKey,
+                    sourceDeptLabel: deptInfo.label || deptKey,
+                    sourceDeptIcon: deptInfo.icon || '🏢',
+                    sourceDeptColor: deptInfo.color || '#667eea',
+                    sourceGoal: selectedGoals.length > 0 ? selectedGoals[0] : cfg.objTemplate,
                 });
             });
 
@@ -1200,6 +1229,8 @@
 
             if (confirm(`سيتم إضافة ${generatedOKRs.length} هدف OKR مولّد تلقائياً. هل تريد المتابعة؟`)) {
                 okrs = [...generatedOKRs, ...okrs];
+                // ── Save to localStorage for bidirectional sync ──
+                localStorage.setItem('stratix_okrs', JSON.stringify(okrs));
                 renderAll();
                 document.getElementById('okrBridgeBanner').remove();
                 showToast(`تم إضافة ${generatedOKRs.length} هدف من التشخيص ✓`);
@@ -1208,6 +1239,7 @@
 
         renderAll();
     </script>
+    <script src="/assets/js/path-tracker.js"></script>
 </body>
 
 </html>

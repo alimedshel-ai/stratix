@@ -1,0 +1,2469 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس | مركز التشخيص الاستراتيجي الموحد v10.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --accent: #38bdf8;
+            --dark: #020617;
+            --glass: rgba(15, 23, 42, 0.85);
+            --border: rgba(255, 255, 255, 0.08);
+            --dim: #94a3b8;
+            --rose: #f43f5e;
+            --emerald: #10b981;
+            --amber: #f59e0b;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--dark);
+            color: #e2e8f0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .bg-glow::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(56, 189, 248, 0.06) 0%, transparent 50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* ── Glass & Cards ── */
+        .glass {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 2.5rem;
+        }
+
+        .glass-t {
+            border-top: 3px solid var(--primary);
+        }
+
+        /* ── Tabs ── */
+        .tab {
+            padding: 0.75rem 1.5rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--dim);
+            border: 1px solid transparent;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab.on {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* ── Inputs ── */
+        .ipt {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 1.2rem;
+            padding: 1rem 1.5rem;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 700;
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        .ipt:focus {
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .slt {
+            width: 100%;
+            background: #1a1f30;
+            border: 1px solid var(--border);
+            border-radius: 1.2rem;
+            padding: 1rem;
+            color: #fff;
+            font-family: 'Tajawal';
+            outline: none;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        /* ── Selector Tiles ── */
+        .sel {
+            padding: 1.25rem;
+            border-radius: 1.5rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 2px solid var(--border);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--dim);
+        }
+
+        .sel:hover {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.08);
+            color: #fff;
+        }
+
+        .sel.on {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.15);
+            color: #fff;
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.2);
+        }
+
+        /* ── Phases ── */
+        .phase {
+            display: none;
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .phase.active {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ── Progress Nodes ── */
+        .node-circle {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--border);
+            transition: all 0.4s ease;
+        }
+
+        .node-circle.done {
+            background: var(--emerald);
+        }
+
+        .node-circle.active {
+            background: var(--primary);
+            box-shadow: 0 0 20px var(--primary);
+            transform: scale(1.5);
+        }
+
+        /* ── Option Buttons ── */
+        .option-btn {
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.02);
+            color: white;
+            padding: 1.25rem;
+            border-radius: 1.5rem;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            cursor: pointer;
+        }
+
+        .option-btn:hover {
+            background: rgba(99, 102, 241, 0.12);
+            border-color: var(--primary);
+            transform: translateX(-8px);
+        }
+
+        /* ── Status Buttons ── */
+        .st-btn {
+            padding: 0.6rem;
+            border-radius: 0.8rem;
+            font-size: 0.65rem;
+            font-weight: 800;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--dim);
+            cursor: pointer;
+            flex: 1;
+            transition: all 0.2s;
+        }
+
+        .st-btn.on[data-st="done"] {
+            background: var(--emerald);
+            color: #fff;
+            border-color: var(--emerald);
+        }
+
+        .st-btn.on[data-st="partial"] {
+            background: var(--amber);
+            color: #fff;
+            border-color: var(--amber);
+        }
+
+        .st-btn.on[data-st="none"] {
+            background: var(--rose);
+            color: #fff;
+            border-color: var(--rose);
+        }
+
+        /* ── Compliance Cards ── */
+        .cc {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .cc.is-done {
+            border-right: 5px solid var(--emerald);
+        }
+
+        .cc.is-partial {
+            border-right: 5px solid var(--amber);
+        }
+
+        .cc.is-none {
+            border-right: 5px solid var(--rose);
+        }
+
+        /* ── Primary Button ── */
+        .btn-p {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            color: #fff;
+            border: none;
+            padding: 1.25rem 3.5rem;
+            border-radius: 1.5rem;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px -5px rgba(79, 70, 229, 0.5);
+        }
+
+        .btn-p:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px -5px rgba(79, 70, 229, 0.6);
+        }
+
+        /* ── Confetti ── */
+        .confetti {
+            position: absolute;
+            border-radius: 2px;
+            animation: confettiFall 3s ease-in forwards;
+            pointer-events: none;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                opacity: 1;
+                transform: translateY(0) rotate(0deg);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(100vh) rotate(720deg);
+            }
+        }
+
+        /* ── Live Bar ── */
+        .live-bar {
+            position: sticky;
+            bottom: 1.5rem;
+            background: #1e293b;
+            padding: 1.5rem;
+            border-radius: 2rem;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            z-index: 50;
+        }
+
+        /* ── Back Link ── */
+        .back-link {
+            color: var(--dim);
+            font-weight: 700;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: #fff;
+        }
+
+        /* ── Phase Stepper ── */
+        .phase-step {
+            color: var(--dim);
+            transition: all 0.3s;
+        }
+
+        .phase-step.on {
+            color: var(--primary);
+        }
+
+        .phase-step.done {
+            color: var(--emerald);
+        }
+
+        /* ── Print ── */
+        @media print {
+
+            .btn-p,
+            .live-bar,
+            nav,
+            .timer-wrap,
+            .node-circle,
+            .back-link,
+            .phase-nav {
+                display: none !important;
+            }
+
+            .glass {
+                background: white !important;
+                color: black !important;
+                border: 1px solid #eee !important;
+                box-shadow: none !important;
+            }
+
+            body {
+                background: white !important;
+            }
+
+            #radarCanvas {
+                max-width: 400px !important;
+            }
+        }
+
+        /* ── Mobile ── */
+        @media (max-width: 768px) {
+            .btn-p {
+                padding: 1rem 1.5rem !important;
+                font-size: 1rem !important;
+                width: 100%;
+            }
+
+            .tab {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.7rem;
+            }
+
+            #tabBar {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                gap: 0.25rem;
+            }
+
+            .glass {
+                border-radius: 1.5rem;
+                padding: 1.5rem !important;
+            }
+
+            h1 {
+                font-size: 2rem !important;
+            }
+
+            h2 {
+                font-size: 1.5rem !important;
+            }
+
+            .phase-nav {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .phase-nav .btn-p {
+                order: -1;
+            }
+
+            .option-btn {
+                padding: 1rem;
+            }
+
+            .cc {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .cc .text-left {
+                text-align: right;
+                display: flex;
+                gap: 1rem;
+            }
+
+            .live-bar {
+                flex-direction: row;
+                padding: 1rem;
+                border-radius: 1.5rem;
+            }
+
+            .live-bar .text-2xl {
+                font-size: 1.25rem;
+            }
+
+            nav {
+                padding: 1rem 1.25rem;
+            }
+
+            .max-w-5xl {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-[#020617]">
+    <div class="bg-glow"></div>
+    <div id="confetti-wrapper" class="fixed inset-0 pointer-events-none z-[1000]"></div>
+
+    <!-- Timer -->
+    <div
+        class="timer-wrap fixed top-6 left-6 z-[70] bg-slate-900/90 backdrop-blur px-5 py-2.5 rounded-full border border-white/10 flex items-center gap-3 shadow-xl text-white">
+        <i class="bi bi-stopwatch text-indigo-400 animate-pulse"></i>
+        <span id="timer-display" class="text-xs font-black text-slate-300">0:00</span>
+    </div>
+
+    <!-- Nav -->
+    <nav
+        class="sticky top-0 z-[60] bg-slate-950/80 backdrop-blur-md border-b border-white/5 py-5 px-10 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <div
+                class="w-11 h-11 bg-indigo-600 rounded-2xl flex items-center justify-center font-black italic text-white shadow-xl shadow-indigo-600/20">
+                S</div>
+            <div class="text-2xl font-black italic tracking-tighter uppercase text-white">Startix <span
+                    class="text-indigo-400 not-italic font-light">PRO</span></div>
+        </div>
+        <div id="phase-stepper"
+            class="hidden md:flex items-center gap-2 text-[10px] font-black text-slate-600 uppercase tracking-widest">
+            <span data-step="0" class="phase-step on">الأسئلة</span><span class="text-slate-700">›</span>
+            <span data-step="1" class="phase-step">الهوية</span><span class="text-slate-700">›</span>
+            <span data-step="2" class="phase-step">البيانات</span><span class="text-slate-700">›</span>
+            <span data-step="3" class="phase-step">الامتثال</span><span class="text-slate-700">›</span>
+            <span data-step="4" class="phase-step">التقرير</span>
+        </div>
+        <div id="nav-stats" class="hidden md:flex items-center gap-10">
+            <div>
+                <small class="block text-[9px] font-black text-slate-500 uppercase tracking-widest">المخاطر
+                    المحتملة</small>
+                <span id="navRisk" class="text-sm font-black text-rose-500">0 ﷼</span>
+            </div>
+            <div class="w-[1px] h-10 bg-white/10"></div>
+            <div>
+                <small class="block text-[9px] font-black text-slate-500 uppercase tracking-widest">كلفة التصحيح</small>
+                <span id="navCost" class="text-sm font-black text-emerald-400">0 ﷼</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-5xl mx-auto px-6 py-16">
+
+        <!-- ═══ PHASE 0: QUICK QUESTIONS ═══ -->
+        <section id="phase-0" class="phase active space-y-12">
+            <div class="text-center space-y-4">
+                <span
+                    class="bg-indigo-500/10 text-indigo-400 text-[11px] font-black px-4 py-1.5 rounded-full border border-indigo-500/20 uppercase tracking-widest">تحليل
+                    النضج الاستراتيجي</span>
+                <h1 class="text-4xl font-black text-white leading-tight">ابدأ تشخيص منشأتك الحقيقي</h1>
+                <p class="text-slate-400 text-lg">أجب على 5 أسئلة لبناء النموذج التشخيصي المتوافق مع منصبك وحجم منشأتك.
+                </p>
+            </div>
+
+            <div id="quick-slide-container"
+                class="glass p-12 min-h-[500px] flex flex-col justify-center shadow-2xl relative overflow-hidden"></div>
+
+            <div class="flex justify-center items-center gap-6 pt-10">
+                <div class="node-circle active" id="node-1"></div>
+                <div class="node-circle" id="node-2"></div>
+                <div class="node-circle" id="node-3"></div>
+                <div class="node-circle" id="node-4"></div>
+                <div class="node-circle" id="node-5"></div>
+                <div class="node-circle" id="node-6"></div>
+                <div class="node-circle" id="node-7"></div>
+                <div class="node-circle" id="node-8"></div>
+            </div>
+
+            <div class="max-w-xs mx-auto text-center mt-6">
+                <div class="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                    <div id="progress-fill" class="h-full bg-indigo-500 transition-all duration-700" style="width:20%">
+                    </div>
+                </div>
+                <p id="progress-label" class="text-[9px] font-bold text-slate-600 uppercase mt-2 tracking-widest">السؤال
+                    1 من 5</p>
+            </div>
+        </section>
+
+        <!-- ═══ PHASE 1: IDENTITY ═══ -->
+        <section id="phase-1" class="phase space-y-10">
+            <div class="text-center space-y-2">
+                <h2 class="text-4xl font-black text-white italic tracking-tighter">تأكيد الهوية والكيان</h2>
+                <p class="text-slate-500 text-sm font-bold uppercase tracking-widest">نحتاج هذه البيانات لتخصيص محرك
+                    الامتثال القطاعي</p>
+            </div>
+            <div class="glass glass-t p-12 space-y-12">
+                <div class="space-y-3">
+                    <label class="text-[11px] font-black text-indigo-400 uppercase tracking-widest">🏢 اسم المنشأة أو
+                        المشروع</label>
+                    <input type="text" id="modalCompanyName" class="ipt"
+                        placeholder="مثال: شركة الحلول المتقدمة للصناعة">
+                    <p id="error-company-name" class="text-[10px] text-rose-500 hidden font-bold">يرجى إدخال اسم المنشأة
+                        للمتابعة.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div class="space-y-6">
+                        <label class="block text-[11px] font-black text-slate-500 uppercase tracking-widest">نوع
+                            الكيان</label>
+                        <div class="grid grid-cols-2 gap-4" id="entity-selector">
+                            <div id="ent-P" onclick="setEntity('P',this)" class="sel">💰 منشأة ربحية</div>
+                            <div id="ent-G" onclick="setEntity('G',this)" class="sel">🏛️ جهة حكومية</div>
+                            <div id="ent-N" onclick="setEntity('N',this)" class="sel">🤝 غير ربحية</div>
+                            <div id="ent-M" onclick="setEntity('M',this)" class="sel">🏢 كيان مختلط</div>
+                        </div>
+                    </div>
+                    <div class="space-y-6">
+                        <label class="block text-[11px] font-black text-slate-500 uppercase tracking-widest">الحجم /
+                            النضج</label>
+                        <div class="grid grid-cols-2 gap-4" id="size-selector">
+                            <div id="size-micro" onclick="setSize('micro',this)" class="sel">🚀 متناهية</div>
+                            <div id="size-small" onclick="setSize('small',this)" class="sel">📈 صغيرة</div>
+                            <div id="size-medium" onclick="setSize('medium',this)" class="sel">🏢 متوسطة</div>
+                            <div id="size-large" onclick="setSize('large',this)" class="sel">🏗️ كبرى</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sector Selection -->
+                <div class="space-y-6 border-t border-white/5 pt-8">
+                    <label class="block text-[11px] font-black text-indigo-400 uppercase tracking-widest">القطاع والنشاط
+                        التخصصي</label>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="mainSectorRow"></div>
+                    <div class="bg-indigo-500/5 p-4 rounded-2xl border border-indigo-500/10">
+                        <p id="sectorHint" class="text-[10px] text-indigo-300 leading-relaxed italic"></p>
+                    </div>
+                    <div id="subSectorContainer" class="space-y-3 hidden">
+                        <label class="block text-[11px] font-black text-slate-500 uppercase tracking-widest">النشاط
+                            الفرعي</label>
+                        <select id="sectorSel" class="slt" onchange="handleSubSectorChange(this.value)"></select>
+                    </div>
+                </div>
+
+                <div class="phase-nav flex justify-between items-center pt-8 border-t border-white/5">
+                    <span onclick="goToPhase(0)" class="back-link"><i class="bi bi-arrow-right"></i> رجوع للأسئلة</span>
+                    <button onclick="goToPhase(2)" class="btn-p px-20 text-xl shadow-2xl">بدء التحليل المالي ←</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══ PHASE 2: OPEX ═══ -->
+        <section id="phase-2" class="phase space-y-10">
+            <div class="glass glass-t max-w-3xl mx-auto p-12 space-y-12 shadow-2xl">
+                <div class="text-center space-y-3">
+                    <h2 class="text-3xl font-black text-white">البيانات التشغيلية (OPEX)</h2>
+                    <p class="text-slate-500 text-sm font-medium italic">تم ضبط أرقام تقديرية بناءً على حجم منشأتك؛ يرجى
+                        مراجعتها.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-3">
+                        <label class="text-[11px] font-black text-slate-500 uppercase">الموظفين السعوديين</label>
+                        <input type="number" id="opSaudi" class="ipt" min="0">
+                    </div>
+                    <div class="space-y-3">
+                        <label class="text-[11px] font-black text-slate-500 uppercase">الموظفين الوافدين</label>
+                        <input type="number" id="opExpat" class="ipt" min="0">
+                    </div>
+                    <div class="space-y-3">
+                        <label class="text-[11px] font-black text-slate-500 uppercase">متوسط الرواتب (ريال)</label>
+                        <input type="number" id="opSal" class="ipt" min="0">
+                    </div>
+                    <div class="space-y-3">
+                        <label class="text-[11px] font-black text-slate-500 uppercase">مساحة المقر (م²)</label>
+                        <input type="number" id="opArea" class="ipt" min="0">
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <label class="text-[11px] font-black text-slate-500 uppercase">المبيعات المستهدفة سنوياً
+                        (ريال)</label>
+                    <input type="number" id="opTarget" class="ipt" placeholder="0" min="0">
+                </div>
+                <p id="error-phase-2" class="text-[10px] text-rose-500 hidden font-bold text-center italic">يرجى التأكد
+                    من ملء جميع الحقول بقيم صحيحة (0 أو أكبر).</p>
+
+                <div class="phase-nav flex justify-between items-center pt-8 border-t border-white/5">
+                    <span onclick="goToPhase(1)" class="back-link"><i class="bi bi-arrow-right"></i> رجوع للهوية</span>
+                    <button onclick="goToPhase(3)" class="btn-p flex-1 text-lg">تفعيل محرك الامتثال ←</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══ PHASE 3: COMPLIANCE ═══ -->
+        <section id="phase-3" class="phase space-y-8 pb-32">
+            <div
+                class="glass p-10 flex flex-col lg:flex-row justify-between items-center gap-10 border-b-4 border-indigo-600">
+                <div class="flex-1">
+                    <h2 class="text-2xl font-black text-white">محرك الامتثال والالتزام ⚡</h2>
+                    <p class="text-slate-500 text-[10px] font-bold mt-2 uppercase tracking-widest leading-loose">
+                        تم رصد <span id="comp-count" class="text-indigo-400">---</span> نقطة فحص لدور <span
+                            id="current-role-badge" class="text-indigo-400">---</span>.
+                    </p>
+                </div>
+                <div class="flex bg-slate-900/50 p-2 rounded-[1.5rem] border border-white/5 overflow-x-auto"
+                    id="tabBar">
+                    <button onclick="switchTab('finance')" class="tab on" data-tab="finance">💰 المالية</button>
+                    <button onclick="switchTab('hr')" class="tab" data-tab="hr">🧑‍💼 الموارد</button>
+                    <button onclick="switchTab('admin')" class="tab" data-tab="admin">📋 الإدارية</button>
+                    <button onclick="switchTab('regulatory')" class="tab" data-tab="regulatory">⚙️ التنظيمية</button>
+                    <button onclick="switchTab('sector')" class="tab" data-tab="sector" id="sectorTabBtn">🏭
+                        القطاعية</button>
+                </div>
+            </div>
+
+            <div id="matrixBox" class="space-y-4 min-h-[400px]"></div>
+
+            <div class="live-bar">
+                <div class="text-center px-6">
+                    <small class="block text-[10px] font-black text-slate-500 uppercase mb-2">المخاطر المحتملة</small>
+                    <span id="liveRisk" class="text-2xl font-black text-rose-500 tracking-tighter">0 ﷼</span>
+                </div>
+                <div class="w-[1px] h-14 bg-white/10"></div>
+                <div class="text-center px-6">
+                    <small class="block text-[10px] font-black text-slate-500 uppercase mb-2">كلفة التصحيح</small>
+                    <span id="liveCost" class="text-2xl font-black text-emerald-400 tracking-tighter">0 ﷼</span>
+                </div>
+            </div>
+
+            <div class="phase-nav flex justify-between items-center mt-16">
+                <span onclick="goToPhase(AppState.role === 'manager' ? 0 : 2)" class="back-link"><i
+                        class="bi bi-arrow-right"></i> رجوع</span>
+                <button onclick="goToPhase(4)" class="btn-p px-32 text-xl shadow-2xl uppercase tracking-widest">توليد
+                    التقرير النهائي ⚖️</button>
+            </div>
+        </section>
+
+        <!-- ═══ PHASE 4: RESULTS ═══ -->
+        <section id="phase-4" class="phase space-y-16 pb-32">
+            <div class="text-center space-y-4">
+                <div id="final-scenario-badge"
+                    class="mx-auto bg-indigo-500/20 border border-indigo-500/20 px-8 py-3 rounded-2xl inline-flex items-center gap-4 shadow-xl">
+                </div>
+                <h1 id="final-title-year" class="text-6xl font-black italic text-white uppercase tracking-tighter">صدمة
+                    الواقع</h1>
+                <p class="text-indigo-400 font-black uppercase tracking-[0.5em] text-[12px] opacity-80">Strategic
+                    Maturity & Compliance Report</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-10" id="final-cards"></div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div class="glass p-12 space-y-10">
+                    <p class="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">رادار النضج المؤسسي</p>
+                    <div class="h-[380px] relative"><canvas id="radarCanvas"></canvas></div>
+                </div>
+                <div
+                    class="bg-slate-900/95 rounded-[4rem] border border-indigo-500/20 p-12 relative overflow-hidden shadow-2xl">
+                    <div class="relative z-10 space-y-10">
+                        <h3 class="text-2xl font-black flex items-center gap-4 justify-end text-white">التوصيات
+                            الاستراتيجية <i class="bi bi-shield-check text-indigo-400"></i></h3>
+                        <div id="aiNarrative" class="text-slate-400 text-lg leading-relaxed font-medium"></div>
+                        <div class="pt-10 border-t border-white/5 space-y-8">
+                            <h4 class="text-[11px] font-black text-indigo-400 uppercase tracking-widest">أهم 3 أولويات
+                                لمعالجة الفجوات:</h4>
+                            <div id="resPlan" class="space-y-6"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass p-12 border-emerald-500/20 space-y-10 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-1.5 h-full bg-emerald-500"></div>
+                <div class="flex items-center gap-5 justify-end">
+                    <h3 id="story-title" class="text-2xl font-black uppercase tracking-tight"></h3>
+                    <div
+                        class="w-14 h-14 bg-emerald-500/20 rounded-2xl flex items-center justify-center text-emerald-400 shadow-inner">
+                        <i class="bi bi-award text-2xl"></i>
+                    </div>
+                </div>
+                <p id="story-desc" class="text-slate-300 text-lg leading-relaxed italic max-w-3xl mr-0"></p>
+                <div id="story-stats" class="flex justify-end gap-16 pt-8 border-t border-white/5"></div>
+            </div>
+
+            <div class="flex flex-col md:flex-row justify-center gap-10 pt-20">
+                <button onclick="window.print()"
+                    class="bg-white text-slate-950 px-12 py-6 rounded-[2rem] font-black text-lg active:scale-95 transition-all flex items-center gap-4 shadow-xl">
+                    <i data-lucide="download" class="w-6 h-6 text-slate-900"></i> تحميل التقرير PDF
+                </button>
+                <button onclick="finishAndRedirect()"
+                    class="bg-indigo-600 text-white px-12 py-6 rounded-[2rem] font-black text-lg active:scale-95 transition-all shadow-2xl shadow-indigo-600/40">
+                    🚀 تفعيل لوحة التحكم (سجّل مجاناً)
+                </button>
+            </div>
+            <div class="text-center pt-4">
+                <button onclick="localStorage.removeItem('startix_v10');location.reload()"
+                    class="text-slate-500 text-sm hover:text-white transition-all cursor-pointer">↺ إعادة التشخيص من
+                    جديد</button>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // ═════════════════════════════════════════════════════════════════
+        // CONSTANTS
+        // ═════════════════════════════════════════════════════════════════
+
+        const ROLES_LIST = {
+            founder: { l: 'مؤسس / صاحب مشروع', i: '🚀', s: 'أبني أو أدير مشروعي الخاص' },
+            ceo: { l: 'رئيس تنفيذي (CEO)', i: '👑', s: 'أقود استراتيجية المنظمة بالكامل' },
+            manager: { l: 'مدير إدارة / قسم', i: '🎯', s: 'أنفذ أهداف إدارتي وأتابع فريقي' },
+            cso: { l: 'مدير استراتيجية (CSO)', i: '⚙️', s: 'أخطط وأربط أداء الكيان' },
+            compliance: { l: 'مسؤول التزام ومخاطر', i: '⚖️', s: 'أحمي المنظمة من المخاطر' },
+            board: { l: 'عضو مجلس إدارة / مستثمر', i: '👁️', s: 'أراقب الأداء وأقيّم الفرص' }
+        };
+
+        const MAT_BASE = {
+            finance: [
+                { id: 'f1', label: 'الزكاة والضريبة (ZATCA)', cost: 12000, risk: 50000, desc: 'الربط مع المرحلة الثانية للفوترة وتجهيز الإقرارات.' },
+                { id: 'f2', label: 'القوائم المالية المدققة', cost: 15000, risk: 30000, desc: 'اعتماد محاسب قانوني للقوائم السنوية والربعية.' },
+                { id: 'f3', label: 'نظام ضريبة الاستقطاع', cost: 0, risk: 40000, desc: 'الالتزام بخصم الضريبة عند التعامل مع موردين أجانب.' },
+                { id: 'f4', label: 'ضريبة القيمة المضافة (VAT)', cost: 0, risk: 100000, desc: 'مطابقة الفواتير مع السجلات المحاسبية.' }
+            ],
+            hr: [
+                { id: 'h1', label: 'التأمينات الاجتماعية (GOSI)', cost: 1000, risk: 30000, desc: 'مطابقة الأجور والالتزام بالسداد الشهري.' },
+                { id: 'h2', label: 'منصة قوى (Qiwa)', cost: 3000, risk: 25000, desc: 'توثيق العقود بنسبة 100% ونسب التوطين.' },
+                { id: 'h3', label: 'نظام مدد (Mudad)', cost: 1200, risk: 20000, desc: 'حماية الأجور والالتزام برفع ملفات الرواتب.' },
+                { id: 'h4', label: 'التأمين الطبي (CHI)', cost: 15000, risk: 50000, desc: 'تغطية طبية إلزامية لكافة الموظفين.' },
+                { id: 'h5', label: 'لائحة تنظيم العمل', cost: 5000, risk: 10000, desc: 'اعتماد لائحة العمل الداخلية رسمياً.' }
+            ],
+            admin: [
+                { id: 'a1', label: 'منصة بلدي (Balady)', cost: 4500, risk: 20000, desc: 'رخصة البلدية، لوحات المحل، واشتراطات النشاط.' },
+                { id: 'a2', label: 'منصة إيجار (Ejar)', cost: 500, risk: 10000, desc: 'توثيق عقود المقرات التجارية إلزامياً.' },
+                { id: 'a3', label: 'الغرفة التجارية', cost: 2000, risk: 5000, desc: 'تجديد الاشتراك السنوي والتصاديق.' },
+                { id: 'a4', label: 'الدفاع المدني (سلامة)', cost: 3000, risk: 30000, desc: 'تراخيص السلامة والوقاية من الحريق.' }
+            ],
+            regulatory: [
+                { id: 'r1', label: 'حماية البيانات (PDPL)', cost: 25000, risk: 150000, desc: 'حوكمة البيانات الشخصية والامتثال لسدايا.' },
+                { id: 'r2', label: 'الأمن السيبراني (NCA)', cost: 35000, risk: 80000, desc: 'الضوابط الأساسية للأمن السيبراني (ECC).' },
+                { id: 'r3', label: 'مكافحة التستر التجاري', cost: 0, risk: 500000, desc: 'الالتزام بمعايير البرنامج الوطني.' },
+                { id: 'r4', label: 'التراخيص الصناعية (إن وُجد)', cost: 10000, risk: 40000, desc: 'تراخيص وزارة الصناعة ومدن.' }
+            ],
+            sector: []
+        };
+
+        const SCENARIOS = {
+            founder_idea: { num: 20, name: 'المُفكّر في التأسيس', icon: '💡', layer: 'Discovery' },
+            founder_startup: { num: 1, name: 'الناشئ الرائد', icon: '🚀', layer: 'Engine' },
+            founder_growing: { num: 3, name: 'المتوسع النشط', icon: '📈', layer: 'Growth' },
+            founder_mature: { num: 2, name: 'الناضج المستدام', icon: '⚡', layer: 'Stability' },
+            ceo: { num: 5, name: 'الرئيس التنفيذي', icon: '👑', layer: 'Governance' },
+            manager: { num: 4, name: 'مدير الإدارة', icon: '🎯', layer: 'Alignment' },
+            cso: { num: 6, name: 'المخطط الاستراتيجي', icon: '⚙️', layer: 'Integration' },
+            compliance: { num: 7, name: 'حارس الامتثال', icon: '⚖️', layer: 'Protection' },
+            board: { num: 8, name: 'المراقب المؤسسي', icon: '👁️', layer: 'Audit' }
+        };
+
+        const SUCCESS_STORIES = {
+            founder: { title: 'قصة أحمد: من فكرة لشركة 80K', desc: 'استخدم ستارتكس لبناء خطته الأساسية وتجنب فوضى البدايات والديون.', stats: [{ n: '21 يوم', l: 'للخطة' }, { n: '80K', l: 'إيراد شهري' }] },
+            ceo: { title: 'قصة سارة: قرارات أسرع 200%', desc: 'حوّلت شركة عائلية من Excel إلى لوحة قيادة مركزية تربط 5 فروع.', stats: [{ n: '200%', l: 'سرعة قرار' }, { n: '95%', l: 'صحة مالية' }] },
+            manager: { title: 'قصة خالد: فريق الإنجاز الفائق', desc: 'ربط أهداف العمليات برؤية المنظمة، مما رفع الإنتاجية بنسبة 40%.', stats: [{ n: '+40%', l: 'إنتاجية' }, { n: '0', l: 'تعارض مهام' }] },
+            cso: { title: 'قصة م. ريم: مواءمة 5 قطاعات', desc: 'نجحت في ربط أهداف التسويق بالمالية والالتزام.', stats: [{ n: '100%', l: 'ارتباط' }] },
+            compliance: { title: 'قصة فهد: صفر غرامات في عامين', desc: 'أغلق ثغرات PDPL قبل التفتيش وحمى المنظمة من غرامات مليونية.', stats: [{ n: '0', l: 'غرامات' }] },
+            board: { title: 'قصة د. علي: شفافية مطلقة للمستثمرين', desc: 'وفر تقارير نضج مؤسسي أقنعت الصناديق الاستثمارية بضخ رأس مال جديد.', stats: [{ n: '3x', l: 'استثمار' }] }
+        };
+
+        // ═══════════════════════════════════════════════════════════════
+        // أسئلة متخصصة لكل إدارة — Functional Strategy + Dept-Deep
+        // 7 إدارات × 3 أسئلة = 21 سؤال استراتيجي
+        // تغذي: Rules Engine + محرك التناقضات + Insight Cards
+        // ═══════════════════════════════════════════════════════════════
+        const DEPT_QUESTIONS = {
+            // ──────── 💰 المالية (CFO) — المحور المالي ────────
+            finance: [
+                {
+                    badge: '💰 المالية — جودة الإيرادات',
+                    title: 'هل تعتمد إيراداتكم على الكاش الفوري أم المديونيات؟',
+                    hint: 'يغذي رادار المخاطر ونقص السيولة',
+                    options: [
+                        { v: 'cash_heavy', l: 'معظم إيراداتنا كاش فوري ومسدد', icon: '💵' },
+                        { v: 'mixed', l: 'مزيج من الكاش والآجل', icon: '🔄' },
+                        { v: 'credit_heavy', l: 'معظمها مبيعات آجلة ومديونيات', icon: '📄' },
+                    ]
+                },
+                {
+                    badge: '💰 المالية — هيكل التكاليف',
+                    title: 'كم نسبة التكاليف الثابتة مقارنة بالمتغيرة؟',
+                    hint: 'يحدد مرونة الشركة في حال هبوط المبيعات',
+                    options: [
+                        { v: 'fixed_high', l: 'الثابتة أكثر من 70% (رواتب، إيجارات)', icon: '🏢' },
+                        { v: 'balanced', l: 'متوازنة تقريباً (50/50)', icon: '⚖️' },
+                        { v: 'variable_high', l: 'المتغيرة أكثر من 70% (مواد، عمولات)', icon: '📦' },
+                    ]
+                },
+                {
+                    badge: '💰 المالية — جاهزية التوسع',
+                    title: 'لو قررت الإدارة العليا مضاعفة العمليات، هل نملك الغطاء المالي؟',
+                    hint: 'يكشف تناقض: CEO يخطط لتوسع ضخم بدون ميزانية',
+                    options: [
+                        { v: 'internal_ok', l: 'نعم، عندنا سيولة داخلية كافية', icon: '✅' },
+                        { v: 'need_external', l: 'نحتاج تمويل خارجي (بنك/مستثمر)', icon: '🏦' },
+                        { v: 'cant_expand', l: 'مستحيل حالياً — السيولة بالكاد تكفي', icon: '🚫' },
+                    ]
+                }
+            ],
+
+            // ──────── 🚀 المبيعات (CSO) — محور العملاء ────────
+            sales: [
+                {
+                    badge: '🚀 المبيعات — تركز المبيعات',
+                    title: 'هل 80% من مبيعاتكم تعتمد على عدد قليل من كبار العملاء؟',
+                    hint: 'تحليل باريتو — يكشف مخاطر فقدان عميل رئيسي',
+                    options: [
+                        { v: 'concentrated', l: 'نعم، نعتمد على 3-5 عملاء كبار', icon: '⚠️' },
+                        { v: 'moderate', l: 'موزعة نسبياً لكن فيه تركز', icon: '🔄' },
+                        { v: 'diversified', l: 'موزعة على قاعدة عملاء واسعة', icon: '✅' },
+                    ]
+                },
+                {
+                    badge: '🚀 المبيعات — عنق الزجاجة',
+                    title: 'أين نفقد أكبر عدد من العملاء المحتملين؟',
+                    hint: 'يحدد نقطة الضعف في رحلة العميل',
+                    options: [
+                        { v: 'awareness', l: 'مرحلة الوعي — ما يعرفونا أصلاً', icon: '👁️' },
+                        { v: 'negotiation', l: 'مرحلة التفاوض — يتراجعون عند السعر', icon: '💬' },
+                        { v: 'closing', l: 'مرحلة الإغلاق — يوقفون قبل التوقيع', icon: '📝' },
+                        { v: 'retention', l: 'بعد البيع — ما يرجعون مرة ثانية', icon: '🔁' },
+                    ]
+                },
+                {
+                    badge: '🚀 المبيعات — قدرة الفريق',
+                    title: 'مقارنة بالمستهدفات البيعية، هل فريقك يملك العدد والمهارة الكافية؟',
+                    hint: 'يغذي محرك التناقضات مع HR',
+                    options: [
+                        { v: 'team_sufficient', l: 'الفريق كافٍ ومؤهل', icon: '✅' },
+                        { v: 'need_skills', l: 'العدد كافٍ لكن المهارات ناقصة', icon: '📚' },
+                        { v: 'need_headcount', l: 'المهارات موجودة لكن العدد غير كافٍ', icon: '👥' },
+                        { v: 'team_insufficient', l: 'لا العدد ولا المهارة كافية', icon: '🚨' },
+                    ]
+                }
+            ],
+
+            // ──────── 📢 التسويق (CMO) — محور العملاء ────────
+            marketing: [
+                {
+                    badge: '📢 التسويق — الميزة التنافسية',
+                    title: 'بصراحة، ليش يشتري العميل منكم ولا من المنافس؟',
+                    hint: 'يغذي أداة قوى بورتر (VRIO)',
+                    options: [
+                        { v: 'price', l: 'السعر — أرخص من المنافسين', icon: '💰' },
+                        { v: 'quality', l: 'الجودة — منتجنا أفضل', icon: '⭐' },
+                        { v: 'speed', l: 'السرعة — نوصّل أسرع', icon: '⚡' },
+                        { v: 'relationships', l: 'العلاقات — الثقة والسمعة', icon: '🤝' },
+                    ]
+                },
+                {
+                    badge: '📢 التسويق — تكلفة الاستحواذ',
+                    title: 'هل تعرفون بدقة كم يكلف الحصول على عميل جديد واحد (CAC)؟',
+                    hint: 'مقارنة CAC بـ LTV — هل التسويق مربح؟',
+                    options: [
+                        { v: 'known_healthy', l: 'نعم، والتكلفة أقل من قيمة العميل', icon: '✅' },
+                        { v: 'known_high', l: 'نعم، لكن التكلفة مرتفعة جداً', icon: '⚠️' },
+                        { v: 'unknown', l: 'صراحة ما نعرف الرقم بدقة', icon: '❓' },
+                    ]
+                },
+                {
+                    badge: '📢 التسويق — التوجيه',
+                    title: 'ميزانية التسويق تُنفق أكثر على جلب عملاء جدد أم الاحتفاظ بالحاليين؟',
+                    hint: 'يكشف توازن الاستثمار التسويقي',
+                    options: [
+                        { v: 'acquisition', l: 'معظمها على جلب عملاء جدد', icon: '🎯' },
+                        { v: 'retention', l: 'معظمها على الاحتفاظ والولاء', icon: '❤️' },
+                        { v: 'balanced', l: 'متوازنة بينهم', icon: '⚖️' },
+                    ]
+                }
+            ],
+
+            // ──────── ⚙️ العمليات (COO) — محور العمليات الداخلية ────────
+            operations: [
+                {
+                    badge: '⚙️ العمليات — الطاقة الاستيعابية',
+                    title: 'كم نسبة استغلالكم الحالي للطاقة التشغيلية؟',
+                    hint: 'إنذار أحمر لو التسويق يريد زيادة 50% والعمليات بـ 95%',
+                    options: [
+                        { v: 'cap_low', l: 'أقل من 50% — طاقة فاضية كثير', icon: '🟢' },
+                        { v: 'cap_moderate', l: '50% - 80% — مريح', icon: '🟡' },
+                        { v: 'cap_high', l: '80% - 95% — قريب من الحد', icon: '🟠' },
+                        { v: 'cap_full', l: 'أكثر من 95% — على الحديدة', icon: '🔴' },
+                    ]
+                },
+                {
+                    badge: '⚙️ العمليات — كشف الهدر',
+                    title: 'ما هو أكبر مصدر للهدر أو التأخير في سلسلة القيمة؟',
+                    hint: 'يغذي مبادرات التحسين الإجبارية',
+                    options: [
+                        { v: 'suppliers', l: 'تأخر الموردين وسلسلة الإمداد', icon: '📦' },
+                        { v: 'tech_issues', l: 'أعطال تقنية وتوقف أنظمة', icon: '💻' },
+                        { v: 'rework', l: 'إعادة عمل بسبب أخطاء وجودة', icon: '🔄' },
+                        { v: 'processes', l: 'بيروقراطية وإجراءات معقدة', icon: '📋' },
+                    ]
+                },
+                {
+                    badge: '⚙️ العمليات — الاعتمادية',
+                    title: 'هل العمليات اليومية موثقة أم تعتمد على أشخاص محددين؟',
+                    hint: 'لو غاب الشخص — يتوقف العمل؟',
+                    options: [
+                        { v: 'documented', l: 'موثقة بالكامل في أدلة وإجراءات', icon: '✅' },
+                        { v: 'partial', l: 'بعضها موثق وبعضها في رؤوس الناس', icon: '🔄' },
+                        { v: 'people_dependent', l: 'تعتمد على أشخاص — لو غابوا يقف كل شي', icon: '🚨' },
+                    ]
+                }
+            ],
+
+            // ──────── 👥 الموارد البشرية (CHRO) — محور التعلم والنمو ────────
+            hr: [
+                {
+                    badge: '👥 الموارد البشرية — التسرب',
+                    title: 'أي الأقسام تعاني من أعلى تسرب للكفاءات؟ وما السبب الجذري؟',
+                    hint: 'يغذي McKinsey 7S وتحليل الثقافة',
+                    options: [
+                        { v: 'turnover_sales', l: 'المبيعات — ضغط الأهداف والعمولات', icon: '📈' },
+                        { v: 'turnover_tech', l: 'التقنية — عروض أفضل من الخارج', icon: '💻' },
+                        { v: 'turnover_ops', l: 'العمليات — بيئة عمل مرهقة', icon: '⚙️' },
+                        { v: 'turnover_low', l: 'التسرب منخفض عموماً — مستقرين', icon: '✅' },
+                    ]
+                },
+                {
+                    badge: '👥 الموارد البشرية — فجوة المهارات',
+                    title: 'ما المهارة الحرجة المفقودة في فريقكم حالياً؟',
+                    hint: 'يغذي خطط التدريب والتوظيف',
+                    options: [
+                        { v: 'gap_digital', l: 'مهارات رقمية وتحول تقني', icon: '💻' },
+                        { v: 'gap_leadership', l: 'مهارات قيادية وإدارية', icon: '👔' },
+                        { v: 'gap_sales', l: 'مهارات بيعية وتفاوض', icon: '🤝' },
+                        { v: 'gap_none', l: 'فريقنا مؤهل — ما فيه فجوة حرجة', icon: '✅' },
+                    ]
+                },
+                {
+                    badge: '👥 الموارد البشرية — نظام التقييم',
+                    title: 'كيف يتم تقييم أداء الموظفين حالياً؟',
+                    hint: 'يكشف مدى ارتباط الأداء بالاستراتيجية',
+                    options: [
+                        { v: 'attendance', l: 'حضور وانصراف ومهام روتينية', icon: '⏰' },
+                        { v: 'kpis_basic', l: 'مؤشرات أداء لكن غير مرتبطة بالاستراتيجية', icon: '📊' },
+                        { v: 'okrs_aligned', l: 'OKRs مرتبطة مباشرة باستراتيجية الشركة', icon: '🎯' },
+                    ]
+                }
+            ],
+
+            // ──────── 🛡️ الامتثال والمخاطر ────────
+            compliance: [
+                {
+                    badge: '🛡️ الامتثال — خريطة المخاطر',
+                    title: 'ما الخطر الخارجي الأكبر الذي يهدد استمرارية العمل؟',
+                    hint: 'يغذي خريطة المخاطر الحرارية',
+                    options: [
+                        { v: 'regulatory', l: 'تنظيمي — تغيير أنظمة أو تراخيص', icon: '📋' },
+                        { v: 'legal', l: 'قانوني — دعاوى أو نزاعات', icon: '⚖️' },
+                        { v: 'cyber', l: 'أمن سيبراني — اختراق أو تسريب بيانات', icon: '🔒' },
+                        { v: 'market', l: 'سوقي — منافس جديد أو تغيير سلوك العملاء', icon: '📉' },
+                    ]
+                },
+                {
+                    badge: '🛡️ الامتثال — الفجوات التشريعية',
+                    title: 'هل عندكم فجوات في التراخيص أو حماية البيانات قد تسبب غرامات؟',
+                    hint: 'يغذي تنبيهات الامتثال العاجلة',
+                    options: [
+                        { v: 'compliant', l: 'ملتزمين 100% — لا فجوات', icon: '✅' },
+                        { v: 'minor_gaps', l: 'فجوات بسيطة قيد المعالجة', icon: '🟡' },
+                        { v: 'major_gaps', l: 'فجوات كبيرة تحتاج تصحيح فوري', icon: '🔴' },
+                    ]
+                },
+                {
+                    badge: '🛡️ الامتثال — خطة الطوارئ',
+                    title: 'هل لديكم خطة استمرارية أعمال (BCP) مجربة وجاهزة؟',
+                    hint: 'يكشف مدى الاستعداد للأزمات',
+                    options: [
+                        { v: 'bcp_tested', l: 'نعم، مجربة ومحدثة دورياً', icon: '✅' },
+                        { v: 'bcp_exists', l: 'موجودة لكن ما جربناها فعلياً', icon: '📄' },
+                        { v: 'bcp_none', l: 'لا يوجد خطة طوارئ واضحة', icon: '🚨' },
+                    ]
+                }
+            ],
+
+            // ──────── 🛎️ الخدمات المساندة / خدمة العملاء ────────
+            support: [
+                {
+                    badge: '🛎️ خدمة العملاء — صوت العميل',
+                    title: 'ما الشكوى رقم #1 الأكثر تكراراً من العملاء في الربع الأخير؟',
+                    hint: 'يتحول لمبادرة تحسين إجبارية لإدارة العمليات',
+                    options: [
+                        { v: 'slow_response', l: 'بطء الاستجابة والتأخر في الرد', icon: '⏰' },
+                        { v: 'quality_issues', l: 'جودة المنتج/الخدمة أقل من المتوقع', icon: '📉' },
+                        { v: 'communication', l: 'ضعف التواصل وعدم المتابعة', icon: '📵' },
+                        { v: 'pricing', l: 'الأسعار مرتفعة مقارنة بالمنافسين', icon: '💸' },
+                    ]
+                },
+                {
+                    badge: '🛎️ خدمة العملاء — وقت الاستجابة',
+                    title: 'معدل سرعة حل مشكلات العملاء مقارنة بالمنافسين؟',
+                    hint: 'يقيس SLA والتنافسية',
+                    options: [
+                        { v: 'faster', l: 'نسبق المنافسين — خدمتنا أسرع', icon: '🏆' },
+                        { v: 'equal', l: 'نساويهم تقريباً', icon: '🔄' },
+                        { v: 'slower', l: 'متأخرين عنهم — نحتاج تحسين', icon: '⚠️' },
+                    ]
+                },
+                {
+                    badge: '🛎️ خدمة العملاء — التغذية الراجعة',
+                    title: 'هل مشاكل العملاء تُرفع كبيانات لتحسين المنتج في الإدارات الأخرى؟',
+                    hint: 'يكشف هل الشكاوى تموت عند التذكرة أم تحسّن المنظمة',
+                    options: [
+                        { v: 'feedback_loop', l: 'نعم، كل شكوى تتحول لتحسين منتج', icon: '✅' },
+                        { v: 'sometimes', l: 'أحياناً — حسب خطورة المشكلة', icon: '🔄' },
+                        { v: 'ticket_closed', l: 'نحل المشكلة ونقفل التذكرة وبس', icon: '🎫' },
+                    ]
+                }
+            ]
+        };
+
+        const SECTOR_GROUPS = {
+            P: [
+                { key: 'commercial', icon: '🛒', label: 'التجاري', hint: 'تجزئة، جملة، بيع بالتجزئة، تجارة إلكترونية' },
+                { key: 'services', icon: '🏢', label: 'الخدمي', hint: 'تقنية، تعليم، صحة، سياحة، نقل، استشارات، مقاولات' },
+                { key: 'industrial', icon: '🏭', label: 'الصناعي', hint: 'تصنيع عام، صناعات غذائية، بتروكيماويات' }
+            ],
+            G: [
+                { key: 'gov_ministry', icon: '🏛️', label: 'وزارات وهيئات', hint: 'وزارة، هيئة عامة، إمارة منطقة' },
+                { key: 'gov_municipality', icon: '🏙️', label: 'بلديات وأمانات', hint: 'أمانة، بلدية، مجلس بلدي' },
+                { key: 'gov_education', icon: '🎓', label: 'تعليمي حكومي', hint: 'جامعات، كليات، إدارات تعليم' },
+                { key: 'gov_health', icon: '🏥', label: 'صحي حكومي', hint: 'مستشفيات، مراكز صحية، تجمعات' },
+                { key: 'gov_security', icon: '🛡️', label: 'أمني وعسكري', hint: 'جهات أمنية، عسكرية، دفاع مدني' },
+                { key: 'gov_fund', icon: '💰', label: 'صناديق وبرامج', hint: 'صناديق تنمية، برامج وطنية، هدف' }
+            ],
+            N: [
+                { key: 'npo_social', icon: '🤲', label: 'اجتماعية وتنموية', hint: 'جمعيات اجتماعية، تنموية، إسكانية' },
+                { key: 'npo_charity', icon: '💚', label: 'خيرية ورعوية', hint: 'رعاية أيتام، إغاثة، كفالة' },
+                { key: 'npo_awqaf', icon: '🕌', label: 'أوقاف ومؤسسات دينية', hint: 'أوقاف، مساجد، حلقات تحفيظ' },
+                { key: 'npo_professional', icon: '📋', label: 'مهنية وعلمية', hint: 'جمعيات مهنية، علمية، رياضية' }
+            ],
+            M: [
+                { key: 'mix_company', icon: '🏢', label: 'شركة حكومية مساهمة', hint: 'أرامكو، سابك، الاتصالات' },
+                { key: 'mix_fund', icon: '💼', label: 'صندوق استثماري', hint: 'PIF، صندوق الاستثمارات العامة' },
+                { key: 'mix_ppp', icon: '🤝', label: 'شراكة عام-خاص', hint: 'BOT، PPP، تشغيل وصيانة' }
+            ]
+        };
+
+        const SUB_SECTORS = {
+            // ── التجاري ──
+            commercial: [
+                { v: 'comm_retail', l: '🛍️ تجزئة عامة (سوبرماركت، ملابس، إلكترونيات)' },
+                { v: 'comm_wholesale', l: '📦 جملة ومخازن وتوزيع' },
+                { v: 'comm_ecom', l: '💻 تجارة إلكترونية ومتاجر رقمية' },
+                { v: 'comm_auto', l: '🚗 معارض سيارات وقطع غيار' },
+                { v: 'comm_gold', l: '💎 مجوهرات وذهب ومعادن ثمينة' },
+                { v: 'comm_fuel', l: '⛽ محطات وقود وزيوت' },
+                { v: 'comm_furniture', l: '🛋️ أثاث ومفروشات' },
+                { v: 'comm_pharma', l: '💊 صيدليات ومستودعات أدوية' }
+            ],
+            // ── الخدمي ──
+            services: [
+                { v: 'serv_tech', l: '💻 تقنية المعلومات والبرمجيات' },
+                { v: 'serv_health', l: '🏥 خدمات صحية (مستشفيات، عيادات)' },
+                { v: 'serv_edu', l: '🎓 تعليم وتدريب (مدارس، معاهد)' },
+                { v: 'serv_tourism', l: '✈️ سياحة وسفر وضيافة' },
+                { v: 'serv_transport', l: '🚛 نقل ولوجستيات وتخزين' },
+                { v: 'serv_consulting', l: '📊 استشارات إدارية ومالية' },
+                { v: 'serv_legal', l: '⚖️ خدمات قانونية ومحاماة' },
+                { v: 'serv_media', l: '🎬 إعلام وإنتاج ودعاية' },
+                { v: 'serv_beauty', l: '💇 صالونات وتجميل وعناية' },
+                { v: 'serv_maintenance', l: '🔧 صيانة وتشغيل مرافق' },
+                { v: 'serv_security', l: '🛡️ حراسات أمنية وسلامة' },
+                { v: 'serv_recruitment', l: '👥 استقدام وتوظيف وموارد بشرية' },
+                { v: 'serv_food', l: '🍽️ مطاعم ومقاهي وتموين' },
+                { v: 'serv_construction', l: '🏗️ مقاولات وإنشاءات عامة' },
+                { v: 'serv_realestate', l: '🏠 تطوير عقاري وإدارة مرافق' }
+            ],
+            // ── الصناعي ──
+            industrial: [
+                { v: 'ind_food', l: '🍞 صناعات غذائية ومشروبات' },
+                { v: 'ind_general', l: '🏭 تصنيع عام ومصانع' },
+                { v: 'ind_petrochemical', l: '🛢️ بتروكيماويات وكيماويات' },
+                { v: 'ind_plastic', l: '♻️ بلاستيك وتعبئة وتغليف' },
+                { v: 'ind_metal', l: '⚙️ حديد وصلب ومعادن' },
+                { v: 'ind_pharma', l: '💊 أدوية ومستحضرات طبية' },
+                { v: 'ind_textile', l: '🧵 نسيج وملابس جاهزة' },
+                { v: 'ind_building', l: '🧱 مواد بناء (أسمنت، بلاط، خرسانة)' },
+                { v: 'ind_water', l: '💧 تحلية مياه ومعالجة' }
+            ],
+            // ── المقاولات ──
+            construction: [
+                { v: 'const_build', l: '🏗️ مقاولات بناء عامة' },
+                { v: 'const_realestate', l: '🏠 تطوير عقاري' },
+                { v: 'const_roads', l: '🛣️ طرق وجسور وبنية تحتية' },
+                { v: 'const_electrical', l: '⚡ مقاولات كهربائية وميكانيكية' },
+                { v: 'const_interior', l: '🎨 تشطيبات وديكور داخلي' },
+                { v: 'const_facility', l: '🏢 إدارة مرافق وتشغيل مباني' }
+            ],
+            // ── الحكومي ──
+            gov_services: [
+                { v: 'gov_min', l: '🏛️ وزارة أو هيئة حكومية' },
+                { v: 'gov_mun', l: '🏙️ بلدية أو أمانة' },
+                { v: 'gov_uni', l: '🎓 جامعة أو كلية حكومية' },
+                { v: 'gov_hospital', l: '🏥 مستشفى أو مركز صحي حكومي' },
+                { v: 'gov_security', l: '🛡️ جهة أمنية أو عسكرية' },
+                { v: 'gov_fund', l: '💰 صندوق تنمية أو مؤسسة عامة' }
+            ],
+            // ── غير الربحي ──
+            npo_charity: [
+                { v: 'npo_social', l: '🤲 جمعية اجتماعية وتنموية' },
+                { v: 'npo_special', l: '♿ رعاية فئات خاصة (أيتام، ذوي إعاقة)' },
+                { v: 'npo_relief', l: '🌍 إغاثة إنسانية وعمل خيري' },
+                { v: 'npo_awqaf', l: '🕌 أوقاف ومؤسسات دينية' },
+                { v: 'npo_sports', l: '⚽ أندية رياضية واتحادات' },
+                { v: 'npo_professional', l: '📋 جمعيات مهنية وعلمية' }
+            ],
+            // ── القابض / المختلط ──
+            mix_holding: [
+                { v: 'mix_energy', l: '⚡ طاقة وبتروكيماويات' },
+                { v: 'mix_telecom', l: '📡 اتصالات وتقنية' },
+                { v: 'mix_finance', l: '🏦 شركات مالية ومصرفية' },
+                { v: 'mix_diversified', l: '🌐 قابضة متنوعة (عدة قطاعات)' },
+                { v: 'mix_ppp', l: '🤝 شراكة عام-خاص (PPP)' },
+                { v: 'mix_logistics', l: '🚢 شحن ولوجستيات دولية' }
+            ]
+        };
+
+        const SECTOR_SPECIFIC = {
+            // ── التجاري ──
+            comm_retail: [{ id: 's1', label: 'مدى ونقاط البيع (Mada/POS)', cost: 500, risk: 5000, desc: 'توفير الدفع الإلكتروني إلزامي للمحال التجارية.' }],
+            comm_wholesale: [{ id: 's7', label: 'رخصة استيراد وتصدير', cost: 5000, risk: 15000, desc: 'ترخيص وزارة التجارة للاستيراد بالجملة.' },
+            { id: 's8', label: 'ترخيص SFDA للمنتجات', cost: 8000, risk: 25000, desc: 'موافقة الغذاء والدواء على المنتجات المستوردة.' }],
+            comm_ecom: [{ id: 's4', label: 'الفاتورة الإلكترونية (المرحلة 2)', cost: 8000, risk: 30000, desc: 'الربط التقني مع منصة ZATCA.' },
+            { id: 's9', label: 'سجل تجاري إلكتروني', cost: 800, risk: 10000, desc: 'إلزامية السجل التجاري لمتاجر التجارة الإلكترونية.' },
+            { id: 's10', label: 'وسائل الدفع الإلكتروني', cost: 3000, risk: 8000, desc: 'تسجيل مع مزود دفع مرخص من البنك المركزي.' }],
+            comm_auto: [{ id: 's11', label: 'ترخيص معرض سيارات', cost: 10000, risk: 20000, desc: 'رخصة وزارة التجارة وشروط العرض والضمان.' },
+            { id: 's12', label: 'نظام تتبع المركبات (تم)', cost: 2000, risk: 5000, desc: 'الربط مع منصة تم لتسجيل المركبات.' }],
+            comm_gold: [{ id: 's13', label: 'ترخيص المعادن الثمينة', cost: 15000, risk: 50000, desc: 'رخصة وزارة التجارة + الدمغ والفحص.' },
+            { id: 's14', label: 'مكافحة غسل الأموال (AML)', cost: 20000, risk: 100000, desc: 'الالتزام بضوابط SAMA لقطاع المعادن.' }],
+            comm_fuel: [{ id: 's15', label: 'ترخيص توزيع وقود', cost: 25000, risk: 60000, desc: 'ترخيص وزارة الطاقة ومعايير السلامة.' }],
+            comm_furniture: [{ id: 's16', label: 'معايير المواصفات (SASO)', cost: 5000, risk: 15000, desc: 'مطابقة الأثاث لمعايير الجودة السعودية.' }],
+            comm_pharma: [{ id: 's17', label: 'ترخيص SFDA صيدلية', cost: 20000, risk: 80000, desc: 'ترخيص هيئة الغذاء والدواء + صيدلي مسؤول.' },
+            { id: 's18', label: 'نظام تتبع الأدوية (RSD)', cost: 10000, risk: 40000, desc: 'الربط مع نظام رصد لتتبع الأدوية.' }],
+            // ── الخدمي ──
+            serv_tech: [{ id: 's2', label: 'ترخيص سدايا (NDMO)', cost: 10000, risk: 100000, desc: 'تسجيل سجلات معالجة البيانات للشركات التقنية.' },
+            { id: 's19', label: 'ترخيص CITC للاتصالات', cost: 15000, risk: 50000, desc: 'ترخيص هيئة الاتصالات للخدمات التقنية.' }],
+            serv_health: [{ id: 's5', label: 'اعتماد سباهي (CBAHI)', cost: 25000, risk: 80000, desc: 'معايير الجودة الصحية الوطنية للمنشآت الصحية.' },
+            { id: 's20', label: 'ترخيص ممارسة صحية', cost: 5000, risk: 30000, desc: 'تصنيف المنشأة في وزارة الصحة.' },
+            { id: 's21', label: 'نظام وصفتي الإلكتروني', cost: 3000, risk: 10000, desc: 'الربط مع منصة وصفتي للوصفات الطبية.' }],
+            serv_edu: [{ id: 's22', label: 'ترخيص وزارة التعليم', cost: 10000, risk: 40000, desc: 'رخصة مزاولة نشاط تعليمي أو تدريبي.' },
+            { id: 's23', label: 'اعتماد المؤسسة العامة للتدريب', cost: 8000, risk: 20000, desc: 'اعتماد البرامج التدريبية من TVTC.' }],
+            serv_tourism: [{ id: 's24', label: 'ترخيص هيئة السياحة', cost: 5000, risk: 15000, desc: 'ترخيص مزاولة نشاط سياحي أو فندقي.' },
+            { id: 's25', label: 'تصنيف فندقي', cost: 8000, risk: 10000, desc: 'تصنيف الفندق/الشقق المفروشة وفق المعايير.' }],
+            serv_transport: [{ id: 's26', label: 'ترخيص هيئة النقل (TGA)', cost: 10000, risk: 30000, desc: 'ترخيص نقل بضائع أو أفراد.' },
+            { id: 's27', label: 'نظام تتبع المركبات (GPS)', cost: 5000, risk: 10000, desc: 'إلزامية تركيب نظام تتبع لأسطول النقل.' }],
+            serv_consulting: [{ id: 's28', label: 'ترخيص مزاولة مهنة', cost: 3000, risk: 10000, desc: 'رخصة وزارة التجارة للخدمات الاستشارية.' }],
+            serv_legal: [{ id: 's29', label: 'ترخيص وزارة العدل', cost: 5000, risk: 20000, desc: 'ترخيص مزاولة المحاماة والاستشارات القانونية.' }],
+            serv_media: [{ id: 's30', label: 'ترخيص هيئة الإعلام', cost: 8000, risk: 25000, desc: 'ترخيص الإنتاج الإعلامي والنشر والبث.' }],
+            serv_beauty: [{ id: 's31', label: 'ترخيص صالون/مركز تجميل', cost: 5000, risk: 15000, desc: 'ترخيص بلدي + صحي لمراكز التجميل.' }],
+            serv_maintenance: [{ id: 's32', label: 'تصنيف مقاول صيانة', cost: 8000, risk: 15000, desc: 'تصنيف في وزارة الشؤون البلدية.' }],
+            serv_security: [{ id: 's33', label: 'ترخيص حراسات أمنية', cost: 15000, risk: 40000, desc: 'ترخيص وزارة الداخلية لشركات الحراسة.' }],
+            serv_recruitment: [{ id: 's34', label: 'ترخيص استقدام', cost: 10000, risk: 30000, desc: 'ترخيص وزارة الموارد البشرية للاستقدام.' }],
+            serv_food: [{ id: 's35', label: 'رخصة بلدية مطعم/مقهى', cost: 5000, risk: 20000, desc: 'ترخيص بلدي + شهادة صحية + SFDA.' },
+            { id: 's36', label: 'شهادة سلامة غذائية', cost: 3000, risk: 15000, desc: 'التزام بمعايير سلامة الغذاء والنظافة.' }],
+            // ── الصناعي ──
+            ind_food: [{ id: 's3', label: 'شهادة هاسب (HACCP)', cost: 15000, risk: 40000, desc: 'سلامة الغذاء ونظام تحليل المخاطر.' },
+            { id: 's37', label: 'ترخيص SFDA مصنع غذائي', cost: 20000, risk: 60000, desc: 'ترخيص هيئة الغذاء والدواء للمصانع الغذائية.' }],
+            ind_general: [{ id: 's38', label: 'ترخيص وزارة الصناعة', cost: 10000, risk: 30000, desc: 'رخصة صناعية من وزارة الصناعة والثروة المعدنية.' },
+            { id: 's39', label: 'معايير البيئة (NCEC)', cost: 15000, risk: 50000, desc: 'الالتزام بمعايير المركز الوطني للرقابة البيئية.' }],
+            ind_petrochemical: [{ id: 's40', label: 'ترخيص Royal Commission', cost: 50000, risk: 200000, desc: 'رخصة الهيئة الملكية للجبيل وينبع.' },
+            { id: 's41', label: 'معايير السلامة الكيميائية', cost: 30000, risk: 100000, desc: 'الالتزام بنظام إدارة السلامة العملياتية (PSM).' }],
+            ind_plastic: [{ id: 's42', label: 'ترخيص إعادة تدوير', cost: 8000, risk: 20000, desc: 'ترخيص المركز الوطني لإدارة النفايات (MWAN).' }],
+            ind_metal: [{ id: 's43', label: 'ترخيص منشأة معدنية', cost: 20000, risk: 40000, desc: 'رخصة وزارة الصناعة + معايير السلامة المهنية.' }],
+            ind_pharma: [{ id: 's44', label: 'ترخيص SFDA تصنيع أدوية', cost: 100000, risk: 500000, desc: 'ترخيص هيئة الغذاء والدواء + GMP.' },
+            { id: 's45', label: 'ممارسات التصنيع الجيدة (GMP)', cost: 50000, risk: 200000, desc: 'الالتزام بمعايير التصنيع الدوائي.' }],
+            ind_textile: [{ id: 's46', label: 'معايير SASO للمنسوجات', cost: 5000, risk: 15000, desc: 'مطابقة المنتجات لمعايير الجودة السعودية.' }],
+            ind_building: [{ id: 's47', label: 'شهادة مطابقة مواد بناء', cost: 10000, risk: 30000, desc: 'اعتماد SASO لمواد البناء والخرسانة.' }],
+            ind_water: [{ id: 's48', label: 'ترخيص تحلية/معالجة مياه', cost: 30000, risk: 80000, desc: 'ترخيص وزارة البيئة والمياه والزراعة.' }],
+            // ── المقاولات ──
+            const_build: [{ id: 's6', label: 'تصنيف مقاول (وزارة الشؤون البلدية)', cost: 12000, risk: 25000, desc: 'تصنيف درجة المقاول وفق حجم المشاريع.' },
+            { id: 's49', label: 'ترخيص مكتب هندسي', cost: 10000, risk: 20000, desc: 'تصنيف الهيئة السعودية للمهندسين.' }],
+            const_realestate: [{ id: 's50', label: 'ترخيص وافي (WAFI)', cost: 15000, risk: 50000, desc: 'ترخيص بيع على الخارطة من وزارة الإسكان.' },
+            { id: 's51', label: 'حساب ضمان المشاريع', cost: 5000, risk: 20000, desc: 'فتح حساب ضمان لحماية حقوق المشترين.' }],
+            const_roads: [{ id: 's52', label: 'تصنيف وزارة النقل', cost: 15000, risk: 30000, desc: 'تصنيف مقاول طرق وجسور.' }],
+            const_electrical: [{ id: 's53', label: 'ترخيص هيئة تنظيم الكهرباء', cost: 10000, risk: 25000, desc: 'ترخيص مقاول كهربائي معتمد.' }],
+            const_interior: [{ id: 's54', label: 'سجل تجاري تشطيبات', cost: 3000, risk: 8000, desc: 'ترخيص مزاولة أعمال التشطيبات.' }],
+            const_facility: [{ id: 's55', label: 'ترخيص إدارة مرافق', cost: 8000, risk: 15000, desc: 'ترخيص شركات إدارة المرافق والمباني.' }],
+            // ── الحكومي ──
+            gov_min: [{ id: 's56', label: 'معايير الحوكمة الرشيدة', cost: 0, risk: 0, desc: 'الالتزام بمعايير جودة الحياة ورؤية 2030.' },
+            { id: 's57', label: 'مؤشرات قياس الأداء الحكومي', cost: 0, risk: 0, desc: 'الربط مع مركز تحقيق الرؤية (DVRC).' }],
+            gov_mun: [{ id: 's58', label: 'معايير التحول الرقمي البلدي', cost: 0, risk: 0, desc: 'الالتزام ببرنامج التحول الرقمي البلدي.' }],
+            gov_uni: [{ id: 's59', label: 'اعتماد أكاديمي', cost: 0, risk: 0, desc: 'معايير هيئة تقويم التعليم والتدريب.' }],
+            gov_hospital: [{ id: 's60', label: 'اعتماد CBAHI حكومي', cost: 0, risk: 0, desc: 'معايير المركز السعودي لاعتماد المنشآت الصحية.' }],
+            gov_security: [{ id: 's61', label: 'معايير أمنية خاصة', cost: 0, risk: 0, desc: 'ضوابط أمنية خاصة بالجهات السيادية.' }],
+            gov_fund: [{ id: 's62', label: 'حوكمة صناديق التنمية', cost: 0, risk: 0, desc: 'معايير هيئة الرقابة المالية للصناديق العامة.' }],
+            // ── غير الربحي ──
+            npo_social: [{ id: 's63', label: 'ترخيص المركز الوطني (NCNP)', cost: 3000, risk: 10000, desc: 'ترخيص وزارة الموارد البشرية للجمعيات.' }],
+            npo_special: [{ id: 's64', label: 'معايير رعاية اجتماعية', cost: 5000, risk: 15000, desc: 'الالتزام بمعايير الرعاية الاجتماعية.' }],
+            npo_relief: [{ id: 's65', label: 'ترخيص جمع تبرعات', cost: 2000, risk: 20000, desc: 'ترخيص منصة إحسان أو وزارة الموارد.' }],
+            npo_awqaf: [{ id: 's66', label: 'ترخيص الهيئة العامة للأوقاف', cost: 5000, risk: 15000, desc: 'تسجيل وقف وإدارته وفق نظام الأوقاف.' }],
+            npo_sports: [{ id: 's67', label: 'ترخيص وزارة الرياضة', cost: 8000, risk: 20000, desc: 'ترخيص مزاولة نشاط رياضي.' }],
+            npo_professional: [{ id: 's68', label: 'اعتماد جمعية مهنية', cost: 3000, risk: 5000, desc: 'ترخيص وزارة التجارة للجمعيات المهنية.' }],
+            // ── القابض / المختلط ──
+            mix_energy: [{ id: 's69', label: 'ترخيص وزارة الطاقة', cost: 50000, risk: 200000, desc: 'ترخيص إنتاج أو توزيع طاقة.' },
+            { id: 's70', label: 'معايير بيئية (NCEC)', cost: 30000, risk: 100000, desc: 'الالتزام بمعايير الانبعاثات والسلامة البيئية.' }],
+            mix_telecom: [{ id: 's71', label: 'ترخيص CITC اتصالات', cost: 100000, risk: 500000, desc: 'ترخيص هيئة الاتصالات وتقنية المعلومات.' }],
+            mix_finance: [{ id: 's72', label: 'ترخيص SAMA / CMA', cost: 200000, risk: 1000000, desc: 'ترخيص البنك المركزي أو هيئة سوق المال.' },
+            { id: 's73', label: 'مكافحة غسل الأموال (AML/CFT)', cost: 50000, risk: 500000, desc: 'الالتزام بنظام مكافحة غسل الأموال وتمويل الإرهاب.' }],
+            mix_diversified: [{ id: 's74', label: 'حوكمة الشركات القابضة', cost: 30000, risk: 80000, desc: 'معايير حوكمة الشركات من CMA أو وزارة التجارة.' }],
+            mix_ppp: [{ id: 's75', label: 'نظام المشتريات الحكومية', cost: 10000, risk: 30000, desc: 'الالتزام بنظام المنافسات والمشتريات الحكومية.' }],
+            mix_logistics: [{ id: 's76', label: 'ترخيص هيئة النقل الدولي', cost: 20000, risk: 50000, desc: 'ترخيص عمليات الشحن والتخليص الجمركي.' },
+            { id: 's77', label: 'نظام سابر الجمركي', cost: 5000, risk: 15000, desc: 'الربط مع منصة سابر للتخليص والمطابقة.' }]
+        };
+
+        const OPEX_DEFAULTS = {
+            micro: [2, 1, 5000, 50, 500000],
+            small: [15, 8, 7500, 150, 1500000],
+            medium: [100, 50, 9500, 600, 5000000],
+            large: [500, 300, 13000, 3000, 20000000],
+            holding: [2000, 1200, 16000, 10000, 100000000]
+        };
+
+        const SIZE_MULTIPLIER = { micro: 0.3, small: 0.6, medium: 1, large: 1.5, holding: 2.5 };
+
+        const CAT_NAMES = {
+            finance: 'الامتثال المالي', hr: 'الموارد البشرية',
+            admin: 'الإداري والتشغيلي', regulatory: 'التنظيمي والأمني', sector: 'القطاعي الخاص'
+        };
+
+        // ═════════════════════════════════════════════════════════════════
+        // STATE
+        // ═════════════════════════════════════════════════════════════════
+
+        const STATE_KEY = 'startix_v10';
+
+        let AppState = {
+            role: null,
+            answers: {},
+            entity: 'P',
+            size: 'micro',
+            mainSector: 'commercial',
+            sector: 'comm_retail',
+            tab: 'finance',
+            res: {},
+            timer: 0,
+            currentSlide: 1
+        };
+
+        let radarChart = null;
+        const $ = id => document.getElementById(id);
+
+        function saveState() {
+            try { localStorage.setItem(STATE_KEY, JSON.stringify(AppState)); } catch (e) { }
+        }
+
+        function loadState() {
+            try {
+                const s = localStorage.getItem(STATE_KEY);
+                if (s) Object.assign(AppState, JSON.parse(s));
+            } catch (e) { }
+        }
+
+        // ═════════════════════════════════════════════════════════════════
+        // PHASE 0 — QUICK QUESTIONS
+        // ═════════════════════════════════════════════════════════════════
+
+        function initApp() {
+            // === لو جاي من الصفحة الرئيسية أو بـ ?new → ابدأ من جديد ===
+            const params = new URLSearchParams(window.location.search);
+            const fromLanding = document.referrer.includes('landing') || document.referrer.endsWith(':3000/') || document.referrer.endsWith('.com/');
+            if (params.has('new') || (fromLanding && !params.has('resume'))) {
+                localStorage.removeItem('startix_v10');
+            }
+
+            loadState();
+            $('final-title-year').innerText = 'صدمة الواقع ' + new Date().getFullYear();
+
+            // === مدير الإدارة: لو خلّص كل الأسئلة — يتخطى لـ Phase 3 مباشرة ===
+            if (AppState.role === 'manager' && AppState.deptQuestions && AppState.deptQuestions.q3) {
+                // نقل البيانات ثم تخطي
+                AppState.entity = AppState._mgrEntity || 'P';
+                AppState.size = AppState.answers[3] || 'medium';
+                AppState.mainSector = AppState._mgrSector || 'services';
+                AppState.sector = AppState._mgrSubSector || AppState._mgrSector || 'services';
+                AppState.companyName = AppState._mgrCompanyName || '';
+                goToPhase(3);
+                return;
+            }
+
+            if (!AppState.role) {
+                renderSlide(1);
+            } else {
+                renderSlide(AppState.currentSlide || 1);
+            }
+
+            // Timer
+            setInterval(() => {
+                AppState.timer++;
+                const m = Math.floor(AppState.timer / 60);
+                const s = AppState.timer % 60;
+                $('timer-display').innerText = m + ':' + String(s).padStart(2, '0');
+            }, 1000);
+        }
+
+        function renderSlide(num) {
+            AppState.currentSlide = num;
+            const c = $('quick-slide-container');
+            let html = '';
+
+            if (num === 1) {
+                html = '<h3 class="text-3xl font-black text-white mb-10">ما هو دورك الأساسي في المنظومة؟</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+                for (const [k, v] of Object.entries(ROLES_LIST)) {
+                    html += '<button onclick="pickRole(\'' + k + '\')" class="option-btn"><span>' + v.i + '</span><div><div class="font-bold">' + v.l + '</div><div class="text-[10px] text-slate-500">' + v.s + '</div></div></button>';
+                }
+                html += '</div>';
+            } else if (num === 2) {
+                // === مسار مدير الإدارة: يسأله أي إدارة أول ===
+                if (AppState.role === 'manager') {
+                    html = '<h3 class="text-3xl font-black text-white mb-10">أي إدارة تقود؟</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+                    const depts = [
+                        { v: 'compliance', l: '⚖️ الامتثال والحوكمة', s: 'التراخيص، الأنظمة، المخاطر' },
+                        { v: 'finance', l: '💰 المالية والمحاسبة', s: 'الميزانية، التقارير، التدفق النقدي' },
+                        { v: 'sales', l: '📈 المبيعات والتطوير', s: 'الإيرادات، العملاء، الشراكات' },
+                        { v: 'hr', l: '👥 الموارد البشرية', s: 'التوظيف، التدريب، الأداء' },
+                        { v: 'marketing', l: '📣 التسويق والعلامة', s: 'الحملات، المحتوى، السوشال ميديا' },
+                        { v: 'operations', l: '⚙️ العمليات والإنتاج', s: 'سلسلة التوريد، الجودة، التشغيل' },
+                        { v: 'support', l: '🛠️ الخدمات المساندة', s: 'تقنية المعلومات، الإدارية، اللوجستية' }
+                    ];
+                    depts.forEach(d => {
+                        html += '<button onclick="pickAnswer(2,\'' + d.v + '\')" class="option-btn"><span>' + d.l.split(' ')[0] + '</span><div><div class="font-bold">' + d.l.substring(d.l.indexOf(' ') + 1) + '</div><div class="text-[10px] text-slate-500">' + d.s + '</div></div></button>';
+                    });
+                    html += '</div>';
+                } else {
+                    const isInst = ['ceo', 'cso', 'compliance', 'board'].includes(AppState.role);
+                    const q = isInst ? 'ما هو تصنيف المنظمة؟' : 'في أي مرحلة يقع مشروعك؟';
+                    const opts = isInst
+                        ? [{ v: 'corp', l: '🏦 منظمة مؤسسية' }, { v: 'gov', l: '🏛️ جهة حكومية' }, { v: 'scale', l: '🚀 شركة نامية' }]
+                        : [{ v: 'idea', l: '💡 مرحلة الفكرة' }, { v: 'startup', l: '🌱 منشأة ناشئة' }, { v: 'growing', l: '📈 مرحلة النمو' }, { v: 'mature', l: '🏢 منشأة ناضجة' }];
+                    html = '<h3 class="text-3xl font-black text-white mb-10">' + q + '</h3><div class="space-y-3">' + makeOpts(2, opts) + '</div>';
+                }
+            } else if (num === 3) {
+                // === مدير الإدارة: حجم الشركة (مو التحدي) ===
+                if (AppState.role === 'manager') {
+                    // === مدير الإدارة: تأكيد الهوية والكيان ===
+                    const savedEntity = AppState._mgrEntity || '';
+                    const savedSector = AppState._mgrSector || '';
+                    const savedSub = AppState._mgrSubSector || ''; // Added for sub-sector
+                    const savedSize = AppState.answers[3] || '';
+
+                    html = '<h3 class="text-2xl font-black text-white mb-6">تأكيد الهوية والكيان</h3>';
+                    html += '<p class="text-slate-400 text-sm mb-6">عرّفنا على منظمتك عشان نخصص تجربتك 🎯</p>';
+
+                    // اسم المنشأة
+                    html += '<div class="mb-6">';
+                    html += '<label style="font-size:12px;color:#94a3b8;font-weight:600;display:block;margin-bottom:6px;">🏷️ اسم المنشأة</label>';
+                    html += '<input type="text" value="' + (AppState._mgrCompanyName || '') + '" onchange="AppState._mgrCompanyName=this.value;saveState()" placeholder="مثال: شركة رفارف للتقنية" style="width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#fff;font-size:15px;font-weight:600;text-align:right;outline:none;transition:border 0.2s;" onfocus="this.style.borderColor=\'#667eea\'" onblur="this.style.borderColor=\'rgba(255,255,255,0.15)\'">';
+                    html += '</div>';
+
+                    // نوع الكيان — ٤ أنواع
+                    html += '<div class="mb-6"><label class="text-slate-300 text-sm font-bold block mb-3">نوع الكيان</label>';
+                    html += '<div class="grid grid-cols-2 gap-3">';
+                    [{ v: 'P', l: '💰 منشأة ربحية', s: 'شركة، مؤسسة، منشأة تجارية' },
+                    { v: 'G', l: '🏛️ جهة حكومية', s: 'وزارة، هيئة، إمارة، بلدية' },
+                    { v: 'N', l: '🤝 غير ربحية', s: 'جمعية، وقف، مؤسسة أهلية' },
+                    { v: 'M', l: '🏢 شبه حكومي', s: 'صندوق تنمية، شركة حكومية مساهمة' }
+                    ].forEach(e => {
+                        const sel = savedEntity === e.v ? 'border-color:#667eea;background:rgba(102,126,234,0.15);' : '';
+                        html += '<button onclick="setMgrField(\'_mgrEntity\',\'' + e.v + '\')" class="option-btn" style="' + sel + '"><span>' + e.l.split(' ')[0] + '</span><div><div class="font-bold">' + e.l.substring(e.l.indexOf(' ') + 1) + '</div><div class="text-[10px] text-slate-500">' + e.s + '</div></div></button>';
+                    });
+                    html += '</div></div>';
+
+                    // التفريعات — تظهر حسب نوع القطاع
+                    if (savedEntity) {
+                        const groups = SECTOR_GROUPS[savedEntity] || SECTOR_GROUPS.P;
+                        html += '<div class="mb-6"><label class="text-slate-300 text-sm font-bold block mb-3">القطاع الرئيسي</label>';
+                        html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-3">';
+                        groups.forEach(g => {
+                            const sel = savedSector === g.key ? 'border-color:#667eea;background:rgba(102,126,234,0.15);' : '';
+                            html += '<button onclick="setMgrField(\'_mgrSector\',\'' + g.key + '\')" class="option-btn" style="' + sel + '"><span>' + g.icon + '</span><div><div class="font-bold">' + g.label + '</div><div class="text-[10px] text-slate-500">' + g.hint + '</div></div></button>';
+                        });
+                        html += '</div></div>';
+                    }
+
+                    // النشاط الفرعي — يظهر حسب القطاع
+                    if (savedSector && SUB_SECTORS[savedSector]) {
+                        html += '<div class="mb-6"><label class="text-slate-300 text-sm font-bold block mb-3">النشاط التفصيلي</label>';
+                        html += '<div class="grid grid-cols-1 gap-2" style="max-height:200px;overflow-y:auto;padding-left:4px;">';
+                        SUB_SECTORS[savedSector].forEach(sub => {
+                            const sel = savedSub === sub.v ? 'border-color:#667eea;background:rgba(102,126,234,0.15);' : '';
+                            html += '<button onclick="setMgrField(\'_mgrSubSector\',\'' + sub.v + '\')" class="option-btn" style="padding:8px 12px;font-size:12px;' + sel + '">' + sub.l + '</button>';
+                        });
+                        html += '</div></div>';
+                    }
+
+                    // حجم المنظمة
+                    html += '<div class="mb-6"><label class="text-slate-300 text-sm font-bold block mb-3">حجم المنظمة</label>';
+                    html += '<div class="grid grid-cols-2 gap-3">';
+                    [{ v: 'small', l: '📈 صغيرة (10-49)' },
+                    { v: 'medium', l: '👨‍💼 متوسطة (50-249)' },
+                    { v: 'large', l: '🏢 كبيرة (250+)' },
+                    { v: 'enterprise', l: '🏛️ عملاقة (500+)' }
+                    ].forEach(sz => {
+                        const sel = savedSize === sz.v ? 'border-color:#667eea;background:rgba(102,126,234,0.15);' : '';
+                        html += '<button onclick="setMgrField(\'size3\',\'' + sz.v + '\')" class="option-btn" style="padding:10px;text-align:center;' + sel + '">' + sz.l + '</button>';
+                    });
+                    html += '</div></div>';
+
+                    // البيانات التشغيلية (OPEX)
+                    html += '<div class="mb-6"><label class="text-slate-300 text-sm font-bold block mb-3">⚡ البيانات التشغيلية <span class="text-slate-500 font-normal">(تقريبي — مو لازم يكون دقيق)</span></label>';
+                    html += '<div class="grid grid-cols-2 gap-4">';
+
+                    const opexFields = [
+                        { id: '_mgrTeamSize', label: 'عدد فريقك', ph: '12', icon: '👥' },
+                        { id: '_mgrBudget', label: 'ميزانية إدارتك (ألف ر.س)', ph: '500', icon: '💰' },
+                        { id: '_mgrTarget', label: 'المستهدف السنوي (ألف ر.س)', ph: '2000', icon: '🎯' }
+                    ];
+                    opexFields.forEach(f => {
+                        html += '<div style="display:flex;flex-direction:column;gap:4px;">';
+                        html += '<label style="font-size:11px;color:#94a3b8;font-weight:600;">' + f.icon + ' ' + f.label + '</label>';
+                        html += '<input type="number" inputmode="numeric" value="' + (AppState[f.id] || '') + '" onchange="AppState[\'' + f.id + '\']=this.value;saveState();updateAvgSalary()" placeholder="' + f.ph + '" style="width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#fff;font-size:16px;font-weight:600;text-align:right;outline:none;transition:border 0.2s;" onfocus="this.style.borderColor=\'#667eea\'" onblur="this.style.borderColor=\'rgba(255,255,255,0.15)\'">';
+                        html += '</div>';
+                    });
+
+                    // متوسط الراتب — محسوب تلقائي
+                    const teamSize = parseInt(AppState._mgrTeamSize) || 0;
+                    const budget = parseInt(AppState._mgrBudget) || 0;
+                    const avgSalary = (teamSize > 0 && budget > 0) ? Math.round((budget * 1000) / teamSize / 12) : 0;
+                    html += '<div style="display:flex;flex-direction:column;gap:4px;">';
+                    html += '<label style="font-size:11px;color:#94a3b8;font-weight:600;">💵 متوسط الراتب (محسوب تلقائي)</label>';
+                    if (avgSalary > 0) {
+                        html += '<div style="width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid rgba(102,126,234,0.3);background:rgba(102,126,234,0.08);color:#667eea;font-size:16px;font-weight:700;text-align:right;">' + avgSalary.toLocaleString('ar-SA') + ' ر.س</div>';
+                    } else {
+                        html += '<div style="width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);color:#64748b;font-size:13px;text-align:center;">أدخل عدد الفريق والميزانية ↑</div>';
+                    }
+                    html += '</div>';
+                    html += '</div></div>';
+
+                    // زر التالي — يظهر فقط لو اختار الثلاثة
+                    if (savedEntity && savedSector && savedSize) {
+                        html += '<button onclick="pickAnswer(3, AppState.answers[3])" class="mt-4 px-8 py-3 rounded-xl font-bold text-white" style="background:linear-gradient(135deg,#667eea,#764ba2);width:100%;font-size:16px;">التالي ←</button>';
+                    }
+                } else {
+                    html = '<h3 class="text-3xl font-black text-white mb-10">ما هو أكبر تحدٍّ يواجهك؟</h3><div class="space-y-3">' +
+                        makeOpts(3, [{ v: 'risk', l: '⚠️ إدارة المخاطر' }, { v: 'growth', l: '📈 رفع الأرباح' }, { v: 'align', l: '🔗 مواءمة الأهداف' }]) + '</div>';
+                }
+            } else if (num === 4) {
+                // === مدير الإدارة: أكبر ألم في إدارته ===
+                if (AppState.role === 'manager') {
+                    const pains = [
+                        { v: 'no_kpis', l: '📊 ما عندي مؤشرات أداء واضحة' },
+                        { v: 'no_align', l: '🔗 أهدافي ما مرتبطة بأهداف المنظمة' },
+                        { v: 'no_team', l: '👥 فريقي ما يعرف أولوياته' },
+                        { v: 'no_data', l: '📋 أقرر بدون بيانات كافية' },
+                        { v: 'no_time', l: '⏰ مشغول بالتشغيل ما عندي وقت للتخطيط' },
+                        { v: 'no_budget', l: '💸 ما عندي ميزانية واضحة لإدارتي' }
+                    ];
+                    const selected = (AppState.answers[4] || '').split(',').filter(Boolean);
+                    html = '<h3 class="text-3xl font-black text-white mb-6">وش أكبر ألم في إدارتك؟</h3>';
+                    html += '<p class="text-slate-400 text-sm mb-6">اختر كل اللي ينطبق عليك 👇</p><div class="space-y-3">';
+                    pains.forEach(p => {
+                        const isOn = selected.includes(p.v);
+                        html += '<button onclick="togglePain(\'' + p.v + '\')" class="option-btn" style="' + (isOn ? 'border-color:#667eea;background:rgba(102,126,234,0.15);' : '') + '">' + (isOn ? '✅ ' : '') + p.l + '</button>';
+                    });
+                    html += '</div>';
+                    if (selected.length > 0) {
+                        html += '<button onclick="pickAnswer(4, AppState.answers[4])" class="mt-6 px-8 py-3 rounded-xl font-bold text-white" style="background:linear-gradient(135deg,#667eea,#764ba2);width:100%;font-size:16px;">التالي ← (' + selected.length + ' مختار)</button>';
+                    }
+                } else {
+                    const stage = AppState.answers[2];
+                    const big = ['corp', 'gov', 'mature'].includes(stage) || ['ceo', 'cso', 'board'].includes(AppState.role);
+                    const opts = big
+                        ? [{ v: 'medium', l: '👨‍💼 متوسطة (50-249)' }, { v: 'large', l: '🏢 كبرى (250+)' }, { v: 'holding', l: '🌍 قابضة / دولية' }]
+                        : [{ v: 'micro', l: '🚀 متناهية (1-5)' }, { v: 'small', l: '📈 صغيرة (6-49)' }, { v: 'medium', l: '👨‍💼 متوسطة (50+)' }];
+                    html = '<h3 class="text-3xl font-black text-white mb-10">ما هو حجم فريق العمل؟</h3><div class="grid grid-cols-2 gap-3">' + makeOpts(4, opts) + '</div>';
+                }
+            } else if (num === 5) {
+                // === مدير الإدارة: هدفه من ستارتكس (multi-select) ===
+                if (AppState.role === 'manager') {
+                    const goals = [
+                        { v: 'improve', l: '📈 أحسّن أداء إدارتي وأرفع الإنتاجية' },
+                        { v: 'report', l: '📋 أسوي تقارير احترافية للإدارة العليا' },
+                        { v: 'plan', l: '🎯 أبني خطة واضحة لإدارتي' },
+                        { v: 'kpis', l: '📊 أحدد مؤشرات أداء وأتابعها' },
+                        { v: 'align', l: '🔗 أربط أهدافي بأهداف المنظمة' },
+                        { v: 'team', l: '👥 أوزّع المهام وأتابع الفريق' },
+                        { v: 'swot', l: '🔍 أحلل نقاط القوة والضعف في إدارتي' }
+                    ];
+                    const selectedGoals = (AppState.answers[5] || '').split(',').filter(Boolean);
+                    html = '<h3 class="text-3xl font-black text-white mb-6">وش تبي تحقق من ستارتكس؟</h3>';
+                    html += '<p class="text-slate-400 text-sm mb-6">اختر كل اللي يهمك 👇</p><div class="space-y-3">';
+                    goals.forEach(g => {
+                        const isOn = selectedGoals.includes(g.v);
+                        html += '<button onclick="toggleGoal(\'' + g.v + '\')" class="option-btn" style="' + (isOn ? 'border-color:#667eea;background:rgba(102,126,234,0.15);' : '') + '">' + (isOn ? '✅ ' : '') + g.l + '</button>';
+                    });
+                    html += '</div>';
+                    if (selectedGoals.length > 0) {
+                        html += '<button onclick="pickAnswer(5, AppState.answers[5])" class="mt-6 px-8 py-3 rounded-xl font-bold text-white" style="background:linear-gradient(135deg,#667eea,#764ba2);width:100%;font-size:16px;">التالي ← (' + selectedGoals.length + ' مختار)</button>';
+                    }
+                } else {
+                    html = '<h3 class="text-3xl font-black text-white mb-10">ما هدفك الأساسي من التشخيص؟</h3><div class="space-y-3">' +
+                        makeOpts(5, [{ v: 'roadmap', l: '🗺️ بناء خارطة طريق' }, { v: 'compliance', l: '⚖️ فحص الامتثال' }, { v: 'both', l: '🎯 الاثنين معاً' }]) + '</div>';
+                }
+
+                // ═══════════════════════════════════════════════════════
+                // أسئلة متخصصة لكل إدارة (slides 6-8) — Functional Strategy
+                // ═══════════════════════════════════════════════════════
+            } else if (num >= 6 && num <= 8 && AppState.role === 'manager') {
+                const dept = AppState.answers[2] || 'finance';
+                const qIdx = num - 6; // 0, 1, 2
+                const dq = DEPT_QUESTIONS[dept];
+                if (dq && dq[qIdx]) {
+                    const q = dq[qIdx];
+                    const totalMgrSlides = 8;
+                    html = '<div class="mb-4"><span class="text-xs font-bold px-3 py-1 rounded-full" style="background:rgba(102,126,234,0.15);color:#667eea;">' + q.badge + '</span></div>';
+                    html += '<h3 class="text-2xl font-black text-white mb-3">' + q.title + '</h3>';
+                    html += '<p class="text-slate-400 text-sm mb-8">' + q.hint + '</p>';
+                    html += '<div class="space-y-3">';
+                    q.options.forEach(o => {
+                        html += '<button onclick="pickDeptAnswer(' + qIdx + ',\'' + o.v + '\')" class="option-btn" style="text-align:right;">' + o.icon + ' ' + o.l + '</button>';
+                    });
+                    html += '</div>';
+                }
+            }
+
+            // Back button
+            const totalSlides = (AppState.role === 'manager') ? 8 : 5;
+            if (num > 1) {
+                html += '<button onclick="renderSlide(' + (num - 1) + ')" class="back-link mt-8"><i class="bi bi-arrow-right"></i> رجوع للسؤال السابق</button>';
+            }
+
+            c.innerHTML = html;
+            updateNodes(num);
+            $('progress-fill').style.width = (num / totalSlides * 100) + '%';
+            $('progress-label').innerText = 'السؤال ' + num + ' من ' + totalSlides;
+        }
+
+        function makeOpts(qNum, opts) {
+            return opts.map(o =>
+                '<button onclick="pickAnswer(' + qNum + ',\'' + o.v + '\')" class="option-btn">' + o.l + '</button>'
+            ).join('');
+        }
+
+        function updateNodes(current) {
+            const total = (AppState.role === 'manager') ? 8 : 5;
+            for (let i = 1; i <= total; i++) {
+                const n = $('node-' + i);
+                if (!n) continue;
+                n.classList.remove('active', 'done');
+                if (i < current) n.classList.add('done');
+                if (i === current) n.classList.add('active');
+            }
+        }
+
+        function pickRole(role) {
+            AppState.role = role;
+            saveState();
+            renderSlide(2);
+        }
+
+        function pickAnswer(qNum, val) {
+            AppState.answers[qNum] = val;
+            saveState();
+            const maxSlide = (AppState.role === 'manager') ? 5 : 5;
+            if (qNum < maxSlide) {
+                renderSlide(qNum + 1);
+            } else if (AppState.role === 'manager' && qNum === 5) {
+                // المدير يروح للأسئلة المتخصصة (slide 6)
+                renderSlide(6);
+            } else {
+                finishQuickQuestions();
+            }
+        }
+
+        // === إجابة سؤال الإدارة المتخصص ===
+        function pickDeptAnswer(qIdx, val) {
+            if (!AppState.deptQuestions) AppState.deptQuestions = {};
+            AppState.deptQuestions['q' + (qIdx + 1)] = val;
+            AppState.deptQuestions.dept = AppState.answers[2];
+            saveState();
+            if (qIdx < 2) {
+                renderSlide(6 + qIdx + 1); // next dept question
+            } else {
+                finishQuickQuestions(); // done!
+            }
+        }
+
+        // === Multi-select toggle for manager pains ===
+        function togglePain(val) {
+            const current = (AppState.answers[4] || '').split(',').filter(Boolean);
+            const idx = current.indexOf(val);
+            if (idx >= 0) {
+                current.splice(idx, 1);
+            } else {
+                current.push(val);
+            }
+            AppState.answers[4] = current.join(',');
+            saveState();
+            renderSlide(4); // أعد رسم الشاشة لتحديث التحديد
+        }
+
+        // === Manager entity/sector/size field setter ===
+        function setMgrField(field, val) {
+            if (field === 'size3') {
+                AppState.answers[3] = val;
+            } else {
+                AppState[field] = val;
+            }
+            saveState();
+            renderSlide(3); // أعد رسم شاشة تأكيد الهوية
+        }
+
+        function updateAvgSalary() {
+            if (AppState.role === 'manager' && AppState.currentSlide === 3) {
+                renderSlide(3);
+            }
+        }
+
+        // === Multi-select toggle for manager goals ===
+        function toggleGoal(val) {
+            const current = (AppState.answers[5] || '').split(',').filter(Boolean);
+            const idx = current.indexOf(val);
+            if (idx >= 0) {
+                current.splice(idx, 1);
+            } else {
+                current.push(val);
+            }
+            AppState.answers[5] = current.join(',');
+            saveState();
+            renderSlide(5);
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // محرك التناقضات النوعي — يعمل client-side من إجابات المدير
+        // ═══════════════════════════════════════════════════════════════
+        function detectDeptContradictions() {
+            const dq = AppState.deptQuestions || {};
+            const dept = dq.dept || AppState.answers[2] || '';
+            const pains = (AppState.answers[4] || '').split(',');
+            const goals = (AppState.answers[5] || '').split(',');
+            const size = AppState.answers[3] || AppState.size || '';
+            const contradictions = [];
+
+            // ──── قواعد المالية ────
+            if (dept === 'finance') {
+                if (dq.q3 === 'cant_expand' && goals.includes('improve')) {
+                    contradictions.push({
+                        id: 'FIN_EXPAND_VS_GOAL', severity: 'HIGH', icon: '🔴',
+                        title: 'تناقض: طموح تحسين بدون غطاء مالي',
+                        desc: 'تريد تحسين الأداء لكن السيولة بالكاد تكفي للتشغيل. أي خطة تحسين تحتاج ميزانية إضافية.',
+                        action: 'راجع أولويات الإنفاق أو ابحث عن مصادر تمويل بديلة'
+                    });
+                }
+                if (dq.q1 === 'credit_heavy' && dq.q2 === 'fixed_high') {
+                    contradictions.push({
+                        id: 'FIN_CREDIT_FIXED', severity: 'CRITICAL', icon: '🚨',
+                        title: 'إنذار سيولة: مديونيات عالية + تكاليف ثابتة مرتفعة',
+                        desc: 'الإيرادات آجلة لكن المصاريف الثابتة (رواتب + إيجارات) لا تنتظر. خطر نقص كاش خلال 3-6 أشهر.',
+                        action: 'ادرس تحويل جزء من المبيعات الآجلة لنقدي أو تخفيض التكاليف الثابتة'
+                    });
+                }
+            }
+
+            // ──── قواعد المبيعات ────
+            if (dept === 'sales') {
+                if (dq.q3 === 'team_insufficient' && pains.includes('no_growth')) {
+                    contradictions.push({
+                        id: 'SALES_TEAM_VS_GROWTH', severity: 'HIGH', icon: '🔴',
+                        title: 'تناقض: هدف نمو بدون فريق كافٍ',
+                        desc: 'تشتكي من عدم النمو لكن فريق المبيعات لا يملك العدد ولا المهارة. النمو مستحيل بالموارد الحالية.',
+                        action: 'إما توظيف مهارات بيعية جديدة أو تعديل المستهدفات لتتناسب مع الفريق الحالي'
+                    });
+                }
+                if (dq.q1 === 'concentrated') {
+                    contradictions.push({
+                        id: 'SALES_CONCENTRATION_RISK', severity: 'MEDIUM', icon: '⚠️',
+                        title: 'خطر تركز: 80% من الإيرادات على عملاء قليلين',
+                        desc: 'فقدان عميل واحد قد يسبب انهيار 30-40% من الإيرادات.',
+                        action: 'بناء خطة تنويع قاعدة العملاء وتقليل الاعتمادية'
+                    });
+                }
+            }
+
+            // ──── قواعد التسويق ────
+            if (dept === 'marketing') {
+                if (dq.q2 === 'unknown') {
+                    contradictions.push({
+                        id: 'MKT_CAC_UNKNOWN', severity: 'HIGH', icon: '🔴',
+                        title: 'فجوة حرجة: تكلفة الاستحواذ (CAC) مجهولة',
+                        desc: 'تنفقون على التسويق بدون معرفة كم يكلف العميل الواحد. قد تكون الميزانية تُحرق بدون عائد.',
+                        action: 'حساب CAC = إجمالي إنفاق التسويق ÷ عدد العملاء الجدد شهرياً'
+                    });
+                }
+                if (dq.q2 === 'known_high' && dq.q3 === 'acquisition') {
+                    contradictions.push({
+                        id: 'MKT_HIGH_CAC_ACQ', severity: 'HIGH', icon: '💸',
+                        title: 'هدر تسويقي: CAC مرتفع + التركيز على استحواذ',
+                        desc: 'تنفقون بكثرة على جلب عملاء جدد رغم أن تكلفة الاستحواذ مرتفعة. الاحتفاظ بالعملاء الحاليين أرخص 5x.',
+                        action: 'حوّل 30% من ميزانية الاستحواذ إلى برامج الولاء والاحتفاظ'
+                    });
+                }
+            }
+
+            // ──── قواعد العمليات ────
+            if (dept === 'operations') {
+                if (dq.q1 === 'cap_full' && goals.includes('improve')) {
+                    contradictions.push({
+                        id: 'OPS_CAP_VS_IMPROVE', severity: 'CRITICAL', icon: '🚨',
+                        title: 'تناقض حرج: الطاقة 95%+ وتريد تحسين!',
+                        desc: 'العمليات على الحديدة. أي تحسين يحتاج مساحة تشغيلية — وما فيه مساحة.',
+                        action: 'أوقف قبول طلبات جديدة مؤقتاً أو وسّع الطاقة الاستيعابية أولاً'
+                    });
+                }
+                if (dq.q3 === 'people_dependent') {
+                    contradictions.push({
+                        id: 'OPS_PEOPLE_RISK', severity: 'HIGH', icon: '⚠️',
+                        title: 'خطر تشغيلي: العمليات تعتمد على أشخاص محددين',
+                        desc: 'لو غاب شخص واحد يتوقف العمل. هذا خطر استمرارية أعمال حقيقي.',
+                        action: 'توثيق العمليات الحرجة في أدلة إجراءات + تدريب بدلاء'
+                    });
+                }
+            }
+
+            // ──── قواعد الموارد البشرية ────
+            if (dept === 'hr') {
+                if (dq.q3 === 'attendance' && goals.includes('kpis')) {
+                    contradictions.push({
+                        id: 'HR_EVAL_VS_KPIS', severity: 'MEDIUM', icon: '⚠️',
+                        title: 'تناقض: تريد KPIs لكن التقييم مبني على الحضور!',
+                        desc: 'تريد مؤشرات أداء استراتيجية لكن الموظفين يُقيَّمون على الحضور والانصراف فقط.',
+                        action: 'انتقل من تقييم الحضور إلى تقييم بالأهداف والنتائج (OKRs)'
+                    });
+                }
+                if (dq.q1 !== 'turnover_low' && dq.q2 !== 'gap_none') {
+                    contradictions.push({
+                        id: 'HR_TURNOVER_GAPS', severity: 'HIGH', icon: '🔴',
+                        title: 'دورة مفرغة: تسرب كفاءات + فجوة مهارات',
+                        desc: 'موظفين يغادرون + المهارات المطلوبة مفقودة = الوضع يزداد سوءاً.',
+                        action: 'برنامج احتفاظ عاجل للكفاءات الحالية + خطة تدريب مسرّعة'
+                    });
+                }
+            }
+
+            // ──── قواعد الامتثال ────
+            if (dept === 'compliance') {
+                if (dq.q2 === 'major_gaps' && dq.q3 === 'bcp_none') {
+                    contradictions.push({
+                        id: 'COMP_GAPS_NO_BCP', severity: 'CRITICAL', icon: '🚨',
+                        title: 'خطر كارثي: فجوات امتثال كبيرة + لا خطة طوارئ',
+                        desc: 'المنشأة معرضة لغرامات/إيقاف + لا خطة بديلة لو حصلت أزمة.',
+                        action: 'أولوية قصوى: سد فجوات الامتثال + بناء خطة استمرارية أعمال (BCP)'
+                    });
+                }
+            }
+
+            // ──── قواعد خدمة العملاء ────
+            if (dept === 'support') {
+                if (dq.q3 === 'ticket_closed' && dq.q1 !== 'pricing') {
+                    contradictions.push({
+                        id: 'SUPPORT_NO_FEEDBACK', severity: 'MEDIUM', icon: '⚠️',
+                        title: 'فرصة ضائعة: الشكاوى تموت عند التذكرة',
+                        desc: 'مشاكل العملاء لا تصل للإدارات الأخرى لتحسين المنتج — نفس المشاكل تتكرر.',
+                        action: 'أنشئ تقرير شهري لأعلى 5 شكاوى وأرسله لإدارة العمليات والمنتج'
+                    });
+                }
+            }
+
+            AppState.deptContradictions = contradictions;
+            saveState();
+            return contradictions;
+        }
+
+        function finishQuickQuestions() {
+            // === مدير الإدارة: بياناته خلاص جمعناها — يعرض ملخص ثم Phase 3 ===
+            if (AppState.role === 'manager') {
+                // نقل البيانات من الـ Quick Questions إلى AppState
+                AppState.entity = AppState._mgrEntity || 'P';
+                AppState.size = AppState.answers[3] || 'medium';
+                AppState.mainSector = AppState._mgrSector || 'services';
+                AppState.sector = AppState._mgrSubSector || AppState._mgrSector || 'services';
+                AppState.companyName = AppState._mgrCompanyName || '';
+
+                // === كشف التناقضات من الأسئلة المتخصصة ===
+                const contradictions = detectDeptContradictions();
+
+                const c = $('quick-slide-container');
+                if (contradictions.length > 0) {
+                    // عرض ملخص التناقضات المكتشفة
+                    let cardsHtml = '';
+                    contradictions.forEach(ct => {
+                        const sevColor = ct.severity === 'CRITICAL' ? '#ef4444' : ct.severity === 'HIGH' ? '#f97316' : '#eab308';
+                        cardsHtml += `
+                        <div style="background:rgba(${ct.severity === 'CRITICAL' ? '239,68,68' : ct.severity === 'HIGH' ? '249,115,22' : '234,179,8'},0.08);border:1px solid ${sevColor}30;border-radius:14px;padding:14px 16px;text-align:right;">
+                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                                <span style="font-size:18px;">${ct.icon}</span>
+                                <span style="font-size:13px;font-weight:800;color:${sevColor};">${ct.title}</span>
+                            </div>
+                            <p style="font-size:12px;color:#94a3b8;margin:0 0 8px 0;line-height:1.6;">${ct.desc}</p>
+                            <div style="font-size:11px;color:#667eea;font-weight:700;">💡 ${ct.action}</div>
+                        </div>`;
+                    });
+
+                    c.innerHTML = `
+                    <div class="text-center space-y-6">
+                        <div class="w-16 h-16 mx-auto rounded-full flex items-center justify-center shadow-xl" style="background:linear-gradient(135deg,#ef4444,#f97316);font-size:28px;">⚡</div>
+                        <div>
+                            <h3 class="text-xl font-black text-white mb-1">كشفنا ${contradictions.length} تناقض في إدارتك</h3>
+                            <p class="text-slate-400 text-xs">هالملاحظات بتساعدك تبني خطة واقعية وقابلة للتنفيذ</p>
+                        </div>
+                        <div class="space-y-3 max-w-lg mx-auto" style="max-height:320px;overflow-y:auto;padding:4px;">
+                            ${cardsHtml}
+                        </div>
+                        <button onclick="goToPhase(3)" class="px-10 py-3 rounded-xl font-bold text-white" style="background:linear-gradient(135deg,#667eea,#764ba2);font-size:15px;">
+                            متابعة لمحرك الامتثال ⚡
+                        </button>
+                    </div>`;
+                } else {
+                    c.innerHTML = '<div class="text-center space-y-10 animate-pulse"><div class="w-20 h-20 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto shadow-2xl"></div><p class="text-2xl font-black text-emerald-400 uppercase tracking-widest">لا تناقضات — إدارتك متسقة ✅</p></div>';
+                    setTimeout(() => goToPhase(3), 2000);
+                }
+
+                if (AppState._mgrCompanyName) {
+                    $('modalCompanyName') && ($('modalCompanyName').value = AppState._mgrCompanyName);
+                }
+                return;
+            }
+
+            // Derive entity and size from answers
+            AppState.size = AppState.answers[4] || 'micro';
+            AppState.entity = (AppState.answers[2] === 'gov') ? 'G' : 'P';
+
+            const c = $('quick-slide-container');
+            c.innerHTML = '<div class="text-center space-y-10 animate-pulse"><div class="w-20 h-20 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto shadow-2xl"></div><p class="text-2xl font-black text-indigo-400 uppercase tracking-widest">تجهيز المصفوفة الاستراتيجية...</p></div>';
+            setTimeout(() => goToPhase(1), 1200);
+        }
+
+        // ═════════════════════════════════════════════════════════════════
+        // PHASE 1 — IDENTITY
+        // ═════════════════════════════════════════════════════════════════
+
+        function initPhase1() {
+            // Activate entity & size buttons
+            document.querySelectorAll('#entity-selector .sel').forEach(s => s.classList.remove('on'));
+            const entEl = $('ent-' + AppState.entity);
+            if (entEl) entEl.classList.add('on');
+
+            document.querySelectorAll('#size-selector .sel').forEach(s => s.classList.remove('on'));
+            const sizeEl = $('size-' + AppState.size);
+            if (sizeEl) sizeEl.classList.add('on');
+
+            renderMainSectors();
+        }
+
+        function setEntity(type, el) {
+            AppState.entity = type;
+            document.querySelectorAll('#entity-selector .sel').forEach(s => s.classList.remove('on'));
+            el.classList.add('on');
+            renderMainSectors();
+            saveState();
+        }
+
+        function setSize(size, el) {
+            AppState.size = size;
+            document.querySelectorAll('#size-selector .sel').forEach(s => s.classList.remove('on'));
+            el.classList.add('on');
+            saveState();
+        }
+
+        function renderMainSectors() {
+            const row = $('mainSectorRow');
+            if (!row) return;
+            const groups = SECTOR_GROUPS[AppState.entity] || SECTOR_GROUPS.P;
+
+            // Reset mainSector if not in current group
+            if (!groups.find(g => g.key === AppState.mainSector)) {
+                AppState.mainSector = groups[0].key;
+            }
+
+            row.innerHTML = groups.map(g =>
+                '<div id="sector-' + g.key + '" onclick="selectMainSector(\'' + g.key + '\',this)" class="sel ' + (AppState.mainSector === g.key ? 'on' : '') + '"><div class="text-2xl mb-2">' + g.icon + '</div><div class="font-bold">' + g.label + '</div></div>'
+            ).join('');
+
+            const hint = groups.find(g => g.key === AppState.mainSector);
+            $('sectorHint').innerText = hint ? hint.hint : '';
+            renderSubSectors();
+        }
+
+        function selectMainSector(key, el) {
+            AppState.mainSector = key;
+            document.querySelectorAll('#mainSectorRow .sel').forEach(s => s.classList.remove('on'));
+            el.classList.add('on');
+
+            const groups = SECTOR_GROUPS[AppState.entity] || SECTOR_GROUPS.P;
+            const hint = groups.find(g => g.key === key);
+            $('sectorHint').innerText = hint ? hint.hint : '';
+
+            renderSubSectors();
+            saveState();
+        }
+
+        function renderSubSectors() {
+            const container = $('subSectorContainer');
+            const select = $('sectorSel');
+            const subs = SUB_SECTORS[AppState.mainSector] || [];
+
+            if (subs.length > 0) {
+                container.classList.remove('hidden');
+                select.innerHTML = subs.map(s =>
+                    '<option value="' + s.v + '" ' + (AppState.sector === s.v ? 'selected' : '') + '>' + s.l + '</option>'
+                ).join('');
+                if (!subs.find(s => s.v === AppState.sector)) {
+                    AppState.sector = subs[0].v;
+                }
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        function handleSubSectorChange(val) {
+            AppState.sector = val;
+            saveState();
+        }
+
+        // ═════════════════════════════════════════════════════════════════
+        // PHASE 2 — OPEX
+        // ═════════════════════════════════════════════════════════════════
+
+        function fillOPEXDefaults() {
+            const d = OPEX_DEFAULTS[AppState.size] || OPEX_DEFAULTS.micro;
+            const fields = ['opSaudi', 'opExpat', 'opSal', 'opArea', 'opTarget'];
+            fields.forEach((f, i) => {
+                const el = $(f);
+                if (!el.value) el.value = d[i];
+            });
+        }
+
+        function validateOPEX() {
+            const fields = ['opSaudi', 'opExpat', 'opSal', 'opArea', 'opTarget'];
+            for (const f of fields) {
+                const val = parseFloat($(f).value);
+                if (isNaN(val) || val < 0) return false;
+            }
+            return true;
+        }
+
+        // ═════════════════════════════════════════════════════════════════
+        // PHASE 3 — COMPLIANCE
+        // ═════════════════════════════════════════════════════════════════
+
+        function initComplianceMatrix() {
+            // Load sector-specific items
+            MAT_BASE.sector = SECTOR_SPECIFIC[AppState.sector] || [];
+
+            // Count total
+            let total = 0;
+            for (const cat of Object.keys(MAT_BASE)) total += MAT_BASE[cat].length;
+            $('comp-count').innerText = total;
+            $('current-role-badge').innerText = ROLES_LIST[AppState.role]?.l || 'غير محدد';
+
+            // Initialize statuses
+            for (const cat of Object.keys(MAT_BASE)) {
+                for (const item of MAT_BASE[cat]) {
+                    if (!AppState.res[item.id]) AppState.res[item.id] = 'none';
+                }
+            }
+
+            // Show nav stats
+            $('nav-stats').classList.remove('hidden');
+
+            renderMatrix();
+        }
+
+        function switchTab(tabName) {
+            AppState.tab = tabName;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+            const btn = document.querySelector('[data-tab="' + tabName + '"]');
+            if (btn) btn.classList.add('on');
+            renderMatrix();
+        }
+
+        function renderMatrix() {
+            const box = $('matrixBox');
+            const items = MAT_BASE[AppState.tab] || [];
+
+            if (items.length === 0) {
+                box.innerHTML = '<div class="text-center py-20 text-slate-500"><i class="bi bi-check-circle text-4xl block mb-4"></i><p>لا توجد متطلبات إضافية لهذا القسم بناءً على نشاطك الحالي.</p></div>';
+                updateLiveBar();
+                return;
+            }
+
+            box.innerHTML = items.map(item => {
+                const st = AppState.res[item.id] || 'none';
+                const stLabel = st === 'done' ? '✅ مكتمل' : (st === 'partial' ? '⚠️ جزئي' : '❌ غير مكتمل');
+                return '<div class="cc is-' + st + '" id="cc-' + item.id + '">' +
+                    '<div class="flex-1 min-w-[200px]">' +
+                    '<div class="flex items-center gap-3 mb-2">' +
+                    '<span class="text-lg font-black text-white">' + item.label + '</span>' +
+                    '<span class="status-badge text-[10px] px-2 py-1 rounded-full bg-white/5 text-slate-400">' + stLabel + '</span>' +
+                    '</div>' +
+                    '<p class="text-sm text-slate-400 leading-relaxed">' + item.desc + '</p>' +
+                    '</div>' +
+                    '<div class="flex gap-2">' +
+                    '<button onclick="setStatus(\'' + item.id + '\',\'done\')" class="st-btn ' + (st === 'done' ? 'on' : '') + '" data-st="done">مكتمل</button>' +
+                    '<button onclick="setStatus(\'' + item.id + '\',\'partial\')" class="st-btn ' + (st === 'partial' ? 'on' : '') + '" data-st="partial">جزئي</button>' +
+                    '<button onclick="setStatus(\'' + item.id + '\',\'none\')" class="st-btn ' + (st === 'none' ? 'on' : '') + '" data-st="none">لا يوجد</button>' +
+                    '</div>' +
+                    '<div class="text-left min-w-[120px]">' +
+                    '<div class="text-[10px] text-slate-500">التكلفة</div>' +
+                    '<div class="text-emerald-400 font-bold">' + item.cost.toLocaleString() + ' ﷼</div>' +
+                    '<div class="text-[10px] text-slate-500 mt-1">المخاطر</div>' +
+                    '<div class="text-rose-500 font-bold">' + item.risk.toLocaleString() + ' ﷼</div>' +
+                    '</div>' +
+                    '</div>';
+            }).join('');
+
+            updateLiveBar();
+        }
+
+        function setStatus(id, status) {
+            AppState.res[id] = status;
+
+            const row = $('cc-' + id);
+            if (!row) return;
+
+            row.classList.remove('is-done', 'is-partial', 'is-none');
+            row.classList.add('is-' + status);
+
+            row.querySelectorAll('.st-btn').forEach(btn => {
+                btn.classList.toggle('on', btn.getAttribute('data-st') === status);
+            });
+
+            const badge = row.querySelector('.status-badge');
+            if (badge) {
+                badge.innerText = status === 'done' ? '✅ مكتمل' : (status === 'partial' ? '⚠️ جزئي' : '❌ غير مكتمل');
+            }
+
+            updateLiveBar();
+            saveState();
+        }
+
+        function updateLiveBar() {
+            let totalRisk = 0, totalCost = 0;
+            const mult = SIZE_MULTIPLIER[AppState.size] || 1;
+
+            for (const cat of Object.keys(MAT_BASE)) {
+                for (const item of MAT_BASE[cat]) {
+                    const st = AppState.res[item.id] || 'none';
+                    if (st === 'none') {
+                        totalRisk += item.risk * mult;
+                        totalCost += item.cost * mult;
+                    } else if (st === 'partial') {
+                        totalRisk += item.risk * 0.5 * mult;
+                        totalCost += item.cost * 0.5 * mult;
+                    }
+                }
+            }
+
+            const rTxt = Math.round(totalRisk).toLocaleString() + ' ﷼';
+            const cTxt = Math.round(totalCost).toLocaleString() + ' ﷼';
+
+            $('liveRisk').innerText = rTxt;
+            $('liveCost').innerText = cTxt;
+            $('navRisk').innerText = rTxt;
+            $('navCost').innerText = cTxt;
+        }
+
+        // ═════════════════════════════════════════════════════════════════
+        // PHASE NAVIGATION
+        // ═════════════════════════════════════════════════════════════════
+
+        function goToPhase(num) {
+            const isManager = AppState.role === 'manager';
+
+            // Validation gates (مدير الإدارة يتخطاها — بياناته جمعناها قبل)
+            if (num === 2 && !isManager) {
+                if (!$('modalCompanyName').value.trim()) {
+                    $('error-company-name').classList.remove('hidden');
+                    return;
+                }
+                $('error-company-name').classList.add('hidden');
+            }
+
+            if (num === 3 && !isManager) {
+                if (!validateOPEX()) {
+                    $('error-phase-2').classList.remove('hidden');
+                    return;
+                }
+                $('error-phase-2').classList.add('hidden');
+            }
+
+            // مدير الإدارة يتخطى الى Phase 3 ← نعبّي بيانات الكيان
+            if (isManager && num === 3) {
+                const nameInput = $('modalCompanyName');
+                if (nameInput && AppState._mgrCompanyName) {
+                    nameInput.value = AppState._mgrCompanyName;
+                }
+                AppState.companyName = AppState._mgrCompanyName || '';
+            }
+
+            // Switch phase
+            document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+            $('phase-' + num).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // لو رجع لـ Phase 0 — أعد رسم الأسئلة
+            if (num === 0 && AppState.currentSlide) {
+                renderSlide(AppState.currentSlide);
+            }
+
+            // Update phase stepper
+            document.querySelectorAll('.phase-step').forEach(s => {
+                const step = parseInt(s.getAttribute('data-step'));
+                s.classList.remove('on', 'done');
+                if (step < num) s.classList.add('done');
+                if (step === num) s.classList.add('on');
+            });
+            $('phase-stepper').classList.remove('hidden');
+            $('phase-stepper').classList.add('md:flex');
+
+            // Phase init hooks
+            if (num === 0) {
+                // Return to last answered slide instead of slide 1
+                const lastSlide = AppState.answers[5] ? 5 : AppState.answers[4] ? 5 : AppState.answers[3] ? 4 : AppState.answers[2] ? 3 : AppState.role ? 2 : 1;
+                renderSlide(lastSlide);
+            }
+            if (num === 1) initPhase1();
+            if (num === 2) fillOPEXDefaults();
+            if (num === 3) initComplianceMatrix();
+            if (num === 4) calculateResults();
+
+            saveState();
+        }
+
+        // ═════════════════════════════════════════════════════════════════
+        // PHASE 4 — RESULTS
+        // ═════════════════════════════════════════════════════════════════
+
+        function calcCatScore(cat) {
+            const items = MAT_BASE[cat] || [];
+            if (items.length === 0) return -1; // -1 means N/A
+            let score = 0;
+            for (const item of items) {
+                const st = AppState.res[item.id] || 'none';
+                if (st === 'done') score += 100;
+                else if (st === 'partial') score += 50;
+            }
+            return Math.round(score / items.length);
+        }
+
+        function determineScenario() {
+            const role = AppState.role;
+            if (role === 'founder') {
+                const m = AppState.answers[2];
+                if (m === 'idea') return 'founder_idea';
+                if (m === 'startup') return 'founder_startup';
+                if (m === 'growing') return 'founder_growing';
+                return 'founder_mature';
+            }
+            return role;
+        }
+
+        function calculateResults() {
+            // Ensure sector items are loaded
+            MAT_BASE.sector = SECTOR_SPECIFIC[AppState.sector] || [];
+
+            const cats = ['finance', 'hr', 'admin', 'regulatory'];
+            if (MAT_BASE.sector.length > 0) cats.push('sector');
+            const scores = {};
+            const radarData = [];
+
+            for (const cat of cats) {
+                const s = calcCatScore(cat);
+                scores[cat] = s === -1 ? 100 : s;
+                radarData.push(s === -1 ? 0 : s);
+            }
+
+            AppState.radarScores = radarData;
+            AppState.radarLabels = cats.map(c => CAT_NAMES[c]);
+
+            // Overall compliance
+            let totalItems = 0, earned = 0;
+            for (const cat of Object.keys(MAT_BASE)) {
+                for (const item of MAT_BASE[cat]) {
+                    totalItems++;
+                    const st = AppState.res[item.id] || 'none';
+                    if (st === 'done') earned += 100;
+                    else if (st === 'partial') earned += 50;
+                }
+            }
+            const compliance = totalItems > 0 ? Math.round(earned / totalItems) : 100;
+
+            // Scenario
+            const scKey = determineScenario();
+            const sc = SCENARIOS[scKey] || SCENARIOS.founder_idea;
+
+            // Badge
+            $('final-scenario-badge').innerHTML =
+                '<span class="text-3xl">' + sc.icon + '</span>' +
+                '<div><div class="text-[10px] text-slate-400 uppercase tracking-widest">' + sc.layer + '</div>' +
+                '<div class="font-black text-white">' + sc.name + '</div></div>';
+
+            // Cards
+            updateLiveBar();
+            const riskVal = parseInt(($('liveRisk').innerText || '0').replace(/[^\d]/g, '')) || 0;
+            const costVal = parseInt(($('liveCost').innerText || '0').replace(/[^\d]/g, '')) || 0;
+
+            $('final-cards').innerHTML =
+                '<div class="glass p-8 text-center space-y-4 border-t-4 border-indigo-500">' +
+                '<div class="text-[10px] font-black text-slate-500 uppercase">نسبة الامتثال</div>' +
+                '<div class="text-5xl font-black text-white">' + compliance + '%</div>' +
+                '<div class="w-full bg-white/10 rounded-full h-2"><div class="bg-indigo-500 h-2 rounded-full" style="width:' + compliance + '%"></div></div>' +
+                '</div>' +
+                '<div class="glass p-8 text-center space-y-4 border-t-4 border-rose-500">' +
+                '<div class="text-[10px] font-black text-slate-500 uppercase">المخاطر المحتملة</div>' +
+                '<div class="text-4xl font-black text-rose-500">' + riskVal.toLocaleString() + ' ﷼</div>' +
+                '<div class="text-xs text-slate-400">في حال عدم التصحيح</div>' +
+                '</div>' +
+                '<div class="glass p-8 text-center space-y-4 border-t-4 border-emerald-500">' +
+                '<div class="text-[10px] font-black text-slate-500 uppercase">كلفة التصحيح</div>' +
+                '<div class="text-4xl font-black text-emerald-400">' + costVal.toLocaleString() + ' ﷼</div>' +
+                '<div class="text-xs text-slate-400">استثمار للحماية</div>' +
+                '</div>';
+
+            // Narrative
+            const sorted = Object.entries(scores).filter(([k]) => MAT_BASE[k].length > 0).sort((a, b) => a[1] - b[1]);
+            const weakest = sorted[0];
+            const strongest = sorted[sorted.length - 1];
+            const compName = $('modalCompanyName').value || 'منشأتك';
+
+            $('aiNarrative').innerHTML =
+                'بناءً على تحليل <strong>' + compName + '</strong>، ' +
+                'تظهر النتائج أن قوة المنشأة تتركز في ' +
+                '<span class="text-emerald-400 font-bold">' + CAT_NAMES[strongest[0]] + '</span> بنسبة ' + strongest[1] + '%، ' +
+                'بينما يحتاج <span class="text-rose-400 font-bold">' + CAT_NAMES[weakest[0]] + '</span> ' +
+                'إلى اهتمام فوري (' + weakest[1] + '%).' +
+                '<br><br>دورك كـ <strong>' + (ROLES_LIST[AppState.role]?.l || '') + '</strong> يتطلب ' +
+                'إغلاق هذه الفجوات لتفادي الغرامات وضمان استمرارية الترخيص.';
+
+            // Priorities — individual items sorted by risk
+            const allGaps = [];
+            for (const cat of Object.keys(MAT_BASE)) {
+                for (const item of MAT_BASE[cat]) {
+                    const st = AppState.res[item.id] || 'none';
+                    if (st !== 'done') {
+                        const severity = (st === 'none' ? item.risk : item.risk * 0.5);
+                        allGaps.push({ ...item, cat, severity, status: st });
+                    }
+                }
+            }
+            const top3Items = allGaps.sort((a, b) => b.severity - a.severity).slice(0, 3);
+
+            $('resPlan').innerHTML = top3Items.length > 0
+                ? top3Items.map((it, i) =>
+                    '<div class="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/10">' +
+                    '<div class="w-10 h-10 bg-rose-500/20 rounded-full flex items-center justify-center text-rose-400 font-black">' + (i + 1) + '</div>' +
+                    '<div class="flex-1">' +
+                    '<div class="font-bold text-white">' + it.label + '</div>' +
+                    '<div class="text-xs text-slate-400">' + CAT_NAMES[it.cat] + ' — ' + (it.status === 'none' ? 'غير مكتمل' : 'جزئي') + '</div>' +
+                    '<div class="text-xs text-rose-400 mt-1">مخاطر: ' + it.risk.toLocaleString() + ' ﷼</div>' +
+                    '</div>' +
+                    '<i class="bi bi-arrow-left text-slate-500"></i>' +
+                    '</div>'
+                ).join('')
+                : '<div class="p-6 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-center"><i class="bi bi-check-circle text-emerald-400 text-2xl block mb-2"></i><div class="font-bold text-emerald-400">جميع المتطلبات مكتملة!</div></div>';
+
+            // Radar
+            renderRadar();
+
+            // Story
+            const story = SUCCESS_STORIES[AppState.role] || SUCCESS_STORIES.founder;
+            $('story-title').innerText = story.title;
+            $('story-desc').innerText = story.desc;
+            $('story-stats').innerHTML = story.stats.map(s =>
+                '<div class="text-center"><div class="text-2xl font-black text-emerald-400">' + s.n + '</div><div class="text-[10px] text-slate-500 uppercase">' + s.l + '</div></div>'
+            ).join('');
+
+            // Confetti
+            triggerConfetti();
+            try { lucide.createIcons(); } catch (e) { }
+        }
+
+        function renderRadar() {
+            const ctx = $('radarCanvas').getContext('2d');
+            if (radarChart) radarChart.destroy();
+
+            radarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: AppState.radarLabels,
+                    datasets: [{
+                        label: 'نسبة النضج',
+                        data: AppState.radarScores,
+                        backgroundColor: 'rgba(99,102,241,0.2)',
+                        borderColor: 'rgba(99,102,241,1)',
+                        pointBackgroundColor: 'rgba(99,102,241,1)',
+                        pointBorderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { stepSize: 20, color: 'rgba(148,163,184,0.5)' },
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            angleLines: { color: 'rgba(255,255,255,0.1)' },
+                            pointLabels: { color: '#94a3b8', font: { family: 'Tajawal', size: 12, weight: 'bold' } }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function triggerConfetti() {
+            const wrapper = $('confetti-wrapper');
+            const colors = ['#6366f1', '#38bdf8', '#10b981', '#f59e0b', '#f43f5e'];
+            for (let i = 0; i < 50; i++) {
+                const c = document.createElement('div');
+                c.className = 'confetti';
+                c.style.left = Math.random() * 100 + '%';
+                c.style.top = '-10px';
+                c.style.width = (Math.random() * 10 + 5) + 'px';
+                c.style.height = (Math.random() * 10 + 5) + 'px';
+                c.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                c.style.animationDelay = Math.random() * 2 + 's';
+                c.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                wrapper.appendChild(c);
+                setTimeout(() => c.remove(), 4000);
+            }
+        }
+
+        function finishAndRedirect() {
+            try {
+                // ═══ 1) الشكل اللي onboarding.html تقرأه ═══
+                const employeeCount = (parseInt($('opSaudi')?.value || 0) + parseInt($('opExpat')?.value || 0));
+                const diagnosticPayload = {
+                    entityType: AppState.entity,                    // P, G, N, M
+                    size: AppState.role === 'manager' ? (AppState.answers[3] || AppState.size) : AppState.size,
+                    sector: AppState.mainSector,                    // commercial, services, industrial...
+                    subsector: AppState.sector,                     // serv_tech, comm_retail...
+                    employees: employeeCount,                       // عدد الموظفين
+                    role: AppState.role,                             // founder, ceo, manager...
+                    department: AppState.role === 'manager' ? (AppState.answers[2] || '') : '',
+                    managerPain: AppState.role === 'manager' ? (AppState.answers[4] || '') : '',
+                    managerGoals: AppState.role === 'manager' ? (AppState.answers[5] || '') : '',
+                    deptQuestions: AppState.deptQuestions || null,    // أسئلة الإدارة المتخصصة
+                    managerOPEX: AppState.role === 'manager' ? {
+                        teamSize: AppState._mgrTeamSize || '',
+                        budget: AppState._mgrBudget || '',
+                        target: AppState._mgrTarget || '',
+                        companyName: AppState._mgrCompanyName || ''
+                    } : null,
+                    companyName: $('modalCompanyName')?.value || '',
+                    scenario: (() => {
+                        let key = AppState.role;
+                        if (AppState.role === 'founder') key = 'founder_' + (AppState.answers[2] || 'idea');
+                        const sc = SCENARIOS[key] || SCENARIOS.founder_idea;
+                        return { key, num: sc.num, name: sc.name, layer: sc.layer };
+                    })(),
+                    completedAt: new Date().toISOString()
+                };
+
+                // المفتاح اللي onboarding تقرأ منه
+                localStorage.setItem('stratix_diagnostic_payload', JSON.stringify(diagnosticPayload));
+
+                // ═══ 2) نسخة تفصيلية كاملة (للاستخدام المتقدم) ═══
+                const fullResults = {
+                    ...diagnosticPayload,
+                    answers: AppState.answers,
+                    deptQuestions: AppState.deptQuestions || null,
+                    deptContradictions: AppState.deptContradictions || [],
+                    complianceResults: AppState.res,
+                    opex: {
+                        saudi: $('opSaudi')?.value || 0,
+                        expat: $('opExpat')?.value || 0,
+                        salary: $('opSal')?.value || 0,
+                        area: $('opArea')?.value || 0,
+                        target: $('opTarget')?.value || 0
+                    },
+                    totalRisk: $('liveRisk')?.innerText || '0',
+                    totalCost: $('liveCost')?.innerText || '0',
+                    timeSpent: AppState.timer
+                };
+                localStorage.setItem('stratix_diagnostic_complete', JSON.stringify(fullResults));
+
+                // وجهة ما بعد التسجيل — كشف مسار الإنقاذ المالي
+                const dq = diagnosticPayload.deptQuestions || {};
+                const pains = (diagnosticPayload.managerPain || '').split(',');
+                const isFinancialRescue = (
+                    // مدير مالية + سيولة مستحيلة
+                    (dq.dept === 'finance' && dq.q3 === 'cant_expand') ||
+                    // مديونيات عالية + تكاليف ثابتة مرتفعة
+                    (dq.q1 === 'credit_heavy' && dq.q2 === 'fixed_high') ||
+                    // شركة ناشئة صغيرة + ألم مالي
+                    (diagnosticPayload.size === 'micro' && pains.includes('no_cash')) ||
+                    // التناقضات كشفت مشكلة مالية حرجة
+                    (AppState.deptContradictions || []).some(c => c.severity === 'CRITICAL' && c.id.startsWith('FIN_'))
+                );
+
+                if (isFinancialRescue) {
+                    localStorage.setItem('stratix_redirect_after_login', '/rescue-path');
+                    localStorage.setItem('stratix_rescue_mode', 'true');
+                } else {
+                    localStorage.setItem('stratix_redirect_after_login', '/onboarding');
+                }
+
+            } catch (e) {
+                console.warn('Failed to save diagnostic results:', e);
+            }
+
+            // ═══ التحويل لصفحة التسجيل ═══
+            window.location.href = '/login?tab=signup&from=diagnostic';
+        }
+
+        // ═════════════════════════════════════════════════════════════════
+        // BOOT
+        // ═════════════════════════════════════════════════════════════════
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp();
+            try { lucide.createIcons(); } catch (e) { }
+        });
+    </script>
+</body>
+
+</html>

@@ -410,6 +410,89 @@
             margin-top: 6px;
         }
 
+        /* ═══ Phase 12B: Reactive Budgeting ═══ */
+        .burn-indicator {
+            margin-top: 8px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+        }
+
+        .burn-indicator.burn-ok {
+            background: rgba(34, 197, 94, 0.08);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .burn-indicator.burn-warn {
+            background: rgba(250, 204, 21, 0.08);
+            border: 1px solid rgba(250, 204, 21, 0.25);
+            color: #facc15;
+        }
+
+        .burn-indicator.burn-danger {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: #ef4444;
+        }
+
+        .burn-bar {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            margin-top: 5px;
+        }
+
+        .burn-bar-track {
+            flex: 1;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .burn-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        .burn-bar-label {
+            font-size: 10px;
+            font-weight: 700;
+            min-width: 36px;
+            text-align: left;
+        }
+
+        .budget-alert-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 2px 7px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .ms-budget-health {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .ms-budget-ring {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
         .init-actions {
             display: flex;
             gap: 6px;
@@ -812,7 +895,7 @@
                 <div class="mini-stat">
                     <div class="ms-value" id="sDone">3</div>
                     <div class="ms-label">مكتملة</div>
-                    <div class="ms-desc">تم إنهاز التنفيذ</div>
+                    <div class="ms-desc">تم إنجاز التنفيذ</div>
                 </div>
                 <div class="mini-stat">
                     <div class="ms-value" id="sProgress">4</div>
@@ -820,16 +903,27 @@
                     <div class="ms-desc">جاري العمل عليها</div>
                 </div>
                 <div class="mini-stat">
-                    <div class="ms-value" id="sDelayed">1</div>
-                    <div class="ms-label">متأخرة</div>
-                    <div class="ms-desc">تجاوزت الموعد المحدد</div>
-                </div>
-                <div class="mini-stat">
                     <div class="ms-value" id="sBudget">4.8M</div>
                     <div class="ms-label">إجمالي الميزانية</div>
                     <div class="ms-desc">بالريال السعودي</div>
                 </div>
+                <div class="mini-stat">
+                    <div class="ms-value" id="sSpent">0</div>
+                    <div class="ms-label">المصروف الفعلي</div>
+                    <div class="ms-desc">ما تم صرفه حتى الآن</div>
+                </div>
+                <div class="mini-stat">
+                    <div class="ms-budget-health">
+                        <div class="ms-budget-ring" id="sBurnRing" style="border:3px solid #22c55e;color:#22c55e">0%
+                        </div>
+                    </div>
+                    <div class="ms-label">صحة الميزانية</div>
+                    <div class="ms-desc" id="sBurnDesc">نسبة الاستنزاف</div>
+                </div>
             </div>
+
+            <!-- Budget Alert Banner -->
+            <div id="budgetAlertBanner" style="display:none;margin-bottom:16px"></div>
 
             <!-- Kanban -->
             <div class="kanban-board" id="kanbanBoard"></div>
@@ -870,10 +964,20 @@
                         </div>
                     </div>
                     <div class="form-row">
-                        <div class="form-group"><label>الميزانية (ريال)</label><input type="text" class="form-input"
-                                id="formBudget" placeholder="500,000"></div>
+                        <div class="form-group"><label>الميزانية المخططة (ريال)</label><input type="text"
+                                class="form-input" id="formBudget" placeholder="500,000"></div>
+                        <div class="form-group"><label>المصروف الفعلي (ريال)</label><input type="text"
+                                class="form-input" id="formSpent" placeholder="200,000"></div>
+                    </div>
+                    <div class="form-row">
                         <div class="form-group"><label>نسبة الإنجاز %</label><input type="number" class="form-input"
                                 id="formProgress" min="0" max="100" value="0"></div>
+                        <div class="form-group">
+                            <label>حالة الميزانية</label>
+                            <div id="formBurnPreview"
+                                style="padding:8px 12px;border-radius:8px;font-size:12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);color:var(--text-muted);margin-top:2px">
+                                أدخل الميزانية والمصروف</div>
+                        </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group"><label>تاريخ البدء</label><input type="date" class="form-input"
@@ -926,18 +1030,92 @@
         }
     </script>
     <script>
-        let initiatives = [
-            { id: '1', name: 'إطلاق التطبيق الرقمي للعملاء', desc: 'تطوير تطبيق موبايل متكامل لخدمة العملاء والمدفوعات الرقمية', objective: 'رفع رضا العملاء', status: 'IN_PROGRESS', priority: 'HIGH', progress: 65, budget: '1,200,000', startDate: '2026-01-01', endDate: '2026-06-30' },
-            { id: '2', name: 'برنامج التحول الرقمي الداخلي', desc: 'أتمتة 80% من العمليات الورقية والتحول إلى بيئة عمل رقمية بالكامل', objective: 'أتمتة العمليات', status: 'IN_PROGRESS', priority: 'HIGH', progress: 78, budget: '800,000', startDate: '2025-10-01', endDate: '2026-04-30' },
-            { id: '3', name: 'توسيع الفريق التقني', desc: 'استقطاب 15 مطور ومهندس بيانات لتعزيز القدرات التقنية', objective: 'تطوير الكوادر', status: 'IN_PROGRESS', priority: 'MEDIUM', progress: 50, budget: '600,000', startDate: '2026-01-15', endDate: '2026-08-31' },
-            { id: '4', name: 'إطلاق برنامج ولاء العملاء', desc: 'نظام نقاط ومكافآت لزيادة الاحتفاظ بالعملاء الحاليين', objective: 'رفع رضا العملاء', status: 'IN_PROGRESS', priority: 'MEDIUM', progress: 35, budget: '350,000', startDate: '2026-02-01', endDate: '2026-07-31' },
-            { id: '5', name: 'الحصول على شهادة ISO 9001', desc: 'تأهيل المنظمة لاجتياز تدقيق الجودة والحصول على الشهادة الدولية', objective: 'تطبيق ISO 9001', status: 'REVIEW', priority: 'HIGH', progress: 88, budget: '250,000', startDate: '2025-06-01', endDate: '2026-03-31' },
-            { id: '6', name: 'دراسة دخول السوق الخليجي', desc: 'بحث وتحليل فرص التوسع في أسواق الإمارات والبحرين والكويت', objective: 'توسيع القطاع الحكومي', status: 'REVIEW', priority: 'MEDIUM', progress: 70, budget: '150,000', startDate: '2025-11-01', endDate: '2026-02-28' },
-            { id: '7', name: 'تطوير منصة التقارير الذكية', desc: 'بناء لوحة تحكم متقدمة مع ذكاء اصطناعي لتحليل الأداء', objective: 'أتمتة العمليات', status: 'PLANNED', priority: 'HIGH', progress: 0, budget: '500,000', startDate: '2026-04-01', endDate: '2026-10-31' },
-            { id: '8', name: 'برنامج تدريب القيادات', desc: 'إعداد 20 قائد من الصف الثاني لتولي مسؤوليات أكبر', objective: 'تطوير الكوادر', status: 'PLANNED', priority: 'MEDIUM', progress: 0, budget: '300,000', startDate: '2026-05-01', endDate: '2026-12-31' },
-            { id: '9', name: 'تحسين كفاءة سلسلة التوريد', desc: 'خفض تكاليف التشغيل 15% من خلال تحسين عمليات الشراء والتخزين', objective: 'تحسين هامش الربح', status: 'COMPLETED', priority: 'HIGH', progress: 100, budget: '200,000', startDate: '2025-06-01', endDate: '2025-12-31' },
-            { id: '10', name: 'إعادة تصميم الهوية البصرية', desc: 'تحديث العلامة التجارية بما يتوافق مع الرؤية الاستراتيجية الجديدة', objective: 'رفع رضا العملاء', status: 'COMPLETED', priority: 'LOW', progress: 100, budget: '180,000', startDate: '2025-08-01', endDate: '2025-11-30' },
+        // ── API Config ──
+        const token = localStorage.getItem('token');
+        const versionId = localStorage.getItem('selectedVersionId') || '';
+        const API_BASE = '/api/initiatives';
+        function apiHeaders() {
+            return { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'X-Version-Id': versionId };
+        }
+
+        // ── البيانات التجريبية (fallback إذا لا يوجد API) ──
+        const DEMO_DATA = [
+            { id: '1', name: 'إطلاق التطبيق الرقمي للعملاء', desc: 'تطوير تطبيق موبايل متكامل لخدمة العملاء والمدفوعات الرقمية', objective: 'رفع رضا العملاء', status: 'IN_PROGRESS', priority: 'HIGH', progress: 65, budget: '1,200,000', spent: '960,000', startDate: '2026-01-01', endDate: '2026-06-30' },
+            { id: '2', name: 'برنامج التحول الرقمي الداخلي', desc: 'أتمتة 80% من العمليات الورقية والتحول إلى بيئة عمل رقمية بالكامل', objective: 'أتمتة العمليات', status: 'IN_PROGRESS', priority: 'HIGH', progress: 78, budget: '800,000', spent: '620,000', startDate: '2025-10-01', endDate: '2026-04-30' },
+            { id: '3', name: 'توسيع الفريق التقني', desc: 'استقطاب 15 مطور ومهندس بيانات لتعزيز القدرات التقنية', objective: 'تطوير الكوادر', status: 'IN_PROGRESS', priority: 'MEDIUM', progress: 50, budget: '600,000', spent: '180,000', startDate: '2026-01-15', endDate: '2026-08-31' },
+            { id: '4', name: 'إطلاق برنامج ولاء العملاء', desc: 'نظام نقاط ومكافآت لزيادة الاحتفاظ بالعملاء الحاليين', objective: 'رفع رضا العملاء', status: 'IN_PROGRESS', priority: 'MEDIUM', progress: 35, budget: '350,000', spent: '280,000', startDate: '2026-02-01', endDate: '2026-07-31' },
+            { id: '5', name: 'الحصول على شهادة ISO 9001', desc: 'تأهيل المنظمة لاجتياز تدقيق الجودة والحصول على الشهادة الدولية', objective: 'تطبيق ISO 9001', status: 'REVIEW', priority: 'HIGH', progress: 88, budget: '250,000', spent: '220,000', startDate: '2025-06-01', endDate: '2026-03-31' },
+            { id: '6', name: 'دراسة دخول السوق الخليجي', desc: 'بحث وتحليل فرص التوسع في أسواق الإمارات والبحرين والكويت', objective: 'توسيع القطاع الحكومي', status: 'REVIEW', priority: 'MEDIUM', progress: 70, budget: '150,000', spent: '105,000', startDate: '2025-11-01', endDate: '2026-02-28' },
+            { id: '7', name: 'تطوير منصة التقارير الذكية', desc: 'بناء لوحة تحكم متقدمة مع ذكاء اصطناعي لتحليل الأداء', objective: 'أتمتة العمليات', status: 'PLANNED', priority: 'HIGH', progress: 0, budget: '500,000', spent: '0', startDate: '2026-04-01', endDate: '2026-10-31' },
+            { id: '8', name: 'برنامج تدريب القيادات', desc: 'إعداد 20 قائد من الصف الثاني لتولي مسؤوليات أكبر', objective: 'تطوير الكوادر', status: 'PLANNED', priority: 'MEDIUM', progress: 0, budget: '300,000', spent: '0', startDate: '2026-05-01', endDate: '2026-12-31' },
+            { id: '9', name: 'تحسين كفاءة سلسلة التوريد', desc: 'خفض تكاليف التشغيل 15% من خلال تحسين عمليات الشراء والتخزين', objective: 'تحسين هامش الربح', status: 'COMPLETED', priority: 'HIGH', progress: 100, budget: '200,000', spent: '185,000', startDate: '2025-06-01', endDate: '2025-12-31' },
+            { id: '10', name: 'إعادة تصميم الهوية البصرية', desc: 'تحديث العلامة التجارية بما يتوافق مع الرؤية الاستراتيجية الجديدة', objective: 'رفع رضا العملاء', status: 'COMPLETED', priority: 'LOW', progress: 100, budget: '180,000', spent: '175,000', startDate: '2025-08-01', endDate: '2025-11-30' },
         ];
+
+        let initiatives = [...DEMO_DATA]; // يبدأ بالبيانات التجريبية ثم يجلب من API
+        let useAPI = false; // يتحول لـ true بعد أول جلب ناجح
+
+        // ── جلب المبادرات من API ──
+        async function loadInitiatives() {
+            if (!token || !versionId) { renderAll(); return; }
+            try {
+                const res = await fetch(API_BASE + '?versionId=' + versionId, { headers: apiHeaders() });
+                if (!res.ok) throw new Error('API error');
+                const data = await res.json();
+                if (data.initiatives && data.initiatives.length > 0) {
+                    initiatives = data.initiatives.map(i => ({
+                        id: i.id,
+                        name: i.title,
+                        desc: i.description || '',
+                        objective: i.category || i.owner || '',
+                        status: i.status,
+                        priority: i.priority || 'MEDIUM',
+                        progress: i.progress || 0,
+                        budget: (i.budget || 0).toLocaleString('en'),
+                        spent: (i.budgetSpent || 0).toLocaleString('en'),
+                        startDate: i.startDate ? i.startDate.slice(0, 10) : '',
+                        endDate: i.endDate ? i.endDate.slice(0, 10) : '',
+                        autoCreated: i.autoCreated || false,
+                    }));
+                    useAPI = true;
+                }
+            } catch (e) {
+                console.log('📦 API غير متاح — استخدام البيانات التجريبية');
+            }
+            renderAll();
+        }
+
+        // ── حفظ مبادرة في API ──
+        async function saveToAPI(data, id) {
+            if (!token || !versionId) return null;
+            const body = {
+                versionId,
+                title: data.name,
+                description: data.desc,
+                owner: data.objective,
+                category: data.objective,
+                status: data.status,
+                priority: data.priority,
+                progress: data.progress,
+                budget: parseMoney(data.budget),
+                budgetSpent: parseMoney(data.spent),
+                startDate: data.startDate || null,
+                endDate: data.endDate || null,
+            };
+            try {
+                const url = id && useAPI ? `${API_BASE}/${id}` : API_BASE;
+                const method = id && useAPI ? 'PUT' : 'POST';
+                const res = await fetch(url, { method, headers: apiHeaders(), body: JSON.stringify(body) });
+                if (res.ok) { useAPI = true; return await res.json(); }
+            } catch (e) { console.warn('حفظ API فشل:', e); }
+            return null;
+        }
+
+        // ── حذف من API ──
+        async function deleteFromAPI(id) {
+            if (!token || !useAPI) return;
+            try { await fetch(`${API_BASE}/${id}`, { method: 'DELETE', headers: apiHeaders() }); } catch (e) { /* silent */ }
+        }
 
         const statusConfig = {
             PLANNED: { label: 'مخطط لها', icon: 'bi-calendar-check', colClass: 'col-planned' },
@@ -954,13 +1132,65 @@
 
         function renderAll() { renderStats(); renderKanban(); }
 
+        function parseMoney(s) { return parseInt((s || '0').toString().replace(/,/g, '')) || 0; }
+
+        function getBurnStatus(budget, spent, progress) {
+            if (!budget || budget === 0) return { status: 'ok', label: '—', icon: '' };
+            const burnPct = Math.round((spent / budget) * 100);
+            const ratio = progress > 0 ? burnPct / progress : (burnPct > 0 ? 999 : 0);
+            if (burnPct > 100) return { status: 'danger', label: `⚠️ تجاوز الميزانية (${burnPct}%)`, icon: '🔴', burnPct };
+            if (ratio > 1.8 && burnPct >= 60) return { status: 'danger', label: `صرف ${burnPct}% والإنجاز ${progress}%`, icon: '🔴', burnPct };
+            if (ratio > 1.3 && burnPct >= 40) return { status: 'warn', label: `صرف ${burnPct}% والإنجاز ${progress}%`, icon: '🟡', burnPct };
+            return { status: 'ok', label: `صرف ${burnPct}% — إنجاز ${progress}%`, icon: '🟢', burnPct };
+        }
+
         function renderStats() {
             document.getElementById('sTotal').textContent = initiatives.length;
             document.getElementById('sDone').textContent = initiatives.filter(i => i.status === 'COMPLETED').length;
             document.getElementById('sProgress').textContent = initiatives.filter(i => i.status === 'IN_PROGRESS').length;
-            document.getElementById('sDelayed').textContent = initiatives.filter(i => i.status !== 'COMPLETED' && new Date(i.endDate) < new Date()).length;
-            const totalBudget = initiatives.reduce((s, i) => s + parseInt(i.budget.replace(/,/g, '') || 0), 0);
-            document.getElementById('sBudget').textContent = (totalBudget / 1000000).toFixed(1) + 'M';
+            const totalBudget = initiatives.reduce((s, i) => s + parseMoney(i.budget), 0);
+            const totalSpent = initiatives.reduce((s, i) => s + parseMoney(i.spent), 0);
+            document.getElementById('sBudget').textContent = totalBudget >= 1000000 ? (totalBudget / 1000000).toFixed(1) + 'M' : (totalBudget / 1000).toFixed(0) + 'K';
+            document.getElementById('sSpent').textContent = totalSpent >= 1000000 ? (totalSpent / 1000000).toFixed(1) + 'M' : (totalSpent / 1000).toFixed(0) + 'K';
+
+            // Budget Health Ring
+            const overallBurn = totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0;
+            const avgProgress = Math.round(initiatives.reduce((s, i) => s + i.progress, 0) / initiatives.length);
+            const health = getBurnStatus(totalBudget, totalSpent, avgProgress);
+            const ring = document.getElementById('sBurnRing');
+            const colors = { ok: '#22c55e', warn: '#facc15', danger: '#ef4444' };
+            ring.style.borderColor = colors[health.status];
+            ring.style.color = colors[health.status];
+            ring.textContent = overallBurn + '%';
+            document.getElementById('sBurnDesc').textContent = health.status === 'ok' ? 'صحي ✓' : health.status === 'warn' ? 'يحتاج انتباه' : 'خطر!';
+
+            // Budget Alert Banner
+            const dangerInits = initiatives.filter(i => {
+                const b = parseMoney(i.budget), sp = parseMoney(i.spent);
+                return b > 0 && getBurnStatus(b, sp, i.progress).status === 'danger' && i.status !== 'COMPLETED';
+            });
+            const banner = document.getElementById('budgetAlertBanner');
+            if (dangerInits.length > 0) {
+                banner.style.display = 'block';
+                banner.innerHTML = `
+                    <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:12px;padding:14px 18px">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                            <span style="font-size:18px">🚨</span>
+                            <span style="font-weight:700;color:#ef4444;font-size:13px">تنبيه ميزانية — ${dangerInits.length} مبادرة في خطر استنزاف</span>
+                        </div>
+                        ${dangerInits.map(di => {
+                    const b = parseMoney(di.budget), sp = parseMoney(di.spent);
+                    const burnPct = Math.round((sp / b) * 100);
+                    return `<div style="font-size:12px;color:var(--text-muted);padding:4px 0;display:flex;align-items:center;gap:6px">
+                                <span style="color:#ef4444;font-weight:700">🔴</span>
+                                <strong style="color:var(--text)">${di.name}</strong>:
+                                صرف ${burnPct}% من الميزانية والإنجاز ${di.progress}% فقط
+                            </div>`;
+                }).join('')}
+                    </div>`;
+            } else {
+                banner.style.display = 'none';
+            }
         }
 
         function renderKanban() {
@@ -993,6 +1223,30 @@
                   <span class="init-date"><i class="bi bi-calendar3"></i> ${i.endDate}</span>
                 </div>
                 <div class="init-budget"><i class="bi bi-cash-stack"></i> ${i.budget} ريال</div>
+                ${(() => {
+                        const b = parseMoney(i.budget), sp = parseMoney(i.spent);
+                        if (!b) return '';
+                        const burn = getBurnStatus(b, sp, i.progress);
+                        const burnPct = burn.burnPct || 0;
+                        const colors = { ok: '#22c55e', warn: '#facc15', danger: '#ef4444' };
+                        const col = colors[burn.status];
+                        return `<div class="burn-indicator burn-${burn.status}">
+                        <div style="display:flex;justify-content:space-between;align-items:center">
+                            <span>${burn.icon} ${burn.label}</span>
+                            <span class="budget-alert-badge" style="background:${col}22;color:${col}">${sp > b ? 'تجاوز!' : burn.status === 'warn' ? 'تحذير' : burn.status === 'danger' ? 'خطر' : 'صحي'}</span>
+                        </div>
+                        <div class="burn-bar">
+                            <span class="burn-bar-label" style="color:${col}">صرف</span>
+                            <div class="burn-bar-track">
+                                <div class="burn-bar-fill" style="width:${Math.min(burnPct, 100)}%;background:${col}"></div>
+                            </div>
+                            <span class="burn-bar-label" style="color:var(--text-muted)">إنجاز</span>
+                            <div class="burn-bar-track">
+                                <div class="burn-bar-fill" style="width:${i.progress}%;background:var(--primary)"></div>
+                            </div>
+                        </div>
+                    </div>`;
+                    })()}
                 <div class="init-actions" onclick="event.stopPropagation()">
                   <button class="init-btn edit" onclick="openEditModal('${i.id}')"><i class="bi bi-pencil"></i> تعديل</button>
                   <button class="init-btn del" onclick="deleteInit('${i.id}')"><i class="bi bi-trash3"></i> حذف</button>
@@ -1026,12 +1280,14 @@
             document.getElementById('formPriority').value = i.priority;
             document.getElementById('formProgress').value = i.progress;
             document.getElementById('formBudget').value = i.budget;
+            document.getElementById('formSpent').value = i.spent || '0';
             document.getElementById('formStart').value = i.startDate;
             document.getElementById('formEnd').value = i.endDate;
+            updateBurnPreview();
             new bootstrap.Modal(document.getElementById('initModal')).show();
         }
 
-        function saveInit() {
+        async function saveInit() {
             const id = document.getElementById('editId').value;
             const data = {
                 name: document.getElementById('formName').value.trim(),
@@ -1041,11 +1297,13 @@
                 priority: document.getElementById('formPriority').value,
                 progress: parseInt(document.getElementById('formProgress').value) || 0,
                 budget: document.getElementById('formBudget').value || '0',
+                spent: document.getElementById('formSpent').value || '0',
                 startDate: document.getElementById('formStart').value,
                 endDate: document.getElementById('formEnd').value,
             };
             if (!data.name) return;
 
+            // حفظ محلي
             if (id) {
                 const i = initiatives.find(x => x.id === id);
                 if (i) Object.assign(i, data);
@@ -1056,12 +1314,21 @@
             }
             bootstrap.Modal.getInstance(document.getElementById('initModal')).hide();
             renderAll();
+
+            // حفظ في API (بالخلفية)
+            const apiResult = await saveToAPI(data, id);
+            if (apiResult && apiResult.initiative && !id) {
+                // تحديث ID من السيرفر
+                const localInit = initiatives.find(x => x.name === data.name);
+                if (localInit) localInit.id = apiResult.initiative.id;
+            }
         }
 
-        function deleteInit(id) {
+        async function deleteInit(id) {
             if (!confirm('حذف المبادرة؟')) return;
             initiatives = initiatives.filter(x => x.id !== id);
             renderAll(); showToast('تم الحذف ✓');
+            await deleteFromAPI(id);
         }
 
         function showToast(msg) {
@@ -1145,9 +1412,62 @@
             }
         }
 
-        renderAll();
-        loadAutoInitiative();
+        // ── Phase 12B: Live burn preview in modal ──
+        function updateBurnPreview() {
+            const b = parseMoney(document.getElementById('formBudget')?.value);
+            const sp = parseMoney(document.getElementById('formSpent')?.value);
+            const prog = parseInt(document.getElementById('formProgress')?.value) || 0;
+            const el = document.getElementById('formBurnPreview');
+            if (!el || !b) { if (el) el.innerHTML = 'أدخل الميزانية والمصروف'; return; }
+            const burn = getBurnStatus(b, sp, prog);
+            const cols = { ok: '#22c55e', warn: '#facc15', danger: '#ef4444' };
+            const c = cols[burn.status];
+            el.style.borderColor = c + '44';
+            el.style.background = c + '0d';
+            el.innerHTML = `<span style="color:${c};font-weight:700">${burn.icon} ${burn.label}</span>`;
+        }
+        document.getElementById('formBudget')?.addEventListener('input', updateBurnPreview);
+        document.getElementById('formSpent')?.addEventListener('input', updateBurnPreview);
+        document.getElementById('formProgress')?.addEventListener('input', updateBurnPreview);
+
+        loadInitiatives().then(() => {
+            loadAutoInitiative();
+            // ═══ Sprint 2: قادم من KPIs ← حوّل لمبادرة ═══
+            handleFromKpi();
+        });
+
+        function handleFromKpi() {
+            const params = new URLSearchParams(location.search);
+            const fromKpi = params.get('from_kpi');
+            const kpiName = params.get('name');
+            if (!fromKpi || !kpiName) return;
+
+            // عرض بانر "قادم من KPIs"
+            const banner = document.createElement('div');
+            banner.style.cssText = 'display:flex;align-items:center;gap:14px;padding:16px 22px;margin-bottom:18px;border-radius:14px;background:linear-gradient(135deg,rgba(79,70,229,0.1),rgba(139,92,246,0.08));border:1px solid rgba(79,70,229,0.25);animation:fadeSlideIn 0.4s ease';
+            banner.innerHTML = `
+                <span style="font-size:24px">📊</span>
+                <div style="flex:1">
+                    <div style="font-size:14px;font-weight:800;color:#a78bfa">إنشاء مبادرة مرتبطة بمؤشر</div>
+                    <div style="font-size:12px;color:var(--text-muted)">المؤشر: <strong style="color:var(--text)">${decodeURIComponent(kpiName)}</strong></div>
+                </div>
+                <a href="/kpis.html" style="padding:6px 14px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--text-muted);font-size:11px;font-weight:700;text-decoration:none">← رجوع للمؤشرات</a>
+            `;
+            const kanban = document.getElementById('kanbanBoard');
+            if (kanban?.parentElement) kanban.parentElement.insertBefore(banner, kanban);
+
+            // فتح نافذة إنشاء مبادرة جديدة مع تعبئة الاسم
+            setTimeout(() => {
+                openCreateModal();
+                document.getElementById('formName').value = `مبادرة تحسين: ${decodeURIComponent(kpiName)}`;
+                document.getElementById('formDesc').value = `مبادرة مرتبطة بمؤشر الأداء: ${decodeURIComponent(kpiName)}`;
+            }, 500);
+
+            // نظّف URL
+            history.replaceState(null, '', '/initiatives.html');
+        }
     </script>
+    <script src="/assets/js/path-tracker.js"></script>
 </body>
 
 </html>

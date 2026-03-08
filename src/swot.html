@@ -844,10 +844,158 @@
         const _userCategory = _sgData?.category || localStorage.getItem('stratix_category') || '';
         const _isIndividual = _userCategory.startsWith('INDIVIDUAL_');
 
+        // ═══ كشف مدير الإدارة ═══
+        const _userObj = JSON.parse(localStorage.getItem('user') || '{}');
+        const _diagPayload = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || '{}');
+        const _isDeptMgr = _userObj.userType === 'DEPT_MANAGER' || _userObj.userCategory === 'DEPT_MANAGER' || _diagPayload.role === 'manager';
+        const _DEPT_NAME_MAP = {
+            'finance': 'المالية', 'hr': 'الموارد البشرية', 'marketing': 'التسويق',
+            'sales': 'المبيعات', 'it': 'تقنية المعلومات', 'operations': 'العمليات',
+            'cs': 'خدمة العملاء', 'quality': 'الجودة', 'projects': 'المشاريع'
+        };
+        const _mgrDeptKey = _diagPayload.department || '';
+        const _mgrDeptName = _DEPT_NAME_MAP[_mgrDeptKey] || _mgrDeptKey || 'إدارتك';
+
         // ============================================================
         //  SWOT SECTIONS & QUESTIONS — Adaptive per user type
         // ============================================================
-        const SWOT_SECTIONS = _isIndividual ? [
+        const SWOT_SECTIONS = _isDeptMgr ? [
+            // ═══════════════════════════════════════════
+            //  أسئلة مدير الإدارة — SWOT إداري
+            // ═══════════════════════════════════════════
+            {
+                id: 'strengths', nameAr: 'نقاط القوة', emoji: '💪', color: '#22c55e', cssClass: 'str',
+                desc: `نقاط القوة في ${_mgrDeptName}`,
+                questions: [
+                    {
+                        text: `ما أقوى قدرة أو ميزة في ${_mgrDeptName}؟`,
+                        hint: 'فكّر في اللي يميز إدارتك عن باقي الإدارات أو عن المعيار المطلوب',
+                        type: 'chips',
+                        options: ['فريق مؤهل وخبير', 'عمليات منظمة وواضحة', 'تقنية متقدمة', 'سرعة الإنجاز', 'جودة المخرجات', 'تعاون الفريق'],
+                        allowCustom: true
+                    },
+                    {
+                        text: `ما أفضل مورد تملكه ${_mgrDeptName}؟`,
+                        hint: 'الموارد: كوادر، أنظمة، ميزانية، معرفة متراكمة',
+                        type: 'chips',
+                        options: ['كوادر متخصصة', 'أنظمة وإجراءات واضحة', 'ميزانية كافية', 'قاعدة بيانات غنية', 'علاقات مع إدارات أخرى', 'خبرة تراكمية'],
+                        allowCustom: true
+                    },
+                    {
+                        text: `ما أكثر شي تُشكر عليه ${_mgrDeptName} من الإدارات الأخرى أو العملاء الداخليين؟`,
+                        hint: 'ردود الفعل الإيجابية تكشف قوتك الحقيقية',
+                        type: 'chips',
+                        options: ['سرعة الاستجابة', 'دقة التقارير', 'حل المشكلات', 'التعاون والمرونة', 'الالتزام بالمواعيد', 'الابتكار'],
+                        allowCustom: true
+                    },
+                    {
+                        text: `ماذا تفعل ${_mgrDeptName} أفضل من المعيار أو التوقعات؟`,
+                        hint: 'الأداء الذي يتجاوز التوقعات = نقطة قوة حقيقية',
+                        type: 'text',
+                        placeholder: 'اكتب نقاط التميز في إدارتك... (فصل بفاصلة)'
+                    }
+                ]
+            },
+            {
+                id: 'weaknesses', nameAr: 'نقاط الضعف', emoji: '⚠️', color: '#ef4444', cssClass: 'wk',
+                desc: `المجالات اللي تحتاج تحسين في ${_mgrDeptName}`,
+                questions: [
+                    {
+                        text: `ما أكبر تحدي يواجه ${_mgrDeptName} حالياً؟`,
+                        hint: 'التحديات الداخلية: نقص موارد، عمليات بطيئة، ضعف تدريب',
+                        type: 'chips',
+                        options: ['نقص الكوادر المؤهلة', 'ضعف التدريب والتطوير', 'عمليات يدوية كثيرة', 'ضعف التواصل الداخلي', 'ميزانية محدودة', 'غياب مؤشرات أداء واضحة'],
+                        allowCustom: true
+                    },
+                    {
+                        text: `ما أكثر شكوى تسمعها عن ${_mgrDeptName}؟`,
+                        hint: 'شكاوى الإدارات الأخرى والعملاء الداخليين',
+                        type: 'chips',
+                        options: ['بطء في الاستجابة', 'عدم وضوح الإجراءات', 'تأخر في التسليم', 'جودة غير متسقة', 'صعوبة التواصل', 'نقص في التقارير'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ما العمليات في إدارتك التي تحتاج تطوير عاجل؟',
+                        hint: 'العمليات اللي تستهلك وقت ومجهود بدون نتائج مرضية',
+                        type: 'chips',
+                        options: ['إعداد التقارير', 'متابعة المهام', 'التنسيق مع الإدارات', 'اتخاذ القرارات', 'التوثيق والأرشفة', 'تقييم الأداء'],
+                        allowCustom: true
+                    },
+                    {
+                        text: `أين الفجوة بين أداء ${_mgrDeptName} الحالي والمطلوب؟`,
+                        hint: 'ركّز على أكبر فجوة تؤثر على نتائج الإدارة',
+                        type: 'text',
+                        placeholder: 'اكتب الفجوات... (فصل بفاصلة)'
+                    }
+                ]
+            },
+            {
+                id: 'opportunities', nameAr: 'الفرص', emoji: '🌟', color: '#3b82f6', cssClass: 'opp',
+                desc: `الفرص المتاحة لتطوير ${_mgrDeptName}`,
+                questions: [
+                    {
+                        text: `ما الفرص المتاحة لتحسين أداء ${_mgrDeptName}؟`,
+                        hint: 'تقنيات جديدة، تدريب، إعادة هيكلة، أتمتة',
+                        type: 'chips',
+                        options: ['أتمتة العمليات', 'تدريب وتطوير الفريق', 'أدوات وأنظمة جديدة', 'إعادة هيكلة العمليات', 'الاستعانة بخبرات خارجية', 'تحسين بيئة العمل'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'هل توجد مبادرات أو مشاريع في الشركة يمكن لإدارتك المشاركة فيها؟',
+                        hint: 'المشاركة في مبادرات الشركة = ظهور وتأثير أكبر',
+                        type: 'chips',
+                        options: ['التحول الرقمي', 'مشاريع تحسين الجودة', 'التوسع في أسواق جديدة', 'رؤية 2030', 'مبادرات الاستدامة', 'برامج ابتكار داخلية'],
+                        allowCustom: true
+                    },
+                    {
+                        text: `ما المهارات أو القدرات التي لو أضفتها لإدارتك ستحدث فرقاً كبيراً؟`,
+                        hint: 'المهارات الناقصة = فرص تطوير',
+                        type: 'chips',
+                        options: ['تحليل البيانات', 'إدارة المشاريع', 'مهارات قيادية', 'مهارات تقنية', 'مهارات تواصل', 'تفكير استراتيجي'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ما التحسينات التي اقترحتها ولم تُنفذ بعد؟',
+                        hint: 'الأفكار المعلقة قد تكون فرص ذهبية',
+                        type: 'text',
+                        placeholder: 'اكتب الفرص المتاحة... (فصل بفاصلة)'
+                    }
+                ]
+            },
+            {
+                id: 'threats', nameAr: 'التهديدات', emoji: '🔥', color: '#f97316', cssClass: 'thr',
+                desc: `المخاطر التي قد تؤثر على ${_mgrDeptName}`,
+                questions: [
+                    {
+                        text: `ما أكبر تهديد يواجه ${_mgrDeptName} حالياً؟`,
+                        hint: 'تهديدات داخلية (تقليص، إعادة هيكلة) أو خارجية (تقنية، تنظيمية)',
+                        type: 'chips',
+                        options: ['تقليص الميزانية', 'استقالة كوادر رئيسية', 'تغيير في الأولويات', 'ضغط عمل متزايد', 'تغيرات تنظيمية', 'تقنية تحل محل العمليات'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'هل توجد تغييرات في الشركة قد تؤثر سلباً على إدارتك؟',
+                        hint: 'إعادة هيكلة، تغيير قيادة، دمج إدارات، تقليص موازنات',
+                        type: 'chips',
+                        options: ['إعادة هيكلة متوقعة', 'تغيير في القيادة', 'دمج مع إدارة أخرى', 'تقليص الصلاحيات', 'تغيير الأنظمة المستخدمة', 'ضغط لتقليل التكاليف'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ما المخاطر التشغيلية التي تقلقك؟',
+                        hint: 'مخاطر مثل: فقدان بيانات، أخطاء تشغيلية، عدم امتثال',
+                        type: 'chips',
+                        options: ['فقدان بيانات مهمة', 'أخطاء تشغيلية كبيرة', 'عدم الامتثال للأنظمة', 'اعتماد على شخص واحد', 'انقطاع الخدمة', 'تسرب معلومات'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ما التهديدات الأخرى التي تراها في الأفق؟',
+                        hint: 'فكّر في ١-٣ سنوات قادمة',
+                        type: 'text',
+                        placeholder: 'اكتب التهديدات... (فصل بفاصلة)'
+                    }
+                ]
+            }
+        ] : _isIndividual ? [
             // ═══════════════════════════════════════════
             //  أسئلة الأفراد — SWOT شخصي
             // ═══════════════════════════════════════════
@@ -1309,7 +1457,11 @@
             if (user?.name) document.getElementById('userInitial').textContent = user.name.charAt(0);
 
             // ═══ تكييف الواجهة حسب نوع المستخدم ═══
-            if (_isIndividual) {
+            if (_isDeptMgr) {
+                document.querySelector('.hero h1').textContent = `📊 تحليل SWOT — ${_mgrDeptName}`;
+                document.getElementById('heroDesc').innerHTML =
+                    `حلّل نقاط القوة والضعف في <strong>${_mgrDeptName}</strong> + اكتشف فرص التطوير والمخاطر — ٤ أقسام × ٤ أسئلة مخصصة لإدارتك. الأجوبة تتحوّل تلقائياً لمصفوفة SWOT.`;
+            } else if (_isIndividual) {
                 document.getElementById('heroDesc').innerHTML =
                     'حلّل نقاط قوتك ومهاراتك الشخصية + اكتشف الفرص والتحديات في مسارك المهني — ٤ أقسام × ٤ أسئلة مخصصة لك. الأجوبة تتحوّل تلقائياً لمصفوفة SWOT شخصية.';
                 // إخفاء بادج الشركة للأفراد
@@ -1508,22 +1660,22 @@
         const AXIS_THRESHOLDS = { strong: 70, weak: 40 };
 
         const DEPT_STRENGTH_RULES = {
-            compliance_officer:    { strength:['نعم — موظف متفرغ','مستشار خارجي'], weakness:['لا — أنا أتولى ذلك'], sL:'مسؤول امتثال متخصص', wL:'لا يوجد مسؤول امتثال' },
-            license_review:        { strength:['هذا الشهر'], weakness:['أكثر من سنة','لا أتذكر'], sL:'متابعة دورية للتراخيص', wL:'تراخيص غير محدّثة' },
-            violations:            { strength:['لا'], weakness:['نعم — لا تزال قائمة'], sL:'سجل نظيف من المخالفات', wL:'مخالفة قائمة لم تُحل' },
-            accountant:            { strength:['داخلي'], weakness:['لا'], sL:'محاسب داخلي متخصص', wL:'لا يوجد محاسب' },
-            profit_margin:         { strength:['نعم بدقة'], weakness:['لا'], sL:'وعي مالي دقيق بالهوامش', wL:'جهل بهامش الربح الصافي' },
-            client_concentration:  { strength:['أقل 20%'], weakness:['أكثر 50% (خطر)'], sL:'تنويع صحي في قاعدة العملاء', wL:'⚠️ اعتماد خطير على عميل واحد' },
-            crm:                   { strength:['نعم متكامل'], weakness:['لا'], sL:'نظام CRM متكامل', wL:'لا يوجد نظام متابعة عملاء' },
-            repeat_clients:        { strength:['أكثر من 60%'], weakness:['أقل من 30%'], sL:'قاعدة عملاء متكررة قوية', wL:'ضعف في الاحتفاظ بالعملاء' },
-            salary_structure:      { strength:['نعم موثق'], weakness:['لا'], sL:'هيكل رواتب وحوافز واضح', wL:'غياب هيكل تعويضات' },
-            performance_eval:      { strength:['نعم — دوري'], weakness:['لا'], sL:'نظام تقييم أداء منتظم', wL:'لا يوجد تقييم أداء' },
-            brand_identity:        { strength:['نعم — احترافية'], weakness:['لا'], sL:'هوية بصرية احترافية', wL:'لا توجد هوية بصرية' },
-            content_frequency:     { strength:['يومياً','أسبوعياً'], weakness:['لا'], sL:'محتوى منتظم ونشط', wL:'لا يوجد نشر محتوى' },
-            sops:                  { strength:['نعم كاملة'], weakness:['في الأذهان فقط'], sL:'إجراءات موثقة SOPs', wL:'العمليات غير موثقة' },
-            automation_level:      { strength:['معظمها أتمتة'], weakness:['كثير'], sL:'مستوى أتمتة عالي', wL:'عمليات يدوية مرهقة' },
-            infra_growth:          { strength:['نعم'], weakness:['ضعيفة'], sL:'بنية تحتية تدعم النمو', wL:'بنية تحتية ضعيفة' },
-            vendor_contracts:      { strength:['نعم'], weakness:['لا'], sL:'عقود موردين محدّثة', wL:'عقود موردين منتهية/غائبة' },
+            compliance_officer: { strength: ['نعم — موظف متفرغ', 'مستشار خارجي'], weakness: ['لا — أنا أتولى ذلك'], sL: 'مسؤول امتثال متخصص', wL: 'لا يوجد مسؤول امتثال' },
+            license_review: { strength: ['هذا الشهر'], weakness: ['أكثر من سنة', 'لا أتذكر'], sL: 'متابعة دورية للتراخيص', wL: 'تراخيص غير محدّثة' },
+            violations: { strength: ['لا'], weakness: ['نعم — لا تزال قائمة'], sL: 'سجل نظيف من المخالفات', wL: 'مخالفة قائمة لم تُحل' },
+            accountant: { strength: ['داخلي'], weakness: ['لا'], sL: 'محاسب داخلي متخصص', wL: 'لا يوجد محاسب' },
+            profit_margin: { strength: ['نعم بدقة'], weakness: ['لا'], sL: 'وعي مالي دقيق بالهوامش', wL: 'جهل بهامش الربح الصافي' },
+            client_concentration: { strength: ['أقل 20%'], weakness: ['أكثر 50% (خطر)'], sL: 'تنويع صحي في قاعدة العملاء', wL: '⚠️ اعتماد خطير على عميل واحد' },
+            crm: { strength: ['نعم متكامل'], weakness: ['لا'], sL: 'نظام CRM متكامل', wL: 'لا يوجد نظام متابعة عملاء' },
+            repeat_clients: { strength: ['أكثر من 60%'], weakness: ['أقل من 30%'], sL: 'قاعدة عملاء متكررة قوية', wL: 'ضعف في الاحتفاظ بالعملاء' },
+            salary_structure: { strength: ['نعم موثق'], weakness: ['لا'], sL: 'هيكل رواتب وحوافز واضح', wL: 'غياب هيكل تعويضات' },
+            performance_eval: { strength: ['نعم — دوري'], weakness: ['لا'], sL: 'نظام تقييم أداء منتظم', wL: 'لا يوجد تقييم أداء' },
+            brand_identity: { strength: ['نعم — احترافية'], weakness: ['لا'], sL: 'هوية بصرية احترافية', wL: 'لا توجد هوية بصرية' },
+            content_frequency: { strength: ['يومياً', 'أسبوعياً'], weakness: ['لا'], sL: 'محتوى منتظم ونشط', wL: 'لا يوجد نشر محتوى' },
+            sops: { strength: ['نعم كاملة'], weakness: ['في الأذهان فقط'], sL: 'إجراءات موثقة SOPs', wL: 'العمليات غير موثقة' },
+            automation_level: { strength: ['معظمها أتمتة'], weakness: ['كثير'], sL: 'مستوى أتمتة عالي', wL: 'عمليات يدوية مرهقة' },
+            infra_growth: { strength: ['نعم'], weakness: ['ضعيفة'], sL: 'بنية تحتية تدعم النمو', wL: 'بنية تحتية ضعيفة' },
+            vendor_contracts: { strength: ['نعم'], weakness: ['لا'], sL: 'عقود موردين محدّثة', wL: 'عقود موردين منتهية/غائبة' },
         };
 
         function checkDiagnosticBridge() {
@@ -1545,7 +1697,7 @@
         }
 
         function generateFromDiagnostic() {
-            const diag  = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
+            const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
             const depth = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
 
             const S = [], W = [], O = [], T = [];
@@ -1553,29 +1705,29 @@
             // ── المصدر 1: التشخيص العام (درجات المحاور) ──
             if (diag?.radar?.axisScores) {
                 const AXIS_LABELS = {
-                    'مالي':    'الأداء المالي',
-                    'عمالة':   'إدارة الموارد البشرية',
-                    'إداري':   'الكفاءة التشغيلية',
-                    'تنظيمي':  'الامتثال التنظيمي',
-                    'قطاعي':   'الأداء في القطاع',
+                    'مالي': 'الأداء المالي',
+                    'عمالة': 'إدارة الموارد البشرية',
+                    'إداري': 'الكفاءة التشغيلية',
+                    'تنظيمي': 'الامتثال التنظيمي',
+                    'قطاعي': 'الأداء في القطاع',
                 };
                 for (const [axis, score] of Object.entries(diag.radar.axisScores)) {
                     const label = AXIS_LABELS[axis] || axis;
-                    if (score >= AXIS_THRESHOLDS.strong) S.push(`أداء قوي في ${label} (${score}%)`);
-                    else if (score <= AXIS_THRESHOLDS.weak) W.push(`فجوة حرجة في ${label} (${score}%)`);
+                    if (score >= AXIS_THRESHOLDS.strong) S.push({ text: `أداء قوي في ${label} (${score}%)`, confidence: 90, source: 'diagnostic' });
+                    else if (score <= AXIS_THRESHOLDS.weak) W.push({ text: `فجوة حرجة في ${label} (${score}%)`, confidence: 90, source: 'diagnostic' });
                 }
             }
 
             // ── تهديدات الامتثال من التشخيص ──
             if (diag?.results?.complianceGap > 50) {
-                T.push('مخاطر امتثال عالية — تراخيص وتسجيلات معلقة');
+                T.push({ text: 'مخاطر امتثال عالية — تراخيص وتسجيلات معلقة', confidence: 90, source: 'diagnostic' });
             }
 
             // ── فرص من القطاع والحجم ──
             const sector = diag?.company?.sector || localStorage.getItem('stratix_sector');
-            const size   = diag?.company?.size;
-            if (sector) O.push(`فرص نمو في قطاع ${sector}`);
-            if (size === 'صغيرة' || size === 'متناهية الصغر') O.push('برامج دعم المنشآت الصغيرة (منشآت، صندوق الاستثمارات)');
+            const size = diag?.company?.size;
+            if (sector) O.push({ text: `فرص نمو في قطاع ${sector}`, confidence: 60, source: 'diagnostic' });
+            if (size === 'صغيرة' || size === 'متناهية الصغر') O.push({ text: 'برامج دعم المنشآت الصغيرة (منشآت، صندوق الاستثمارات)', confidence: 60, source: 'diagnostic' });
 
             // ── المصدر 2: إجابات الإدارات (dept-deep) ──
             if (depth) {
@@ -1585,29 +1737,43 @@
                         const rule = DEPT_STRENGTH_RULES[qId];
                         if (!rule) continue;
                         const vals = Array.isArray(val) ? val : [val];
-                        if (vals.some(v => rule.strength.includes(v))) { if (!S.includes(rule.sL)) S.push(rule.sL); }
-                        else if (vals.some(v => rule.weakness.includes(v))) { if (!W.includes(rule.wL)) W.push(rule.wL); }
+                        if (vals.some(v => rule.strength.includes(v))) {
+                            if (!S.some(x => (x.text || x) === rule.sL)) S.push({ text: rule.sL, confidence: 80, source: 'dept_deep' });
+                        } else if (vals.some(v => rule.weakness.includes(v))) {
+                            if (!W.some(x => (x.text || x) === rule.wL)) W.push({ text: rule.wL, confidence: 80, source: 'dept_deep' });
+                        }
                     }
                     // التحديات المختارة → تهديدات
                     if (deptData.challenges?.length) {
-                        deptData.challenges.forEach(c => { if (!T.includes(c)) T.push(c); });
+                        deptData.challenges.forEach(c => {
+                            if (!T.some(x => (x.text || x) === c)) T.push({ text: c, confidence: 70, source: 'dept_deep' });
+                        });
                     }
                     // نموذج التشغيل
                     if (deptData.model === 'مزود خارجي — راضٍ عن الأداء') {
-                        if (!S.includes('تشغيل خارجي فعّال يقلل الأعباء')) S.push('تشغيل خارجي فعّال يقلل الأعباء');
+                        if (!S.some(x => (x.text || x) === 'تشغيل خارجي فعّال يقلل الأعباء'))
+                            S.push({ text: 'تشغيل خارجي فعّال يقلل الأعباء', confidence: 70, source: 'dept_rule' });
                     } else if (deptData.model === 'مزود خارجي — أفكر في التغيير') {
-                        if (!W.includes('مزود خارجي بأداء ضعيف')) W.push('مزود خارجي بأداء ضعيف');
+                        if (!W.some(x => (x.text || x) === 'مزود خارجي بأداء ضعيف'))
+                            W.push({ text: 'مزود خارجي بأداء ضعيف', confidence: 70, source: 'dept_rule' });
                     }
                 }
             }
 
-            // ── دمج في state.prefilled ──
-            if (!state.prefilled) state.prefilled = { strengths:[], weaknesses:[], opportunities:[], threats:[] };
-            const merge = (arr, src) => src.forEach(x => { if (!arr.includes(x)) arr.push(x); });
-            merge(state.prefilled.strengths    ||= [], S);
-            merge(state.prefilled.weaknesses   ||= [], W);
-            merge(state.prefilled.opportunities||= [], O);
-            merge(state.prefilled.threats      ||= [], T);
+            // ── دمج في state.prefilled (with confidence) ──
+            if (!state.prefilled) state.prefilled = { strengths: [], weaknesses: [], opportunities: [], threats: [] };
+            const mergeWithConf = (arr, items) => {
+                items.forEach(item => {
+                    const text = typeof item === 'string' ? item : item.text;
+                    if (!arr.some(x => (typeof x === 'string' ? x : x.text) === text)) {
+                        arr.push(item);
+                    }
+                });
+            };
+            mergeWithConf(state.prefilled.strengths ||= [], S);
+            mergeWithConf(state.prefilled.weaknesses ||= [], W);
+            mergeWithConf(state.prefilled.opportunities ||= [], O);
+            mergeWithConf(state.prefilled.threats ||= [], T);
 
             // إخفاء زر التوليد بعد الاستخدام
             document.getElementById('diagnosticBridgeBanner').style.display = 'none';
@@ -1835,15 +2001,18 @@
                     const key = `${sec.id}_${qi}`;
                     const answers = state.answers[key] || [];
                     answers.forEach(a => {
-                        swotData[sec.id].push({ text: a, source: 'question' });
+                        swotData[sec.id].push({ text: a, source: 'question', confidence: 50 });
                     });
                 }
-                // Add pre-filled items from pain/ambition
+                // Add pre-filled items from pain/ambition + diagnostic bridge
                 if (state.prefilled[sec.id]) {
                     state.prefilled[sec.id].forEach(item => {
+                        const text = typeof item === 'string' ? item : item.text;
+                        const conf = typeof item === 'object' ? (item.confidence || 50) : 50;
+                        const src = typeof item === 'object' ? (item.source || 'pain_ambition') : 'pain_ambition';
                         // Don't add duplicates
-                        if (!swotData[sec.id].some(x => x.text === item)) {
-                            swotData[sec.id].push({ text: item, source: 'pain_ambition' });
+                        if (!swotData[sec.id].some(x => x.text === text)) {
+                            swotData[sec.id].push({ text, source: src, confidence: conf });
                         }
                     });
                 }
@@ -1887,6 +2056,9 @@
 
             SWOT_SECTIONS.forEach(sec => {
                 const items = swotData[sec.id];
+                // ── Evidence v2: Sort by confidence (highest first) ──
+                items.sort((a, b) => (b.confidence || 50) - (a.confidence || 50));
+
                 html += `
                     <div class="swot-quad ${sec.cssClass}">
                         <div class="sq-header">
@@ -1899,12 +2071,27 @@
                     html += `<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">لا توجد بيانات</div>`;
                 } else {
                     items.forEach(item => {
-                        const sourceTag = item.source === 'pain_ambition'
-                            ? `<span class="si-source" style="background:rgba(102,126,234,0.1);color:var(--primary)">من الألم والطموح</span>`
-                            : `<span class="si-source" style="background:rgba(255,255,255,0.05);color:var(--text-muted)">من إجاباتك</span>`;
+                        const conf = item.confidence || 50;
+                        const isLow = conf < 60;
+                        const opacity = isLow ? 'opacity:0.7;' : '';
+
+                        // Source tag with confidence
+                        let sourceTag = '';
+                        if (item.source === 'diagnostic') {
+                            sourceTag = `<span class="si-source" style="background:rgba(59,130,246,0.1);color:#60a5fa">🔬 التشخيص · ${conf}%</span>`;
+                        } else if (item.source === 'dept_deep') {
+                            sourceTag = `<span class="si-source" style="background:rgba(139,92,246,0.1);color:#a78bfa">🏢 dept-deep · ${conf}%</span>`;
+                        } else if (item.source === 'pain_ambition') {
+                            sourceTag = `<span class="si-source" style="background:rgba(102,126,234,0.1);color:var(--primary)">💡 الألم والطموح · ${conf}%</span>`;
+                        } else if (item.source === 'dept_rule') {
+                            sourceTag = `<span class="si-source" style="background:rgba(139,92,246,0.06);color:#9784c4">⚙️ قاعدة · ${conf}%</span>`;
+                        } else {
+                            sourceTag = `<span class="si-source" style="background:rgba(255,255,255,0.05);color:var(--text-muted)">✍️ إجاباتك · ${conf}%</span>`;
+                        }
+
                         html += `
-                            <div class="swot-item" style="border-color:${sec.color}">
-                                <div style="flex:1">${item.text}</div>
+                            <div class="swot-item" style="border-color:${sec.color};${opacity}">
+                                <div style="flex:1">${item.text}${isLow ? ' <span style="font-size:9px;color:var(--text-muted);font-weight:600">(إثبات ضعيف)</span>' : ''}</div>
                                 ${sourceTag}
                             </div>
                         `;
@@ -1932,26 +2119,37 @@
             // Recommendations
             html += buildRecommendations(swotData, score);
 
-            // Next Step CTA — PESTEL
+            // Next Step CTA — Journey Progress
             html += `
-                <div style="background:linear-gradient(135deg,rgba(59,130,246,0.08),rgba(34,197,94,0.05));border:1px solid rgba(59,130,246,0.2);border-radius:18px;padding:24px;margin-top:24px;text-align:center">
-                    <div style="font-size:22px;margin-bottom:8px">🌍</div>
-                    <div style="font-size:16px;font-weight:800;margin-bottom:4px">الخطوة التالية: تحليل PESTEL</div>
-                    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.8">
-                        بعد تحليل البيئة الداخلية (SWOT)، حلّل البيئة الخارجية — السياسية، الاقتصادية، الاجتماعية، التقنية، البيئية، والقانونية
+                <div style="background:linear-gradient(135deg,rgba(167,139,250,0.08),rgba(102,126,234,0.05));border:1px solid rgba(167,139,250,0.2);border-radius:18px;padding:24px;margin-top:24px">
+                    <div style="font-size:15px;font-weight:900;margin-bottom:14px;text-align:center;color:var(--text)">🗺️ رحلتك الاستراتيجية — وصلت الخطوة ٢ من ٤</div>
+                    <div style="display:flex;align-items:center;gap:0;margin-bottom:18px;justify-content:center;flex-wrap:wrap">
+                        <div style="width:32px;height:32px;border-radius:50%;background:rgba(34,197,94,0.15);color:#22c55e;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900">✓</div>
+                        <div style="width:28px;height:3px;background:linear-gradient(90deg,#22c55e,#22c55e)"></div>
+                        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900">✓</div>
+                        <div style="width:28px;height:3px;background:linear-gradient(90deg,#22c55e,#a78bfa)"></div>
+                        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#a78bfa,#8b5cf6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;animation:pulse 2s infinite;box-shadow:0 0 16px rgba(139,92,246,0.4)">3</div>
+                        <div style="width:28px;height:3px;background:rgba(255,255,255,0.08)"></div>
+                        <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.06);color:var(--text-muted);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">4</div>
                     </div>
-                    <a href="/tool-detail.html?code=PESTEL" style="
-                        display:inline-flex;align-items:center;gap:10px;
-                        padding:14px 36px;border-radius:14px;
-                        background:linear-gradient(135deg,#3b82f6,#2563eb);
-                        color:white;text-decoration:none;font-size:15px;font-weight:700;
-                        box-shadow:0 4px 15px rgba(59,130,246,0.3);
-                        transition:transform 0.2s;font-family:inherit
-                    " onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <i class="bi bi-globe2"></i>
-                        ابدأ تحليل PESTEL
-                        <i class="bi bi-arrow-left"></i>
-                    </a>
+                    <div style="display:flex;gap:8px;text-align:center;justify-content:center;margin-bottom:16px;flex-wrap:wrap">
+                        <span style="font-size:11px;color:#22c55e;font-weight:700">✅ البيئة الداخلية</span>
+                        <span style="font-size:11px;color:#22c55e;font-weight:700">✅ SWOT</span>
+                        <span style="font-size:11px;color:#a78bfa;font-weight:700">👈 التوجهات التالي</span>
+                        <span style="font-size:11px;color:var(--text-muted)">KPIs</span>
+                    </div>
+                    <div style="text-align:center">
+                        <a href="/directions.html" style="
+                            display:inline-flex;align-items:center;gap:10px;
+                            padding:14px 36px;border-radius:14px;
+                            background:linear-gradient(135deg,#a78bfa,#8b5cf6);
+                            color:white;text-decoration:none;font-size:15px;font-weight:700;
+                            box-shadow:0 4px 15px rgba(139,92,246,0.3);
+                            transition:transform 0.2s;font-family:inherit
+                        " onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'" onclick="if(window.stratixTrackComplete) stratixTrackComplete(2)">
+                            🎯 الخطوة التالية: حدد أهدافك الاستراتيجية ←
+                        </a>
+                    </div>
                 </div>
             `;
 
@@ -1964,8 +2162,8 @@
                     <button class="btn-q back" onclick="restartAnalysis()">
                         <i class="bi bi-arrow-clockwise"></i> إعادة التحليل
                     </button>
-                    <a href="/dashboard.html" class="btn-q back" style="text-decoration:none">
-                        <i class="bi bi-speedometer2"></i> لوحة التحكم
+                    <a href="/tool-detail.html?code=PESTEL" class="btn-q back" style="text-decoration:none">
+                        <i class="bi bi-globe2"></i> أو تحليل PESTEL
                     </a>
                 </div>
             `;
@@ -2072,13 +2270,16 @@
                 for (let qi = 0; qi < 4; qi++) {
                     const key = `${sec.id}_${qi}`;
                     (state.answers[key] || []).forEach(a => {
-                        swotData[sec.id].push({ title: a, impact: 'MEDIUM', source: 'question' });
+                        swotData[sec.id].push({ title: a, impact: 'MEDIUM', source: 'question', confidence: 50 });
                     });
                 }
                 if (state.prefilled[sec.id]) {
                     state.prefilled[sec.id].forEach(item => {
-                        if (!swotData[sec.id].some(x => x.title === item)) {
-                            swotData[sec.id].push({ title: item, impact: 'HIGH', source: 'pain_ambition' });
+                        const text = typeof item === 'string' ? item : item.text;
+                        const conf = typeof item === 'object' ? (item.confidence || 50) : 50;
+                        const src = typeof item === 'object' ? (item.source || 'pain_ambition') : 'pain_ambition';
+                        if (!swotData[sec.id].some(x => x.title === text)) {
+                            swotData[sec.id].push({ title: text, impact: conf >= 80 ? 'HIGH' : 'MEDIUM', source: src, confidence: conf });
                         }
                     });
                 }
@@ -2136,6 +2337,7 @@
 
         init();
     </script>
+    <script src="/assets/js/path-tracker.js"></script>
 </body>
 
 </html>

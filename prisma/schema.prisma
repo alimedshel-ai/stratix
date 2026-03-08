@@ -551,9 +551,11 @@ model StrategicInitiative {
   autoCreated Boolean @default(false) // أُنشئت تلقائياً من نمط الشركة
   budgetSpent Float?  @default(0)
 
-  version StrategyVersion  @relation(fields: [versionId], references: [id], onDelete: Cascade)
-  tasks   InitiativeTask[]
-  kpis    InitiativeKpi[]
+  version    StrategyVersion  @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  tasks      InitiativeTask[]
+  kpis       InitiativeKpi[]
+  milestones Milestone[]
+  raciEntries RaciEntry[]
 
   @@index([versionId])
   @@map("strategic_initiatives")
@@ -1432,4 +1434,273 @@ model Lead {
   @@index([sector])
   @@index([status])
   @@map("leads")
+}
+
+// =========================================
+// PHASE: FINANCIAL TOOLS (الأدوات المالية)
+// DuPont, Break-even, ABC Costing
+// =========================================
+
+/// تحليل DuPont — تفكيك العائد على حقوق الملكية
+model DupontAnalysis {
+  id            String @id @default(cuid())
+  entityId      String
+  versionId     String?
+  fiscalYear    Int
+  fiscalQuarter Int?   // 1-4 (اختياري)
+
+  // المدخلات الأساسية
+  revenue       Float  // الإيرادات
+  netIncome     Float  // صافي الربح
+  totalAssets   Float  // إجمالي الأصول
+  totalEquity   Float  // إجمالي حقوق الملكية
+
+  // النتائج المحسوبة (يُحسب في Backend)
+  profitMargin     Float? // هامش الربح = netIncome / revenue
+  assetTurnover    Float? // دوران الأصول = revenue / totalAssets
+  equityMultiplier Float? // مضاعف حقوق الملكية = totalAssets / totalEquity
+  roe              Float? // العائد على حقوق الملكية = profitMargin × assetTurnover × equityMultiplier
+
+  notes     String?
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([entityId, fiscalYear, fiscalQuarter])
+  @@index([entityId])
+  @@index([fiscalYear])
+  @@map("dupont_analyses")
+}
+
+/// تحليل نقطة التعادل — Break-even Analysis
+model BreakevenAnalysis {
+  id            String @id @default(cuid())
+  entityId      String
+  versionId     String?
+  productName   String // اسم المنتج أو الخدمة
+
+  // المدخلات
+  fixedCosts    Float  // التكاليف الثابتة
+  variableCost  Float  // التكلفة المتغيرة للوحدة
+  sellingPrice  Float  // سعر البيع للوحدة
+
+  // النتائج المحسوبة (Backend)
+  breakevenUnits   Float? // وحدات التعادل = fixedCosts / (sellingPrice - variableCost)
+  breakevenRevenue Float? // إيرادات التعادل = breakevenUnits × sellingPrice
+  contributionMargin Float? // هامش المساهمة = (sellingPrice - variableCost) / sellingPrice
+  marginOfSafety   Float? // هامش الأمان (%) — اختياري
+
+  actualUnits  Float? // الوحدات الفعلية المباعة (للمقارنة)
+  notes        String?
+  createdBy    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([entityId])
+  @@map("breakeven_analyses")
+}
+
+/// أنشطة ABC Costing — تحديد محركات التكلفة
+model AbcActivity {
+  id            String @id @default(cuid())
+  entityId      String
+  versionId     String?
+  nameAr        String // اسم النشاط بالعربي
+  nameEn        String? // اسم النشاط بالإنجليزي
+  costDriver    String // محرك التكلفة (ساعات عمل، عدد طلبات...)
+  totalCost     Float  // إجمالي تكلفة النشاط
+  driverQuantity Float // إجمالي كمية المحرك
+  ratePerDriver Float? // معدل التكلفة لكل وحدة محرك (محسوب)
+
+  createdBy     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  productCosts  AbcProductCost[]
+
+  @@index([entityId])
+  @@map("abc_activities")
+}
+
+/// توزيع تكاليف ABC على المنتجات
+model AbcProductCost {
+  id           String @id @default(cuid())
+  activityId   String
+  productName  String // اسم المنتج
+  driverUsage  Float  // استخدام المنتج لمحرك التكلفة
+  allocatedCost Float? // التكلفة المخصصة (محسوب)
+
+  createdAt    DateTime @default(now())
+
+  activity AbcActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@index([activityId])
+  @@map("abc_product_costs")
+}
+
+// =========================================
+// PHASE: INTELLIGENCE TOOLS (أدوات الذكاء)
+// Monte Carlo, Process Mining
+// =========================================
+
+/// محاكاة Monte Carlo — تحليل احتمالي
+model MonteCarloRun {
+  id          String @id @default(cuid())
+  entityId    String
+  versionId   String?
+  name        String // اسم المحاكاة
+  description String?
+
+  iterations  Int    @default(10000) // عدد التكرارات
+  variables   String // JSON: [{name, min, max, distribution, mostLikely}]
+  results     String? // JSON: {mean, median, p5, p25, p75, p95, stdDev, histogram}
+
+  status      String @default("PENDING") // PENDING, RUNNING, COMPLETED, FAILED
+  createdBy   String?
+  createdAt   DateTime @default(now())
+
+  @@index([entityId])
+  @@index([versionId])
+  @@map("monte_carlo_runs")
+}
+
+/// سجلات العمليات — Process Mining Event Log
+model ProcessLog {
+  id            String   @id @default(cuid())
+  entityId      String
+  processName   String   // اسم العملية
+  caseId        String   // معرف الحالة/الطلب
+  activity      String   // النشاط (مثال: "تقديم الطلب"، "المراجعة")
+  startedAt     DateTime // وقت البداية
+  completedAt   DateTime? // وقت الانتهاء
+  durationMins  Float?   // المدة بالدقائق
+  performerId   String?  // المنفذ (user ID)
+  departmentId  String?  // القسم
+  metadata      String?  // JSON — بيانات إضافية
+
+  createdAt     DateTime @default(now())
+
+  @@index([entityId, processName])
+  @@index([caseId])
+  @@index([startedAt])
+  @@map("process_logs")
+}
+
+/// اختناقات العمليات — نتائج تحليل Process Mining
+model ProcessBottleneck {
+  id              String @id @default(cuid())
+  entityId        String
+  processName     String
+  activity        String   // النشاط المتسبب في الاختناق
+  avgDuration     Float?   // متوسط المدة (دقائق)
+  caseCount       Int?     // عدد الحالات المتأثرة
+  bottleneckScore Float?   // درجة الاختناق (0-100)
+  recommendation  String?  // توصية التحسين
+
+  detectedAt      DateTime @default(now())
+
+  @@index([entityId])
+  @@index([processName])
+  @@map("process_bottlenecks")
+}
+
+// =========================================
+// PHASE: EXECUTION TOOLS (أدوات التنفيذ)
+// Milestones (Gantt), RACI Matrix
+// =========================================
+
+/// معالم المبادرة — لمخطط جانت
+model Milestone {
+  id            String   @id @default(cuid())
+  initiativeId  String
+  title         String
+  startDate     DateTime
+  endDate       DateTime
+  progress      Float    @default(0) // 0-100
+  dependsOnId   String?  // معلم سابق يعتمد عليه
+  sortOrder     Int      @default(0)
+  color         String?  // لون شريط جانت
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  initiative StrategicInitiative @relation(fields: [initiativeId], references: [id], onDelete: Cascade)
+  dependsOn  Milestone?          @relation("MilestoneDep", fields: [dependsOnId], references: [id])
+  dependents Milestone[]         @relation("MilestoneDep")
+
+  @@index([initiativeId])
+  @@map("milestones")
+}
+
+/// مصفوفة RACI — تحديد المسؤوليات
+model RaciEntry {
+  id            String @id @default(cuid())
+  initiativeId  String
+  activity      String // النشاط/المهمة
+  responsibleId String? // المسؤول عن التنفيذ (R)
+  accountableId String? // المعتمد/المحاسب (A)
+  consulted     String? // المستشارون — JSON array of user IDs (C)
+  informed      String? // المُطّلعون — JSON array of user IDs (I)
+  notes         String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  initiative StrategicInitiative @relation(fields: [initiativeId], references: [id], onDelete: Cascade)
+
+  @@index([initiativeId])
+  @@map("raci_entries")
+}
+
+// =========================================
+// PHASE: OKR KEY RESULTS
+// النتائج الرئيسية لأهداف OKR
+// =========================================
+
+/// النتائج الرئيسية — Key Results لكل OKR Objective
+model OkrKeyResult {
+  id           String @id @default(cuid())
+  objectiveId  String // ربط بـ StrategicObjective (framework='OKR')
+  title        String
+  metricType   String @default("PERCENTAGE") // NUMBER, PERCENTAGE, CURRENCY, BOOLEAN
+  startValue   Float  @default(0)
+  targetValue  Float
+  currentValue Float  @default(0)
+  progress     Float? @default(0) // محسوب: ((current - start) / (target - start)) × 100
+  ownerId      String? // مسؤول النتيجة
+  status       String @default("NOT_STARTED") // NOT_STARTED, IN_PROGRESS, AT_RISK, ACHIEVED
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([objectiveId])
+  @@map("okr_key_results")
+}
+
+// =========================================
+// PHASE: AI RECOMMENDATIONS
+// توصيات الذكاء الاصطناعي
+// =========================================
+
+/// توصيات AI — جاهزة للترقية من rule-based إلى ML
+model AiRecommendation {
+  id             String  @id @default(cuid())
+  entityId       String
+  kpiId          String? // KPI المرتبط (اختياري)
+  departmentId   String? // القسم المرتبط (اختياري)
+  recommendation String  // نص التوصية
+  reasoning      String? // سبب التوصية
+  confidence     Float?  @default(0.75) // 0-1 مستوى الثقة
+  sourceType     String  @default("RULE_BASED") // RULE_BASED, ML_MODEL, HYBRID
+  category       String? // FINANCIAL, OPERATIONAL, STRATEGIC, HR
+  priority       String  @default("MEDIUM") // HIGH, MEDIUM, LOW
+  isDismissed    Boolean @default(false)
+  isImplemented  Boolean @default(false)
+
+  createdAt      DateTime @default(now())
+
+  @@index([entityId])
+  @@index([kpiId])
+  @@index([isDismissed])
+  @@map("ai_recommendations")
 }

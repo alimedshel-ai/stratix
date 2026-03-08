@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس | نظام الإدارة المؤسسي المتكامل v7.7</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --font-main: 'Tajawal', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: #F8FAFC;
+            color: #1E293B;
+            overflow: hidden;
+        }
+
+        .sidebar-nav-item {
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            font-size: 0.85rem;
+            color: #64748b;
+            border-radius: 0.75rem;
+            margin-bottom: 0.2rem;
+            outline: none;
+            border: none;
+            background: transparent;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .sidebar-nav-item:hover:not(.locked) {
+            background-color: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .sidebar-nav-item:focus-visible {
+            outline: 2px solid #2563eb;
+            outline-offset: 2px;
+        }
+
+        .sidebar-nav-item.active {
+            background-color: #eff6ff;
+            color: #2563eb;
+            font-weight: 700;
+        }
+
+        .sidebar-nav-item.locked {
+            opacity: 0.4;
+            cursor: not-allowed;
+            filter: grayscale(1);
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+            border-radius: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Skeleton Loading */
+        .skeleton {
+            background: #f1f5f9;
+            background-image: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+            border-radius: 0.5rem;
+        }
+
+        @keyframes skeleton-loading {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .progress-bar-inner {
+            transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Roadmap Styling */
+        .roadmap-line {
+            position: absolute;
+            height: 2px;
+            background: #E2E8F0;
+            width: 100%;
+            top: 20px;
+            z-index: 0;
+        }
+
+        .roadmap-fill {
+            position: absolute;
+            height: 2px;
+            background: #2563EB;
+            z-index: 1;
+            transition: width 1s ease-in-out;
+        }
+
+        .node-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 4px solid #F8FAFC;
+            z-index: 10;
+            position: relative;
+            transition: all 0.3s;
+            cursor: pointer;
+            outline: none;
+            border: none;
+        }
+
+        .node-circle:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 2px;
+        }
+
+        .node-active {
+            background: #2563EB;
+            box-shadow: 0 0 0 6px #DBEAFE;
+            transform: scale(1.1);
+        }
+
+        .node-done {
+            background: #10B981;
+        }
+
+        .node-pending {
+            background: #CBD5E1;
+        }
+
+        /* Notifications Panel Positioning - Fixed for RTL */
+        #notification-panel {
+            position: absolute;
+            top: 4rem;
+            left: 0;
+            width: 320px;
+            max-height: 450px;
+            z-index: 100;
+            transform-origin: top left;
+            transition: all 0.2s ease;
+            display: none;
+        }
+
+        #notification-panel.open {
+            display: block;
+            animation: popIn 0.2s ease-out;
+        }
+
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        /* Notifications / Toasts */
+        #toast-container {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .toast {
+            padding: 1rem 1.5rem;
+            border-radius: 1rem;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        #demo-banner {
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+            }
+
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #E2E8F0;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body class="flex h-screen overflow-hidden">
+
+    <!-- ⚠️ Toast Container -->
+    <div id="toast-container" aria-live="polite"></div>
+
+    <!-- ⚠️ Demo Mode Banner -->
+    <div id="demo-banner"
+        class="hidden fixed top-0 left-0 right-0 z-[100] bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest py-1.5 text-center shadow-lg">
+        ⚠️ وضع العرض — البيانات تجريبية. يرجى ربط الخادم لعرض بياناتك الحقيقية.
+    </div>
+
+    <!-- 1️⃣ السايدبار (The Intelligent Navigator) -->
+    <aside id="sidebar" class="w-72 bg-white border-l border-slate-200 flex flex-col shrink-0 z-50" role="navigation"
+        aria-label="القائمة الجانبية">
+        <div class="p-8 flex items-center gap-3 text-right">
+            <div
+                class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200 text-white">
+                <i data-lucide="shield-check" aria-hidden="true"></i>
+            </div>
+            <div>
+                <h1 class="font-black text-xl text-slate-900 tracking-tight text-right uppercase">ستارتكس</h1>
+                <p class="text-[9px] text-blue-600 font-bold uppercase tracking-widest text-left">Enterprise v7.7</p>
+            </div>
+        </div>
+
+        <nav class="flex-1 px-4 overflow-y-auto pb-6">
+            <div
+                class="nav-group-title text-[10px] font-extrabold text-slate-400 uppercase p-4 text-right tracking-widest">
+                الرئيسية</div>
+            <button id="nav-dashboard" class="sidebar-nav-item active text-right"
+                onclick="window.handleNavigation('dashboard')">
+                <i data-lucide="layout-dashboard" class="w-4 h-4 ml-3" aria-hidden="true"></i>
+                <span>لوحة التحكم المركزية</span>
+            </button>
+            <a href="/dashboard.html" class="sidebar-nav-item text-right">
+                <i data-lucide="gauge" class="w-4 h-4 ml-3" aria-hidden="true"></i>
+                <span>الداشبورد الكلاسيكي</span>
+            </a>
+
+            <div
+                class="nav-group-title text-[10px] font-extrabold text-slate-400 uppercase p-4 text-right tracking-widest">
+                سلسلة القيمة الاستراتيجية</div>
+            <div class="space-y-0.5" id="sidebar-stages">
+                <button id="side-stage-1" class="sidebar-nav-item locked" onclick="window.handleNavigation('stage', 1)"
+                    aria-disabled="true"><i data-lucide="building-2" class="w-4 h-4 ml-3"
+                        aria-hidden="true"></i><span>1. تحليل الإدارات</span></button>
+                <button id="side-stage-2" class="sidebar-nav-item locked" onclick="window.handleNavigation('stage', 2)"
+                    aria-disabled="true"><i data-lucide="globe" class="w-4 h-4 ml-3" aria-hidden="true"></i><span>2.
+                        تحليل البيئة</span></button>
+                <button id="side-stage-3" class="sidebar-nav-item locked" onclick="window.handleNavigation('stage', 3)"
+                    aria-disabled="true"><i data-lucide="swords" class="w-4 h-4 ml-3" aria-hidden="true"></i><span>3.
+                        مصفوفة SWOT</span></button>
+                <button id="side-stage-4" class="sidebar-nav-item locked" onclick="window.handleNavigation('stage', 4)"
+                    aria-disabled="true"><i data-lucide="target" class="w-4 h-4 ml-3" aria-hidden="true"></i><span>4.
+                        الأهداف و KPIs</span></button>
+                <button id="side-stage-5" class="sidebar-nav-item locked" onclick="window.handleNavigation('stage', 5)"
+                    aria-disabled="true"><i data-lucide="alert-octagon" class="w-4 h-4 ml-3 text-red-400"
+                        aria-hidden="true"></i><span>5. المخاطر</span></button>
+                <button id="side-stage-6" class="sidebar-nav-item locked" onclick="window.handleNavigation('stage', 6)"
+                    aria-disabled="true"><i data-lucide="rocket" class="w-4 h-4 ml-3 text-blue-400"
+                        aria-hidden="true"></i><span>6. المبادرات</span></button>
+            </div>
+
+            <div
+                class="nav-group-title text-[10px] font-extrabold text-slate-400 uppercase p-4 text-right tracking-widest">
+                📈 رؤيتي</div>
+            <div class="space-y-0.5">
+                <a href="/auto-reports.html" class="sidebar-nav-item text-right"><i data-lucide="file-bar-chart"
+                        class="w-4 h-4 ml-3" aria-hidden="true"></i><span>تقاريري</span></a>
+                <a href="/finance-audit.html" class="sidebar-nav-item text-right"><i data-lucide="calculator"
+                        class="w-4 h-4 ml-3" aria-hidden="true"></i><span>الفحص المالي</span></a>
+                <a href="/kpi-entries.html" class="sidebar-nav-item text-right"><i data-lucide="pencil"
+                        class="w-4 h-4 ml-3" aria-hidden="true"></i><span>إدخال المؤشرات</span></a>
+                <a href="/scenarios.html" class="sidebar-nav-item text-right"><i data-lucide="flask-conical"
+                        class="w-4 h-4 ml-3" aria-hidden="true"></i><span>محاكاة السيناريوهات</span></a>
+            </div>
+
+            <div
+                class="nav-group-title text-[10px] font-extrabold text-slate-400 uppercase p-4 text-right tracking-widest">
+                💎 أدواتي المتقدمة</div>
+            <div class="space-y-0.5">
+                <a href="/tools.html" class="sidebar-nav-item text-right"><i data-lucide="wrench" class="w-4 h-4 ml-3"
+                        aria-hidden="true"></i><span>كل الأدوات</span></a>
+                <a href="/gantt-chart.html" class="sidebar-nav-item text-right"><i data-lucide="calendar-range"
+                        class="w-4 h-4 ml-3" aria-hidden="true"></i><span>مخطط جانت</span></a>
+                <a href="/bcg-matrix.html" class="sidebar-nav-item text-right"><i data-lucide="star"
+                        class="w-4 h-4 ml-3" aria-hidden="true"></i><span>مصفوفة BCG</span></a>
+                <a href="/ansoff-matrix.html" class="sidebar-nav-item text-right"><i data-lucide="trending-up"
+                        class="w-4 h-4 ml-3" aria-hidden="true"></i><span>مصفوفة أنسوف</span></a>
+                <a href="/strategic-advisor.html" class="sidebar-nav-item text-right"><i data-lucide="cpu"
+                        class="w-4 h-4 ml-3" aria-hidden="true"></i><span>المستشار الذكي</span></a>
+                <a href="/intelligence.html" class="sidebar-nav-item text-right"><i data-lucide="brain"
+                        class="w-4 h-4 ml-3" aria-hidden="true"></i><span>الذكاء الاستراتيجي</span></a>
+            </div>
+
+            <div
+                class="nav-group-title text-[10px] font-extrabold text-slate-400 uppercase p-4 text-right tracking-widest">
+                مختبر التحليلات</div>
+            <div class="space-y-0.5">
+                <button onclick="showComingSoon('Monte Carlo Simulation')" class="sidebar-nav-item w-full text-right">
+                    <i data-lucide="bar-chart" class="w-4 h-4 ml-3 text-slate-400" aria-hidden="true"></i>
+                    <span>Monte Carlo</span>
+                </button>
+                <button onclick="showComingSoon('Process Mining')" class="sidebar-nav-item w-full text-right">
+                    <i data-lucide="git-branch" class="w-4 h-4 ml-3 text-slate-400" aria-hidden="true"></i>
+                    <span>Process Mining</span>
+                </button>
+            </div>
+
+            <div
+                class="nav-group-title text-[10px] font-extrabold text-slate-400 uppercase p-4 text-right tracking-widest">
+                ⚙️ النظام</div>
+            <div class="space-y-0.5">
+                <a href="/team.html" class="sidebar-nav-item text-right"><i data-lucide="users" class="w-4 h-4 ml-3"
+                        aria-hidden="true"></i><span>الفريق</span></a>
+                <a href="/settings.html" class="sidebar-nav-item text-right"><i data-lucide="settings"
+                        class="w-4 h-4 ml-3" aria-hidden="true"></i><span>الإعدادات</span></a>
+                <a href="/activity-feed.html" class="sidebar-nav-item text-right"><i data-lucide="activity"
+                        class="w-4 h-4 ml-3" aria-hidden="true"></i><span>سجل النشاطات</span></a>
+            </div>
+        </nav>
+
+        <div class="p-6 bg-slate-50 border-t border-slate-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 font-bold uppercase"
+                    aria-hidden="true">CEO</div>
+                <div class="flex-1 overflow-hidden text-right">
+                    <p class="text-xs font-bold text-slate-900 truncate uppercase" id="user-name">تحميل...</p>
+                    <p id="user-id-badge" class="text-[9px] text-slate-400 truncate tracking-tighter italic">
+                        Authenticating...</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 2️⃣ المحتوى الرئيسي -->
+    <main class="flex-1 overflow-y-auto bg-[#F8FAFC]" role="main">
+
+        <!-- Header (Dynamic) -->
+        <header
+            class="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-10 sticky top-0 z-40">
+            <div class="flex items-center gap-6 text-right">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800" id="dynamic-greeting" aria-live="polite">---</h2>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span id="entity-level-badge"
+                            class="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase tracking-widest text-right">---</span>
+                        <div class="w-1 h-1 bg-slate-300 rounded-full"></div>
+                        <p class="text-[10px] text-slate-400 font-medium" id="current-date-display"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-left ml-4 border-l border-slate-200 pl-4" aria-label="الوقت الحالي">
+                    <p class="text-sm font-bold text-slate-900" id="live-clock">--:--:--</p>
+                </div>
+                <button id="btn-refresh" onclick="refreshData()"
+                    class="p-2 hover:bg-slate-100 rounded-xl transition-all text-slate-400 hover:text-blue-600 focus:ring-2 focus:ring-blue-500"
+                    aria-label="تحديث بيانات لوحة التحكم">
+                    <i data-lucide="refresh-cw" class="w-5 h-5" id="refresh-icon" aria-hidden="true"></i>
+                </button>
+                <div class="relative">
+                    <button id="bell-button" onclick="toggleNotificationPanel()"
+                        class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 relative focus:ring-2 focus:ring-blue-500"
+                        aria-label="فتح لوحة التنبيهات">
+                        <i data-lucide="bell" class="w-5 h-5" aria-hidden="true"></i>
+                        <span id="alert-dot"
+                            class="hidden absolute top-2.5 left-2.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
+                    </button>
+                    <!-- Notification Panel -->
+                    <div id="notification-panel"
+                        class="stat-card shadow-2xl p-0 border-slate-200 bg-white overflow-hidden" role="dialog"
+                        aria-labelledby="panel-title">
+                        <div class="bg-slate-50 p-4 border-b border-slate-100 flex justify-between items-center">
+                            <h3 id="panel-title" class="text-xs font-black uppercase tracking-widest text-right">تنبيهات
+                                النظام الذكية</h3>
+                            <span class="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-bold"
+                                id="panel-alert-count">0</span>
+                        </div>
+                        <div id="panel-alert-list" class="overflow-y-auto max-h-[320px]" role="list">
+                            <!-- Alerts injected here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="max-w-6xl mx-auto p-10 space-y-8 pb-20">
+
+            <!-- 🧭 خارطة الرحلة (Accessible Roadmap) -->
+            <div class="space-y-4 text-right">
+                <div class="flex justify-between items-end px-2">
+                    <h5 class="text-[11px] font-black text-slate-400 uppercase tracking-widest">مسار النضج الاستراتيجي
+                        (Live)</h5>
+                    <span id="total-progress-text"
+                        class="text-[10px] font-bold text-blue-600 tracking-tighter uppercase" aria-live="polite">0%
+                        Progress</span>
+                </div>
+                <div class="stat-card p-12 bg-white relative">
+                    <div class="roadmap-line" aria-hidden="true"></div>
+                    <div id="roadmap-fill" class="roadmap-fill" style="width: 0%;" aria-hidden="true"></div>
+                    <div class="flex justify-between w-full relative" id="roadmap-nodes" role="list">
+                        <!--Nodes Injected via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 📊 المنظورات الحية (BSC Grid) -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6" id="bsc-grid" aria-label="بطاقة الأداء المتوازن">
+                <div class="stat-card p-6 h-36 skeleton"></div>
+                <div class="stat-card p-6 h-36 skeleton"></div>
+                <div class="stat-card p-6 h-36 skeleton"></div>
+                <div class="stat-card p-6 h-36 skeleton"></div>
+            </div>
+
+            <!-- 🎯 الموجه الذكي (Next Step) -->
+            <div id="nba-card"
+                class="stat-card p-1 flex items-center bg-white border-blue-100 overflow-hidden min-h-[120px]">
+                <div class="w-full h-24 skeleton text-right"></div>
+            </div>
+
+            <!-- 💔 الـ Diagnostic Widget -->
+            <div id="diagnostic-hub"
+                class="stat-card p-10 bg-slate-900 text-white relative overflow-hidden min-h-[220px]"
+                aria-label="ملخص النضج والامتثال">
+                <div class="relative z-10 flex flex-col md:flex-row justify-between items-center gap-12 text-right"
+                    id="diagnostic-content">
+                    <div class="w-full h-32 skeleton opacity-20"></div>
+                </div>
+            </div>
+
+            <!-- AI Insights & Activity -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 text-right">
+                <div class="space-y-4">
+                    <h5
+                        class="text-[11px] font-black text-slate-400 uppercase tracking-widest px-2 tracking-widest uppercase">
+                        رؤى المساعد الاستراتيجي (AI)</h5>
+                    <div id="ai-alerts-list" class="space-y-3" aria-live="polite">
+                        <div class="w-full h-20 skeleton"></div>
+                        <div class="w-full h-20 skeleton"></div>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <h5
+                        class="text-[11px] font-black text-slate-400 uppercase tracking-widest px-2 tracking-widest uppercase">
+                        سجل النشاطات الفوري</h5>
+                    <div id="activity-log"
+                        class="stat-card p-6 bg-white space-y-4 max-h-[300px] overflow-y-auto min-h-[220px]">
+                        <div class="w-full h-10 skeleton mb-2"></div>
+                        <div class="w-full h-10 skeleton mb-2"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Perspective Card Template -->
+    <template id="bsc-card-template">
+        <div class="stat-card p-6 border-b-4 transition-all hover:bg-slate-50 group">
+            <div class="flex justify-between items-center mb-6">
+                <div class="p-2 rounded-lg icon-container" aria-hidden="true"></div>
+                <span class="text-2xl font-black score-val">--%</span>
+            </div>
+            <h6 class="text-[11px] font-black text-slate-400 uppercase mb-4 perspective-label text-right">---</h6>
+            <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden" role="progressbar" aria-valuenow="0"
+                aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar-inner h-full" style="width: 0%"></div>
+            </div>
+        </div>
+    </template>
+
+    <script type="module">
+        // --- ⚙️ API Configuration & Global State ---
+        const API_BASE = '/api/v1';
+
+        const State = {
+            isLoaded: false,
+            isFetching: false,
+            isDemo: false,
+            lastUpdateHash: null,
+            bsc: { fin: 0, cust: 0, ops: 0, growth: 0 },
+            progress: { stage: 1, percent: 0 },
+            compliance: 0,
+            alerts: [],
+            activities: [],
+            stages: [
+                { id: 1, label: 'الإدارات', icon: 'building-2' },
+                { id: 2, label: 'البيئة', icon: 'globe' },
+                { id: 3, label: 'SWOT', icon: 'swords' },
+                { id: 4, label: 'الأهداف', icon: 'target' },
+                { id: 5, label: 'المخاطر', icon: 'alert-octagon' },
+                { id: 6, label: 'المبادرات', icon: 'rocket' }
+            ]
+        };
+
+        const THEME = {
+            fin: { color: 'border-emerald-500', bg: 'bg-emerald-50', text: 'text-emerald-600', icon: 'trending-up', bar: '#10b981' },
+            cust: { color: 'border-blue-500', bg: 'bg-blue-50', text: 'text-blue-600', icon: 'users', bar: '#3b82f6' },
+            ops: { color: 'border-amber-500', bg: 'bg-amber-50', text: 'text-amber-600', icon: 'settings', bar: '#f59e0b' },
+            growth: { color: 'border-purple-500', bg: 'bg-purple-50', text: 'text-purple-600', icon: 'book-open', bar: '#a855f7' }
+        };
+
+        // --- 🚀 Data Fetching with Heartbeat Logic ---
+        async function fetchFromBackend(endpoint, options = {}) {
+            const token = localStorage.getItem('token') || localStorage.getItem('start_token') || 'DEMO_TOKEN';
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                State.isDemo = true;
+                const banner = document.getElementById('demo-banner');
+                if (banner) banner.classList.remove('hidden');
+                return simulateFallback(endpoint);
+            }
+        }
+
+        function simulateFallback(endpoint) {
+            const data = {
+                '/heartbeat': { hash: Date.now() }, // Force update in demo
+                '/bsc/score': { fin: 68.4, cust: 51.2, ops: 24.5, growth: 10.0, compliance: 72.5 },
+                '/profile/status': { currentStage: 2, level: 'Medium', name: 'أ. محمد العتيبي' },
+                '/alerts': [
+                    { id: 1, type: 'CRITICAL', title: 'خطر سيولة نقدية', msg: 'المصروفات التشغيلية تفوق التوقعات المخصصة لقطاع العمليات.', color: 'rose' },
+                    { id: 2, type: 'INFO', title: 'نمو قطاعي واعد', msg: 'بيانات السوق تشير لنمو 14% في قطاعك المكتشف.', color: 'emerald' },
+                    { id: 3, type: 'WARNING', title: 'تأخر في الامتثال', msg: 'بند حماية الأجور يحتاج إلى تحديث فوري.', color: 'amber' }
+                ],
+                '/activities': [
+                    { id: 1, user: 'CEO', action: 'اعتمد مصفوفة SWOT المبدئية', time: 'منذ ساعتين' },
+                    { id: 2, user: 'AI', action: 'حدث مؤشرات أداء قسم العمليات', time: 'منذ ساعة' }
+                ]
+            };
+            return data[endpoint] || null;
+        }
+
+        // --- 🎨 Component Renderers ---
+        function renderAIInsights() {
+            const container = document.getElementById('ai-alerts-list');
+            if (!container) return;
+            if (!State.alerts.length) {
+                container.innerHTML = `<div class="p-6 text-center text-slate-400 text-xs italic">لا توجد رؤى متاحة حالياً.</div>`;
+                return;
+            }
+            container.innerHTML = State.alerts.map(a => {
+                const colors = { CRITICAL: 'border-rose-500', WARNING: 'border-amber-500', INFO: 'border-emerald-500' };
+                const bgColors = { CRITICAL: 'bg-rose-500', WARNING: 'bg-amber-500', INFO: 'bg-emerald-500' };
+                return `
+                    <div class="stat-card p-4 border-r-4 ${colors[a.type] || 'border-slate-500'} flex items-center justify-between group cursor-pointer hover:bg-slate-50 transition-all" role="alert" tabindex="0">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full ${bgColors[a.type] || 'bg-slate-500'} ${a.type === 'CRITICAL' ? 'animate-pulse' : ''}"></div>
+                            <div>
+                                <p class="text-xs font-bold text-slate-800 text-right">${a.title}</p>
+                                <p class="text-[10px] text-slate-500 text-right">${a.msg}</p>
+                            </div>
+                        </div>
+                        <i data-lucide="chevron-left" class="w-4 h-4 text-slate-300 group-hover:text-blue-600 transition-colors"></i>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function renderRoadmap() {
+            const container = document.getElementById('roadmap-nodes');
+            const fillBar = document.getElementById('roadmap-fill');
+            const totalText = document.getElementById('total-progress-text');
+            if (!container || !fillBar) return;
+
+            const current = State.progress.stage;
+            fillBar.style.width = `${((current - 1) / (State.stages.length - 1)) * 100}%`;
+            totalText.innerText = `${Math.round((current / State.stages.length) * 100)}% Complete`;
+
+            container.innerHTML = State.stages.map(s => {
+                let statusClass = "node-pending";
+                let icon = `<i data-lucide="${s.icon}" class="w-5 h-5"></i>`;
+                let ariaLabel = `المرحلة ${s.id}: ${s.label} - ${s.id < current ? 'مكتملة' : s.id === current ? 'قيد التنفيذ' : 'لم تبدأ'}`;
+
+                if (s.id < current) { statusClass = "node-done"; icon = `<i data-lucide="check" class="w-5 h-5"></i>`; }
+                else if (s.id === current) { statusClass = "node-active"; }
+
+                return `
+                    <div class="flex flex-col items-center gap-3" role="listitem">
+                        <button class="node-circle ${statusClass} flex items-center justify-center text-white transition-all hover:scale-110 shadow-lg" 
+                                onclick="window.moveToStage(${s.id})" 
+                                aria-label="${ariaLabel}"
+                                title="${s.label}">
+                            ${icon}
+                        </button>
+                        <span class="text-[10px] font-bold ${s.id <= current ? 'text-blue-600' : 'text-slate-400'} uppercase" aria-hidden="true">${s.label}</span>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function renderSidebar() {
+            const current = State.progress.stage;
+            const stagesItems = document.querySelectorAll('#sidebar-stages .sidebar-nav-item');
+            const dashboardLink = document.getElementById('nav-dashboard');
+
+            let anySubStageActive = false;
+            stagesItems.forEach((item, index) => {
+                const stageId = index + 1;
+                item.classList.remove('active');
+                if (stageId <= current) {
+                    item.classList.remove('locked');
+                    item.removeAttribute('aria-disabled');
+                    if (stageId === current) { item.classList.add('active'); anySubStageActive = true; }
+                } else {
+                    item.classList.add('locked');
+                    item.setAttribute('aria-disabled', 'true');
+                }
+            });
+
+            if (dashboardLink) dashboardLink.classList.toggle('active', !anySubStageActive);
+        }
+
+        function renderBSC() {
+            const container = document.getElementById('bsc-grid');
+            const template = document.getElementById('bsc-card-template');
+            if (!container) return;
+
+            if (State.bsc.fin === 0 && State.bsc.cust === 0) {
+                container.innerHTML = `<div class="col-span-4 p-12 text-center stat-card bg-blue-50/30 border-blue-100"><div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4"><i data-lucide="bar-chart-3" class="w-8 h-8"></i></div><h4 class="text-lg font-bold text-slate-800 mb-2 uppercase tracking-tight">Your Strategy Engine is Ready</h4><p class="text-sm text-slate-500 mb-6 font-medium">ابدأ بتحليل إدارتك الأولى لتوليد مؤشرات الأداء الحية وقياس الأثر.</p><button class="bg-blue-600 text-white px-8 py-2.5 rounded-xl font-bold text-sm shadow-xl active:scale-95 transition-all" onclick="window.moveToStage(1)">ابدأ التشخيص الآن</button></div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = '';
+            ['fin', 'cust', 'ops', 'growth'].forEach(key => {
+                const clone = template.content.cloneNode(true);
+                const theme = THEME[key];
+                const score = State.bsc[key] || 0;
+                const labels = { fin: 'المنظور المالي', cust: 'منظور العملاء', ops: 'العمليات الداخلية', growth: 'التعلم والنمو' };
+
+                clone.querySelector('.stat-card').classList.add(theme.color);
+                const iconBox = clone.querySelector('.icon-container');
+                iconBox.classList.add(theme.bg, theme.text);
+                iconBox.innerHTML = `<i data-lucide="${theme.icon}" class="w-4 h-4"></i>`;
+                clone.querySelector('.score-val').innerText = `${score}%`;
+                clone.querySelector('.perspective-label').innerText = labels[key];
+                const bar = clone.querySelector('.progress-bar-inner');
+                bar.style.width = `${score}%`;
+                bar.style.backgroundColor = theme.bar;
+                container.appendChild(clone);
+            });
+            lucide.createIcons();
+        }
+
+        function renderDiagnosticHub() {
+            const container = document.getElementById('diagnostic-content');
+            if (!container) return;
+            const avg = Math.round((State.bsc.fin + State.bsc.cust + State.bsc.ops + State.bsc.growth) / 4);
+            const alertsCount = State.alerts.length;
+
+            container.innerHTML = `
+                <div class="text-center md:text-right space-y-2">
+                    <p class="text-indigo-400 text-[10px] font-black uppercase tracking-widest">Executive Summary</p>
+                    <h3 class="text-4xl font-black">نضج المنشأة: <span class="text-blue-400">${avg}%</span></h3>
+                    <p class="text-slate-400 text-[10px] uppercase font-bold tracking-tight">${State.isDemo ? 'Simulation Mode - Sandbox Data' : 'Live Intelligence Feed - 33 Tables'}</p>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
+                    <div class="space-y-1"><p class="text-[9px] text-slate-500 uppercase font-bold tracking-widest text-right">الامتثال</p><p class="text-2xl font-black text-emerald-400">${State.compliance}%</p></div>
+                    <div class="space-y-1"><p class="text-[9px] text-slate-500 uppercase font-bold tracking-widest text-right">التنبيهات</p><p class="text-2xl font-black text-rose-500">${alertsCount}</p></div>
+                    <div class="space-y-1"><p class="text-[9px] text-slate-500 uppercase font-bold tracking-widest text-right">الإدارات</p><p class="text-2xl font-black text-white">${State.progress.stage}/7</p></div>
+                    <div class="space-y-1"><p class="text-[9px] text-slate-500 uppercase font-bold tracking-widest text-right">الهوية</p><p class="text-2xl font-black text-blue-400">✅</p></div>
+                </div>
+            `;
+        }
+
+        // --- 🏗️ Core Logic ---
+        async function initialize(isBackground = false) {
+            if (State.isFetching) return;
+
+            // Heartbeat Logic Simulation: Only update if anything changed
+            if (isBackground) {
+                const heartbeat = await fetchFromBackend('/heartbeat');
+                if (heartbeat.hash === State.lastUpdateHash) return;
+                State.lastUpdateHash = heartbeat.hash;
+            }
+
+            State.isFetching = true;
+            const refreshIcon = document.getElementById('refresh-icon');
+            const btnRefresh = document.getElementById('btn-refresh');
+            if (refreshIcon && !isBackground) refreshIcon.classList.add('animate-spin');
+            if (btnRefresh) btnRefresh.disabled = true;
+
+            try {
+                const [bsc, status, alerts, activities] = await Promise.all([
+                    fetchFromBackend('/bsc/score'),
+                    fetchFromBackend('/profile/status'),
+                    fetchFromBackend('/alerts'),
+                    fetchFromBackend('/activities')
+                ]);
+
+                State.bsc = bsc || { fin: 0, cust: 0, ops: 0, growth: 0 };
+                State.compliance = bsc?.compliance || 0;
+                State.progress.stage = status?.currentStage || 1;
+                State.alerts = alerts || [];
+                State.activities = activities || [];
+                State.isLoaded = true;
+
+                document.getElementById('user-name').innerText = status?.name || 'المدير التنفيذي';
+                document.getElementById('entity-level-badge').innerText = `${status?.level || 'NEW'} Entity`;
+                document.getElementById('user-id-badge').innerText = `ID: ${State.isDemo ? 'DEMO_MODE' : 'AUTH_SUCCESS'}`;
+
+                refreshAllComponents();
+                updatePanelAlerts();
+                document.getElementById('alert-dot').classList.toggle('hidden', !State.alerts.length);
+
+            } catch (err) {
+                if (!isBackground) showFatalError();
+            } finally {
+                State.isFetching = false;
+                if (refreshIcon) refreshIcon.classList.remove('animate-spin');
+                if (btnRefresh) btnRefresh.disabled = false;
+            }
+        }
+
+        function refreshAllComponents() {
+            renderBSC();
+            renderRoadmap();
+            renderSidebar();
+            renderDiagnosticHub();
+            renderNBA();
+            renderActivityLog();
+            renderAIInsights();
+        }
+
+        function updatePanelAlerts() {
+            const list = document.getElementById('panel-alert-list');
+            const count = document.getElementById('panel-alert-count');
+            if (!list || !count) return;
+
+            count.innerText = State.alerts.length;
+            if (!State.alerts.length) {
+                list.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs italic">لا توجد تنبيهات جديدة.</div>`;
+                return;
+            }
+            list.innerHTML = State.alerts.map(a => `
+                <button class="w-full p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors text-right block focus:bg-blue-50 outline-none" role="listitem">
+                    <p class="text-xs font-bold text-slate-800">${a.title}</p>
+                    <p class="text-[10px] text-slate-500 mt-1">${a.msg}</p>
+                </button>
+            `).join('');
+        }
+
+        function renderNBA() {
+            const card = document.getElementById('nba-card');
+            if (!card) return;
+            const guides = {
+                1: { title: "تشخيص الإدارات", desc: "ابدأ بفحص الإدارات السبع لربط واقعك بالاستراتيجية القادمة." },
+                2: { title: "التحليل البيئي", desc: "رصدنا تحديثات تنظيمية في قطاعك؛ يرجى تحديث بيانات PESTEL." },
+                3: { title: "مصفوفة SWOT", desc: "بياناتك جاهزة الآن؛ لنقم باستنتاج نقاط القوة والضعف الموحدة." },
+                4: { title: "صياغة الأهداف SMART", desc: "حول استراتيجيات TOWS إلى أهداف ذكية قابلة للقياس المالي." },
+                5: { title: "تحليل المخاطر", desc: "حدد صمامات الأمان لحماية أهدافك الاستراتيجية من التهديدات." },
+                6: { title: "إطلاق المبادرات", desc: "اعتمد خطة التنفيذ النهائية ووزع المبادرات على فرق العمل." }
+            };
+            const current = guides[State.progress.stage] || guides[1];
+
+            card.innerHTML = `
+                <div class="bg-blue-600 text-white px-8 py-8 rounded-xl flex flex-col justify-center items-center gap-2" aria-hidden="true">
+                    <i data-lucide="zap" class="w-8 h-8"></i>
+                    <span class="text-[10px] font-black uppercase tracking-widest">موجه</span>
+                </div>
+                <div class="flex-1 px-8 text-right">
+                    <h4 class="text-lg font-bold text-slate-900">${current.title}</h4>
+                    <p class="text-sm text-slate-500 mt-1 italic leading-relaxed">${current.desc}</p>
+                </div>
+                <div class="px-8 border-r border-slate-100">
+                    <button id="btn-nba-action" 
+                            class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-8 py-3 rounded-xl shadow-lg transition-all active:scale-95" 
+                            onclick="window.moveToStage(${State.progress.stage})"
+                            aria-label="تنفيذ خطوة: ${current.title}">
+                        انطلق الآن ←
+                    </button>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        // --- 🛠️ Actions ---
+        // Stage → Page mapping
+        const STAGE_PAGES = {
+            1: '/dept-deep.html',
+            2: '/analysis.html',
+            3: '/swot.html',
+            4: '/objectives.html',
+            5: '/risk-map.html',
+            6: '/initiatives.html'
+        };
+
+        window.handleNavigation = (type, id = null) => {
+            if (type === 'stage') {
+                const stageId = parseInt(id);
+                if (stageId > State.progress.stage) {
+                    showToast("هذه المرحلة مغلقة حالياً. يرجى إكمال المتطلبات.", "bg-slate-600");
+                    return;
+                }
+                const targetPage = STAGE_PAGES[stageId];
+                if (targetPage) {
+                    showToast(`جارِ التوجيه إلى: ${State.stages.find(s => s.id === stageId).label}...`, "bg-blue-600");
+                    setTimeout(() => { location.href = targetPage; }, 400);
+                }
+            } else {
+                // Already on dashboard — scroll to top
+                document.querySelector('main').scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        };
+
+        window.toggleNotificationPanel = () => {
+            const panel = document.getElementById('notification-panel');
+            const isOpen = panel.classList.toggle('open');
+            if (isOpen) {
+                const firstAlert = panel.querySelector('button');
+                if (firstAlert) firstAlert.focus();
+            }
+        };
+
+        window.moveToStage = async (id) => {
+            if (State.isFetching) return;
+            // Navigate to actual page for the stage
+            const targetPage = STAGE_PAGES[id];
+            if (targetPage) {
+                showToast(`جارِ التوجيه للمرحلة ${id}...`, 'bg-blue-600');
+                // Save stage transition in background (don't await)
+                if (!State.isDemo) {
+                    fetchFromBackend('/profile/update-stage', { method: 'POST', body: JSON.stringify({ stage: id }) }).catch(() => { });
+                }
+                setTimeout(() => { location.href = targetPage; }, 400);
+            }
+        };
+
+        window.refreshData = () => {
+            if (State.isFetching) return;
+            showToast("جاري تحديث نبض المنشأة...", "bg-blue-500");
+            initialize();
+        };
+
+        window.showComingSoon = (tool) => {
+            showToast(`أداة ${tool} قادمة في v7.8 🚀`, 'bg-indigo-600');
+        };
+
+        function showToast(msg, bgColor) {
+            const container = document.getElementById('toast-container');
+            const t = document.createElement('div');
+            t.className = `toast ${bgColor}`;
+            t.setAttribute('role', 'alert');
+            t.innerText = msg;
+            container.appendChild(t);
+            setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(-20px)'; setTimeout(() => t.remove(), 300); }, 3000);
+        }
+
+        function showFatalError() {
+            document.body.innerHTML = `<div class="flex h-screen items-center justify-center bg-white text-right"><div class="text-center p-10 stat-card max-w-md"><i data-lucide="wifi-off" class="w-12 h-12 text-rose-500 mx-auto mb-4"></i><h1 class="text-2xl font-black mb-4 uppercase">System Link Failure</h1><p class="text-slate-500 mb-6 leading-relaxed italic">فشل الاتصال بالخادم الرئيسي. يرجى مراجعة الـ API Endpoints.</p><button onclick="location.reload()" class="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold active:scale-95 shadow-lg">إعادة المحاولة</button></div></div>`;
+            lucide.createIcons();
+        }
+
+        function renderActivityLog() {
+            const container = document.getElementById('activity-log');
+            if (!container) return;
+            if (!State.activities.length) {
+                container.innerHTML = `<div class="flex flex-col items-center justify-center h-full opacity-50 py-10"><i data-lucide="ghost" class="w-8 h-8 mb-2"></i><p class="text-xs text-slate-400 italic font-medium">سجل النشاطات فارغ حالياً.</p></div>`;
+                lucide.createIcons();
+                return;
+            }
+            container.innerHTML = State.activities.map(act => `
+                <div class="flex items-center gap-3 border-b border-slate-50 pb-3 last:border-0 animate-fade-in" role="listitem">
+                    <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-[10px] font-bold text-blue-600 uppercase" aria-hidden="true">${act.user.charAt(0)}</div>
+                    <div class="flex-1">
+                        <p class="text-xs font-bold text-slate-800 text-right">${act.action}</p>
+                        <p class="text-[9px] text-slate-400 text-right uppercase tracking-tighter">${act.time} • BY ${act.user}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function tick() {
+            const clockEl = document.getElementById('live-clock');
+            const dateEl = document.getElementById('current-date-display');
+            const greetEl = document.getElementById('dynamic-greeting');
+            const now = new Date();
+            if (clockEl) clockEl.innerText = now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            if (dateEl) dateEl.innerText = now.toLocaleDateString('ar-SA', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            if (greetEl && State.isLoaded) {
+                const hr = now.getHours();
+                if (hr >= 5 && hr < 12) greetEl.innerText = "صباح الخير، أيها القائد 👋";
+                else if (hr >= 12 && hr < 17) greetEl.innerText = "طاب يومك، أيها القائد ☀️";
+                else greetEl.innerText = "مساء الخير، أيها القائد 🌙";
+            }
+        }
+
+        // Global Listeners for Accessibility
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const panel = document.getElementById('notification-panel');
+                if (panel && panel.classList.contains('open')) panel.classList.remove('open');
+            }
+        });
+
+        window.addEventListener('click', (e) => {
+            const panel = document.getElementById('notification-panel');
+            const bell = document.getElementById('bell-button');
+            if (panel && panel.classList.contains('open') && !panel.contains(e.target) && !bell.contains(e.target)) {
+                panel.classList.remove('open');
+            }
+        });
+
+        // --- 🚀 Bootstrapping ---
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            initialize();
+            setInterval(tick, 1000);
+            setInterval(() => { if (State.isLoaded && !State.isFetching) initialize(true); }, 60000);
+            tick();
+        });
+    </script>
+</body>
+
+</html>
