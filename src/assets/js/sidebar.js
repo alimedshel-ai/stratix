@@ -36,12 +36,14 @@
   // يقرأ الدور من التشخيص V10 ويربطه بالمسار المناسب
   let _v10Role = '';
   let _v10Size = '';
+  let _v10Dept = '';  // إدارة المدير المختارة في V10
   try {
     const diagRaw = localStorage.getItem('stratix_diagnostic_payload');
     if (diagRaw) {
       const diag = JSON.parse(diagRaw);
       _v10Role = diag.role || '';   // founder, ceo, manager, cso, compliance, board
       _v10Size = diag.size || '';   // micro, small, medium, large, enterprise
+      _v10Dept = diag.department || (diag.answers && diag.answers['2']) || '';  // إدارة المدير
     }
   } catch (e) { /* ignore */ }
 
@@ -155,22 +157,30 @@
   // === محرك المسارات الذكية (يُقرأ ديناميكياً داخل buildSidebar) ===
 
   // === رحلتي الاستراتيجية: 4 مراحل (المنهجية المتكاملة الجديدة) ===
+  // === كل الإدارات المتاحة ===
+  const ALL_DEPT_ITEMS = [
+    { label: 'الامتثال والحوكمة', href: '/dept-deep.html?dept=compliance', icon: 'bi-shield-fill-check', key: 'compliance' },
+    { label: 'المالية', href: '/dept-deep.html?dept=finance', icon: 'bi-cash-coin', key: 'finance' },
+    { label: 'المبيعات', href: '/dept-deep.html?dept=sales', icon: 'bi-graph-up-arrow', key: 'sales' },
+    { label: 'الموارد البشرية', href: '/dept-deep.html?dept=hr', icon: 'bi-people-fill', key: 'hr' },
+    { label: 'التسويق', href: '/dept-deep.html?dept=marketing', icon: 'bi-megaphone-fill', key: 'marketing' },
+    { label: 'العمليات', href: '/dept-deep.html?dept=operations', icon: 'bi-gear-wide-connected', key: 'operations' },
+    { label: 'الخدمات المساندة', href: '/dept-deep.html?dept=support', icon: 'bi-wrench-adjustable', key: 'support' },
+  ];
+
+  // === فلترة: مدير الإدارة يشوف إدارته فقط ===
+  const filteredDeptItems = (userType === 'DEPT_MANAGER' && _v10Dept)
+    ? ALL_DEPT_ITEMS.filter(d => d.key === _v10Dept)
+    : ALL_DEPT_ITEMS;
+
   const journeyPhases = [
     {
       id: 'DEPT_ANALYSIS',
-      nameAr: 'تحليل الإدارات',
+      nameAr: userType === 'DEPT_MANAGER' && _v10Dept ? 'تحليل إدارتي' : 'تحليل الإدارات',
       icon: 'bi-building-fill-gear',
       emoji: '🏢',
       color: '#667eea',
-      items: [
-        { label: 'الامتثال والحوكمة', href: '/dept-deep.html?dept=compliance', icon: 'bi-shield-fill-check' },
-        { label: 'المالية', href: '/dept-deep.html?dept=finance', icon: 'bi-cash-coin' },
-        { label: 'المبيعات', href: '/dept-deep.html?dept=sales', icon: 'bi-graph-up-arrow' },
-        { label: 'الموارد البشرية', href: '/dept-deep.html?dept=hr', icon: 'bi-people-fill' },
-        { label: 'التسويق', href: '/dept-deep.html?dept=marketing', icon: 'bi-megaphone-fill' },
-        { label: 'العمليات', href: '/dept-deep.html?dept=operations', icon: 'bi-gear-wide-connected' },
-        { label: 'الخدمات المساندة', href: '/dept-deep.html?dept=support', icon: 'bi-wrench-adjustable' },
-      ]
+      items: filteredDeptItems
     },
     {
       id: 'ENVIRONMENT',
