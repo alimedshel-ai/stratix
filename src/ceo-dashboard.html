@@ -720,6 +720,38 @@
             z-index: 9999;
         }
 
+        /* ═══ Hamburger ═══ */
+        .ceo-hamburger {
+            display: none;
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            font-size: 20px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .ceo-hamburger:active {
+            transform: scale(0.9);
+        }
+
+        .sidebar-overlay-ceo {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 998;
+        }
+
+        .sidebar-overlay-ceo.active {
+            display: block;
+        }
+
         @media(max-width:1200px) {
             .ceo-grid {
                 grid-template-columns: 1fr 1fr;
@@ -727,8 +759,35 @@
         }
 
         @media(max-width:768px) {
+            .ceo-hamburger {
+                display: flex;
+            }
+
+            /* Sidebar drawer */
+            #sidebar-container {
+                position: fixed !important;
+                top: 0 !important;
+                right: -280px !important;
+                width: 260px !important;
+                height: 100vh !important;
+                z-index: 999 !important;
+                transition: right 0.3s ease !important;
+                box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3) !important;
+                background: var(--bg2) !important;
+            }
+
+            #sidebar-container.mobile-open {
+                right: 0 !important;
+            }
+
+            .page-wrapper {
+                display: block !important;
+            }
+
             .ceo-grid {
                 grid-template-columns: 1fr;
+                padding: 12px;
+                gap: 12px;
             }
 
             .ceo-grid-2 {
@@ -744,26 +803,89 @@
             }
 
             .ceo-header {
-                padding: 20px 16px 0;
+                padding: 16px 12px 0;
             }
 
-            .ceo-grid {
+            .ceo-title {
+                font-size: 22px;
+            }
+
+            .gauge-svg {
+                width: 160px;
+                height: 96px;
+            }
+
+            .gauge-number {
+                font-size: 32px;
+            }
+
+            .stat-number {
+                font-size: 26px;
+            }
+
+            .pulse-card {
+                padding: 20px 16px;
+            }
+
+            .section-card {
                 padding: 16px;
+            }
+
+            .decision-desc {
+                padding-right: 0;
+            }
+
+            .chart-area {
+                height: 160px;
+            }
+
+            .chart-bars {
+                height: 110px;
+            }
+        }
+
+        @media(max-width:480px) {
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+
+            .quick-action {
+                padding: 12px 8px;
+            }
+
+            .quick-action i {
+                font-size: 18px;
+            }
+
+            .quick-action span {
+                font-size: 11px;
+            }
+
+            .ceo-header {
+                flex-direction: column;
+                align-items: flex-start;
             }
         }
     </style>
 </head>
 
 <body>
+    <div class="sidebar-overlay-ceo" id="ceoSidebarOverlay" onclick="toggleCeoSidebar()"></div>
     <div class="page-wrapper">
         <div id="sidebar-container"></div>
         <div class="main-content">
 
             <!-- Header -->
             <div class="ceo-header">
-                <div>
-                    <h1 class="ceo-title"><i class="bi bi-gem"></i> لوحة القيادة <span>التنفيذية</span></h1>
-                    <div class="ceo-subtitle">نبض المنظمة الاستراتيجي — كل ما تحتاجه في صفحة واحدة</div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <button class="ceo-hamburger" onclick="toggleCeoSidebar()" aria-label="القائمة">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <div>
+                        <h1 class="ceo-title"><i class="bi bi-gem"></i> لوحة القيادة <span>التنفيذية</span></h1>
+                        <div class="ceo-subtitle">نبض المنظمة الاستراتيجي — كل ما تحتاجه في صفحة واحدة</div>
+                    </div>
                 </div>
                 <div style="display:flex;align-items:center;gap:12px">
                     <div class="ceo-date">
@@ -1511,6 +1633,27 @@
         loadBreakEven();
         loadAlerts();
         renderChart();
+    </script>
+
+    <!-- Mobile sidebar toggle -->
+    <script>
+        function toggleCeoSidebar() {
+            var sidebar = document.getElementById('sidebar-container');
+            var overlay = document.getElementById('ceoSidebarOverlay');
+            if (!sidebar) return;
+            sidebar.classList.toggle('mobile-open');
+            if (overlay) overlay.classList.toggle('active');
+            document.body.style.overflow = sidebar.classList.contains('mobile-open') ? 'hidden' : '';
+        }
+        window.addEventListener('resize', function () {
+            if (window.innerWidth > 768) {
+                var sidebar = document.getElementById('sidebar-container');
+                var overlay = document.getElementById('ceoSidebarOverlay');
+                if (sidebar) sidebar.classList.remove('mobile-open');
+                if (overlay) overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
     </script>
 </body>
 

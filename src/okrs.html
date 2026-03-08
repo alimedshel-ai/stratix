@@ -894,6 +894,7 @@
     <script src="/assets/js/api.js"></script>
     <script src="/assets/js/sidebar.js"></script>
     <script src="/assets/js/ai-advisor.js"></script>
+    <script src="/js/data-layer.js"></script>
     <script>
         const iconColors = {
             'cash-stack': { bg: 'rgba(34,197,94,0.12)', color: 'var(--success)', bar: 'linear-gradient(90deg,#22c55e,#4ade80)' },
@@ -1089,8 +1090,14 @@
         }
 
         // ===== PHASE 8: BRIDGE FROM DEPT-DEEP + IDENTITY =====
-        (function checkOKRBridge() {
-            const dept = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
+        (async function checkOKRBridge() {
+            // 📊 المرحلة 3: DB أولاً
+            let dept = null;
+            try {
+                const result = await StratixData.getDeptDeep();
+                if (!result._error) dept = result;
+            } catch (e) { }
+            if (!dept) dept = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
             const ident = JSON.parse(localStorage.getItem('stratix_identity_payload') || 'null');
             if (!dept && !ident) return;
 
@@ -1177,8 +1184,14 @@
             support: { label: 'الخدمات المساندة', icon: '🔧', color: '#64748b' },
         };
 
-        window.generateOKRsFromBridge = function () {
-            const dept = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
+        window.generateOKRsFromBridge = async function () {
+            // 📊 المرحلة 3: DB أولاً
+            let dept = null;
+            try {
+                const result = await StratixData.getDeptDeep();
+                if (!result._error) dept = result;
+            } catch (e) { }
+            if (!dept) dept = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
             const ident = JSON.parse(localStorage.getItem('stratix_identity_payload') || 'null');
             const generatedOKRs = [];
             let krIdBase = Date.now();

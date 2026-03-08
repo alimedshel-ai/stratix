@@ -53,6 +53,18 @@ const execDashboardApiRoutes = require('./routes/exec-dashboard-api');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// ============ STARTUP VALIDATION ============
+// 🔒 إصلاح #1: التحقق من JWT_SECRET عند التشغيل
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+  console.error('💀 [FATAL] JWT_SECRET is missing or too short (min 32 chars).');
+  console.error('   Set it in .env: JWT_SECRET=your-very-long-secret-key-here-min-32-chars');
+  if (process.env.NODE_ENV === 'production') {
+    process.exit(1); // في الإنتاج: لا تشغّل بدون مفتاح آمن
+  } else {
+    console.warn('⚠️  [DEV MODE] Continuing with weak JWT_SECRET — NOT safe for production!');
+  }
+}
+
 // ============ PROCESS SAFETY HANDLERS ============
 process.on('unhandledRejection', (reason) => {
   console.error('❌ [Process] Unhandled Rejection:', reason);
@@ -146,14 +158,21 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // CORS Configuration
+// 🔒 إصلاح #2: رفض origins غير معروفة في Production
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
-    ? (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : true)
+    ? (process.env.ALLOWED_ORIGINS
+      ? process.env.ALLOWED_ORIGINS.split(',')
+      : false) // 🔒 false = يرفض كل الطلبات cross-origin إذا لم يُحدد ALLOWED_ORIGINS
     : ['http://localhost:3000', 'http://127.0.0.1:3000'],
   credentials: true,
   optionsSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
+if (process.env.NODE_ENV === 'production' && !process.env.ALLOWED_ORIGINS) {
+  console.warn('⚠️  [CORS] No ALLOWED_ORIGINS set — cross-origin requests will be blocked in production.');
+  console.warn('   Set it in .env: ALLOWED_ORIGINS=https://yourdomain.com,https://app.yourdomain.com');
+}
 
 app.use(express.static(path.join(__dirname, 'src')));
 
@@ -275,6 +294,7 @@ app.use('/api/plan-limits', planLimitsRoutes);
 const departmentsRoutes = require('./routes/departments');
 const invitationsRoutes = require('./routes/invitations');
 const deptDataRoutes = require('./routes/dept-data');
+const deptDeepRoutes = require('./routes/dept-deep'); // 📊 المرحلة 3: نقل localStorage → DB
 const rulesEngineRoutes = require('./routes/rules-engine');
 const sectorConfigsRoutes = require('./routes/sector-configs');
 const breakEvenRoutes = require('./routes/break-even');
@@ -282,573 +302,103 @@ const cfoAuditRoutes = require('./routes/cfo-audit');
 app.use('/api/departments', departmentsRoutes);
 app.use('/api/invitations', invitationsRoutes);
 app.use('/api/dept-data', deptDataRoutes);
+app.use('/api/dept-deep', deptDeepRoutes); // 📊 المرحلة 3
 app.use('/api/rules-engine', rulesEngineRoutes);
 app.use('/api/sector-configs', sectorConfigsRoutes);
 app.use('/api/break-even', breakEvenRoutes);
 app.use('/api/cfo', cfoAuditRoutes);
 
 
-// Serve diagnostic center page → redirects to unified v10
-app.get('/diagnostic-center', (req, res) => {
-  res.redirect('/startix-v10-single');
-});
+// =========================================
+// 🔒 إصلاح #3: تحويل ~95 route يدوي إلى auto-serve
+// =========================================
 
-// Serve compliance analyzer page (محلل فجوة الامتثال)
-app.get('/compliance-analyzer', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'compliance-analyzer.html'));
-});
+// التحويلات (Redirects) — يجب أن تكون صريحة
+const REDIRECTS = {
+  '/diagnostic-center': '/startix-v10-single',
+  '/pain-ambition': '/pain-screen', // backward compat (query params handled below)
+  '/strategic-tools': '/tools',
+  '/signup': '/login?tab=signup&from=landing',
+  '/swot': '/tool?code=SWOT',
+  '/founder-diagnostic': '/startix-v10-single',
+  '/path1': '/',
+  '/alerts': '/intelligence',
+  '/free-diagnostic': '/startix-v10-single',
+  '/select-type': '/startix-v10-single?new',
+  '/diagnostic-result': '/startix-v10-single?new',
+  '/cfo-board-pitch': '/finance-audit',
+};
 
-// Serve pain-screen page (v4-A — شاشة الألم)
-app.get('/pain-screen', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'pain-screen.html'));
-});
+for (const [from, to] of Object.entries(REDIRECTS)) {
+  app.get(from, (req, res) => res.redirect(to));
+  // .html compat for old links
+  if (!from.endsWith('.html')) {
+    app.get(from + '.html', (req, res) => res.redirect(to));
+  }
+}
 
-// Backward compat: pain-ambition → pain-screen
+// خاص: pain-ambition يمرر query params
 app.get('/pain-ambition', (req, res) => {
   res.redirect('/pain-screen' + (req.query.category ? '?category=' + req.query.category : ''));
 });
 
-// Serve financial-input page (v4-A — صفحة إدخال الأرقام المالية)
-app.get('/financial-input', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'financial-input.html'));
-});
-
-// Serve financial-result page (v4-A — نتيجة الفحص المالي)
-app.get('/financial-result', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'financial-result.html'));
-});
-
-// Serve financial-report page (v4-A — التقرير المالي الكامل)
-app.get('/financial-report', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'financial-report.html'));
-});
-
-// Serve strategy-hub page (v4-A — مركز القيادة الاستراتيجي)
-app.get('/strategy-hub', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'strategy-hub.html'));
-});
-
-// Serve action-plan page (v4-A — خطة العمل الاستراتيجية)
-app.get('/action-plan', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'action-plan.html'));
-});
-
-// Serve import page
-app.get('/import', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'import.html'));
-});
-
-// Serve statistical data page
-app.get('/statistical-data', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'statistical-data.html'));
-});
-
-// Serve strategic tools page (redirected to canonical /tools)
-app.get('/strategic-tools', (req, res) => {
-  res.redirect(301, '/tools');
-});
-
-// Serve OKRs page
-app.get('/okrs', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'okrs.html'));
-});
-
-// Serve Gap Analysis page
-app.get('/gap-analysis', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'gap-analysis.html'));
-});
-
-// Serve Three Horizons page
-app.get('/three-horizons', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'three-horizons.html'));
-});
-
-// Serve OGSM page
-app.get('/ogsm', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'ogsm.html'));
-});
-
-// Serve Simulation Lab page
-app.get('/simulation-lab', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'simulation-lab.html'));
-});
-
-// Serve Growth Plan page
-app.get('/growth-plan', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'growth-plan.html'));
-});
-
-// Serve login page
-app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'login.html'));
-});
-
-// Serve signup page → redirect to unified auth page
-app.get('/signup', (req, res) => {
-  res.redirect('/login?tab=signup&from=landing');
-});
-
-// Serve Super Admin Dashboard (برج المراقبة)
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'admin.html'));
-});
-
-// Serve dashboard/welcome page (protected by frontend)
-app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'dashboard.html'));
-});
-
-// Serve strategic pipeline page
-app.get('/tools', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'tools.html'));
-});
-
-// Serve tool detail page
-app.get('/tool', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'tool-detail.html'));
-});
-
-// Serve sectors page
-app.get('/sectors', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'sectors.html'));
-});
-
-// Serve industries page
-app.get('/industries', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'industries.html'));
-});
-
-// Serve entities page
-app.get('/entities', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'entities.html'));
-});
-
-// Serve users page
-app.get('/users', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'users.html'));
-});
-
-// Serve assessments page
-app.get('/assessments', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'assessments.html'));
-});
-
-// Serve KPIs page
-app.get('/kpis', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'kpis.html'));
-});
-
-// Serve settings page
-app.get('/settings', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'settings.html'));
-});
-
-// Serve settings-data page
-app.get('/settings-data', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'settings-data.html'));
-});
-
-// Serve onboarding wizard
-app.get('/onboarding', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'onboarding.html'));
-});
-
-// Serve versions page
-app.get('/versions', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'versions.html'));
-});
-
-// Serve choices page
-app.get('/choices', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'choices.html'));
-});
-
-// Serve corrections page
-app.get('/corrections', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'corrections.html'));
-});
-
-// Serve analysis page
-app.get('/analysis', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'analysis.html'));
-});
-
-// Serve financial page
-app.get('/financial', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'financial.html'));
-});
-
-// Serve integrations page
-app.get('/integrations', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'integrations.html'));
-});
-
-// Serve directions page
-app.get('/directions', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'directions.html'));
-});
-
-// Serve objectives page
-app.get('/objectives', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'objectives.html'));
-});
-
-// Serve initiatives page
-app.get('/initiatives', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'initiatives.html'));
-});
-
-// Serve reviews page
-app.get('/reviews', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'reviews.html'));
-});
-
-// Redirect alerts to intelligence page (alerts are shown there)
-app.get('/alerts', (req, res) => {
-  res.redirect('/intelligence');
-});
-
-// Serve TOWS Matrix page
-app.get('/tows', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'tows.html'));
-});
-
-// Serve Strategy Map / Causal Links page
-app.get('/strategy-map', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'strategy-map.html'));
-});
-
-// Serve KPI entries page
-app.get('/kpi-entries', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'kpi-entries.html'));
-});
-
-// Serve Priority Matrix page
-app.get('/priority-matrix', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'priority-matrix.html'));
-});
-app.get('/inspector', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'inspector.html'));
-});
-
-// Serve Intelligence Dashboard
-app.get('/intelligence', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'intelligence.html'));
-});
-
-// Serve Beginner Path
-app.get('/beginner-path', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'beginner-path.html'));
-});
-
-// Serve Founder Diagnostic (Pre-Startup Path)
-app.get('/founder-diagnostic', (req, res) => {
-  res.redirect('/startix-v10-single');
-});
-
-// Serve Path 1 journey (moved) — redirect to landing
-app.get('/path1', (req, res) => {
-  res.redirect(302, '/');
-});
-
-// Serve Guided Journey
-app.get('/journey', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'journey.html'));
-});
-
-// Serve Pricing page
-app.get('/pricing', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'pricing.html'));
-});
-
-// Serve Projects page
-app.get('/projects', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'projects.html'));
-});
-
-// Serve Tasks page
-app.get('/tasks', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'tasks.html'));
-});
-
-// Serve Admin Decisions page
-app.get('/admin-decisions', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'admin-decisions.html'));
-});
-
-// Serve SWOT page (moved) — redirect to canonical tool detail
-app.get('/swot', (req, res) => {
-  res.redirect(301, '/tool?code=SWOT');
-});
-
-// Serve Getting Started guide
-app.get('/getting-started', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'getting-started.html'));
-});
-
-// Serve Operations page
-app.get('/operations', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'operations.html'));
-});
-
-// Serve CEO Executive Dashboard
-app.get('/ceo-dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'ceo-dashboard.html'));
-});
-
-// Serve Achievements page
-app.get('/achievements', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'achievements.html'));
-});
-
-// Serve Strategic Calendar
-app.get('/strategic-calendar', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'strategic-calendar.html'));
-});
-
-// Serve Activity Feed
-app.get('/activity-feed', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'activity-feed.html'));
-});
-
-// Serve Auto Reports
-app.get('/auto-reports', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'auto-reports.html'));
-});
-
-// Serve Risk Map
-app.get('/risk-map', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'risk-map.html'));
-});
-
-// Serve Org DNA
-app.get('/org-dna', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'org-dna.html'));
-});
-
-// Serve Benchmarking
-app.get('/benchmarking', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'benchmarking.html'));
-});
-
-// Serve Stakeholders
-app.get('/stakeholders', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'stakeholders.html'));
-});
-
-// Serve Team Management
-app.get('/team', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'team.html'));
-});
-
-// Serve Join via Invitation
-app.get('/join', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'join.html'));
-});
-
-// Serve Department Questionnaire
-app.get('/dept-questionnaire', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'dept-questionnaire.html'));
-});
-
-// Serve Strategic Advisor
-app.get('/strategic-advisor', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'strategic-advisor.html'));
-});
-
-// Serve AI Presentation
-app.get('/ai-presentation', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'ai-presentation.html'));
-});
-
-// Serve Live Board
-app.get('/live-board', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'live-board.html'));
-});
-
-// Serve Contradictions Analysis
-app.get('/contradictions', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'contradictions.html'));
-});
-app.get('/contradictions.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'contradictions.html'));
-});
-
-// Serve Break-Even Result
-app.get('/break-even-result', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'break-even-result.html'));
-});
-app.get('/break-even-result.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'break-even-result.html'));
-});
-
-// Serve Financial Rescue Path
-app.get('/rescue-path', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'rescue-path.html'));
-});
-app.get('/rescue-path.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'rescue-path.html'));
-});
-
-// Redirect old CFO Board Pitch URLs to new Finance Audit page
-app.get('/cfo-board-pitch', (req, res) => res.redirect('/finance-audit'));
-app.get('/cfo-board-pitch.html', (req, res) => res.redirect('/finance-audit'));
-
-// Serve Finance Audit page (new CFO flow)
-app.get('/finance-audit', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'finance-audit.html'));
-});
-app.get('/finance-audit.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'finance-audit.html'));
-});
-
-// Serve API Docs
-app.get('/api-docs-page', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'api-docs.html'));
-});
-
-// Serve Webhooks
-app.get('/webhooks', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'webhooks.html'));
-});
-
-// Serve Companies page (SUPER_ADMIN)
-app.get('/companies', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'companies.html'));
-});
-
-// Serve AI Center
-app.get('/ai-center', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'ai-center.html'));
-});
-
-// Serve Internal Environment Analysis
-app.get('/internal-env', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'internal-env.html'));
-});
-
-// Serve Admin Panel
-app.get('/admin-panel', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'admin-panel.html'));
-});
-
-// Serve Scenarios page
-app.get('/scenarios', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'scenarios.html'));
-});
-
-// Serve Account Suspended page
-app.get('/account-suspended', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'account-suspended.html'));
-});
-
-// Serve Admin Dashboard
-app.get('/admin-dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'admin-dashboard.html'));
-});
-
-// Serve Board Dashboard
-app.get('/board-dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'board-dashboard.html'));
-});
-
-// Serve Consultant Dashboard
-app.get('/consultant-dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'consultant-dashboard.html'));
-});
-
-// Serve Department Dashboard
-app.get('/dept-dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'dept-dashboard.html'));
-});
-
-// Serve SMO Dashboard
-app.get('/smo-dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'smo-dashboard.html'));
-});
-
-// Serve Data Entry page
-app.get('/data-entry', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'data-entry.html'));
-});
-
-// Serve Data Forms page
-app.get('/data-forms', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'data-forms.html'));
-});
-
-// Serve Free Diagnostic page
-app.get('/free-diagnostic', (req, res) => {
-  res.redirect('/startix-v10-single');
-});
-
-app.get('/startix-v10-single', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'startix-v10-single.html'));
-});
-
-// Serve Select Type page
-app.get('/select-type', (req, res) => {
-  res.redirect('/startix-v10-single?new');
-});
-
-// Serve Diagnostic Result page
-app.get('/diagnostic-result', (req, res) => {
-  res.redirect('/startix-v10-single?new');
-});
-
-// Serve Individual Dashboard
-app.get('/individual-dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'individual-dashboard.html'));
-});
-
-// Serve Smart Guide page
-app.get('/smart-guide', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'smart-guide.html'));
-});
-
-// Serve Department Diagnostic page
-app.get('/dept-diagnostic', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'dept-diagnostic.html'));
-});
-
-// Phase 6A — استكشاف الإدارات العميق
-app.get('/dept-deep', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'dept-deep.html'));
-});
-
-// Serve Tools Guide page
-app.get('/tools-guide', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'tools-guide.html'));
-});
-
-// Serve Viewer Hub page
-app.get('/viewer-hub', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'viewer-hub.html'));
-});
-
-// Serve RACI Matrix page
-app.get('/raci-matrix', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'raci-matrix.html'));
-});
-
-// Serve Gantt Chart page
-app.get('/gantt-chart', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'gantt-chart.html'));
-});
-
-// Serve BCG Matrix page
-app.get('/bcg-matrix', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'bcg-matrix.html'));
-});
-
-// Serve Ansoff Matrix page
-app.get('/ansoff-matrix', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'ansoff-matrix.html'));
-});
-
-// Serve Executive Dashboard (v7.7 — BSC-Driven)
-app.get('/exec-dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'exec-dashboard.html'));
+// الأسماء الخاصة: URL ≠ اسم الملف
+const SPECIAL_FILE_MAP = {
+  '/tool': 'tool-detail.html',
+  '/api-docs-page': 'api-docs.html',
+};
+
+for (const [route, file] of Object.entries(SPECIAL_FILE_MAP)) {
+  app.get(route, (req, res) => {
+    res.sendFile(path.join(__dirname, 'src', file));
+  });
+}
+
+// 🔒 Auto-Serve: أي URL يطابق ملف HTML في src/ يُقدّم تلقائياً
+// هذا يستبدل ~80 سطر app.get يدوي
+const fs = require('fs');
+const htmlFilesCache = new Set();
+
+// بناء cache لملفات HTML الموجودة
+try {
+  const srcDir = path.join(__dirname, 'src');
+  const files = fs.readdirSync(srcDir);
+  for (const file of files) {
+    if (file.endsWith('.html') && !file.startsWith('.')) {
+      // /dept-deep → dept-deep.html
+      htmlFilesCache.add(file.replace('.html', ''));
+    }
+  }
+  console.log(`📂 [Auto-Serve] ${htmlFilesCache.size} HTML pages indexed`);
+} catch (err) {
+  console.error('❌ [Auto-Serve] Failed to index src/ directory:', err.message);
+}
+
+// Auto-serve middleware — يجب أن يكون بعد API routes وقبل 404
+app.get('/:page', (req, res, next) => {
+  const page = req.params.page;
+
+  // تجاهل: API, الملفات الثابتة, المسارات المسجلة مسبقاً
+  if (page.includes('.') || page.startsWith('api')) {
+    return next();
+  }
+
+  // هل يوجد ملف HTML مطابق؟
+  if (htmlFilesCache.has(page)) {
+    return res.sendFile(path.join(__dirname, 'src', `${page}.html`));
+  }
+
+  // .html compat: /dept-deep.html → /dept-deep
+  next();
+});
+
+// compat: /page.html → sendFile (for direct .html links)
+app.get('/:page.html', (req, res, next) => {
+  const page = req.params.page;
+  if (htmlFilesCache.has(page)) {
+    return res.sendFile(path.join(__dirname, 'src', `${page}.html`));
+  }
+  next();
 });
 
 // 🏥 Health check endpoint (for Railway)

@@ -616,6 +616,7 @@
     <script src="/assets/js/api.js"></script>
     <script src="/assets/js/sidebar.js"></script>
     <script src="/assets/js/ai-advisor.js"></script>
+    <script src="/js/data-layer.js"></script>
     <script>
         const API = '/api';
         let dimensions = [];
@@ -633,7 +634,7 @@
         document.addEventListener('DOMContentLoaded', async () => {
             await loadEntities();
             // Phase 6B: محاولة تعبئة من جسر التشخيص أولاً
-            const filled = fillFromDiagnosticBridge();
+            const filled = await fillFromDiagnosticBridge();
             if (!filled && dimensions.length === 0) {
                 // Default dimensions
                 ['الموارد البشرية', 'التقنية والأنظمة', 'العمليات والإجراءات', 'الثقافة التنظيمية', 'الابتكار'].forEach(name => {
@@ -643,10 +644,16 @@
         });
 
         // Phase 6B: تعبئة أبعاد الرادار من درجات المحاور
-        function fillFromDiagnosticBridge() {
+        async function fillFromDiagnosticBridge() {
             try {
                 const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
-                const dept = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
+                // 📊 المرحلة 3: DB أولاً
+                let dept = null;
+                try {
+                    const result = await StratixData.getDeptDeep();
+                    if (!result._error) dept = result;
+                } catch(e) { }
+                if (!dept) dept = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
                 if (!diag?.radar?.axisScores) return false;
 
                 const AXIS_TO_DIM = {

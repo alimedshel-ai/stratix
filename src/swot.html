@@ -835,6 +835,7 @@
     <script src="/assets/js/sidebar.js"></script>
     <script src="/assets/js/ai-advisor.js"></script>
     <script src="/assets/js/stats-panel.js"></script>
+    <script src="/js/data-layer.js"></script>
     <script>if (typeof StatsPanel !== 'undefined') StatsPanel.init('SWOT');</script>
     <script>
         // ============================================================
@@ -1475,7 +1476,7 @@
             await loadPainAmbitionData();
 
             // 2b. Phase 6B — فحص جسر التشخيص (dept-deep + diagnostic-center)
-            checkDiagnosticBridge();
+            await checkDiagnosticBridge();
 
             // 3. Show pre-fill banner if we have data
             showPrefillBanner();
@@ -1678,9 +1679,15 @@
             vendor_contracts: { strength: ['نعم'], weakness: ['لا'], sL: 'عقود موردين محدّثة', wL: 'عقود موردين منتهية/غائبة' },
         };
 
-        function checkDiagnosticBridge() {
+        async function checkDiagnosticBridge() {
             const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
-            const dept = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
+            // 📊 المرحلة 3: قراءة dept-deep من DB أولاً
+            let dept = null;
+            try {
+                const result = await StratixData.getDeptDeep();
+                if (!result._error) dept = result;
+            } catch (e) { }
+            if (!dept) dept = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
             if (!diag && !dept) return;
 
             const banner = document.getElementById('diagnosticBridgeBanner');
@@ -1696,9 +1703,15 @@
             summary.textContent = parts.join(' · ') + ' — جاهز للتحويل لـ SWOT';
         }
 
-        function generateFromDiagnostic() {
+        async function generateFromDiagnostic() {
             const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
-            const depth = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
+            // 📊 المرحلة 3: قراءة dept-deep من DB أولاً
+            let depth = null;
+            try {
+                const result = await StratixData.getDeptDeep();
+                if (!result._error) depth = result;
+            } catch (e) { }
+            if (!depth) depth = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
 
             const S = [], W = [], O = [], T = [];
 

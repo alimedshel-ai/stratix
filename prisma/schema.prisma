@@ -235,6 +235,9 @@ model Entity {
   integrations       Integration[] // ✨ التكاملات
   departments        Department[] // ✨ الأقسام
   invitations        Invitation[] // ✨ الدعوات
+  employees          Employee[] // ✨ الموظفين (فحص HR)
+  housingUnits       HousingUnit[] // ✨ السكن (فحص HR)
+  govPlatforms       GovPlatformStatus[] // ✨ المنصات الحكومية (فحص Gov)
 
   @@index([companyId])
   @@index([sectorId])
@@ -1704,3 +1707,260 @@ model AiRecommendation {
   @@index([isDismissed])
   @@map("ai_recommendations")
 }
+
+// =========================================
+// PHASE: DEPT-DEEP DATA (المرحلة 3)
+// نقل بيانات الفحص العميق من localStorage لـ DB
+// =========================================
+
+/// بيانات الفحص العميق — كل إدارة لكل entity
+model DeptDeepData {
+  id          String   @id @default(cuid())
+  entityId    String
+  deptKey     String   // compliance, finance, sales, hr, marketing, operations, support
+
+  // البيانات (JSON blob — نفس هيكل localStorage)
+  payload     String   // JSON: { answers, extraStrengths, extraWeaknesses, challenges, goals, goalOkrLinks, priority, model, manager, managerName, managerSatisfied, notes, vrioScores, completed }
+
+  // حالة الاكتمال
+  completed   Boolean  @default(false)
+  completedAt DateTime?
+
+  // من أجرى الفحص
+  userId      String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([entityId, deptKey]) // إدارة واحدة لكل entity
+  @@index([entityId])
+  @@index([deptKey])
+  @@map("dept_deep_data")
+}
+
+// =========================================
+// PHASE: HR & GOV AUDIT (23 Approved Points)
+// فحص الموارد البشرية والمنصات الحكومية
+// 4 نقاط HR + 19 نقطة منصات حكومية
+// =========================================
+
+/// الموظفين — بيانات HR الأساسية للفحص
+model Employee {
+  id       String @id @default(cuid())
+  entityId String
+
+  // البيانات الأساسية
+  employeeNo  String  // رقم الموظف
+  nameAr      String  // الاسم بالعربي
+  nameEn      String? // الاسم بالإنجليزي
+  nationality String  // الجنسية (سعودي / غير سعودي)
+  gender      String? // MALE / FEMALE
+
+  // ── hr-audit نقطة 1: تصنيف مهن الإقامة ──
+  jobTitle       String? // المسمى الوظيفي الفعلي
+  iqamaProfession String? // المهنة في الإقامة
+  // المقارنة: IF jobTitle != iqamaProfession → مخالفة محتملة
+
+  // ── hr-audit نقطة 2: صرف مدد بالموعد ──
+  iban           String? // IBAN البنكي
+  basicSalary    Float?  // الراتب الأساسي
+  lastPayDate    DateTime? // آخر تاريخ صرف
+  wpsStatus      String?   // COMPLIANT / DELAYED / NOT_REGISTERED
+
+  // ── gov-audit: بيانات الإقامة والتأشيرات ──
+  iqamaNumber    String?   // رقم الإقامة
+  iqamaExpiry    DateTime? // تاريخ انتهاء الإقامة
+  passportExpiry DateTime? // تاريخ انتهاء الجواز
+  visaStatus     String?   // ACTIVE / EXPIRED / PENDING / CANCELLED
+  visaNumber     String?   // رقم التأشيرة
+
+  // ── gov-audit: بيانات العمل والتسجيل ──
+  workPermitNo     String?   // رقم رخصة العمل (نافذ)
+  workPermitExpiry DateTime? // تاريخ انتهاء رخصة العمل
+  contractStatus   String?   // REGISTERED / PENDING / NOT_REGISTERED — حالة العقد في قوى
+  gosiNumber       String?   // رقم التأمينات الاجتماعية
+  gosiRegistered   Boolean   @default(false) // مسجل في التأمينات؟
+  joinDate         DateTime? // تاريخ بداية العمل
+  exitDate         DateTime? // تاريخ نهاية العمل (إن وجد)
+  exitReported     Boolean   @default(false) // هل تم الإبلاغ عن نهاية العمل؟
+
+  // ── بيانات السلامة ──
+  isSafetyRep    Boolean @default(false) // هل ممثل سلامة؟
+  safetyTraining DateTime? // آخر تدريب سلامة
+
+  // حالة الموظف
+  status    String   @default("ACTIVE") // ACTIVE / TERMINATED / ON_LEAVE / FINAL_EXIT
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  entity    Entity       @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  housingId String?
+  housing   HousingUnit? @relation(fields: [housingId], references: [id], onDelete: SetNull)
+
+  @@unique([entityId, employeeNo])
+  @@index([entityId])
+  @@index([nationality])
+  @@index([status])
+  @@index([iqamaExpiry])
+  @@index([workPermitExpiry])
+  @@map("employees")
+}
+
+/// وحدات السكن — hr-audit نقطة 3: ملائمة السكن
+model HousingUnit {
+  id       String @id @default(cuid())
+  entityId String
+
+  // بيانات السكن
+  unitName    String  // اسم/رقم الوحدة
+  address     String? // العنوان
+  unitType    String  @default("RESIDENTIAL") // RESIDENTIAL / COMMERCIAL
+
+  // عقد الإيجار (إيجار)
+  ejarContractNo String?   // رقم عقد إيجار
+  rentStartDate  DateTime? // بداية العقد
+  rentEndDate    DateTime? // نهاية العقد
+  monthlyRent    Float?    // الإيجار الشهري
+
+  // شهادات السلامة
+  municipalityCert     Boolean   @default(false) // شهادة البلدية
+  municipalityCertDate DateTime? // تاريخ شهادة البلدية
+  civilDefenseCert     Boolean   @default(false) // شهادة الدفاع المدني
+  civilDefenseCertDate DateTime? // تاريخ شهادة الدفاع المدني
+
+  // المساحة والسعة
+  totalArea      Float? // المساحة الكلية (م²)
+  maxOccupants   Int?   // السعة القصوى
+  currentOccupants Int  @default(0) // العدد الحالي
+  // المعيار: totalArea / currentOccupants >= 4 م²
+
+  // الخدمات الأساسية
+  hasElectricity Boolean @default(true)
+  hasWater       Boolean @default(true)
+  hasCooling     Boolean @default(true)
+  hasKitchen     Boolean @default(false)
+  hasLaundry     Boolean @default(false)
+
+  // فصل الجنسين
+  genderSeparation Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  entity    Entity     @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  employees Employee[]
+
+  @@index([entityId])
+  @@map("housing_units")
+}
+
+/// حالة تسجيل المنصات الحكومية — gov-audit
+model GovPlatformStatus {
+  id       String @id @default(cuid())
+  entityId String
+
+  // المنصة
+  platform String // QIWA, MUQEEM, ABSHER, NAFATH, EJAR, SALAMA, GOSI, ZATCA, BALADY, MUDAD
+
+  // بيانات التسجيل
+  registrationNo  String?   // رقم التسجيل
+  isRegistered    Boolean   @default(false)
+  registeredDate  DateTime?
+  lastUpdated     DateTime? // آخر تحديث للبيانات
+  expiryDate      DateTime? // تاريخ انتهاء التسجيل
+
+  // الحالة
+  status          String    @default("UNKNOWN") // ACTIVE, EXPIRED, SUSPENDED, NOT_REGISTERED, UNKNOWN
+  hasViolations   Boolean   @default(false) // مخالفات قائمة؟
+  violationCount  Int       @default(0)
+  pendingFees     Float     @default(0) // رسوم متأخرة
+
+  // ملاحظات
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  entity Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  @@unique([entityId, platform])
+  @@index([entityId])
+  @@index([platform])
+  @@index([status])
+  @@map("gov_platform_statuses")
+}
+
+/// جلسة الفحص — تتبع عملية الفحص الكاملة
+model AuditSession {
+  id       String @id @default(cuid())
+  entityId String
+  auditedBy String // Member ID — المستشار الذي يجري الفحص
+
+  // نوع الفحص
+  auditType String // HR_AUDIT, GOV_AUDIT, FULL_AUDIT
+
+  // النتيجة الإجمالية
+  overallScore   Float?  // 0-100
+  overallStatus  String  @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED, NEEDS_ACTION
+  totalPoints    Int     @default(0) // عدد النقاط الإجمالي
+  passedPoints   Int     @default(0) // عدد النقاط الناجحة
+  warningPoints  Int     @default(0) // عدد التحذيرات
+  failedPoints   Int     @default(0) // عدد الراسبة
+
+  // تواريخ
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  // ملاحظات
+  summary String? // ملخص تنفيذي
+  notes   String? // ملاحظات المستشار
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  checkpoints AuditCheckpoint[]
+
+  @@index([entityId])
+  @@index([auditType])
+  @@index([overallStatus])
+  @@map("audit_sessions")
+}
+
+/// نقطة فحص فردية — نتيجة كل نقطة
+model AuditCheckpoint {
+  id        String @id @default(cuid())
+  sessionId String
+
+  // تعريف النقطة
+  checkpointCode String // مثال: HR_01, HR_02, GOV_QIWA_01, GOV_EJAR_02
+  category       String // HR_AUDIT, GOV_QIWA, GOV_MUQEEM, GOV_NAFATH, GOV_EJAR, GOV_SALAMA, GOV_OTHER
+  title          String // عنوان النقطة
+  description    String? // وصف تفصيلي
+
+  // النتيجة
+  status     String  @default("NOT_CHECKED") // PASS, WARNING, FAIL, NOT_CHECKED, NOT_APPLICABLE
+  score      Float?  // 0-100
+  weight     Float   @default(10) // الوزن (10% لكل نقطة)
+
+  // التفاصيل
+  checkMethod  String? // AUTO_DB, MANUAL, FIELD_CHECK — طريقة الفحص
+  actualValue  String? // القيمة الفعلية (مثال: "3 إقامات منتهية")
+  expectedValue String? // القيمة المتوقعة (مثال: "0 إقامات منتهية")
+  evidence     String? // رابط أو وصف الدليل
+  recommendation String? // التوصية للمعالجة
+
+  // تواريخ
+  checkedAt  DateTime?
+  resolvedAt DateTime? // تاريخ المعالجة
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  session AuditSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, checkpointCode])
+  @@index([sessionId])
+  @@index([category])
+  @@index([status])
+  @@map("audit_checkpoints")
+}
+

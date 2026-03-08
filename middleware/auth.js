@@ -21,6 +21,8 @@ const verifyToken = (req, res, next) => {
       // SUPER_ADMIN يتصفح كشركة محددة
       req.user.activeEntityId = impersonateEntity;
       req.user.activeCompanyId = impersonateCompany || null;
+      // 🔒 إصلاح #4: تسجيل Impersonation
+      console.warn(`🔑 [Impersonation] SUPER_ADMIN ${decoded.id} → Entity ${impersonateEntity} | IP: ${req.ip} | ${req.method} ${req.path}`);
     } else if (!req.user.isSuperAdmin) {
       // مستخدم عادي — يشوف بياناته فقط
       req.user.activeEntityId = decoded.entityId || null;
