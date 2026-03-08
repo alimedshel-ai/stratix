@@ -169,9 +169,21 @@
   ];
 
   // === فلترة: مدير الإدارة يشوف إدارته فقط ===
-  const filteredDeptItems = (userType === 'DEPT_MANAGER' && _v10Dept)
-    ? ALL_DEPT_ITEMS.filter(d => d.key === _v10Dept)
-    : ALL_DEPT_ITEMS;
+  // مدير الإدارة → تشخيص سريع أولاً (dept-diagnostic) ثم عميق (dept-deep)
+  let filteredDeptItems;
+  if (userType === 'DEPT_MANAGER' && _v10Dept) {
+    const deptItem = ALL_DEPT_ITEMS.find(d => d.key === _v10Dept);
+    if (deptItem) {
+      filteredDeptItems = [
+        { label: 'تشخيص سريع', href: `/dept-diagnostic.html?dept=${_v10Dept}`, icon: 'bi-lightning-charge-fill' },
+        { label: 'تشخيص عميق', href: `/dept-deep.html?dept=${_v10Dept}&single=1`, icon: 'bi-search-heart' },
+      ];
+    } else {
+      filteredDeptItems = ALL_DEPT_ITEMS;
+    }
+  } else {
+    filteredDeptItems = ALL_DEPT_ITEMS;
+  }
 
   const journeyPhases = [
     {
