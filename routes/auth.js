@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../lib/prisma');
 const { verifyToken } = require('../middleware/auth');
-const { validateLogin, validateRegister } = require('../middleware/validation');
+const { validateLogin } = require('../middleware/validation');
 
 const router = express.Router();
 
@@ -165,6 +165,14 @@ router.post('/register', async (req, res) => {
       { expiresIn: '24h' }
     );
 
+    // 7.5 حقن التوكن في HttpOnly Cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    });
+
     // 8. الرد
     res.status(201).json({
       message: 'تم إنشاء الحساب بنجاح',
@@ -288,10 +296,17 @@ router.post('/verify-code', verifyToken, async (req, res) => {
 });
 
 // Login
-router.post('/login', validateLogin, async (req, res) => {
+router.post('/login', (req, res, next) => {
+  // تنظيف الإيميل قبل التحقق (Validation) لتجنب خطأ 400
+  if (req.body && req.body.email && typeof req.body.email === 'string') {
+    req.body.email = req.body.email.trim();
+  }
+  next();
+}, validateLogin, async (req, res) => {
   try {
-
-    const { email, password } = req.body;
+    // تنظيف الإيميل من المسافات الزائدة وتحويله لحروف صغيرة
+    const email = (req.body.email || '').trim().toLowerCase();
+    const password = req.body.password;
 
     // Find user with memberships
     const user = await prisma.user.findUnique({
@@ -307,20 +322,24 @@ router.post('/login', validateLogin, async (req, res) => {
       },
     });
 
-
-
     if (!user) {
-
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     // Compare passwords
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
-
     if (!isPasswordValid) {
-
-      return res.status(401).json({ message: 'Invalid credentials' });
+      // حل مشكلة كلمات المرور غير المشفرة (Plain text) من الاستيراد القديم
+      if (password === user.password) {
+        const hashedNewPassword = await bcrypt.hash(password, 10);
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { password: hashedNewPassword }
+        });
+      } else {
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
     }
 
     // التحقق من تعطيل الحساب
@@ -390,6 +409,14 @@ router.post('/login', validateLogin, async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
+
+    // حقن التوكن في HttpOnly Cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    });
 
     res.json({
       message: 'Login successful',
@@ -734,6 +761,14 @@ router.post('/complete-onboarding', verifyToken, async (req, res) => {
       { expiresIn: '24h' }
     );
 
+    // حقن التوكن في HttpOnly Cookie
+    res.cookie('token', newToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    });
+
     res.json({
       message: 'تم إكمال التأسيس بنجاح 🎉',
       onboardingCompleted: true,
@@ -749,6 +784,17 @@ router.post('/complete-onboarding', verifyToken, async (req, res) => {
     }
     res.status(500).json({ error: 'فشل إكمال التأسيس' });
   }
+});
+
+// ═══ تسجيل الخروج (مسح الكوكي من المتصفح) ═══
+router.post('/logout', (req, res) => {
+  res.clearCookie('token', {
+    path: '/',
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict'
+  });
+  res.json({ message: 'تم تسجيل الخروج بنجاح' });
 });
 
 module.exports = router;

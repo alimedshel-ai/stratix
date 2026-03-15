@@ -163,7 +163,7 @@ router.get('/context', verifyToken, async (req, res) => {
         // الخطوة 1: هل أكمل الألم والطموح؟
         if (!painAmbitionData) {
             // إذا كان في صفحة الألم والطموح → بطاقة ترحيبية مخصصة
-            if (page === '/pain-ambition.html') {
+            if (page === '/select-type') {
                 suggestions.push({
                     id: 'welcome-pain-ambition',
                     type: 'START',
@@ -252,13 +252,13 @@ router.get('/context', verifyToken, async (req, res) => {
                     icon: '💔',
                     title: 'ابدأ رحلتك الاستراتيجية',
                     message: 'حدد ألمك وطموحك أولاً — هذه الخطوة الأساسية التي تبني عليها كل شيء',
-                    action: { label: 'ابدأ الآن', href: '/pain-ambition.html' },
+                    action: { label: 'ابدأ الآن', href: '/select-type' },
                     estimatedTime: '5 دقائق',
                 });
                 nudge = {
                     icon: '🚀',
                     text: 'رحلتك تبدأ هنا — حدد ألمك وطموحك',
-                    href: '/pain-ambition.html'
+                    href: '/select-type'
                 };
             }
         }
@@ -528,7 +528,7 @@ router.get('/context', verifyToken, async (req, res) => {
                     icon: '🎭',
                     title: 'حدد دورك في المنصة',
                     message: 'اختر نوع حسابك (مدير شركة، مدير إدارة، أو مستشار) لتجربة مخصصة',
-                    action: { label: 'اختر نوعك', href: '/select-type.html' },
+                    action: { label: 'اختر نوعك', href: '/select-type' },
                     context: 'تخصيص',
                 });
             }
@@ -625,6 +625,30 @@ router.get('/tool-chain/:entityId', verifyToken, async (req, res) => {
             },
             {
                 step: 2,
+                id: 'COMPANY_HEALTH',
+                label: 'التشخيص العام للشركة',
+                icon: '🏥',
+                status: getToolStatus(analyses, 'CORE_COMPETENCY'), // Using a proxy or we can just rely on pending
+                progress: getToolProgress(analyses, 'CORE_COMPETENCY'),
+            },
+            {
+                step: 3,
+                id: 'DEPT_DEEP',
+                label: 'استكشاف الإدارات',
+                icon: '🏢',
+                status: getToolStatus(analyses, 'VALUE_CHAIN'), // Proxy for UI progress
+                progress: getToolProgress(analyses, 'VALUE_CHAIN'),
+            },
+            {
+                step: 4,
+                id: 'EXTERNAL_ENV',
+                label: 'البيئة الخارجية (PESTEL)',
+                icon: '🌍',
+                status: getToolStatus(analyses, 'PESTEL'),
+                progress: getToolProgress(analyses, 'PESTEL'),
+            },
+            {
+                step: 5,
                 id: 'SWOT',
                 label: 'تحليل SWOT',
                 icon: '🔍',
@@ -633,7 +657,7 @@ router.get('/tool-chain/:entityId', verifyToken, async (req, res) => {
                 output: getToolSummary(analyses, 'SWOT'),
             },
             {
-                step: 3,
+                step: 6,
                 id: 'TOWS',
                 label: 'مصفوفة TOWS',
                 icon: '🔄',
@@ -788,7 +812,7 @@ function getToolSummary(analyses, code) {
 
 function getPageNudge(page, ctx) {
     const nudges = {
-        '/pain-ambition.html': {
+        '/select-type': {
             icon: '🤖', text: 'أنا مساعدك الذكي — اختر تحدياتك وراح أوجهك للأدوات المناسبة', href: null
         },
         '/swot.html': ctx.completedTools.some(t => t.code === 'SWOT')
@@ -824,7 +848,7 @@ function getPageNudge(page, ctx) {
         '/dept-dashboard.html': {
             icon: '📊', text: 'تابع مؤشرات إدارتك يومياً — التنبيهات المبكرة تمنع المشاكل', href: null
         },
-        '/select-type.html': {
+        '/select-type': {
             icon: '🎭', text: 'اختر نوعك بعناية — كل نوع يفتح لك أدوات ولوحات مختلفة', href: null
         },
     };
@@ -872,7 +896,7 @@ function getChainRecommendation(chain, patternKey) {
             icon: '💔',
             title: 'ابدأ بتحديد ألمك وطموحك',
             message: 'هذه المحطة الأولى — 5 دقائق فقط لتحديد اتجاهك',
-            action: { label: 'ابدأ', href: '/pain-ambition.html' }
+            action: { label: 'ابدأ', href: '/select-type' }
         },
         SWOT: {
             icon: '🔍',

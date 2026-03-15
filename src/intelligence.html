@@ -922,7 +922,7 @@
 <body>
     <div class="main-content content-area">
         <!-- Breadcrumb Navigation -->
-        <div class="d-flex align-items-center gap-2 mb-3 animate-in" style="font-size:0.82rem;">
+        <div class="d-flex align-items-center gap-2 mb-3 animate-in" id="breadcrumbBar" style="font-size:0.82rem;">
             <a href="/dashboard" style="color:var(--text-secondary); text-decoration:none; transition:color 0.2s;"
                 onmouseover="this.style.color='var(--accent-1)'" onmouseout="this.style.color='var(--text-secondary)'">
                 <i class="bi bi-speedometer2"></i> لوحة التحكم
@@ -977,7 +977,7 @@
                 <h1><i class="bi bi-cpu"></i> الذكاء الاستراتيجي</h1>
                 <p>تحليل تلقائي للصحة الاستراتيجية مع توصيات ذكية وقرارات مبنية على البيانات</p>
             </div>
-            <div class="d-flex gap-2 align-items-center">
+            <div class="d-flex gap-2 align-items-center" id="entitySelectorWrapper">
                 <select id="entitySelect" class="entity-selector" onchange="onEntityChange()">
                     <option value="">جاري التحميل...</option>
                 </select>
@@ -1161,7 +1161,7 @@
         </div>
 
         <!-- Row 3: Entity Health Overview -->
-        <div class="row g-4 mb-4">
+        <div class="row g-4 mb-4" id="entityOverviewSection">
             <div class="col-12 animate-in delay-5">
                 <div class="glass-card">
                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -1254,7 +1254,7 @@
     <script>
         // Auth
         const token = localStorage.getItem('token');
-        if (!token) window.location.href = '/login';
+        if (!token) { sessionStorage.setItem('stratix_return_url', location.pathname + location.search); location.href = '/login?from=restore'; }
         const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
 
         let currentEntityId = null;
@@ -1295,15 +1295,18 @@
             if (currentEntityId) loadEntityIntelligence(currentEntityId);
         }
 
-        // ===== LOAD ENTITY INTELLIGENCE =====
         async function loadEntityIntelligence(entityId) {
-            // Load health + recommendations + nervous system in parallel
-            await Promise.all([
+            // 🔒 Fix: Promise.allSettled — فشل طلب واحد لا يُسقط الباقي
+            const results = await Promise.allSettled([
                 loadHealthScore(entityId),
                 loadRecommendations(entityId),
                 loadRootCauseAnalysis(entityId),
                 loadTowsForConvert(entityId)
             ]);
+            const failed = results.filter(r => r.status === 'rejected');
+            if (failed.length > 0) {
+                console.warn('بعض بيانات الذكاء لم تُحمَّل:', failed.map(r => r.reason?.message));
+            }
         }
 
         // ===== HEALTH SCORE =====
@@ -2105,6 +2108,58 @@
         // Start
         init().then(() => { checkRequirements(); loadAlerts(); });
     </script>
+
+    <!-- ═══ DEPT DETECTION — تكيف الصفحة لمدير الإدارة ═══ -->
+    <script>
+        (function () {
+            const _dp = new URLSearchParams(window.location.search).get('dept');
+            if (!_dp) return;
+            const _deptNames = { hr: 'الموارد البشرية', finance: 'المالية', operations: 'العمليات', marketing: 'التسويق', sales: 'المبيعات', compliance: 'الامتثال', it: 'تقنية المعلومات', cs: 'خدمة العملاء', quality: 'الجودة', projects: 'إدارة المشاريع', support: 'الخدمات المساندة' };
+            const _dn = _deptNames[_dp] || _dp;
+
+            // 1. تحديث العنوان
+            document.title = 'ستارتكس — ذكاء ' + _dn;
+            const _h1 = document.querySelector('.page-header h1');
+            if (_h1) _h1.innerHTML = '<i class="bi bi-cpu"></i> ذكاء ' + _dn + ' الاستراتيجي';
+            const _desc = document.querySelector('.page-header p');
+            if (_desc) _desc.textContent = 'تحليل ذكي لأداء إدارة ' + _dn + ' مع توصيات وقرارات مبنية على البيانات';
+
+            // 2. إخفاء selector الكيانات (مدير الإدارة لا يحتاجه)
+            const _es = document.getElementById('entitySelectorWrapper');
+            if (_es) {
+                const sel = _es.querySelector('#entitySelect');
+                if (sel) sel.style.display = 'none';
+            }
+
+            // 3. إخفاء "نظرة عامة — صحة جميع الكيانات" (خاص بـ CEO)
+            const _eo = document.getElementById('entityOverviewSection');
+            if (_eo) _eo.style.display = 'none';
+
+            // 4. تحديث الـ breadcrumb
+            const _bc = document.getElementById('breadcrumbBar');
+            if (_bc) {
+                const bcSpan = _bc.querySelector('span[style*="font-weight:600"]');
+                if (bcSpan) bcSpan.innerHTML = '<i class="bi bi-cpu"></i> ذكاء ' + _dn;
+                // تحديث رابط لوحة التحكم ليروح للوحة الإدارة
+                const dashLink = _bc.querySelector('a[href*="dashboard"]');
+                if (dashLink) dashLink.href = '/dept-dashboard.html?dept=' + _dp;
+            }
+
+            // 5. تحديث onboarding banner
+            const _ob = document.getElementById('onboardingBanner');
+            if (_ob) {
+                const obDesc = _ob.querySelector('.onboarding-desc');
+                if (obDesc) obDesc.innerHTML = 'هذه الصفحة تحلّل <strong style="color:#fff;">صحة إدارة ' + _dn + ' الاستراتيجية</strong> بناءً على البيانات المدخلة. كل ما أدخلت بيانات أكثر، كل ما كانت التوصيات أذكى.';
+            }
+
+            // 6. تحديث رابط المؤشرات والمراجعات في breadcrumb
+            const kpiLink = _bc ? _bc.querySelector('a[href*="kpi"]') : null;
+            if (kpiLink) kpiLink.href = '/kpis.html?dept=' + _dp;
+
+            console.log('[Intelligence] ✅ dept detection applied:', _dn);
+        })();
+    </script>
+
     <script src="/assets/js/api.js"></script>
     <script src="/assets/js/sidebar.js"></script>
     <script src="/assets/js/ai-advisor.js"></script>

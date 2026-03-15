@@ -294,6 +294,32 @@
         })();
     </script>
 
+    <!-- 🔄 إعادة التوجيه الذكية: حفظ الصفحة اللي كان فيها المستخدم -->
+    <script>
+        (function () {
+            const params = new URLSearchParams(window.location.search);
+            // 1. redirect= parameter صريح (أولوية)
+            const explicitRedirect = params.get('redirect');
+            if (explicitRedirect) {
+                sessionStorage.setItem('stratix_return_url', decodeURIComponent(explicitRedirect));
+                return;
+            }
+            // 2. document.referrer — إذا جاي من صفحة داخلية (انتهت جلسته)
+            const ref = document.referrer;
+            if (ref && !sessionStorage.getItem('stratix_return_url')) {
+                try {
+                    const refUrl = new URL(ref);
+                    if (refUrl.origin === window.location.origin &&
+                        !refUrl.pathname.includes('login') &&
+                        !refUrl.pathname.includes('landing') &&
+                        refUrl.pathname !== '/') {
+                        sessionStorage.setItem('stratix_return_url', refUrl.pathname + refUrl.search);
+                    }
+                } catch (e) { }
+            }
+        })();
+    </script>
+
     <div class="auth-card">
         <!-- الشعار -->
         <div class="text-center mb-3">
@@ -350,6 +376,13 @@
 
         <!-- ═══ نموذج إنشاء حساب ═══ -->
         <div class="auth-panel" id="panel-signup">
+            <!-- شريط المسار المقترح (يظهر بعد التشخيص) -->
+            <div id="diagPathBanner"
+                style="display:none; background:linear-gradient(135deg,rgba(102,126,234,0.12),rgba(118,75,162,0.12)); border:1px solid rgba(102,126,234,0.2); border-radius:14px; padding:14px 18px; margin-bottom:20px; text-align:center;">
+                <div style="font-size:0.82rem; color:#94a3b8; margin-bottom:4px;">مسارك المقترح:</div>
+                <div id="diagPathName" style="font-size:1.1rem; font-weight:700; color:#fff;"></div>
+                <div id="diagPathSub" style="font-size:0.8rem; color:#667eea; margin-top:2px;"></div>
+            </div>
             <form id="signupForm">
                 <div class="mb-3">
                     <label class="form-label">
@@ -449,6 +482,36 @@
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
         tooltipTriggerList.map(el => new bootstrap.Tooltip(el));
 
+        // ═══ عرض شريط المسار المقترح (إذا جاي من التشخيص الجديد) ═══
+        (function showDiagBanner() {
+            try {
+                const raw = sessionStorage.getItem('diagnosticResult');
+                if (!raw) return;
+                const result = JSON.parse(raw);
+                const banner = document.getElementById('diagPathBanner');
+                const nameEl = document.getElementById('diagPathName');
+                const subEl = document.getElementById('diagPathSub');
+                if (!banner || !nameEl) return;
+
+                if (result.category === 'manager') {
+                    nameEl.textContent = (result.emoji || '🎯') + ' مسار إدارة ' + (result.name || '');
+                } else if (result.category === 'investor') {
+                    nameEl.textContent = (result.emoji || '👁️') + ' ' + (result.name || '');
+                } else {
+                    nameEl.textContent = (result.emoji || '✨') + ' ' + (result.pathName || result.patternKey || '');
+                    if (result.variant && result.variant.subtitle) {
+                        subEl.textContent = result.variant.subtitle;
+                    }
+                }
+                banner.style.display = 'block';
+
+                // تبديل للتسجيل تلقائياً إذا جاي من التشخيص
+                if (urlParams.get('from') === 'diagnostic') {
+                    switchTab('signup');
+                }
+            } catch (e) { }
+        })();
+
         // ═══ التحقق من كلمة المرور (التسجيل) ═══
         const pwdInput = document.getElementById('signup-password');
         const rules = {
@@ -488,13 +551,16 @@
                 const res = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ email, password }),
+                    credentials: 'include' // 🔒 إرسال واستقبال HttpOnly Cookie
                 });
 
                 const data = await res.json();
 
-                if (res.ok && data.token) {
-                    localStorage.setItem('token', data.token);
+                if (res.ok && data.user) {
+                    // 🔒 الكوكي HttpOnly أُضبط تلقائياً من السيرفر
+                    // نخزن علامة فقط لتمرير فحوصات if (!token) في الصفحات القديمة
+                    localStorage.setItem('token', 'httponly-managed');
                     localStorage.setItem('user', JSON.stringify(data.user));
 
                     // حفظ entityId و companyId — مطلوب للداشبورد والمستشار الذكي
@@ -503,6 +569,19 @@
                     if (_eid) localStorage.setItem('entityId', _eid);
                     if (_cid) localStorage.setItem('companyId', _cid);
 
+                    // 🔄 إعادة التوجيه الذكية: لو كان المستخدم في صفحة وانتهت جلسته → يرجع لها
+                    const _returnUrl = sessionStorage.getItem('stratix_return_url');
+                    if (_returnUrl) {
+                        sessionStorage.removeItem('stratix_return_url');
+                        try {
+                            const _rUrl = new URL(_returnUrl, window.location.origin);
+                            if (_rUrl.origin === window.location.origin && !_rUrl.pathname.includes('login')) {
+                                window.location.href = _rUrl.pathname + _rUrl.search;
+                                return;
+                            }
+                        } catch (e) { }
+                    }
+
                     const role = data.user.role || 'VIEWER';
                     const sysRole = data.user.systemRole || 'USER';
                     const uType = data.user.userType || 'EXPLORER';
@@ -510,9 +589,13 @@
                     const hasEntity = !!data.user.entity;
                     const onboardingDone = data.user.onboardingCompleted || false;
 
-                    // 1. SUPER_ADMIN → دائماً الداشبورد
+                    // 1. SUPER_ADMIN → لوحة الإدارة (مالك المنصة)
                     if (sysRole === 'SUPER_ADMIN') {
-                        window.location.href = '/dashboard.html';
+                        window.location.href = '/admin-dashboard.html';
+                    }
+                    // 1b. ADMIN → لوحة الإدارة (مدير النظام)
+                    else if (sysRole === 'ADMIN' || role === 'ADMIN') {
+                        window.location.href = '/admin-dashboard.html';
                     }
                     // 2. ما أكمل التأسيس → onboarding أولاً (قبل أي حكم على الدور)
                     else if (!onboardingDone && !hasEntity) {
@@ -530,21 +613,55 @@
                     else if (uType === 'CONSULTANT' || uCategory.startsWith('CONSULTANT')) {
                         window.location.href = '/consultant-dashboard.html';
                     }
-                    // 6. VIEWER/DATA_ENTRY حقيقي (عنده entity بس دور محدود)
+                    // 6a. مستثمر → لوحة المستثمر (الفرص + المحفظة)
+                    else if (uCategory === 'INVESTOR' || uCategory.startsWith('INVESTOR_')) {
+                        window.location.href = '/investor-dashboard.html';
+                    }
+                    // 6b. عضو مجلس → لوحة المجلس (مراقبة + تقارير)
+                    else if (uCategory === 'BOARD_MEMBER' || uCategory.startsWith('BOARD_')) {
+                        window.location.href = '/board-dashboard.html';
+                    }
+                    // 7. VIEWER/DATA_ENTRY حقيقي (عنده entity بس دور محدود)
                     else if (hasEntity && (role === 'VIEWER' || role === 'DATA_ENTRY')) {
                         window.location.href = '/viewer-hub.html';
                     }
-                    // 7. عنده كيان + التأسيس مكتمل
+                    // 8. عنده كيان + التأسيس مكتمل → توجيه ذكي حسب المسار
                     else if (hasEntity && onboardingDone) {
-                        window.location.href = '/dashboard.html';
+                        // التوجيه حسب حجم المنظمة ومسارها
+                        const _diagPayload = (() => { try { return JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || '{}'); } catch (e) { return {}; } })();
+                        const _painAmb = (() => { try { return JSON.parse(localStorage.getItem('painAmbition') || '{}'); } catch (e) { return {}; } })();
+                        const _role = _diagPayload.role || '';
+                        const _pKey = _painAmb.patternKey || '';
+                        const _size = _diagPayload.size || _painAmb.sizeCategory || '';
+
+                        // مستثمر → لوحة المستثمر
+                        if (_role === 'investor') {
+                            window.location.href = '/investor-dashboard.html';
+                        }
+                        // مجلس إدارة → لوحة المجلس
+                        else if (_role === 'board') {
+                            window.location.href = '/board-dashboard.html';
+                        }
+                        // مسارات متقدمة (نامية طموحة + ناضجة) → CEO Dashboard
+                        else if (['growing_ambitious', 'mature_renewing', 'mature_competitive', 'default_strategic'].includes(_pKey)) {
+                            window.location.href = '/ceo-dashboard.html';
+                        }
+                        // شركات كبيرة/متوسطة بدون مسار محدد
+                        else if (['large', 'enterprise'].includes(_size)) {
+                            window.location.href = '/ceo-dashboard.html';
+                        }
+                        // الباقي (ناشئة / صغيرة / default)
+                        else {
+                            window.location.href = '/dashboard.html';
+                        }
                     }
-                    // 8. Default
+                    // 9. Default
                     else {
                         window.location.href = '/dashboard.html';
                     }
                 } else {
                     if (data.suspended) {
-                        if (data.token) localStorage.setItem('token', data.token);
+                        if (data.token) localStorage.setItem('token', 'httponly-managed');
                         localStorage.setItem('user', JSON.stringify(data.user || {}));
                         localStorage.setItem('suspendReason', data.reason || '');
                         localStorage.setItem('suspendedAt', data.suspendedAt || '');
@@ -683,11 +800,18 @@
             // تحديد userCategory
             let userCategory = diagPath || selectedUserType || 'EXPLORER';
 
-            // جمع بيانات التشخيص
+            // جمع بيانات التشخيص — الجديد (sessionStorage) + القديم (localStorage)
             let diagnosticData = null;
             try {
-                const pa = localStorage.getItem('painAmbition') || localStorage.getItem('diagnosticData');
-                if (pa) diagnosticData = JSON.parse(pa);
+                // أولاً: المحرك الجديد (diagnostic-engine.js)
+                const sessionDiag = sessionStorage.getItem('diagnosticResult');
+                if (sessionDiag) {
+                    diagnosticData = JSON.parse(sessionDiag);
+                } else {
+                    // Fallback: البيانات القديمة
+                    const pa = localStorage.getItem('painAmbition') || localStorage.getItem('diagnosticData');
+                    if (pa) diagnosticData = JSON.parse(pa);
+                }
             } catch (e) { }
 
             let smartGuideData = null;
@@ -714,23 +838,79 @@
                 });
                 const data = await res.json();
 
-                if (res.ok && data.token) {
-                    localStorage.setItem('token', data.token);
+                if (res.ok && (data.token || data.user)) {
+                    // 🔒 الكوكي HttpOnly أُضبط تلقائياً من السيرفر
+                    localStorage.setItem('token', 'httponly-managed');
                     // إضافة userType للـ user data إذا ما كان موجود
                     if (selectedUserType && !data.user.userType) {
                         data.user.userType = selectedUserType;
                     }
                     localStorage.setItem('user', JSON.stringify(data.user));
 
-                    // التوجيه حسب النوع — دائماً لوحة التحكم أولاً بعد التسجيل
-                    // حفظ الوجهة المقترحة (لو موجودة) عشان الداشبورد يعرضها كاقتراح
+                    // ═══ المرحلة 6: نقل بيانات التشخيص → localStorage (dual-write) ═══
+                    let diagFirstPage = null;
+                    try {
+                        const sessionDiag = sessionStorage.getItem('diagnosticResult');
+                        if (sessionDiag) {
+                            const diagResult = JSON.parse(sessionDiag);
+
+                            // Dual-write: painAmbition + stratix_diagnostic_payload
+                            if (diagResult.patternKey) {
+                                localStorage.setItem('painAmbition', JSON.stringify({
+                                    patternKey: diagResult.patternKey,
+                                    category: diagResult.category || 'owner',
+                                    sizeCategory: diagResult.sizeCategory || 'medium',
+                                    reason: diagResult.reason || '',
+                                    diagnosticAnswers: diagResult.answers || {},
+                                    diagnosticDate: new Date().toISOString(),
+                                }));
+                            }
+                            localStorage.setItem('stratix_diagnostic_payload', JSON.stringify({
+                                role: diagResult.category === 'owner' ? 'founder' : (diagResult.category === 'manager' ? 'manager' : 'board'),
+                                size: diagResult.sizeCategory || 'medium',
+                                department: diagResult.department || '',
+                                answers: diagResult.answers || {},
+                                completedAt: new Date().toISOString(),
+                            }));
+
+                            // تحديد أول صفحة في المسار
+                            if (diagResult.category === 'manager') {
+                                diagFirstPage = diagResult.dashboardPath || '/dept-dashboard.html';
+                                // حفظ الإدارة المختارة
+                                if (diagResult.department) {
+                                    localStorage.setItem('stratix_dept', diagResult.department);
+                                    localStorage.setItem('stratix_category', 'DEPT_' + diagResult.department.toUpperCase());
+                                    localStorage.setItem('stratix_user_type', 'DEPT_MANAGER');
+                                }
+                            } else if (diagResult.category === 'investor') {
+                                diagFirstPage = diagResult.dashboardPath || '/investor-dashboard.html';
+                            } else if (diagResult.patternKey) {
+                                // صاحب مشروع → نوجهه للـ onboarding أولاً ثم المسار
+                                diagFirstPage = null; // يروح onboarding أولاً
+                                localStorage.setItem('stratix_suggested_next', diagResult.patternKey);
+                            }
+
+                            // تنظيف sessionStorage
+                            sessionStorage.removeItem('diagnosticResult');
+                            sessionStorage.removeItem('diagnosticTimestamp');
+                        }
+                    } catch (diagErr) {
+                        console.warn('Diagnostic promote failed:', diagErr);
+                    }
+
+                    // التوجيه حسب النوع
                     const savedRedirect = localStorage.getItem('stratix_redirect_after_login');
                     if (savedRedirect) {
                         localStorage.setItem('stratix_suggested_next', savedRedirect);
                         localStorage.removeItem('stratix_redirect_after_login');
                     }
 
-                    if (['INDIVIDUAL', 'PERSONAL', 'CAREER', 'IDEA', 'CONSULTANT_SOLO'].includes(userCategory) || userCategory.startsWith('INDIVIDUAL_')) {
+                    // ═══ أولوية 1: التشخيص الجديد حدد صفحة ═══
+                    if (diagFirstPage) {
+                        window.location.href = diagFirstPage;
+                    }
+                    // ═══ أولوية 2: التوجيه القديم حسب النوع ═══
+                    else if (['INDIVIDUAL', 'PERSONAL', 'CAREER', 'IDEA', 'CONSULTANT_SOLO'].includes(userCategory) || userCategory.startsWith('INDIVIDUAL_')) {
                         window.location.href = '/individual-dashboard.html';
                     } else if (userCategory.startsWith('DEPT_') || selectedUserType === 'DEPT_MANAGER') {
                         const hasEntity = !!(data.user?.entity?.id);
@@ -738,7 +918,7 @@
                     } else if (userCategory === 'CONSULTANT_AGENCY') {
                         window.location.href = '/consultant-dashboard.html';
                     } else {
-                        // ✅ الافتراضي: لوحة التحكم — يشوف المسار أول
+                        // ✅ الافتراضي: لوحة التحكم
                         window.location.href = '/dashboard.html';
                     }
                 } else {

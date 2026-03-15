@@ -257,6 +257,36 @@
             color: white
         }
 
+        /* رسائل التحميل والنجاح */
+        .toast-message {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-size: 13px;
+            font-weight: 500;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toast-message.show {
+            display: flex;
+        }
+
+        .toast-success {
+            border-right: 4px solid var(--green);
+        }
+
+        .toast-error {
+            border-right: 4px solid var(--red);
+        }
+
         @media(max-width:768px) {
             .main-content {
                 padding: 16px
@@ -326,7 +356,7 @@
                         <input class="set-input" type="text" id="companyName" placeholder="اسم الشركة"
                             style="width:180px">
                         <button class="set-btn set-btn-save" style="padding:7px 14px;font-size:12px"
-                            onclick="saveCompanyName()" id="saveCompanyBtn">
+                            id="saveCompanyBtn">
                             <i class="bi bi-check-lg"></i> حفظ
                         </button>
                     </div>
@@ -349,9 +379,9 @@
                         <div class="set-row-label">اللغة</div>
                         <div class="set-row-desc">لغة واجهة المستخدم</div>
                     </div>
-                    <select class="set-select">
-                        <option selected>🇸🇦 العربية</option>
-                        <option>🇺🇸 English</option>
+                    <select class="set-select" id="languageSelect">
+                        <option value="ar" selected>🇸🇦 العربية</option>
+                        <option value="en">🇺🇸 English</option>
                     </select>
                 </div>
                 <div class="set-row">
@@ -359,10 +389,10 @@
                         <div class="set-row-label">المنطقة الزمنية</div>
                         <div class="set-row-desc">لحساب المواعيد والتنبيهات</div>
                     </div>
-                    <select class="set-select">
-                        <option selected>Asia/Riyadh (UTC+3)</option>
-                        <option>Asia/Dubai (UTC+4)</option>
-                        <option>Europe/London (UTC+0)</option>
+                    <select class="set-select" id="timezoneSelect">
+                        <option value="Asia/Riyadh" selected>Asia/Riyadh (UTC+3)</option>
+                        <option value="Asia/Dubai">Asia/Dubai (UTC+4)</option>
+                        <option value="Europe/London">Europe/London (UTC+0)</option>
                     </select>
                 </div>
                 <div class="set-row">
@@ -370,11 +400,11 @@
                         <div class="set-row-label">السنة المالية</div>
                         <div class="set-row-desc">شهر بداية السنة المالية</div>
                     </div>
-                    <select class="set-select">
-                        <option selected>يناير</option>
-                        <option>أبريل</option>
-                        <option>يوليو</option>
-                        <option>أكتوبر</option>
+                    <select class="set-select" id="fiscalYearSelect">
+                        <option value="1" selected>يناير</option>
+                        <option value="4">أبريل</option>
+                        <option value="7">يوليو</option>
+                        <option value="10">أكتوبر</option>
                     </select>
                 </div>
             </div>
@@ -387,10 +417,10 @@
                         <div class="set-row-label">الوضع</div>
                         <div class="set-row-desc">داكن / فاتح</div>
                     </div>
-                    <select class="set-select">
-                        <option selected>🌙 داكن</option>
-                        <option>☀️ فاتح</option>
-                        <option>💻 تلقائي (حسب النظام)</option>
+                    <select class="set-select" id="themeSelect">
+                        <option value="dark" selected>🌙 داكن</option>
+                        <option value="light">☀️ فاتح</option>
+                        <option value="auto">💻 تلقائي (حسب النظام)</option>
                     </select>
                 </div>
                 <div class="set-row">
@@ -405,14 +435,14 @@
                         <div class="set-row-label">السايدبار المصغر</div>
                         <div class="set-row-desc">تصغير القائمة الجانبية تلقائياً</div>
                     </div>
-                    <div class="set-toggle" onclick="this.classList.toggle('on')"></div>
+                    <div class="set-toggle" id="miniSidebarToggle"></div>
                 </div>
                 <div class="set-row">
                     <div class="set-row-info">
                         <div class="set-row-label">الحركات والتأثيرات</div>
                         <div class="set-row-desc">تفعيل الأنيميشن وتأثيرات الحركة</div>
                     </div>
-                    <div class="set-toggle on" onclick="this.classList.toggle('on')"></div>
+                    <div class="set-toggle on" id="animationsToggle"></div>
                 </div>
             </div>
 
@@ -424,35 +454,35 @@
                         <div class="set-row-label">إشعارات المتصفح</div>
                         <div class="set-row-desc">تنبيهات مباشرة من المتصفح</div>
                     </div>
-                    <div class="set-toggle on" onclick="this.classList.toggle('on')"></div>
+                    <div class="set-toggle on" id="browserNotificationsToggle"></div>
                 </div>
                 <div class="set-row">
                     <div class="set-row-info">
                         <div class="set-row-label">إشعارات البريد</div>
                         <div class="set-row-desc">ملخص يومي عبر الإيميل</div>
                     </div>
-                    <div class="set-toggle on" onclick="this.classList.toggle('on')"></div>
+                    <div class="set-toggle on" id="emailNotificationsToggle"></div>
                 </div>
                 <div class="set-row">
                     <div class="set-row-info">
                         <div class="set-row-label">تنبيهات المخاطر</div>
                         <div class="set-row-desc">إخطار فوري عند تجاوز عتبة الخطر</div>
                     </div>
-                    <div class="set-toggle on" onclick="this.classList.toggle('on')"></div>
+                    <div class="set-toggle on" id="riskAlertsToggle"></div>
                 </div>
                 <div class="set-row">
                     <div class="set-row-info">
                         <div class="set-row-label">تنبيهات الأداء</div>
                         <div class="set-row-desc">إخطار عند انخفاض KPI تحت المستهدف</div>
                     </div>
-                    <div class="set-toggle on" onclick="this.classList.toggle('on')"></div>
+                    <div class="set-toggle on" id="performanceAlertsToggle"></div>
                 </div>
                 <div class="set-row">
                     <div class="set-row-info">
                         <div class="set-row-label">صوت الإشعارات</div>
                         <div class="set-row-desc">تشغيل صوت مع كل إشعار</div>
                     </div>
-                    <div class="set-toggle" onclick="this.classList.toggle('on')"></div>
+                    <div class="set-toggle" id="notificationSoundToggle"></div>
                 </div>
             </div>
 
@@ -465,18 +495,18 @@
                         <div class="set-row-label">النسخ الاحتياطي التلقائي</div>
                         <div class="set-row-desc">نسخ يومية تلقائية لقاعدة البيانات</div>
                     </div>
-                    <div class="set-toggle on" onclick="this.classList.toggle('on')"></div>
+                    <div class="set-toggle on" id="autoBackupToggle"></div>
                 </div>
                 <div class="set-row">
                     <div class="set-row-info">
                         <div class="set-row-label">مدة الاحتفاظ</div>
                         <div class="set-row-desc">مدة الاحتفاظ بالنسخ الاحتياطية</div>
                     </div>
-                    <select class="set-select">
-                        <option>7 أيام</option>
-                        <option selected>30 يوم</option>
-                        <option>90 يوم</option>
-                        <option>سنة</option>
+                    <select class="set-select" id="retentionSelect">
+                        <option value="7">7 أيام</option>
+                        <option value="30" selected>30 يوم</option>
+                        <option value="90">90 يوم</option>
+                        <option value="365">سنة</option>
                     </select>
                 </div>
                 <div class="set-row">
@@ -484,7 +514,7 @@
                         <div class="set-row-label">تسجيل النشاط</div>
                         <div class="set-row-desc">تتبع جميع إجراءات المستخدمين</div>
                     </div>
-                    <div class="set-toggle on" onclick="this.classList.toggle('on')"></div>
+                    <div class="set-toggle on" id="activityLogToggle"></div>
                 </div>
             </div>
 
@@ -494,9 +524,9 @@
                 <div class="set-row">
                     <div class="set-row-info">
                         <div class="set-row-label">Webhooks</div>
-                        <div class="set-row-desc">3 webhooks نشطة</div>
+                        <div class="set-row-desc" id="webhooksCount">3 webhooks نشطة</div>
                     </div>
-                    <a href="/webhooks.html"
+                    <a href="#" id="webhooksLink"
                         style="color:var(--primary);font-size:12px;font-weight:600;text-decoration:none">إدارة →</a>
                 </div>
                 <div class="set-row">
@@ -504,7 +534,7 @@
                         <div class="set-row-label">API Keys</div>
                         <div class="set-row-desc">مفاتيح الوصول للتكامل الخارجي</div>
                     </div>
-                    <a href="/api-docs.html"
+                    <a href="#" id="apiKeysLink"
                         style="color:var(--primary);font-size:12px;font-weight:600;text-decoration:none">التوثيق →</a>
                 </div>
                 <div class="set-row">
@@ -512,7 +542,7 @@
                         <div class="set-row-label">PWA</div>
                         <div class="set-row-desc">التطبيق كتطبيق هاتف</div>
                     </div>
-                    <div class="set-toggle on" onclick="this.classList.toggle('on')"></div>
+                    <div class="set-toggle on" id="pwaToggle"></div>
                 </div>
             </div>
 
@@ -525,142 +555,396 @@
                         <div class="set-row-label">تصدير البيانات</div>
                         <div class="set-row-desc">تحميل جميع بياناتك بصيغة JSON</div>
                     </div>
-                    <button class="set-danger-btn"><i class="bi bi-download"></i> تصدير</button>
+                    <button class="set-danger-btn" id="exportDataBtn"><i class="bi bi-download"></i> تصدير</button>
                 </div>
                 <div class="set-row">
                     <div class="set-row-info">
                         <div class="set-row-label">إعادة ضبط المصنع</div>
                         <div class="set-row-desc">حذف جميع البيانات والعودة للإعدادات الافتراضية</div>
                     </div>
-                    <button class="set-danger-btn"><i class="bi bi-trash"></i> إعادة ضبط</button>
+                    <button class="set-danger-btn" id="resetFactoryBtn"><i class="bi bi-trash"></i> إعادة ضبط</button>
                 </div>
             </div>
 
             <div class="set-save">
-                <button class="set-btn set-btn-cancel">إلغاء</button>
-                <button class="set-btn set-btn-save" onclick="showSaveMsg()"><i class="bi bi-check-lg"></i> حفظ
+                <button class="set-btn set-btn-cancel" id="cancelBtn">إلغاء</button>
+                <button class="set-btn set-btn-save" id="saveAllSettingsBtn"><i class="bi bi-check-lg"></i> حفظ
                     الإعدادات</button>
             </div>
         </div>
     </div>
 
-    <script src="/assets/js/api.js"></script>
-    <script src="/assets/js/sidebar.js"></script>
-    <script src="/assets/js/ai-advisor.js"></script>
-    <script src="/assets/js/achievements.js"></script>
-    <script src="/assets/js/notifications.js"></script>
+    <!-- Toast message -->
+    <div id="toastMessage" class="toast-message"></div>
+
     <script>
-        const token = localStorage.getItem('token');
-        if (!token) location.href = '/login.html';
-
-        const colors = [
-            { color: '#667eea', name: 'أزرق بنفسجي' },
-            { color: '#ef4444', name: 'أحمر' },
-            { color: '#22c55e', name: 'أخضر' },
-            { color: '#f97316', name: 'برتقالي' },
-            { color: '#8b5cf6', name: 'بنفسجي' },
-            { color: '#ec4899', name: 'وردي' },
-            { color: '#14b8a6', name: 'تيل' },
-            { color: '#38bdf8', name: 'سماوي' },
-        ];
-
-        document.getElementById('colorPicker').innerHTML = colors.map((c, i) =>
-            `<div class="set-color ${i === 0 ? 'active' : ''}" style="background:${c.color}" title="${c.name}" onclick="selectColor(this)"></div>`
-        ).join('');
-
-        function selectColor(el) {
-            document.querySelectorAll('.set-color').forEach(c => c.classList.remove('active'));
-            el.classList.add('active');
-        }
-
-        function showSaveMsg() {
-            const btn = document.querySelector('.set-save .set-btn-save');
-            btn.innerHTML = '<i class="bi bi-check-circle"></i> تم الحفظ!';
-            btn.style.background = 'var(--green)';
-            setTimeout(() => {
-                btn.innerHTML = '<i class="bi bi-check-lg"></i> حفظ الإعدادات';
-                btn.style.background = '';
-            }, 2000);
-        }
-
-        // === تحميل بيانات الحساب ===
-        let userData = null;
-        try { userData = JSON.parse(localStorage.getItem('user')); } catch (e) { }
-
-        if (userData) {
-            document.getElementById('userName').value = userData.name || '';
-            document.getElementById('userEmail').textContent = userData.email || '';
-
-            const roleMap = { OWNER: 'مالك', ADMIN: 'مدير', EDITOR: 'محرر', VIEWER: 'مشاهد', SUPER_ADMIN: 'مدير النظام' };
-            const roleLabel = roleMap[userData.systemRole] || roleMap[userData.role] || userData.role || '';
-            document.getElementById('userRole').textContent = roleLabel;
-
-            const entityName = userData.entity?.legalName || userData.entity?.displayName || '';
-            document.getElementById('entityName').textContent = entityName || 'غير محدد';
-
-            const companyName = userData.entity?.company?.nameAr || userData.entity?.company?.nameEn || '';
-            document.getElementById('companyName').value = companyName;
-            document.getElementById('orgNameInput').value = companyName || entityName || 'ستارتكس';
-
-            // إخفاء زر تغيير الشركة إذا ما كان أدمن/مالك
-            const canEdit = ['OWNER', 'ADMIN'].includes(userData.role) || userData.systemRole === 'SUPER_ADMIN';
-            if (!canEdit) {
-                document.getElementById('companyName').disabled = true;
-                document.getElementById('saveCompanyBtn').style.display = 'none';
-            }
-        }
-
-        // === حفظ اسم الشركة ===
-        async function saveCompanyName() {
-            const companyId = userData?.entity?.company?.id || userData?.entity?.companyId || null;
-            const entityId = userData?.entity?.id || null;
-            const nameAr = document.getElementById('companyName').value.trim();
-
-            if (!nameAr) {
-                alert('الرجاء إدخال اسم الشركة');
-                return;
-            }
-            if (!companyId && !entityId) {
-                alert('لا يوجد كيان مرتبط بحسابك');
+        (function () {
+            // --- الإعدادات الأولية ---
+            const token = localStorage.getItem('token');
+            if (!token) {
+                sessionStorage.setItem('stratix_return_url', location.pathname + location.search);
+                location.href = '/login?from=restore';
                 return;
             }
 
-            const btn = document.getElementById('saveCompanyBtn');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> جاري الحفظ...';
+            // عناصر toast
+            const toast = document.getElementById('toastMessage');
 
-            try {
-                const body = { nameAr, nameEn: nameAr };
-                if (companyId) body.companyId = companyId;
-                else body.entityId = entityId;
+            // دالة عرض الرسائل
+            function showToast(message, type = 'success', duration = 3000) {
+                toast.textContent = message;
+                toast.className = `toast-message show toast-${type}`;
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, duration);
+            }
 
-                const res = await fetch('/api/auth/company', {
-                    method: 'PATCH',
-                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
+            // --- تخزين اللقطة الأولى للإعدادات (للاستخدام في زر الإلغاء) ---
+            let initialSettingsSnapshot = {};
+
+            // --- دالة لجلب البيانات من API مع الرجوع إلى localStorage ---
+            async function fetchUserData() {
+                try {
+                    const response = await fetch('/api/auth/me', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (!response.ok) throw new Error('فشل في جلب البيانات');
+                    const userData = await response.json();
+                    localStorage.setItem('user', JSON.stringify(userData));
+                    return userData;
+                } catch (error) {
+                    console.warn('استخدام البيانات المخزنة محلياً:', error);
+                    const cached = localStorage.getItem('user');
+                    return cached ? JSON.parse(cached) : null;
+                }
+            }
+
+            // متغير لحفظ بيانات المستخدم
+            let userData = null;
+
+            // --- تحميل البيانات وعرضها ---
+            async function loadUserData() {
+                userData = await fetchUserData();
+                if (!userData) {
+                    showToast('لم يتم العثور على بيانات المستخدم', 'error');
+                    return;
+                }
+
+                // تعبئة الحقول
+                document.getElementById('userName').value = userData.name || '';
+                document.getElementById('userEmail').textContent = userData.email || '';
+
+                const roleMap = { OWNER: 'مالك', ADMIN: 'مدير', EDITOR: 'محرر', VIEWER: 'مشاهد', SUPER_ADMIN: 'مدير النظام' };
+                const roleLabel = roleMap[userData.systemRole] || roleMap[userData.role] || userData.role || '';
+                document.getElementById('userRole').textContent = roleLabel;
+
+                const entityName = userData.entity?.legalName || userData.entity?.displayName || '';
+                document.getElementById('entityName').textContent = entityName || 'غير محدد';
+
+                const companyName = userData.entity?.company?.nameAr || userData.entity?.company?.nameEn || '';
+                document.getElementById('companyName').value = companyName;
+                document.getElementById('orgNameInput').value = companyName || entityName || 'ستارتكس';
+
+                // التحقق من صلاحية تعديل اسم الشركة
+                const canEdit = ['OWNER', 'ADMIN'].includes(userData.role) || userData.systemRole === 'SUPER_ADMIN';
+                const companyInput = document.getElementById('companyName');
+                const saveCompanyBtn = document.getElementById('saveCompanyBtn');
+                if (!canEdit) {
+                    companyInput.disabled = true;
+                    saveCompanyBtn.style.display = 'none';
+                } else {
+                    companyInput.disabled = false;
+                    saveCompanyBtn.style.display = 'inline-flex';
+                }
+
+                // تحميل الإعدادات من localStorage وأخذ لقطة
+                loadSettingsFromStorage();
+                takeSettingsSnapshot(); // بعد التحميل، نخزن اللقطة
+            }
+
+            // --- أخذ لقطة من الإعدادات الحالية (لزر الإلغاء) ---
+            function takeSettingsSnapshot() {
+                initialSettingsSnapshot = {
+                    orgName: document.getElementById('orgNameInput').value,
+                    language: document.getElementById('languageSelect').value,
+                    timezone: document.getElementById('timezoneSelect').value,
+                    fiscalYear: document.getElementById('fiscalYearSelect').value,
+                    theme: document.getElementById('themeSelect').value,
+                    miniSidebar: document.getElementById('miniSidebarToggle').classList.contains('on'),
+                    animations: document.getElementById('animationsToggle').classList.contains('on'),
+                    browserNotifications: document.getElementById('browserNotificationsToggle').classList.contains('on'),
+                    emailNotifications: document.getElementById('emailNotificationsToggle').classList.contains('on'),
+                    riskAlerts: document.getElementById('riskAlertsToggle').classList.contains('on'),
+                    performanceAlerts: document.getElementById('performanceAlertsToggle').classList.contains('on'),
+                    notificationSound: document.getElementById('notificationSoundToggle').classList.contains('on'),
+                    autoBackup: document.getElementById('autoBackupToggle').classList.contains('on'),
+                    retention: document.getElementById('retentionSelect').value,
+                    activityLog: document.getElementById('activityLogToggle').classList.contains('on'),
+                    pwa: document.getElementById('pwaToggle').classList.contains('on')
+                };
+            }
+
+            // --- استعادة الإعدادات من اللقطة (زر الإلغاء) ---
+            function restoreSettingsFromSnapshot() {
+                const s = initialSettingsSnapshot;
+                document.getElementById('orgNameInput').value = s.orgName || '';
+                document.getElementById('languageSelect').value = s.language || 'ar';
+                document.getElementById('timezoneSelect').value = s.timezone || 'Asia/Riyadh';
+                document.getElementById('fiscalYearSelect').value = s.fiscalYear || '1';
+                document.getElementById('themeSelect').value = s.theme || 'dark';
+
+                document.getElementById('miniSidebarToggle').className = `set-toggle ${s.miniSidebar ? 'on' : ''}`;
+                document.getElementById('animationsToggle').className = `set-toggle ${s.animations !== false ? 'on' : ''}`;
+                document.getElementById('browserNotificationsToggle').className = `set-toggle ${s.browserNotifications !== false ? 'on' : ''}`;
+                document.getElementById('emailNotificationsToggle').className = `set-toggle ${s.emailNotifications !== false ? 'on' : ''}`;
+                document.getElementById('riskAlertsToggle').className = `set-toggle ${s.riskAlerts !== false ? 'on' : ''}`;
+                document.getElementById('performanceAlertsToggle').className = `set-toggle ${s.performanceAlerts !== false ? 'on' : ''}`;
+                document.getElementById('notificationSoundToggle').className = `set-toggle ${s.notificationSound ? 'on' : ''}`;
+                document.getElementById('autoBackupToggle').className = `set-toggle ${s.autoBackup !== false ? 'on' : ''}`;
+                document.getElementById('retentionSelect').value = s.retention || '30';
+                document.getElementById('activityLogToggle').className = `set-toggle ${s.activityLog !== false ? 'on' : ''}`;
+                document.getElementById('pwaToggle').className = `set-toggle ${s.pwa ? 'on' : ''}`;
+
+                // استعادة اللون الرئيسي المحفوظ (إذا كان موجوداً في localStorage)
+                const savedColor = localStorage.getItem('primaryColor');
+                if (savedColor) {
+                    const colorEl = Array.from(document.querySelectorAll('.set-color')).find(el => el.dataset.color === savedColor);
+                    if (colorEl) {
+                        document.querySelectorAll('.set-color').forEach(c => c.classList.remove('active'));
+                        colorEl.classList.add('active');
+                        document.documentElement.style.setProperty('--primary', savedColor);
+                    }
+                }
+            }
+
+            // --- تحميل الإعدادات من localStorage وتطبيقها ---
+            function loadSettingsFromStorage() {
+                const settings = JSON.parse(localStorage.getItem('appSettings')) || {};
+
+                document.getElementById('orgNameInput').value = settings.orgName || document.getElementById('orgNameInput').value;
+                document.getElementById('languageSelect').value = settings.language || 'ar';
+                document.getElementById('timezoneSelect').value = settings.timezone || 'Asia/Riyadh';
+                document.getElementById('fiscalYearSelect').value = settings.fiscalYear || '1';
+                document.getElementById('themeSelect').value = settings.theme || 'dark';
+
+                document.getElementById('miniSidebarToggle').className = `set-toggle ${settings.miniSidebar ? 'on' : ''}`;
+                document.getElementById('animationsToggle').className = `set-toggle ${settings.animations !== false ? 'on' : ''}`;
+                document.getElementById('browserNotificationsToggle').className = `set-toggle ${settings.browserNotifications !== false ? 'on' : ''}`;
+                document.getElementById('emailNotificationsToggle').className = `set-toggle ${settings.emailNotifications !== false ? 'on' : ''}`;
+                document.getElementById('riskAlertsToggle').className = `set-toggle ${settings.riskAlerts !== false ? 'on' : ''}`;
+                document.getElementById('performanceAlertsToggle').className = `set-toggle ${settings.performanceAlerts !== false ? 'on' : ''}`;
+                document.getElementById('notificationSoundToggle').className = `set-toggle ${settings.notificationSound ? 'on' : ''}`;
+                document.getElementById('autoBackupToggle').className = `set-toggle ${settings.autoBackup !== false ? 'on' : ''}`;
+                document.getElementById('retentionSelect').value = settings.retention || '30';
+                document.getElementById('activityLogToggle').className = `set-toggle ${settings.activityLog !== false ? 'on' : ''}`;
+                document.getElementById('pwaToggle').className = `set-toggle ${settings.pwa ? 'on' : ''}`;
+
+                // استعادة اللون الرئيسي
+                const savedColor = localStorage.getItem('primaryColor');
+                if (savedColor) {
+                    document.documentElement.style.setProperty('--primary', savedColor);
+                }
+            }
+
+            // --- حفظ الإعدادات في localStorage فقط (بدون محاولة خادم) ---
+            function saveSettingsToStorage() {
+                const settings = {
+                    orgName: document.getElementById('orgNameInput').value,
+                    language: document.getElementById('languageSelect').value,
+                    timezone: document.getElementById('timezoneSelect').value,
+                    fiscalYear: document.getElementById('fiscalYearSelect').value,
+                    theme: document.getElementById('themeSelect').value,
+                    miniSidebar: document.getElementById('miniSidebarToggle').classList.contains('on'),
+                    animations: document.getElementById('animationsToggle').classList.contains('on'),
+                    browserNotifications: document.getElementById('browserNotificationsToggle').classList.contains('on'),
+                    emailNotifications: document.getElementById('emailNotificationsToggle').classList.contains('on'),
+                    riskAlerts: document.getElementById('riskAlertsToggle').classList.contains('on'),
+                    performanceAlerts: document.getElementById('performanceAlertsToggle').classList.contains('on'),
+                    notificationSound: document.getElementById('notificationSoundToggle').classList.contains('on'),
+                    autoBackup: document.getElementById('autoBackupToggle').classList.contains('on'),
+                    retention: document.getElementById('retentionSelect').value,
+                    activityLog: document.getElementById('activityLogToggle').classList.contains('on'),
+                    pwa: document.getElementById('pwaToggle').classList.contains('on')
+                };
+                localStorage.setItem('appSettings', JSON.stringify(settings));
+
+                // حفظ اللون الرئيسي
+                const activeColor = document.querySelector('.set-color.active');
+                if (activeColor) {
+                    localStorage.setItem('primaryColor', activeColor.dataset.color);
+                }
+
+                return settings;
+            }
+
+            // --- دالة حفظ جميع الإعدادات (محلياً فقط) ---
+            function saveAllSettings() {
+                saveSettingsToStorage();
+                // تحديث اللقطة بعد الحفظ لتعكس الحالة الجديدة
+                takeSettingsSnapshot();
+                showToast('✅ تم حفظ الإعدادات في المتصفح', 'success');
+            }
+
+            // --- دالة حفظ اسم الشركة (تحديث على الخادم) ---
+            async function saveCompanyName() {
+                const companyId = userData?.entity?.company?.id || userData?.entity?.companyId || null;
+                const entityId = userData?.entity?.id || null;
+                const nameAr = document.getElementById('companyName').value.trim();
+
+                if (!nameAr) {
+                    showToast('الرجاء إدخال اسم الشركة', 'error');
+                    return;
+                }
+                if (!companyId && !entityId) {
+                    showToast('لا يوجد كيان مرتبط بحسابك', 'error');
+                    return;
+                }
+
+                const btn = document.getElementById('saveCompanyBtn');
+                const originalText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="bi bi-hourglass-split"></i> جاري الحفظ...';
+
+                try {
+                    const body = { nameAr, nameEn: nameAr };
+                    if (companyId) body.companyId = companyId;
+                    else body.entityId = entityId;
+
+                    const res = await fetch('/api/auth/company', {
+                        method: 'PATCH',
+                        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || 'فشل التحديث');
+
+                    // تحديث localStorage
+                    if (!userData.entity) userData.entity = {};
+                    userData.entity.company = data.company;
+                    userData.entity.companyId = data.company.id;
+                    localStorage.setItem('user', JSON.stringify(userData));
+
+                    // تحديث الحقول الأخرى
+                    document.getElementById('orgNameInput').value = nameAr;
+
+                    btn.innerHTML = '<i class="bi bi-check-circle"></i> تم الحفظ!';
+                    btn.style.background = 'var(--green)';
+                    showToast('تم تحديث اسم الشركة على الخادم', 'success');
+
+                    setTimeout(() => {
+                        btn.innerHTML = '<i class="bi bi-check-lg"></i> حفظ';
+                        btn.style.background = '';
+                        btn.disabled = false;
+                    }, 2000);
+                } catch (err) {
+                    showToast(err.message, 'error');
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            }
+
+            // --- دوال تفعيل toggle ---
+            function setupToggles() {
+                document.querySelectorAll('.set-toggle').forEach(toggle => {
+                    toggle.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        this.classList.toggle('on');
+                        // لا نرسل أي شيء فورياً
+                    });
+                });
+            }
+
+            // --- منتقي الألوان ---
+            function setupColorPicker() {
+                const colors = [
+                    { color: '#667eea', name: 'أزرق بنفسجي' },
+                    { color: '#ef4444', name: 'أحمر' },
+                    { color: '#22c55e', name: 'أخضر' },
+                    { color: '#f97316', name: 'برتقالي' },
+                    { color: '#8b5cf6', name: 'بنفسجي' },
+                    { color: '#ec4899', name: 'وردي' },
+                    { color: '#14b8a6', name: 'تيل' },
+                    { color: '#38bdf8', name: 'سماوي' },
+                ];
+
+                const container = document.getElementById('colorPicker');
+                container.innerHTML = colors.map((c, i) =>
+                    `<div class="set-color ${i === 0 ? 'active' : ''}" style="background:${c.color}" title="${c.name}" data-color="${c.color}"></div>`
+                ).join('');
+
+                container.querySelectorAll('.set-color').forEach(el => {
+                    el.addEventListener('click', function () {
+                        container.querySelectorAll('.set-color').forEach(c => c.classList.remove('active'));
+                        this.classList.add('active');
+                        const selectedColor = this.dataset.color;
+                        localStorage.setItem('primaryColor', selectedColor);
+                        document.documentElement.style.setProperty('--primary', selectedColor);
+                    });
                 });
 
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error || 'فشل التحديث');
-
-                // تحديث localStorage
-                if (!userData.entity) userData.entity = {};
-                userData.entity.company = data.company;
-                userData.entity.companyId = data.company.id;
-                localStorage.setItem('user', JSON.stringify(userData));
-
-                btn.innerHTML = '<i class="bi bi-check-circle"></i> تم الحفظ!';
-                btn.style.background = 'var(--green)';
-                document.getElementById('orgNameInput').value = nameAr;
-
-                // تحديث الـ sidebar فوراً
-                setTimeout(() => location.reload(), 800);
-            } catch (err) {
-                alert(err.message);
-                btn.innerHTML = '<i class="bi bi-check-lg"></i> حفظ';
-                btn.disabled = false;
+                // استعادة اللون المحفوظ
+                const savedColor = localStorage.getItem('primaryColor');
+                if (savedColor) {
+                    const activeEl = Array.from(container.querySelectorAll('.set-color')).find(el => el.dataset.color === savedColor);
+                    if (activeEl) {
+                        container.querySelectorAll('.set-color').forEach(c => c.classList.remove('active'));
+                        activeEl.classList.add('active');
+                        document.documentElement.style.setProperty('--primary', savedColor);
+                    }
+                }
             }
-        }
+
+            // --- أحداث الأزرار الأخرى ---
+            function setupOtherButtons() {
+                // تصدير البيانات
+                document.getElementById('exportDataBtn').addEventListener('click', function () {
+                    showToast('📥 سيتم تحميل البيانات قريباً', 'success');
+                });
+
+                // إعادة ضبط المصنع (محلي فقط)
+                document.getElementById('resetFactoryBtn').addEventListener('click', function () {
+                    if (confirm('⚠️ هل أنت متأكد؟ سيتم مسح جميع الإعدادات المحلية وإعادة تحميل الصفحة. (لن تتأثر بيانات الخادم)')) {
+                        localStorage.removeItem('appSettings');
+                        localStorage.removeItem('primaryColor');
+                        showToast('🔄 تم إعادة ضبط الإعدادات المحلية', 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    }
+                });
+
+                // إلغاء (استعادة اللقطة الأولى)
+                document.getElementById('cancelBtn').addEventListener('click', function () {
+                    restoreSettingsFromSnapshot();
+                    showToast('تم إلغاء التغييرات', 'success');
+                });
+
+                // حفظ الكل (محلي)
+                document.getElementById('saveAllSettingsBtn').addEventListener('click', saveAllSettings);
+
+                // حفظ الشركة
+                document.getElementById('saveCompanyBtn').addEventListener('click', saveCompanyName);
+
+                // روابط التكامل (تجريبية)
+                document.getElementById('webhooksLink').addEventListener('click', function (e) {
+                    e.preventDefault();
+                    showToast('سيتم توجيهك إلى صفحة Webhooks', 'success');
+                });
+                document.getElementById('apiKeysLink').addEventListener('click', function (e) {
+                    e.preventDefault();
+                    showToast('سيتم توجيهك إلى صفحة API Keys', 'success');
+                });
+            }
+
+            // --- تهيئة الصفحة ---
+            async function init() {
+                await loadUserData();
+                setupToggles();
+                setupColorPicker();
+                setupOtherButtons();
+            }
+
+            init();
+        })();
     </script>
 </body>
 

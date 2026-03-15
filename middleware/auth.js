@@ -1,7 +1,26 @@
 const jwt = require('jsonwebtoken');
 
 const verifyToken = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1] || req.query.token;
+  let token = null;
+
+  // 🔒 الأولوية 1: HttpOnly Cookie (المصدر الآمن الأساسي)
+  // نقرأ الكوكي أولاً — حتى لو الصفحة القديمة أرسلت Authorization header وهمي
+  if (req.cookies && req.cookies.token) {
+    token = req.cookies.token;
+  }
+
+  // 🔒 الأولوية 2: قراءة يدوية من cookie header (fallback لو cookie-parser مش مفعّل)
+  if (!token && req.headers.cookie) {
+    try {
+      const cookies = Object.fromEntries(req.headers.cookie.split('; ').map(c => c.split('=')));
+      token = cookies.token;
+    } catch (e) { /* malformed cookie header */ }
+  }
+
+  // 🔒 الأولوية 3: Authorization header (legacy — للتوافق مع الصفحات القديمة)
+  if (!token) {
+    token = req.headers.authorization?.split(' ')[1] || req.query.token;
+  }
 
   if (!token) {
     return res.status(401).json({ message: 'No token provided' });

@@ -6,22 +6,83 @@
     'use strict';
 
     // === Token Management ===
+    // ⚠️ DEPRECATED: التوكن الآن في HttpOnly Cookie — لا يُقرأ من الفرونتند
+    // هذه الدوال موجودة فقط للتوافق مع الصفحات القديمة
     function getToken() {
-        return localStorage.getItem('token');
+        return localStorage.getItem('token') || '';
     }
 
     function setToken(token) {
-        localStorage.setItem('token', token);
+        // 🔒 لا نخزن التوكن الحقيقي — العلامة فقط لتمرير فحوصات if (!token)
+        if (token) localStorage.setItem('token', 'httponly-managed');
     }
 
     function clearToken() {
         localStorage.removeItem('token');
         localStorage.removeItem('selectedVersionId');
+        // مسح الكوكي من السيرفر
+        fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).catch(() => { });
     }
 
-    function requireAuth() {
-        if (!getToken()) {
-            window.location.href = '/login';
+    // === Authentication via /api/user/me ===
+    let _cachedUser = null;
+    let _userFetchPromise = null;
+
+    /**
+     * جلب بيانات المستخدم الحالي من السيرفر (عبر HttpOnly Cookie)
+     * النتيجة تُخزّن في الذاكرة — لا تُخزّن في localStorage
+     * @param {boolean} force - إعادة الجلب حتى لو موجودة في الكاش
+     * @returns {Promise<object|null>} بيانات المستخدم أو null
+     */
+    async function getCurrentUser(force = false) {
+        if (_cachedUser && !force) return _cachedUser;
+        // تجنب طلبات متزامنة متعددة لنفس الـ endpoint
+        if (_userFetchPromise && !force) return _userFetchPromise;
+
+        _userFetchPromise = (async () => {
+            try {
+                const res = await fetch('/api/user/me', { credentials: 'same-origin' });
+                if (res.status === 401) {
+                    _cachedUser = null;
+                    return null;
+                }
+                if (res.status === 403) {
+                    // حساب معلّق
+                    const errData = await res.json().catch(() => ({}));
+                    if (errData.suspended) {
+                        localStorage.setItem('suspendReason', errData.reason || '');
+                        window.location.href = '/account-suspended.html';
+                        return null;
+                    }
+                }
+                if (!res.ok) {
+                    _cachedUser = null;
+                    return null;
+                }
+                _cachedUser = await res.json();
+                return _cachedUser;
+            } catch (err) {
+                console.warn('[getCurrentUser] Network error:', err.message);
+                _cachedUser = null;
+                return null;
+            } finally {
+                _userFetchPromise = null;
+            }
+        })();
+
+        return _userFetchPromise;
+    }
+
+    /**
+     * التحقق من أن المستخدم مسجل الدخول
+     * لو غير مسجل → يتم توجيهه لصفحة تسجيل الدخول
+     * @returns {Promise<boolean>} true لو مسجل، false لو تم التوجيه
+     */
+    async function requireAuth() {
+        const user = await getCurrentUser();
+        if (!user) {
+            sessionStorage.setItem('stratix_return_url', location.pathname + location.search);
+            window.location.href = '/login?from=restore';
             return false;
         }
         return true;
@@ -30,10 +91,6 @@
     // === API Call ===
     async function api(url, opts = {}) {
         const token = getToken();
-        if (!token) {
-            window.location.href = '/login';
-            return;
-        }
 
         // Offline check
         if (!navigator.onLine) {
@@ -47,6 +104,9 @@
         if (userData.systemRole === 'SUPER_ADMIN' && userData.entity?.id) {
             extraHeaders['X-Entity-Id'] = userData.entity.id;
         }
+        // 🔒 لا نرسل Authorization header — الكوكي HttpOnly يُرسل تلقائياً
+        // نبقي كـ fallback فقط للصفحات التي لا تستخدم api()
+        // if (token) extraHeaders['Authorization'] = `Bearer ${token}`;
 
         const maxRetries = opts._noRetry ? 0 : 2;
         let lastError = null;
@@ -55,8 +115,8 @@
             try {
                 const res = await fetch(url, {
                     ...opts,
+                    credentials: 'same-origin', // 🔒 إرسال HttpOnly Cookie تلقائياً
                     headers: {
-                        'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json',
                         ...extraHeaders,
                         ...opts.headers
@@ -65,7 +125,7 @@
 
                 if (res.status === 401) {
                     clearToken();
-                    window.location.href = '/login';
+                    window.location.href = '/login.html';
                     return;
                 }
 
@@ -371,12 +431,169 @@
         document.body.classList.add('viewer-badge');
     }
 
+    // === Global Fallback Routing (حارس البوابات) ===
+    const STRATEGIC_PAGES = [
+        '/swot.html', '/swot',
+        '/tows.html', '/tows',
+        '/directions.html', '/directions',
+        '/objectives.html', '/objectives',
+        '/kpis.html', '/kpis',
+        '/initiatives.html', '/initiatives',
+        '/risk-map.html', '/risk-map',
+        '/strategy-map.html', '/strategy-map',
+        '/action-plan.html', '/action-plan'
+    ];
+
+    async function enforceStrategicContext() {
+        const path = window.location.pathname;
+        const needsContext = STRATEGIC_PAGES.some(p => path.endsWith(p));
+
+        // إذا كانت الصفحة تتطلب سياقاً استراتيجياً (versionId)
+        if (needsContext && getToken()) {
+            const vId = await ensureVersionId();
+            if (!vId) {
+                // إخفاء المحتوى فوراً لمنع الوميض وظهور أخطاء Console
+                const main = document.querySelector('.main-content');
+                if (main) main.style.opacity = '0';
+
+                showToast('⚠️ فقدنا سياق العمل أو لا يوجد إصدار نشط. جاري إعادتك للرئيسية...', 4000);
+                setTimeout(() => {
+                    const u = getUserData();
+                    window.location.href = u.userType === 'DEPT_MANAGER' ? '/dept-dashboard.html' : '/dashboard.html';
+                }, 2000);
+            }
+        }
+    }
+
+    // === Global Link Patcher (معترض الروابط الذكي) ===
+    function patchLinksOnFly() {
+        document.addEventListener('click', (e) => {
+            const u = getUserData();
+            // 🚨 حماية المالك والمستثمر من الاحتجاز داخل مسار الإدارة
+            if (u.userType !== 'DEPT_MANAGER') return;
+
+            const link = e.target.closest('a');
+            if (!link || !link.href || link.href.startsWith('javascript:')) return;
+
+            try {
+                const targetUrl = new URL(link.href, window.location.origin);
+                // تجاهل الروابط الخارجية
+                if (targetUrl.origin !== window.location.origin) return;
+
+                const currentParams = new URLSearchParams(window.location.search);
+                const dept = currentParams.get('dept');
+
+                if (dept) {
+                    const STRATEGIC_PAGES = [
+                        '/swot', '/tows', '/directions', '/objectives', '/kpis',
+                        '/initiatives', '/risk-map', '/strategy-map', '/action-plan',
+                        '/internal-env', '/dept-deep', '/dept-dashboard', '/intelligence',
+                        '/kpi-entries', '/tasks', '/auto-reports', '/choices', '/analysis'
+                    ];
+
+                    // إذا كانت الصفحة وجهة استراتيجية، احقن سياق الإدارة قبل الانتقال
+                    const needsDept = STRATEGIC_PAGES.some(p => targetUrl.pathname.includes(p));
+                    if (needsDept && !targetUrl.searchParams.has('dept')) {
+                        targetUrl.searchParams.set('dept', dept);
+                        link.href = targetUrl.toString();
+                    }
+                }
+            } catch (err) { /* ignore */ }
+        }, true); // Use capture phase to intercept early
+    }
+
+    // === Role & Context Banner (شريط الهوية السياقي) ===
+    function injectRoleContextBanner() {
+        const u = getUserData();
+        const urlParams = new URLSearchParams(window.location.search);
+        const deptParam = urlParams.get('dept');
+
+        const isOwner = u.role === 'OWNER' || u.role === 'ADMIN' || u.systemRole === 'SUPER_ADMIN';
+        const isDeptManager = u.userType === 'DEPT_MANAGER';
+
+        const DEPT_NAMES = {
+            'hr': 'الموارد البشرية', 'finance': 'المالية', 'marketing': 'التسويق',
+            'operations': 'العمليات', 'sales': 'المبيعات', 'it': 'تقنية المعلومات',
+            'cs': 'خدمة العملاء', 'compliance': 'الامتثال والحوكمة', 'quality': 'الجودة',
+            'projects': 'إدارة المشاريع', 'support': 'الخدمات المساندة'
+        };
+
+        let bannerHtml = '';
+        let bannerClass = '';
+
+        if (isOwner && deptParam) {
+            const dName = DEPT_NAMES[deptParam] || deptParam;
+            bannerHtml = `<i class="bi bi-shield-lock-fill"></i> <strong>صلاحية الإدارة العليا:</strong> أنت تتصفح وتدير بيانات قسم <strong>[${dName}]</strong> نيابة عنهم.`;
+            bannerClass = 'role-banner-owner';
+        } else if (isDeptManager) {
+            const myDept = DEPT_NAMES[deptParam || localStorage.getItem('stratix_v10_dept')] || 'إدارتك';
+            bannerHtml = `<i class="bi bi-person-badge-fill"></i> <strong>صلاحية مدير إدارة:</strong> أنت تتصفح ضمن المسار المخصص لـ <strong>[${myDept}]</strong>.`;
+            bannerClass = 'role-banner-dept';
+        } else {
+            return; // لا نعرض الشريط في الصفحات العامة للمالك
+        }
+
+        const banner = document.createElement('div');
+        banner.className = `stx-role-banner ${bannerClass}`;
+        banner.innerHTML = bannerHtml;
+
+        if (!document.getElementById('stxRoleBannerCSS')) {
+            const style = document.createElement('style');
+            style.id = 'stxRoleBannerCSS';
+            style.textContent = `
+                .stx-role-banner { padding: 10px 24px; font-size: 13px; display: flex; align-items: center; gap: 8px; z-index: 99; position: relative; font-family: 'Tajawal', sans-serif; }
+                .stx-role-banner strong { font-weight: 800; }
+                .role-banner-owner { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border-bottom: 1px solid rgba(56, 189, 248, 0.3); }
+                .role-banner-dept { background: rgba(167, 139, 250, 0.15); color: #c4b5fd; border-bottom: 1px solid rgba(167, 139, 250, 0.3); }
+                .stx-role-banner i { font-size: 16px; }
+            `;
+            document.head.appendChild(style);
+        }
+
+        const topNav = document.querySelector('.top-nav') || document.querySelector('header');
+        if (topNav && topNav.nextSibling) {
+            topNav.parentNode.insertBefore(banner, topNav.nextSibling);
+        } else {
+            document.body.prepend(banner);
+        }
+    }
+
     // Auto-run when DOM is ready
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', enforceRoleUI);
+        document.addEventListener('DOMContentLoaded', () => { enforceRoleUI(); enforceStrategicContext(); patchLinksOnFly(); injectRoleContextBanner(); });
     } else {
-        enforceRoleUI();
+        enforceRoleUI(); enforceStrategicContext(); patchLinksOnFly(); injectRoleContextBanner();
     }
+
+    // === 🔒 XSS Prevention Helpers ===
+    function escapeHtml(str) {
+        if (str == null) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function escapeAttr(str) {
+        return escapeHtml(str);
+    }
+
+    /**
+     * 🔒 آمن: يضبط نص عنصر عبر textContent (لا innerHTML)
+     * @param {string} id - معرف العنصر
+     * @param {string} text - النص الآمن
+     */
+    function safeText(id, text) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text ?? '';
+    }
+
+    // 🔒 اختصارات عالمية لسهولة الاستخدام في كل الصفحات
+    window.esc = escapeHtml;
+    window.escA = escapeAttr;
+    window.safeText = safeText;
 
     // === Expose API ===
     window.StartixAPI = {
@@ -389,6 +606,7 @@
         setToken,
         clearToken,
         requireAuth,
+        getCurrentUser,
         getSelectedVersionId,
         setSelectedVersionId,
         ensureVersionId,
@@ -407,6 +625,11 @@
         isViewer,
         isDataEntry,
         enforceRoleUI,
+        enforceStrategicContext,
+        // 🔒 XSS helpers
+        escapeHtml,
+        escapeAttr,
+        safeText,
     };
 
     // Shortcut — backward compatible

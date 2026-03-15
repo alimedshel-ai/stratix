@@ -250,4 +250,130 @@ router.post('/backfill-codes', verifyToken, checkPermission('EDITOR'), async (re
     }
 });
 
+// ============ SYNC FROM DEPT-DEEP ============
+// POST /api/analysis/sync-from-dept
+// ينقل نقاط القوة والضعف المكتشفة في dept-deep إلى AnalysisPoint
+// يستخدم Upsert (حذف القديم + إدراج الجديد) لمنع التكرار
+
+router.post('/sync-from-dept', verifyToken, async (req, res) => {
+    try {
+        const { assessmentId, departmentKey, departmentName, points } = req.body;
+
+        // ── Validation ──
+        if (!departmentKey || !Array.isArray(points)) {
+            return res.status(400).json({
+                error: 'departmentKey و points مطلوبة',
+                hint: '{ departmentKey: "sales", departmentName: "المبيعات", points: [{ type: "STRENGTH", title: "..." }] }'
+            });
+        }
+
+        const validTypes = ['STRENGTH', 'WEAKNESS', 'OPPORTUNITY', 'THREAT'];
+        const validPoints = points.filter(p =>
+            p.title && validTypes.includes(p.type)
+        );
+
+        if (validPoints.length === 0) {
+            return res.status(400).json({ error: 'لا توجد نقاط صالحة (type + title مطلوبة)' });
+        }
+
+        // ── Resolve Assessment ──
+        // إذا لم يُرسل assessmentId، نبحث عن أول assessment للـ entity أو ننشئ واحد
+        let targetAssessmentId = assessmentId;
+        const entityId = req.user.activeEntityId;
+
+        if (!entityId) {
+            return res.status(400).json({ error: 'لا يوجد كيان نشط — سجّل دخول أو اختر كيان' });
+        }
+
+        if (!targetAssessmentId) {
+            // ابحث عن assessment موجود
+            let assessment = await prisma.assessment.findFirst({
+                where: { entityId },
+                orderBy: { createdAt: 'desc' }
+            });
+
+            // أنشئ واحد إذا ما لقينا
+            if (!assessment) {
+                assessment = await prisma.assessment.create({
+                    data: {
+                        entityId,
+                        title: 'تقييم الإدارات — تحليل عميق',
+                        description: 'تم إنشاؤه تلقائياً من الفحص العميق للإدارات',
+                        status: 'IN_PROGRESS'
+                    }
+                });
+                console.log(`✅ [sync-from-dept] أنشأنا Assessment جديد: ${assessment.id}`);
+            }
+
+            targetAssessmentId = assessment.id;
+        }
+
+        // ── Tag prefix for source tracking ──
+        const deptTag = `[dept-deep:${departmentKey}]`;
+        const deptLabel = departmentName || departmentKey;
+
+        // ── Transaction: Delete old + Insert new ──
+        const result = await prisma.$transaction(async (tx) => {
+
+            // 1. حذف النقاط القديمة من نفس الإدارة (Idempotency)
+            const deleted = await tx.analysisPoint.deleteMany({
+                where: {
+                    assessmentId: targetAssessmentId,
+                    title: { startsWith: deptTag }
+                }
+            });
+
+            // 2. حساب الترميز الحالي (S1, S2, W1, W2...) — نحسب من النقاط المتبقية
+            const typePrefix = { STRENGTH: 'S', WEAKNESS: 'W', OPPORTUNITY: 'O', THREAT: 'T' };
+            const existingCounts = {};
+            for (const type of validTypes) {
+                existingCounts[type] = await tx.analysisPoint.count({
+                    where: { assessmentId: targetAssessmentId, type }
+                });
+            }
+
+            // 3. إدراج النقاط الجديدة
+            const created = [];
+            for (const pt of validPoints) {
+                existingCounts[pt.type] = (existingCounts[pt.type] || 0) + 1;
+                const code = `${typePrefix[pt.type]}${existingCounts[pt.type]}`;
+
+                const point = await tx.analysisPoint.create({
+                    data: {
+                        assessmentId: targetAssessmentId,
+                        type: pt.type,
+                        code,
+                        title: `${deptTag} ${pt.title}`,
+                        description: pt.description || `مصدر: فحص ${deptLabel} العميق`,
+                        impact: pt.impact || 'MEDIUM'
+                    }
+                });
+                created.push({
+                    id: point.id,
+                    type: point.type,
+                    code: point.code,
+                    title: point.title
+                });
+            }
+
+            return { deleted: deleted.count, created };
+        });
+
+        console.log(`✅ [sync-from-dept] ${departmentKey}: حذف ${result.deleted} قديمة → أضاف ${result.created.length} جديدة`);
+
+        res.json({
+            success: true,
+            assessmentId: targetAssessmentId,
+            departmentKey,
+            deleted: result.deleted,
+            created: result.created.length,
+            points: result.created
+        });
+
+    } catch (error) {
+        console.error('❌ [sync-from-dept] Error:', error);
+        res.status(500).json({ error: 'فشل مزامنة بيانات الإدارة', details: error.message });
+    }
+});
+
 module.exports = router;

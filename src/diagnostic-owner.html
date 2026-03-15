@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس — تشخيص مشروعك</title>
+    <meta name="description" content="6 أسئلة سريعة لتحديد المسار الاستراتيجي المناسب لمشروعك">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <link href="/assets/css/diagnostic.css" rel="stylesheet">
+    <style>
+        .diag-q-hint {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.45);
+            margin-bottom: 14px;
+        }
+
+        .diag-options.multi-select .diag-option {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .diag-check {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: transparent;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+        }
+
+        .diag-option.selected .diag-check {
+            background: rgba(74, 222, 128, 0.18);
+            border-color: #4ade80;
+            color: #4ade80;
+        }
+
+        .diag-multi-notice {
+            display: none;
+            margin-bottom: 16px;
+            padding: 14px 18px;
+            border-radius: 14px;
+            font-size: 0.88rem;
+            text-align: center;
+            animation: fadeSlide 0.3s ease;
+        }
+
+        .diag-multi-notice.growth {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            color: #60a5fa;
+        }
+
+        .diag-multi-notice.comprehensive {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            color: #f59e0b;
+        }
+
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-8px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+    </style>
+</head>
+
+<body class="diagnostic-page">
+
+    <!-- الشعار -->
+    <div class="diag-header">
+        <a href="/" class="diag-logo">
+            <i class="bi bi-activity"></i> Startix
+        </a>
+        <div class="diag-subtitle">تشخيص مشروعك — 6 أسئلة سريعة</div>
+    </div>
+
+    <div class="diag-container narrow">
+
+        <!-- شريط التقدم -->
+        <div class="diag-progress" id="progressBar">
+            <div class="diag-progress-step active" id="prog-1"></div>
+            <div class="diag-progress-step" id="prog-2"></div>
+            <div class="diag-progress-step" id="prog-3"></div>
+            <div class="diag-progress-step" id="prog-4"></div>
+            <div class="diag-progress-step" id="prog-5"></div>
+            <div class="diag-progress-step" id="prog-6"></div>
+            <span class="diag-progress-label" id="progressLabel">1 / 6</span>
+        </div>
+
+        <!-- ═══ السؤال 1: القطاع ═══ -->
+        <div class="diag-question active" id="q1">
+            <div class="diag-q-label">السؤال 1 من 6</div>
+            <div class="diag-q-title">ما قطاع منشأتك؟</div>
+            <div class="diag-options">
+
+                <!-- ══ قطاع خاص ══ -->
+                <div class="diag-option" onclick="togglePrivateSubs(this)" id="privateSectorCard"
+                    style="flex-direction:column;align-items:stretch;">
+                    <div style="display:flex;align-items:center;gap:14px;">
+                        <div class="diag-option-icon" style="background:rgba(102,126,234,0.12); color:#667eea;">🏢</div>
+                        <div class="diag-option-text">
+                            <div class="diag-option-title">قطاع خاص</div>
+                            <div class="diag-option-desc">شركات ومؤسسات خاصة — ربحية</div>
+                        </div>
+                        <i class="bi bi-chevron-down" id="privateSectorChevron"
+                            style="margin-right:auto;color:#667eea;transition:transform 0.3s;font-size:18px;"></i>
+                    </div>
+                    <!-- التفريعات -->
+                    <div id="privateSubs"
+                        style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid rgba(102,126,234,0.15);">
+                        <div style="font-size:12px;color:#94a3b8;font-weight:600;margin-bottom:10px;padding-right:4px;">
+                            حدد نوع النشاط:</div>
+                        <div style="display:flex;flex-direction:column;gap:8px;">
+                            <div class="diag-sub-option"
+                                onclick="event.stopPropagation(); answer('activity', 'private_services', this)"
+                                style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;border:1px solid rgba(139,92,246,0.15);background:rgba(139,92,246,0.04);cursor:pointer;transition:all 0.3s;">
+                                <span style="font-size:20px;">💼</span>
+                                <div>
+                                    <div style="font-weight:700;font-size:14px;color:#1e293b;">خدمي</div>
+                                    <div style="font-size:11px;color:#94a3b8;">استشارات — خدمات مهنية — ضيافة — نقل —
+                                        صحة — تعليم</div>
+                                </div>
+                            </div>
+                            <div class="diag-sub-option"
+                                onclick="event.stopPropagation(); answer('activity', 'private_commercial', this)"
+                                style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;border:1px solid rgba(59,130,246,0.15);background:rgba(59,130,246,0.04);cursor:pointer;transition:all 0.3s;">
+                                <span style="font-size:20px;">🏪</span>
+                                <div>
+                                    <div style="font-weight:700;font-size:14px;color:#1e293b;">تجاري</div>
+                                    <div style="font-size:11px;color:#94a3b8;">بيع منتجات — استيراد وتصدير — متاجر —
+                                        تجزئة — تقنية</div>
+                                </div>
+                            </div>
+                            <div class="diag-sub-option"
+                                onclick="event.stopPropagation(); answer('activity', 'private_industrial', this)"
+                                style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;border:1px solid rgba(245,158,11,0.15);background:rgba(245,158,11,0.04);cursor:pointer;transition:all 0.3s;">
+                                <span style="font-size:20px;">🏭</span>
+                                <div>
+                                    <div style="font-weight:700;font-size:14px;color:#1e293b;">صناعي</div>
+                                    <div style="font-size:11px;color:#94a3b8;">تصنيع — إنتاج — تعبئة — مقاولات — بناء —
+                                        طاقة</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══ قطاع عام ══ -->
+                <div class="diag-option" onclick="answer('activity', 'public_sector', this)">
+                    <div class="diag-option-icon" style="background:rgba(16,185,129,0.12); color:#10b981;">🏛️</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">قطاع عام</div>
+                        <div class="diag-option-desc">جهات حكومية — هيئات — مؤسسات عامة</div>
+                    </div>
+                </div>
+
+                <!-- ══ قطاع مختلط ══ -->
+                <div class="diag-option" onclick="answer('activity', 'mixed_sector', this)">
+                    <div class="diag-option-icon" style="background:rgba(245,158,11,0.12); color:#f59e0b;">🤝</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">قطاع مختلط</div>
+                        <div class="diag-option-desc">شراكة بين القطاعين العام والخاص — شركات شبه حكومية</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function togglePrivateSubs(card) {
+                var subs = document.getElementById('privateSubs');
+                var chevron = document.getElementById('privateSectorChevron');
+                var isOpen = subs.style.display === 'block';
+
+                // إذا مفتوح أقفله
+                if (isOpen) {
+                    subs.style.display = 'none';
+                    chevron.style.transform = 'rotate(0deg)';
+                    card.classList.remove('selected');
+                } else {
+                    subs.style.display = 'block';
+                    chevron.style.transform = 'rotate(180deg)';
+                    card.classList.add('selected');
+                    card.style.borderColor = 'rgba(102,126,234,0.4)';
+                    card.style.background = 'rgba(102,126,234,0.06)';
+                }
+            }
+        </script>
+
+        <!-- ═══ السؤال 2: عمر المنظمة ═══ -->
+        <div class="diag-question" id="q2">
+            <div class="diag-q-label">السؤال 2 من 6</div>
+            <div class="diag-q-title">كم عمر مشروعك أو شركتك؟</div>
+            <div class="diag-options">
+                <div class="diag-option" onclick="answer('maturity', 'nascent', this)">
+                    <div class="diag-option-icon">🌱</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">ناشئة (أقل من سنتين)</div>
+                        <div class="diag-option-desc">بداية المشوار — نبني الأساس</div>
+                    </div>
+                </div>
+                <div class="diag-option" onclick="answer('maturity', 'growing', this)">
+                    <div class="diag-option-icon">📈</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">نامية (2 — 5 سنوات)</div>
+                        <div class="diag-option-desc">نمو ملحوظ — نحتاج هيكلة أفضل</div>
+                    </div>
+                </div>
+                <div class="diag-option" onclick="answer('maturity', 'mature', this)">
+                    <div class="diag-option-icon">🏢</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">ناضجة (أكثر من 5 سنوات)</div>
+                        <div class="diag-option-desc">شركة راسخة — نريد التجديد والريادة</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ السؤال 3: حجم الفريق ═══ -->
+        <div class="diag-question" id="q3">
+            <div class="diag-q-label">السؤال 3 من 6</div>
+            <div class="diag-q-title">كم عدد الموظفين حالياً؟</div>
+            <div class="diag-options">
+                <div class="diag-option" onclick="answer('size', '1-5', this)">
+                    <div class="diag-option-icon">👤</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">1 — 5 أشخاص</div>
+                        <div class="diag-option-desc">فريق صغير جداً — مرن وسريع</div>
+                    </div>
+                </div>
+                <div class="diag-option" onclick="answer('size', '6-30', this)">
+                    <div class="diag-option-icon">👥</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">6 — 30 شخص</div>
+                        <div class="diag-option-desc">فريق صغير — يبدأ بالتخصص</div>
+                    </div>
+                </div>
+                <div class="diag-option" onclick="answer('size', '31-200', this)">
+                    <div class="diag-option-icon">🏬</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">31 — 200 شخص</div>
+                        <div class="diag-option-desc">منظمة متوسطة — إدارات وأقسام</div>
+                    </div>
+                </div>
+                <div class="diag-option" onclick="answer('size', '200+', this)">
+                    <div class="diag-option-icon">🏢</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">أكثر من 200 شخص</div>
+                        <div class="diag-option-desc">منظمة كبيرة — متعددة الأقسام</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ السؤال 4: التحدي الأكبر (اختيار متعدد) ═══ -->
+        <div class="diag-question" id="q4">
+            <div class="diag-q-label">السؤال 4 من 6</div>
+            <div class="diag-q-title">ما أكبر تحدٍ تواجهه الآن؟</div>
+            <div class="diag-q-hint"><i class="bi bi-hand-index-thumb"></i> يمكنك اختيار أكثر من تحدي</div>
+
+            <!-- تنبيه التحديات المتعددة -->
+            <div class="diag-multi-notice" id="multiNotice">
+                <i class="bi bi-info-circle-fill"></i>
+                <span id="noticeText"></span>
+            </div>
+
+            <div class="diag-options multi-select">
+                <div class="diag-option" data-challenge="organizational" onclick="toggleChallenge(this)">
+                    <div class="diag-option-icon" style="background:rgba(240,147,251,0.12); color:#f093fb;">🌪️</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">فوضى تنظيمية</div>
+                        <div class="diag-option-desc">غياب هيكل واضح — تداخل مسؤوليات — قرارات عشوائية</div>
+                    </div>
+                    <div class="diag-check"><i class="bi bi-check-lg"></i></div>
+                </div>
+                <div class="diag-option" data-challenge="financial" onclick="toggleChallenge(this)">
+                    <div class="diag-option-icon" style="background:rgba(239,68,68,0.12); color:#ef4444;">💰</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">ضغط مالي</div>
+                        <div class="diag-option-desc">تدفقات نقدية ضعيفة — خسائر — ديون</div>
+                    </div>
+                    <div class="diag-check"><i class="bi bi-check-lg"></i></div>
+                </div>
+                <div class="diag-option" data-challenge="competitive" onclick="toggleChallenge(this)">
+                    <div class="diag-option-icon" style="background:rgba(16,185,129,0.12); color:#10b981;">🚀</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">ضعف تنافسي</div>
+                        <div class="diag-option-desc">المنافسين يتقدمون — صعوبة التميز — فقدان حصة سوقية</div>
+                    </div>
+                    <div class="diag-check"><i class="bi bi-check-lg"></i></div>
+                </div>
+                <div class="diag-option" data-challenge="operational" onclick="toggleChallenge(this)">
+                    <div class="diag-option-icon" style="background:rgba(107,114,128,0.12); color:#9ca3af;">⚙️</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">كفاءة تشغيلية منخفضة</div>
+                        <div class="diag-option-desc">هدر في الوقت والموارد — إجراءات معقدة — إنتاجية ضعيفة</div>
+                    </div>
+                    <div class="diag-check"><i class="bi bi-check-lg"></i></div>
+                </div>
+                <div class="diag-option" data-challenge="crisis" onclick="toggleChallenge(this)">
+                    <div class="diag-option-icon" style="background:rgba(185,28,28,0.12); color:#dc2626;">🛡️</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">أزمة أو تهديد</div>
+                        <div class="diag-option-desc">مشكلة طارئة تهدد استمرار العمل</div>
+                    </div>
+                    <div class="diag-check"><i class="bi bi-check-lg"></i></div>
+                </div>
+            </div>
+
+            <button class="diag-btn diag-btn-primary" id="challengeContinueBtn"
+                style="display:none; margin-top:20px; width:100%;" onclick="confirmChallenges()">
+                <i class="bi bi-arrow-left"></i> التالي
+            </button>
+        </div>
+
+        <!-- ═══ السؤال 5: الطموح ═══ -->
+        <div class="diag-question" id="q5">
+            <div class="diag-q-label">السؤال 5 من 6</div>
+            <div class="diag-q-title">ما هدفك الأساسي اليوم؟</div>
+            <div class="diag-options">
+                <div class="diag-option" onclick="answer('ambition', 'survive', this)">
+                    <div class="diag-option-icon">🆘</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">البقاء والاستقرار</div>
+                        <div class="diag-option-desc">تأمين الوضع الحالي أولاً</div>
+                    </div>
+                </div>
+                <div class="diag-option" onclick="answer('ambition', 'improve', this)">
+                    <div class="diag-option-icon">📊</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">التحسين والتطوير</div>
+                        <div class="diag-option-desc">تحسين ما هو موجود وزيادة الكفاءة</div>
+                    </div>
+                </div>
+                <div class="diag-option" onclick="answer('ambition', 'grow', this)">
+                    <div class="diag-option-icon">🚀</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">النمو والتوسع</div>
+                        <div class="diag-option-desc">دخول أسواق جديدة — منتجات جديدة</div>
+                    </div>
+                </div>
+                <div class="diag-option" onclick="answer('ambition', 'lead', this)">
+                    <div class="diag-option-icon">🏆</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">الريادة وقيادة السوق</div>
+                        <div class="diag-option-desc">أن نكون الأفضل في مجالنا</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ السؤال 6: مستوى التنظيم ═══ -->
+        <div class="diag-question" id="q6">
+            <div class="diag-q-label">السؤال 6 من 6</div>
+            <div class="diag-q-title">كيف يوصف التنظيم الحالي في شركتك؟</div>
+            <div class="diag-options">
+                <div class="diag-option" onclick="answer('organization', 'none', this)">
+                    <div class="diag-option-icon">📝</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">بدون تنظيم واضح</div>
+                        <div class="diag-option-desc">لا يوجد هيكل — كل شيء بالاجتهاد الشخصي</div>
+                    </div>
+                </div>
+                <div class="diag-option" onclick="answer('organization', 'basic', this)">
+                    <div class="diag-option-icon">📋</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">تنظيم أساسي</div>
+                        <div class="diag-option-desc">هيكل بسيط — بعض الإجراءات المكتوبة</div>
+                    </div>
+                </div>
+                <div class="diag-option" onclick="answer('organization', 'advanced', this)">
+                    <div class="diag-option-icon">🏗️</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">تنظيم متقدم</div>
+                        <div class="diag-option-desc">هيكل واضح — سياسات — أنظمة</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- زر الرجوع -->
+        <div class="diag-nav">
+            <button class="diag-btn diag-btn-ghost" id="backBtn" onclick="goBack()">
+                <i class="bi bi-arrow-right"></i> رجوع
+            </button>
+            <div></div>
+        </div>
+
+    </div>
+
+    <script src="/assets/js/diagnostic-engine.js"></script>
+    <script>
+        const answers = {};
+        let currentQ = 1;
+        const totalQ = 6;
+
+        function answer(key, value, el) {
+            // تسجيل الإجابة
+            answers[key] = value;
+
+            // Highlight
+            const parent = el.closest('.diag-question');
+            parent.querySelectorAll('.diag-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+
+            // تأخير قصير ثم الانتقال
+            setTimeout(() => {
+                if (currentQ < totalQ) {
+                    goToQuestion(currentQ + 1);
+                } else {
+                    // آخر سؤال — حساب النتيجة
+                    calculateResult();
+                }
+            }, 350);
+        }
+
+        function goToQuestion(num) {
+            // إخفاء الحالي
+            document.getElementById('q' + currentQ).classList.remove('active');
+
+            // إظهار الجديد
+            currentQ = num;
+            document.getElementById('q' + currentQ).classList.add('active');
+
+            // تحديث شريط التقدم
+            updateProgress();
+        }
+
+        function updateProgress() {
+            for (let i = 1; i <= totalQ; i++) {
+                const step = document.getElementById('prog-' + i);
+                step.classList.remove('done', 'active');
+                if (i < currentQ) step.classList.add('done');
+                if (i === currentQ) step.classList.add('active');
+            }
+            document.getElementById('progressLabel').textContent = currentQ + ' / ' + totalQ;
+        }
+
+        function goBack() {
+            if (currentQ > 1) {
+                goToQuestion(currentQ - 1);
+            } else {
+                // رجوع لاختيار الفئة
+                window.location.href = '/select-type';
+            }
+        }
+
+        // ═══ اختيار متعدد للتحديات ═══
+        function toggleChallenge(el) {
+            el.classList.toggle('selected');
+            const selectedEls = document.querySelectorAll('#q4 .diag-option.selected');
+            const count = selectedEls.length;
+            const notice = document.getElementById('multiNotice');
+            const btn = document.getElementById('challengeContinueBtn');
+            const noticeText = document.getElementById('noticeText');
+
+            btn.style.display = count > 0 ? 'block' : 'none';
+
+            if (count > 1) {
+                const challenges = Array.from(selectedEls).map(e => e.dataset.challenge);
+                const hasFinancial = challenges.includes('financial');
+                const hasOrg = challenges.includes('organizational');
+                notice.className = 'diag-multi-notice';
+                if (hasFinancial && hasOrg) {
+                    notice.classList.add('comprehensive');
+                    noticeText.innerHTML = '<strong>مسار شامل:</strong> الجمع بين التحديات المالية والإدارية يوجّهك للمسار الاستراتيجي الشامل';
+                } else if (hasFinancial) {
+                    notice.classList.add('comprehensive');
+                    noticeText.innerHTML = '<strong>مسار شامل:</strong> التحديات المالية مع تحديات أخرى تتطلب مسار شامل';
+                } else {
+                    notice.classList.add('growth');
+                    noticeText.innerHTML = '<strong>تطوير إداري:</strong> اختيار أكثر من تحدي يركّز مسارك على التطوير الإداري والنمو';
+                }
+                notice.style.display = 'block';
+            } else {
+                notice.style.display = 'none';
+            }
+        }
+
+        function confirmChallenges() {
+            const selectedEls = document.querySelectorAll('#q4 .diag-option.selected');
+            if (selectedEls.length === 0) return;
+            const challenges = Array.from(selectedEls).map(e => e.dataset.challenge);
+            answers.challenge = challenges.length === 1 ? challenges[0] : challenges;
+            goToQuestion(currentQ + 1);
+        }
+
+        function calculateResult() {
+            // حساب المسار عبر المحرك
+            const result = DiagnosticEngine.determineOwnerPath(answers);
+
+            // إضافة معلومات إضافية
+            result.category = 'owner';
+            result.answers = answers;
+            result.variant = DiagnosticEngine.getSizeVariant(result.patternKey, result.sizeCategory);
+
+            // حفظ في sessionStorage
+            DiagnosticEngine.saveToSession(result);
+
+            // الانتقال لشاشة النتيجة
+            window.location.href = '/diagnostic-result';
+        }
+    </script>
+
+</body>
+
+</html>

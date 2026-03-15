@@ -784,10 +784,13 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const token = localStorage.getItem('token');
-        if (!token) window.location.href = '/login';
+        if (!token) { sessionStorage.setItem('stratix_return_url', location.pathname + location.search); location.href = '/login?from=restore'; }
 
         let currentData = null;
         let allObjectives = [];
+        // ✅ Fix #4: closures بدلاً من window globals
+        let _pendingSuggestions = null;
+        let _suggestedHypothesis = '';
 
         const perspectiveLabel = {
             FINANCIAL: '💰 المالية',
@@ -799,15 +802,17 @@
         const linkTypeLabel = { ENABLES: 'يُمكّن', DRIVES: 'يقود', SUPPORTS: 'يدعم', REQUIRES: 'يتطلب' };
         const strengthLabel = { STRONG: 'قوية', MEDIUM: 'متوسطة', WEAK: 'ضعيفة' };
 
+        // ✅ Fix #1: بناء DOM دفعة واحدة بدلاً من innerHTML += في حلقة
         async function init() {
             try {
                 const res = await fetch('/api/entities', { headers: { 'Authorization': `Bearer ${token}` } });
                 const entities = await res.json();
                 const sel = document.getElementById('entitySelect');
                 const entityList = entities.entities || entities || [];
-                entityList.forEach(e => {
-                    sel.innerHTML += `<option value="${e.id}">${e.legalName || e.displayName}</option>`;
-                });
+                const optionsHtml = entityList.map(e =>
+                    `<option value="${e.id}">${e.legalName || e.displayName}</option>`
+                ).join('');
+                sel.innerHTML += optionsHtml;
                 // Auto-try each entity until one with versions is found
                 for (const entity of entityList) {
                     sel.value = entity.id;
@@ -826,12 +831,13 @@
                 const res = await fetch(`/api/versions?entityId=${entityId}`, { headers: { 'Authorization': `Bearer ${token}` } });
                 const data = await res.json();
                 const sel = document.getElementById('versionSelect');
-                sel.innerHTML = '<option value="">-- اختر نسخة --</option>';
-                (data.versions || data || []).forEach(v => {
+                const versions = data.versions || data || [];
+                // ✅ Fix: بناء دفعة واحدة
+                sel.innerHTML = '<option value="">-- اختر نسخة --</option>' + versions.map(v => {
                     const label = v.name || `النسخة ${v.versionNumber}`;
                     const active = v.isActive ? ' ✅' : '';
-                    sel.innerHTML += `<option value="${v.id}" ${v.isActive ? 'selected' : ''}>${label}${active}</option>`;
-                });
+                    return `<option value="${v.id}" ${v.isActive ? 'selected' : ''}>${label}${active}</option>`;
+                }).join('');
                 // Auto-load if active version selected
                 if (sel.value) loadMap();
             } catch (e) {
@@ -901,7 +907,7 @@
         `;
             }
 
-            // Links panel
+            // Links panel — ✅ Fix: data-* attributes بدلاً من onclick لمنع injection
             html += `
         <div class="links-panel">
           <h3><i class="bi bi-link-45deg"></i> الروابط السببية (${links.length})</h3>
@@ -917,10 +923,10 @@
                     <span class="link-strength strength-${l.strength}">${strengthLabel[l.strength]}</span>
                     ${l.validated ? '<span class="validated-icon"><i class="bi bi-check-circle-fill"></i> تم التحقق</span>' : ''}
                     <div class="link-actions">
-                      <button onclick="toggleValidation('${l.id}', ${!l.validated})" title="${l.validated ? 'إلغاء التحقق' : 'تأكيد التحقق'}">
+                      <button data-action="toggle" data-id="${l.id}" data-validated="${!l.validated}" title="${l.validated ? 'إلغاء التحقق' : 'تأكيد التحقق'}">
                         <i class="bi bi-${l.validated ? 'x-circle' : 'check-circle'}"></i>
                       </button>
-                      <button onclick="deleteLink('${l.id}')" title="حذف"><i class="bi bi-trash"></i></button>
+                      <button data-action="delete" data-id="${l.id}" title="حذف"><i class="bi bi-trash"></i></button>
                     </div>
                   </div>
                 `).join('')
@@ -930,6 +936,22 @@
       `;
 
             document.getElementById('mapArea').innerHTML = html;
+
+            // ✅ Event delegation لأزرار الروابط — آمن ضد injection
+            const linksArea = document.getElementById('linksListArea');
+            if (linksArea) {
+                linksArea.addEventListener('click', function (e) {
+                    const btn = e.target.closest('button[data-action]');
+                    if (!btn) return;
+                    const action = btn.dataset.action;
+                    const id = btn.dataset.id;
+                    if (action === 'delete') {
+                        deleteLink(id);
+                    } else if (action === 'toggle') {
+                        toggleValidation(id, btn.dataset.validated === 'true');
+                    }
+                });
+            }
         }
 
         function updateStats(stats) {
@@ -952,14 +974,13 @@
 
             const sourceSel = document.getElementById('sourceSelect');
             const targetSel = document.getElementById('targetSelect');
-            sourceSel.innerHTML = '<option value="">-- اختر الهدف المؤثر --</option>';
-            targetSel.innerHTML = '<option value="">-- اختر الهدف المتأثر --</option>';
-
-            allObjectives.forEach(o => {
+            // ✅ Fix: بناء دفعة واحدة
+            const optionsHtml = allObjectives.map(o => {
                 const pLabel = perspectiveLabel[o.perspective] || o.perspective || 'غير محدد';
-                sourceSel.innerHTML += `<option value="${o.id}">${pLabel} — ${o.title}</option>`;
-                targetSel.innerHTML += `<option value="${o.id}">${pLabel} — ${o.title}</option>`;
-            });
+                return `<option value="${o.id}">${pLabel} — ${o.title}</option>`;
+            }).join('');
+            sourceSel.innerHTML = '<option value="">-- اختر الهدف المؤثر --</option>' + optionsHtml;
+            targetSel.innerHTML = '<option value="">-- اختر الهدف المتأثر --</option>' + optionsHtml;
 
             document.getElementById('hypothesisText').value = '';
             document.getElementById('linkDescription').value = '';
@@ -1013,13 +1034,13 @@
             }
 
             document.getElementById('suggestedHypothesisText').textContent = '💡 اقتراح: ' + hypothesis;
-            window._suggestedHypothesis = hypothesis;
+            _suggestedHypothesis = hypothesis;
             area.style.display = 'block';
         }
 
         function acceptHypothesisSuggestion() {
             const textarea = document.getElementById('hypothesisText');
-            textarea.value = window._suggestedHypothesis || '';
+            textarea.value = _suggestedHypothesis || '';
             document.getElementById('hypothesisSuggestionArea').style.display = 'none';
             textarea.focus();
             showToast('تم إدراج الفرضية المقترحة — يمكنك تعديلها', 'success');
@@ -1066,6 +1087,8 @@
             };
 
             if (!body.sourceId || !body.targetId) return showToast('اختر الهدفين', 'warning');
+            // ✅ Fix #5: منع ربط الهدف بنفسه
+            if (body.sourceId === body.targetId) return showToast('لا يمكن ربط الهدف بنفسه — اختر هدفين مختلفين', 'warning');
 
             try {
                 const res = await fetch('/api/causal-links', {
@@ -1086,14 +1109,21 @@
             }
         }
 
+        // ✅ Fix #2: التحقق من نجاح الطلب قبل إعادة التحميل
         async function deleteLink(id) {
             if (!window.confirm('حذف هذا الرابط السببي؟')) return;
             try {
-                await fetch(`/api/causal-links/${id}`, {
+                const res = await fetch(`/api/causal-links/${id}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                loadMap();
+                if (res.ok) {
+                    showToast('تم حذف الرابط ✅', 'success');
+                    loadMap();
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    showToast(err.error || 'فشل في حذف الرابط', 'error');
+                }
             } catch (e) {
                 showToast('خطأ في الحذف', 'error');
             }
@@ -1101,12 +1131,17 @@
 
         async function toggleValidation(id, validated) {
             try {
-                await fetch(`/api/causal-links/${id}`, {
+                const res = await fetch(`/api/causal-links/${id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({ validated })
                 });
-                loadMap();
+                if (res.ok) {
+                    loadMap();
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    showToast(err.error || 'فشل في التحديث', 'error');
+                }
             } catch (e) {
                 showToast('خطأ في التحديث', 'error');
             }
@@ -1152,7 +1187,7 @@
                     document.querySelector('.control-bar').insertAdjacentElement('afterend', confirmDiv);
 
                     // Store suggestions for later
-                    window._pendingSuggestions = data.suggestions;
+                    _pendingSuggestions = data.suggestions;
                 } else {
                     showToast(data.message || 'لا توجد اقتراحات جديدة — جميع الروابط الممكنة موجودة بالفعل', 'info');
                 }
@@ -1161,14 +1196,16 @@
             }
         }
 
+        // ✅ Fix #3: Promise.allSettled للطلبات المتوازية بدلاً من التسلسلية
         async function acceptSuggestions() {
             const versionId = document.getElementById('versionSelect').value;
-            const suggestions = window._pendingSuggestions || [];
-            let created = 0;
+            const suggestions = _pendingSuggestions || [];
 
-            for (const s of suggestions) {
-                try {
-                    const res = await fetch('/api/causal-links', {
+            showToast(`جاري إنشاء ${suggestions.length} رابط...`, 'info');
+
+            const results = await Promise.allSettled(
+                suggestions.map(s =>
+                    fetch('/api/causal-links', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                         body: JSON.stringify({
@@ -1179,16 +1216,21 @@
                             strength: 'MEDIUM',
                             hypothesis: s.hypothesis
                         })
-                    });
-                    if (res.ok) created++;
-                } catch (e) { /* skip duplicates */ }
-            }
+                    }).then(res => res.ok ? 'created' : 'failed')
+                )
+            );
+
+            const created = results.filter(r => r.status === 'fulfilled' && r.value === 'created').length;
+            const failed = results.length - created;
 
             const confirmDiv = document.getElementById('suggestConfirm');
             if (confirmDiv) confirmDiv.remove();
 
-            showToast(`تم إنشاء ${created} رابط سببي بنجاح ✅`, 'success');
-            window._pendingSuggestions = null;
+            const msg = failed > 0
+                ? `تم إنشاء ${created} رابط ✅ (${failed} تم تخطيه — ربما موجود مسبقاً)`
+                : `تم إنشاء ${created} رابط سببي بنجاح ✅`;
+            showToast(msg, created > 0 ? 'success' : 'warning');
+            _pendingSuggestions = null;
             loadMap();
         }
 
@@ -1200,7 +1242,7 @@
 
         init();
     </script>
-<script src="/assets/js/ai-advisor.js"></script>
+    <script src="/assets/js/ai-advisor.js"></script>
 </body>
 
 </html>

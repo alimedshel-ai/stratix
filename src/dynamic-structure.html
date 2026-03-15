@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس — الهيكل الديناميكي</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="/assets/js/sidebar.js" defer></script>
+    <style>
+        :root {
+            --bg: #0f1219;
+            --bg2: #161b26;
+            --card: #1a1f2e;
+            --card-hover: #1f2538;
+            --border: rgba(255, 255, 255, 0.06);
+            --text: #e2e8f0;
+            --muted: #8b8ba7;
+            --accent: #a78bfa;
+            --red: #ef4444;
+            --yellow: #f59e0b;
+            --green: #22c55e;
+            --blue: #3b82f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .layout {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 260px;
+            flex-shrink: 0;
+        }
+
+        .main {
+            flex: 1;
+            overflow-y: auto;
+            min-height: 100vh;
+        }
+
+        .container-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 32px 28px 80px;
+        }
+
+        /* Header */
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 26px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        /* Org Chart */
+        .org-chart {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 32px;
+        }
+
+        .org-node {
+            background: var(--card);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 16px 24px;
+            text-align: center;
+            position: relative;
+            min-width: 200px;
+            transition: all .3s;
+            cursor: pointer;
+        }
+
+        .org-node:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(167, 139, 250, 0.15);
+        }
+
+        .org-node.owner {
+            border-color: rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.04);
+        }
+
+        .org-node.specialist {
+            border-color: rgba(34, 197, 94, 0.3);
+            background: rgba(34, 197, 94, 0.04);
+        }
+
+        .org-node.external {
+            border-color: rgba(59, 130, 246, 0.3);
+            background: rgba(59, 130, 246, 0.04);
+        }
+
+        .org-node.empty {
+            border-color: rgba(139, 139, 167, 0.2);
+            background: rgba(139, 139, 167, 0.04);
+            border-style: dashed;
+        }
+
+        .org-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .org-role {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .org-badge {
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 6px;
+            margin-top: 6px;
+            display: inline-block;
+        }
+
+        .org-connector {
+            width: 2px;
+            height: 20px;
+            background: var(--border);
+        }
+
+        .org-row {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* Influence Matrix */
+        .influence-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .influence-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all .3s;
+        }
+
+        .influence-card:hover {
+            border-color: rgba(167, 139, 250, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .influence-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .influence-dept {
+            font-size: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .influence-score {
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .influence-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .influence-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+
+        .influence-meta {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .influence-tag {
+            font-size: 10px;
+            padding: 3px 10px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        /* Resistance Analyzer */
+        .resistance-section {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .resistance-title {
+            font-size: 16px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .resistance-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-bottom: 8px;
+            transition: all .2s;
+        }
+
+        .resistance-item:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .resistance-emoji {
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .resistance-info {
+            flex: 1;
+        }
+
+        .resistance-name {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .resistance-desc {
+            font-size: 11px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .resistance-level {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 8px;
+            white-space: nowrap;
+        }
+
+        /* Section title */
+        .section-title {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 14px;
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 4px;
+        }
+
+        @media(max-width:768px) {
+            .layout {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .org-row {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .influence-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar" id="sidebarContainer"></aside>
+        <div class="main">
+            <div class="container-inner">
+                <!-- Header -->
+                <div class="page-header">
+                    <div class="page-title">🏗️ الهيكل الديناميكي</div>
+                    <div class="page-subtitle">
+                        خريطة القوة الفعلية vs الرسمية — اكتشف من يتخذ القرار فعلياً، وحدد جبهات المقاومة قبل تنفيذ
+                        المبادرات
+                    </div>
+                </div>
+
+                <!-- Legend -->
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:rgba(239,68,68,0.6)"></div> صاحب العمل يدير شخصياً
+                        (خطر)
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:rgba(34,197,94,0.6)"></div> موظف متخصص / مستشار
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:rgba(59,130,246,0.6)"></div> مزود خارجي
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:rgba(139,139,167,0.3);border:1px dashed var(--muted)">
+                        </div> لا أحد — فجوة
+                    </div>
+                </div>
+
+                <!-- Org Chart -->
+                <div class="section-title">🏢 خريطة الإدارة الفعلية</div>
+                <div class="org-chart" id="orgChart"></div>
+
+                <!-- Influence Matrix -->
+                <div class="section-title">⚡ مصفوفة التأثير والنفوذ</div>
+                <div class="influence-grid" id="influenceGrid"></div>
+
+                <!-- Resistance Analyzer -->
+                <div id="resistanceSection"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DEPTS = [
+            { key: 'compliance', name: 'الامتثال', icon: '⚖️', color: '#ef4444' },
+            { key: 'finance', name: 'المالية', icon: '💰', color: '#f59e0b' },
+            { key: 'sales', name: 'المبيعات', icon: '📈', color: '#10b981' },
+            { key: 'hr', name: 'الموارد البشرية', icon: '👥', color: '#3b82f6' },
+            { key: 'marketing', name: 'التسويق', icon: '📣', color: '#8b5cf6' },
+            { key: 'operations', name: 'العمليات', icon: '⚙️', color: '#6366f1' },
+            { key: 'support', name: 'الخدمات المساندة', icon: '🛠️', color: '#64748b' },
+        ];
+
+        const MANAGEMENT_LABELS = {
+            'أنا شخصياً (صاحب العمل)': { type: 'owner', label: 'صاحب العمل يدير', badge: '⚠️ مشتت', color: '#ef4444', risk: 'high' },
+            'موظف داخلي متخصص': { type: 'specialist', label: 'موظف متخصص', badge: '✅ مهني', color: '#22c55e', risk: 'low' },
+            'مكتب خارجي / مستشار': { type: 'external', label: 'مزود خارجي', badge: '🔵 خارجي', color: '#3b82f6', risk: 'medium' },
+            'لا أحد — تحتاج تعيين': { type: 'empty', label: 'لا أحد!', badge: '🔴 فجوة خطيرة', color: '#ef4444', risk: 'critical' },
+        };
+
+        function loadData() {
+            const deptPayload = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || '{}');
+            return deptPayload;
+        }
+
+        function getManagement(deptData) {
+            if (!deptData || !deptData.answers) return null;
+            // Look for management answer
+            const mgmt = deptData.answers?.management || deptData.answers?.dept_management || deptData.management;
+            return mgmt;
+        }
+
+        function getOperatingModel(deptData) {
+            if (!deptData || !deptData.answers) return null;
+            return deptData.answers?.operating_model || deptData.operatingModel;
+        }
+
+        function renderOrgChart() {
+            const data = loadData();
+            const chart = document.getElementById('orgChart');
+
+            // CEO node
+            let html = `
+                <div class="org-node owner" style="border-color:rgba(167,139,250,0.4);background:rgba(167,139,250,0.06);">
+                    <div style="font-size:24px;margin-bottom:4px;">👤</div>
+                    <div class="org-title">صاحب العمل / المدير التنفيذي</div>
+                    <div class="org-role">القرارات الاستراتيجية</div>
+                </div>
+                <div class="org-connector"></div>
+                <div class="org-row">
+            `;
+
+            DEPTS.forEach(dept => {
+                const deptData = data[dept.key] || {};
+                const mgmt = getManagement(deptData);
+                const mgmtInfo = MANAGEMENT_LABELS[mgmt] || { type: 'empty', label: 'غير محدد', badge: '❓', color: '#8b8ba7', risk: 'unknown' };
+
+                html += `
+                    <div>
+                        <div class="org-connector" style="margin:0 auto;"></div>
+                        <div class="org-node ${mgmtInfo.type}">
+                            <div style="font-size:20px;margin-bottom:4px;">${dept.icon}</div>
+                            <div class="org-title">${dept.name}</div>
+                            <div class="org-role">${mgmtInfo.label}</div>
+                            <div class="org-badge" style="background:${mgmtInfo.color}20;color:${mgmtInfo.color}">${mgmtInfo.badge}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            chart.innerHTML = html;
+        }
+
+        function renderInfluenceGrid() {
+            const data = loadData();
+            const grid = document.getElementById('influenceGrid');
+
+            let ownerCount = 0;
+            let emptyCount = 0;
+            let totalScore = 0;
+
+            let html = '';
+            DEPTS.forEach(dept => {
+                const deptData = data[dept.key] || {};
+                const mgmt = getManagement(deptData);
+                const opModel = getOperatingModel(deptData);
+                const mgmtInfo = MANAGEMENT_LABELS[mgmt] || { type: 'empty', label: 'غير محدد', badge: '❓', color: '#8b8ba7', risk: 'unknown' };
+
+                // Calculate influence score
+                let score = 50; // default
+                if (mgmtInfo.type === 'specialist') score = 85;
+                else if (mgmtInfo.type === 'external') score = 70;
+                else if (mgmtInfo.type === 'owner') { score = 40; ownerCount++; }
+                else if (mgmtInfo.type === 'empty') { score = 10; emptyCount++; }
+
+                // Factor in operating model satisfaction
+                if (opModel?.includes('راضٍ')) score += 10;
+                if (opModel?.includes('أفكر في التغيير')) score -= 10;
+
+                score = Math.max(0, Math.min(100, score));
+                totalScore += score;
+
+                const scoreColor = score >= 70 ? '#22c55e' : score >= 40 ? '#f59e0b' : '#ef4444';
+
+                // Determine tags
+                const tags = [];
+                if (mgmtInfo.type === 'owner') tags.push({ text: 'اعتماد على المؤسس', bg: 'rgba(239,68,68,0.1)', color: '#ef4444' });
+                if (mgmtInfo.type === 'empty') tags.push({ text: 'فجوة تشغيلية', bg: 'rgba(239,68,68,0.1)', color: '#ef4444' });
+                if (opModel?.includes('أفكر في التغيير')) tags.push({ text: 'مزود غير مستقر', bg: 'rgba(245,158,11,0.1)', color: '#f59e0b' });
+                if (score >= 70) tags.push({ text: 'سليم', bg: 'rgba(34,197,94,0.1)', color: '#22c55e' });
+
+                html += `
+                    <div class="influence-card">
+                        <div class="influence-header">
+                            <div class="influence-dept">${dept.icon} ${dept.name}</div>
+                            <div class="influence-score" style="color:${scoreColor}">${score}%</div>
+                        </div>
+                        <div class="influence-bar">
+                            <div class="influence-fill" style="width:${score}%;background:${scoreColor}"></div>
+                        </div>
+                        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">
+                            يديرها: <strong style="color:${mgmtInfo.color}">${mgmtInfo.label}</strong>
+                        </div>
+                        ${tags.length ? `
+                            <div class="influence-meta">
+                                ${tags.map(t => `<span class="influence-tag" style="background:${t.bg};color:${t.color}">${t.text}</span>`).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+
+            grid.innerHTML = html;
+
+            // Render resistance section
+            renderResistance(ownerCount, emptyCount, totalScore / DEPTS.length, data);
+        }
+
+        function renderResistance(ownerCount, emptyCount, avgScore, data) {
+            const section = document.getElementById('resistanceSection');
+            const risks = [];
+
+            if (ownerCount >= 3) {
+                risks.push({
+                    emoji: '🔥',
+                    name: 'اعتماد حرج على المؤسس',
+                    desc: `صاحب العمل يدير ${ownerCount} إدارات شخصياً — هذا يخلق عنق زجاجة ويضعف القرارات المتخصصة. أول خطوة: تعيين مدير إدارة واحدة على الأقل.`,
+                    level: 'حرج',
+                    levelBg: 'rgba(239,68,68,0.1)',
+                    levelColor: '#ef4444'
+                });
+            } else if (ownerCount >= 1) {
+                risks.push({
+                    emoji: '⚠️',
+                    name: 'اعتماد جزئي على المؤسس',
+                    desc: `صاحب العمل يدير ${ownerCount} إدارة — قد يجعله مشتتاً. خطة تدريجية لنقل المسؤوليات ستحسن الأداء.`,
+                    level: 'متوسط',
+                    levelBg: 'rgba(245,158,11,0.1)',
+                    levelColor: '#f59e0b'
+                });
+            }
+
+            if (emptyCount > 0) {
+                risks.push({
+                    emoji: '🕳️',
+                    name: `${emptyCount} إدارة بدون مسؤول`,
+                    desc: 'فجوة تشغيلية خطيرة — إدارات تعمل بدون مسؤول واضح. هذا يؤدي لقرارات عشوائية ومشاكل مخفية.',
+                    level: 'خطير',
+                    levelBg: 'rgba(239,68,68,0.1)',
+                    levelColor: '#ef4444'
+                });
+            }
+
+            if (avgScore < 50) {
+                risks.push({
+                    emoji: '📉',
+                    name: 'ضعف إجمالي في الهيكل الإداري',
+                    desc: `متوسط درجة الصحة الإدارية ${Math.round(avgScore)}% — المنظمة تحتاج إعادة هيكلة جزئية لتفعيل المبادرات الاستراتيجية.`,
+                    level: 'مرتفع',
+                    levelBg: 'rgba(239,68,68,0.1)',
+                    levelColor: '#ef4444'
+                });
+            }
+
+            // Change management risk
+            risks.push({
+                emoji: '🔄',
+                name: 'قياس جبهات المقاومة',
+                desc: 'عند تنفيذ أي مبادرة، الإدارات التي يديرها المؤسس شخصياً ستكون أبطأ في التكيف. ضع خطة إدارة تغيير مبكراً.',
+                level: 'معلومة',
+                levelBg: 'rgba(102,126,234,0.1)',
+                levelColor: '#667eea'
+            });
+
+            if (avgScore >= 70) {
+                risks.push({
+                    emoji: '✅',
+                    name: 'هيكل إداري صحي',
+                    desc: `متوسط درجة الصحة الإدارية ${Math.round(avgScore)}% — المنظمة لديها بنية قيادية قوية. استمر وحسّن التخصصات.`,
+                    level: 'ممتاز',
+                    levelBg: 'rgba(34,197,94,0.1)',
+                    levelColor: '#22c55e'
+                });
+            }
+
+            section.innerHTML = `
+                <div class="resistance-section">
+                    <div class="resistance-title">🛡️ تحليل المقاومة والمخاطر الهيكلية</div>
+                    ${risks.map(r => `
+                        <div class="resistance-item">
+                            <div class="resistance-emoji">${r.emoji}</div>
+                            <div class="resistance-info">
+                                <div class="resistance-name">${r.name}</div>
+                                <div class="resistance-desc">${r.desc}</div>
+                            </div>
+                            <div class="resistance-level" style="background:${r.levelBg};color:${r.levelColor}">${r.level}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // Init
+        renderOrgChart();
+        renderInfluenceGrid();
+    </script>
+</body>
+
+</html>

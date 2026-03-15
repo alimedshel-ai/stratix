@@ -18,6 +18,12 @@ const state = {
     }
 };
 
+// 🔒 XSS Prevention Helper
+function escapeAttr(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 // ═══ Auth Token ═══
 function getToken() {
     return localStorage.getItem('adminToken') || localStorage.getItem('token');
@@ -300,8 +306,8 @@ function renderUsers() {
             <td><span class="status-badge ${user.status}">${user.status === 'active' ? 'نشط' : 'غير نشط'}</span></td>
             <td>
                 <div class="table-actions">
-                    <button class="btn-table" onclick="editUser('${user.id}')">تعديل</button>
-                    <button class="btn-table danger" onclick="deleteUser('${user.id}', '${user.name}')">حذف</button>
+                    <button class="btn-table" data-action="edit-user" data-id="${escapeAttr(user.id)}">تعديل</button>
+                    <button class="btn-table danger" data-action="delete-user" data-id="${escapeAttr(user.id)}" data-name="${escapeAttr(user.name)}">حذف</button>
                 </div>
             </td>
         </tr>
@@ -371,11 +377,11 @@ function renderCompanies() {
             <td><span class="status-badge ${company.companyStatus === 'SUSPENDED' ? 'suspended' : company.status}">${company.companyStatus === 'SUSPENDED' ? '⏸️ معلّق' : translateStatus(company.status)}</span></td>
             <td>
                 <div class="table-actions">
-                    <button class="btn-table" onclick="viewCompany('${company.id}')">عرض</button>
-                    <button class="btn-table" onclick="impersonateCompany('${company.id}', '${company.name}')">🎭 دخول</button>
+                    <button class="btn-table" data-action="view-company" data-id="${escapeAttr(company.id)}">عرض</button>
+                    <button class="btn-table" data-action="impersonate" data-id="${escapeAttr(company.id)}" data-name="${escapeAttr(company.name)}">🎭 دخول</button>
                     ${company.companyStatus === 'SUSPENDED'
-            ? `<button class="btn-table success" onclick="toggleSuspend('${company.id}', '${company.name}', false)" title="إعادة تفعيل">✅ تفعيل</button>`
-            : `<button class="btn-table danger" onclick="toggleSuspend('${company.id}', '${company.name}', true)" title="تعليق">⏸️ تعليق</button>`
+            ? `<button class="btn-table success" data-action="toggle-suspend" data-id="${escapeAttr(company.id)}" data-name="${escapeAttr(company.name)}" data-suspend="false" title="إعادة تفعيل">✅ تفعيل</button>`
+            : `<button class="btn-table danger" data-action="toggle-suspend" data-id="${escapeAttr(company.id)}" data-name="${escapeAttr(company.name)}" data-suspend="true" title="تعليق">⏸️ تعليق</button>`
         }
                 </div>
             </td>
@@ -690,8 +696,27 @@ function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('adminToken');
     localStorage.removeItem('user');
+    // 🔒 مسح HttpOnly Cookie
+    fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).catch(() => { });
     window.location.href = '/login.html';
 }
+
+// 🔒 Event Delegation — بديل آمن عن onclick
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const action = btn.dataset.action;
+    const id = btn.dataset.id;
+    const name = btn.dataset.name;
+
+    switch (action) {
+        case 'edit-user': editUser(id); break;
+        case 'delete-user': deleteUser(id, name); break;
+        case 'view-company': viewCompany(id); break;
+        case 'impersonate': impersonateCompany(id, name); break;
+        case 'toggle-suspend': toggleSuspend(id, name, btn.dataset.suspend === 'true'); break;
+    }
+});
 
 // ═══ Helpers ═══
 function translateRole(role) {
@@ -1157,7 +1182,7 @@ function renderStalledTable(filter) {
             <!-- Actions -->
             <div style="flex-shrink:0;display:flex;gap:6px">
                 ${u.email ? `<a href="mailto:${u.email}" style="padding:5px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:#e2e8f0;font-size:11px;text-decoration:none;cursor:pointer">📧 تواصل</a>` : ''}
-                <button onclick="deleteUser('${u.id}', '${u.name}')" style="padding:5px 10px;border-radius:8px;border:1px solid rgba(239,68,68,0.2);background:transparent;color:#ef4444;font-size:11px;font-family:inherit;cursor:pointer">🗑️</button>
+                <button data-action="delete-user" data-id="${escapeAttr(u.id)}" data-name="${escapeAttr(u.name)}" style="padding:5px 10px;border-radius:8px;border:1px solid rgba(239,68,68,0.2);background:transparent;color:#ef4444;font-size:11px;font-family:inherit;cursor:pointer">🗑️</button>
             </div>
         </div>`;
     }).join('');

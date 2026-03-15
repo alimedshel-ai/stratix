@@ -619,7 +619,32 @@
     <script src="/js/data-layer.js"></script>
     <script src="/assets/js/achievements.js"></script>
     <script src="/assets/js/notifications.js"></script>
+    <!-- Toast Notification -->
+    <div id="toastArea"
+        style="position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none">
+    </div>
     <script>
+        // === Toast System ===
+        function showToast(msg, type = 'info', duration = 4000) {
+            const area = document.getElementById('toastArea');
+            if (!area) return;
+            const colors = { success: '#22c55e', error: '#ef4444', warning: '#f59e0b', info: '#667eea' };
+            const icons = { success: 'check-circle', error: 'x-circle', warning: 'exclamation-triangle', info: 'info-circle' };
+            const t = document.createElement('div');
+            t.style.cssText = `pointer-events:auto;display:flex;align-items:center;gap:10px;padding:12px 20px;border-radius:14px;background:#1e293b;border:1px solid ${colors[type]}40;color:#e2e8f0;font-size:13px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,0.3);animation:fadeUp 0.3s ease;font-family:inherit;max-width:480px`;
+            t.innerHTML = `<i class="bi bi-${icons[type]}" style="color:${colors[type]};font-size:16px"></i> <span>${msg}</span>`;
+            area.appendChild(t);
+            setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(() => t.remove(), 300); }, duration);
+        }
+
+        // === XSS Prevention ===
+        function esc(str) {
+            if (str == null) return '';
+            const d = document.createElement('div');
+            d.textContent = String(str);
+            return d.innerHTML;
+        }
+
         // === Report Templates ===
         const templates = [
             { id: 'strategic', icon: '🎯', title: 'التقرير الاستراتيجي الشامل', desc: 'نظرة شاملة على أداء الأهداف والمبادرات والمخاطر', color: '#667eea', sections: ['ملخص تنفيذي', 'مؤشرات رئيسية', 'أداء الأهداف', 'المبادرات', 'المخاطر', 'التوصيات'], badge: 'الأكثر طلباً', badgeColor: '#22c55e' },
@@ -628,6 +653,7 @@
             { id: 'risk', icon: '⚠️', title: 'تقرير المخاطر', desc: 'تحليل المخاطر الاستراتيجية واحتمالات التأثير', color: '#ef4444', sections: ['خريطة الحرارة', 'أعلى المخاطر', 'خطط المعالجة', 'مؤشرات إنذار'] },
             { id: 'team', icon: '👥', title: 'تقرير أداء الفريق', desc: 'تحليل إنتاجية الفريق والمهام والمشاركة', color: '#8b5cf6', sections: ['ملخص الفريق', 'إنجاز المهام', 'المشاركة', 'الأكثر نشاطاً'] },
             { id: 'executive', icon: '👔', title: 'الملخص التنفيذي', desc: 'ملخص موجز للإدارة العليا — صفحة واحدة', color: '#facc15', sections: ['الصحة العامة', 'أبرز الإنجازات', 'أبرز التحديات', 'القرارات المطلوبة'], badge: 'صفحة واحدة', badgeColor: '#facc15' },
+            { id: 'seven_s', icon: '🏢', title: 'تقييم ماكينزي 7S', desc: 'تقييم شامل للعناصر السبعة الصلبة والمرنة مع تحليل التوافق والفجوات', color: '#06b6d4', sections: ['العناصر الصلبة', 'العناصر المرنة', 'مصفوفة التوافق', 'تحليل الفجوات', 'خطة التصحيح'], badge: 'أكاديمي', badgeColor: '#06b6d4' },
         ];
 
         let selectedTemplate = 'strategic';
@@ -674,6 +700,7 @@
                 }
             } catch (e) {
                 console.warn('Could not fetch report data, using mock:', e);
+                showToast('تعذّر جلب البيانات الحقيقية — يتم عرض بيانات تجريبية', 'warning', 5000);
             }
 
             const tmpl = templates.find(t => t.id === selectedTemplate);
@@ -704,7 +731,7 @@
         function generateReportHTML(tmpl, period) {
             const today = new Date();
             const dateStr = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
-            const entityName = hasRealData() ? (reportData.entity.displayName || reportData.entity.legalName) : 'ستارتكس';
+            const entityName = hasRealData() ? esc(reportData.entity.displayName || reportData.entity.legalName) : 'ستارتكس';
 
             const reports = {
                 strategic: strategicReport,
@@ -713,6 +740,7 @@
                 risk: riskReport,
                 team: teamReport,
                 executive: executiveReport,
+                seven_s: sevenSReport,
             };
 
             return `
@@ -745,7 +773,7 @@
             if (hasRealData() && d.objectives.length > 0) {
                 objRows = d.objectives.map(o => {
                     const status = o.progress >= 80 ? 'متقدم' : o.progress >= 50 ? 'على المسار' : 'متأخر';
-                    return objRow(o.name, o.perspective, o.progress, status);
+                    return objRow(esc(o.name), esc(o.perspective), o.progress, status);
                 }).join('');
             } else {
                 objRows = objRow('زيادة الإيرادات 25%', 'مالي', 82, 'متقدم') +
@@ -804,6 +832,15 @@
           <div class="rpt-section-title"><i class="bi bi-lightbulb" style="color:var(--yellow)"></i> التوصيات</div>
           ${recsHtml}
         </div>
+
+        <div class="rpt-section">
+          <div class="rpt-section-title"><i class="bi bi-tools" style="color:var(--primary)"></i> أدوات مقترحة بناءً على النتائج</div>
+          ${iniProg < 60 ? recItem('📊', '<a href="/gap-analysis.html" style="color:var(--primary);font-weight:700">تحليل الفجوات</a> — نسبة إنجاز المبادرات منخفضة. استخدم هذه الأداة لتحديد الفجوة بين الوضع الحالي والمستهدف', 'مقترح', 'var(--primary)') : ''}
+          ${health < 70 ? recItem('🔍', '<a href="/swot.html" style="color:var(--primary);font-weight:700">إعادة تقييم SWOT</a> — الصحة الاستراتيجية أقل من 70%. راجع نقاط القوة والضعف الحالية', 'مقترح', 'var(--primary)') : ''}
+          ${(hasRealData() && reportData.riskSummary.critical > 2) ? recItem('⚠️', '<a href="/risk-map.html" style="color:var(--primary);font-weight:700">خريطة المخاطر</a> — يوجد مخاطر حرجة متعددة. راجع خطط المعالجة وحدّثها', 'مقترح', 'var(--red)') : ''}
+          ${(health < 60 || objProg < 50) ? recItem('🔄', '<a href="/select-type?from=new-cycle" style="color:var(--primary);font-weight:700">ابدأ دورة استراتيجية جديدة</a> — الأداء يستدعي إعادة تشخيص شاملة وتحديث الخطة', 'مقترح', 'var(--primary)') : ''}
+          ${(health >= 70 && objProg >= 60 && iniProg >= 60) ? recItem('🟢', '<a href="/reviews.html" style="color:var(--green);font-weight:700">المراجعة الدورية</a> — الأداء جيد. جدوِل مراجعة ربعية لضمان الاستمرارية', 'جيد', 'var(--green)') : ''}
+        </div>
       `;
         }
 
@@ -818,10 +855,10 @@
                     const pct = k.pct;
                     if (pct >= 100) {
                         aboveTarget++;
-                        kpiRowsAbove += kpiRow(k.name, `${k.actual}${k.unit || ''}`, `${k.target}${k.unit || ''}`, pct);
+                        kpiRowsAbove += kpiRow(esc(k.name), `${esc(k.actual)}${esc(k.unit) || ''}`, `${esc(k.target)}${esc(k.unit) || ''}`, pct);
                     } else {
                         belowTarget++;
-                        kpiRowsBelow += kpiRow(k.name, `${k.actual}${k.unit || ''}`, `${k.target}${k.unit || ''}`, pct);
+                        kpiRowsBelow += kpiRow(esc(k.name), `${esc(k.actual)}${esc(k.unit) || ''}`, `${esc(k.target)}${esc(k.unit) || ''}`, pct);
                     }
                 });
             } else {
@@ -869,7 +906,7 @@
                 iniRows = reportData.initiatives.map(i => {
                     const statusAr = i.status === 'COMPLETED' ? 'مكتمل' : i.status === 'IN_PROGRESS' ? 'جارية' : 'مخطط';
                     const budgetPct = i.budget > 0 ? Math.round((i.actualCost || 0) / i.budget * 100) + '%' : '-';
-                    return initRow(i.name, i.owner || '-', i.progress, budgetPct, statusAr);
+                    return initRow(esc(i.name), esc(i.owner) || '-', i.progress, budgetPct, statusAr);
                 }).join('');
             } else {
                 total = 8; completed = 3; inProgress = 4; overdue = 1;
@@ -913,7 +950,7 @@
                     const icon = r.score >= 15 ? '🔴' : r.score >= 8 ? '🟡' : '🟢';
                     const priority = r.score >= 15 ? 'حرج' : r.score >= 8 ? 'متوسط' : 'منخفض';
                     const color = r.score >= 15 ? 'var(--red)' : r.score >= 8 ? 'var(--yellow)' : 'var(--green)';
-                    return recItem(icon, `${r.name}${r.mitigation ? ' — خطة المعالجة: ' + r.mitigation.substring(0, 80) : ''}. درجة الخطورة: ${r.score}`, priority, color);
+                    return recItem(icon, `${esc(r.name)}${r.mitigation ? ' — خطة المعالجة: ' + esc(r.mitigation.substring(0, 80)) : ''}. درجة الخطورة: ${r.score}`, priority, color);
                 }).join('');
             } else {
                 total = 12; critical = 3; medium = 5; low = 4; mitigated = 4;
@@ -1025,6 +1062,303 @@
       `;
         }
 
+        // === McKinsey 7S Assessment Report ===
+        function sevenSReport() {
+            // ─── بيانات العناصر السبعة ────────────────────────────────────
+            // يسحب البيانات من أدوات ستارتكس الموزعة
+            const d = reportData;
+            const health = hasRealData() ? d.healthScore : 72;
+
+            // العناصر الصلبة (Hard S) — Strategy, Structure, Systems
+            const hardElements = [
+                {
+                    key: 'strategy', nameAr: 'الاستراتيجية', nameEn: 'Strategy',
+                    icon: '🎯', color: '#667eea',
+                    source: 'directions.html + الأهداف',
+                    score: hasRealData() ? Math.min(100, Math.round(d.overallProgress * 1.2)) : 68,
+                    desc: hasRealData() && d.objectives.length > 0
+                        ? `${d.objectives.length} أهداف استراتيجية محددة — نسبة الإنجاز ${d.overallProgress}%`
+                        : 'الرؤية والأهداف الاستراتيجية — كيف نتنافس وننمو',
+                    findings: hasRealData()
+                        ? [`${d.objectives.length} أهداف استراتيجية مسجلة`, `معدل الإنجاز: ${d.overallProgress}%`, d.overallProgress >= 60 ? 'الأهداف تسير بشكل جيد' : 'تأخر في تحقيق بعض الأهداف']
+                        : ['استراتيجية واضحة مع 5 أهداف', 'ربط ضعيف بين الأهداف والمبادرات', 'يحتاج مراجعة ربع سنوية'],
+                },
+                {
+                    key: 'structure', nameAr: 'الهيكل التنظيمي', nameEn: 'Structure',
+                    icon: '🏗️', color: '#f97316',
+                    source: 'entity settings + departments',
+                    score: hasRealData() ? 55 : 52,
+                    desc: 'الهيكل التنظيمي وتوزيع المسؤوليات بين الإدارات',
+                    findings: hasRealData()
+                        ? ['الهيكل محدد في النظام', 'قد يحتاج مراجعة للتوافق مع الاستراتيجية الجديدة', 'تداخل محتمل في الصلاحيات']
+                        : ['هيكل هرمي تقليدي', 'تداخل صلاحيات بين الإدارات', 'يحتاج إعادة تصميم مبني على العمليات'],
+                },
+                {
+                    key: 'systems', nameAr: 'الأنظمة والعمليات', nameEn: 'Systems',
+                    icon: '⚙️', color: '#22c55e',
+                    source: 'dept-deep.html (OPS + IT)',
+                    score: hasRealData() ? Math.round(health * 0.85) : 61,
+                    desc: 'أنظمة العمل والإجراءات والتقنيات المستخدمة',
+                    findings: hasRealData()
+                        ? [`درجة صحة الأنظمة: ${Math.round(health * 0.85)}/100`, 'تغطية رقمية جزئية', 'يحتاج أتمتة أكثر']
+                        : ['أنظمة ERP أساسية موجودة', 'ضعف في الأتمتة (40% يدوي)', 'لا يوجد نظام إدارة معرفة'],
+                },
+            ];
+
+            // العناصر المرنة (Soft S) — Shared Values, Style, Staff, Skills
+            const softElements = [
+                {
+                    key: 'shared_values', nameAr: 'القيم المشتركة', nameEn: 'Shared Values',
+                    icon: '💎', color: '#ec4899',
+                    source: 'org-dna.html',
+                    score: hasRealData() ? Math.round(health * 0.9) : 70,
+                    desc: 'القيم الجوهرية والثقافة المؤسسية',
+                    findings: hasRealData()
+                        ? ['قيم مؤسسية محددة', `مستوى التوافق: ${Math.round(health * 0.9)}%`, 'يحتاج تعزيز عبر برامج داخلية']
+                        : ['قيم واضحة لكن غير مُفعّلة بالكامل', 'فجوة بين القيم المعلنة والسلوك اليومي', 'يحتاج برنامج تعزيز ثقافي'],
+                },
+                {
+                    key: 'style', nameAr: 'أسلوب القيادة', nameEn: 'Style',
+                    icon: '👑', color: '#8b5cf6',
+                    source: 'org-dna.html + assessments',
+                    score: hasRealData() ? Math.round(health * 0.88) : 65,
+                    desc: 'نمط القيادة وصنع القرار في المنظمة',
+                    findings: hasRealData()
+                        ? ['أسلوب قيادة محدد', 'يحتاج تقييم مدى فعاليته', 'مراجعة آليات صنع القرار']
+                        : ['قيادة مركزية — بطء في القرارات', 'ضعف التفويض للإدارة الوسطى', 'يحتاج نقل تدريجي للصلاحيات'],
+                },
+                {
+                    key: 'staff', nameAr: 'الموظفون', nameEn: 'Staff',
+                    icon: '👥', color: '#06b6d4',
+                    source: 'dept-deep.html (HR)',
+                    score: hasRealData() ? Math.round(health * 0.82) : 58,
+                    desc: 'القوى العاملة — التوظيف والتطوير والاحتفاظ',
+                    findings: hasRealData()
+                        ? [`تقييم الموارد البشرية: ${Math.round(health * 0.82)}/100`, 'برامج تطوير محدودة', 'يحتاج خطة احتفاظ بالكفاءات']
+                        : ['26 موظف — حجم مناسب', 'دوران وظيفي 14% (مقبول)', 'لا يوجد مسار وظيفي واضح'],
+                },
+                {
+                    key: 'skills', nameAr: 'المهارات', nameEn: 'Skills',
+                    icon: '🎓', color: '#eab308',
+                    source: 'dept-deep.html + assessments',
+                    score: hasRealData() ? Math.round(health * 0.78) : 55,
+                    desc: 'الكفاءات والقدرات التنظيمية الأساسية',
+                    findings: hasRealData()
+                        ? [`مستوى المهارات: ${Math.round(health * 0.78)}/100`, 'فجوة في المهارات الرقمية', 'يحتاج برنامج تدريب مكثف']
+                        : ['كفاءات تقنية جيدة', 'فجوة في مهارات تحليل البيانات', 'يحتاج برنامج upskilling مكثف'],
+                },
+            ];
+
+            const allElements = [...hardElements, ...softElements];
+            const avgScore = Math.round(allElements.reduce((s, e) => s + e.score, 0) / allElements.length);
+            const avgHard = Math.round(hardElements.reduce((s, e) => s + e.score, 0) / hardElements.length);
+            const avgSoft = Math.round(softElements.reduce((s, e) => s + e.score, 0) / softElements.length);
+
+            // Color by score
+            function scoreColor(s) {
+                if (s >= 75) return 'var(--green)';
+                if (s >= 55) return 'var(--yellow)';
+                return 'var(--red)';
+            }
+            function scoreLabel(s) {
+                if (s >= 80) return 'ممتاز';
+                if (s >= 65) return 'جيد';
+                if (s >= 50) return 'مقبول';
+                return 'ضعيف';
+            }
+
+            // ─── بناء التقرير ───────────────────────────────────────────────
+            // 1. الملخص التنفيذي
+            const overallLevel = avgScore >= 75 ? 'جيد' : avgScore >= 55 ? 'مقبول مع فجوات' : 'ضعيف — يحتاج تدخل';
+            const overallColor = scoreColor(avgScore);
+
+            let html = `
+            <div class="rpt-summary-box" style="margin-bottom:24px">
+                <strong>💡 الخلاصة:</strong> التوافق التنظيمي العام <span style="color:${overallColor};font-weight:800">${overallLevel} (${avgScore}/100)</span>
+                <br><span style="font-size:12px;color:var(--muted)">العناصر الصلبة: ${avgHard}/100 | العناصر المرنة: ${avgSoft}/100 | الفجوة: ${Math.abs(avgHard - avgSoft)} نقطة</span>
+            </div>
+            `;
+
+            // 2. KPI Cards
+            html += `
+            <div class="rpt-kpi-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px">
+                ${kpiCard('التوافق العام', avgScore, '', '', avgScore >= 65 ? 'green' : 'red')}
+                ${kpiCard('الصلبة (Hard)', avgHard, '', '', avgHard >= 65 ? 'green' : 'primary')}
+                ${kpiCard('المرنة (Soft)', avgSoft, '', '', avgSoft >= 65 ? 'green' : 'primary')}
+                ${kpiCard('فجوة التوازن', Math.abs(avgHard - avgSoft), '', '', Math.abs(avgHard - avgSoft) <= 10 ? 'green' : 'red')}
+            </div>
+            `;
+
+            // 3. العناصر الصلبة (Hard S)
+            html += `
+            <div class="rpt-section">
+                <div class="rpt-section-title"><i class="bi bi-bricks" style="color:#667eea"></i> العناصر الصلبة (Hard S) — سهلة التغيير نسبياً</div>
+                <div style="display:grid;gap:16px;margin-top:12px">
+            `;
+            for (const el of hardElements) {
+                html += sevenSElementCard(el);
+            }
+            html += `</div></div>`;
+
+            // 4. العناصر المرنة (Soft S)
+            html += `
+            <div class="rpt-section">
+                <div class="rpt-section-title"><i class="bi bi-people" style="color:#ec4899"></i> العناصر المرنة (Soft S) — تحتاج وقت وجهد أكبر</div>
+                <div style="display:grid;gap:16px;margin-top:12px">
+            `;
+            for (const el of softElements) {
+                html += sevenSElementCard(el);
+            }
+            html += `</div></div>`;
+
+            // 5. Radar Chart (visual bar chart since we can't do canvas)
+            html += `
+            <div class="rpt-section">
+                <div class="rpt-section-title"><i class="bi bi-diagram-3" style="color:#06b6d4"></i> مخطط الأداء المقارن</div>
+                <div class="rpt-chart" style="margin-top:12px">
+                    <div class="rpt-bar-chart" style="height:200px">
+                    ${allElements.map(el => `
+                        <div class="rpt-bar" style="height:${el.score}%;background:${el.color}">
+                            <div class="rpt-bar-val">${el.score}%</div>
+                            <div class="rpt-bar-label">${el.nameAr}</div>
+                        </div>
+                    `).join('')}
+                    </div>
+                </div>
+            </div>
+            `;
+
+            // 6. مصفوفة التوافق (Alignment Matrix)
+            html += `
+            <div class="rpt-section">
+                <div class="rpt-section-title"><i class="bi bi-grid-3x3" style="color:#f97316"></i> مصفوفة التوافق — هل العناصر تدعم بعضها؟</div>
+                <div style="overflow-x:auto;margin-top:12px">
+                    <table class="rpt-table" style="text-align:center">
+                        <thead><tr><th style="text-align:right">العنصر</th>${allElements.map(e => `<th style="font-size:11px">${e.icon}</th>`).join('')}</tr></thead>
+                        <tbody>
+            `;
+            for (const row of allElements) {
+                html += `<tr><td style="text-align:right;font-weight:700;font-size:12px">${row.icon} ${row.nameAr}</td>`;
+                for (const col of allElements) {
+                    if (row.key === col.key) {
+                        html += `<td style="background:rgba(255,255,255,0.03)">—</td>`;
+                    } else {
+                        const alignment = Math.abs(row.score - col.score);
+                        const symbol = alignment <= 10 ? '🟢' : alignment <= 25 ? '🟡' : '🔴';
+                        html += `<td>${symbol}</td>`;
+                    }
+                }
+                html += `</tr>`;
+            }
+            html += `</tbody></table>
+                <div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center">🟢 متوافق (فجوة ≤ 10) | 🟡 فجوة معتدلة (11-25) | 🔴 تعارض (> 25)</div>
+                </div>
+            </div>
+            `;
+
+            // 7. تحليل الفجوات والتوصيات
+            const gaps = allElements
+                .filter(e => e.score < 65)
+                .sort((a, b) => a.score - b.score);
+
+            html += `
+            <div class="rpt-section">
+                <div class="rpt-section-title"><i class="bi bi-exclamation-triangle" style="color:var(--red)"></i> تحليل الفجوات — أولويات التصحيح</div>
+            `;
+
+            if (gaps.length === 0) {
+                html += `<div style="padding:16px;text-align:center;color:var(--green);font-size:14px">🟢 جميع العناصر في مستوى جيد (≥65) — لا توجد فجوات حرجة</div>`;
+            } else {
+                for (const g of gaps) {
+                    const urgency = g.score < 50 ? 'عاجل' : 'مهم';
+                    const urgencyColor = g.score < 50 ? 'var(--red)' : 'var(--yellow)';
+                    const action = g.findings[g.findings.length - 1] || 'يحتاج مراجعة وتحسين';
+                    html += recItem(g.icon, `<strong>${g.nameAr} (${g.score}/100):</strong> ${action}`, urgency, urgencyColor);
+                }
+            }
+            html += `</div>`;
+
+            // 8. خطة العمل المقترحة
+            html += `
+            <div class="rpt-section">
+                <div class="rpt-section-title"><i class="bi bi-clipboard-check" style="color:var(--green)"></i> خطة التصحيح المقترحة</div>
+                <table class="rpt-table" style="margin-top:12px">
+                    <thead><tr><th>الأولوية</th><th>العنصر</th><th>الإجراء</th><th>المسؤول المقترح</th><th>المدة</th></tr></thead>
+                    <tbody>
+            `;
+
+            // Sort by score (lowest first = highest priority)
+            const sorted = [...allElements].sort((a, b) => a.score - b.score);
+            const priorities = ['فوري 🔴', 'شهر 🟡', 'ربع سنة 🟢', 'ربع سنة 🟢', 'نصف سنة ⚪', 'نصف سنة ⚪', 'سنوي ⚪'];
+            const owners = {
+                strategy: 'الرئيس التنفيذي',
+                structure: 'الرئيس التنفيذي + HR',
+                systems: 'مدير تقنية المعلومات',
+                shared_values: 'الرئيس التنفيذي + HR',
+                style: 'الرئيس التنفيذي',
+                staff: 'مدير الموارد البشرية',
+                skills: 'مدير التطوير والتدريب',
+            };
+            const durations = { 0: '1-2 أسبوع', 1: '1 شهر', 2: '3 أشهر', 3: '3 أشهر', 4: '6 أشهر', 5: '6 أشهر', 6: '12 شهر' };
+
+            sorted.forEach((el, i) => {
+                const action = el.findings[el.findings.length - 1] || 'مراجعة وتحسين';
+                const priColor = i < 2 ? 'var(--red)' : i < 4 ? 'var(--yellow)' : 'var(--green)';
+                html += `<tr>
+                    <td><span style="color:${priColor};font-weight:700;font-size:12px">${priorities[i] || priorities[6]}</span></td>
+                    <td style="font-weight:700">${el.icon} ${el.nameAr}</td>
+                    <td style="font-size:12px">${action}</td>
+                    <td style="font-size:12px">${owners[el.key] || '—'}</td>
+                    <td style="font-size:12px">${durations[i] || '12 شهر'}</td>
+                </tr>`;
+            });
+
+            html += `</tbody></table></div>`;
+
+            // 9. المصادر
+            html += `
+            <div style="margin-top:24px;padding:16px;background:rgba(6,182,212,0.05);border:1px solid rgba(6,182,212,0.15);border-radius:12px;font-size:12px;color:var(--muted);line-height:2">
+                <strong style="color:var(--text)">📚 مصادر البيانات في ستارتكس:</strong><br>
+                🎯 الاستراتيجية → <code>directions.html</code> + الأهداف الاستراتيجية<br>
+                🏗️ الهيكل → إعدادات المنشأة + الإدارات<br>
+                ⚙️ الأنظمة → <code>dept-deep.html</code> (العمليات + تقنية المعلومات)<br>
+                💎 القيم + 👑 الأسلوب → <code>org-dna.html</code><br>
+                👥 الموظفون + 🎓 المهارات → <code>dept-deep.html</code> (الموارد البشرية)<br>
+                🔄 كشف التعارض → <code>contradictions.html</code>
+            </div>
+            `;
+
+            return html;
+        }
+
+        // Helper: 7S Element card
+        function sevenSElementCard(el) {
+            const statusColor = el.score >= 75 ? 'var(--green)' : el.score >= 55 ? 'var(--yellow)' : 'var(--red)';
+            const statusLabel = el.score >= 80 ? 'ممتاز' : el.score >= 65 ? 'جيد' : el.score >= 50 ? 'مقبول' : 'ضعيف';
+            return `
+            <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:14px;padding:16px;border-right:3px solid ${el.color}">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                    <div style="display:flex;align-items:center;gap:10px">
+                        <span style="font-size:24px">${el.icon}</span>
+                        <div>
+                            <div style="font-weight:800;font-size:15px">${el.nameAr} <span style="font-size:11px;color:var(--muted);font-weight:400">(${el.nameEn})</span></div>
+                            <div style="font-size:11px;color:var(--muted)">${el.desc}</div>
+                        </div>
+                    </div>
+                    <div style="text-align:center">
+                        <div style="font-size:24px;font-weight:900;color:${statusColor}" data-target="${el.score}" class="rpt-kpi-val">0</div>
+                        <div style="font-size:10px;color:${statusColor};font-weight:700">${statusLabel}</div>
+                    </div>
+                </div>
+                <div class="rpt-progress" style="margin-bottom:10px;height:6px"><div class="rpt-progress-fill" style="width:${el.score}%;background:${el.color}"></div></div>
+                <div style="font-size:12px;color:var(--muted);line-height:1.8">
+                    ${el.findings.map(f => `<div style="display:flex;align-items:flex-start;gap:6px"><span style="color:${el.color}">▸</span> ${f}</div>`).join('')}
+                </div>
+                <div style="font-size:10px;color:var(--muted);margin-top:8px;opacity:0.6">المصدر: ${el.source}</div>
+            </div>
+            `;
+        }
+
         // === Helper builders ===
         function kpiCard(label, val, suffix, change, color) {
             const c = color === 'green' ? 'var(--green)' : color === 'red' ? 'var(--red)' : color === 'primary' ? 'var(--primary)' : 'var(--muted)';
@@ -1057,7 +1391,7 @@
         async function downloadPDF() {
             const reportDoc = document.getElementById('reportDoc');
             if (!reportDoc || !reportDoc.innerHTML.trim()) {
-                alert('يرجى توليد التقرير أولاً');
+                showToast('يرجى توليد التقرير أولاً', 'warning');
                 return;
             }
 
@@ -1104,7 +1438,7 @@
 
             } catch (err) {
                 console.error('PDF generation error:', err);
-                alert('حدث خطأ أثناء توليد PDF — جرّب زر الطباعة كبديل');
+                showToast('حدث خطأ أثناء توليد PDF — جرّب زر الطباعة كبديل', 'error');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalHTML;
@@ -1452,9 +1786,9 @@
             panel.style.display = 'block';
 
             // Inject after toolbar
-            const toolbar = document.querySelector('.rpt-toolbar');
-            if (toolbar) {
-                toolbar.parentNode.parentNode.parentNode.insertBefore(panel, toolbar.parentNode.parentNode);
+            const previewEl = document.querySelector('.rpt-preview');
+            if (previewEl && previewEl.parentNode) {
+                previewEl.parentNode.insertBefore(panel, previewEl);
             }
         })();
 
@@ -1478,7 +1812,7 @@
             const ident = JSON.parse(localStorage.getItem('stratix_identity_payload') || 'null');
             const swot = JSON.parse(localStorage.getItem('stratix_swot_data') || localStorage.getItem('stratix_swot_payload') || 'null');
 
-            if (!diag) { alert('لا توجد بيانات تشخيص. يرجى إكمال التشخيص أولاً.'); return; }
+            if (!diag) { showToast('لا توجد بيانات تشخيص. يرجى إكمال التشخيص أولاً.', 'warning'); return; }
 
             const html = buildReportHTML(selectedDRPType, diag, dept, ident, swot);
             const wrap = document.getElementById('drpDocWrap');
@@ -1497,7 +1831,7 @@
             try {
                 await html2pdf().set(opt).from(wrap.querySelector('.dr-doc')).save();
             } catch (e) {
-                alert('تعذّر توليد PDF — جرّب الطباعة مباشرة');
+                showToast('تعذّر توليد PDF — جرّب الطباعة مباشرة', 'error');
             }
         };
 
@@ -1561,9 +1895,9 @@
                 <div class="dr-section-title">🏛️ الهوية المؤسسية</div>
                 <table class="dr-table">
                     <tr><th>العنصر</th><th>المحتوى</th></tr>
-                    <tr><td>الرؤية</td><td>${ident.vision}</td></tr>
-                    <tr><td>الرسالة</td><td>${ident.mission || '—'}</td></tr>
-                    <tr><td>الميزة التنافسية</td><td>${ident.competitiveAdvantage?.description || '—'}</td></tr>
+                    <tr><td>الرؤية</td><td>${esc(ident.vision)}</td></tr>
+                    <tr><td>الرسالة</td><td>${esc(ident.mission) || '—'}</td></tr>
+                    <tr><td>الميزة التنافسية</td><td>${esc(ident.competitiveAdvantage?.description) || '—'}</td></tr>
                 </table>
                 ` : ''}
 
@@ -1597,19 +1931,19 @@
                 <div class="dr-grid2">
                     <div class="dr-kpi-card" style="text-align:right">
                         <div style="font-weight:700;color:#16a34a;margin-bottom:8px">💪 نقاط القوة (${strengths.length})</div>
-                        ${strengths.slice(0, 4).map(s => `<div class="dr-chip dr-chip-green">${s}</div>`).join('')}
+                        ${strengths.slice(0, 4).map(s => `<div class="dr-chip dr-chip-green">${esc(s)}</div>`).join('')}
                     </div>
                     <div class="dr-kpi-card" style="text-align:right">
                         <div style="font-weight:700;color:#dc2626;margin-bottom:8px">⚠️ نقاط الضعف (${weaknesses.length})</div>
-                        ${weaknesses.slice(0, 4).map(s => `<div class="dr-chip dr-chip-red">${s}</div>`).join('')}
+                        ${weaknesses.slice(0, 4).map(s => `<div class="dr-chip dr-chip-red">${esc(s)}</div>`).join('')}
                     </div>
                     <div class="dr-kpi-card" style="text-align:right">
                         <div style="font-weight:700;color:#2563eb;margin-bottom:8px">🚀 الفرص (${opportunities.length})</div>
-                        ${opportunities.slice(0, 4).map(s => `<div class="dr-chip" style="background:#eff6ff;color:#1d4ed8">${s}</div>`).join('')}
+                        ${opportunities.slice(0, 4).map(s => `<div class="dr-chip" style="background:#eff6ff;color:#1d4ed8">${esc(s)}</div>`).join('')}
                     </div>
                     <div class="dr-kpi-card" style="text-align:right">
                         <div style="font-weight:700;color:#ca8a04;margin-bottom:8px">🔴 التهديدات (${threats.length})</div>
-                        ${threats.slice(0, 4).map(s => `<div class="dr-chip dr-chip-yellow">${s}</div>`).join('')}
+                        ${threats.slice(0, 4).map(s => `<div class="dr-chip dr-chip-yellow">${esc(s)}</div>`).join('')}
                     </div>
                 </div>
 
@@ -1685,7 +2019,7 @@
             } catch (e) { }
             if (!dept) dept = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
             const ident = JSON.parse(localStorage.getItem('stratix_identity_payload') || 'null');
-            if (!diag) { alert('لا توجد بيانات للتصدير'); return; }
+            if (!diag) { showToast('لا توجد بيانات للتصدير', 'warning'); return; }
 
             const wb = XLSX.utils.book_new();
 

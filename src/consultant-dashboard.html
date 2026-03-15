@@ -752,6 +752,17 @@
 
         <!-- Content (hidden until loaded) -->
         <div id="contentArea" style="display:none">
+
+            <!-- 🧠 السياق الذكي + ⚡ Smart Pings -->
+            <div id="smartContextWelcome" style="margin-bottom:8px;"></div>
+            <div id="smartPingsContainer" style="display:none; margin-bottom:16px;"></div>
+            <script src="/assets/js/smart-context.js"></script>
+            <script src="/assets/js/smart-pings.js"></script>
+            <script>
+                SmartContext.renderWelcome('smartContextWelcome');
+                SmartPings.render('smartPingsContainer');
+            </script>
+
             <!-- Header -->
             <div class="page-header fade-in">
                 <div>
@@ -830,7 +841,7 @@
     <script>
         // === Auth ===
         const token = localStorage.getItem('token');
-        if (!token) location.href = '/login.html';
+        if (!token) { sessionStorage.setItem('stratix_return_url', location.pathname + location.search); location.href = '/login?from=restore'; }
 
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         let currentView = 'grid';
@@ -878,7 +889,7 @@
 
                 if (!res.ok) {
                     let errBody = '';
-                    try { const j = await res.json(); errBody = j.error || j.message || ''; } catch(_) {}
+                    try { const j = await res.json(); errBody = j.error || j.message || ''; } catch (_) { }
                     throw new Error(`API error ${res.status}${errBody ? ': ' + errBody : ''}`);
                 }
                 const data = await res.json();
@@ -895,7 +906,7 @@
                 renderSummary(data.summary, data.entities);
                 renderAvgHealth(data.summary, data.entities);
                 renderInsights(data.entities, data.summary);
-                try { renderCharts(data.entities, data.summary); } catch(chartErr) { console.warn('Charts failed:', chartErr); document.getElementById('chartsSection').style.display = 'none'; }
+                try { renderCharts(data.entities, data.summary); } catch (chartErr) { console.warn('Charts failed:', chartErr); document.getElementById('chartsSection').style.display = 'none'; }
                 renderGrid(data.entities);
                 renderTable(data.entities);
                 document.getElementById('entityCount').textContent = `(${data.entities.length} كيان)`;

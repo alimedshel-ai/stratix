@@ -805,6 +805,24 @@
                 </button>
             </div>
 
+            <!-- PESTEL → SWOT Import Banner -->
+            <div id="pestelImportBanner" style="display:none;margin-bottom:16px;padding:14px 18px;
+                background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);
+                border-radius:14px;align-items:center;gap:14px;flex-wrap:wrap">
+                <div style="font-size:24px">🌍</div>
+                <div style="flex:1">
+                    <div style="font-weight:800;font-size:14px;margin-bottom:3px">بيانات PESTEL متاحة</div>
+                    <div id="pestelSummary" style="font-size:12px;color:var(--text-muted)"></div>
+                </div>
+                <button onclick="showPestelImportModal()" style="
+                    padding:9px 18px;border-radius:10px;border:none;
+                    background:linear-gradient(135deg,#3b82f6,#60a5fa);
+                    color:#fff;font-family:'Tajawal',sans-serif;
+                    font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">
+                    📥 استيراد إلى SWOT
+                </button>
+            </div>
+
             <!-- Pre-fill banner -->
             <div id="prefillBanner" style="display:none"></div>
 
@@ -831,6 +849,9 @@
         </div>
     </div>
 
+    <script src="/assets/js/path-engine.js"></script>
+    <script src="/assets/js/hr-handlers.js"></script>
+    <script src="/assets/js/finance-handlers.js"></script>
     <script src="/assets/js/api.js"></script>
     <script src="/assets/js/sidebar.js"></script>
     <script src="/assets/js/ai-advisor.js"></script>
@@ -847,14 +868,18 @@
 
         // ═══ كشف مدير الإدارة ═══
         const _userObj = JSON.parse(localStorage.getItem('user') || '{}');
-        const _diagPayload = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || '{}');
-        const _isDeptMgr = _userObj.userType === 'DEPT_MANAGER' || _userObj.userCategory === 'DEPT_MANAGER' || _diagPayload.role === 'manager';
+        // 🔧 إصلاح: كشف ?dept= من الـ URL — لو موجود = نعامله كمدير إدارة
+        const _swotDeptParam = new URLSearchParams(window.location.search).get('dept');
+        const _isDeptMgrUser = _userObj.userType === 'DEPT_MANAGER' || _userObj.userCategory === 'DEPT_MANAGER';
+        const _isDeptMgr = !!_swotDeptParam || _isDeptMgrUser;
         const _DEPT_NAME_MAP = {
             'finance': 'المالية', 'hr': 'الموارد البشرية', 'marketing': 'التسويق',
             'sales': 'المبيعات', 'it': 'تقنية المعلومات', 'operations': 'العمليات',
-            'cs': 'خدمة العملاء', 'quality': 'الجودة', 'projects': 'المشاريع'
+            'cs': 'خدمة العملاء', 'quality': 'الجودة', 'projects': 'المشاريع',
+            'compliance': 'الامتثال', 'support': 'الخدمات المساندة'
         };
-        const _mgrDeptKey = _diagPayload.department || '';
+        // 🔧 أولاً نستخدم ?dept= من URL، ثانياً من التشخيص
+        const _mgrDeptKey = _swotDeptParam || _diagPayload.department || '';
         const _mgrDeptName = _DEPT_NAME_MAP[_mgrDeptKey] || _mgrDeptKey || 'إدارتك';
 
         // ============================================================
@@ -1448,8 +1473,6 @@
         //  INIT
         // ============================================================
         async function init() {
-            if (!token) { location.href = '/login.html'; return; }
-
             // Load sidebar
             if (typeof loadSidebar === 'function') loadSidebar();
 
@@ -1475,8 +1498,54 @@
             // 2. Pull pain/ambition data from API
             await loadPainAmbitionData();
 
+            // ═══ 2a. كشف ?dept=hr — تحميل S/W من فحص الموارد البشرية ═══
+            const _deptParam = new URLSearchParams(window.location.search).get('dept');
+            if (_deptParam) {
+                const deptNames = { hr: 'الموارد البشرية', finance: 'المالية', operations: 'العمليات', marketing: 'التسويق', sales: 'المبيعات', compliance: 'الامتثال' };
+                const deptName = deptNames[_deptParam] || _deptParam;
+
+                // تخصيص DRAFT_KEY بالإدارة
+                // Note: DRAFT_KEY is const, but we override it here for dept-specific drafts
+                window._deptSwotDraftKey = 'swot_draft_' + _deptParam + '_' + (state.versionId || 'new');
+
+                // تحديث عنوان الصفحة
+                document.title = 'ستارتكس — SWOT ' + deptName;
+                const heroH1 = document.querySelector('.hero h1');
+                if (heroH1) heroH1.textContent = '📊 تحليل SWOT — ' + deptName;
+                const heroDesc = document.getElementById('heroDesc');
+                if (heroDesc) heroDesc.innerHTML = `تحليل نقاط القوة والضعف في <strong>${deptName}</strong> بناءً على نتائج الفحص + أضف الفرص والتهديدات.`;
+
+                // تحميل S/W من localStorage
+                const deptStrengths = JSON.parse(localStorage.getItem('stratix_' + _deptParam + '_strengths') || '[]');
+                const deptWeaknesses = JSON.parse(localStorage.getItem('stratix_' + _deptParam + '_weaknesses') || '[]');
+
+                if (!state.prefilled) state.prefilled = { strengths: [], weaknesses: [], opportunities: [], threats: [] };
+
+                deptStrengths.forEach(s => {
+                    if (!state.prefilled.strengths.some(x => (typeof x === 'string' ? x : x.text) === s)) {
+                        state.prefilled.strengths.push({ text: s, confidence: 90, source: 'hr_deep' });
+                    }
+                });
+                deptWeaknesses.forEach(w => {
+                    if (!state.prefilled.weaknesses.some(x => (typeof x === 'string' ? x : x.text) === w)) {
+                        state.prefilled.weaknesses.push({ text: w, confidence: 90, source: 'hr_deep' });
+                    }
+                });
+
+                if (deptStrengths.length === 0 && deptWeaknesses.length === 0) {
+                    if (typeof showToast === 'function') {
+                        showToast('لم يتم العثور على بيانات الفحص — يرجى إكمال التحليل العميق أولاً', 'warning');
+                    }
+                } else {
+                    console.log(`📌 Loaded ${deptStrengths.length} strengths + ${deptWeaknesses.length} weaknesses from ${_deptParam} deep analysis`);
+                }
+            }
+
             // 2b. Phase 6B — فحص جسر التشخيص (dept-deep + diagnostic-center)
             await checkDiagnosticBridge();
+
+            // 2c. PESTEL → SWOT — فحص بيانات PESTEL المتاحة
+            if (!_isIndividual) await checkPestelData();
 
             // 3. Show pre-fill banner if we have data
             showPrefillBanner();
@@ -1795,6 +1864,213 @@
             showPrefillBanner();
 
             console.log('⚡ Auto-SWOT from Diagnostic Bridge:', { S: S.length, W: W.length, O: O.length, T: T.length });
+        }
+
+        // ============================================================
+        //  PESTEL → SWOT IMPORT
+        // ============================================================
+        let _pestelItems = null; // cached PESTEL items
+
+        async function checkPestelData() {
+            if (!state.versionId) return;
+            try {
+                const pestel = await api(`/api/company-analysis/version/${state.versionId}/PESTEL`);
+                if (!pestel?.data) return;
+
+                const data = typeof pestel.data === 'string' ? JSON.parse(pestel.data) : pestel.data;
+
+                // Extract threats & opportunities from PESTEL dimensions
+                const threats = [];
+                const opportunities = [];
+                const DIMENSION_LABELS = {
+                    political: 'سياسي', economic: 'اقتصادي', social: 'اجتماعي',
+                    technological: 'تقني', environmental: 'بيئي', legal: 'قانوني',
+                    P: 'سياسي', E: 'اقتصادي', S: 'اجتماعي',
+                    T: 'تقني', En: 'بيئي', L: 'قانوني'
+                };
+
+                // Handle different data structures
+                const factors = data.factors || data.items || [];
+                const dimensions = data.dimensions || data.categories || {};
+
+                // Structure 1: flat array of factors
+                if (factors.length > 0) {
+                    factors.forEach(f => {
+                        const dimLabel = DIMENSION_LABELS[f.dimension] || DIMENSION_LABELS[f.category] || f.dimension || '';
+                        const text = f.description || f.text || f.name || '';
+                        if (!text) return;
+                        const impact = f.impact || f.type || 'neutral';
+                        if (impact === 'negative' || impact === 'threat' || f.isTheat) {
+                            threats.push({ text: `[${dimLabel}] ${text}`, dimension: dimLabel });
+                        } else if (impact === 'positive' || impact === 'opportunity') {
+                            opportunities.push({ text: `[${dimLabel}] ${text}`, dimension: dimLabel });
+                        }
+                    });
+                }
+
+                // Structure 2: grouped by dimension { political: { threats: [...], opportunities: [...] } }
+                if (Object.keys(dimensions).length > 0) {
+                    for (const [dimKey, dimData] of Object.entries(dimensions)) {
+                        const dimLabel = DIMENSION_LABELS[dimKey] || dimKey;
+                        if (dimData.threats) {
+                            dimData.threats.forEach(t => {
+                                const text = typeof t === 'string' ? t : (t.text || t.description || '');
+                                if (text) threats.push({ text: `[${dimLabel}] ${text}`, dimension: dimLabel });
+                            });
+                        }
+                        if (dimData.opportunities) {
+                            dimData.opportunities.forEach(o => {
+                                const text = typeof o === 'string' ? o : (o.text || o.description || '');
+                                if (text) opportunities.push({ text: `[${dimLabel}] ${text}`, dimension: dimLabel });
+                            });
+                        }
+                        // Also check items with impact field
+                        if (dimData.items) {
+                            dimData.items.forEach(item => {
+                                const text = typeof item === 'string' ? item : (item.text || item.description || '');
+                                if (!text) return;
+                                if (item.impact === 'negative') threats.push({ text: `[${dimLabel}] ${text}`, dimension: dimLabel });
+                                else if (item.impact === 'positive') opportunities.push({ text: `[${dimLabel}] ${text}`, dimension: dimLabel });
+                            });
+                        }
+                    }
+                }
+
+                if (threats.length === 0 && opportunities.length === 0) return;
+
+                _pestelItems = { threats, opportunities };
+
+                // Show banner
+                const banner = document.getElementById('pestelImportBanner');
+                banner.style.display = 'flex';
+                document.getElementById('pestelSummary').textContent =
+                    `${opportunities.length} فرصة + ${threats.length} تهديد من تحليل PESTEL — اختر ما تريد إضافته`;
+
+                console.log('🌍 PESTEL data available:', { threats: threats.length, opportunities: opportunities.length });
+            } catch (e) {
+                console.warn('PESTEL check failed:', e);
+            }
+        }
+
+        function showPestelImportModal() {
+            if (!_pestelItems) return;
+
+            const overlay = document.createElement('div');
+            overlay.id = 'pestelOverlay';
+            overlay.style.cssText = `
+                position:fixed;inset:0;z-index:10000;
+                background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);
+                display:flex;align-items:center;justify-content:center;
+                animation:fadeIn 0.3s ease;
+            `;
+
+            let itemsHtml = '';
+
+            // Opportunities
+            if (_pestelItems.opportunities.length > 0) {
+                itemsHtml += `<div style="margin-bottom:16px">
+                    <div style="font-weight:800;font-size:14px;color:#3b82f6;margin-bottom:8px">🌟 فرص (${_pestelItems.opportunities.length})</div>`;
+                _pestelItems.opportunities.forEach((item, i) => {
+                    itemsHtml += `
+                        <label style="display:flex;align-items:flex-start;gap:8px;padding:8px 12px;
+                            border-radius:10px;margin-bottom:4px;cursor:pointer;
+                            background:rgba(59,130,246,0.04);border:1px solid rgba(59,130,246,0.1)">
+                            <input type="checkbox" checked data-type="opportunity" data-index="${i}"
+                                style="margin-top:4px;accent-color:#3b82f6">
+                            <span style="font-size:13px;line-height:1.6">${item.text}</span>
+                        </label>`;
+                });
+                itemsHtml += `</div>`;
+            }
+
+            // Threats
+            if (_pestelItems.threats.length > 0) {
+                itemsHtml += `<div>
+                    <div style="font-weight:800;font-size:14px;color:#f97316;margin-bottom:8px">🔥 تهديدات (${_pestelItems.threats.length})</div>`;
+                _pestelItems.threats.forEach((item, i) => {
+                    itemsHtml += `
+                        <label style="display:flex;align-items:flex-start;gap:8px;padding:8px 12px;
+                            border-radius:10px;margin-bottom:4px;cursor:pointer;
+                            background:rgba(249,115,22,0.04);border:1px solid rgba(249,115,22,0.1)">
+                            <input type="checkbox" checked data-type="threat" data-index="${i}"
+                                style="margin-top:4px;accent-color:#f97316">
+                            <span style="font-size:13px;line-height:1.6">${item.text}</span>
+                        </label>`;
+                });
+                itemsHtml += `</div>`;
+            }
+
+            overlay.innerHTML = `
+                <div style="
+                    background:#1a1d2e;border:1px solid rgba(255,255,255,0.1);
+                    border-radius:20px;padding:28px;max-width:520px;width:92%;
+                    font-family:Tajawal,sans-serif;color:#e2e8f0;
+                    box-shadow:0 20px 60px rgba(0,0,0,0.5);
+                    max-height:80vh;overflow-y:auto;
+                ">
+                    <div style="text-align:center;margin-bottom:16px">
+                        <div style="font-size:36px;margin-bottom:8px">🌍</div>
+                        <div style="font-size:18px;font-weight:800">استيراد من PESTEL</div>
+                        <div style="font-size:12px;color:#94a3b8;margin-top:4px">اختر العناصر التي تريد إضافتها لتحليل SWOT</div>
+                    </div>
+                    <div id="pestelItemsList">${itemsHtml}</div>
+                    <div style="display:flex;gap:10px;justify-content:center;margin-top:20px">
+                        <button onclick="confirmPestelImport()" style="
+                            background:linear-gradient(135deg,#3b82f6,#60a5fa);color:#fff;
+                            border:none;padding:12px 28px;border-radius:12px;
+                            font-weight:700;font-size:14px;cursor:pointer;
+                            font-family:Tajawal,sans-serif;
+                        ">✅ استيراد المحدد</button>
+                        <button onclick="document.getElementById('pestelOverlay')?.remove()" style="
+                            background:rgba(255,255,255,0.06);color:#94a3b8;
+                            border:1px solid rgba(255,255,255,0.1);
+                            padding:12px 28px;border-radius:12px;
+                            font-weight:700;font-size:14px;cursor:pointer;
+                            font-family:Tajawal,sans-serif;
+                        ">❌ إلغاء</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        function confirmPestelImport() {
+            const checkboxes = document.querySelectorAll('#pestelItemsList input[type=checkbox]:checked');
+            if (checkboxes.length === 0) {
+                document.getElementById('pestelOverlay')?.remove();
+                return;
+            }
+
+            if (!state.prefilled) state.prefilled = { strengths: [], weaknesses: [], opportunities: [], threats: [] };
+
+            let oppCount = 0, thrCount = 0;
+
+            checkboxes.forEach(cb => {
+                const type = cb.dataset.type;
+                const idx = parseInt(cb.dataset.index);
+                if (type === 'opportunity' && _pestelItems.opportunities[idx]) {
+                    const text = _pestelItems.opportunities[idx].text;
+                    if (!state.prefilled.opportunities.some(x => (typeof x === 'string' ? x : x.text) === text)) {
+                        state.prefilled.opportunities.push({ text, confidence: 85, source: 'pestel' });
+                        oppCount++;
+                    }
+                } else if (type === 'threat' && _pestelItems.threats[idx]) {
+                    const text = _pestelItems.threats[idx].text;
+                    if (!state.prefilled.threats.some(x => (typeof x === 'string' ? x : x.text) === text)) {
+                        state.prefilled.threats.push({ text, confidence: 85, source: 'pestel' });
+                        thrCount++;
+                    }
+                }
+            });
+
+            // Hide overlay & banner
+            document.getElementById('pestelOverlay')?.remove();
+            document.getElementById('pestelImportBanner').style.display = 'none';
+
+            // Update prefill banner
+            showPrefillBanner();
+
+            console.log(`🌍 PESTEL imported: ${oppCount} opportunities, ${thrCount} threats`);
         }
 
         function showPrefillBanner() {
@@ -2135,32 +2411,26 @@
             // Next Step CTA — Journey Progress
             html += `
                 <div style="background:linear-gradient(135deg,rgba(167,139,250,0.08),rgba(102,126,234,0.05));border:1px solid rgba(167,139,250,0.2);border-radius:18px;padding:24px;margin-top:24px">
-                    <div style="font-size:15px;font-weight:900;margin-bottom:14px;text-align:center;color:var(--text)">🗺️ رحلتك الاستراتيجية — وصلت الخطوة ٢ من ٤</div>
-                    <div style="display:flex;align-items:center;gap:0;margin-bottom:18px;justify-content:center;flex-wrap:wrap">
-                        <div style="width:32px;height:32px;border-radius:50%;background:rgba(34,197,94,0.15);color:#22c55e;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900">✓</div>
-                        <div style="width:28px;height:3px;background:linear-gradient(90deg,#22c55e,#22c55e)"></div>
-                        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900">✓</div>
-                        <div style="width:28px;height:3px;background:linear-gradient(90deg,#22c55e,#a78bfa)"></div>
-                        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#a78bfa,#8b5cf6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;animation:pulse 2s infinite;box-shadow:0 0 16px rgba(139,92,246,0.4)">3</div>
-                        <div style="width:28px;height:3px;background:rgba(255,255,255,0.08)"></div>
-                        <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.06);color:var(--text-muted);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">4</div>
-                    </div>
-                    <div style="display:flex;gap:8px;text-align:center;justify-content:center;margin-bottom:16px;flex-wrap:wrap">
-                        <span style="font-size:11px;color:#22c55e;font-weight:700">✅ البيئة الداخلية</span>
-                        <span style="font-size:11px;color:#22c55e;font-weight:700">✅ SWOT</span>
-                        <span style="font-size:11px;color:#a78bfa;font-weight:700">👈 التوجهات التالي</span>
-                        <span style="font-size:11px;color:var(--text-muted)">KPIs</span>
+                    <div style="font-size:15px;font-weight:900;margin-bottom:14px;text-align:center;color:var(--text)">🗺️ رحلتك التشخيصية — أكملت الخطوة ٦ من ٧</div>
+                    <div style="display:flex;gap:6px;text-align:center;justify-content:center;margin-bottom:16px;flex-wrap:wrap">
+                        <span style="font-size:10px;color:#22c55e;font-weight:700">✅ PESTEL</span>
+                        <span style="font-size:10px;color:#22c55e;font-weight:700">✅ بورتر</span>
+                        <span style="font-size:10px;color:#22c55e;font-weight:700">✅ البيئة الداخلية</span>
+                        <span style="font-size:10px;color:#22c55e;font-weight:700">✅ سلسلة القيمة</span>
+                        <span style="font-size:10px;color:#22c55e;font-weight:700">✅ الإدارات</span>
+                        <span style="font-size:10px;color:#22c55e;font-weight:700">✅ SWOT</span>
+                        <span style="font-size:10px;color:#8b5cf6;font-weight:700">👈 TOWS</span>
                     </div>
                     <div style="text-align:center">
-                        <a href="/directions.html" style="
+                        <a href="/tows.html" style="
                             display:inline-flex;align-items:center;gap:10px;
                             padding:14px 36px;border-radius:14px;
                             background:linear-gradient(135deg,#a78bfa,#8b5cf6);
                             color:white;text-decoration:none;font-size:15px;font-weight:700;
                             box-shadow:0 4px 15px rgba(139,92,246,0.3);
                             transition:transform 0.2s;font-family:inherit
-                        " onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'" onclick="if(window.stratixTrackComplete) stratixTrackComplete(2)">
-                            🎯 الخطوة التالية: حدد أهدافك الاستراتيجية ←
+                        " onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                            ↔️ الخطوة التالية: مصفوفة TOWS ←
                         </a>
                     </div>
                 </div>
@@ -2175,8 +2445,8 @@
                     <button class="btn-q back" onclick="restartAnalysis()">
                         <i class="bi bi-arrow-clockwise"></i> إعادة التحليل
                     </button>
-                    <a href="/tool-detail.html?code=PESTEL" class="btn-q back" style="text-decoration:none">
-                        <i class="bi bi-globe2"></i> أو تحليل PESTEL
+                    <a href="/tows.html" class="btn-q back" style="text-decoration:none">
+                        <i class="bi bi-arrows-fullscreen"></i> مصفوفة TOWS
                     </a>
                 </div>
             `;
@@ -2230,7 +2500,7 @@
             }
 
             if (insights.length === 0) {
-                insights.push({ icon: '✅', text: 'أكملت التحليل! الخطوة التالية: تحليل البيئة الخارجية (PESTEL)', action: '' });
+                insights.push({ icon: '✅', text: 'أكملت التحليل! الخطوة التالية: مصفوفة TOWS لتحويل النتائج إلى إجراءات', action: '' });
             }
 
             let html = `
@@ -2258,10 +2528,10 @@
                 <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
                     <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--text-muted)">🔗 خطواتك القادمة:</div>
                     <div style="display:flex;gap:8px;flex-wrap:wrap">
-                        <a href="/tows.html" style="padding:8px 16px;border-radius:10px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);color:#22c55e;text-decoration:none;font-size:12px;font-weight:700">🔄 تحليل TOWS</a>
-                        <a href="/tool-detail.html?code=PESTEL" style="padding:8px 16px;border-radius:10px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);color:#3b82f6;text-decoration:none;font-size:12px;font-weight:700">🌍 تحليل PESTEL</a>
+                        <a href="/tows.html" style="padding:8px 16px;border-radius:10px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);color:#22c55e;text-decoration:none;font-size:12px;font-weight:700">🔄 مصفوفة TOWS</a>
+                        <a href="/directions.html" style="padding:8px 16px;border-radius:10px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.2);color:#a78bfa;text-decoration:none;font-size:12px;font-weight:700">🎯 التوجهات الاستراتيجية</a>
+                        <a href="/tool-detail.html?code=PESTEL" style="padding:8px 16px;border-radius:10px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);color:#3b82f6;text-decoration:none;font-size:12px;font-weight:700">🌍 PESTEL</a>
                         <a href="/tool-detail.html?code=PORTER" style="padding:8px 16px;border-radius:10px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.2);color:#f97316;text-decoration:none;font-size:12px;font-weight:700">⚔️ Porter</a>
-                        <a href="/internal-env.html" style="padding:8px 16px;border-radius:10px;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);color:#8b5cf6;text-decoration:none;font-size:12px;font-weight:700">🏢 البيئة الداخلية</a>
                     </div>
                 </div>
             `;
@@ -2274,7 +2544,7 @@
         //  SAVE ANALYSIS
         // ============================================================
         async function saveAnalysis() {
-            if (!token || !state.versionId) return;
+            if (!state.versionId) return;
 
             // Collect SWOT data in the standard format
             const swotData = {};
@@ -2307,6 +2577,9 @@
                 summary: `SWOT: ${swotData.strengths.length} قوة, ${swotData.weaknesses.length} ضعف, ${swotData.opportunities.length} فرص, ${swotData.threats.length} تهديدات`
             };
 
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
             try {
                 const url = state.analysisId
                     ? `/api/company-analysis/${state.analysisId}`
@@ -2315,7 +2588,8 @@
 
                 const res = await fetch(url, {
                     method,
-                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    headers,
+                    credentials: 'same-origin',
                     body: JSON.stringify(payload)
                 });
 
@@ -2325,7 +2599,27 @@
                     console.log('✅ SWOT saved');
                     // مسح المسودة بعد الحفظ الناجح
                     localStorage.removeItem(DRAFT_KEY);
+                    if (window._deptSwotDraftKey) localStorage.removeItem(window._deptSwotDraftKey);
                     _draftSaved = true;
+
+                    // ═══ Dept-specific: حفظ SWOT + انتقال للتوجهات ═══
+                    const _dp = new URLSearchParams(window.location.search).get('dept');
+                    if (_dp) {
+                        // حفظ dual-write
+                        localStorage.setItem('stratix_' + _dp + '_swot', JSON.stringify(swotData));
+
+                        // تسجيل إكمال الخطوة 2
+                        if (typeof updateCompletedSteps === 'function') updateCompletedSteps(2);
+
+                        // إشعار + انتقال
+                        if (typeof showToast === 'function') {
+                            showToast('تم حفظ تحليل SWOT — جاري الانتقال للتوجهات', 'success');
+                        }
+                        setTimeout(() => {
+                            window.location.href = '/directions.html?dept=' + _dp;
+                        }, 1500);
+                        return;
+                    }
                 }
             } catch (e) {
                 console.warn('Save failed:', e);

@@ -546,7 +546,7 @@
     <script src="/assets/js/notifications.js"></script>
     <script>
         const token = localStorage.getItem('token');
-        if (!token) { location.href = '/login.html'; }
+        if (!token) { sessionStorage.setItem('stratix_return_url', location.pathname + location.search); location.href = '/login?from=restore'; }
 
         const state = {
             versionId: localStorage.getItem('selectedVersionId'),
@@ -572,11 +572,11 @@
         }
 
         const presTemplates = [
-            { id: 'quarterly', icon: '📊', title: 'مراجعة ربعية', desc: 'أداء الربع مع KPIs', slides: 8, color: '#667eea' },
-            { id: 'board', icon: '👔', title: 'تقرير مجلس الإدارة', desc: 'ملخص تنفيذي للقيادة', slides: 6, color: '#ef4444' },
-            { id: 'strategy', icon: '🎯', title: 'الخطة الاستراتيجية', desc: 'عرض الرؤية والأهداف', slides: 10, color: '#22c55e' },
-            { id: 'initiative', icon: '🚀', title: 'عرض مبادرة', desc: 'حالة مبادرة محددة', slides: 7, color: '#f97316' },
-            { id: 'team', icon: '👥', title: 'أداء الفريق', desc: 'إنتاجية وإنجازات الفريق', slides: 6, color: '#8b5cf6' },
+            { id: 'quarterly', icon: '📊', title: 'مراجعة ربعية', desc: 'أداء الربع مع KPIs', color: '#667eea' },
+            { id: 'board', icon: '👔', title: 'تقرير مجلس الإدارة', desc: 'ملخص تنفيذي للقيادة', color: '#ef4444' },
+            { id: 'strategy', icon: '🎯', title: 'الخطة الاستراتيجية', desc: 'عرض الرؤية والأهداف', color: '#22c55e' },
+            { id: 'initiative', icon: '🚀', title: 'عرض مبادرة', desc: 'حالة مبادرة محددة', color: '#f97316' },
+            { id: 'team', icon: '👥', title: 'أداء الفريق', desc: 'إنتاجية وإنجازات الفريق', color: '#8b5cf6' },
         ];
 
         let selectedPres = 'quarterly';
@@ -652,14 +652,14 @@
             if (sub) sub.textContent = `توليد عروض تقديمية استراتيجية لـ ${state.entityName} بالذكاء الاصطناعي`;
         }
 
-        function renderPresTemplates() {
+        function renderPresTemplates(slideCount) {
             document.getElementById('presTemplates').innerHTML = presTemplates.map(t => `
                 <div class="pres-tmpl ${t.id === selectedPres ? 'active' : ''}" onclick="selectedPres='${t.id}';renderPresTemplates()">
                     <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${t.color}"></div>
                     <span class="pres-tmpl-icon">${t.icon}</span>
                     <h3>${t.title}</h3>
                     <p>${t.desc}</p>
-                    <div class="pres-tmpl-slides">${t.slides} شرائح</div>
+                    <div class="pres-tmpl-slides">${slideCount ? slideCount + ' شرائح (متوقعة)' : 'حسب البيانات المتوفرة'}</div>
                 </div>
             `).join('');
         }
@@ -675,11 +675,12 @@
             slides = generateSlides();
             currentSlide = 0;
             renderSlide();
+            renderPresTemplates(slides.length); // Update slide count after generation
             document.getElementById('presShow').classList.add('visible');
 
             btn.disabled = false;
             btn.classList.remove('generating');
-            btn.innerHTML = '<i class="bi bi-magic"></i> توليد العرض';
+            btn.innerHTML = '<i class="bi bi-magic"></i> إعادة التوليد';
             document.getElementById('presShow').scrollIntoView({ behavior: 'smooth' });
         }
 
@@ -707,11 +708,17 @@
             // Tools completion
             const completedTools = state.syncTools.filter(t => t.status === 'COMPLETED').length;
             const totalTools = state.syncTools.length || 1;
+            const toolsPct = Math.round(completedTools / totalTools * 100);
 
-            // Build slides based on template
+            // Check what data is available
+            const hasKpiData = kpiAchievements.length > 0;
+            const hasObjectives = state.objectives.length > 0;
+            const hasInitiatives = state.initiatives.length > 0;
+            const hasSwot = !!state.swotData;
+
             let result = [];
 
-            // ===== COVER SLIDE =====
+            // ===== 1. COVER SLIDE (always) =====
             result.push({
                 type: 'cover',
                 content: {
@@ -725,37 +732,39 @@
                 }
             });
 
-            // ===== KPI METRICS SLIDE =====
-            if (kpiAchievements.length > 0) {
-                const topKpis = kpiAchievements.slice(0, 4);
+            // ===== 2. OVERVIEW DASHBOARD (always — single overview, no duplication) =====
+            result.push({
+                type: 'metrics',
+                content: {
+                    title: `📊 لمحة عامة — ${entity}`,
+                    items: [
+                        { label: 'الأهداف الاستراتيجية', value: `${state.objectives.length}`, change: hasObjectives ? 'تم التسجيل' : 'لم تُسجل بعد', color: hasObjectives ? 'var(--green)' : 'var(--muted)' },
+                        { label: 'مؤشرات الأداء', value: `${state.kpis.length}`, change: hasKpiData ? `متوسط التحقيق ${avgKpi}%` : 'بدون قيم فعلية', color: hasKpiData ? (avgKpi >= 70 ? 'var(--green)' : 'var(--yellow)') : 'var(--muted)' },
+                        { label: 'المبادرات', value: `${state.initiatives.length}`, change: hasInitiatives ? 'قيد التنفيذ' : 'لم تُسجل بعد', color: hasInitiatives ? 'var(--blue)' : 'var(--muted)' },
+                        { label: 'أدوات التحليل', value: `${completedTools}/${totalTools}`, change: `${toolsPct}% مكتملة`, color: toolsPct >= 50 ? 'var(--green)' : 'var(--yellow)' },
+                    ]
+                }
+            });
+
+            // ===== 3. KPI DETAILS TABLE (only if real KPI data exists) =====
+            if (hasKpiData) {
                 result.push({
-                    type: 'metrics',
+                    type: 'table',
                     content: {
-                        title: `📊 المؤشرات الرئيسية — ${entity}`,
-                        items: topKpis.map(k => ({
-                            label: k.name,
-                            value: `${k.actual}${k.unit === '%' ? '%' : ''}`,
-                            change: `${k.pct}% من المستهدف`,
-                            color: k.pct >= 80 ? 'var(--green)' : k.pct >= 50 ? 'var(--yellow)' : 'var(--red)'
-                        }))
-                    }
-                });
-            } else {
-                result.push({
-                    type: 'list',
-                    content: {
-                        title: `📊 حالة المؤشرات — ${entity}`,
-                        items: [
-                            `إجمالي المؤشرات المسجلة: ${state.kpis.length}`,
-                            `لم يتم تحديث قيم فعلية بعد — يرجى إدخال البيانات`,
-                            `عدد الأدوات المكتملة: ${completedTools}/${totalTools}`,
-                        ]
+                        title: `📈 تفاصيل مؤشرات الأداء — ${entity}`,
+                        headers: ['المؤشر', 'المستهدف', 'الفعلي', 'التحقيق'],
+                        rows: kpiAchievements.slice(0, 8).map(k => [
+                            k.name,
+                            `${k.target} ${k.unit}`,
+                            `${k.actual} ${k.unit}`,
+                            `${k.pct >= 80 ? '✅' : k.pct >= 50 ? '🟡' : '🔴'} ${k.pct}%`
+                        ])
                     }
                 });
             }
 
-            // ===== OBJECTIVES TABLE =====
-            if (state.objectives.length > 0) {
+            // ===== 4. OBJECTIVES TABLE (only if objectives exist) =====
+            if (hasObjectives) {
                 const objRows = state.objectives.slice(0, 6).map(o => [
                     o.title,
                     o.perspective || '—',
@@ -774,25 +783,8 @@
                 });
             }
 
-            // ===== KPI DETAILS TABLE =====
-            if (kpiAchievements.length > 0) {
-                result.push({
-                    type: 'table',
-                    content: {
-                        title: `📈 تفاصيل مؤشرات الأداء — ${entity}`,
-                        headers: ['المؤشر', 'المستهدف', 'الفعلي', 'التحقيق'],
-                        rows: kpiAchievements.slice(0, 8).map(k => [
-                            k.name,
-                            `${k.target} ${k.unit}`,
-                            `${k.actual} ${k.unit}`,
-                            `${k.pct >= 80 ? '✅' : k.pct >= 50 ? '🟡' : '🔴'} ${k.pct}%`
-                        ])
-                    }
-                });
-            }
-
-            // ===== SWOT SLIDE =====
-            if (state.swotData) {
+            // ===== 5. SWOT SLIDE (only if SWOT data exists) =====
+            if (hasSwot) {
                 const getItems = (key) => {
                     const val = state.swotData[key];
                     if (Array.isArray(val)) return val.map(v => typeof v === 'string' ? v : v.title || v.text || '').filter(Boolean);
@@ -824,8 +816,8 @@
                 }
             }
 
-            // ===== INITIATIVES SLIDE =====
-            if (state.initiatives.length > 0) {
+            // ===== 6. INITIATIVES SLIDE (only if initiatives exist) =====
+            if (hasInitiatives) {
                 result.push({
                     type: 'list',
                     content: {
@@ -840,49 +832,26 @@
                 });
             }
 
-            // ===== TOOLS STATUS =====
-            if (state.syncTools.length > 0) {
-                const toolNames = {
-                    'SWOT': 'تحليل SWOT',
-                    'PESTEL': 'تحليل PESTEL',
-                    'PORTER': 'نموذج بورتر',
-                    'ANSOFF': 'مصفوفة أنسوف',
-                    'BSC': 'بطاقة الأداء',
-                    'CUSTOMER_JOURNEY': 'رحلة العميل',
-                    'VALUE_CHAIN': 'سلسلة القيمة',
-                    'CORE_COMPETENCY': 'القدرات الجوهرية'
-                };
-                result.push({
-                    type: 'table',
-                    content: {
-                        title: `🔧 حالة أدوات التحليل — ${entity}`,
-                        headers: ['الأداة', 'الحالة', 'بيانات'],
-                        rows: state.syncTools.map(t => [
-                            toolNames[t.code] || t.code,
-                            t.status === 'COMPLETED' ? '✅ مكتمل' :
-                                t.status === 'IN_PROGRESS' ? '🔵 قيد التنفيذ' :
-                                    '⬜ لم يبدأ',
-                            t.hasData ? '✅' : '❌'
-                        ])
-                    }
-                });
-            }
+            // ===== 7. NEXT STEPS (always — replaces old duplicate summary) =====
+            const nextSteps = [];
+            if (!hasKpiData && state.kpis.length > 0) nextSteps.push('تحديث القيم الفعلية لمؤشرات الأداء (KPIs)');
+            if (state.kpis.length === 0) nextSteps.push('إضافة مؤشرات أداء (KPIs) للأهداف الاستراتيجية');
+            if (!hasObjectives) nextSteps.push('تسجيل الأهداف الاستراتيجية في المنصة');
+            if (!hasInitiatives) nextSteps.push('إنشاء المبادرات وربطها بالأهداف');
+            if (completedTools < totalTools) nextSteps.push(`إكمال أدوات التحليل (${totalTools - completedTools} أداة متبقية)`);
+            if (!hasSwot) nextSteps.push('إجراء تحليل SWOT لبناء رؤية استراتيجية متكاملة');
+            if (nextSteps.length === 0) nextSteps.push('الاستمرار بالمتابعة الدورية وتحديث المؤشرات');
+            nextSteps.push('مراجعة التوصيات في صفحة الذكاء الاستراتيجي');
 
-            // ===== SUMMARY METRICS =====
             result.push({
-                type: 'metrics',
+                type: 'list',
                 content: {
-                    title: `📋 ملخص — ${entity}`,
-                    items: [
-                        { label: 'الأهداف الاستراتيجية', value: `${state.objectives.length}`, change: '', color: 'var(--primary)' },
-                        { label: 'مؤشرات الأداء', value: `${state.kpis.length}`, change: avgKpi ? `متوسط ${avgKpi}%` : '', color: avgKpi >= 70 ? 'var(--green)' : 'var(--yellow)' },
-                        { label: 'المبادرات', value: `${state.initiatives.length}`, change: '', color: 'var(--blue)' },
-                        { label: 'أدوات مكتملة', value: `${completedTools}/${totalTools}`, change: `${Math.round(completedTools / totalTools * 100)}%`, color: 'var(--purple)' },
-                    ]
+                    title: `📌 الخطوات القادمة — ${entity}`,
+                    items: nextSteps
                 }
             });
 
-            // ===== END SLIDE =====
+            // ===== 8. END SLIDE (always) =====
             result.push({
                 type: 'end',
                 content: {

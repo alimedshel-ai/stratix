@@ -838,7 +838,7 @@
     <script>
         // ===== AUTH & API HELPERS =====
         const token = localStorage.getItem('token');
-        if (!token) window.location.href = '/login.html';
+        if (!token) { sessionStorage.setItem('stratix_return_url', location.pathname + location.search); location.href = '/login?from=restore'; }
 
         async function api(url, options = {}) {
             const res = await fetch(url, {
@@ -879,7 +879,10 @@
 
         // ===== LOAD DATA =====
         async function loadAll() {
-            await Promise.all([loadSectors(), loadIndustries(), loadEntityTypes(), loadEntityCount()]);
+            // 🔒 Fix: Promise.allSettled — فشل طلب واحد لا يُسقط الباقي
+            const results = await Promise.allSettled([loadSectors(), loadIndustries(), loadEntityTypes(), loadEntityCount()]);
+            const failed = results.filter(r => r.status === 'rejected');
+            if (failed.length > 0) console.warn('بعض البيانات لم تُحمَّل:', failed.map(r => r.reason?.message));
         }
 
         async function loadSectors() {

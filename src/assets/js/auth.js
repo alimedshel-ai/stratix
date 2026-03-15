@@ -1,19 +1,28 @@
 // Shared auth utilities
+// ⚠️ التوكن الآن في HttpOnly Cookie — لا يُمكن قراءته من الفرونتند
+// هذه الدالة تبقى للتوافق مع الصفحات القديمة
 function getToken() {
-    const token = localStorage.getItem('token');
-    if (!token) {
-        window.location.href = '/login';
-        return null;
-    }
-    return token;
+    return localStorage.getItem('token') || '';
 }
 
 function logout() {
     localStorage.removeItem('token');
-    window.location.href = '/login';
+    localStorage.removeItem('user');
+    localStorage.removeItem('selectedVersionId');
+    // 🔒 مسح HttpOnly Cookie من السيرفر
+    fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
+        .catch(() => { })
+        .finally(() => {
+            window.location.href = '/login.html';
+        });
 }
 
-// Check auth on page load
-if (!getToken()) {
-    window.location.href = '/login';
+// 🔒 فحص هل المستخدم مسجل دخول عبر طلب للسيرفر
+async function checkAuth() {
+    try {
+        const res = await fetch('/api/auth/me', { credentials: 'same-origin' });
+        return res.ok;
+    } catch {
+        return false;
+    }
 }

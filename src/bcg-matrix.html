@@ -470,6 +470,132 @@
                 grid-template-columns: 1fr
             }
         }
+
+        /* Product Recommendation Badge */
+        .qi-rec {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .qi-rec.invest {
+            background: rgba(250, 204, 21, 0.12);
+            color: #facc15;
+        }
+
+        .qi-rec.decide {
+            background: rgba(56, 189, 248, 0.12);
+            color: #38bdf8;
+        }
+
+        .qi-rec.harvest {
+            background: rgba(34, 197, 94, 0.12);
+            color: #22c55e;
+        }
+
+        .qi-rec.divest {
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
+        }
+
+        .qi-initiative {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            background: rgba(102, 126, 234, 0.08);
+            color: #667eea;
+            cursor: pointer;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .2s;
+        }
+
+        .qi-initiative:hover {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+            transform: scale(1.1);
+        }
+
+        /* Success Path */
+        .success-path-wrap {
+            margin-top: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px 24px;
+        }
+
+        .success-path-title {
+            font-size: 14px;
+            font-weight: 800;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sp-track {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            flex-wrap: wrap;
+        }
+
+        .sp-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 16px;
+            border-radius: 12px;
+            border: 1.5px solid var(--border);
+            background: rgba(255, 255, 255, 0.02);
+            transition: all .3s;
+            min-width: 90px;
+        }
+
+        .sp-node.highlight {
+            border-color: rgba(250, 204, 21, 0.4);
+            background: rgba(250, 204, 21, 0.06);
+        }
+
+        .sp-node .sp-emoji {
+            font-size: 24px;
+        }
+
+        .sp-node .sp-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .sp-node .sp-count {
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .sp-arrow {
+            font-size: 20px;
+            color: var(--text-muted);
+            margin: 0 6px;
+        }
+
+        .sp-desc {
+            margin-top: 12px;
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+            line-height: 1.8;
+        }
     </style>
 </head>
 
@@ -495,6 +621,12 @@
                     <div class="axis-label-low-y">منخفض</div>
                     <div class="axis-label-high-x">عالية</div>
                     <div class="axis-label-low-x">منخفضة</div>
+                </div>
+
+                <!-- Success Path -->
+                <div class="success-path-wrap">
+                    <div class="success-path-title">🛤️ مسار النجاح المثالي</div>
+                    <div id="successPath"></div>
                 </div>
 
                 <!-- Side Panel -->
@@ -554,10 +686,30 @@
     <script src="/assets/js/sidebar.js"></script>
     <script>
         const QUADS = {
-            stars: { emoji: '⭐', title: 'نجوم', desc: 'نمو عالي + حصة عالية — استثمر بقوة', strategy: 'استثمر بقوة للحفاظ على الريادة. هذه المنتجات تحتاج موارد لكنها تعود بعوائد عالية.' },
-            questions: { emoji: '❓', title: 'علامات استفهام', desc: 'نمو عالي + حصة منخفضة — قرّر: استثمر أو اخرج', strategy: 'قرّر بسرعة: إما استثمار مكثف لتحويلها لنجوم، أو تصفيتها. لا تتركها معلّقة.' },
-            cows: { emoji: '🐄', title: 'أبقار نقدية', desc: 'نمو منخفض + حصة عالية — احلبها وأعد الاستثمار', strategy: 'حافظ عليها كمصدر تمويل. لا تستثمر فيها كثيراً — استخدم أرباحها لتمويل النجوم وعلامات الاستفهام.' },
-            dogs: { emoji: '🐕', title: 'كلاب', desc: 'نمو منخفض + حصة منخفضة — أوقف أو صفِّ', strategy: 'فكّر جدياً في التخلص منها. إذا لم تكن تحقق ربح أو قيمة استراتيجية، أوقفها وحرّر الموارد.' }
+            stars: {
+                emoji: '⭐', title: 'نجوم',
+                desc: 'نمو عالي + حصة عالية — استثمر بقوة',
+                strategy: 'استثمر بقوة للحفاظ على الريادة. هذه المنتجات تحتاج موارد لكنها تعود بعوائد عالية.',
+                action: 'استثمر', actionClass: 'invest', actionIcon: '📈'
+            },
+            questions: {
+                emoji: '❓', title: 'علامات استفهام',
+                desc: 'نمو عالي + حصة منخفضة — قرّر: استثمر أو اخرج',
+                strategy: 'قرّر بسرعة: إما استثمار مكثف لتحويلها لنجوم، أو تصفيتها. لا تتركها معلّقة.',
+                action: 'قرّر', actionClass: 'decide', actionIcon: '🤔'
+            },
+            cows: {
+                emoji: '🐄', title: 'أبقار نقدية',
+                desc: 'نمو منخفض + حصة عالية — احلبها وأعد الاستثمار',
+                strategy: 'حافظ عليها كمصدر تمويل. لا تستثمر فيها كثيراً — استخدم أرباحها لتمويل النجوم وعلامات الاستفهام.',
+                action: 'احتفظ', actionClass: 'harvest', actionIcon: '🥛'
+            },
+            dogs: {
+                emoji: '🐕', title: 'كلاب',
+                desc: 'نمو منخفض + حصة منخفضة — أوقف أو صفِّ',
+                strategy: 'فكّر جدياً في التخلص منها. إذا لم تكن تحقق ربح أو قيمة استراتيجية، أوقفها وحرّر الموارد.',
+                action: 'صفِّ', actionClass: 'divest', actionIcon: '🚫'
+            }
         };
 
         let items = [
@@ -585,8 +737,15 @@
                     <div class="quad-desc">${cfg.desc}</div>
                     <div class="quad-items">${qItems.map(i => `
                         <div class="quad-item">
-                            <div><span class="quad-item-name">${i.name}</span><br><span class="quad-item-rev">${i.revenue} ﷼</span></div>
+                            <div style="flex:1">
+                                <span class="quad-item-name">${i.name}</span><br>
+                                <span class="quad-item-rev">${i.revenue} ﷼</span>
+                            </div>
+                            <span class="qi-rec ${cfg.actionClass}">${cfg.actionIcon} ${cfg.action}</span>
                             <div class="quad-item-actions">
+                                <button class="qi-initiative" onclick="event.stopPropagation();createInitiative('${i.name}','${q}')" title="أنشئ مبادرة">
+                                    <i class="bi bi-rocket-takeoff"></i>
+                                </button>
                                 <button class="qi-btn" onclick="moveItem('${i.id}')" title="نقل"><i class="bi bi-arrow-left-right"></i></button>
                                 <button class="qi-btn del" onclick="deleteItem('${i.id}')" title="حذف"><i class="bi bi-trash3"></i></button>
                             </div>
@@ -601,6 +760,9 @@
             document.getElementById('sCow').textContent = items.filter(i => i.quad === 'cows').length;
             document.getElementById('sDog').textContent = items.filter(i => i.quad === 'dogs').length;
 
+            // Success Path
+            renderSuccessPath();
+
             // Strategy
             const recs = document.getElementById('stratRecs');
             let strategies = [];
@@ -612,6 +774,15 @@
                 strategies.push({ e: '💰', t: '<strong>توازن ممتاز!</strong> — استخدم أرباح الأبقار لتمويل النجوم' });
             if (items.filter(i => i.quad === 'cows').length === 0)
                 strategies.push({ e: '🚨', t: '<strong>لا توجد أبقار نقدية!</strong> — تحتاج مصدر تمويل مستقر' });
+
+            // New: specific action recommendations
+            const qCount = items.filter(i => i.quad === 'questions').length;
+            const sCount = items.filter(i => i.quad === 'stars').length;
+            if (qCount > 0 && sCount > 0)
+                strategies.push({ e: '🎯', t: `<strong>فرصة تحويل:</strong> لديك ${qCount} علامة استفهام يمكن تحويلها لنجوم بالاستثمار المناسب` });
+            if (items.filter(i => i.quad === 'dogs').length > items.filter(i => i.quad === 'stars').length)
+                strategies.push({ e: '🔴', t: '<strong>تحذير:</strong> الكلاب أكثر من النجوم — المحفظة في خطر' });
+
             if (!strategies.length) strategies.push({ e: '✅', t: 'محفظة متوازنة — استمر في المتابعة' });
             recs.innerHTML = strategies.map(s => `<div class="strat-item"><span class="strat-emoji">${s.e}</span><div class="strat-text">${s.t}</div></div>`).join('');
         }
@@ -650,6 +821,92 @@
             t.innerHTML = `<i class="bi bi-check-circle"></i> ${msg}`;
             document.getElementById('toastContainer').appendChild(t);
             setTimeout(() => t.remove(), 2500);
+        }
+
+        // ═══ Success Path Visualization ═══
+        function renderSuccessPath() {
+            const path = document.getElementById('successPath');
+            const counts = {
+                questions: items.filter(i => i.quad === 'questions').length,
+                stars: items.filter(i => i.quad === 'stars').length,
+                cows: items.filter(i => i.quad === 'cows').length,
+                dogs: items.filter(i => i.quad === 'dogs').length
+            };
+
+            const steps = [
+                { key: 'questions', emoji: '❓', label: 'استفهام', color: '#38bdf8' },
+                { key: 'stars', emoji: '⭐', label: 'نجوم', color: '#facc15' },
+                { key: 'cows', emoji: '🐄', label: 'أبقار', color: '#22c55e' }
+            ];
+
+            let html = '<div class="sp-track">';
+            steps.forEach((step, i) => {
+                const isHighlight = counts[step.key] > 0;
+                html += `
+                    <div class="sp-node ${isHighlight ? 'highlight' : ''}" style="${isHighlight ? 'border-color:' + step.color + '40;background:' + step.color + '0a' : ''}">
+                        <span class="sp-emoji">${step.emoji}</span>
+                        <span class="sp-count" style="color:${step.color}">${counts[step.key]}</span>
+                        <span class="sp-label">${step.label}</span>
+                    </div>`;
+                if (i < steps.length - 1) {
+                    html += '<span class="sp-arrow">→</span>';
+                }
+            });
+
+            // Dogs = separate path (exit)
+            html += `
+                <div style="margin-right:24px;display:flex;align-items:center;gap:6px">
+                    <span class="sp-arrow" style="color:#ef4444">✕</span>
+                    <div class="sp-node" style="${counts.dogs > 0 ? 'border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.06)' : ''}">
+                        <span class="sp-emoji">🐕</span>
+                        <span class="sp-count" style="color:#ef4444">${counts.dogs}</span>
+                        <span class="sp-label">تصفية</span>
+                    </div>
+                </div>`;
+
+            html += '</div>';
+
+            // Description
+            html += '<div class="sp-desc">';
+            if (counts.questions > 0 && counts.stars > 0 && counts.cows > 0) {
+                html += '✅ <strong style="color:#22c55e">المسار المثالي يعمل!</strong> — علامات الاستفهام تتحول لنجوم ثم تنضج لأبقار نقدية';
+            } else if (counts.questions > 0 && counts.stars === 0) {
+                html += '⚠️ لديك علامات استفهام لكن بدون نجوم — تحتاج استثمار لتحويل بعضها';
+            } else if (counts.stars > 0 && counts.cows === 0) {
+                html += '⚠️ نجوم بدون أبقار — من يموّل النجوم؟ انتظر حتى تنضج بعضها';
+            } else {
+                html += '🛤️ المسار المثالي: ❓ استثمر → ⭐ أبدع → 🐄 احصد — والكلاب 🐕 صفِّها';
+            }
+            html += '</div>';
+
+            path.innerHTML = html;
+        }
+
+        // ═══ Create Initiative from BCG ═══
+        function createInitiative(productName, quad) {
+            const cfg = QUADS[quad];
+            const actionMap = {
+                stars: `تعزيز الاستثمار في "${productName}" للحفاظ على الريادة`,
+                questions: `تقييم جدوى الاستثمار في "${productName}" وتحديد القرار`,
+                cows: `تحسين كفاءة "${productName}" وإعادة استثمار الأرباح`,
+                dogs: `خطة تصفية أو إعادة هيكلة "${productName}"`
+            };
+            const title = actionMap[quad] || `مبادرة: ${productName}`;
+
+            // Save to sessionStorage for initiatives page to pick up
+            sessionStorage.setItem('bcg_initiative', JSON.stringify({
+                title,
+                source: 'BCG Matrix',
+                product: productName,
+                quadrant: cfg.title,
+                strategy: cfg.strategy,
+                timestamp: new Date().toISOString()
+            }));
+
+            showToast(`تم تجهيز مبادرة لـ "${productName}" — جاري التحويل...`);
+            setTimeout(() => {
+                window.location.href = '/initiatives';
+            }, 1000);
         }
 
         render();

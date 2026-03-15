@@ -174,17 +174,26 @@
             return;
         }
 
+        function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
         list.innerHTML = notifs.map(n => `
-      <div class="notif-item ${seen.includes(n.id) ? '' : 'unseen'} ${n.urgent ? 'urgent' : ''}" onclick="handleNotifClick('${n.id}','${n.link || ''}')">
+      <div class="notif-item ${seen.includes(n.id) ? '' : 'unseen'} ${n.urgent ? 'urgent' : ''}" data-notif-id="${esc(n.id)}" data-notif-link="${esc(n.link || '')}">
         <div class="notif-dot ${seen.includes(n.id) ? 'seen' : ''}"></div>
         <div class="notif-icon-wrap" style="background:${n.color}15;color:${n.color}">${n.icon}</div>
         <div class="notif-body">
-          <div class="notif-item-title">${n.title}</div>
-          <div class="notif-item-msg">${n.message}</div>
+          <div class="notif-item-title">${esc(n.title)}</div>
+          <div class="notif-item-msg">${esc(n.message)}</div>
           <div class="notif-item-time"><i class="bi bi-clock"></i> ${formatTime(n.time)}</div>
         </div>
       </div>
     `).join('');
+
+        // Event delegation for notification clicks
+        list.onclick = function (e) {
+            const item = e.target.closest('[data-notif-id]');
+            if (!item) return;
+            handleNotifClick(item.dataset.notifId, item.dataset.notifLink);
+        };
     };
 
     window.handleNotifClick = function (id, link) {

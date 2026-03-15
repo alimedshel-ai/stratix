@@ -10,7 +10,6 @@ const path = require('path');
 const fs = require('fs');
 const prisma = require('../lib/prisma');
 const { verifyToken } = require('../middleware/auth');
-const { checkDataEntryPermission } = require('../middleware/permission');
 
 const router = express.Router();
 

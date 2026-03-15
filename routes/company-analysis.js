@@ -379,6 +379,40 @@ function calculateProgress(toolCode, data) {
             if (Array.isArray(data.scenarios) && data.scenarios.length === 1) return 50;
             return 0;
         }
+        case 'VALUE_CHAIN': {
+            // 9 activities in Porter's value chain (5 primary + 4 support)
+            const activities = data.activities || data;
+            const vcKeys = ['inboundLogistics', 'operations', 'outboundLogistics', 'marketing', 'service',
+                'procurement', 'technology', 'hrm', 'infrastructure'];
+            const filled = vcKeys.filter(k => {
+                const v = activities[k];
+                return Array.isArray(v) ? v.length > 0 : (v && typeof v === 'object' ? Object.keys(v).length > 0 : !!v);
+            }).length;
+            return Math.round((filled / 9) * 100);
+        }
+        case 'CORE_COMPETENCY': {
+            if (Array.isArray(data.competencies) && data.competencies.length > 0) return 100;
+            if (Array.isArray(data.resources) && data.resources.length > 0) return 80;
+            if (data.analysis || data.description) return 30;
+            return 0;
+        }
+        case 'CUSTOMER_JOURNEY': {
+            const stages = ['awareness', 'consideration', 'purchase', 'retention', 'advocacy'];
+            const filled = stages.filter(s => {
+                const v = data[s];
+                return Array.isArray(v) ? v.length > 0 : (v && typeof v === 'object' ? Object.keys(v).length > 0 : !!v);
+            }).length;
+            return Math.round((filled / 5) * 100);
+        }
+        case 'INTERNAL_ENV': {
+            // Check how many sections of company health have data
+            const sections = ['departments', 'employees', 'financials', 'operations', 'technology', 'culture'];
+            const filled = sections.filter(s => {
+                const v = data[s];
+                return Array.isArray(v) ? v.length > 0 : (v && typeof v === 'object' ? Object.keys(v).length > 0 : !!v);
+            }).length;
+            return sections.length > 0 ? Math.round((filled / sections.length) * 100) : 0;
+        }
         default:
             return 0;
     }

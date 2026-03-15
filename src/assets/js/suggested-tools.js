@@ -15,13 +15,13 @@
   //  TOOL DEFINITIONS — كل الأدوات مع ربطها بالمراحل والشروط
   // ====================================================================
   const ALL_TOOLS = [
-    // ── تشخيصي ──
-    { id: 'swot', name: 'تحليل SWOT', emoji: '📊', href: '/swot.html', phase: 'DIAGNOSIS', order: 1, checkKey: 'swot' },
-    { id: 'pestel', name: 'تحليل PESTEL', emoji: '🌍', href: '/tool-detail.html?code=PESTEL', phase: 'DIAGNOSIS', order: 2, checkKey: 'pestel' },
-    { id: 'porter', name: 'قوى بورتر الخمس', emoji: '⚔️', href: '/tool-detail.html?code=PORTER', phase: 'DIAGNOSIS', order: 3, checkKey: 'porter' },
-    { id: 'vchain', name: 'سلسلة القيمة', emoji: '🔗', href: '/tool-detail.html?code=VALUE_CHAIN', phase: 'DIAGNOSIS', order: 4, checkKey: 'vchain' },
-    { id: 'vrio', name: 'تحليل VRIO', emoji: '💎', href: '/internal-env.html', phase: 'DIAGNOSIS', order: 5, checkKey: 'vrio' },
-    { id: 'core', name: 'القدرات الجوهرية', emoji: '🏆', href: '/tool-detail.html?code=CORE_COMPETENCY', phase: 'DIAGNOSIS', order: 6, checkKey: 'core' },
+    // ── تشخيصي (بالترتيب المنهجي: خارج → داخل → تركيب) ──
+    { id: 'pestel', name: 'تحليل PESTEL', emoji: '🌍', href: '/tool-detail.html?code=PESTEL', phase: 'DIAGNOSIS', order: 1, checkKey: 'pestel' },
+    { id: 'porter', name: 'قوى بورتر الخمس', emoji: '⚔️', href: '/tool-detail.html?code=PORTER', phase: 'DIAGNOSIS', order: 2, checkKey: 'porter' },
+    { id: 'vchain', name: 'سلسلة القيمة', emoji: '🔗', href: '/tool-detail.html?code=VALUE_CHAIN', phase: 'DIAGNOSIS', order: 3, checkKey: 'vchain' },
+    { id: 'vrio', name: 'تحليل VRIO', emoji: '💎', href: '/tool-detail.html?code=VRIO', phase: 'DIAGNOSIS', order: 4, checkKey: 'vrio' },
+    { id: 'core', name: 'القدرات الجوهرية', emoji: '🏆', href: '/tool-detail.html?code=CORE_COMPETENCY', phase: 'DIAGNOSIS', order: 5, checkKey: 'core' },
+    { id: 'swot', name: 'تحليل SWOT', emoji: '📊', href: '/swot.html', phase: 'DIAGNOSIS', order: 6, checkKey: 'swot' },
     { id: 'journey', name: 'رحلة العميل', emoji: '👥', href: '/tool-detail.html?code=CUSTOMER_JOURNEY', phase: 'DIAGNOSIS', order: 7, checkKey: 'journey' },
     { id: 'gap', name: 'تحليل الفجوات', emoji: '📉', href: '/gap-analysis.html', phase: 'DIAGNOSIS', order: 8, checkKey: 'gap' },
     { id: 'bench', name: 'المقارنة المعيارية', emoji: '📊', href: '/benchmarking.html', phase: 'DIAGNOSIS', order: 9, checkKey: 'bench' },
@@ -52,30 +52,31 @@
   ];
 
   // ====================================================================
-  //  SUGGESTION RULES — قواعد الاقتراح الذكي
+  //  SUGGESTION RULES — قواعد الاقتراح الذكي (ترتيب: خارج → داخل → تركيب)
   // ====================================================================
   const SUGGESTION_RULES = [
-    // المرحلة 0: لم يبدأ بعد
+    // المرحلة 0: لم يبدأ بعد — ابدأ بالبيئة الكلية (PESTEL)
     {
-      condition: (ctx) => !ctx.hasPainAmbition,
+      condition: (ctx) => ctx.diagnosisPercent === 0 && ctx.completed.length === 0,
       suggestions: [
-        { toolId: 'swot', reason: 'ابدأ بتحليل SWOT لفهم وضعك الحالي' }
+        { toolId: 'pestel', reason: 'ابدأ بتحليل البيئة الكلية أولاً' },
+        { toolId: 'porter', reason: 'ثم حلل البيئة التنافسية القطاعية' }
       ]
     },
-    // مرحلة التشخيص: أكمل SWOT → اقترح PESTEL + Porter
+    // أكمل PESTEL → اقترح Porter + داخلي
     {
-      condition: (ctx) => ctx.completed.includes('swot') && !ctx.completed.includes('pestel'),
+      condition: (ctx) => ctx.completed.includes('pestel') && !ctx.completed.includes('porter'),
       suggestions: [
-        { toolId: 'pestel', reason: 'SWOT جاهز — حلل البيئة الخارجية الآن' },
-        { toolId: 'porter', reason: 'افهم ديناميكيات المنافسة في صناعتك' }
+        { toolId: 'porter', reason: 'PESTEL جاهز — حلل البيئة التنافسية الآن' },
+        { toolId: 'vchain', reason: 'أو انتقل لتحليل سلسلة القيمة الداخلية' }
       ]
     },
-    // أكمل SWOT + PESTEL → اقترح Porter + TOWS
+    // أكمل PESTEL + Porter → اقترح الداخلي + SWOT
     {
-      condition: (ctx) => ctx.completed.includes('swot') && ctx.completed.includes('pestel') && !ctx.completed.includes('tows'),
+      condition: (ctx) => ctx.completed.includes('pestel') && ctx.completed.includes('porter') && !ctx.completed.includes('swot'),
       suggestions: [
-        { toolId: 'tows', reason: 'حوّل نتائج SWOT إلى استراتيجيات عملية' },
-        { toolId: 'porter', reason: 'حلل قوى المنافسة لتحديد موقعك', skip: ctx => ctx.completed.includes('porter') }
+        { toolId: 'vchain', reason: 'حلل سلسلة القيمة الداخلية', skip: ctx => ctx.completed.includes('vchain') },
+        { toolId: 'swot', reason: 'اجمع كل شيء في تحليل SWOT' }
       ]
     },
     // أكمل التشخيص → اقترح التخطيط
@@ -262,12 +263,6 @@
     // Recently completed (show up to 2)
     const recentDone = ctx.completed.slice(-2).map(id => ALL_TOOLS.find(t => t.id === id)).filter(Boolean);
 
-    // Can show all tools?
-    const isSuperAdmin = ctx.systemRole === 'SUPER_ADMIN';
-    const isOwner = ['OWNER', 'ADMIN'].includes(ctx.userRole);
-    const isVeteran = ctx.accountAge >= 90;
-    const canShowAll = isSuperAdmin || isOwner || isVeteran;
-
     let html = '';
 
     // Stage badge
@@ -309,23 +304,6 @@
         <div class="sgt-empty">
           <span>🎉</span>
           <small>أحسنت! أنجزت المطلوب لهذه المرحلة</small>
-        </div>
-      `;
-    }
-
-    // "Show all tools" button
-    if (canShowAll) {
-      html += `
-        <a href="/tools.html" class="sgt-all-btn">
-          <i class="bi bi-grid-3x3-gap"></i>
-          <span>جميع الأدوات</span>
-        </a>
-      `;
-    } else {
-      html += `
-        <div class="sgt-locked-hint">
-          <i class="bi bi-lock"></i>
-          <small>يُفتح بعد 3 أشهر أو لدور OWNER</small>
         </div>
       `;
     }

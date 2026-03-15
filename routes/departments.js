@@ -1,7 +1,6 @@
 const express = require('express');
 const prisma = require('../lib/prisma');
 const { verifyToken } = require('../middleware/auth');
-const { checkPermission } = require('../middleware/permission');
 
 const router = express.Router();
 

@@ -33,7 +33,8 @@ const companyAnalysisRoutes = require('./routes/company-analysis');
 const userProgressRoutes = require('./routes/user-progress');
 const syncRoutes = require('./routes/sync');
 const alertEngineRoutes = require('./routes/alert-engine');
-// const causalLinksRoutes = require('./routes/causal-links'); // DISABLED
+// TODO: [DEFERRED] causal-links — جاهز للتفعيل عند تطبيق Strategy Map
+// const causalLinksRoutes = require('./routes/causal-links');
 const towsRoutes = require('./routes/tows');
 const pathRoutes = require('./routes/path');
 const importRoutes = require('./routes/import');
@@ -49,6 +50,7 @@ const aiInsightRoutes = require('./routes/ai-insight');
 const adminRoutes = require('./routes/admin');
 const financialEngineRoutes = require('./routes/financial-engine');
 const execDashboardApiRoutes = require('./routes/exec-dashboard-api');
+const companyHealthRoutes = require('./routes/company-health');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -190,6 +192,72 @@ const { checkPermission, checkDataEntryPermission, requireRole } = require('./mi
 // 🔓 Auth — بدون حماية (login/register)
 app.use('/api/auth', authLimiter, authRoutes);
 
+// 🔒 GET /api/user/me — المستخدم الحالي من HttpOnly Cookie
+// نقطة النهاية الأساسية للتحقق من الجلسة بدلاً من localStorage
+app.get('/api/user/me', verifyToken, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phone: true,
+        systemRole: true,
+        userCategory: true,
+        onboardingCompleted: true,
+        suspended: true,
+        memberships: {
+          select: {
+            id: true,
+            role: true,
+            userType: true,
+            entity: {
+              select: {
+                id: true,
+                legalName: true,
+                displayName: true,
+                size: true,
+                company: { select: { id: true, nameAr: true, nameEn: true } }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.suspended) {
+      return res.status(403).json({ suspended: true, reason: 'الحساب معلّق' });
+    }
+
+    // بناء الـ response بنفس الشكل المعتاد
+    const primaryMembership = user.memberships[0] || null;
+    const isSA = user.systemRole === 'SUPER_ADMIN';
+
+    res.json({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      phone: user.phone,
+      systemRole: user.systemRole || 'USER',
+      role: primaryMembership?.role || (isSA ? 'OWNER' : 'VIEWER'),
+      userType: primaryMembership?.userType || 'EXPLORER',
+      userCategory: user.userCategory || null,
+      onboardingCompleted: user.onboardingCompleted || false,
+      entity: primaryMembership?.entity || null,
+      memberships: user.memberships,
+      authenticated: true
+    });
+  } catch (error) {
+    console.error('[/api/user/me] Error:', error.message);
+    res.status(500).json({ message: 'خطأ في جلب بيانات المستخدم' });
+  }
+});
+
 // 🔓 Path — المسار الاستراتيجي
 app.use('/api/path', pathRoutes);
 
@@ -198,6 +266,9 @@ app.use('/api/financial-engine', engineLimiter, financialEngineRoutes);
 
 // 📊 Dashboard — كل مستخدم مسجل
 app.use('/api/dashboard', dashboardApiRoutes);
+
+// 🏥 صحة الشركة — لوحة أم تستقبل بيانات الإدارات
+app.use('/api/company-health', companyHealthRoutes);
 
 // 🎯 Executive Dashboard API v1 — BSC-Driven
 app.use('/api/v1', execDashboardApiRoutes);
@@ -223,6 +294,8 @@ app.use('/api/audit', auditRoutes);
 app.use('/api/assessments', assessmentsRoutes);
 app.use('/api/strategic', strategicRoutes);
 app.use('/api/strategic/reviews', reviewsRoutes);
+const objectivesSyncRoutes = require('./routes/objectives-sync');
+app.use('/api/strategic/objectives', objectivesSyncRoutes);
 app.use('/api/versions', versionsRoutes);
 app.use('/api/choices', choicesRoutes);
 app.use('/api/corrections', correctionsRoutes);
@@ -232,7 +305,8 @@ app.use('/api/external-analysis', externalAnalysisRoutes);
 app.use('/api/tools', toolsRoutes);
 app.use('/api/company-analysis', companyAnalysisRoutes);
 app.use('/api/user-progress', userProgressRoutes);
-// app.use('/api/causal-links', causalLinksRoutes); // DISABLED
+// TODO: [DEFERRED] causal-links — يُفعّل مع Strategy Map
+// app.use('/api/causal-links', causalLinksRoutes);
 app.use('/api/tows', towsRoutes);
 
 // ⚙️ العمليات
@@ -308,6 +382,12 @@ app.use('/api/sector-configs', sectorConfigsRoutes);
 app.use('/api/break-even', breakEvenRoutes);
 app.use('/api/cfo', cfoAuditRoutes);
 
+// 💰 الفرص الاستثمارية — Investment Deal Pipeline
+const dealsRoutes = require('./routes/deals');
+const notificationsRoutes = require('./routes/notifications');
+app.use('/api/deals', dealsRoutes);
+app.use('/api/notifications', notificationsRoutes);
+
 
 // =========================================
 // 🔒 إصلاح #3: تحويل ~95 route يدوي إلى auto-serve
@@ -315,32 +395,41 @@ app.use('/api/cfo', cfoAuditRoutes);
 
 // التحويلات (Redirects) — يجب أن تكون صريحة
 const REDIRECTS = {
-  '/diagnostic-center': '/startix-v10-single',
-  '/pain-ambition': '/pain-screen', // backward compat (query params handled below)
+  '/diagnostic-center': '/select-type',            // ← الجديد: يروح لشاشة اختيار الفئة
+  // '/pain-ambition' — يُعالج يدوياً أسفل (مع query params)
   '/strategic-tools': '/tools',
   '/signup': '/login?tab=signup&from=landing',
   '/swot': '/tool?code=SWOT',
-  '/founder-diagnostic': '/startix-v10-single',
+  '/founder-diagnostic': '/select-type',            // ← الجديد: بدل V10
   '/path1': '/',
   '/alerts': '/intelligence',
-  '/free-diagnostic': '/startix-v10-single',
-  '/select-type': '/startix-v10-single?new',
-  '/diagnostic-result': '/startix-v10-single?new',
+  '/free-diagnostic': '/select-type',               // ← الجديد: بدل V10
+  // '/select-type' — يُخدم تلقائياً من auto-serve (select-type.html)
+  // '/diagnostic-result' — يُخدم تلقائياً من auto-serve (diagnostic-result.html)
   '/cfo-board-pitch': '/finance-audit',
 };
 
 for (const [from, to] of Object.entries(REDIRECTS)) {
-  app.get(from, (req, res) => res.redirect(to));
+  app.get(from, (req, res) => {
+    const qs = new URLSearchParams(req.query).toString();
+    res.redirect(to + (qs ? (to.includes('?') ? '&' : '?') + qs : ''));
+  });
   // .html compat for old links
   if (!from.endsWith('.html')) {
-    app.get(from + '.html', (req, res) => res.redirect(to));
+    app.get(from + '.html', (req, res) => {
+      const qs = new URLSearchParams(req.query).toString();
+      res.redirect(to + (qs ? (to.includes('?') ? '&' : '?') + qs : ''));
+    });
   }
 }
 
 // خاص: pain-ambition يمرر query params
-app.get('/pain-ambition', (req, res) => {
-  res.redirect('/pain-screen' + (req.query.category ? '?category=' + req.query.category : ''));
-});
+const buildPainRedirect = (req) => {
+  const qs = new URLSearchParams(req.query).toString();
+  return '/select-type' + (qs ? '?' + qs : '');
+};
+app.get('/pain-ambition', (req, res) => res.redirect(buildPainRedirect(req)));
+app.get('/pain-ambition.html', (req, res) => res.redirect(buildPainRedirect(req)));
 
 // الأسماء الخاصة: URL ≠ اسم الملف
 const SPECIAL_FILE_MAP = {

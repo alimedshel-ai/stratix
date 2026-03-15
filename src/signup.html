@@ -139,6 +139,7 @@
         <div class="text-center mb-4">
             <h2
                 style="font-weight: 800; background: linear-gradient(135deg, var(--primary), #a78bfa); -webkit-background-clip: text; background-clip: text; color: transparent;">
+                background-clip: text;
                 ستارتكس</h2>
             <p class="text-muted">مرحباً بك في بوابتك للإدارة الاستراتيجية</p>
         </div>
@@ -243,12 +244,14 @@
                 const res = await fetch('/api/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, companyName, phone, password })
+                    body: JSON.stringify({ name, email, companyName, phone, password }),
+                    credentials: 'include' // 🔒 إرسال واستقبال HttpOnly Cookie
                 });
                 const data = await res.json();
 
-                if (res.ok && data.token) {
-                    localStorage.setItem('token', data.token);
+                if (res.ok && (data.token || data.user)) {
+                    // 🔒 الكوكي HttpOnly أُضبط تلقائياً من السيرفر
+                    localStorage.setItem('token', 'httponly-managed');
                     localStorage.setItem('user', JSON.stringify(data.user));
 
                     // === Smart Redirect بعد التسجيل ===

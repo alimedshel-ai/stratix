@@ -4,20 +4,21 @@
  * ثم: StartixComments.init({ targetType: 'OBJECTIVE', targetId: 'xxx', targetName: 'اسم الهدف', container: '#comments-container' })
  */
 (function () {
-    'use strict';
+  'use strict';
 
-    const API = '/api/comments';
-    const token = () => localStorage.getItem('token');
-    const currentUser = () => {
-        try { return JSON.parse(atob(token().split('.')[1])); } catch { return { name: 'مستخدم', id: '' }; }
-    };
+  const API = '/api/comments';
+  const token = () => localStorage.getItem('token');
+  const currentUser = () => {
+    // 🔒 التوكن الآن 'httponly-managed' — نقرأ بيانات المستخدم من localStorage('user')
+    try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return { name: 'مستخدم', id: '' }; }
+  };
 
-    // === Styles (injected once) ===
-    function injectStyles() {
-        if (document.getElementById('commentWidgetStyles')) return;
-        const style = document.createElement('style');
-        style.id = 'commentWidgetStyles';
-        style.textContent = `
+  // === Styles (injected once) ===
+  function injectStyles() {
+    if (document.getElementById('commentWidgetStyles')) return;
+    const style = document.createElement('style');
+    style.id = 'commentWidgetStyles';
+    style.textContent = `
       .cw-wrap{margin-top:20px;border-top:1px solid rgba(255,255,255,0.06);padding-top:20px}
       .cw-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
       .cw-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;color:#e2e8f0}
@@ -49,29 +50,29 @@
       .cw-login-prompt{text-align:center;padding:16px;color:#64748b;font-size:13px;background:rgba(255,255,255,0.02);border-radius:12px}
       .cw-login-prompt a{color:#667eea;text-decoration:none}
     `;
-        document.head.appendChild(style);
-    }
+    document.head.appendChild(style);
+  }
 
-    function formatTime(iso) {
-        const diff = Math.floor((Date.now() - new Date(iso)) / 60000);
-        if (diff < 1) return 'الآن';
-        if (diff < 60) return `منذ ${diff} د`;
-        if (diff < 1440) return `منذ ${Math.floor(diff / 60)} س`;
-        return `منذ ${Math.floor(diff / 1440)} يوم`;
-    }
+  function formatTime(iso) {
+    const diff = Math.floor((Date.now() - new Date(iso)) / 60000);
+    if (diff < 1) return 'الآن';
+    if (diff < 60) return `منذ ${diff} د`;
+    if (diff < 1440) return `منذ ${Math.floor(diff / 60)} س`;
+    return `منذ ${Math.floor(diff / 1440)} يوم`;
+  }
 
-    // === Init ===
-    function init(config) {
-        const { targetType, targetId, targetName, container, entityId } = config;
-        const el = typeof container === 'string' ? document.querySelector(container) : container;
-        if (!el) return console.warn('Comments: container not found');
+  // === Init ===
+  function init(config) {
+    const { targetType, targetId, targetName, container, entityId } = config;
+    const el = typeof container === 'string' ? document.querySelector(container) : container;
+    if (!el) return console.warn('Comments: container not found');
 
-        injectStyles();
+    injectStyles();
 
-        const user = currentUser();
-        const initial = user.name ? user.name.charAt(0) : '?';
+    const user = currentUser();
+    const initial = user.name ? user.name.charAt(0) : '?';
 
-        el.innerHTML = `
+    el.innerHTML = `
       <div class="cw-wrap">
         <div class="cw-header">
           <div class="cw-title"><i class="bi bi-chat-dots"></i> التعليقات <span class="cw-count" id="cwCount">0</span></div>
@@ -89,47 +90,47 @@
       </div>
     `;
 
-        // Input handler
-        const input = document.getElementById('cwInput');
-        const sendBtn = document.getElementById('cwSend');
-        if (input) {
-            input.addEventListener('input', () => {
-                sendBtn.disabled = !input.value.trim();
-                input.style.height = 'auto';
-                input.style.height = Math.min(input.scrollHeight, 120) + 'px';
-            });
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitComment(); }
-            });
-        }
-        if (sendBtn) sendBtn.addEventListener('click', submitComment);
+    // Input handler
+    const input = document.getElementById('cwInput');
+    const sendBtn = document.getElementById('cwSend');
+    if (input) {
+      input.addEventListener('input', () => {
+        sendBtn.disabled = !input.value.trim();
+        input.style.height = 'auto';
+        input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitComment(); }
+      });
+    }
+    if (sendBtn) sendBtn.addEventListener('click', submitComment);
 
-        // Load comments
-        loadComments();
+    // Load comments
+    loadComments();
 
-        async function loadComments() {
-            if (!token()) return;
-            try {
-                const res = await fetch(`${API}?targetType=${targetType}&targetId=${targetId}`, {
-                    headers: { 'Authorization': `Bearer ${token()}` }
-                });
-                if (!res.ok) return;
-                const data = await res.json();
-                renderComments(data.data || []);
-                document.getElementById('cwCount').textContent = data.total || 0;
-            } catch (e) {
-                console.warn('Comments load failed:', e);
-            }
-        }
+    async function loadComments() {
+      if (!token()) return;
+      try {
+        const res = await fetch(`${API}?targetType=${targetType}&targetId=${targetId}`, {
+          headers: { 'Authorization': `Bearer ${token()}` }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        renderComments(data.data || []);
+        document.getElementById('cwCount').textContent = data.total || 0;
+      } catch (e) {
+        console.warn('Comments load failed:', e);
+      }
+    }
 
-        function renderComments(comments) {
-            const list = document.getElementById('cwList');
-            if (!comments.length) {
-                list.innerHTML = '<div class="cw-empty"><i class="bi bi-chat"></i> لا توجد تعليقات بعد — كن أول المعلّقين!</div>';
-                return;
-            }
+    function renderComments(comments) {
+      const list = document.getElementById('cwList');
+      if (!comments.length) {
+        list.innerHTML = '<div class="cw-empty"><i class="bi bi-chat"></i> لا توجد تعليقات بعد — كن أول المعلّقين!</div>';
+        return;
+      }
 
-            list.innerHTML = comments.map(c => `
+      list.innerHTML = comments.map(c => `
         <div class="cw-comment" id="comment-${c.id}">
           <div class="cw-avatar" style="background:linear-gradient(135deg,#${hashColor(c.userName)},#${hashColor(c.userName + 'x')})">${(c.userName || '?').charAt(0)}</div>
           <div class="cw-comment-body">
@@ -164,72 +165,72 @@
           </div>
         </div>
       `).join('');
+    }
+
+    async function submitComment() {
+      const content = input.value.trim();
+      if (!content) return;
+
+      sendBtn.disabled = true;
+      try {
+        const res = await fetch(API, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token()}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content, targetType, targetId, targetName, entityId })
+        });
+        if (res.ok) {
+          input.value = '';
+          input.style.height = 'auto';
+          loadComments();
+          if (window.StartixAchievements) window.StartixAchievements.unlock('first_comment');
         }
-
-        async function submitComment() {
-            const content = input.value.trim();
-            if (!content) return;
-
-            sendBtn.disabled = true;
-            try {
-                const res = await fetch(API, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token()}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ content, targetType, targetId, targetName, entityId })
-                });
-                if (res.ok) {
-                    input.value = '';
-                    input.style.height = 'auto';
-                    loadComments();
-                    if (window.StartixAchievements) window.StartixAchievements.unlock('first_comment');
-                }
-            } catch (e) { console.error('Comment submit error:', e); }
-            sendBtn.disabled = false;
-        }
-
-        window.cwReply = (id) => {
-            const el = document.getElementById(`reply-${id}`);
-            el.classList.toggle('show');
-            if (el.classList.contains('show')) document.getElementById(`replyInput-${id}`).focus();
-        };
-
-        window.cwSubmitReply = async (parentId) => {
-            const input = document.getElementById(`replyInput-${parentId}`);
-            const content = input.value.trim();
-            if (!content) return;
-            try {
-                await fetch(API, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token()}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ content, targetType, targetId, targetName, parentId, entityId })
-                });
-                input.value = '';
-                loadComments();
-            } catch (e) { console.error(e); }
-        };
-
-        window.cwDelete = async (id) => {
-            if (!confirm('حذف التعليق؟')) return;
-            try {
-                await fetch(`${API}/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token()}` } });
-                loadComments();
-            } catch (e) { console.error(e); }
-        };
+      } catch (e) { console.error('Comment submit error:', e); }
+      sendBtn.disabled = false;
     }
 
-    function hashColor(str) {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
-        const h = Math.abs(hash) % 360;
-        return hslToHex(h, 65, 55);
-    }
-    function hslToHex(h, s, l) {
-        s /= 100; l /= 100;
-        const a = s * Math.min(l, 1 - l);
-        const f = n => { const k = (n + h / 30) % 12; const c = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1); return Math.round(255 * c).toString(16).padStart(2, '0'); };
-        return f(0) + f(8) + f(4);
-    }
-    function escapeHtml(t) { return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>'); }
+    window.cwReply = (id) => {
+      const el = document.getElementById(`reply-${id}`);
+      el.classList.toggle('show');
+      if (el.classList.contains('show')) document.getElementById(`replyInput-${id}`).focus();
+    };
 
-    window.StartixComments = { init };
+    window.cwSubmitReply = async (parentId) => {
+      const input = document.getElementById(`replyInput-${parentId}`);
+      const content = input.value.trim();
+      if (!content) return;
+      try {
+        await fetch(API, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token()}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content, targetType, targetId, targetName, parentId, entityId })
+        });
+        input.value = '';
+        loadComments();
+      } catch (e) { console.error(e); }
+    };
+
+    window.cwDelete = async (id) => {
+      if (!confirm('حذف التعليق؟')) return;
+      try {
+        await fetch(`${API}/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token()}` } });
+        loadComments();
+      } catch (e) { console.error(e); }
+    };
+  }
+
+  function hashColor(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    const h = Math.abs(hash) % 360;
+    return hslToHex(h, 65, 55);
+  }
+  function hslToHex(h, s, l) {
+    s /= 100; l /= 100;
+    const a = s * Math.min(l, 1 - l);
+    const f = n => { const k = (n + h / 30) % 12; const c = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1); return Math.round(255 * c).toString(16).padStart(2, '0'); };
+    return f(0) + f(8) + f(4);
+  }
+  function escapeHtml(t) { return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>'); }
+
+  window.StartixComments = { init };
 })();

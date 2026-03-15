@@ -617,7 +617,7 @@
   </nav>
 
   <div class="layout">
-    <aside class="sidebar"></aside>
+    <aside class="sidebar-placeholder" id="sidebarContainer"></aside>
     <div class="main-content">
       <div class="page-header">
         <div>
@@ -628,7 +628,7 @@
       </div>
 
       <!-- شريط مسار التخطيط -->
-      <div
+      <div id="planningPathBar"
         style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:18px 22px;margin-bottom:20px">
         <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:12px">🗺️ مسار التخطيط</div>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -637,6 +637,14 @@
             <span style="font-size:16px">🧭</span>
             <div>
               <div style="font-size:11px;font-weight:700;color:#22c55e">التوجهات ✅</div>
+            </div>
+          </a>
+          <div style="font-size:12px;color:var(--text-muted)">←</div>
+          <a href="/choices.html"
+            style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);text-decoration:none;flex:1;min-width:100px">
+            <span style="font-size:16px">⚖️</span>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:#22c55e">الخيارات ✅</div>
             </div>
           </a>
           <div style="font-size:12px;color:var(--text-muted)">←</div>
@@ -661,14 +669,6 @@
             <span style="font-size:16px">🚀</span>
             <div>
               <div style="font-size:11px;font-weight:600;color:var(--text-muted)">المبادرات</div>
-            </div>
-          </a>
-          <div style="font-size:12px;color:var(--text-muted)">←</div>
-          <a href="/choices.html"
-            style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid var(--border);text-decoration:none;flex:1;min-width:100px">
-            <span style="font-size:16px">⚖️</span>
-            <div>
-              <div style="font-size:11px;font-weight:600;color:var(--text-muted)">الخيارات</div>
             </div>
           </a>
         </div>
@@ -698,7 +698,7 @@
       </div>
 
       <!-- Department Filter -->
-      <div
+      <div id="deptFilterSection"
         style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px">
         <div
           style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:6px">
@@ -921,6 +921,9 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/hr-handlers.js"></script>
+  <script src="/assets/js/finance-handlers.js"></script>
+  <script src="/js/data-layer.js"></script>
   <script src="/assets/js/api.js"></script>
   <script src="/assets/js/sidebar.js"></script>
   <script src="/assets/js/ai-advisor.js"></script>
@@ -930,9 +933,9 @@
     }
   </script>
   <script>
-    const token = localStorage.getItem('token');
-    if (!token) window.location.href = '/login.html';
-    const apiHeaders = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+    const token = localStorage.getItem('token') || '';
+    const apiHeaders = { 'Content-Type': 'application/json' };
+    if (token) apiHeaders['Authorization'] = `Bearer ${token}`;
 
     let currentFilter = 'all';
     let currentDept = 'all';
@@ -962,14 +965,18 @@
     async function initFromAPI() {
       try {
         // 1. تحميل الإصدارات
-        const vRes = await fetch('/api/versions', { headers: apiHeaders });
-        const vData = await vRes.json();
-        const versions = vData.versions || vData || [];
-        const active = versions.find(v => v.isActive || v.status === 'ACTIVE') || versions[0];
-        if (active) activeVersionId = active.id;
+        try {
+          const vRes = await fetch('/api/versions', { headers: apiHeaders, credentials: 'same-origin' });
+          if (vRes.ok) {
+            const vData = await vRes.json();
+            const versions = Array.isArray(vData.versions) ? vData.versions : Array.isArray(vData) ? vData : [];
+            const active = versions.find(v => v.isActive || v.status === 'ACTIVE') || versions[0];
+            if (active) activeVersionId = active.id;
+          }
+        } catch (ve) { console.warn('[KPIs] تجاوز خطأ الإصدارات:', ve); }
 
         // 2. تحميل المؤشرات من الـ API
-        const kRes = await fetch('/api/strategic/kpis?limit=100' + (activeVersionId ? '&versionId=' + activeVersionId : ''), { headers: apiHeaders });
+        const kRes = await fetch('/api/strategic/kpis?limit=100' + (activeVersionId ? '&versionId=' + activeVersionId : ''), { headers: apiHeaders, credentials: 'same-origin' });
         const kData = await kRes.json();
         const apiKpis = kData.kpis || [];
 
@@ -1006,10 +1013,117 @@
         kpis = DEMO_KPIS;
         isApiMode = false;
       }
-      renderAll();
+
+      // ═══ Dept-specific: ?dept=hr (BEFORE render) ═══
+      try {
+        const _deptParam = new URLSearchParams(window.location.search).get('dept');
+        if (_deptParam) {
+          const deptNames = { hr: 'الموارد البشرية', finance: 'المالية', operations: 'العمليات', marketing: 'التسويق', sales: 'المبيعات', compliance: 'الامتثال', it: 'تقنية المعلومات', cs: 'خدمة العملاء', quality: 'الجودة' };
+          const deptDisplayNames = { hr: 'الموارد البشرية', finance: 'المالية', operations: 'العمليات' };
+          const deptName = deptNames[_deptParam] || _deptParam;
+
+          // تخصيص العنوان
+          document.title = 'ستارتكس — مؤشرات ' + deptName;
+          const h1 = document.querySelector('.page-header h1');
+          if (h1) h1.innerHTML = '<i class="bi bi-speedometer2"></i> مؤشرات ' + deptName;
+
+          // إخفاء فلتر الإدارات ومسار التخطيط
+          const deptFilterSec = document.getElementById('deptFilterSection');
+          if (deptFilterSec) deptFilterSec.style.display = 'none';
+          const planningPath = document.getElementById('planningPathBar');
+          if (planningPath) planningPath.style.display = 'none';
+
+          // فلتر المؤشرات للإدارة المحددة
+          const deptFilterName = deptDisplayNames[_deptParam] || deptName;
+          if (typeof filterByDept === 'function') {
+            currentDept = deptFilterName;
+          }
+
+          // تعيين الإدارة تلقائياً في مودال إنشاء مؤشر
+          const formDeptSel = document.getElementById('formDept');
+          if (formDeptSel) {
+            const deptFormValue = deptDisplayNames[_deptParam] || deptName;
+            for (const opt of formDeptSel.options) {
+              if (opt.value === deptFormValue || opt.textContent.includes(deptFormValue)) {
+                formDeptSel.value = opt.value;
+                break;
+              }
+            }
+            formDeptSel.closest('.form-group').style.display = 'none';
+          }
+
+          // عرض اقتراحات KPI
+          setTimeout(() => {
+            if (_deptParam === 'hr' && typeof getSuggestedKPIs === 'function') {
+              _showDeptKPISuggestions('hr', deptName, getSuggestedKPIs, 'الموارد البشرية');
+            }
+            if (_deptParam === 'finance' && typeof getSuggestedFinanceKPIs === 'function') {
+              _showDeptKPISuggestions('finance', deptName, getSuggestedFinanceKPIs, 'المالية');
+            }
+          }, 500);
+        }
+      } catch (deptErr) { console.warn('[KPIs] dept detection error:', deptErr); }
+
+      try { renderAll(); } catch (re) { console.warn('[KPIs] renderAll error:', re); }
       // إذا بيانات تجريبية، أظهر تنبيه
       if (!isApiMode) {
-        setTimeout(() => showDemoBanner(), 300);
+        setTimeout(() => { try { showDemoBanner(); } catch (e) { } }, 300);
+      }
+    }
+
+    // ═══ بانر KPI مشترَك ═══
+    function _showDeptKPISuggestions(deptKey, deptName, suggestFn, formDeptValue) {
+      const directions = JSON.parse(localStorage.getItem('stratix_' + deptKey + '_directions') || '[]');
+      let allSuggested = [];
+      directions.forEach(d => {
+        const suggestions = suggestFn(d.id || d.title || '');
+        allSuggested = allSuggested.concat(suggestions);
+      });
+      // Fallback
+      if (allSuggested.length === 0) {
+        if (deptKey === 'hr') {
+          allSuggested = [
+            { name: 'نسبة التوطين (%)', target: '25', unit: '%' },
+            { name: 'معدل الدوران السنوي', target: '15', unit: '%' },
+            { name: 'نسبة الامتثال النظامي', target: '100', unit: '%' },
+            { name: 'ساعات التدريب لكل موظف/سنة', target: '40', unit: 'ساعة' },
+            { name: 'نسبة الرضا الوظيفي', target: '75', unit: '%' },
+          ];
+        } else if (deptKey === 'finance') {
+          allSuggested = [
+            { name: 'هامش الربح التشغيلي', target: '15', unit: '%' },
+            { name: 'شهور البقاء (Runway)', target: '12', unit: 'شهر' },
+            { name: 'نسبة الديون للإيرادات', target: '30', unit: '%' },
+            { name: 'متوسط أيام التحصيل', target: '30', unit: 'يوم' },
+            { name: 'نمو الإيرادات ربعياً', target: '10', unit: '%' },
+          ];
+        }
+      }
+      if (allSuggested.length > 0) {
+        const mc = document.querySelector('.main-content');
+        const banner = document.createElement('div');
+        banner.id = deptKey + 'KpiSuggBanner';
+        banner.style.cssText = 'background:linear-gradient(135deg,rgba(6,182,212,0.08),rgba(139,92,246,0.06));border:1px solid rgba(6,182,212,0.2);border-radius:14px;padding:16px;margin-bottom:16px;';
+        banner.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:20px">💡</span>
+              <div style="font-weight:800;font-size:13px">مؤشرات مقترحة لـ${deptName}</div>
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" style="background:none;border:none;color:#94a3b8;cursor:pointer">✕</button>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            ${allSuggested.slice(0, 8).map(s => `
+              <button onclick="document.getElementById('formName').value='${s.name}';document.getElementById('formTarget').value='${s.target}${s.unit}';document.getElementById('formDept').value='${formDeptValue}';openCreateModal()" 
+                style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 12px;color:#e2e8f0;cursor:pointer;font-family:Tajawal;font-size:12px;">
+                <div style="font-weight:700">${s.name}</div>
+                <div style="font-size:10px;color:#94a3b8">المستهدف: ${s.target}${s.unit}</div>
+              </button>`).join('')}
+          </div>
+        `;
+        const readiness = document.getElementById('kpiReadinessBanner');
+        if (readiness) mc.insertBefore(banner, readiness);
+        else mc.appendChild(banner);
       }
     }
 
@@ -1024,6 +1138,10 @@
     }
 
     function showDemoBanner() {
+      // إخفاء بانر البيانات التجريبية لمدير الإدارة — ما يحتاج يعرف عن الإصدارات
+      const _hasDept = new URLSearchParams(window.location.search).get('dept');
+      if (_hasDept) return;
+
       const container = document.querySelector('.main-content');
       if (!container || document.getElementById('demoBanner')) return;
       const banner = document.createElement('div');
@@ -1402,6 +1520,50 @@
 
     function renderReadiness() {
       const banner = document.getElementById('kpiReadinessBanner');
+      if (!kpis.length && currentDept === 'all') { banner.innerHTML = ''; return; }
+
+      // === لمدير الإدارة: عرض إدارته فقط ===
+      const _isDeptMode = new URLSearchParams(window.location.search).get('dept');
+      if (_isDeptMode) {
+        const deptData = kpis.filter(k => k.dept === currentDept);
+        const count = deptData.length;
+        const avgP = count ? Math.round(deptData.reduce((s, k) => s + k.percent, 0) / count) : 0;
+        const cfg = deptConfig[currentDept] || { icon: '📊', color: '#6366f1' };
+        let html = `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:22px">
+          <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px">
+            📋 جاهزية مؤشرات إدارتي
+            <span style="font-size:12px;padding:3px 12px;border-radius:12px;font-weight:700;background:${count > 0 ? 'rgba(34,197,94,0.15);color:#22c55e' : 'rgba(245,158,11,0.15);color:#f59e0b'}">${count} مؤشر · معدل ${avgP}%</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;border:1px solid ${count > 0 ? cfg.color + '30' : 'var(--border)'};background:${count > 0 ? cfg.color + '08' : 'transparent'}">
+            <span style="font-size:24px">${cfg.icon}</span>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700;color:${count > 0 ? cfg.color : 'var(--text-muted)'}">${currentDept}</div>
+              <div style="font-size:11px;color:var(--text-muted)">${count} مؤشر أداء مسجّل</div>
+            </div>
+            <span style="font-size:18px">${count > 0 ? '✅' : '⭕'}</span>
+          </div>`;
+        if (count === 0) {
+          html += `<div style="margin-top:14px;background:rgba(245,158,11,0.04);border:2px dashed rgba(245,158,11,0.2);border-radius:14px;padding:16px 20px">
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px"><span style="color:#f59e0b">●</span> لا توجد مؤشرات لإدارتك حالياً — أضف مؤشرات لمتابعة أداء الإدارة</div>
+            <button onclick="openCreateModal()" style="padding:8px 18px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--secondary));color:white;border:none;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px">
+              <i class="bi bi-plus-circle"></i> أضف مؤشر جديد
+            </button>
+          </div>`;
+        } else if (count >= 3) {
+          html += `<div style="margin-top:14px;background:linear-gradient(135deg,rgba(34,197,94,0.1),rgba(102,126,234,0.08));border:2px solid rgba(34,197,94,0.25);border-radius:14px;padding:16px 20px;display:flex;align-items:center;gap:14px">
+            <span style="font-size:22px">🚀</span>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:800;color:#22c55e">ممتاز! مؤشرات إدارتك جاهزة 🎉</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">تابع الأداء وأدخل القيم الفعلية بانتظام</div>
+            </div>
+          </div>`;
+        }
+        html += '</div>';
+        banner.innerHTML = html;
+        return;
+      }
+
+      // === النسخة الأصلية (CEO) — كل الإدارات ===
       if (!kpis.length) { banner.innerHTML = ''; return; }
 
       // Check coverage
@@ -1587,6 +1749,7 @@
             const res = await fetch(`/api/strategic/kpis/${id}`, {
               method: 'PATCH',
               headers: apiHeaders,
+              credentials: 'same-origin',
               body: JSON.stringify({
                 name, nameAr: name, description: obj,
                 target: targetNum, actual: actualNum,
@@ -1604,6 +1767,7 @@
             const res = await fetch('/api/strategic/kpis', {
               method: 'POST',
               headers: apiHeaders,
+              credentials: 'same-origin',
               body: JSON.stringify({
                 name, nameAr: name, description: obj,
                 target: targetNum,
@@ -1621,6 +1785,14 @@
           // أعد التحميل من الـ API
           bootstrap.Modal.getInstance(document.getElementById('kpiModal')).hide();
           await initFromAPI();
+
+          // ═══ Dept-specific: تتبع الخطوة 4 ═══
+          const _dp = new URLSearchParams(window.location.search).get('dept');
+          if (_dp && typeof updateCompletedSteps === 'function') {
+            updateCompletedSteps(4);
+            localStorage.setItem('stratix_' + _dp + '_kpis_saved', 'true');
+          }
+
           // ═══ Sprint 2: بانر "حوّل لمبادرة" بعد الحفظ ═══
           showInitiativeBanner(name, id || 'new');
           return;
@@ -1679,7 +1851,7 @@
 
       if (isApiMode && !id.startsWith('demo-')) {
         try {
-          const res = await fetch(`/api/strategic/kpis/${id}`, { method: 'DELETE', headers: apiHeaders });
+          const res = await fetch(`/api/strategic/kpis/${id}`, { method: 'DELETE', headers: apiHeaders, credentials: 'same-origin' });
           if (!res.ok) throw new Error('فشل الحذف');
           showToast('✅ تم الحذف من قاعدة البيانات');
           await initFromAPI();
@@ -1705,6 +1877,193 @@
 
     // بدء التحميل من الـ API
     initFromAPI();
+  </script>
+
+  <!-- ═══ DEPT DETECTION — مستقل تماماً عن async API ═══ -->
+  <script>
+    (function () {
+      const _dp = new URLSearchParams(window.location.search).get('dept');
+      if (!_dp) return;
+      const _dn = { hr: 'الموارد البشرية', finance: 'المالية', operations: 'العمليات', marketing: 'التسويق', sales: 'المبيعات', compliance: 'الامتثال', it: 'تقنية المعلومات', cs: 'خدمة العملاء', quality: 'الجودة' }[_dp] || _dp;
+
+      // التحقق من صلاحية المستخدم
+      let isDeptManager = false;
+      try {
+        const u = JSON.parse(localStorage.getItem('user') || '{}');
+        isDeptManager = (u.userType === 'DEPT_MANAGER');
+      } catch (e) { }
+
+      // 1. تحديث العنوان
+      document.title = 'ستارتكس — مؤشرات ' + _dn;
+      const _h1 = document.querySelector('.page-header h1');
+      if (_h1) _h1.innerHTML = '<i class="bi bi-speedometer2"></i> مؤشرات ' + _dn;
+
+      // 🚨 تطبيق الحظر وتعديل الروابط فقط لمدير الإدارة الفعلي
+      if (isDeptManager) {
+        // 1.5 تعديل رابط شعار ستارتكس ليرجع للوحة الإدارة بدل dashboard
+        const _brandLink = document.querySelector('a.brand');
+        if (_brandLink) _brandLink.href = '/dept-dashboard.html?dept=' + _dp;
+
+        // 2. إخفاء مسار التخطيط وفلتر الإدارات
+        const _pp = document.getElementById('planningPathBar');
+        if (_pp) _pp.style.display = 'none';
+        const _df = document.getElementById('deptFilterSection');
+        if (_df) _df.style.display = 'none';
+      }
+
+      // إزالة حالة "الكل" لتجنب أي التباس في الواجهة أو الفحص الآلي
+      const activeDeptChip = document.querySelector('#deptFilterBar .filter-chip.active');
+      if (activeDeptChip) activeDeptChip.classList.remove('active');
+
+      const targetChip = Array.from(document.querySelectorAll('#deptFilterBar .filter-chip'))
+        .find(c => c.textContent.includes(_dn));
+      if (targetChip) targetChip.classList.add('active');
+
+      // 3. تعيين الإدارة في مودال الإنشاء
+      const _fs = document.getElementById('formDept');
+      if (_fs) {
+        for (const opt of _fs.options) {
+          if (opt.textContent.includes(_dn)) { _fs.value = opt.value; break; }
+        }
+        const fg = _fs.closest('.form-group');
+        if (fg) fg.style.display = 'none';
+      }
+
+      // 4. فلتر تلقائي حسب الإدارة — فوراً + بعد تحميل البيانات
+      if (typeof currentDept !== 'undefined') currentDept = _dn;
+
+      // 5. إخفاء بار الكيان (entity banner) — مدير الإدارة ما يحتاجه
+      setTimeout(function () {
+        if (isDeptManager) {
+          const eb = document.querySelector('.stx-entity-banner');
+          if (eb) eb.style.display = 'none';
+        }
+      }, 200);
+
+      // 6. إعادة الفلتر بعد ما البيانات تتحمل من API (async)
+      function _refilterForDept() {
+        if (typeof currentDept !== 'undefined') currentDept = _dn;
+        if (typeof renderAll === 'function') {
+          try { renderAll(); } catch (e) { }
+        }
+        // إعادة إخفاء بار الكيان بعد كل re-render
+        if (isDeptManager) {
+          const eb2 = document.querySelector('.stx-entity-banner');
+          if (eb2) eb2.style.display = 'none';
+        }
+      }
+      // تشغيل بعد 800ms و 2s عشان نضمن البيانات تكون محمّلة
+      setTimeout(_refilterForDept, 800);
+      setTimeout(_refilterForDept, 2000);
+
+      // 7. تخصيص قوالب المودال حسب الإدارة
+      const _deptTemplates = {
+        hr: [
+          { name: 'نسبة التوطين', icon: 'bi-flag-fill', color: '#22c55e', objective: 'رفع نسبة التوطين للحد النظامي', actual: '20%', target: '25%', trend: 'up', percent: 80 },
+          { name: 'معدل الدوران السنوي', icon: 'bi-arrow-repeat', color: '#ef4444', objective: 'خفض نسبة ترك الموظفين', actual: '18%', target: '15%', trend: 'down', percent: 60 },
+          { name: 'نسبة الامتثال النظامي', icon: 'bi-shield-check', color: '#8b5cf6', objective: 'الالتزام بأنظمة العمل والتأمينات', actual: '85%', target: '100%', trend: 'up', percent: 85 },
+          { name: 'ساعات التدريب لكل موظف', icon: 'bi-mortarboard', color: '#3b82f6', objective: 'تطوير مهارات الموظفين', actual: '30', target: '40 ساعة', trend: 'up', percent: 75 },
+          { name: 'نسبة الرضا الوظيفي', icon: 'bi-emoji-smile', color: '#f59e0b', objective: 'رفع مستوى رضا الموظفين', actual: '68%', target: '75%', trend: 'up', percent: 90 },
+          { name: 'متوسط وقت التوظيف', icon: 'bi-clock-history', color: '#06b6d4', objective: 'تسريع عملية الاستقطاب', actual: '45 يوم', target: '30 يوم', trend: 'flat', percent: 67 },
+        ],
+        finance: [
+          { name: 'نمو الإيرادات', icon: 'bi-graph-up-arrow', color: '#22c55e', objective: 'زيادة الإيرادات السنوية', actual: '18%', target: '20%', trend: 'up', percent: 90 },
+          { name: 'هامش الربح الصافي', icon: 'bi-cash-stack', color: '#10b981', objective: 'تحسين الربحية التشغيلية', actual: '12%', target: '15%', trend: 'up', percent: 80 },
+          { name: 'نسبة السيولة', icon: 'bi-droplet', color: '#3b82f6', objective: 'الحفاظ على سيولة كافية', actual: '1.8', target: '2.0', trend: 'flat', percent: 90 },
+          { name: 'معدل تحصيل الذمم', icon: 'bi-receipt', color: '#f59e0b', objective: 'تسريع التحصيل', actual: '60 يوم', target: '45 يوم', trend: 'up', percent: 75 },
+          { name: 'نسبة الانحراف عن الميزانية', icon: 'bi-bar-chart', color: '#ef4444', objective: 'ضبط الإنفاق ضمن الميزانية', actual: '8%', target: '5%', trend: 'down', percent: 62 },
+          { name: 'العائد على الاستثمار ROI', icon: 'bi-arrow-up-circle', color: '#8b5cf6', objective: 'تعظيم العائد على الاستثمارات', actual: '15%', target: '20%', trend: 'up', percent: 75 },
+        ],
+        operations: [
+          { name: 'كفاءة العمليات', icon: 'bi-gear-wide-connected', color: '#22c55e', objective: 'تحسين كفاءة العمليات التشغيلية', actual: '82%', target: '90%', trend: 'up', percent: 91 },
+          { name: 'نسبة الأتمتة', icon: 'bi-robot', color: '#8b5cf6', objective: 'أتمتة العمليات اليدوية', actual: '60%', target: '80%', trend: 'up', percent: 75 },
+          { name: 'وقت التنفيذ', icon: 'bi-stopwatch', color: '#f59e0b', objective: 'تقليل وقت تنفيذ العمليات', actual: '4 أيام', target: '2 يوم', trend: 'flat', percent: 50 },
+          { name: 'نسبة الأخطاء التشغيلية', icon: 'bi-exclamation-triangle', color: '#ef4444', objective: 'تقليل الأخطاء', actual: '5%', target: '2%', trend: 'down', percent: 60 },
+          { name: 'رضا العملاء الداخليين', icon: 'bi-emoji-smile', color: '#3b82f6', objective: 'رفع رضا الأقسام المستفيدة', actual: '75%', target: '85%', trend: 'up', percent: 88 },
+          { name: 'تكلفة الوحدة التشغيلية', icon: 'bi-cash', color: '#06b6d4', objective: 'خفض التكلفة التشغيلية', actual: '120 ر.س', target: '100 ر.س', trend: 'flat', percent: 83 },
+        ],
+      };
+      // القوالب الافتراضية للإدارات الأخرى
+      const _defaultTemplates = [
+        { name: 'مؤشر أداء رئيسي', icon: 'bi-speedometer2', color: '#667eea', objective: 'تحقيق الهدف الاستراتيجي', actual: '0%', target: '100%', trend: 'up', percent: 0 },
+        { name: 'نسبة الإنجاز', icon: 'bi-check2-all', color: '#22c55e', objective: 'إنجاز المشاريع في الوقت المحدد', actual: '60%', target: '90%', trend: 'up', percent: 67 },
+        { name: 'رضا المستفيدين', icon: 'bi-emoji-smile', color: '#f59e0b', objective: 'رفع رضا المستفيدين', actual: '70%', target: '85%', trend: 'up', percent: 82 },
+      ];
+
+      const _myTemplates = _deptTemplates[_dp] || _defaultTemplates;
+
+      // استبدال kpiTemplates
+      if (typeof kpiTemplates !== 'undefined') {
+        kpiTemplates.length = 0;
+        _myTemplates.forEach(t => kpiTemplates.push(t));
+      }
+
+      // استبدال HTML القوالب في المودال
+      const _tplContainer = document.querySelector('#kpiTplSection > div');
+      if (_tplContainer) {
+        let tplHtml = '';
+        _myTemplates.forEach((t, i) => {
+          tplHtml += `<div class="kpi-tpl" onclick="fillKpiTpl(${i})"
+            style="background:${t.color}0a;border:1px solid ${t.color}25;border-radius:8px;padding:8px;cursor:pointer;text-align:center;transition:all 0.2s;font-size:10px"
+            onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform=''">
+            <i class="bi ${t.icon}" style="font-size:16px;color:${t.color};display:block;margin-bottom:2px"></i>
+            <div style="font-weight:700">${t.name}</div>
+          </div>`;
+        });
+        _tplContainer.style.gridTemplateColumns = 'repeat(3,1fr)';
+        _tplContainer.innerHTML = tplHtml;
+      }
+
+      // استبدال اقتراحات الأسماء
+      const _nameInput = document.getElementById('formName');
+      if (_nameInput) {
+        const _sugContainer = _nameInput.parentElement.querySelector('div[style*="flex-wrap"]');
+        if (_sugContainer) {
+          _sugContainer.innerHTML = _myTemplates.slice(0, 3).map(t =>
+            `<span onclick="document.getElementById('formName').value=this.textContent;updateKpiPreview()"
+              style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(102,126,234,0.08);color:var(--primary);cursor:pointer;border:1px solid rgba(102,126,234,0.15)">${t.name}</span>`
+          ).join('');
+        }
+      }
+
+      // تعديل openCreateModal ليعيّن الإدارة تلقائياً
+      const _origOpen = typeof openCreateModal === 'function' ? openCreateModal : null;
+      window.openCreateModal = function () {
+        if (_origOpen) _origOpen();
+        else {
+          document.getElementById('modalTitle').innerHTML = '<i class="bi bi-plus-circle"></i> مؤشر جديد';
+          document.getElementById('editId').value = '';
+          ['formName', 'formObj', 'formActual', 'formTarget'].forEach(id => document.getElementById(id).value = '');
+          document.getElementById('formTrend').value = 'up';
+          document.getElementById('formPercent').value = 0;
+          document.getElementById('kpiTplSection').style.display = '';
+          document.querySelectorAll('.kpi-tpl').forEach(el => { el.style.boxShadow = ''; });
+          if (typeof updateKpiPreview === 'function') updateKpiPreview();
+          new bootstrap.Modal(document.getElementById('kpiModal')).show();
+        }
+        // تعيين الإدارة تلقائياً وإخفاء الحقل
+        const _fd = document.getElementById('formDept');
+        if (_fd) {
+          _fd.value = _dn;
+          // لو القيمة مش موجودة، أضفها
+          let found = false;
+          for (const opt of _fd.options) {
+            if (opt.value === _dn) { found = true; break; }
+          }
+          if (!found) {
+            const newOpt = document.createElement('option');
+            newOpt.value = _dn;
+            newOpt.textContent = _dn;
+            _fd.appendChild(newOpt);
+            _fd.value = _dn;
+          }
+          const fg = _fd.closest('.form-group');
+          if (fg) fg.style.display = 'none';
+        }
+      };
+
+      console.log('[KPIs] ✅ dept detection applied:', _dn);
+    })();
   </script>
   <script src="/assets/js/path-tracker.js"></script>
 </body>

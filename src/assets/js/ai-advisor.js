@@ -1014,7 +1014,7 @@
           icon: '🚀',
           title: 'أعد شركتك للبدء',
           message: 'حدد ألمك وطموحك وأنا أبني لك مسار استراتيجي مخصص',
-          action: { label: 'ابدأ الآن', href: '/pain-ambition.html' },
+          action: { label: 'ابدأ الآن', href: '/select-type' },
           estimatedTime: '5 دقائق',
         });
       } else {

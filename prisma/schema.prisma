@@ -185,6 +185,7 @@ model User {
   memberships     Member[]
   auditLogs       AuditLog[]
   financialAudits FinancialAudit[]
+  healthReports   CompanyHealthReport[] @relation("HealthReporter")
 
   @@map("users")
 }
@@ -238,6 +239,7 @@ model Entity {
   employees          Employee[] // ✨ الموظفين (فحص HR)
   housingUnits       HousingUnit[] // ✨ السكن (فحص HR)
   govPlatforms       GovPlatformStatus[] // ✨ المنصات الحكومية (فحص Gov)
+  healthReports      CompanyHealthReport[] // ✨ تقارير صحة الشركة
 
   @@index([companyId])
   @@index([sectorId])
@@ -1964,3 +1966,255 @@ model AuditCheckpoint {
   @@map("audit_checkpoints")
 }
 
+// =========================================
+// INVESTMENT DEAL PIPELINE (NEW ✨)
+// نظام إدارة الفرص الاستثمارية
+// =========================================
+
+/// الفرصة الاستثمارية — دورة حياة كاملة من التقديم للقرار
+model InvestmentDeal {
+  id       String  @id @default(cuid())
+  entityId String? // ربط بالكيان (اختياري — بعد الموافقة)
+
+  // بيانات الفرصة
+  companyName String  // اسم الشركة المستهدفة
+  sector      String  // القطاع
+  description String  // وصف الفرصة
+  stage       String  @default("SEED") // SEED, SERIES_A, SERIES_B, GROWTH, MATURE
+  askAmount   Float?  // المبلغ المطلوب
+  valuation   Float?  // التقييم
+  equity      Float?  // النسبة المعروضة
+  location    String? // الموقع
+  website     String? // الموقع الإلكتروني
+  pitchSummary String? // ملخص العرض
+
+  // حالة الفرصة (State Machine)
+  status String @default("SUBMITTED")
+  // SUBMITTED → UNDER_REVIEW → ANALYZING →
+  // INFO_REQUIRED → DECISION_READY →
+  // APPROVED / REJECTED / NEGOTIATING → INVESTED / CLOSED
+
+  // مقدم الفرصة
+  submittedById String  // User ID — مقدم الفرصة
+  submittedAt   DateTime @default(now())
+
+  // قائد فريق التحليل
+  leadAnalystId String?   // User ID — قائد الفريق
+  assignedAt    DateTime? // تاريخ التعيين
+
+  // قرار المستثمر
+  decisionById    String?   // User ID — صاحب القرار
+  decisionAt      DateTime? // تاريخ القرار
+  decisionNotes   String?   // ملاحظات القرار
+  rejectionReason String?   // سبب الرفض
+
+  // Metadata
+  tags     String? // JSON — تصنيفات إضافية
+  priority String  @default("MEDIUM") // HIGH, MEDIUM, LOW
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // العلاقات
+  documents DealDocument[]
+  reports   DealAnalysisReport[]
+  portfolio PortfolioCompany?
+
+  @@index([status])
+  @@index([submittedById])
+  @@index([leadAnalystId])
+  @@index([decisionById])
+  @@index([sector])
+  @@map("investment_deals")
+}
+
+/// مستندات الفرصة — ملفات مرفقة (PDF, صور, ...)
+model DealDocument {
+  id     String @id @default(cuid())
+  dealId String
+
+  fileName   String // اسم الملف الأصلي
+  fileUrl    String // رابط الملف المخزّن
+  fileType   String @default("OTHER") // FINANCIAL, LEGAL, MARKET, PITCH_DECK, COMMERCIAL_REG, OTHER
+  fileSize   Int?   // الحجم بالبايت
+  mimeType   String? // application/pdf, image/png, etc.
+  uploadedBy String  // User ID
+
+  createdAt DateTime @default(now())
+
+  deal InvestmentDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@index([dealId])
+  @@index([fileType])
+  @@map("deal_documents")
+}
+
+/// تقارير تحليل الفرصة — مالي، سوقي، قانوني، موحد
+model DealAnalysisReport {
+  id     String @id @default(cuid())
+  dealId String
+
+  type      String // FINANCIAL, MARKET, LEGAL, TECHNICAL, UNIFIED
+  analystId String // User ID — المحلل
+
+  // محتوى التقرير
+  summary        String? // ملخص التقرير
+  score          Float?  // 0-100 — الدرجة الإجمالية
+  riskLevel      String? // HIGH, MEDIUM, LOW
+  findings       String? // JSON — النتائج التفصيلية
+  recommendation String? // INVEST, PASS, NEED_INFO
+
+  // حالة التقرير
+  status String @default("DRAFT") // DRAFT, SUBMITTED, REVIEWED
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  deal InvestmentDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@index([dealId])
+  @@index([analystId])
+  @@index([type])
+  @@map("deal_analysis_reports")
+}
+
+/// شركة في المحفظة — بعد الموافقة على الاستثمار
+model PortfolioCompany {
+  id     String @id @default(cuid())
+  dealId String @unique // ربط بالفرصة الأصلية
+
+  // بيانات الشركة
+  companyName    String
+  investedAmount Float    // المبلغ المستثمر
+  equityPercent  Float    // نسبة الملكية
+  investedAt     DateTime // تاريخ الاستثمار
+
+  // الحالة
+  status    String    @default("ACTIVE") // ACTIVE, EXITED, WRITTEN_OFF
+  exitedAt  DateTime? // تاريخ التخارج
+  exitValue Float?    // قيمة التخارج
+  exitType  String?   // IPO, ACQUISITION, BUYBACK, WRITE_OFF
+
+  // محلل المتابعة
+  assignedAnalystId String? // User ID
+  reportFrequency   String  @default("QUARTERLY") // MONTHLY, QUARTERLY, SEMI_ANNUAL, ANNUAL
+  nextReportDue     DateTime? // تاريخ التقرير القادم
+
+  // أداء
+  lastRevenue    Float? // آخر إيراد
+  lastNetProfit  Float? // آخر صافي ربح
+  currentHealth  String @default("HEALTHY") // HEALTHY, WARNING, CRITICAL
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // العلاقات
+  deal    InvestmentDeal    @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  reports PortfolioReport[]
+
+  @@index([status])
+  @@index([assignedAnalystId])
+  @@map("portfolio_companies")
+}
+
+/// تقارير المتابعة الدورية — شهرية/ربعية
+model PortfolioReport {
+  id                 String @id @default(cuid())
+  portfolioCompanyId String
+
+  // الفترة
+  period     String // "2026-Q1", "2026-03"
+  periodType String @default("QUARTERLY") // MONTHLY, QUARTERLY, ANNUAL
+
+  // المالية
+  revenue    Float? // الإيرادات
+  expenses   Float? // المصروفات
+  netProfit  Float? // صافي الربح
+  cashFlow   Float? // التدفق النقدي
+  burnRate   Float? // معدل الحرق (للشركات الناشئة)
+
+  // التشغيل
+  kpis        String? // JSON — مؤشرات الأداء
+  headcount   Int?    // عدد الموظفين
+  customers   Int?    // عدد العملاء
+
+  // الملخص
+  highlights  String? // إنجازات الفترة
+  challenges  String? // تحديات
+  risks       String? // مخاطر جديدة
+  nextSteps   String? // الخطوات القادمة
+
+  // حالة التقرير
+  status    String @default("DRAFT") // DRAFT, SUBMITTED, REVIEWED
+  createdBy String // User ID
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  portfolioCompany PortfolioCompany @relation(fields: [portfolioCompanyId], references: [id], onDelete: Cascade)
+
+  @@index([portfolioCompanyId])
+  @@index([period])
+  @@map("portfolio_reports")
+}
+
+/// الإشعارات — نظام إشعارات موحد للنظام بالكامل
+model Notification {
+  id     String @id @default(cuid())
+  userId String // المستخدم المستهدف
+
+  // محتوى الإشعار
+  type    String // DEAL_SUBMITTED, DEAL_ASSIGNED, INFO_REQUIRED, ANALYSIS_COMPLETE,
+                 // DECISION_READY, DEAL_APPROVED, DEAL_REJECTED, REPORT_READY,
+                 // REPORT_DUE, SYSTEM
+  title   String
+  message String
+  link    String? // رابط الإجراء المطلوب
+  icon    String? // أيقونة مخصصة
+
+  // القراءة
+  isRead  Boolean   @default(false)
+  readAt  DateTime?
+
+  // المصدر
+  sourceType String? // DEAL, PORTFOLIO, SYSTEM
+  sourceId   String? // ID المصدر (dealId, portfolioId, etc.)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+  @@index([type])
+  @@map("notifications")
+}
+
+// =========================================
+// 30. COMPANY HEALTH REPORTS (NEW ✨)
+// لوحة أم — كل إدارة تغذي جزء معين
+// =========================================
+
+/// تقارير صحة الشركة — مؤشرات حية من كل إدارة
+model CompanyHealthReport {
+  id             String   @id @default(cuid())
+  entityId       String
+  dimension      String   // financial, operational, cultural, marketing, hr
+  indicatorName  String   // اسم المؤشر (صافي الربح, رضا العملاء...)
+  indicatorValue Float    // القيمة الفعلية
+  targetValue    Float    // القيمة المستهدفة
+  unit           String   // percent, currency, number, hours, days
+  department     String   // finance, operations, hr, marketing, executive
+  reportDate     DateTime // تاريخ التقرير
+  notes          String?  // ملاحظات إضافية
+  reporterId     String   // المستخدم اللي أدخل التقرير
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  entity   Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  reporter User   @relation("HealthReporter", fields: [reporterId], references: [id], onDelete: Restrict)
+
+  @@index([entityId, reportDate])
+  @@index([entityId, dimension])
+  @@index([department])
+  @@map("company_health_reports")
+}

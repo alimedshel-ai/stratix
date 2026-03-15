@@ -1171,10 +1171,11 @@
     <script>
         // ===== AUTH =====
         const token = localStorage.getItem('token');
-        if (!token) window.location.href = '/login';
+        if (!token) { sessionStorage.setItem('stratix_return_url', location.pathname + location.search); location.href = '/login?from=restore'; }
 
         try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
+            // 🔒 التوكن الآن 'httponly-managed' — نقرأ من localStorage('user')
+            const payload = JSON.parse(localStorage.getItem('user') || '{}');
             document.getElementById('userName').textContent = payload.name || 'مستخدم';
             document.getElementById('userRole').textContent = payload.role || payload.systemRole || '';
             document.getElementById('userAvatar').textContent = (payload.name || 'م')[0];
@@ -1317,6 +1318,7 @@
               <button class="btn-v btn-view" onclick="viewDetails('${v.id}')"><i class="bi bi-eye"></i> تفاصيل</button>
               <button class="btn-v btn-edit" onclick="editVersion('${v.id}')"><i class="bi bi-pencil"></i> تعديل</button>
               ${v.status === 'DRAFT' ? `<button class="btn-v btn-activate" onclick="activateVersion('${v.id}')"><i class="bi bi-check-circle"></i> تفعيل</button>` : ''}
+              ${v.isActive ? `<a href="/select-type?from=new-cycle&version=V${v.versionNumber}" class="btn-v" style="border-color:#667eea;color:#667eea;text-decoration:none"><i class="bi bi-arrow-repeat"></i> ابدأ دورة جديدة</a>` : ''}
               <button class="btn-v btn-delete" onclick="deleteVersion('${v.id}', 'V${v.versionNumber}')"><i class="bi bi-trash"></i> حذف</button>
             </div>
           </div>`;

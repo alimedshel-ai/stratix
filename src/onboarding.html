@@ -580,6 +580,7 @@
                                 maxlength="15">
                         </div>
                     </div>
+
                     <div class="wizard-actions">
                         <div></div>
                         <button class="btn-wizard primary" onclick="nextStep(2)">
@@ -887,6 +888,20 @@
         let selectedStructure = '';
         let selectedTeam = '';
 
+        // ═══ تخطي الإعداد لمدير الإدارة ═══
+        // مدير الإدارة ما يحتاج يعبّي بيانات الشركة — يروح مباشرة للوحته
+        (function skipForDeptManager() {
+            try {
+                const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
+                if (diag && diag.role === 'manager') {
+                    const dept = diag.department || '';
+                    const target = dept ? `/dept-dashboard.html?dept=${dept}` : '/dashboard.html';
+                    window.location.replace(target);
+                    return;
+                }
+            } catch (e) { /* ignore */ }
+        })();
+
         // ═══ Auto-fill from Diagnostic Payload ═══
         (function autoFillFromDiagnostic() {
             const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
@@ -1148,9 +1163,9 @@
                     const res = await fetch('/api/auth/complete-onboarding', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + token
+                            'Content-Type': 'application/json'
                         },
+                        credentials: 'same-origin', // 🔒 HttpOnly Cookie
                         body: JSON.stringify({
                             companyName: data.orgName,
                             sector: data.sector,
@@ -1173,9 +1188,9 @@
                         if (result.companyId) {
                             localStorage.setItem('companyId', result.companyId);
                         }
-                        // تحديث التوكن لو رجع واحد جديد
+                        // تحديث التوكن لو رجع واحد جديد (الكوكي أُضبط تلقائياً)
                         if (result.token) {
-                            localStorage.setItem('token', result.token);
+                            localStorage.setItem('token', 'httponly-managed');
                             // استخراج userType من التوكن الجديد
                             try {
                                 const payload = JSON.parse(atob(result.token.split('.')[1]));
@@ -1204,9 +1219,9 @@
                                     await fetch('/api/sector-configs/link-entity', {
                                         method: 'POST',
                                         headers: {
-                                            'Content-Type': 'application/json',
-                                            'Authorization': 'Bearer ' + token
+                                            'Content-Type': 'application/json'
                                         },
+                                        credentials: 'same-origin', // 🔒 HttpOnly Cookie
                                         body: JSON.stringify({
                                             entityId: result.entityId,
                                             sectorConfigCode: configCode

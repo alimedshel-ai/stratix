@@ -127,6 +127,32 @@ function showEmptyState(message, icon = 'inbox', containerId) {
   }
 }
 
+/**
+ * Show crash/error state (Global Error Boundary)
+ */
+function showCrashState(containerId, message = 'عذراً، فقدنا الاتصال أو حدث خطأ أثناء جلب البيانات.', actionLabel = 'تحديث الصفحة', actionUrl = '') {
+  const container = document.getElementById(containerId) || document.querySelector('.main-content');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;text-align:center;background:var(--bg-card,#1a1d2e);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:16px;margin:20px 0;animation:fadeIn 0.4s ease;">
+        <div style="font-size:56px;margin-bottom:16px;opacity:0.9;">🔌</div>
+        <h3 style="font-size:18px;font-weight:800;color:var(--text,#e2e8f0);margin-bottom:8px;">تعذر عرض البيانات</h3>
+        <p style="font-size:14px;color:var(--text-muted,#94a3b8);margin-bottom:24px;max-width:400px;line-height:1.6;">${message}</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+            <button onclick="${actionUrl ? `window.location.href='${actionUrl}'` : 'window.location.reload()'}" style="padding:10px 24px;border-radius:10px;background:linear-gradient(135deg,var(--primary,#667eea),var(--secondary,#764ba2));color:white;border:none;font-weight:700;font-size:13px;cursor:pointer;transition:transform 0.2s;">
+                <i class="bi bi-arrow-clockwise"></i> ${actionLabel}
+            </button>
+            <button onclick="window.location.href=window.location.search.includes('dept=') ? '/dept-dashboard.html' + window.location.search : '/dashboard.html'" style="padding:10px 24px;border-radius:10px;background:rgba(255,255,255,0.05);color:var(--text-muted,#94a3b8);border:1px solid var(--border,rgba(255,255,255,0.1));font-weight:600;font-size:13px;cursor:pointer;transition:all 0.2s;">
+                <i class="bi bi-house"></i> العودة للرئيسية
+            </button>
+        </div>
+    </div>
+  `;
+
+  hideLoading();
+}
+
 // =====================================
 // Toast Notifications
 // =====================================
@@ -196,20 +222,19 @@ function showToast(message, type = 'info', duration = 3000) {
  * Make authenticated API request
  */
 async function apiRequest(url, options = {}) {
-  const token = localStorage.getItem('token');
-
-  if (!token) {
-    window.location.href = '/login';
-    throw new Error('No authentication token');
-  }
+  const token = localStorage.getItem('token') || '';
 
   const defaultOptions = {
+    credentials: 'same-origin',
     headers: {
-      'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
       ...options.headers
     }
   };
+
+  if (token) {
+    defaultOptions.headers['Authorization'] = `Bearer ${token}`;
+  }
 
   const response = await fetch(url, { ...defaultOptions, ...options });
 
@@ -217,7 +242,7 @@ async function apiRequest(url, options = {}) {
   if (response.status === 401) {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/login';
+    window.location.href = '/login.html';
     throw new Error('Unauthorized');
   }
 
@@ -472,6 +497,7 @@ if (typeof module !== 'undefined' && module.exports) {
     showError,
     showSuccess,
     showEmptyState,
+    showCrashState,
     showToast,
     apiRequest,
     handleApiError,

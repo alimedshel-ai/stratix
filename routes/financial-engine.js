@@ -482,6 +482,224 @@ function findCrossLink(ratios) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// 10. 📐 حساب نقطة التعادل (Break-Even Analysis)
+// ═══════════════════════════════════════════════════════════════════
+
+/**
+ * معايير القطاعات — نسبة التكاليف الثابتة من إجمالي المصاريف + هامش مرجعي
+ * المصدر: متوسطات السوق السعودي + معايير دولية
+ */
+const SECTOR_BENCHMARKS = {
+    // ─── تجزئة و تجارة ────────────────────────────────────────
+    RETAIL: { fixedRatio: 0.35, targetMargin: 0.25, nameAr: 'تجزئة', icon: '🛒' },
+    WHOLESALE: { fixedRatio: 0.25, targetMargin: 0.15, nameAr: 'تجارة جملة', icon: '📦' },
+    ECOMMERCE: { fixedRatio: 0.45, targetMargin: 0.30, nameAr: 'تجارة إلكترونية', icon: '🌐' },
+    // ─── خدمات ────────────────────────────────────────────────
+    SERVICES: { fixedRatio: 0.60, targetMargin: 0.35, nameAr: 'خدمات', icon: '🤝' },
+    CONSULTING: { fixedRatio: 0.70, targetMargin: 0.40, nameAr: 'استشارات', icon: '💼' },
+    HEALTHCARE: { fixedRatio: 0.55, targetMargin: 0.30, nameAr: 'صحة', icon: '🏥' },
+    EDUCATION: { fixedRatio: 0.65, targetMargin: 0.35, nameAr: 'تعليم', icon: '🎓' },
+    // ─── تقنية ────────────────────────────────────────────────
+    TECH: { fixedRatio: 0.75, targetMargin: 0.50, nameAr: 'تقنية', icon: '💻' },
+    SAAS: { fixedRatio: 0.80, targetMargin: 0.60, nameAr: 'برمجيات SaaS', icon: '☁️' },
+    // ─── صناعة ────────────────────────────────────────────────
+    MANUFACTURING: { fixedRatio: 0.50, targetMargin: 0.20, nameAr: 'صناعة', icon: '🏭' },
+    FOOD: { fixedRatio: 0.40, targetMargin: 0.25, nameAr: 'أغذية ومشروبات', icon: '🍽️' },
+    // ─── عقار و بناء ──────────────────────────────────────────
+    REAL_ESTATE: { fixedRatio: 0.30, targetMargin: 0.25, nameAr: 'عقارات', icon: '🏢' },
+    CONSTRUCTION: { fixedRatio: 0.35, targetMargin: 0.15, nameAr: 'مقاولات', icon: '🏗️' },
+    // ─── أخرى ─────────────────────────────────────────────────
+    LOGISTICS: { fixedRatio: 0.45, targetMargin: 0.20, nameAr: 'لوجستيات', icon: '🚚' },
+    HOSPITALITY: { fixedRatio: 0.55, targetMargin: 0.25, nameAr: 'ضيافة وسياحة', icon: '🏨' },
+    OTHER: { fixedRatio: 0.45, targetMargin: 0.25, nameAr: 'عام', icon: '📊' },
+};
+
+/**
+ * حساب نقطة التعادل (Break-Even Point)
+ * 
+ * الصيغة الأساسية:
+ *   BEP = التكاليف الثابتة ÷ (1 - نسبة التكاليف المتغيرة/الإيرادات)
+ *   أو: BEP = التكاليف الثابتة ÷ هامش المساهمة
+ * 
+ * نظراً لأن المستخدم يدخل 5 أرقام فقط (إيرادات + COGS + مصاريف إدارية + أصول + التزامات)،
+ * نستخدم القطاع لتقدير نسبة الثابت من المتغير.
+ */
+function calculateBreakEven(data, ratios, sector) {
+    const benchmark = SECTOR_BENCHMARKS[sector] || SECTOR_BENCHMARKS.OTHER;
+
+    // إجمالي التكاليف = COGS + مصاريف إدارية
+    const totalCosts = data.cogs + data.admin_expenses;
+
+    // تقدير التكاليف الثابتة والمتغيرة حسب القطاع
+    // المصاريف الإدارية → غالباً ثابتة
+    // COGS → غالباً متغيرة (لكن فيها جزء ثابت حسب القطاع)
+    const fixedFromAdmin = data.admin_expenses * 0.85;  // 85% من الإدارية ثابتة
+    const fixedFromCogs = data.cogs * (benchmark.fixedRatio * 0.3); // جزء ثابت من COGS حسب القطاع
+    const estimatedFixedCosts = fixedFromAdmin + fixedFromCogs;
+    const estimatedVariableCosts = totalCosts - estimatedFixedCosts;
+
+    // نسبة التكاليف المتغيرة من الإيرادات
+    const variableCostRatio = data.total_revenue > 0
+        ? estimatedVariableCosts / data.total_revenue
+        : 0;
+
+    // هامش المساهمة (Contribution Margin)
+    const contributionMargin = 1 - variableCostRatio;
+
+    // نقطة التعادل
+    const breakEvenRevenue = contributionMargin > 0
+        ? Math.round(estimatedFixedCosts / contributionMargin)
+        : null; // لا يمكن حسابها إذا هامش المساهمة ≤ 0
+
+    // هامش الأمان (Margin of Safety)
+    // = (الإيرادات الفعلية - نقطة التعادل) ÷ الإيرادات الفعلية
+    const marginOfSafety = breakEvenRevenue && data.total_revenue > 0
+        ? ((data.total_revenue - breakEvenRevenue) / data.total_revenue)
+        : null;
+
+    // الحالة الصحية
+    let healthStatus, healthColor, healthIcon, healthMessage;
+
+    if (breakEvenRevenue === null) {
+        healthStatus = 'CRITICAL';
+        healthColor = '#EF4444';
+        healthIcon = '🔴';
+        healthMessage = 'لا يمكن تحقيق التعادل — التكاليف المتغيرة تتجاوز الإيرادات لكل وحدة مباعة';
+    } else if (marginOfSafety < 0) {
+        healthStatus = 'BELOW_BE';
+        healthColor = '#EF4444';
+        healthIcon = '🔴';
+        healthMessage = `المنشأة تحت نقطة التعادل بمقدار ${Math.abs(Math.round(marginOfSafety * 100))}% — تحتاج زيادة إيرادات ${(breakEvenRevenue - data.total_revenue).toLocaleString('ar-SA')} ريال`;
+    } else if (marginOfSafety < 0.10) {
+        healthStatus = 'DANGER_ZONE';
+        healthColor = '#F97316';
+        healthIcon = '🟠';
+        healthMessage = `هامش أمان ضعيف (${(marginOfSafety * 100).toFixed(1)}%) — أي انخفاض بسيط في المبيعات يهدد الربحية`;
+    } else if (marginOfSafety < 0.25) {
+        healthStatus = 'CAUTIOUS';
+        healthColor = '#EAB308';
+        healthIcon = '🟡';
+        healthMessage = `هامش أمان مقبول (${(marginOfSafety * 100).toFixed(1)}%) — لكن يُفضل رفعه فوق 25%`;
+    } else if (marginOfSafety < 0.40) {
+        healthStatus = 'HEALTHY';
+        healthColor = '#22C55E';
+        healthIcon = '🟢';
+        healthMessage = `هامش أمان جيد (${(marginOfSafety * 100).toFixed(1)}%) — المنشأة في منطقة آمنة`;
+    } else {
+        healthStatus = 'STRONG';
+        healthColor = '#10B981';
+        healthIcon = '🟢';
+        healthMessage = `هامش أمان ممتاز (${(marginOfSafety * 100).toFixed(1)}%) — المنشأة بعيدة عن الخطر`;
+    }
+
+    // مقارنة بمعيار القطاع
+    const sectorComparison = {
+        sectorKey: sector || 'OTHER',
+        sectorNameAr: benchmark.nameAr,
+        sectorIcon: benchmark.icon,
+        targetMargin: benchmark.targetMargin,
+        currentMargin: ratios.gm,
+        gap: ratios.gm - benchmark.targetMargin,
+        gapText: ratios.gm >= benchmark.targetMargin
+            ? `هامشك أعلى من متوسط القطاع بـ ${((ratios.gm - benchmark.targetMargin) * 100).toFixed(1)}% — ممتاز!`
+            : `هامشك أقل من متوسط القطاع بـ ${((benchmark.targetMargin - ratios.gm) * 100).toFixed(1)}% — يحتاج تحسين`,
+    };
+
+    // توصيات Break-Even
+    const beRecommendations = [];
+
+    if (healthStatus === 'BELOW_BE' || healthStatus === 'CRITICAL') {
+        beRecommendations.push({
+            priority: 'NOW',
+            icon: '🔴',
+            text: `أولوية قصوى: المنشأة تحت نقطة التعادل. خيارات: (1) زيادة المبيعات ${breakEvenRevenue ? Math.ceil((breakEvenRevenue - data.total_revenue) / 1000) * 1000 : '—'} ريال، (2) خفض التكاليف الثابتة ${Math.ceil(estimatedFixedCosts * 0.15 / 1000) * 1000} ريال.`,
+        });
+    }
+
+    if (healthStatus === 'DANGER_ZONE') {
+        beRecommendations.push({
+            priority: 'MONTH',
+            icon: '🟠',
+            text: `تنبيه: هامش الأمان منخفض. ابنِ سيناريو "ماذا لو انخفضت المبيعات 15%؟" — الجواب: ستدخل منطقة الخسارة.`,
+        });
+    }
+
+    if (sectorComparison.gap < 0) {
+        beRecommendations.push({
+            priority: 'QUARTER',
+            icon: '🟡',
+            text: `هامشك أقل من متوسط قطاع ${benchmark.nameAr}. دراسة القطاع تُظهر أن المعيار هو ${(benchmark.targetMargin * 100).toFixed(0)}% — حاول رفع هامشك تدريجياً.`,
+        });
+    }
+
+    return {
+        estimatedFixedCosts: Math.round(estimatedFixedCosts),
+        estimatedVariableCosts: Math.round(estimatedVariableCosts),
+        contributionMargin: Math.round(contributionMargin * 1000) / 1000,
+        breakEvenRevenue,
+        marginOfSafety: marginOfSafety !== null ? Math.round(marginOfSafety * 1000) / 1000 : null,
+        marginOfSafetyPercent: marginOfSafety !== null ? `${(marginOfSafety * 100).toFixed(1)}%` : null,
+        // الحالة الصحية
+        health: {
+            status: healthStatus,
+            color: healthColor,
+            icon: healthIcon,
+            message: healthMessage,
+        },
+        // مقارنة بالقطاع
+        sectorComparison,
+        // توصيات
+        recommendations: beRecommendations,
+        // سيناريوهات What-If
+        scenarios: generateWhatIfScenarios(data, estimatedFixedCosts, contributionMargin, breakEvenRevenue),
+    };
+}
+
+/**
+ * سيناريوهات "ماذا لو" — تنبؤات سريعة
+ */
+function generateWhatIfScenarios(data, fixedCosts, cm, currentBE) {
+    if (!currentBE || cm <= 0) return [];
+
+    const scenarios = [];
+
+    // سيناريو 1: ماذا لو زدنا الأسعار 10%؟
+    const newRevenueUp = data.total_revenue * 1.10;
+    const newMarginUp = ((newRevenueUp - currentBE) / newRevenueUp * 100).toFixed(1);
+    scenarios.push({
+        id: 'PRICE_UP_10',
+        title: '📈 لو زدت الأسعار 10%',
+        result: `هامش الأمان يصبح ${newMarginUp}%`,
+        impact: newMarginUp > 25 ? 'positive' : 'neutral',
+    });
+
+    // سيناريو 2: ماذا لو انخفضت المبيعات 20%؟
+    const newRevenueDown = data.total_revenue * 0.80;
+    const newMarginDown = newRevenueDown > 0 ? ((newRevenueDown - currentBE) / newRevenueDown * 100).toFixed(1) : '-100';
+    scenarios.push({
+        id: 'SALES_DOWN_20',
+        title: '📉 لو انخفضت المبيعات 20%',
+        result: newMarginDown < 0 ? `ستخسر — تحت نقطة التعادل بـ ${Math.abs(newMarginDown)}%` : `هامش الأمان ينخفض إلى ${newMarginDown}%`,
+        impact: newMarginDown < 0 ? 'negative' : 'cautious',
+    });
+
+    // سيناريو 3: ماذا لو خفّضت التكاليف الثابتة 15%؟
+    const newFixed = fixedCosts * 0.85;
+    const newBE = cm > 0 ? Math.round(newFixed / cm) : null;
+    if (newBE) {
+        const newMargin = data.total_revenue > 0 ? ((data.total_revenue - newBE) / data.total_revenue * 100).toFixed(1) : '0';
+        scenarios.push({
+            id: 'CUT_FIXED_15',
+            title: '✂️ لو خفّضت التكاليف الثابتة 15%',
+            result: `نقطة التعادل تنخفض إلى ${newBE.toLocaleString('ar-SA')} ريال (هامش أمان ${newMargin}%)`,
+            impact: 'positive',
+        });
+    }
+
+    return scenarios;
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // 🔌 API ENDPOINT
 // ═══════════════════════════════════════════════════════════════════
 
@@ -534,6 +752,7 @@ router.post('/analyze', (req, res) => {
             admin_expenses,
             current_assets,
             current_liabilities,
+            sector,
         } = req.body;
 
         // تحويل القيم إلى أرقام
@@ -572,7 +791,10 @@ router.post('/analyze', (req, res) => {
         // 6. الرابط الذكي
         const crossLink = findCrossLink(ratios);
 
-        // 7. ملخص الأرقام المشتقة
+        // 7. حساب نقطة التعادل (Break-Even)
+        const breakEven = calculateBreakEven(data, ratios, sector || 'OTHER');
+
+        // 8. ملخص الأرقام المشتقة
         const summary = {
             gross_profit: ratios.gross_profit,
             operating_profit: ratios.operating_profit,
@@ -598,6 +820,7 @@ router.post('/analyze', (req, res) => {
             swot,
             recommendations,
             crossLink,
+            breakEven,
             score,
             scoreLabel,
             warnings: warnings.length > 0 ? warnings : undefined,
@@ -627,15 +850,39 @@ router.get('/health', (req, res) => {
     res.json({
         status: 'ok',
         engine: 'financial-translation-engine',
-        version: '1.0.0',
+        version: '2.0.0',
         rules: {
             swot: SWOT_RULES.length,
             recommendations: RECOMMENDATION_RULES.length,
             crossLinks: CROSS_LINKS.length,
+            sectorBenchmarks: Object.keys(SECTOR_BENCHMARKS).length,
         },
         ratios: ['CR (Current Ratio)', 'GM (Gross Margin)', 'OM (Operating Margin)'],
     });
 });
+
+/**
+ * @swagger
+ * /api/financial-engine/sectors:
+ *   get:
+ *     summary: قائمة القطاعات المتاحة مع معاييرها
+ *     tags: [Financial Engine]
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: قائمة القطاعات
+ */
+router.get('/sectors', (req, res) => {
+    const sectors = Object.entries(SECTOR_BENCHMARKS).map(([key, val]) => ({
+        key,
+        nameAr: val.nameAr,
+        icon: val.icon,
+        targetMargin: val.targetMargin,
+        targetMarginPercent: `${(val.targetMargin * 100).toFixed(0)}%`,
+    }));
+    res.json({ success: true, sectors });
+});
+
 // ═══════════════════════════════════════════════════════════════════
 // 🔐 Save Result + Silent Account Creation
 // ═══════════════════════════════════════════════════════════════════

@@ -4,15 +4,15 @@
  * لو SUPER_ADMIN يتصفح كشركة، يظهر شريط أحمر في الأعلى
  */
 (function () {
-    const impersonating = localStorage.getItem('impersonating');
-    const adminToken = localStorage.getItem('adminToken');
+  const impersonating = localStorage.getItem('impersonating');
+  const adminToken = localStorage.getItem('adminToken');
 
-    if (!impersonating || !adminToken) return; // مو في وضع Impersonation
+  if (!impersonating || !adminToken) return; // مو في وضع Impersonation
 
-    // إنشاء الشريط الأحمر
-    const bar = document.createElement('div');
-    bar.id = 'impersonation-bar';
-    bar.style.cssText = `
+  // إنشاء الشريط الأحمر
+  const bar = document.createElement('div');
+  bar.id = 'impersonation-bar';
+  bar.style.cssText = `
     position: fixed;
     top: 0;
     left: 0;
@@ -30,7 +30,7 @@
     direction: rtl;
   `;
 
-    bar.innerHTML = `
+  bar.innerHTML = `
     <span>
       <i class="bi bi-eye-fill" style="margin-left:6px;"></i>
       <strong>وضع المعاينة</strong> — أنت تتصفح النظام بصلاحية عميل
@@ -51,31 +51,32 @@
     </button>
   `;
 
-    document.body.prepend(bar);
+  document.body.prepend(bar);
 
-    // إزاحة محتوى الصفحة للأسفل
-    document.body.style.paddingTop = '40px';
+  // إزاحة محتوى الصفحة للأسفل
+  document.body.style.paddingTop = '40px';
 
-    // زر العودة
-    document.getElementById('exitImpersonation').addEventListener('click', function () {
-        // استعادة جلسة الـ Admin
-        const adminTokenValue = localStorage.getItem('adminToken');
-        const adminUser = localStorage.getItem('adminUser');
+  // زر العودة
+  document.getElementById('exitImpersonation').addEventListener('click', function () {
+    // استعادة جلسة الـ Admin
+    const adminTokenValue = localStorage.getItem('adminToken');
+    const adminUser = localStorage.getItem('adminUser');
 
-        localStorage.setItem('token', adminTokenValue);
-        localStorage.setItem('user', adminUser);
+    // 🔒 الكوكي الخاص بالأدمن يُرسل تلقائياً — نخزن علامة فقط
+    localStorage.setItem('token', 'httponly-managed');
+    localStorage.setItem('user', adminUser);
 
-        // حذف بيانات الـ Impersonation
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminUser');
-        localStorage.removeItem('impersonating');
+    // حذف بيانات الـ Impersonation
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
+    localStorage.removeItem('impersonating');
 
-        // الرجوع لبرج المراقبة
-        window.location.href = '/admin';
-    });
+    // الرجوع لبرج المراقبة
+    window.location.href = '/admin';
+  });
 
-    // Hover effect
-    const btn = document.getElementById('exitImpersonation');
-    btn.addEventListener('mouseenter', () => { btn.style.background = 'rgba(255,255,255,0.35)'; });
-    btn.addEventListener('mouseleave', () => { btn.style.background = 'rgba(255,255,255,0.2)'; });
+  // Hover effect
+  const btn = document.getElementById('exitImpersonation');
+  btn.addEventListener('mouseenter', () => { btn.style.background = 'rgba(255,255,255,0.35)'; });
+  btn.addEventListener('mouseleave', () => { btn.style.background = 'rgba(255,255,255,0.2)'; });
 })();

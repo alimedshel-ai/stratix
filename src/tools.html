@@ -810,7 +810,7 @@
         };
 
         // ===== AUTH =====
-        if (!state.token) window.location.href = '/login.html';
+        if (!state.token) { sessionStorage.setItem('stratix_return_url', location.pathname + location.search); location.href = '/login?from=restore'; }
 
         // ===== API HELPER =====
         async function apiCall(url) {
@@ -892,10 +892,11 @@
             let html = '';
 
             td.phases.forEach(phase => {
-                // Get tools for this phase
+                // Get tools for this phase, sorted by methodology order
                 const phaseTools = Object.entries(td.tools)
                     .filter(([_, t]) => t.phase === phase.id)
-                    .filter(([_, t]) => state.filter === 'all' || t.isPrimary);
+                    .filter(([_, t]) => state.filter === 'all' || t.isPrimary)
+                    .sort(([, a], [, b]) => (a.order || 99) - (b.order || 99));
 
                 if (phaseTools.length === 0) return;
 
@@ -1005,7 +1006,7 @@
             if (!td) return;
 
             // Define recommended order
-            const ORDER = ['SWOT', 'INTERNAL_ENV', 'VALUE_CHAIN', 'DIRECTIONS', 'TOWS', 'OBJECTIVES', 'KPIS', 'INITIATIVES'];
+            const ORDER = ['INTERNAL_ENV', 'VALUE_CHAIN', 'PESTEL', 'SWOT', 'DIRECTIONS', 'TOWS', 'OBJECTIVES', 'KPIS', 'INITIATIVES'];
             const recs = [];
 
             for (const code of ORDER) {

@@ -542,25 +542,20 @@
 
 <body>
     <nav class="top-nav">
-        <a href="/dashboard" class="brand"><i class="bi bi-rocket-takeoff-fill"></i> ستارتكس</a>
-        <div class="nav-links">
-            <a href="/dashboard"><i class="bi bi-house"></i> الرئيسية</a>
-            <a href="/kpis"><i class="bi bi-graph-up"></i> المؤشرات</a>
-            <a href="/alerts"><i class="bi bi-bell"></i> التنبيهات</a>
-        </div>
+        <a href="/dashboard.html" class="brand"><i class="bi bi-gem"></i> ستارتكس</a>
         <div class="user-area">
             <span style="color:#fff;font-size:13px" id="userName">مدير النظام</span>
             <div class="user-avatar">م</div>
-            <button class="btn-logout" onclick="logout()">خروج</button>
+            <button class="btn-logout" onclick="logout()"><i class="bi bi-box-arrow-right"></i> خروج</button>
         </div>
     </nav>
 
     <div class="layout">
-        <nav class="sidebar"></nav>
+        <aside class="sidebar-placeholder" id="sidebarContainer"></aside>
         <main class="main-content">
             <div class="page-header">
-                <h1>✏️ إدخال بيانات المؤشرات</h1>
-                <p>سجّل القيم الفعلية لمؤشراتك — البيانات المحدّثة تعني قرارات أذكى 📊</p>
+                <h1 id="pageTitle">✏️ إدخال بيانات المؤشرات</h1>
+                <p id="pageSubtitle">سجّل القيم الفعلية لمؤشراتك — البيانات المحدّثة تعني قرارات أذكى 📊</p>
             </div>
 
             <div class="content-grid">
@@ -791,13 +786,33 @@
     <script src="/assets/js/sidebar.js"></script>
     <script src="/assets/js/ai-advisor.js"></script>
     <script>
-        const token = localStorage.getItem('token');
-        if (!token) window.location.href = '/login.html';
-        const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+        const token = localStorage.getItem('token') || '';
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         document.getElementById('userName').textContent = user.name || 'مستخدم';
         let currentKpiId = null, currentKpiName = '';
         const freqLabel = { MONTHLY: 'شهري', QUARTERLY: 'ربع سنوي', SEMI_ANNUAL: 'نصف سنوي', ANNUAL: 'سنوي' };
+
+        // ── كشف الإدارة من URL أو localStorage ──
+        const DEPT_NAMES = {
+            hr: 'الموارد البشرية', finance: 'المالية', marketing: 'التسويق',
+            operations: 'العمليات', sales: 'المبيعات', it: 'تقنية المعلومات',
+            cs: 'خدمة العملاء', compliance: 'الامتثال والحوكمة', quality: 'الجودة',
+            projects: 'إدارة المشاريع', support: 'الخدمات المساندة'
+        };
+        const _urlDept = new URLSearchParams(location.search).get('dept') || '';
+        let currentDept = _urlDept;
+        if (!currentDept && user.userType === 'DEPT_MANAGER') {
+            currentDept = localStorage.getItem('stratix_v10_dept') || '';
+        }
+        const currentDeptName = DEPT_NAMES[currentDept] || '';
+
+        // ── تحديث العنوان حسب الإدارة ──
+        if (currentDeptName) {
+            document.getElementById('pageTitle').textContent = `✏️ مؤشرات ${currentDeptName}`;
+            document.getElementById('pageSubtitle').textContent = `سجّل القيم الفعلية لمؤشرات إدارة ${currentDeptName} — البيانات المحدّثة تعني قرارات أذكى 📊`;
+        }
 
         function closeModal() { document.getElementById('entryModal').classList.remove('show'); }
         document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
@@ -806,7 +821,7 @@
 
         async function loadVersions() {
             try {
-                const res = await fetch('/api/versions', { headers }); const data = await res.json();
+                const res = await fetch('/api/versions', { headers, credentials: 'same-origin' }); const data = await res.json();
                 const sel = document.getElementById('versionFilter');
                 (data.versions || []).forEach(v => { const o = document.createElement('option'); o.value = v.id; o.textContent = `V${v.versionNumber} — ${v.entity?.legalName || ''}`; sel.appendChild(o); });
             } catch (e) { console.error(e); }
@@ -820,7 +835,7 @@
                 const vId = document.getElementById('versionFilter').value;
                 if (vId) url += `&versionId=${vId}`;
                 console.log('[KPI-Entries] Fetching KPIs:', url);
-                const res = await fetch(url, { headers });
+                const res = await fetch(url, { headers, credentials: 'same-origin' });
                 if (res.status === 401) {
                     container.innerHTML = '<div class="empty-state"><div class="emoji">🔒</div><p>انتهت الجلسة</p><p style="font-size:11px;color:var(--text-muted);margin-top:6px"><a href="/login.html" style="color:var(--primary)">سجّل دخولك مرة أخرى</a></p></div>';
                     return;
@@ -872,12 +887,15 @@
         async function loadEntries(kpiId, kpiName) {
             const area = document.getElementById('entriesArea');
             try {
-                const [entriesRes, statsRes] = await Promise.all([
-                    fetch(`/api/kpi-entries?kpiId=${kpiId}`, { headers }),
-                    fetch(`/api/kpi-entries/stats/${kpiId}`, { headers })
+                // 🔒 Fix: Promise.allSettled — فشل طلب واحد لا يُسقط الباقي
+                const [entriesResult, statsResult] = await Promise.allSettled([
+                    fetch(`/api/kpi-entries?kpiId=${kpiId}`, { headers, credentials: 'same-origin' }),
+                    fetch(`/api/kpi-entries/stats/${kpiId}`, { headers, credentials: 'same-origin' })
                 ]);
-                const entriesData = await entriesRes.json();
-                const stats = await statsRes.json();
+                const entriesRes = entriesResult.status === 'fulfilled' ? entriesResult.value : null;
+                const statsRes = statsResult.status === 'fulfilled' ? statsResult.value : null;
+                const entriesData = entriesRes ? await entriesRes.json().catch(() => ({})) : {};
+                const stats = statsRes ? await statsRes.json().catch(() => ({})) : {};
                 const entries = entriesData.entries || [];
                 const fmt = d => d ? new Date(d).toLocaleDateString('ar-SA') : '-';
                 const trendIcon = stats.trend === 'UP' ? '<i class="bi bi-arrow-up-short trend-up"></i>' : stats.trend === 'DOWN' ? '<i class="bi bi-arrow-down-short trend-down"></i>' : '<i class="bi bi-dash trend-same"></i>';
@@ -998,7 +1016,7 @@
 
         async function editEntry(id) {
             try {
-                const res = await fetch(`/api/kpi-entries/${id}`, { headers }); const e = await res.json();
+                const res = await fetch(`/api/kpi-entries/${id}`, { headers, credentials: 'same-origin' }); const e = await res.json();
                 document.getElementById('editId').value = e.id; document.getElementById('entryValue').value = e.value;
                 document.getElementById('entryStart').value = e.periodStart ? e.periodStart.split('T')[0] : '';
                 document.getElementById('entryEnd').value = e.periodEnd ? e.periodEnd.split('T')[0] : '';
@@ -1024,14 +1042,14 @@
             if (!editId) body.kpiId = currentKpiId;
             try {
                 const url = editId ? `/api/kpi-entries/${editId}` : '/api/kpi-entries';
-                const res = await fetch(url, { method: editId ? 'PATCH' : 'POST', headers, body: JSON.stringify(body) });
+                const res = await fetch(url, { method: editId ? 'PATCH' : 'POST', headers, credentials: 'same-origin', body: JSON.stringify(body) });
                 if (!res.ok) throw new Error('Failed');
                 closeModal(); selectKPI(currentKpiId, currentKpiName); loadKPIs();
             } catch (e) { alert('خطأ في الحفظ'); }
         }
 
-        async function delEntry(id) { if (!confirm('حذف هذا الإدخال؟')) return; try { await fetch(`/api/kpi-entries/${id}`, { method: 'DELETE', headers }); selectKPI(currentKpiId, currentKpiName); loadKPIs(); } catch (e) { alert('خطأ'); } }
-        function logout() { localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.href = '/login.html'; }
+        async function delEntry(id) { if (!confirm('حذف هذا الإدخال؟')) return; try { await fetch(`/api/kpi-entries/${id}`, { method: 'DELETE', headers, credentials: 'same-origin' }); selectKPI(currentKpiId, currentKpiName); loadKPIs(); } catch (e) { alert('خطأ'); } }
+        function logout() { localStorage.removeItem('token'); localStorage.removeItem('user'); fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).finally(() => location.href = '/login.html'); }
         init();
     </script>
     <script src="/assets/js/impersonation.js"></script>

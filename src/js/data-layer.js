@@ -28,18 +28,11 @@
      * @returns {Promise<object|null>}
      */
     async function apiFetch(endpoint, options = {}) {
-        const token = localStorage.getItem(TOKEN_KEY);
-        if (!token) {
-            console.warn('⚠️ [data-layer] No token — redirecting to login');
-            window.location.href = '/login';
-            return null;
-        }
-
         try {
             const response = await fetch(`${API_BASE}${endpoint}`, {
                 ...options,
+                credentials: 'same-origin', // 🔒 إرسال HttpOnly Cookie تلقائياً
                 headers: {
-                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                     ...options.headers,
                 },
@@ -67,10 +60,9 @@
     /** استخراج entityId من JWT token */
     function getEntityId() {
         try {
-            const token = localStorage.getItem(TOKEN_KEY);
-            if (!token) return null;
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            return payload.entityId || null;
+            // 🔒 الاعتماد على كائن المستخدم بدلاً من التوكن الذي أصبح مخفياً
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            return user.entity?.id || user.activeEntityId || user.entityId || null;
         } catch (e) {
             return null;
         }
@@ -79,10 +71,9 @@
     /** استخراج userId من JWT token */
     function getUserId() {
         try {
-            const token = localStorage.getItem(TOKEN_KEY);
-            if (!token) return null;
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            return payload.id || null;
+            // 🔒 الاعتماد على كائن المستخدم المحفوظ
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            return user.id || null;
         } catch (e) {
             return null;
         }

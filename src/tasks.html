@@ -651,12 +651,13 @@
     </nav>
 
     <div class="layout">
-        <aside class="sidebar"></aside>
+        <aside class="sidebar-placeholder" id="sidebarContainer"></aside>
         <div class="main-content">
             <div class="page-header">
                 <div>
-                    <h1><i class="bi bi-check2-square"></i> المهام اليومية</h1>
-                    <p class="page-subtitle">المهام المنزّلة من المشاريع — كل مهمة مربوطة بالسلسلة الاستراتيجية من الهدف
+                    <h1 id="pageTitle"><i class="bi bi-check2-square"></i> المهام اليومية</h1>
+                    <p class="page-subtitle" id="pageSubtitle">المهام المنزّلة من المشاريع — كل مهمة مربوطة بالسلسلة
+                        الاستراتيجية من الهدف
                         حتى التنفيذ الفعلي</p>
                 </div>
                 <button class="btn-add" onclick="openCreateModal()"><i class="bi bi-plus-lg"></i> مهمة جديدة</button>
@@ -765,6 +766,23 @@
                             </select>
                         </div>
                     </div>
+                    <div class="form-group" id="formDeptGroup">
+                        <label>📂 الإدارة</label>
+                        <select class="form-input" id="formDept">
+                            <option value="">— كل الإدارات —</option>
+                            <option value="hr">الموارد البشرية</option>
+                            <option value="finance">المالية</option>
+                            <option value="marketing">التسويق</option>
+                            <option value="sales">المبيعات</option>
+                            <option value="operations">العمليات</option>
+                            <option value="it">تقنية المعلومات</option>
+                            <option value="compliance">الامتثال والحوكمة</option>
+                            <option value="cs">خدمة العملاء</option>
+                            <option value="quality">الجودة</option>
+                            <option value="projects">إدارة المشاريع</option>
+                            <option value="support">الخدمات المساندة</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn-modal-cancel" data-bs-dismiss="modal">إلغاء</button>
@@ -789,29 +807,91 @@
         /* ═══════════════════════════════════════
            Phase 11A — Tasks Bridge
            Live data from localStorage + OKRs
+           + Department-aware filtering
         ═══════════════════════════════════════ */
         let currentFilter = 'all';
         let searchQuery = '';
         const avColors = ['#667eea', '#22c55e', '#38bdf8', '#facc15', '#ef4444', '#a78bfa', '#f97316', '#06b6d4', '#ec4899', '#14b8a6'];
 
-        // ── Load from localStorage or seed defaults ──
+        // ── كشف الإدارة من URL أو localStorage ──
+        const DEPT_NAMES = {
+            hr: 'الموارد البشرية', finance: 'المالية', marketing: 'التسويق',
+            operations: 'العمليات', sales: 'المبيعات', it: 'تقنية المعلومات',
+            cs: 'خدمة العملاء', compliance: 'الامتثال والحوكمة', quality: 'الجودة',
+            projects: 'إدارة المشاريع', support: 'الخدمات المساندة'
+        };
+        const _urlDept = new URLSearchParams(location.search).get('dept') || '';
+        const _storedDept = localStorage.getItem('stratix_v10_dept') || '';
+        const _DEPT_MAP = {
+            'DEPT_HR': 'hr', 'DEPT_FINANCE': 'finance', 'DEPT_MARKETING': 'marketing',
+            'DEPT_OPS': 'operations', 'DEPT_SERVICE': 'cs', 'DEPT_SALES': 'sales',
+            'DEPT_IT': 'it', 'DEPT_LEGAL': 'compliance', 'DEPT_QUALITY': 'quality', 'DEPT_PMO': 'projects'
+        };
+        const _savedDeptKey = localStorage.getItem('stratix_dept') || '';
+        const _mappedDept = _DEPT_MAP[_savedDeptKey] || '';
+        const currentDept = _urlDept || _storedDept || _mappedDept || '';
+        const currentDeptName = DEPT_NAMES[currentDept] || '';
+
+        // ── تحديث العنوان حسب الإدارة ──
+        if (currentDeptName) {
+            document.getElementById('pageTitle').innerHTML = `<i class="bi bi-check2-square"></i> مهام ${currentDeptName}`;
+            document.getElementById('pageSubtitle').textContent = `المهام الخاصة بإدارة ${currentDeptName} — مربوطة بالسلسلة الاستراتيجية`;
+        }
+
+        // ── إخفاء حقل الإدارة في المودال لو فيه إدارة مختارة ──
+        if (currentDept) {
+            const deptGroup = document.getElementById('formDeptGroup');
+            if (deptGroup) deptGroup.style.display = 'none';
+        }
+
+        // ── Load from localStorage or seed dept-specific defaults ──
         function loadTasks() {
             const saved = localStorage.getItem('stratix_tasks');
-            if (saved) return JSON.parse(saved);
-            // Seed with sample tasks (first run only)
-            return [
-                { id: '1', title: 'تصميم صفحة تسجيل الدخول', project: 'تطوير واجهة التطبيق', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', okrId: '', assignee: 'أحمد المطيري', priority: 'HIGH', status: 'done', due: '2026-02-10' },
-                { id: '2', title: 'تصميم لوحة التحكم الرئيسية', project: 'تطوير واجهة التطبيق', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', okrId: '', assignee: 'أحمد المطيري', priority: 'HIGH', status: 'done', due: '2026-02-15' },
-                { id: '3', title: 'بناء API المصادقة (JWT)', project: 'بناء Backend APIs', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', okrId: '', assignee: 'خالد العتيبي', priority: 'HIGH', status: 'done', due: '2026-02-05' },
-                { id: '4', title: 'ربط بوابة الدفع mada/VISA', project: 'بناء Backend APIs', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', okrId: '', assignee: 'فهد', priority: 'HIGH', status: 'in_progress', due: '2026-03-10' },
-                { id: '5', title: 'اختبار الاستجابة على الجوال', project: 'تطوير واجهة التطبيق', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', okrId: '', assignee: 'نور', priority: 'MEDIUM', status: 'todo', due: '2026-03-15' },
-            ];
+            if (saved) {
+                let all = JSON.parse(saved);
+                // لو فيه dept محدد → فلتر المهام
+                if (currentDept) all = all.filter(t => (t.dept === currentDept) || (!t.dept));
+                return all;
+            }
+            // Seed with sample tasks
+            const seeds = {
+                hr: [
+                    { id: 'hr1', title: 'تحديث سياسة التوظيف', dept: 'hr', project: 'تطوير الموارد البشرية', initiative: 'برنامج الاستقطاب', objective: 'تحسين جودة التوظيف', okrId: '', assignee: 'منى الشهري', priority: 'HIGH', status: 'in_progress', due: '2026-03-20' },
+                    { id: 'hr2', title: 'تصميم برنامج تدريب القيادات', dept: 'hr', project: 'تطوير المواهب', initiative: 'تطوير الكوادر', objective: 'رفع كفاءة القيادات', okrId: '', assignee: 'فاطمة', priority: 'HIGH', status: 'todo', due: '2026-04-01' },
+                    { id: 'hr3', title: 'إطلاق استبيان رضا الموظفين', dept: 'hr', project: 'قياس الرضا', initiative: 'بيئة عمل محفّزة', objective: 'رفع رضا الموظفين', okrId: '', assignee: 'سارة', priority: 'MEDIUM', status: 'todo', due: '2026-03-25' },
+                    { id: 'hr4', title: 'توثيق إجراءات الـ Onboarding', dept: 'hr', project: 'تحسين الإجراءات', initiative: 'برنامج الاستقطاب', objective: 'تحسين تجربة الموظف الجديد', okrId: '', assignee: 'عبدالله', priority: 'MEDIUM', status: 'done', due: '2026-02-28' },
+                    { id: 'hr5', title: 'مراجعة هيكل الرواتب والمزايا', dept: 'hr', project: 'تحليل التعويضات', initiative: 'بيئة عمل محفّزة', objective: 'المحافظة على الكفاءات', okrId: '', assignee: 'منى الشهري', priority: 'HIGH', status: 'in_progress', due: '2026-03-15' },
+                ],
+                finance: [
+                    { id: 'fin1', title: 'إعداد التقرير المالي الربعي', dept: 'finance', project: 'التقارير المالية', initiative: 'الشفافية المالية', objective: 'تحسين جودة التقارير', okrId: '', assignee: 'محمد العمري', priority: 'HIGH', status: 'in_progress', due: '2026-03-31' },
+                    { id: 'fin2', title: 'مراجعة الميزانية التشغيلية', dept: 'finance', project: 'إدارة الميزانية', initiative: 'ضبط التكاليف', objective: 'خفض المصروفات 10%', okrId: '', assignee: 'نورة', priority: 'HIGH', status: 'todo', due: '2026-04-05' },
+                    { id: 'fin3', title: 'تحديث سياسة المشتريات', dept: 'finance', project: 'الحوكمة المالية', initiative: 'ضبط التكاليف', objective: 'تحسين كفاءة الإنفاق', okrId: '', assignee: 'فهد', priority: 'MEDIUM', status: 'done', due: '2026-02-20' },
+                ],
+                default: [
+                    { id: '1', title: 'تصميم صفحة تسجيل الدخول', project: 'تطوير واجهة التطبيق', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', okrId: '', assignee: 'أحمد المطيري', priority: 'HIGH', status: 'done', due: '2026-02-10' },
+                    { id: '2', title: 'تصميم لوحة التحكم الرئيسية', project: 'تطوير واجهة التطبيق', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', okrId: '', assignee: 'أحمد المطيري', priority: 'HIGH', status: 'done', due: '2026-02-15' },
+                    { id: '3', title: 'بناء API المصادقة (JWT)', project: 'بناء Backend APIs', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', okrId: '', assignee: 'خالد العتيبي', priority: 'HIGH', status: 'done', due: '2026-02-05' },
+                    { id: '4', title: 'ربط بوابة الدفع mada/VISA', project: 'بناء Backend APIs', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', okrId: '', assignee: 'فهد', priority: 'HIGH', status: 'in_progress', due: '2026-03-10' },
+                    { id: '5', title: 'اختبار الاستجابة على الجوال', project: 'تطوير واجهة التطبيق', initiative: 'إطلاق التطبيق الرقمي', objective: 'رفع رضا العملاء', okrId: '', assignee: 'نور', priority: 'MEDIUM', status: 'todo', due: '2026-03-15' },
+                ]
+            };
+            return seeds[currentDept] || seeds.default;
         }
 
         let tasks = loadTasks();
 
         function saveTasks() {
-            localStorage.setItem('stratix_tasks', JSON.stringify(tasks));
+            // حفظ كل المهام (مع dept tag)
+            let allTasks = [];
+            try { allTasks = JSON.parse(localStorage.getItem('stratix_tasks') || '[]'); } catch (e) { }
+            // إزالة المهام القديمة لهذا الـ dept وإضافة الجديدة
+            if (currentDept) {
+                allTasks = allTasks.filter(t => t.dept && t.dept !== currentDept);
+                allTasks = [...allTasks, ...tasks];
+            } else {
+                allTasks = tasks;
+            }
+            localStorage.setItem('stratix_tasks', JSON.stringify(allTasks));
         }
 
         // ── Read OKRs from localStorage ──
@@ -1105,6 +1185,8 @@
             const okrs = getOKRs();
             const okr = okrId ? okrs.find(o => o.id === okrId) : null;
 
+            const formDeptEl = document.getElementById('formDept');
+            const taskDept = currentDept || (formDeptEl ? formDeptEl.value : '');
             const data = {
                 title: document.getElementById('formTitle').value.trim(),
                 project: initiative || 'بدون مبادرة',
@@ -1115,6 +1197,7 @@
                 priority: document.getElementById('formPriority').value,
                 status: document.getElementById('formStatus').value,
                 due: document.getElementById('formDue').value,
+                dept: taskDept,
             };
             if (!data.title) return;
             if (id) {

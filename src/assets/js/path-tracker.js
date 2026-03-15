@@ -25,6 +25,8 @@
         // مسار 1: رحلة المدير (4 خطوات)
         '/internal-env': { path: 'manager_journey', step: 1, name: 'البيئة الداخلية' },
         '/internal-env.html': { path: 'manager_journey', step: 1, name: 'البيئة الداخلية' },
+        '/company-health': { path: 'manager_journey', step: 1, name: 'صحة الشركة' },
+        '/company-health.html': { path: 'manager_journey', step: 1, name: 'صحة الشركة' },
         '/swot': { path: 'manager_journey', step: 2, name: 'SWOT' },
         '/swot.html': { path: 'manager_journey', step: 2, name: 'SWOT' },
         '/directions': { path: 'manager_journey', step: 3, name: 'التوجهات' },

@@ -30,10 +30,10 @@
       description: 'خطة بقاء 90 يوم — وقف النزيف وتثبيت الأساس',
       estimatedTime: '2-3 ساعات',
       steps: [
-        { label: '💔 الألم والطموح', href: '/pain-ambition.html', icon: 'bi-heart-pulse', phase: 'FOUNDATION' },
-        { label: 'تأسيس المنظمة', href: '/onboarding.html', icon: 'bi-rocket-takeoff', phase: 'FOUNDATION' },
-        { label: 'تحليل SWOT سريع', href: '/analysis.html', icon: 'bi-binoculars', phase: 'DIAGNOSIS' },
+        { label: 'PESTEL', href: '/tool-detail.html?code=PESTEL', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
+        { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-heart-pulse', phase: 'DIAGNOSIS' },
         { label: 'خريطة المخاطر', href: '/risk-map.html', icon: 'bi-exclamation-triangle', phase: 'DIAGNOSIS' },
+        { label: 'تحليل SWOT', href: '/swot.html', icon: 'bi-grid-3x3-gap', phase: 'DIAGNOSIS' },
         { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass', phase: 'PLANNING' },
         { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye', phase: 'PLANNING' },
         { label: 'مؤشرات الأداء', href: '/kpis.html', icon: 'bi-graph-up-arrow', phase: 'PLANNING' },
@@ -41,7 +41,7 @@
       ],
       // الصفحات المسموح بها (تشمل الخطوات + صفحات مساعدة)
       allowedPages: [
-        '/onboarding.html', '/pain-ambition.html', '/analysis.html', '/risk-map.html',
+        '/onboarding.html', '/select-type', '/company-health.html', '/internal-env.html', '/analysis.html', '/swot.html', '/risk-map.html',
         '/directions.html', '/objectives.html', '/kpis.html', '/initiatives.html',
         '/kpi-entries.html', '/dashboard.html', '/tools.html', '/tool-detail.html',
         '/settings.html', '/settings-data.html', '/entities.html',
@@ -57,9 +57,10 @@
       description: 'أساس متين + خطة مرحلية + مؤشرات قياس',
       estimatedTime: '3-4 ساعات',
       steps: [
-        { label: '💔 الألم والطموح', href: '/pain-ambition.html', icon: 'bi-heart-pulse', phase: 'FOUNDATION' },
-        { label: 'تأسيس المنظمة', href: '/onboarding.html', icon: 'bi-rocket-takeoff', phase: 'FOUNDATION' },
-        { label: '🧬 هوية المنظمة', href: '/org-dna.html', icon: 'bi-fingerprint', phase: 'FOUNDATION' },
+        { label: 'PESTEL', href: '/tool-detail.html?code=PESTEL', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
+        { label: '🧬 هوية المنظمة', href: '/org-dna.html', icon: 'bi-fingerprint', phase: 'DIAGNOSIS' },
+        { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-heart-pulse', phase: 'DIAGNOSIS' },
+        { label: 'تحليل SWOT', href: '/swot.html', icon: 'bi-grid-3x3-gap', phase: 'DIAGNOSIS' },
         { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass', phase: 'PLANNING' },
         { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye', phase: 'PLANNING' },
         { label: 'مؤشرات الأداء', href: '/kpis.html', icon: 'bi-graph-up-arrow', phase: 'PLANNING' },
@@ -68,7 +69,7 @@
         { label: 'إدخال المؤشرات', href: '/kpi-entries.html', icon: 'bi-pencil-square', phase: 'EXECUTION' },
       ],
       allowedPages: [
-        '/onboarding.html', '/pain-ambition.html', '/org-dna.html',
+        '/onboarding.html', '/select-type', '/org-dna.html', '/company-health.html', '/internal-env.html', '/swot.html',
         '/directions.html', '/objectives.html', '/kpis.html',
         '/initiatives.html', '/tasks.html', '/kpi-entries.html',
         '/dashboard.html', '/tools.html', '/tool-detail.html',
@@ -85,10 +86,10 @@
       description: 'هيكلة العمليات + مؤشرات أداء مركزية + محاذاة الفرق',
       estimatedTime: '4-5 ساعات',
       steps: [
-        { label: '💔 الألم والطموح', href: '/pain-ambition.html', icon: 'bi-heart-pulse', phase: 'FOUNDATION' },
-        { label: 'تأسيس المنظمة', href: '/onboarding.html', icon: 'bi-rocket-takeoff', phase: 'FOUNDATION' },
-        { label: 'البيئة الداخلية', href: '/internal-env.html', icon: 'bi-building-check', phase: 'DIAGNOSIS' },
+        { label: 'PESTEL', href: '/tool-detail.html?code=PESTEL', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
         { label: 'أصحاب المصلحة', href: '/stakeholders.html', icon: 'bi-people-fill', phase: 'DIAGNOSIS' },
+        { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-heart-pulse', phase: 'DIAGNOSIS' },
+        { label: 'تحليل SWOT', href: '/swot.html', icon: 'bi-grid-3x3-gap', phase: 'DIAGNOSIS' },
         { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass', phase: 'PLANNING' },
         { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye', phase: 'PLANNING' },
         { label: 'مؤشرات الأداء', href: '/kpis.html', icon: 'bi-graph-up-arrow', phase: 'PLANNING' },
@@ -97,7 +98,7 @@
         { label: 'المراجعات الدورية', href: '/reviews.html', icon: 'bi-journal-check', phase: 'ADAPTATION' },
       ],
       allowedPages: [
-        '/onboarding.html', '/pain-ambition.html', '/internal-env.html', '/stakeholders.html',
+        '/onboarding.html', '/select-type', '/internal-env.html', '/dept-deep.html', '/company-health.html', '/swot.html', '/stakeholders.html',
         '/directions.html', '/objectives.html', '/kpis.html',
         '/initiatives.html', '/tasks.html', '/kpi-entries.html', '/reviews.html',
         '/dashboard.html', '/tools.html', '/tool-detail.html',
@@ -114,19 +115,21 @@
       description: 'تحليل تنافسي + تخطيط التميز + تنفيذ سريع',
       estimatedTime: '4-6 ساعات',
       steps: [
-        { label: '💔 الألم والطموح', href: '/pain-ambition.html', icon: 'bi-heart-pulse', phase: 'FOUNDATION' },
-        { label: 'تأسيس المنظمة', href: '/onboarding.html', icon: 'bi-rocket-takeoff', phase: 'FOUNDATION' },
-        { label: 'التحليل الاستراتيجي', href: '/analysis.html', icon: 'bi-binoculars', phase: 'DIAGNOSIS' },
+        { label: 'PESTEL', href: '/tool-detail.html?code=PESTEL', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
+        { label: 'قوى بورتر', href: '/tool-detail.html?code=PORTER', icon: 'bi-shield-check', phase: 'DIAGNOSIS' },
+        { label: 'المقارنة المعيارية', href: '/benchmarking.html', icon: 'bi-bar-chart-line', phase: 'DIAGNOSIS' },
+        { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-heart-pulse', phase: 'DIAGNOSIS' },
+        { label: 'سلسلة القيمة', href: '/tool-detail.html?code=VALUE_CHAIN', icon: 'bi-link-45deg', phase: 'DIAGNOSIS' },
+        { label: 'تحليل SWOT', href: '/swot.html', icon: 'bi-grid-3x3-gap', phase: 'DIAGNOSIS' },
         { label: 'مصفوفة TOWS', href: '/tows.html', icon: 'bi-arrows-fullscreen', phase: 'PLANNING' },
         { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass', phase: 'PLANNING' },
         { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye', phase: 'PLANNING' },
         { label: 'مؤشرات الأداء', href: '/kpis.html', icon: 'bi-graph-up-arrow', phase: 'PLANNING' },
         { label: 'OKRs', href: '/okrs.html', icon: 'bi-layers', phase: 'PLANNING' },
         { label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban', phase: 'EXECUTION' },
-        { label: 'المقارنة المعيارية', href: '/benchmarking.html', icon: 'bi-bar-chart-line', phase: 'ADAPTATION' },
       ],
       allowedPages: [
-        '/onboarding.html', '/pain-ambition.html', '/analysis.html', '/tows.html',
+        '/onboarding.html', '/select-type', '/internal-env.html', '/swot.html', '/dept-deep.html', '/company-health.html', '/analysis.html', '/tows.html',
         '/directions.html', '/objectives.html', '/kpis.html', '/okrs.html',
         '/initiatives.html', '/tasks.html', '/kpi-entries.html', '/benchmarking.html',
         '/dashboard.html', '/tools.html', '/tool-detail.html',
@@ -143,10 +146,12 @@
       description: 'وقف النزيف المالي + خفض تكاليف + تنويع إيرادات',
       estimatedTime: '3-4 ساعات',
       steps: [
-        { label: '💔 الألم والطموح', href: '/pain-ambition.html', icon: 'bi-heart-pulse', phase: 'FOUNDATION' },
-        { label: 'تأسيس المنظمة', href: '/onboarding.html', icon: 'bi-rocket-takeoff', phase: 'FOUNDATION' },
-        { label: 'التحليل الاستراتيجي', href: '/analysis.html', icon: 'bi-binoculars', phase: 'DIAGNOSIS' },
+        { label: 'PESTEL', href: '/tool-detail.html?code=PESTEL', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
+        { label: 'قوى بورتر', href: '/tool-detail.html?code=PORTER', icon: 'bi-shield-check', phase: 'DIAGNOSIS' },
+        { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-heart-pulse', phase: 'DIAGNOSIS' },
+        { label: 'سلسلة القيمة', href: '/tool-detail.html?code=VALUE_CHAIN', icon: 'bi-link-45deg', phase: 'DIAGNOSIS' },
         { label: 'خريطة المخاطر', href: '/risk-map.html', icon: 'bi-exclamation-triangle', phase: 'DIAGNOSIS' },
+        { label: 'تحليل SWOT', href: '/swot.html', icon: 'bi-grid-3x3-gap', phase: 'DIAGNOSIS' },
         { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass', phase: 'PLANNING' },
         { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye', phase: 'PLANNING' },
         { label: 'مؤشرات الأداء', href: '/kpis.html', icon: 'bi-graph-up-arrow', phase: 'PLANNING' },
@@ -155,7 +160,7 @@
         { label: 'التصحيحات', href: '/corrections.html', icon: 'bi-arrow-repeat', phase: 'ADAPTATION' },
       ],
       allowedPages: [
-        '/onboarding.html', '/pain-ambition.html', '/analysis.html', '/risk-map.html',
+        '/onboarding.html', '/select-type', '/company-health.html', '/internal-env.html', '/swot.html', '/analysis.html', '/risk-map.html',
         '/directions.html', '/objectives.html', '/kpis.html', '/financial.html',
         '/initiatives.html', '/kpi-entries.html', '/corrections.html',
         '/dashboard.html', '/tools.html', '/tool-detail.html',
@@ -172,11 +177,12 @@
       description: 'تشخيص فجوات + تخطيط تحوّلي + ابتكار',
       estimatedTime: '5-7 ساعات',
       steps: [
-        { label: '💔 الألم والطموح', href: '/pain-ambition.html', icon: 'bi-heart-pulse', phase: 'FOUNDATION' },
-        { label: 'تأسيس المنظمة', href: '/onboarding.html', icon: 'bi-rocket-takeoff', phase: 'FOUNDATION' },
+        { label: 'PESTEL', href: '/tool-detail.html?code=PESTEL', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
         { label: 'التقييمات', href: '/assessments.html', icon: 'bi-clipboard-check', phase: 'DIAGNOSIS' },
-        { label: 'البيئة الداخلية', href: '/internal-env.html', icon: 'bi-building-check', phase: 'DIAGNOSIS' },
-        { label: 'التحليل الاستراتيجي', href: '/analysis.html', icon: 'bi-binoculars', phase: 'DIAGNOSIS' },
+        { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-heart-pulse', phase: 'DIAGNOSIS' },
+        { label: 'سلسلة القيمة', href: '/tool-detail.html?code=VALUE_CHAIN', icon: 'bi-link-45deg', phase: 'DIAGNOSIS' },
+        { label: 'القدرات الجوهرية', href: '/tool-detail.html?code=CORE_COMPETENCY', icon: 'bi-trophy', phase: 'DIAGNOSIS' },
+        { label: 'تحليل SWOT', href: '/swot.html', icon: 'bi-grid-3x3-gap', phase: 'DIAGNOSIS' },
         { label: 'مصفوفة TOWS', href: '/tows.html', icon: 'bi-arrows-fullscreen', phase: 'PLANNING' },
         { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass', phase: 'PLANNING' },
         { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye', phase: 'PLANNING' },
@@ -185,7 +191,7 @@
         { label: 'السيناريوهات', href: '/scenarios.html', icon: 'bi-bezier2', phase: 'ADAPTATION' },
       ],
       allowedPages: [
-        '/onboarding.html', '/pain-ambition.html', '/assessments.html', '/internal-env.html',
+        '/onboarding.html', '/select-type', '/assessments.html', '/internal-env.html', '/dept-deep.html', '/company-health.html', '/swot.html',
         '/analysis.html', '/tows.html', '/directions.html', '/objectives.html', '/kpis.html',
         '/initiatives.html', '/tasks.html', '/kpi-entries.html', '/scenarios.html', '/reviews.html',
         '/dashboard.html', '/tools.html', '/tool-detail.html',
@@ -202,10 +208,13 @@
       description: 'تحليل تنافسي شامل + توسع مدروس + ذكاء تنافسي',
       estimatedTime: '6-8 ساعات',
       steps: [
-        { label: '💔 الألم والطموح', href: '/pain-ambition.html', icon: 'bi-heart-pulse', phase: 'FOUNDATION' },
-        { label: 'تأسيس المنظمة', href: '/onboarding.html', icon: 'bi-rocket-takeoff', phase: 'FOUNDATION' },
-        { label: 'التحليل الاستراتيجي', href: '/analysis.html', icon: 'bi-binoculars', phase: 'DIAGNOSIS' },
+        { label: 'PESTEL', href: '/tool-detail.html?code=PESTEL', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
+        { label: 'قوى بورتر', href: '/tool-detail.html?code=PORTER', icon: 'bi-shield-check', phase: 'DIAGNOSIS' },
         { label: 'المقارنة المعيارية', href: '/benchmarking.html', icon: 'bi-bar-chart-line', phase: 'DIAGNOSIS' },
+        { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-heart-pulse', phase: 'DIAGNOSIS' },
+        { label: 'سلسلة القيمة', href: '/tool-detail.html?code=VALUE_CHAIN', icon: 'bi-link-45deg', phase: 'DIAGNOSIS' },
+        { label: 'القدرات الجوهرية', href: '/tool-detail.html?code=CORE_COMPETENCY', icon: 'bi-trophy', phase: 'DIAGNOSIS' },
+        { label: 'تحليل SWOT', href: '/swot.html', icon: 'bi-grid-3x3-gap', phase: 'DIAGNOSIS' },
         { label: 'مصفوفة TOWS', href: '/tows.html', icon: 'bi-arrows-fullscreen', phase: 'PLANNING' },
         { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass', phase: 'PLANNING' },
         { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye', phase: 'PLANNING' },
@@ -216,7 +225,7 @@
         { label: 'المراجعات الدورية', href: '/reviews.html', icon: 'bi-journal-check', phase: 'ADAPTATION' },
       ],
       allowedPages: [
-        '/onboarding.html', '/pain-ambition.html', '/analysis.html', '/benchmarking.html',
+        '/onboarding.html', '/select-type', '/internal-env.html', '/dept-deep.html', '/company-health.html', '/swot.html', '/analysis.html', '/benchmarking.html',
         '/tows.html', '/directions.html', '/objectives.html', '/kpis.html', '/okrs.html',
         '/initiatives.html', '/tasks.html', '/kpi-entries.html', '/scenarios.html', '/reviews.html',
         '/dashboard.html', '/tools.html', '/tool-detail.html', '/intelligence.html',
@@ -233,10 +242,11 @@
       description: 'كل الأدوات والتحليلات متاحة — للمحترفين والاستشاريين',
       estimatedTime: '6-10 ساعات',
       steps: [
-        { label: '💔 الألم والطموح', href: '/pain-ambition.html', icon: 'bi-heart-pulse', phase: 'FOUNDATION' },
-        { label: 'تأسيس المنظمة', href: '/onboarding.html', icon: 'bi-rocket-takeoff', phase: 'FOUNDATION' },
-        { label: 'التحليل الاستراتيجي', href: '/analysis.html', icon: 'bi-binoculars', phase: 'DIAGNOSIS' },
-        { label: 'التقييمات', href: '/assessments.html', icon: 'bi-clipboard-check', phase: 'DIAGNOSIS' },
+        { label: 'PESTEL', href: '/tool-detail.html?code=PESTEL', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
+        { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-heart-pulse', phase: 'DIAGNOSIS' },
+        { label: 'استكشاف الإدارات', href: '/dept-deep.html', icon: 'bi-building-fill-gear', phase: 'DIAGNOSIS' },
+        { label: 'سلسلة القيمة', href: '/tool-detail.html?code=VALUE_CHAIN', icon: 'bi-link-45deg', phase: 'DIAGNOSIS' },
+        { label: 'تحليل SWOT', href: '/swot.html', icon: 'bi-grid-3x3-gap', phase: 'DIAGNOSIS' },
         { label: 'مصفوفة TOWS', href: '/tows.html', icon: 'bi-arrows-fullscreen', phase: 'PLANNING' },
         { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass', phase: 'PLANNING' },
         { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye', phase: 'PLANNING' },
@@ -255,10 +265,9 @@
       nameEn: 'Golden Path',
       emoji: '✨',
       color: '#f59e0b',
-      description: '6 مراحل متكاملة: الألم → البنية → التشخيص → الخيارات → التنفيذ → المتابعة',
+      description: '6 مراحل متكاملة: البنية → التشخيص → التحليل → الخيارات → التنفيذ → المتابعة',
       estimatedTime: '4-6 ساعات',
       steps: [
-        { label: '💔 الألم والطموح', href: '/pain-ambition.html', icon: 'bi-heart-pulse', phase: 'FOUNDATION_START' },
         { label: '🏗️ بنيتنا', href: '/onboarding.html', icon: 'bi-building-gear', phase: 'FOUNDATION' },
         { label: '🔍 تشخيصي', href: '/analysis.html', icon: 'bi-search-heart', phase: 'DIAGNOSIS' },
         { label: '🎯 خياراتي', href: '/tows.html', icon: 'bi-signpost-split', phase: 'PLANNING' },
@@ -266,12 +275,10 @@
         { label: '📊 متابعتي', href: '/reviews.html', icon: 'bi-bar-chart-line', phase: 'ADAPTATION' },
       ],
       allowedPages: [
-        // الألم والطموح
-        '/pain-ambition.html',
         // بنيتنا
         '/onboarding.html', '/entities.html', '/sectors.html', '/settings-data.html',
         // تشخيصي
-        '/analysis.html', '/assessments.html', '/internal-env.html',
+        '/analysis.html', '/assessments.html', '/company-health.html', '/internal-env.html',
         '/stakeholders.html', '/risk-map.html', '/statistical-data.html',
         // خياراتي
         '/tows.html', '/directions.html', '/objectives.html', '/kpis.html', '/okrs.html',
@@ -281,6 +288,62 @@
         '/reviews.html', '/intelligence.html', '/corrections.html', '/strategic-calendar.html',
         // نظامية دائمة
         '/dashboard.html', '/settings.html', '/tools.html', '/tool-detail.html',
+      ],
+    },
+
+    // ─── 10. مسار التحسين التشغيلي 🆕 ───
+    operational_tactical: {
+      name: 'مسار التحسين التشغيلي',
+      nameEn: 'Operational Improvement Path',
+      emoji: '⚙️',
+      color: '#6b7280',
+      description: 'تحسين العمليات + رفع الكفاءة + مؤشرات تشغيلية',
+      estimatedTime: '3-5 أيام',
+      steps: [
+        { label: 'PESTEL', href: '/tool-detail.html?code=PESTEL', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
+        { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-heart-pulse', phase: 'DIAGNOSIS' },
+        { label: 'سلسلة القيمة', href: '/tool-detail.html?code=VALUE_CHAIN', icon: 'bi-link-45deg', phase: 'DIAGNOSIS' },
+        { label: 'تحليل SWOT', href: '/swot.html', icon: 'bi-grid-3x3-gap', phase: 'DIAGNOSIS' },
+        { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass', phase: 'PLANNING' },
+        { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye', phase: 'PLANNING' },
+        { label: 'مؤشرات الأداء', href: '/kpis.html', icon: 'bi-graph-up-arrow', phase: 'PLANNING' },
+        { label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban', phase: 'EXECUTION' },
+        { label: 'المهام', href: '/tasks.html', icon: 'bi-check2-square', phase: 'EXECUTION' },
+      ],
+      allowedPages: [
+        '/onboarding.html', '/select-type', '/internal-env.html', '/dept-deep.html', '/company-health.html',
+        '/directions.html', '/objectives.html', '/kpis.html',
+        '/initiatives.html', '/tasks.html', '/kpi-entries.html',
+        '/dashboard.html', '/tools.html', '/tool-detail.html',
+        '/settings.html', '/settings-data.html', '/entities.html',
+      ],
+    },
+
+    // ─── 11. مسار إدارة الأزمات والمخاطر 🆕 ───
+    emergency_risk: {
+      name: 'مسار إدارة الأزمات والمخاطر',
+      nameEn: 'Crisis & Risk Management Path',
+      emoji: '🛡️',
+      color: '#b91c1c',
+      description: 'تقييم المخاطر + سيناريوهات بديلة + خطة طوارئ',
+      estimatedTime: '1-2 يوم',
+      steps: [
+        { label: 'PESTEL', href: '/tool-detail.html?code=PESTEL', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
+        { label: 'خريطة المخاطر', href: '/risk-map.html', icon: 'bi-exclamation-triangle', phase: 'DIAGNOSIS' },
+        { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-heart-pulse', phase: 'DIAGNOSIS' },
+        { label: 'تحليل SWOT', href: '/swot.html', icon: 'bi-grid-3x3-gap', phase: 'DIAGNOSIS' },
+        { label: 'السيناريوهات', href: '/scenarios.html', icon: 'bi-bezier2', phase: 'PLANNING' },
+        { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass', phase: 'PLANNING' },
+        { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye', phase: 'PLANNING' },
+        { label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban', phase: 'EXECUTION' },
+        { label: 'التصحيحات', href: '/corrections.html', icon: 'bi-arrow-repeat', phase: 'ADAPTATION' },
+      ],
+      allowedPages: [
+        '/onboarding.html', '/select-type', '/risk-map.html', '/company-health.html', '/internal-env.html', '/analysis.html', '/swot.html',
+        '/scenarios.html', '/directions.html', '/objectives.html', '/kpis.html',
+        '/initiatives.html', '/corrections.html', '/kpi-entries.html',
+        '/dashboard.html', '/tools.html', '/tool-detail.html',
+        '/settings.html', '/settings-data.html', '/entities.html',
       ],
     },
 
@@ -348,11 +411,9 @@
   }
 
   /**
-   * فلترة عناصر phase بناءً على المسار
+   * دالة مساعدة لتصفية العناصر بناءً على الصفحات المسموحة (تطبيق مبدأ DRY)
    */
-  function filterPhaseItems(items) {
-    if (!isPathMode()) return items;
-    const path = getPath();
+  function filterByAllowedPages(items, path) {
     if (!path || !path.allowedPages) return items;
     return items.filter(item => {
       const clean = item.href.split('?')[0];
@@ -361,18 +422,21 @@
   }
 
   /**
+   * فلترة عناصر phase بناءً على المسار
+   */
+  function filterPhaseItems(items) {
+    if (!isPathMode()) return items;
+    return filterByAllowedPages(items, getPath());
+  }
+
+  /**
    * فلترة مراحل الرحلة — إخفاء المراحل الفارغة
    */
   function filterPhases(phases) {
     if (!isPathMode()) return phases;
     const path = getPath();
-    if (!path || !path.allowedPages) return phases;
     return phases.map(phase => {
-      const filtered = phase.items.filter(item => {
-        const clean = item.href.split('?')[0];
-        return path.allowedPages.includes(clean);
-      });
-      return { ...phase, items: filtered };
+      return { ...phase, items: filterByAllowedPages(phase.items, path) };
     }).filter(phase => phase.items.length > 0);
   }
 
@@ -407,6 +471,7 @@
     const visited = getVisitedPages();
     if (!visited.includes(page)) {
       visited.push(page);
+      if (visited.length > 50) visited.shift(); // حماية الذاكرة: الاحتفاظ بآخر 50 زيارة فقط
       localStorage.setItem('pathVisited', JSON.stringify(visited));
     }
   }
@@ -650,14 +715,91 @@
   }
 
   // ═══════════════════════════════════════════════
-  // 4. تهيئة تلقائية
+  // 4. Dept-Deep Gating — قفل SWOT حتى تكتمل 3 إدارات
+  // ═══════════════════════════════════════════════
+
+  /** الحد الأدنى من الإدارات المكتملة لفتح البوابة */
+  const DEPT_GATE_MIN = 3;
+
+  /** الصفحات المقفلة خلف بوابة الإدارات */
+  const GATED_PAGES = ['/swot.html', '/analysis.html', '/tows.html'];
+
+  /**
+   * قراءة حالة الإدارات المكتملة في dept-deep
+   * @returns {{ completed: string[], pending: string[], total: number }}
+   */
+  function getDeptDeepStatus() {
+    const ALL_DEPT_KEYS = ['compliance', 'finance', 'hr', 'sales', 'marketing', 'operations', 'support'];
+    var completed = [], pending = [];
+    try {
+      var data = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || '{}');
+      ALL_DEPT_KEYS.forEach(function (key) {
+        if (data[key] && data[key].completed === true) {
+          completed.push(key);
+        } else {
+          pending.push(key);
+        }
+      });
+    } catch (e) {
+      pending = ALL_DEPT_KEYS.slice();
+    }
+    return { completed: completed, pending: pending, total: ALL_DEPT_KEYS.length };
+  }
+
+  /**
+   * هل بوابة الإدارات مفتوحة؟ (3 إدارات مكتملة على الأقل)
+   */
+  function isDeptDeepGateOpen() {
+    return getDeptDeepStatus().completed.length >= DEPT_GATE_MIN;
+  }
+
+  /**
+   * هل هذه الصفحة مقفلة خلف بوابة الإدارات؟
+   */
+  function isPageGated(href) {
+    var clean = (href || '').split('?')[0];
+    return GATED_PAGES.indexOf(clean) >= 0;
+  }
+
+  // ═══════════════════════════════════════════════
+  // 5. تهيئة تلقائية
   // ═══════════════════════════════════════════════
 
   injectStyles();
   trackPageVisit();
 
+  // ═══ Gating: إعادة توجيه إذا الصفحة مقفلة ═══
+  (async function enforceGating() {
+    var currentPage = window.location.pathname;
+    if (isPageGated(currentPage) && !isDeptDeepGateOpen()) {
+      // 🔒 التحقق الآمن من الصلاحية (عبر Backend و HttpOnly Cookie) بدلاً من localStorage
+      try {
+        const res = await fetch('/api/auth/profile', { credentials: 'same-origin' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.user?.systemRole === 'SUPER_ADMIN') return; // تخطي آمن لمدير النظام
+        }
+      } catch (e) { /* proceed with block */ }
+
+      // عرض رسالة قفل بدل إعادة التوجيه المفاجئ
+      document.addEventListener('DOMContentLoaded', function () {
+        var deptStatus = getDeptDeepStatus();
+        var mainEl = document.querySelector('main') || document.querySelector('.content-area') || document.body;
+        mainEl.innerHTML = '<div style="text-align:center;padding:80px 20px;max-width:500px;margin:0 auto;">'
+          + '<div style="font-size:64px;margin-bottom:20px;">🔒</div>'
+          + '<h2 style="font-size:20px;font-weight:800;color:var(--text,#e2e8f0);margin:0 0 12px;">هذه الخطوة مقفلة</h2>'
+          + '<p style="font-size:14px;color:var(--text-muted,#94a3b8);line-height:1.8;margin:0 0 8px;">أكمل فحص <strong style="color:#f59e0b">' + DEPT_GATE_MIN + ' إدارات</strong> على الأقل في التحليل العميق قبل فتح هذه الأداة.</p>'
+          + '<p style="font-size:13px;color:var(--text-muted,#94a3b8);margin:0 0 24px;">حالياً: <strong style="color:#22c55e">' + deptStatus.completed.length + '</strong> مكتملة من أصل ' + deptStatus.total + '</p>'
+          + '<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">'
+          + '<a href="/dept-deep.html" style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#f59e0b,#ea580c);color:white;padding:12px 24px;border-radius:12px;text-decoration:none;font-size:14px;font-weight:700;box-shadow:0 4px 12px rgba(245,158,11,0.3);"><i class="bi bi-building-fill-gear"></i> استكشاف الإدارات</a>'
+          + '<a href="/dashboard.html" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);color:var(--text-muted,#94a3b8);padding:12px 24px;border-radius:12px;text-decoration:none;font-size:14px;font-weight:600;border:1px solid rgba(255,255,255,0.08);"><i class="bi bi-house"></i> الرئيسية</a>'
+          + '</div></div>';
+      });
+    }
+  })();
+
   // ═══════════════════════════════════════════════
-  // 5. تصدير API عام
+  // 6. تصدير API عام
   // ═══════════════════════════════════════════════
 
   window.PathEngine = {
@@ -672,6 +814,56 @@
     buildProgressHTML,
     buildClassicToggleHTML,
     PATH_DEFINITIONS,
+
+    // ═══ Dept-Deep Gating API ═══
+    getDeptDeepStatus,
+    isDeptDeepGateOpen,
+    isPageGated,
+    DEPT_GATE_MIN,
+
+    /**
+     * حساب الخطوات مع Gating — مثل Manager Journey
+     * كل خطوة: completed | available | locked
+     * يُطبّق أيضاً بوابة الإدارات على صفحات SWOT
+     * @returns {Array|null} خطوات مع status، أو null لو مو في المسار الذكي
+     */
+    calculateAllowedSteps: function () {
+      var path = getPath();
+      if (!path || !path.steps) return null;
+      var visited = getVisitedPages();
+      var currentPage = window.location.pathname;
+      var gateOpen = isDeptDeepGateOpen();
+
+      return path.steps.map(function (step, idx) {
+        var clean = step.href.split('?')[0];
+        var isDone = visited.indexOf(clean) >= 0;
+        var isCurrent = currentPage === clean;
+        // الخطوة الأولى دائماً متاحة، الباقي يعتمد على اللي قبلها
+        var prevClean = idx > 0 ? path.steps[idx - 1].href.split('?')[0] : null;
+        var prevDone = idx === 0 || visited.indexOf(prevClean) >= 0;
+
+        var status = 'locked';
+        if (isDone) status = 'completed';
+        else if (isCurrent) status = 'current';
+        else if (prevDone) status = 'available';
+
+        // ═══ بوابة الإدارات: أقفل SWOT/Analysis/TOWS إذا ما كملت 3 إدارات ═══
+        if (isPageGated(clean) && !gateOpen && status !== 'completed') {
+          status = 'locked';
+        }
+
+        return {
+          label: step.label,
+          href: step.href,
+          icon: step.icon,
+          phase: step.phase,
+          index: idx + 1,
+          status: status,
+          clickable: status !== 'locked',
+          gated: isPageGated(clean) && !gateOpen // علامة إضافية للـ UI
+        };
+      });
+    },
   };
 
 })();

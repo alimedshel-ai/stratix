@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس — التحليلات التنبؤية وإدارة المخاطر</title>
+    <meta name="description" content="لوحة التحليلات التنبؤية ونظام الكشف المبكر عن المخاطر — ستارتكس">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/assets/css/predictive-analytics.css" rel="stylesheet">
+</head>
+
+<body class="analytics-dashboard">
+
+    <!-- ═══ Header ═══ -->
+    <header class="dashboard-header">
+        <div>
+            <h1>🧠 التحليلات التنبؤية</h1>
+            <p>نظام الذكاء الاصطناعي للكشف المبكر عن المخاطر ومحاكاة السيناريوهات</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+            <a href="/internal-env.html"
+                style="color:#94a3b8;text-decoration:none;font-size:0.8rem;display:flex;align-items:center;gap:4px">
+                <i class="bi bi-arrow-right"></i> العودة للفحص
+            </a>
+            <div class="ai-status">
+                <div class="ai-pulse"></div>
+                <span>المحرك نشط</span>
+                <span class="last-update" id="last-update">جاري التحميل...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ═══ Risk Alerts ═══ -->
+    <section class="risk-alerts-panel scanning-effect">
+        <h2><i class="bi bi-radar" style="color:#fca5a5"></i> تنبيهات المخاطر</h2>
+        <div id="risk-alerts">
+            <div class="loading-spinner">
+                <i class="bi bi-arrow-repeat"></i>
+                <p style="margin-top:8px">جاري تحليل البيانات وحساب المخاطر...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ Heat Map ═══ -->
+    <section class="risk-heatmap">
+        <h2><i class="bi bi-grid-3x3" style="color:#818cf8"></i> خريطة حرارية للأنظمة</h2>
+        <div class="heatmap-grid" id="risk-heatmap"></div>
+        <div class="heatmap-legend">
+            <span><span class="legend-dot critical"></span> حرج (&lt;40%)</span>
+            <span><span class="legend-dot high"></span> عالي (40-59%)</span>
+            <span><span class="legend-dot medium"></span> متوسط (60-79%)</span>
+            <span><span class="legend-dot low"></span> منخفض (≥80%)</span>
+        </div>
+    </section>
+
+    <!-- ═══ Predictions ═══ -->
+    <section>
+        <h2><i class="bi bi-graph-up-arrow" style="color:#818cf8"></i> التنبؤات المستقبلية (90 يوم)</h2>
+        <div class="prediction-section" id="predictions-container"></div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ═══ Scenario Simulator ═══ -->
+    <section class="scenario-simulator">
+        <h2><i class="bi bi-sliders" style="color:#818cf8"></i> محاكاة السيناريوهات "ماذا لو"</h2>
+
+        <div class="scenario-grid">
+            <!-- سيناريو 1: خفض الاستقطاب -->
+            <div class="scenario-box">
+                <h3><i class="bi bi-people"></i> خفض الاستقطاب</h3>
+                <div class="scenario-controls">
+                    <div class="scenario-slider">
+                        <label>نسبة الخفض <span id="turnover-value">20%</span></label>
+                        <input type="range" class="slider" id="turnover-slider" min="5" max="50" value="20"
+                            oninput="document.getElementById('turnover-value').textContent=this.value+'%'">
+                    </div>
+                    <div class="scenario-slider">
+                        <label>الاستثمار (ريال) <span id="turnover-inv-value">100,000</span></label>
+                        <input type="range" class="slider" id="turnover-investment" min="50000" max="500000"
+                            step="10000" value="100000"
+                            oninput="document.getElementById('turnover-inv-value').textContent=parseInt(this.value).toLocaleString()">
+                    </div>
+                </div>
+                <button class="scenario-run-btn" onclick="runScenario('turnover')">
+                    <i class="bi bi-play-fill"></i> تشغيل المحاكاة
+                </button>
+            </div>
+
+            <!-- سيناريو 2: أتمتة الرواتب -->
+            <div class="scenario-box">
+                <h3><i class="bi bi-gear-wide-connected"></i> أتمتة الرواتب</h3>
+                <div class="scenario-controls">
+                    <div class="scenario-slider">
+                        <label>مستوى الأتمتة <span id="automation-value">80%</span></label>
+                        <input type="range" class="slider" id="automation-slider" min="10" max="100" value="80"
+                            oninput="document.getElementById('automation-value').textContent=this.value+'%'">
+                    </div>
+                    <div class="scenario-slider">
+                        <label>الاستثمار (ريال) <span id="automation-inv-value">200,000</span></label>
+                        <input type="range" class="slider" id="automation-investment" min="100000" max="1000000"
+                            step="25000" value="200000"
+                            oninput="document.getElementById('automation-inv-value').textContent=parseInt(this.value).toLocaleString()">
+                    </div>
+                </div>
+                <button class="scenario-run-btn" onclick="runScenario('automation')">
+                    <i class="bi bi-play-fill"></i> تشغيل المحاكاة
+                </button>
+            </div>
+        </div>
+
+        <!-- نتائج السيناريو -->
+        <div class="scenario-results" id="scenario-results">
+            <div class="scenario-metric">
+                <div class="metric-value">—</div>
+                <div class="metric-label">عائد الاستثمار</div>
+            </div>
+            <div class="scenario-metric">
+                <div class="metric-value">—</div>
+                <div class="metric-label">صافي العائد</div>
+            </div>
+            <div class="scenario-metric">
+                <div class="metric-value">—</div>
+                <div class="metric-label">فترة الاسترداد</div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ═══ System Dependency Graph ═══ -->
+    <section class="system-graph">
+        <h2><i class="bi bi-diagram-3" style="color:#818cf8"></i> رسم تبعية الأنظمة</h2>
+        <div class="graph-canvas" id="system-graph-canvas"></div>
+    </section>
+
+    <!-- ═══ Executive Insights ═══ -->
+    <section class="insights-panel">
+        <h2><i class="bi bi-lightbulb" style="color:#fde047"></i> الرؤى التنفيذية</h2>
+        <div id="insights-panel">
+            <div class="loading-spinner">
+                <i class="bi bi-arrow-repeat"></i>
+                <p style="margin-top:8px">جاري تحليل الرؤى...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ Export ═══ -->
+    <div class="export-section">
+        <button class="export-btn" onclick="exportAnalyticsReport()">
+            <i class="bi bi-file-earmark-arrow-down"></i>
+            تصدير تقرير التحليلات التنبؤية
+        </button>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/assets/js/interactive-audit.js"></script>
+    <script src="/assets/js/predictive-engine.js"></script>
+    <script>
+        // Toast helper (standalone for this page)
+        if (typeof showToast === 'undefined') {
+            window.showToast = function (msg, type) {
+                type = type || 'info';
+                const existing = document.getElementById('stratix-toast');
+                if (existing) existing.remove();
+                const colors = {
+                    success: 'linear-gradient(135deg,#22c55e,#16a34a)',
+                    warning: 'linear-gradient(135deg,#f59e0b,#d97706)',
+                    error: 'linear-gradient(135deg,#ef4444,#dc2626)',
+                    info: 'linear-gradient(135deg,#6366f1,#4f46e5)'
+                };
+                const icons = { success: '✅', warning: '⚠️', error: '❌', info: 'ℹ️' };
+                const t = document.createElement('div');
+                t.id = 'stratix-toast';
+                t.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);padding:14px 28px;border-radius:14px;font-size:14px;font-weight:700;color:white;z-index:99999;font-family:Tajawal,sans-serif;background:' + (colors[type] || colors.info) + ';box-shadow:0 8px 32px rgba(0,0,0,0.35);display:flex;align-items:center;gap:10px;max-width:90vw;';
+                t.innerHTML = '<span>' + (icons[type] || 'ℹ️') + '</span> <span>' + msg + '</span>';
+                document.body.appendChild(t);
+                setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'all 0.3s'; setTimeout(() => t.remove(), 300); }, 3500);
+            };
+        }
+    </script>
+</body>
+
+</html>
