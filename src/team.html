@@ -130,12 +130,26 @@
         .dept-card {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 24px;
-            transition: all 0.3s;
+            border-radius: 20px;
+            padding: 26px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: default;
             position: relative;
             overflow: hidden;
+            animation: fadeInUp 0.5s ease backwards;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .dept-card::before {
@@ -149,9 +163,9 @@
         }
 
         .dept-card:hover {
-            border-color: rgba(102, 126, 234, 0.15);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
         }
 
         .dept-top {
@@ -188,8 +202,15 @@
             gap: 10px;
             padding: 10px 12px;
             background: rgba(255, 255, 255, 0.03);
-            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
             margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+
+        .dept-member:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
         }
 
         .dept-member-avatar {
@@ -216,9 +237,13 @@
 
         .dept-empty {
             text-align: center;
-            padding: 16px;
+            padding: 24px 16px;
             color: var(--muted);
             font-size: 13px;
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            margin-bottom: 12px;
         }
 
         .dept-progress {
@@ -666,7 +691,7 @@
             }
 
             try {
-                const res = await window.apiRequest(`/api/departments/${entityId}/team-overview`, {
+                const res = await fetch(`/api/departments/${entityId}/team-overview`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
@@ -689,7 +714,7 @@
 
             // Department Grid
             const grid = document.getElementById('deptGrid');
-            grid.innerHTML = data.departments.map(dept => {
+            grid.innerHTML = data.departments.map((dept, index) => {
                 const color = dept.color || DEPT_COLORS[dept.code] || '#667eea';
                 const hasMember = dept.hasMember;
                 const statusClass = dept.dataStatus === 'COMPLETED' ? 'status-completed' :
@@ -698,7 +723,7 @@
                     dept.dataStatus === 'IN_PROGRESS' ? '⏳ قيد العمل' : '⬜ لم يبدأ';
 
                 return `
-                <div class="dept-card" style="--dept-color:${color}">
+                <div class="dept-card" style="--dept-color:${color}; animation-delay: ${index * 0.05}s">
                     <div style="position:absolute;top:0;right:0;left:0;height:3px;background:${color};border-radius:16px 16px 0 0"></div>
                     <div class="dept-top">
                         <div class="dept-icon" style="background:${color}20;color:${color}">
@@ -722,7 +747,7 @@
                         </div>
                     `).join('') : `
                         <div class="dept-empty">
-                            <i class="bi bi-person-dash" style="font-size:24px;display:block;margin-bottom:6px"></i>
+                            <i class="bi bi-person-dash" style="font-size:24px;display:block;margin-bottom:6px;opacity:0.5"></i>
                             لا يوجد مدير معيّن
                         </div>
                     `}
@@ -850,7 +875,7 @@
             btn.innerHTML = '<i class="bi bi-hourglass-split"></i> جارٍ الإرسال...';
 
             try {
-                const res = await window.apiRequest('/api/invitations', {
+                const res = await fetch('/api/invitations', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -933,7 +958,7 @@
         async function cancelInvite(id) {
             if (!confirm('هل تريد إلغاء هذه الدعوة؟')) return;
             try {
-                await window.apiRequest(`/api/invitations/${id}`, {
+                await fetch(`/api/invitations/${id}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -945,7 +970,7 @@
 
         async function resendInvite(id) {
             try {
-                const res = await window.apiRequest(`/api/invitations/${id}/resend`, {
+                const res = await fetch(`/api/invitations/${id}/resend`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });

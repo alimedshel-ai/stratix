@@ -331,13 +331,16 @@
         .okr-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 16px;
+            border-radius: 20px;
             overflow: hidden;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .okr-card:hover {
-            border-color: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
         }
 
         .okr-bar {
@@ -346,9 +349,10 @@
 
         .okr-header {
             display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 22px 24px 0;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 24px;
+            background: rgba(255, 255, 255, 0.015);
         }
 
         .okr-icon {
@@ -376,8 +380,11 @@
         }
 
         .okr-obj-name {
-            font-size: 18px;
+            font-size: 1.15rem;
             font-weight: 800;
+            color: var(--text);
+            line-height: 1.5;
+            margin-top: 2px;
         }
 
         .okr-owner {
@@ -405,10 +412,10 @@
         }
 
         .okr-overall-bar {
-            margin: 14px 24px 0;
-            height: 6px;
+            margin: 0;
+            height: 4px;
             background: rgba(255, 255, 255, 0.06);
-            border-radius: 6px;
+            border-radius: 0;
             overflow: hidden;
         }
 
@@ -1029,13 +1036,14 @@
                 </div>
                 <div class="kr-score" style="color:${getScoreColor(kr.score)}">${kr.score.toFixed(1)}</div>
                 <div class="kr-actions">
-                  <button class="kr-btn edit" title="تحديث القيمة"><i class="bi bi-pencil"></i></button>
+                  <button class="kr-btn edit" title="تحديث القيمة" onclick="editKR('${o.id}', '${kr.id}')"><i class="bi bi-pencil"></i></button>
                 </div>
               </div>`;
                 }).join('')}
           </div>
           <div class="okr-actions">
             <button class="okr-btn primary" onclick="showToast('جاري إنشاء التقرير...')"><i class="bi bi-file-earmark-text"></i> تقرير</button>
+            <button class="okr-btn" onclick="openEditModal('${o.id}')"><i class="bi bi-pencil-square"></i> تعديل</button>
             <button class="okr-btn" onclick="showToast('تم النسخ')"><i class="bi bi-link-45deg"></i> مشاركة</button>
             <button class="okr-btn" onclick="deleteOKR('${o.id}')"><i class="bi bi-trash3"></i> حذف</button>
           </div>
@@ -1059,26 +1067,58 @@
             new bootstrap.Modal(document.getElementById('okrModal')).show();
         }
 
+        function openEditModal(id) {
+            const o = okrs.find(x => x.id === id);
+            if (!o) return;
+            document.getElementById('modalTitle').innerHTML = '<i class="bi bi-pencil-square"></i> تعديل الهدف';
+            document.getElementById('editId').value = o.id;
+            document.getElementById('formObj').value = o.objective;
+            document.getElementById('formOwner').value = o.owner || '';
+            document.getElementById('formIcon').value = o.icon || 'rocket-takeoff';
+            document.getElementById('formKRs').value = o.krs.map(kr => kr.name).join('\n');
+            new bootstrap.Modal(document.getElementById('okrModal')).show();
+        }
+
         function saveOKR() {
+            const id = document.getElementById('editId').value;
             const obj = document.getElementById('formObj').value.trim();
             const owner = document.getElementById('formOwner').value.trim();
             const icon = document.getElementById('formIcon').value;
             const krsText = document.getElementById('formKRs').value.trim();
             if (!obj) return;
-            const krs = krsText.split('\n').filter(l => l.trim()).map((l, i) => ({
-                id: 'new_kr_' + Date.now() + '_' + i,
-                name: l.trim(), start: 0, target: 100, current: 0, score: 0.0
-            }));
-            okrs.unshift({ id: Date.now().toString(), objective: obj, icon, owner, krs });
+
+            const krsNames = krsText.split('\n').filter(l => l.trim());
+
+            if (id) {
+                const o = okrs.find(x => x.id === id);
+                if (o) {
+                    o.objective = obj;
+                    o.owner = owner;
+                    o.icon = icon;
+                    o.krs = krsNames.map((name, i) => o.krs[i] ? { ...o.krs[i], name } : { id: 'new_kr_' + Date.now() + '_' + i, name, start: 0, target: 100, current: 0, score: 0.0 });
+                }
+                showToast('تم تعديل الهدف بنجاح ✓');
+            } else {
+                const krs = krsNames.map((name, i) => ({
+                    id: 'new_kr_' + Date.now() + '_' + i,
+                    name: name, start: 0, target: 100, current: 0, score: 0.0
+                }));
+                okrs.unshift({ id: Date.now().toString(), objective: obj, icon, owner, krs });
+                showToast('تم إنشاء هدف OKR جديد ✓');
+            }
+
             bootstrap.Modal.getInstance(document.getElementById('okrModal')).hide();
             renderAll();
-            showToast('تم إنشاء هدف OKR جديد ✓');
         }
 
         function deleteOKR(id) {
             if (!confirm('حذف هذا الهدف وكل نتائجه؟')) return;
             okrs = okrs.filter(o => o.id !== id);
             renderAll(); showToast('تم الحذف ✓');
+        }
+
+        function editKR(okrId, krId) {
+            showToast('ميزة تحديث قيم النتائج الرئيسية ستتوفر في النسخة القادمة ⏳');
         }
 
         function showToast(msg) {
