@@ -860,6 +860,16 @@
             'سوق': '📊', 'تقني': '💻', 'قانوني': '⚖️'
         };
 
+        function escapeHtml(str) {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
         // === نقل البيانات من API إلى الشكل المحلي ===
         function normalizeRisk(r) {
             return {
@@ -952,7 +962,7 @@
                     cellRisks.forEach(r => {
                         const color = getSeverityColor(r.score);
                         const initial = r.name.charAt(0);
-                        html += `<div class="heatmap-risk-dot" style="background:${color}" onclick="showRiskDetail('${r.id}')"><span>${initial}</span><div class="tooltip">${r.name} (${r.score})</div></div>`;
+                        html += `<div class="heatmap-risk-dot" style="background:${color}" onclick="showRiskDetail('${r.id}')"><span>${escapeHtml(initial)}</span><div class="tooltip">${escapeHtml(r.name)} (${r.score})</div></div>`;
                     });
                     html += '</div>';
                 }
@@ -972,12 +982,12 @@
                 <div class="risk-item" onclick="showRiskDetail('${r.id}')">
                     <div class="risk-item-header">
                         <div class="risk-severity" style="background:${color}"></div>
-                        <div class="risk-item-name">${r.name}</div>
+                        <div class="risk-item-name">${escapeHtml(r.name)}</div>
                         <div class="risk-item-score" style="background:${color}15;color:${color}">${r.score}</div>
                     </div>
                     <div class="risk-item-meta">
-                        <span><i class="bi bi-tag"></i> ${r.category}</span>
-                        <span><i class="bi bi-person"></i> ${r.owner}</span>
+                        <span><i class="bi bi-tag"></i> ${escapeHtml(r.category)}</span>
+                        <span><i class="bi bi-person"></i> ${escapeHtml(r.owner)}</span>
                         ${shBadge}
                         <span style="font-size:9px;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,0.05)">${r.status}</span>
                     </div>
@@ -993,7 +1003,7 @@
             document.getElementById('riskCategories').innerHTML = Object.entries(cats).map(([cat, count]) => `
                 <div class="risk-category">
                     <div class="risk-cat-icon">${catIcons[cat] || '📌'}</div>
-                    <div class="risk-cat-name">${cat}</div>
+                    <div class="risk-cat-name">${escapeHtml(cat)}</div>
                     <div class="risk-cat-bar"><div class="risk-cat-fill" style="width:${(count / total) * 100}%;background:${catColors[cat] || 'var(--primary)'}"></div></div>
                     <div class="risk-cat-count">${count}</div>
                 </div>
@@ -1013,7 +1023,7 @@
                     <div style="margin-top:12px;padding:12px;background:rgba(102,126,234,0.05);border:1px solid rgba(102,126,234,0.1);border-radius:10px">
                         <h4 style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:8px"><i class="bi bi-people"></i> أصحاب المصلحة المتأثرون (${r.stakeholders.length})</h4>
                         <div style="display:flex;flex-wrap:wrap;gap:6px">
-                            ${r.stakeholders.map(s => `<span style="font-size:11px;padding:4px 10px;border-radius:8px;background:${s.color || 'var(--primary)'}15;color:${s.color || 'var(--primary)'};font-weight:600">${s.name}</span>`).join('')}
+                            ${r.stakeholders.map(s => `<span style="font-size:11px;padding:4px 10px;border-radius:8px;background:${escapeHtml(s.color || 'var(--primary)')}15;color:${escapeHtml(s.color || 'var(--primary)')};font-weight:600">${escapeHtml(s.name)}</span>`).join('')}
                         </div>
                     </div>`;
             }
@@ -1022,8 +1032,8 @@
                 <div class="risk-detail-header">
                     <div class="risk-detail-sev" style="background:${color}15;color:${color};font-size:24px">${icon}</div>
                     <div>
-                        <h3 style="font-size:18px;font-weight:800;margin-bottom:2px">${r.name}</h3>
-                        <div style="font-size:12px;color:var(--muted)">${r.category} | المسؤول: ${r.owner} | الحالة: ${r.status}</div>
+                        <h3 style="font-size:18px;font-weight:800;margin-bottom:2px">${escapeHtml(r.name)}</h3>
+                        <div style="font-size:12px;color:var(--muted)">${escapeHtml(r.category)} | المسؤول: ${escapeHtml(r.owner)} | الحالة: ${escapeHtml(r.status)}</div>
                     </div>
                 </div>
                 <div class="risk-detail-scores">
@@ -1031,16 +1041,16 @@
                     <div class="risk-detail-score"><div class="risk-detail-score-num">${r.probability}<small>/5</small></div><div class="risk-detail-score-label">الاحتمال</div></div>
                     <div class="risk-detail-score"><div class="risk-detail-score-num">${r.impact}<small>/5</small></div><div class="risk-detail-score-label">التأثير</div></div>
                 </div>
-                <p style="font-size:13px;line-height:1.8;color:var(--muted);margin-bottom:12px">${r.desc}</p>
+                <p style="font-size:13px;line-height:1.8;color:var(--muted);margin-bottom:12px">${escapeHtml(r.desc)}</p>
                 ${r.mitigation.length > 0 ? `
                 <div class="risk-mitigation">
                     <h4><i class="bi bi-shield-check"></i> خطة المعالجة</h4>
-                    <ul>${r.mitigation.map(m => `<li>${m}</li>`).join('')}</ul>
+                    <ul>${r.mitigation.map(m => `<li>${escapeHtml(m)}</li>`).join('')}</ul>
                 </div>` : ''}
                 ${r.contingency ? `
                 <div style="margin-top:10px;padding:10px;background:rgba(250,204,21,0.05);border:1px solid rgba(250,204,21,0.1);border-radius:10px">
                     <h4 style="font-size:13px;font-weight:700;color:var(--yellow);margin-bottom:4px"><i class="bi bi-shield-exclamation"></i> خطة الطوارئ</h4>
-                    <p style="font-size:12px;color:var(--muted)">${r.contingency}</p>
+                    <p style="font-size:12px;color:var(--muted)">${escapeHtml(r.contingency)}</p>
                 </div>` : ''}
                 ${stakeholderHtml}
             `;
@@ -1056,7 +1066,7 @@
             const owners = [...new Set(risks.map(r => r.owner).filter(o => o && o !== '—'))];
             const sel = document.getElementById('filterOwner');
             sel.innerHTML = '<option value="">👤 كل المسؤولين</option>' +
-                owners.map(o => `<option value="${o}">${o}</option>`).join('');
+                owners.map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
         }
 
         function applyFilters() {
