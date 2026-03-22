@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس — تشخيص الإدارة</title>
+    <meta name="description" content="تشخيص ذكي ومخصص لإدارتك — اكتشف درجة النضج واحصل على KPIs مقترحة وخطة 30 يوم">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0d14;
+            --bg-card: #141825;
+            --bg-card-hover: #1a2035;
+            --text: #e2e8f0;
+            --text-muted: #8b8ba7;
+            --border: rgba(255, 255, 255, 0.06);
+            --primary: #7c3aed;
+            --primary-light: #a78bfa;
+            --primary-glow: rgba(124, 58, 237, 0.15);
+            --success: #22c55e;
+            --success-glow: rgba(34, 197, 94, 0.15);
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 28px 20px 60px;
+            overflow-y: auto;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 30% 20%, rgba(124, 58, 237, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* === Header === */
+        .page-header {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            max-width: 640px;
+            width: 100%;
+            margin-bottom: 24px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .page-header .logo {
+            font-size: 24px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #a78bfa, #38bdf8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .page-header h1 {
+            font-size: 24px;
+            font-weight: 900;
+            margin-bottom: 4px;
+        }
+
+        .page-header .dept-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+            padding: 5px 16px;
+            border-radius: 20px;
+            background: var(--primary-glow);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            color: var(--primary-light);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .page-header .company-info {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        /* === Progress Bar === */
+        .progress-container {
+            position: relative;
+            z-index: 1;
+            max-width: 640px;
+            width: 100%;
+            margin-bottom: 24px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            background: linear-gradient(90deg, var(--primary), #f093fb);
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 6px;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* === Step Dots === */
+        .step-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .step-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 800;
+            border: 2px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            transition: all 0.4s ease;
+        }
+
+        .step-dot.active {
+            border-color: var(--primary);
+            background: var(--primary-glow);
+            color: var(--primary-light);
+            transform: scale(1.15);
+        }
+
+        .step-dot.done {
+            border-color: var(--success);
+            background: var(--success-glow);
+            color: #4ade80;
+        }
+
+        /* === Card Container === */
+        .card-container {
+            position: relative;
+            z-index: 1;
+            max-width: 640px;
+            width: 100%;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px 28px;
+            animation: slideUp 0.5s ease;
+        }
+
+        .step-title {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* === Question Block === */
+        .question-block {
+            margin-bottom: 24px;
+            opacity: 0;
+            animation: staggerIn 0.4s ease forwards;
+        }
+
+        .question-block:nth-child(1) {
+            animation-delay: 0.05s;
+        }
+
+        .question-block:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .question-block:nth-child(3) {
+            animation-delay: 0.25s;
+        }
+
+        .question-block:last-child {
+            margin-bottom: 0;
+        }
+
+        .question-label {
+            display: block;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 12px;
+        }
+
+        .options-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .opt-btn {
+            padding: 10px 18px;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-muted);
+            font-family: 'Tajawal', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .opt-btn:hover {
+            border-color: var(--primary);
+            background: var(--primary-glow);
+            color: var(--text);
+        }
+
+        .opt-btn.selected {
+            border-color: var(--primary);
+            background: var(--primary-glow);
+            color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        /* === Error Message === */
+        .error-msg {
+            display: none;
+            padding: 10px 16px;
+            margin-top: 16px;
+            border-radius: 12px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .error-msg.show {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* === Navigation Buttons === */
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 28px;
+            gap: 12px;
+        }
+
+        .btn-prev {
+            padding: 12px 24px;
+            border-radius: 14px;
+            border: none;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-muted);
+            font-family: 'Tajawal', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: none;
+        }
+
+        .btn-prev:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+        }
+
+        .btn-next {
+            flex: 1;
+            padding: 14px 28px;
+            border-radius: 14px;
+            border: none;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-next:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(124, 58, 237, 0.35);
+        }
+
+        .btn-next.final {
+            background: linear-gradient(135deg, var(--success), #4ade80);
+        }
+
+        .btn-next.final:hover {
+            box-shadow: 0 6px 24px rgba(34, 197, 94, 0.35);
+        }
+
+        /* === Result Container === */
+        .result-container {
+            display: none;
+            position: relative;
+            z-index: 1;
+            max-width: 640px;
+            width: 100%;
+        }
+
+        .result-container.show {
+            display: block;
+            animation: slideUp 0.6s ease;
+        }
+
+        .result-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .result-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--success-glow);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .result-dept-name {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .result-company {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .score-circle {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-size: 36px;
+            font-weight: 900;
+            border: 5px solid;
+            transition: all 0.5s ease;
+            animation: popIn 0.6s ease;
+        }
+
+        .score-circle .label {
+            font-size: 11px;
+            font-weight: 600;
+            opacity: 0.7;
+        }
+
+        .score-circle.low {
+            border-color: var(--danger);
+            color: var(--danger);
+            background: rgba(239, 68, 68, 0.08);
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.15);
+        }
+
+        .score-circle.mid {
+            border-color: var(--warning);
+            color: var(--warning);
+            background: rgba(245, 158, 11, 0.08);
+            box-shadow: 0 0 30px rgba(245, 158, 11, 0.15);
+        }
+
+        .score-circle.high {
+            border-color: var(--success);
+            color: var(--success);
+            background: rgba(34, 197, 94, 0.08);
+            box-shadow: 0 0 30px rgba(34, 197, 94, 0.15);
+        }
+
+        .score-message {
+            font-size: 14px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 24px;
+            line-height: 1.7;
+        }
+
+        /* === Weakness Items === */
+        .weakness-item {
+            color: #fca5a5 !important;
+            background: rgba(239, 68, 68, 0.06) !important;
+            border: 1px solid rgba(239, 68, 68, 0.12);
+        }
+
+        /* === Print Button === */
+        .btn-print {
+            width: 100%;
+            padding: 14px;
+            border-radius: 14px;
+            border: 2px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            font-family: 'Tajawal', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-print:hover {
+            border-color: var(--primary);
+            color: var(--primary-light);
+            background: var(--primary-glow);
+        }
+
+        /* === Confetti === */
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 998;
+            overflow: hidden;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+            animation: confettiFall linear forwards;
+        }
+
+        /* === Result section stagger === */
+        .result-container .result-section {
+            opacity: 0;
+            animation: staggerIn 0.5s ease forwards;
+        }
+
+        .result-container .result-section:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .result-container .result-section:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        .result-container .result-section:nth-child(4) {
+            animation-delay: 0.6s;
+        }
+
+        .result-container .result-section:nth-child(5) {
+            animation-delay: 0.8s;
+        }
+
+        /* === Result Sections === */
+        .result-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px 22px;
+            margin-bottom: 12px;
+        }
+
+        .result-section h3 {
+            font-size: 15px;
+            font-weight: 800;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .result-section ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .result-section ul li {
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .result-section ul li .num {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), #f093fb);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 800;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .strength-item {
+            color: #4ade80 !important;
+            background: rgba(34, 197, 94, 0.06) !important;
+            border: 1px solid rgba(34, 197, 94, 0.12);
+        }
+
+        .kpi-item {
+            color: var(--primary-light) !important;
+            background: rgba(124, 58, 237, 0.06) !important;
+            border: 1px solid rgba(124, 58, 237, 0.12);
+        }
+
+        /* === CTA Buttons === */
+        .result-cta {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn-register {
+            width: 100%;
+            padding: 16px;
+            border-radius: 16px;
+            border: none;
+            background: linear-gradient(135deg, var(--success), #4ade80);
+            color: #fff;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 17px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-register:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(34, 197, 94, 0.3);
+        }
+
+        .btn-skip-link {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-decoration: underline;
+            text-underline-offset: 4px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-family: 'Tajawal', sans-serif;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .btn-skip-link:hover {
+            color: var(--primary-light);
+        }
+
+        /* === Resume Modal === */
+        .resume-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(6px);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .resume-modal.show {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .resume-modal-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 32px 28px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .resume-modal-card h3 {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .resume-modal-card p {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            line-height: 1.7;
+        }
+
+        .resume-modal-card .modal-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .resume-modal-card .modal-btns button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-resume {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+        }
+
+        .btn-restart {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-muted);
+        }
+
+        /* === Skip Link === */
+        .page-skip {
+            position: relative;
+            z-index: 1;
+            margin-top: 20px;
+            font-size: 12px;
+            color: var(--text-muted);
+            text-decoration: underline;
+            text-underline-offset: 4px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-family: 'Tajawal', sans-serif;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .page-skip:hover {
+            color: var(--primary-light);
+        }
+
+        /* === Animations === */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes staggerIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes popIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+
+            70% {
+                transform: scale(1.08);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(-20px) rotate(0deg);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        @media print {
+            body {
+                background: #fff !important;
+                color: #111 !important;
+                padding: 0;
+            }
+
+            body::before {
+                display: none;
+            }
+
+            .page-header .logo {
+                -webkit-text-fill-color: #7c3aed;
+            }
+
+            .page-header h1 {
+                color: #111;
+            }
+
+            .progress-container,
+            .page-skip,
+            .btn-register,
+            .btn-print,
+            .btn-skip-link,
+            .confetti-container {
+                display: none !important;
+            }
+
+            .result-container {
+                display: block !important;
+            }
+
+            .result-section {
+                background: #f8f9fa !important;
+                border: 1px solid #ddd !important;
+                page-break-inside: avoid;
+            }
+
+            .result-section h3 {
+                color: #111 !important;
+            }
+
+            .result-section ul li {
+                color: #333 !important;
+                background: #fff !important;
+            }
+
+            .score-circle {
+                border-width: 3px !important;
+                box-shadow: none !important;
+            }
+
+            .score-message {
+                color: #333 !important;
+            }
+
+            .result-badge {
+                background: #e8f5e9 !important;
+                color: #2e7d32 !important;
+            }
+
+            .result-dept-name,
+            .result-company {
+                color: #111 !important;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .card-container {
+                padding: 24px 18px;
+            }
+
+            .opt-btn {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+
+            .page-header h1 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Resume Modal -->
+    <div class="resume-modal" id="resumeModal">
+        <div class="resume-modal-card">
+            <div style="font-size:40px; margin-bottom:12px;">🔄</div>
+            <h3>مرحباً بعودتك!</h3>
+            <p id="resumeText">لقد توقفت عند الخطوة 2 في تشخيص الإدارة المالية. هل تريد الإكمال؟</p>
+            <div class="modal-btns">
+                <button class="btn-resume" onclick="resumeDraft()">أكمل من حيث توقفت</button>
+                <button class="btn-restart" onclick="restartDiagnostic()">ابدأ من جديد</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="page-header">
+        <div class="logo">◈ ستارتكس</div>
+        <h1 id="pageTitle">التشخيص الذكي للإدارة</h1>
+        <div class="dept-badge" id="deptBadge">
+            <i class="bi bi-clipboard2-pulse"></i>
+            <span id="deptBadgeText">تحميل...</span>
+        </div>
+        <div class="company-info" id="companyInfo"></div>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-container" id="progressSection">
+        <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-label">
+            <span id="progressStep">الخطوة 1</span>
+            <span id="progressTotal">من 4</span>
+        </div>
+        <div class="step-dots" id="stepDots"></div>
+    </div>
+
+    <!-- Questions Card -->
+    <div class="card-container" id="questionsCard">
+        <div class="step-title" id="stepTitle"></div>
+        <div id="dynamicContent"></div>
+        <div class="error-msg" id="errorMsg">
+            <i class="bi bi-exclamation-triangle"></i>
+            الرجاء الإجابة على جميع الأسئلة للمتابعة
+        </div>
+        <div class="nav-buttons">
+            <button class="btn-prev" id="prevBtn" onclick="goPrev()">
+                <i class="bi bi-arrow-right"></i> السابق
+            </button>
+            <button class="btn-next" id="nextBtn" onclick="goNext()">
+                التالي <i class="bi bi-arrow-left"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Result -->
+    <div class="result-container" id="resultContainer">
+        <div class="result-header">
+            <div class="result-badge"><i class="bi bi-check-circle-fill"></i> تم التحليل بنجاح</div>
+            <div class="result-dept-name" id="resultDeptName"></div>
+            <div class="result-company" id="resultCompany"></div>
+            <div class="score-circle" id="scoreCircle">
+                <span id="scoreNumber">0</span>
+                <span class="label">من 100</span>
+            </div>
+            <div class="score-message" id="scoreMessage"></div>
+        </div>
+
+        <!-- نقاط القوة -->
+        <div class="result-section" id="strengthsSection">
+            <h3><i class="bi bi-trophy" style="color:#4ade80;"></i> نقاط القوة</h3>
+            <ul id="strengthsList"></ul>
+        </div>
+
+        <!-- نقاط تحتاج تحسين -->
+        <div class="result-section" id="weaknessesSection">
+            <h3><i class="bi bi-exclamation-diamond" style="color:#fca5a5;"></i> تحتاج تحسين</h3>
+            <ul id="weaknessesList"></ul>
+        </div>
+
+        <!-- KPIs المقترحة -->
+        <div class="result-section">
+            <h3><i class="bi bi-bar-chart-line" style="color:var(--primary-light);"></i> KPIs المقترحة لإدارتك</h3>
+            <ul id="kpiList"></ul>
+        </div>
+
+        <!-- خطة 30 يوم -->
+        <div class="result-section">
+            <h3><i class="bi bi-calendar-check" style="color:var(--warning);"></i> خطة الـ 30 يوم</h3>
+            <ul id="planList"></ul>
+        </div>
+
+        <!-- CTA -->
+        <div class="result-cta">
+            <button class="btn-register" onclick="goToRegister()">
+                <i class="bi bi-rocket-takeoff"></i>
+                فعّل هذه الخطة — سجّل مجاناً
+            </button>
+            <button class="btn-print" onclick="printReport()">
+                <i class="bi bi-printer"></i>
+                اطبع التقرير
+            </button>
+            <a href="/#pricing" class="btn-skip-link">
+                <i class="bi bi-tag"></i> شاهد الباقات
+            </a>
+        </div>
+    </div>
+
+    <!-- Skip Link -->
+    <button class="page-skip" id="skipLink" onclick="skipDiagnostic()">
+        تخطي التشخيص وسجّل مباشرة
+    </button>
+
+    <script>
+        // ═══════════════════════════════════════════════════════
+        // 1. قاعدة بيانات الأسئلة (3 إدارات)
+        // ═══════════════════════════════════════════════════════
+        const diagnosticDB = {
+            'DEPT_FINANCE': {
+                title: 'الإدارة المالية',
+                icon: 'bi-wallet2',
+                color: '#f59e0b',
+                kpis: ['نسبة إغلاق الموازنة الشهرية في الوقت', 'دقة التنبؤ المالي (Forecast Accuracy)', 'نسبة الأخطاء المحاسبية', 'وقت إعداد التقارير المالية', 'نسبة التحصيل في الوقت'],
+                plan: ['حدد أهدافك المالية الفصلية بوضوح', 'أنشئ 3 مؤشرات أداء (KPIs) أساسية', 'ابدأ التتبع الأسبوعي للمؤشرات', 'أصدر أول تقرير أداء لإدارتك'],
+                steps: [
+                    {
+                        title: '🏢 بيانات الإدارة',
+                        questions: [
+                            { id: 'size', text: 'عدد موظفي الإدارة المالية؟', options: [{ t: '1 - 5', v: 2 }, { t: '5 - 15', v: 5 }, { t: '15+', v: 10 }] },
+                            { id: 'age', text: 'عمر الإدارة؟', options: [{ t: 'أقل من سنة', v: 2 }, { t: '1 - 3 سنوات', v: 5 }, { t: 'أكثر من 3', v: 10 }] },
+                            { id: 'budget', text: 'هل تملكون ميزانية تشغيلية مستقلة؟', options: [{ t: 'نعم', v: 10 }, { t: 'جزئياً', v: 5 }, { t: 'لا', v: 0 }] }
+                        ]
+                    },
+                    {
+                        title: '🎯 الأهداف الحالية',
+                        questions: [
+                            { id: 'goal', text: 'ما هو الهدف الأهم لإدارتك هذا العام؟', options: [{ t: 'تخطيط وموازنات دقيقة', v: 10 }, { t: 'تقارير مالية فورية', v: 8 }, { t: 'إدارة المخاطر المالية', v: 9 }] },
+                            { id: 'strategy', text: 'هل أهدافك مربوطة باستراتيجية الشركة؟', options: [{ t: 'نعم', v: 10 }, { t: 'جزئياً', v: 5 }, { t: 'لا أدري', v: 0 }] }
+                        ]
+                    },
+                    {
+                        title: '📊 المؤشرات والقياس',
+                        questions: [
+                            { id: 'track', text: 'كيف تتابع الأداء المالي حالياً؟', options: [{ t: 'نظام / داشبورد', v: 10 }, { t: 'Excel / يدوي', v: 4 }, { t: 'بدون متابعة', v: 0 }] },
+                            { id: 'kpi_count', text: 'كم مؤشر أداء (KPI) تتابعه حالياً؟', options: [{ t: 'لا يوجد', v: 0 }, { t: '1 - 3', v: 5 }, { t: '4+', v: 10 }] }
+                        ]
+                    },
+                    {
+                        title: '⚡ التحديات اليومية',
+                        questions: [
+                            { id: 'challenge', text: 'ما هو أكبر تحدي يواجه إدارتك؟', options: [{ t: 'تأخر التقارير', v: 5 }, { t: 'كثرة العمل اليدوي', v: 5 }, { t: 'صعوبة التنبؤ', v: 5 }] },
+                            { id: 'accuracy', text: 'ما مستوى دقة الموازنات حالياً؟', options: [{ t: 'أكثر من 85%', v: 10 }, { t: '70 - 85%', v: 5 }, { t: 'أقل من 70%', v: 0 }] },
+                            { id: 'reports', text: 'هل تقدم تقارير منتظمة للإدارة العليا؟', options: [{ t: 'أسبوعياً', v: 10 }, { t: 'شهرياً', v: 5 }, { t: 'لا', v: 0 }] }
+                        ]
+                    }
+                ]
+            },
+            'DEPT_HR': {
+                title: 'الموارد البشرية',
+                icon: 'bi-people-fill',
+                color: '#10b981',
+                kpis: ['معدل الدوران الوظيفي (Turnover Rate)', 'وقت التوظيف (Time to Hire)', 'مؤشر رضا الموظفين', 'تكلفة التوظيف لكل موظف', 'معدل الغياب الشهري'],
+                plan: ['إعداد نموذج تقييم أداء موحّد', 'ربط أهداف الموظفين بأهداف الشركة', 'قياس رضا الموظفين (استبيان أول)', 'إطلاق لوحة مؤشرات HR الأولى'],
+                steps: [
+                    {
+                        title: '🏢 بيانات الإدارة',
+                        questions: [
+                            { id: 'size', text: 'عدد موظفي إدارة الموارد البشرية؟', options: [{ t: '1 - 5', v: 2 }, { t: '5 - 15', v: 5 }, { t: '15+', v: 10 }] },
+                            { id: 'age', text: 'عمر الإدارة؟', options: [{ t: 'أقل من سنة', v: 2 }, { t: '1 - 3 سنوات', v: 5 }, { t: 'أكثر من 3', v: 10 }] },
+                            { id: 'budget', text: 'هل تملكون ميزانية مستقلة للتدريب والتوظيف؟', options: [{ t: 'نعم', v: 10 }, { t: 'جزئياً', v: 5 }, { t: 'لا', v: 0 }] }
+                        ]
+                    },
+                    {
+                        title: '🎯 الأهداف الحالية',
+                        questions: [
+                            { id: 'goal', text: 'ما هو الهدف الأهم لإدارتك هذا العام؟', options: [{ t: 'مؤشرات أداء الموظفين', v: 10 }, { t: 'تخطيط القوى العاملة', v: 8 }, { t: 'رفع الرضا الوظيفي', v: 9 }] },
+                            { id: 'strategy', text: 'هل أهداف إدارتك مربوطة باستراتيجية الشركة؟', options: [{ t: 'نعم', v: 10 }, { t: 'جزئياً', v: 5 }, { t: 'لا أدري', v: 0 }] }
+                        ]
+                    },
+                    {
+                        title: '📊 المؤشرات والقياس',
+                        questions: [
+                            { id: 'track', text: 'كيف تتابع أداء الموارد البشرية حالياً؟', options: [{ t: 'نظام HRIS', v: 10 }, { t: 'Excel / يدوي', v: 4 }, { t: 'بدون متابعة', v: 0 }] },
+                            { id: 'kpi_count', text: 'كم مؤشر أداء (KPI) تتابعه حالياً؟', options: [{ t: 'لا يوجد', v: 0 }, { t: '1 - 3', v: 5 }, { t: '4+', v: 10 }] }
+                        ]
+                    },
+                    {
+                        title: '⚡ التحديات اليومية',
+                        questions: [
+                            { id: 'challenge', text: 'ما هو أكبر تحدي يواجه إدارتك؟', options: [{ t: 'دوران الموظفين', v: 5 }, { t: 'غياب تقييمات موضوعية', v: 5 }, { t: 'صعوبة الاستقطاب', v: 5 }] },
+                            { id: 'evaluations', text: 'هل تُجرى تقييمات أداء منتظمة؟', options: [{ t: 'ربع سنوي', v: 10 }, { t: 'سنوياً', v: 5 }, { t: 'لا', v: 0 }] },
+                            { id: 'turnover', text: 'ما نسبة الدوران الوظيفي التقريبية؟', options: [{ t: 'أقل من 10%', v: 10 }, { t: '10 - 25%', v: 5 }, { t: 'أكثر من 25%', v: 0 }] }
+                        ]
+                    }
+                ]
+            },
+            'DEPT_MARKETING': {
+                title: 'إدارة التسويق',
+                icon: 'bi-megaphone-fill',
+                color: '#8b5cf6',
+                kpis: ['تكلفة اكتساب العميل (CAC)', 'العائد على الاستثمار التسويقي (ROI)', 'معدل التحويل (Conversion Rate)', 'الوعي بالعلامة التجارية', 'تفاعل المحتوى (Engagement Rate)'],
+                plan: ['تحديد قنوات الاستحواذ الرئيسية', 'إعداد تتبع دقيق لتكلفة اكتساب العميل', 'ربط الحملات التسويقية بأهداف المبيعات', 'إصدار أول تقرير ROI تسويقي'],
+                steps: [
+                    {
+                        title: '🏢 بيانات الإدارة',
+                        questions: [
+                            { id: 'size', text: 'حجم الفريق التسويقي؟', options: [{ t: '1 - 5', v: 2 }, { t: '5 - 15', v: 5 }, { t: '15+', v: 10 }] },
+                            { id: 'age', text: 'عمر الإدارة؟', options: [{ t: 'أقل من سنة', v: 2 }, { t: '1 - 3 سنوات', v: 5 }, { t: 'أكثر من 3', v: 10 }] },
+                            { id: 'budget', text: 'هل تملكون ميزانية تسويقية مستقلة ومحددة؟', options: [{ t: 'نعم', v: 10 }, { t: 'جزئياً', v: 5 }, { t: 'لا', v: 0 }] }
+                        ]
+                    },
+                    {
+                        title: '🎯 الأهداف الحالية',
+                        questions: [
+                            { id: 'goal', text: 'ما هو الهدف الأهم لإدارتك هذا العام؟', options: [{ t: 'قياس العائد ROI', v: 10 }, { t: 'بناء العلامة التجارية', v: 8 }, { t: 'زيادة العملاء المحتملين', v: 9 }] },
+                            { id: 'strategy', text: 'هل أهدافك مربوطة باستراتيجية مبيعات الشركة؟', options: [{ t: 'نعم', v: 10 }, { t: 'جزئياً', v: 5 }, { t: 'لا أدري', v: 0 }] }
+                        ]
+                    },
+                    {
+                        title: '📊 المؤشرات والقياس',
+                        questions: [
+                            { id: 'track', text: 'كيف تتابع الأداء التسويقي حالياً؟', options: [{ t: 'أدوات تحليل / داشبورد', v: 10 }, { t: 'Excel / يدوي', v: 4 }, { t: 'بدون متابعة', v: 0 }] },
+                            { id: 'kpi_count', text: 'كم مؤشر أداء (KPI) تتابعه أسبوعياً؟', options: [{ t: 'لا يوجد', v: 0 }, { t: '1 - 3', v: 5 }, { t: '4+', v: 10 }] }
+                        ]
+                    },
+                    {
+                        title: '⚡ التحديات اليومية',
+                        questions: [
+                            { id: 'challenge', text: 'ما هو أكبر تحدي تسويقي يواجهكم؟', options: [{ t: 'ضعف قياس الـ ROI', v: 5 }, { t: 'تشتت القنوات', v: 5 }, { t: 'ضعف الوعي بالعلامة', v: 5 }] },
+                            { id: 'channels', text: 'كم عدد القنوات التسويقية النشطة؟', options: [{ t: '1 - 2', v: 5 }, { t: '3 - 5', v: 10 }, { t: 'أكثر من 5', v: 8 }] },
+                            { id: 'cac', text: 'هل تقيس تكلفة اكتساب العميل (CAC)؟', options: [{ t: 'بدقة', v: 10 }, { t: 'تقريبياً', v: 5 }, { t: 'لا', v: 0 }] }
+                        ]
+                    }
+                ]
+            },
+            'DEPT_SALES': {
+                title: 'إدارة المبيعات',
+                icon: 'bi-graph-up-arrow',
+                color: '#f59e0b',
+                kpis: ['معدل التحويل (Conversion Rate)', 'متوسط قيمة الصفقة (Average Deal Size)', 'دورة البيع (Sales Cycle Length)', 'نسبة تحقيق الهدف الشهري', 'تكلفة اكتساب العميل (CAC)'],
+                plan: ['تحديد الأهداف البيعية الفصلية بوضوح', 'بناء Pipeline واضح بمراحل محددة', 'إعداد تقرير أسبوعي للأداء البيعي', 'ربط أهداف المبيعات بالاستراتيجية العامة'],
+                steps: [
+                    {
+                        title: '🏢 بيانات الإدارة',
+                        questions: [
+                            { id: 'size', text: 'حجم فريق المبيعات؟', options: [{ t: '1 - 5', v: 2 }, { t: '5 - 15', v: 5 }, { t: '15+', v: 10 }] },
+                            { id: 'age', text: 'عمر إدارة المبيعات؟', options: [{ t: 'أقل من سنة', v: 2 }, { t: '1 - 3 سنوات', v: 5 }, { t: 'أكثر من 3', v: 10 }] },
+                            { id: 'crm', text: 'هل تستخدمون نظام CRM؟', options: [{ t: 'نعم — متكامل', v: 10 }, { t: 'جزئياً / Excel', v: 5 }, { t: 'لا', v: 0 }] }
+                        ]
+                    },
+                    {
+                        title: '🎯 الأهداف البيعية',
+                        questions: [
+                            { id: 'goal', text: 'ما هو الهدف الأهم لإدارتك هذا العام؟', options: [{ t: 'زيادة الإيرادات', v: 10 }, { t: 'توسيع قاعدة العملاء', v: 8 }, { t: 'رفع معدل التحويل', v: 9 }] },
+                            { id: 'target_clear', text: 'هل الأهداف البيعية واضحة ومحددة رقمياً؟', options: [{ t: 'نعم — بدقة', v: 10 }, { t: 'جزئياً', v: 5 }, { t: 'لا', v: 0 }] },
+                            { id: 'pipeline', text: 'هل لديكم Pipeline منظم بمراحل محددة؟', options: [{ t: 'نعم', v: 10 }, { t: 'غير رسمي', v: 5 }, { t: 'لا', v: 0 }] }
+                        ]
+                    },
+                    {
+                        title: '📊 القياس والمتابعة',
+                        questions: [
+                            { id: 'track', text: 'كيف تتابع الأداء البيعي حالياً؟', options: [{ t: 'CRM / داشبورد', v: 10 }, { t: 'Excel / يدوي', v: 4 }, { t: 'بدون متابعة', v: 0 }] },
+                            { id: 'kpi_count', text: 'كم مؤشر أداء (KPI) تتابعه أسبوعياً؟', options: [{ t: 'لا يوجد', v: 0 }, { t: '1 - 3', v: 5 }, { t: '4+', v: 10 }] }
+                        ]
+                    },
+                    {
+                        title: '⚡ التحديات البيعية',
+                        questions: [
+                            { id: 'challenge', text: 'ما أكبر تحدي يواجه المبيعات؟', options: [{ t: 'ضعف التحويل', v: 5 }, { t: 'طول دورة البيع', v: 5 }, { t: 'ضعف جودة العملاء المحتملين', v: 5 }] },
+                            { id: 'forecast', text: 'هل تتوقعون الإيرادات بدقة؟', options: [{ t: 'أكثر من 80% دقة', v: 10 }, { t: '50 - 80%', v: 5 }, { t: 'لا نتوقع', v: 0 }] },
+                            { id: 'retention', text: 'ما نسبة الاحتفاظ بالعملاء سنوياً؟', options: [{ t: 'أكثر من 80%', v: 10 }, { t: '50 - 80%', v: 5 }, { t: 'أقل من 50%', v: 0 }] }
+                        ]
+                    }
+                ]
+            },
+            'DEPT_OPERATIONS': {
+                title: 'إدارة العمليات',
+                icon: 'bi-gear-fill',
+                color: '#06b6d4',
+                kpis: ['كفاءة العمليات (OEE)', 'وقت التسليم (Lead Time)', 'نسبة الأخطاء التشغيلية', 'معدل استغلال الموارد', 'تكلفة العملية الواحدة'],
+                plan: ['توثيق أهم 5 عمليات تشغيلية', 'تحديد نقاط الاختناق والهدر', 'إنشاء لوحة مؤشرات تشغيلية', 'إطلاق أول مراجعة أسبوعية للعمليات'],
+                steps: [
+                    {
+                        title: '🏢 بيانات الإدارة',
+                        questions: [
+                            { id: 'size', text: 'حجم فريق العمليات؟', options: [{ t: '1 - 5', v: 2 }, { t: '5 - 20', v: 5 }, { t: '20+', v: 10 }] },
+                            { id: 'age', text: 'عمر إدارة العمليات؟', options: [{ t: 'أقل من سنة', v: 2 }, { t: '1 - 3 سنوات', v: 5 }, { t: 'أكثر من 3', v: 10 }] },
+                            { id: 'documented', text: 'هل العمليات الأساسية موثّقة؟', options: [{ t: 'نعم — SOP معتمد', v: 10 }, { t: 'جزئياً', v: 5 }, { t: 'لا', v: 0 }] }
+                        ]
+                    },
+                    {
+                        title: '🎯 الأهداف التشغيلية',
+                        questions: [
+                            { id: 'goal', text: 'ما الهدف الأهم لإدارتك؟', options: [{ t: 'تقليل التكاليف التشغيلية', v: 10 }, { t: 'تسريع التسليم', v: 8 }, { t: 'تحسين الجودة', v: 9 }] },
+                            { id: 'automation', text: 'ما مستوى الأتمتة في عملياتكم؟', options: [{ t: 'عالي (70%+)', v: 10 }, { t: 'متوسط (30-70%)', v: 5 }, { t: 'منخفض (<30%)', v: 2 }] }
+                        ]
+                    },
+                    {
+                        title: '📊 القياس والجودة',
+                        questions: [
+                            { id: 'track', text: 'كيف تتابع الأداء التشغيلي؟', options: [{ t: 'نظام ERP / داشبورد', v: 10 }, { t: 'Excel / يدوي', v: 4 }, { t: 'بدون متابعة', v: 0 }] },
+                            { id: 'kpi_count', text: 'كم مؤشر تشغيلي تتابعه؟', options: [{ t: 'لا يوجد', v: 0 }, { t: '1 - 3', v: 5 }, { t: '4+', v: 10 }] }
+                        ]
+                    },
+                    {
+                        title: '⚡ التحديات التشغيلية',
+                        questions: [
+                            { id: 'challenge', text: 'ما أكبر تحدي تشغيلي؟', options: [{ t: 'تأخر التسليم', v: 5 }, { t: 'هدر الموارد', v: 5 }, { t: 'غياب التوثيق', v: 5 }] },
+                            { id: 'downtime', text: 'كم مرة تتوقف العمليات شهرياً؟', options: [{ t: 'نادراً (0-1)', v: 10 }, { t: 'أحياناً (2-4)', v: 5 }, { t: 'كثيراً (5+)', v: 0 }] },
+                            { id: 'quality', text: 'هل لديكم نظام ضبط جودة؟', options: [{ t: 'نعم — معتمد (ISO)', v: 10 }, { t: 'إجراءات داخلية', v: 5 }, { t: 'لا', v: 0 }] }
+                        ]
+                    }
+                ]
+            },
+            'DEPT_COMPLIANCE': {
+                title: 'إدارة الامتثال',
+                icon: 'bi-shield-check',
+                color: '#22c55e',
+                kpis: ['نسبة الامتثال العامة (%)', 'عدد المخالفات الشهرية', 'وقت الاستجابة للتحديثات التنظيمية', 'نسبة اكتمال التراخيص', 'تكلفة الامتثال السنوية'],
+                plan: ['جرد جميع التراخيص والمتطلبات التنظيمية', 'إنشاء تقويم تجديد التراخيص', 'تقييم فجوات الامتثال الحالية', 'إعداد أول تقرير امتثال شهري'],
+                steps: [
+                    {
+                        title: '🏢 بيانات الإدارة',
+                        questions: [
+                            { id: 'size', text: 'هل لديكم فريق أو مسؤول امتثال؟', options: [{ t: 'فريق متخصص', v: 10 }, { t: 'مسؤول واحد', v: 5 }, { t: 'لا يوجد', v: 0 }] },
+                            { id: 'age', text: 'منذ متى تتابعون الامتثال بشكل منظم؟', options: [{ t: 'أقل من سنة', v: 2 }, { t: '1 - 3 سنوات', v: 5 }, { t: 'أكثر من 3', v: 10 }] },
+                            { id: 'system', text: 'هل تستخدمون نظاماً لتتبع الامتثال؟', options: [{ t: 'نعم — برنامج GRC', v: 10 }, { t: 'Excel / يدوي', v: 5 }, { t: 'لا', v: 0 }] }
+                        ]
+                    },
+                    {
+                        title: '🎯 الأهداف التنظيمية',
+                        questions: [
+                            { id: 'goal', text: 'ما الهدف الأهم للامتثال هذا العام؟', options: [{ t: 'تحقيق 100% تراخيص', v: 10 }, { t: 'تقليل المخالفات', v: 8 }, { t: 'بناء نظام امتثال شامل', v: 9 }] },
+                            { id: 'awareness', text: 'هل الموظفون واعون بمتطلبات الامتثال؟', options: [{ t: 'نعم — تدريب منتظم', v: 10 }, { t: 'جزئياً', v: 5 }, { t: 'لا', v: 0 }] }
+                        ]
+                    },
+                    {
+                        title: '📊 التقييم والمتابعة',
+                        questions: [
+                            { id: 'track', text: 'كيف تتابعون حالة الامتثال؟', options: [{ t: 'نظام تنبيهات آلي', v: 10 }, { t: 'مراجعة دورية يدوية', v: 5 }, { t: 'لا نتابع بانتظام', v: 0 }] },
+                            { id: 'audit', text: 'متى آخر تدقيق امتثال داخلي؟', options: [{ t: 'خلال 3 أشهر', v: 10 }, { t: 'خلال سنة', v: 5 }, { t: 'لم يحصل', v: 0 }] }
+                        ]
+                    },
+                    {
+                        title: '⚡ التحديات والمخاطر',
+                        questions: [
+                            { id: 'challenge', text: 'ما أكبر تحدي للامتثال؟', options: [{ t: 'كثرة التحديثات التنظيمية', v: 5 }, { t: 'نقص الموارد', v: 5 }, { t: 'ضعف الوعي الداخلي', v: 5 }] },
+                            { id: 'violations', text: 'كم مخالفة تنظيمية واجهتكم آخر سنة؟', options: [{ t: 'لا شيء', v: 10 }, { t: '1 - 3', v: 5 }, { t: 'أكثر من 3', v: 0 }] },
+                            { id: 'pdpl', text: 'ما مستوى التزامكم بنظام حماية البيانات (PDPL)؟', options: [{ t: 'مكتمل', v: 10 }, { t: 'قيد التطبيق', v: 5 }, { t: 'لم نبدأ', v: 0 }] }
+                        ]
+                    }
+                ]
+            },
+            'DEPT_SUPPORT': {
+                title: 'الخدمات المساندة',
+                icon: 'bi-tools',
+                color: '#a855f7',
+                kpis: ['وقت الاستجابة للطلبات', 'معدل رضا المستفيدين الداخليين', 'نسبة إغلاق التذاكر في الوقت', 'تكلفة الخدمة الواحدة', 'نسبة التوفر (Uptime)'],
+                plan: ['توثيق قائمة الخدمات المقدمة (Service Catalog)', 'إنشاء نظام تذاكر للطلبات الداخلية', 'قياس رضا المستفيدين — استبيان أول', 'تحديد SLAs لأهم 5 خدمات'],
+                steps: [
+                    {
+                        title: '🏢 بيانات الإدارة',
+                        questions: [
+                            { id: 'size', text: 'حجم فريق الخدمات المساندة؟', options: [{ t: '1 - 5', v: 2 }, { t: '5 - 15', v: 5 }, { t: '15+', v: 10 }] },
+                            { id: 'scope', text: 'ما الخدمات التي تغطيها إدارتكم؟', options: [{ t: 'IT + إدارية + لوجستية', v: 10 }, { t: 'IT فقط أو إدارية فقط', v: 5 }, { t: 'غير محددة', v: 2 }] },
+                            { id: 'catalog', text: 'هل لديكم قائمة خدمات موثّقة؟', options: [{ t: 'نعم — Service Catalog', v: 10 }, { t: 'جزئياً', v: 5 }, { t: 'لا', v: 0 }] }
+                        ]
+                    },
+                    {
+                        title: '🎯 الأهداف والمستوى',
+                        questions: [
+                            { id: 'goal', text: 'ما الهدف الأهم لإدارتك؟', options: [{ t: 'تحسين وقت الاستجابة', v: 10 }, { t: 'رفع رضا المستفيدين', v: 9 }, { t: 'تقليل التكاليف', v: 8 }] },
+                            { id: 'sla', text: 'هل لديكم اتفاقيات مستوى خدمة (SLA)؟', options: [{ t: 'نعم — موثقة', v: 10 }, { t: 'غير رسمية', v: 5 }, { t: 'لا', v: 0 }] }
+                        ]
+                    },
+                    {
+                        title: '📊 القياس والمتابعة',
+                        questions: [
+                            { id: 'track', text: 'كيف تتابعون طلبات الخدمة؟', options: [{ t: 'نظام تذاكر (ITSM)', v: 10 }, { t: 'إيميل / واتساب', v: 4 }, { t: 'شفهياً', v: 0 }] },
+                            { id: 'satisfaction', text: 'هل تقيسون رضا المستفيدين؟', options: [{ t: 'نعم — استبيان دوري', v: 10 }, { t: 'أحياناً', v: 5 }, { t: 'لا', v: 0 }] }
+                        ]
+                    },
+                    {
+                        title: '⚡ التحديات اليومية',
+                        questions: [
+                            { id: 'challenge', text: 'ما أكبر تحدي يواجه إدارتكم؟', options: [{ t: 'كثرة الطلبات العشوائية', v: 5 }, { t: 'نقص الموارد', v: 5 }, { t: 'غياب الأولويات', v: 5 }] },
+                            { id: 'response_time', text: 'متوسط وقت الاستجابة للطلبات؟', options: [{ t: 'أقل من ساعة', v: 10 }, { t: '1 - 24 ساعة', v: 5 }, { t: 'أكثر من يوم', v: 0 }] },
+                            { id: 'proactive', text: 'هل تقدمون صيانة استباقية؟', options: [{ t: 'نعم — جدول منتظم', v: 10 }, { t: 'أحياناً', v: 5 }, { t: 'فقط عند الأعطال', v: 0 }] }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        // ═══════════════════════════════════════════════════════
+        // 2. الإعدادات والتهيئة
+        // ═══════════════════════════════════════════════════════
+        const urlParams = new URLSearchParams(window.location.search);
+        let rawDept = urlParams.get('dept') || '';
+
+        // دعم الأسماء القصيرة والطويلة
+        const DEPT_MAP = {
+            'finance': 'DEPT_FINANCE', 'FINANCE': 'DEPT_FINANCE', 'DEPT_FINANCE': 'DEPT_FINANCE',
+            'hr': 'DEPT_HR', 'HR': 'DEPT_HR', 'DEPT_HR': 'DEPT_HR',
+            'marketing': 'DEPT_MARKETING', 'MARKETING': 'DEPT_MARKETING', 'DEPT_MARKETING': 'DEPT_MARKETING',
+            'sales': 'DEPT_SALES', 'SALES': 'DEPT_SALES', 'DEPT_SALES': 'DEPT_SALES',
+            'operations': 'DEPT_OPERATIONS', 'OPERATIONS': 'DEPT_OPERATIONS', 'DEPT_OPERATIONS': 'DEPT_OPERATIONS',
+            'compliance': 'DEPT_COMPLIANCE', 'COMPLIANCE': 'DEPT_COMPLIANCE', 'DEPT_COMPLIANCE': 'DEPT_COMPLIANCE',
+            'support': 'DEPT_SUPPORT', 'SUPPORT': 'DEPT_SUPPORT', 'DEPT_SUPPORT': 'DEPT_SUPPORT',
+        };
+
+        let currentDeptKey = DEPT_MAP[rawDept] || 'DEPT_FINANCE';
+        if (!diagnosticDB[currentDeptKey]) currentDeptKey = 'DEPT_FINANCE';
+
+        const deptData = diagnosticDB[currentDeptKey];
+        const totalSteps = deptData.steps.length;
+        let currentStep = 0;
+        let userAnswers = {};
+
+        // عرض بيانات الإدارة
+        document.getElementById('pageTitle').textContent = `التشخيص الذكي: ${deptData.title}`;
+        document.getElementById('deptBadgeText').textContent = deptData.title;
+        document.title = `ستارتكس — تشخيص ${deptData.title}`;
+
+        // عرض بيانات الشركة (من select-type)
+        const companyName = localStorage.getItem('stratix_company_name');
+        const sectorName = localStorage.getItem('stratix_sector');
+        if (companyName) {
+            document.getElementById('companyInfo').textContent = `🏢 ${companyName}${sectorName ? ' · ' + sectorName : ''}`;
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // 3. Auto-Save & Resume
+        // ═══════════════════════════════════════════════════════
+        const DRAFT_KEY = `stratix_draft_dept_${currentDeptKey}`;
+
+        function checkDraft() {
+            const saved = localStorage.getItem(DRAFT_KEY);
+            if (!saved) return;
+
+            try {
+                const draft = JSON.parse(saved);
+                // تحقق من صلاحية المسودة (48 ساعة)
+                const age = Date.now() - new Date(draft.timestamp).getTime();
+                if (age > 48 * 60 * 60 * 1000) {
+                    localStorage.removeItem(DRAFT_KEY);
+                    return;
+                }
+
+                // عرض modal الاسترجاع
+                const stepNum = (draft.step || 0) + 1;
+                document.getElementById('resumeText').textContent =
+                    `لقد توقفت عند الخطوة ${stepNum} في تشخيص ${deptData.title}. هل تريد الإكمال من حيث توقفت؟`;
+                document.getElementById('resumeModal').classList.add('show');
+
+                // مؤقت: إذا ما اختار → أنقذ الموقف
+                window._draftData = draft;
+            } catch (e) {
+                localStorage.removeItem(DRAFT_KEY);
+            }
+        }
+
+        function resumeDraft() {
+            if (window._draftData) {
+                currentStep = window._draftData.step || 0;
+                userAnswers = window._draftData.answers || {};
+            }
+            document.getElementById('resumeModal').classList.remove('show');
+            renderStep();
+        }
+
+        function restartDiagnostic() {
+            localStorage.removeItem(DRAFT_KEY);
+            currentStep = 0;
+            userAnswers = {};
+            document.getElementById('resumeModal').classList.remove('show');
+            renderStep();
+        }
+
+        function saveDraft() {
+            localStorage.setItem(DRAFT_KEY, JSON.stringify({
+                step: currentStep,
+                answers: userAnswers,
+                dept: currentDeptKey,
+                timestamp: new Date().toISOString()
+            }));
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // 4. عرض الخطوات
+        // ═══════════════════════════════════════════════════════
+        function renderStep() {
+            if (currentStep >= totalSteps) {
+                showResults();
+                return;
+            }
+
+            // إخفاء الخطأ
+            document.getElementById('errorMsg').classList.remove('show');
+
+            const step = deptData.steps[currentStep];
+
+            // عنوان الخطوة
+            document.getElementById('stepTitle').textContent = step.title;
+
+            // بناء الأسئلة
+            let html = '';
+            step.questions.forEach(q => {
+                html += `<div class="question-block">
+                    <label class="question-label">${q.text}</label>
+                    <div class="options-row">`;
+                q.options.forEach(opt => {
+                    const selected = userAnswers[q.id]?.value === opt.v && userAnswers[q.id]?.text === opt.t;
+                    html += `<button class="opt-btn ${selected ? 'selected' : ''}"
+                        onclick="selectOption('${q.id}', '${opt.t.replace(/'/g, "\\'")}', ${opt.v})">${opt.t}</button>`;
+                });
+                html += `</div></div>`;
+            });
+            document.getElementById('dynamicContent').innerHTML = html;
+
+            // أزرار التنقل
+            document.getElementById('prevBtn').style.display = currentStep === 0 ? 'none' : 'block';
+
+            const nextBtn = document.getElementById('nextBtn');
+            if (currentStep === totalSteps - 1) {
+                nextBtn.innerHTML = 'عرض النتيجة <i class="bi bi-bar-chart-line"></i>';
+                nextBtn.classList.add('final');
+            } else {
+                nextBtn.innerHTML = 'التالي <i class="bi bi-arrow-left"></i>';
+                nextBtn.classList.remove('final');
+            }
+
+            // شريط التقدم
+            const pct = Math.round((currentStep / totalSteps) * 100);
+            document.getElementById('progressFill').style.width = pct + '%';
+            document.getElementById('progressStep').textContent = `الخطوة ${currentStep + 1}`;
+            document.getElementById('progressTotal').textContent = `من ${totalSteps}`;
+
+            // Step Dots
+            renderStepDots();
+
+            // Animation
+            const card = document.getElementById('questionsCard');
+            card.style.animation = 'none';
+            card.offsetHeight; // trigger reflow
+            card.style.animation = 'slideUp 0.4s ease';
+        }
+
+        window.selectOption = function (qId, text, value) {
+            userAnswers[qId] = { text, value };
+            // إعادة تحديث الأزرار بصرياً
+            renderStep();
+            saveDraft();
+        };
+
+        // ═══════════════════════════════════════════════════════
+        // 5. التنقل والتحقق
+        // ═══════════════════════════════════════════════════════
+        function validateCurrentStep() {
+            const questions = deptData.steps[currentStep].questions;
+            return questions.every(q => userAnswers[q.id] !== undefined);
+        }
+
+        function goNext() {
+            if (!validateCurrentStep()) {
+                document.getElementById('errorMsg').classList.add('show');
+                return;
+            }
+            currentStep++;
+            saveDraft();
+            renderStep();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function goPrev() {
+            if (currentStep > 0) {
+                currentStep--;
+                saveDraft();
+                renderStep();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // 6. حساب النتيجة وعرضها
+        // ═══════════════════════════════════════════════════════
+        function showResults() {
+            // إخفاء الأسئلة
+            document.getElementById('questionsCard').style.display = 'none';
+            document.getElementById('skipLink').style.display = 'none';
+
+            // حساب النسبة
+            let totalScore = 0;
+            let maxScore = 0;
+            Object.values(userAnswers).forEach(a => totalScore += a.value);
+            deptData.steps.forEach(s => s.questions.forEach(q => {
+                maxScore += Math.max(...q.options.map(o => o.v));
+            }));
+            const percentage = Math.round((totalScore / maxScore) * 100) || 0;
+
+            // تحديث الشريط
+            document.getElementById('progressFill').style.width = '100%';
+            document.getElementById('progressStep').textContent = 'مكتمل';
+            document.getElementById('progressTotal').textContent = '✅';
+
+            // عرض النتيجة
+            document.getElementById('resultDeptName').textContent = `📊 تقرير تشخيص ${deptData.title}`;
+            if (companyName) {
+                document.getElementById('resultCompany').textContent = `🏢 ${companyName}`;
+            }
+
+            // دائرة النتيجة
+            const circle = document.getElementById('scoreCircle');
+            document.getElementById('scoreNumber').textContent = percentage;
+            if (percentage < 40) {
+                circle.className = 'score-circle low';
+                document.getElementById('scoreMessage').innerHTML = '🔴 إدارتك تعمل بشكل تقليدي — تحتاج لتدخل سريع<br>لأتمتة العمليات وربط الأهداف بالأداء.';
+            } else if (percentage <= 75) {
+                circle.className = 'score-circle mid';
+                document.getElementById('scoreMessage').innerHTML = '🟠 أداء متوسط — أساسياتك جيدة<br>لكن تفتقد للرؤية الاستراتيجية المتكاملة.';
+            } else {
+                circle.className = 'score-circle high';
+                document.getElementById('scoreMessage').innerHTML = '🟢 أداء ممتاز! إدارتك ناضجة<br>وجاهزة للربط الاستراتيجي المباشر.';
+            }
+
+            // نقاط القوة (الإجابات ≥ 8)
+            const strengths = [];
+            const weaknesses = [];
+            Object.entries(userAnswers).forEach(([qId, ans]) => {
+                if (ans.value >= 8) {
+                    strengths.push(ans.text);
+                } else if (ans.value <= 2) {
+                    weaknesses.push(ans.text);
+                }
+            });
+
+            // عرض نقاط القوة
+            const strengthsSection = document.getElementById('strengthsSection');
+            if (strengths.length > 0) {
+                document.getElementById('strengthsList').innerHTML = strengths.map(s =>
+                    `<li class="strength-item"><i class="bi bi-check-circle-fill" style="color:#4ade80;"></i> ${s}</li>`
+                ).join('');
+                strengthsSection.style.display = 'block';
+            } else {
+                strengthsSection.style.display = 'none';
+            }
+
+            // عرض نقاط الضعف
+            const weaknessesSection = document.getElementById('weaknessesSection');
+            if (weaknesses.length > 0) {
+                document.getElementById('weaknessesList').innerHTML = weaknesses.map(w =>
+                    `<li class="weakness-item"><i class="bi bi-x-circle-fill" style="color:#fca5a5;"></i> ${w}</li>`
+                ).join('');
+                weaknessesSection.style.display = 'block';
+            } else {
+                weaknessesSection.style.display = 'none';
+            }
+
+            // KPIs المقترحة
+            document.getElementById('kpiList').innerHTML = deptData.kpis.map((kpi, i) =>
+                `<li class="kpi-item"><span class="num">${i + 1}</span> ${kpi}</li>`
+            ).join('');
+
+            // خطة 30 يوم
+            document.getElementById('planList').innerHTML = deptData.plan.map((p, i) =>
+                `<li><span class="num">${i + 1}</span> الأسبوع ${i + 1}: ${p}</li>`
+            ).join('');
+
+            // عرض
+            document.getElementById('resultContainer').classList.add('show');
+
+            // Counter Animation للنتيجة
+            animateCounter('scoreNumber', percentage, 1200);
+
+            // Confetti للنتائج العالية
+            if (percentage >= 60) {
+                launchConfetti();
+            }
+
+            // ═══ حفظ البيانات ═══
+            const diagnosticResult = {
+                dept: currentDeptKey,
+                deptTitle: deptData.title,
+                company: companyName || '',
+                sector: sectorName || '',
+                score: percentage,
+                answers: userAnswers,
+                strengths: strengths,
+                kpis: deptData.kpis,
+                plan: deptData.plan,
+                timestamp: new Date().toISOString()
+            };
+
+            // حفظ بتنسيق متوافق مع auth/register
+            localStorage.setItem('diagnosticData', JSON.stringify(diagnosticResult));
+            localStorage.setItem('diagnosticPath', currentDeptKey);
+            localStorage.setItem('stratix_category', currentDeptKey);
+            localStorage.setItem('stratix_user_type', 'DEPT_MANAGER');
+            localStorage.setItem('stratix_diagnostic_started', 'true');
+
+            // حذف المسودة
+            localStorage.removeItem(DRAFT_KEY);
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // 7. التوجيه
+        // ═══════════════════════════════════════════════════════
+        function goToRegister() {
+            window.location.href = '/login?tab=signup&from=dept-diagnostic';
+        }
+
+        function skipDiagnostic() {
+            window.location.href = '/login?tab=signup&from=dept-skip';
+        }
+
+        function printReport() {
+            window.print();
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // 8. UI Helpers
+        // ═══════════════════════════════════════════════════════
+        function renderStepDots() {
+            let html = '';
+            for (let i = 0; i < totalSteps; i++) {
+                let cls = '';
+                if (i < currentStep) cls = 'done';
+                else if (i === currentStep) cls = 'active';
+                html += `<span class="step-dot ${cls}">${i < currentStep ? '<i class="bi bi-check2"></i>' : (i + 1)}</span>`;
+            }
+            document.getElementById('stepDots').innerHTML = html;
+        }
+
+        function animateCounter(elementId, target, duration) {
+            const el = document.getElementById(elementId);
+            const start = 0;
+            const startTime = performance.now();
+
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                // easeOutQuart
+                const eased = 1 - Math.pow(1 - progress, 4);
+                el.textContent = Math.round(start + (target - start) * eased);
+                if (progress < 1) requestAnimationFrame(update);
+            }
+            requestAnimationFrame(update);
+        }
+
+        function launchConfetti() {
+            const container = document.createElement('div');
+            container.className = 'confetti-container';
+            document.body.appendChild(container);
+
+            const colors = ['#7c3aed', '#f093fb', '#4ade80', '#f59e0b', '#38bdf8', '#ef4444'];
+            for (let i = 0; i < 50; i++) {
+                const el = document.createElement('div');
+                el.className = 'confetti';
+                el.style.left = Math.random() * 100 + '%';
+                el.style.top = '-10px';
+                el.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                el.style.width = (Math.random() * 6 + 4) + 'px';
+                el.style.height = (Math.random() * 6 + 4) + 'px';
+                el.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                el.style.animationDelay = (Math.random() * 1.5) + 's';
+                container.appendChild(el);
+            }
+            setTimeout(() => container.remove(), 5000);
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // 9. التشغيل
+        // ═══════════════════════════════════════════════════════
+        checkDraft();
+        if (!document.getElementById('resumeModal').classList.contains('show')) {
+            renderStep();
+        }
+    </script>
+</body>
+
+</html>

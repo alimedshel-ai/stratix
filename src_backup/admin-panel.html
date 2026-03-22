@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس - لوحة الإدارة</title>
+    <meta name="description" content="لوحة تحكم المشرف — إدارة المستخدمين والنظام">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0b10;
+            --bg2: #12141f;
+            --card: #171a2a;
+            --text: #e2e8f0;
+            --muted: #7a8599;
+            --border: rgba(255, 255, 255, 0.06);
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --green: #22c55e;
+            --yellow: #facc15;
+            --red: #ef4444;
+            --blue: #38bdf8;
+            --purple: #a78bfa;
+            --orange: #f97316
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+            min-height: 100vh
+        }
+
+        .page-wrapper {
+            display: flex;
+            min-height: 100vh
+        }
+
+        .main-content {
+            flex: 1;
+            min-width: 0;
+            padding: 28px 32px
+        }
+
+        .adm-header {
+            margin-bottom: 24px
+        }
+
+        .adm-title {
+            font-size: 28px;
+            font-weight: 900
+        }
+
+        .adm-title span {
+            background: linear-gradient(135deg, #ef4444, #f97316);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        /* Tabs */
+        .adm-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 4px;
+            overflow-x: auto
+        }
+
+        .adm-tab {
+            padding: 10px 20px;
+            border-radius: 10px 10px 0 0;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .adm-tab:hover {
+            color: var(--text)
+        }
+
+        .adm-tab.active {
+            background: var(--card);
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary)
+        }
+
+        .adm-panel {
+            display: none
+        }
+
+        .adm-panel.active {
+            display: block;
+            animation: fadeIn 0.3s
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0
+            }
+
+            to {
+                opacity: 1
+            }
+        }
+
+        /* Stats row */
+        .adm-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px
+        }
+
+        .adm-stat {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            text-align: center
+        }
+
+        .adm-stat-num {
+            font-size: 24px;
+            font-weight: 900
+        }
+
+        .adm-stat-label {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 2px
+        }
+
+        /* Table */
+        .adm-table-wrap {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden
+        }
+
+        .adm-table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .adm-table-title {
+            font-size: 14px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .adm-table-actions {
+            display: flex;
+            gap: 8px
+        }
+
+        .adm-btn {
+            padding: 7px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px
+        }
+
+        .adm-btn:hover {
+            background: rgba(255, 255, 255, 0.04)
+        }
+
+        .adm-btn.primary {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary)
+        }
+
+        .adm-table {
+            width: 100%;
+            border-collapse: collapse
+        }
+
+        .adm-table th {
+            padding: 10px 16px;
+            text-align: right;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--muted);
+            border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.02)
+        }
+
+        .adm-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px
+        }
+
+        .adm-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02)
+        }
+
+        .adm-user-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .adm-user-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 800;
+            color: white;
+            flex-shrink: 0
+        }
+
+        .adm-user-info {
+            min-width: 0
+        }
+
+        .adm-user-name {
+            font-weight: 700;
+            font-size: 13px
+        }
+
+        .adm-user-email {
+            font-size: 10px;
+            color: var(--muted)
+        }
+
+        .adm-badge {
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700
+        }
+
+        .adm-role-OWNER {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--red)
+        }
+
+        .adm-role-ADMIN {
+            background: rgba(249, 115, 22, 0.1);
+            color: var(--orange)
+        }
+
+        .adm-role-EDITOR {
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary)
+        }
+
+        .adm-role-VIEWER {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--green)
+        }
+
+        .adm-role-DATA_ENTRY {
+            background: rgba(167, 139, 250, 0.1);
+            color: var(--purple)
+        }
+
+        .adm-status {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px
+        }
+
+        .adm-status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%
+        }
+
+        .adm-action-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s
+        }
+
+        .adm-action-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text)
+        }
+
+        /* System info */
+        .adm-sys-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 14px
+        }
+
+        .adm-sys-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px
+        }
+
+        .adm-sys-title {
+            font-size: 13px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .adm-sys-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 12px
+        }
+
+        .adm-sys-item:last-child {
+            border-bottom: none
+        }
+
+        .adm-sys-key {
+            color: var(--muted)
+        }
+
+        .adm-sys-val {
+            font-weight: 700
+        }
+
+        .adm-log {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .adm-log-time {
+            font-family: monospace;
+            font-size: 10px;
+            color: var(--muted);
+            flex-shrink: 0
+        }
+
+        .adm-log-level {
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 700;
+            flex-shrink: 0
+        }
+
+        @media(max-width:768px) {
+            .main-content {
+                padding: 16px
+            }
+
+            .adm-table {
+                display: block;
+                overflow-x: auto
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <div id="sidebar-container"></div>
+        <div class="main-content">
+            <div class="adm-header">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                    <a href="/dashboard.html"
+                        style="display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:12px;text-decoration:none;padding:6px 14px;border-radius:8px;border:1px solid var(--border);transition:all .2s;font-weight:600"
+                        onmouseenter="this.style.background='rgba(255,255,255,0.04)';this.style.color='var(--text)'"
+                        onmouseleave="this.style.background='';this.style.color='var(--muted)'">
+                        <i class="bi bi-arrow-right"></i> الرئيسية
+                    </a>
+                </div>
+                <h1 class="adm-title"><i class="bi bi-shield-lock"></i> لوحة <span>الإدارة</span></h1>
+                <div style="font-size:13px;color:var(--muted);margin-top:4px">إدارة المستخدمين والنظام والأمان —
+                    للمشرفين فقط</div>
+            </div>
+
+            <div class="adm-tabs">
+                <button class="adm-tab active" onclick="switchTab('users')"><i class="bi bi-people"></i>
+                    المستخدمون</button>
+                <button class="adm-tab" onclick="switchTab('system')"><i class="bi bi-gear"></i> النظام</button>
+                <button class="adm-tab" onclick="switchTab('logs')"><i class="bi bi-terminal"></i> السجلات</button>
+                <button class="adm-tab" onclick="switchTab('security')"><i class="bi bi-shield-check"></i>
+                    الأمان</button>
+            </div>
+
+            <!-- Users Panel -->
+            <div class="adm-panel active" id="panel-users">
+                <div class="adm-stats" id="userStats"></div>
+                <div class="adm-table-wrap">
+                    <div class="adm-table-header">
+                        <div class="adm-table-title"><i class="bi bi-people"></i> إدارة المستخدمين</div>
+                        <div class="adm-table-actions">
+                            <button class="adm-btn" onclick="exportUsers()"><i class="bi bi-download"></i>
+                                تصدير</button>
+                            <button class="adm-btn primary" onclick="showInviteModal()"><i class="bi bi-plus"></i> دعوة
+                                مستخدم</button>
+                        </div>
+                    </div>
+                    <table class="adm-table" id="usersTable"></table>
+                </div>
+            </div>
+
+            <!-- System Panel -->
+            <div class="adm-panel" id="panel-system">
+                <div class="adm-sys-grid" id="sysInfo"></div>
+            </div>
+
+            <!-- Logs Panel -->
+            <div class="adm-panel" id="panel-logs">
+                <div class="adm-table-wrap" style="padding:16px">
+                    <div class="adm-table-title" style="margin-bottom:12px"><i class="bi bi-terminal"></i> سجلات النظام
+                        (آخر 24 ساعة)</div>
+                    <div id="sysLogs"></div>
+                </div>
+            </div>
+
+            <!-- Security Panel -->
+            <div class="adm-panel" id="panel-security">
+                <div class="adm-sys-grid" id="securityInfo"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invite User Modal -->
+    <div class="modal fade" id="inviteModal" tabindex="-1">
+        <div class="modal-dialog modal-lg" style="direction:rtl">
+            <div class="modal-content"
+                style="background:var(--card);border:1px solid var(--border);border-radius:20px;color:var(--text)">
+                <div class="modal-header" style="border-bottom:1px solid var(--border);padding:20px 24px">
+                    <h5 class="modal-title" style="font-weight:800;font-size:18px"><i class="bi bi-person-plus-fill"
+                            style="color:var(--primary)"></i> دعوة مستخدم جديد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
+                </div>
+                <div class="modal-body" style="padding:24px">
+
+                    <!-- Quick Role Templates -->
+                    <div style="margin-bottom:18px">
+                        <label
+                            style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;margin-bottom:10px">
+                            <i class="bi bi-lightning-charge-fill" style="color:var(--primary)"></i> اختر نوع الدعوة
+                            <span style="font-size:10px;color:var(--muted);font-weight:400">(اختياري — اضغط لتعبئة
+                                الحقول)</span>
+                        </label>
+                        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px" id="inviteTplGrid">
+                            <div class="inv-tpl" onclick="fillInviteTpl('OWNER')"
+                                style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:10px;cursor:pointer;text-align:center;transition:all .2s"
+                                onmouseenter="this.style.transform='translateY(-2px)'"
+                                onmouseleave="this.style.transform=''">
+                                <i class="bi bi-crown"
+                                    style="font-size:20px;color:#ef4444;display:block;margin-bottom:4px"></i>
+                                <div style="font-size:11px;font-weight:700">مالك</div>
+                                <div style="font-size:9px;color:var(--muted)">صلاحيات كاملة</div>
+                            </div>
+                            <div class="inv-tpl" onclick="fillInviteTpl('ADMIN')"
+                                style="background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.2);border-radius:10px;padding:10px;cursor:pointer;text-align:center;transition:all .2s"
+                                onmouseenter="this.style.transform='translateY(-2px)'"
+                                onmouseleave="this.style.transform=''">
+                                <i class="bi bi-shield-check"
+                                    style="font-size:20px;color:#f97316;display:block;margin-bottom:4px"></i>
+                                <div style="font-size:11px;font-weight:700">مشرف</div>
+                                <div style="font-size:9px;color:var(--muted)">إدارة وتعديل</div>
+                            </div>
+                            <div class="inv-tpl" onclick="fillInviteTpl('EDITOR')"
+                                style="background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);border-radius:10px;padding:10px;cursor:pointer;text-align:center;transition:all .2s"
+                                onmouseenter="this.style.transform='translateY(-2px)'"
+                                onmouseleave="this.style.transform=''">
+                                <i class="bi bi-pencil-square"
+                                    style="font-size:20px;color:#667eea;display:block;margin-bottom:4px"></i>
+                                <div style="font-size:11px;font-weight:700">محرر</div>
+                                <div style="font-size:9px;color:var(--muted)">تعديل المحتوى</div>
+                            </div>
+                            <div class="inv-tpl" onclick="fillInviteTpl('VIEWER')"
+                                style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:10px;cursor:pointer;text-align:center;transition:all .2s"
+                                onmouseenter="this.style.transform='translateY(-2px)'"
+                                onmouseleave="this.style.transform=''">
+                                <i class="bi bi-eye"
+                                    style="font-size:20px;color:#22c55e;display:block;margin-bottom:4px"></i>
+                                <div style="font-size:11px;font-weight:700">مشاهد</div>
+                                <div style="font-size:9px;color:var(--muted)">عرض فقط</div>
+                            </div>
+                            <div class="inv-tpl" onclick="fillInviteTpl('DATA_ENTRY')"
+                                style="background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.2);border-radius:10px;padding:10px;cursor:pointer;text-align:center;transition:all .2s"
+                                onmouseenter="this.style.transform='translateY(-2px)'"
+                                onmouseleave="this.style.transform=''">
+                                <i class="bi bi-input-cursor-text"
+                                    style="font-size:20px;color:#a78bfa;display:block;margin-bottom:4px"></i>
+                                <div style="font-size:11px;font-weight:700">مُدخل بيانات</div>
+                                <div style="font-size:9px;color:var(--muted)">إدخال KPIs</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Name -->
+                    <div class="mb-3">
+                        <label
+                            style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:6px">
+                            <i class="bi bi-person" style="color:var(--primary)"></i> الاسم الكامل
+                            <i class="bi bi-info-circle" style="font-size:11px;color:var(--muted);cursor:help"
+                                title="الاسم الذي سيظهر في النظام"></i>
+                        </label>
+                        <input type="text" id="invName" class="form-control" placeholder="مثال: سارة الحربي"
+                            oninput="updateInvitePreview()"
+                            style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;font-family:inherit">
+                    </div>
+
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label
+                            style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:6px">
+                            <i class="bi bi-envelope" style="color:var(--primary)"></i> البريد الإلكتروني
+                            <i class="bi bi-info-circle" style="font-size:11px;color:var(--muted);cursor:help"
+                                title="سيتم إرسال رابط الدعوة لهذا البريد"></i>
+                        </label>
+                        <input type="email" id="invEmail" class="form-control" placeholder="user@company.sa"
+                            oninput="updateInvitePreview()"
+                            style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;font-family:inherit;direction:ltr;text-align:right">
+                        <div style="font-size:10px;color:var(--muted);margin-top:4px"><i class="bi bi-shield-lock"></i>
+                            سيتم إرسال رابط آمن لتعيين كلمة المرور</div>
+                    </div>
+
+                    <!-- Role -->
+                    <div class="mb-3">
+                        <label
+                            style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:6px">
+                            <i class="bi bi-shield" style="color:var(--primary)"></i> الدور والصلاحيات
+                            <i class="bi bi-info-circle" style="font-size:11px;color:var(--muted);cursor:help"
+                                title="يحدد مستوى الوصول والصلاحيات"></i>
+                        </label>
+                        <select id="invRole" class="form-select" onchange="updateRoleHint();updateInvitePreview()"
+                            style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;font-family:inherit">
+                            <option value="OWNER">👑 مالك — صلاحيات كاملة ومطلقة</option>
+                            <option value="ADMIN">🛡️ مشرف — إدارة المستخدمين والإعدادات</option>
+                            <option value="EDITOR" selected>✏️ محرر — تعديل المحتوى والبيانات</option>
+                            <option value="VIEWER">👁️ مشاهد — عرض فقط بدون تعديل</option>
+                            <option value="DATA_ENTRY">📝 مُدخل بيانات — إدخال قيم المؤشرات</option>
+                        </select>
+                        <div id="roleHintBox"
+                            style="font-size:10px;margin-top:6px;padding:8px 12px;border-radius:8px;background:rgba(102,126,234,0.06);border:1px dashed rgba(102,126,234,0.2);color:var(--muted);display:flex;align-items:flex-start;gap:6px">
+                            <i class="bi bi-lightbulb" style="color:var(--primary);font-size:12px;margin-top:1px"></i>
+                            <span>المحرر يمكنه تعديل الأهداف والمبادرات والمؤشرات لكن لا يمكنه إدارة المستخدمين</span>
+                        </div>
+                    </div>
+
+                    <!-- Welcome Message -->
+                    <div class="mb-3">
+                        <label
+                            style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:6px">
+                            <i class="bi bi-chat-heart" style="color:var(--primary)"></i> رسالة ترحيبية
+                            <span style="font-size:10px;font-weight:400;color:var(--muted)">(اختياري)</span>
+                        </label>
+                        <textarea id="invMessage" class="form-control" rows="2"
+                            placeholder="مرحباً بك في فريق ستارتكس! نحن متحمسون لانضمامك..."
+                            style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;font-family:inherit"></textarea>
+                    </div>
+
+                    <!-- Live Preview -->
+                    <div
+                        style="background:rgba(102,126,234,0.04);border:1px solid rgba(102,126,234,0.12);border-radius:14px;padding:16px;margin-top:8px">
+                        <div
+                            style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+                            <i class="bi bi-eye-fill"></i> معاينة بطاقة المستخدم
+                        </div>
+                        <div id="invPreview" style="font-size:12px;color:var(--muted);line-height:1.8">
+                            <div style="text-align:center;padding:14px;opacity:0.5"><i class="bi bi-person-plus"
+                                    style="font-size:22px;display:block;margin-bottom:6px"></i>أدخل بيانات المستخدم
+                                لرؤية المعاينة</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer"
+                    style="border-top:1px solid var(--border);padding:16px 24px;display:flex;gap:8px">
+                    <button type="button"
+                        style="background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--muted);padding:10px 24px;border-radius:10px;font-family:inherit;cursor:pointer"
+                        data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" onclick="sendInvite()"
+                        style="background:linear-gradient(135deg,var(--primary),var(--secondary));border:none;color:white;padding:10px 24px;border-radius:10px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px"><i
+                            class="bi bi-send"></i> إرسال الدعوة</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/sidebar.js"></script>
+    <script src="/assets/js/ai-advisor.js"></script>
+    <script src="/assets/js/achievements.js"></script>
+    <script src="/assets/js/notifications.js"></script>
+    <script>
+        const users = [
+            { name: 'علي المالكي', email: 'ali@stratix.sa', role: 'OWNER', status: 'online', lastLogin: 'منذ 5 دقائق', color: '#ef4444', joined: '2025-01-01', actions: 156 },
+            { name: 'سارة الحربي', email: 'sara@stratix.sa', role: 'ADMIN', status: 'online', lastLogin: 'منذ 12 دقيقة', color: '#f97316', joined: '2025-02-15', actions: 134 },
+            { name: 'أحمد العتيبي', email: 'ahmed@stratix.sa', role: 'EDITOR', status: 'online', lastLogin: 'منذ 30 دقيقة', color: '#667eea', joined: '2025-03-01', actions: 89 },
+            { name: 'محمد القحطاني', email: 'mohammed@stratix.sa', role: 'EDITOR', status: 'offline', lastLogin: 'أمس 18:30', color: '#22c55e', joined: '2025-03-10', actions: 67 },
+            { name: 'نورة السبيعي', email: 'noura@stratix.sa', role: 'VIEWER', status: 'offline', lastLogin: 'أمس 14:00', color: '#8b5cf6', joined: '2025-04-01', actions: 34 },
+            { name: 'خالد الشمري', email: 'khaled@stratix.sa', role: 'DATA_ENTRY', status: 'online', lastLogin: 'منذ ساعة', color: '#a78bfa', joined: '2025-05-01', actions: 210 },
+            { name: 'فاطمة الدوسري', email: 'fatima@stratix.sa', role: 'VIEWER', status: 'offline', lastLogin: 'منذ 3 أيام', color: '#ec4899', joined: '2025-06-15', actions: 12 },
+            { name: 'عبدالله الغامدي', email: 'abdullah@stratix.sa', role: 'EDITOR', status: 'offline', lastLogin: 'منذ أسبوع', color: '#14b8a6', joined: '2025-07-01', actions: 45 },
+        ];
+
+        const roleLabels = { OWNER: 'مالك', ADMIN: 'مشرف', EDITOR: 'محرر', VIEWER: 'مشاهد', DATA_ENTRY: 'مُدخل' };
+
+        function switchTab(tab) {
+            document.querySelectorAll('.adm-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.adm-panel').forEach(p => p.classList.remove('active'));
+            document.querySelector(`.adm-tab[onclick="switchTab('${tab}')"]`).classList.add('active');
+            document.getElementById('panel-' + tab).classList.add('active');
+        }
+
+        // Users
+        function renderUsers() {
+            const online = users.filter(u => u.status === 'online').length;
+            document.getElementById('userStats').innerHTML = `
+        <div class="adm-stat"><div class="adm-stat-num">${users.length}</div><div class="adm-stat-label">إجمالي المستخدمين</div></div>
+        <div class="adm-stat"><div class="adm-stat-num" style="color:var(--green)">${online}</div><div class="adm-stat-label">متصلون الآن</div></div>
+        <div class="adm-stat"><div class="adm-stat-num" style="color:var(--primary)">${users.reduce((s, u) => s + u.actions, 0)}</div><div class="adm-stat-label">إجمالي الإجراءات</div></div>
+        <div class="adm-stat"><div class="adm-stat-num" style="color:var(--orange)">${users.filter(u => u.role === 'ADMIN' || u.role === 'OWNER').length}</div><div class="adm-stat-label">مشرفون</div></div>
+      `;
+
+            document.getElementById('usersTable').innerHTML = `
+        <thead><tr><th>المستخدم</th><th>الدور</th><th>الحالة</th><th>آخر دخول</th><th>الإجراءات</th><th>تحكم</th></tr></thead>
+        <tbody>${users.map(u => `
+          <tr>
+            <td><div class="adm-user-cell"><div class="adm-user-avatar" style="background:${u.color}">${u.name.charAt(0)}</div><div class="adm-user-info"><div class="adm-user-name">${u.name}</div><div class="adm-user-email">${u.email}</div></div></div></td>
+            <td><span class="adm-badge adm-role-${u.role}">${roleLabels[u.role]}</span></td>
+            <td><div class="adm-status"><div class="adm-status-dot" style="background:${u.status === 'online' ? 'var(--green)' : 'var(--muted)'}"></div>${u.status === 'online' ? 'متصل' : 'غير متصل'}</div></td>
+            <td style="font-size:12px;color:var(--muted)">${u.lastLogin}</td>
+            <td style="font-weight:700">${u.actions}</td>
+            <td><button class="adm-action-btn"><i class="bi bi-three-dots"></i></button></td>
+          </tr>
+        `).join('')}</tbody>
+      `;
+        }
+
+        // System
+        function renderSystem() {
+            document.getElementById('sysInfo').innerHTML = `
+        <div class="adm-sys-card">
+          <div class="adm-sys-title"><i class="bi bi-cpu" style="color:var(--primary)"></i> الخادم</div>
+          <div class="adm-sys-item"><span class="adm-sys-key">الإصدار</span><span class="adm-sys-val">Stratix v2.0.0</span></div>
+          <div class="adm-sys-item"><span class="adm-sys-key">Node.js</span><span class="adm-sys-val">v25.6.1</span></div>
+          <div class="adm-sys-item"><span class="adm-sys-key">قاعدة البيانات</span><span class="adm-sys-val">SQLite (Prisma)</span></div>
+          <div class="adm-sys-item"><span class="adm-sys-key">Uptime</span><span class="adm-sys-val" style="color:var(--green)">14 يوم 6 ساعات</span></div>
+          <div class="adm-sys-item"><span class="adm-sys-key">المنطقة الزمنية</span><span class="adm-sys-val">Asia/Riyadh (UTC+3)</span></div>
+        </div>
+        <div class="adm-sys-card">
+          <div class="adm-sys-title"><i class="bi bi-hdd" style="color:var(--green)"></i> التخزين</div>
+          <div class="adm-sys-item"><span class="adm-sys-key">حجم قاعدة البيانات</span><span class="adm-sys-val">24.5 MB</span></div>
+          <div class="adm-sys-item"><span class="adm-sys-key">الصفحات</span><span class="adm-sys-val">60 صفحة</span></div>
+          <div class="adm-sys-item"><span class="adm-sys-key">ملفات JavaScript</span><span class="adm-sys-val">8 ملفات</span></div>
+          <div class="adm-sys-item"><span class="adm-sys-key">Routes</span><span class="adm-sys-val">36 ملف</span></div>
+          <div class="adm-sys-item"><span class="adm-sys-key">Schema</span><span class="adm-sys-val">850 سطر</span></div>
+        </div>
+        <div class="adm-sys-card">
+          <div class="adm-sys-title"><i class="bi bi-speedometer2" style="color:var(--orange)"></i> الأداء</div>
+          <div class="adm-sys-item"><span class="adm-sys-key">متوسط وقت الاستجابة</span><span class="adm-sys-val" style="color:var(--green)">45ms</span></div>
+          <div class="adm-sys-item"><span class="adm-sys-key">الطلبات/دقيقة</span><span class="adm-sys-val">125</span></div>
+          <div class="adm-sys-item"><span class="adm-sys-key">ذاكرة مستخدمة</span><span class="adm-sys-val">128 MB</span></div>
+          <div class="adm-sys-item"><span class="adm-sys-key">CPU</span><span class="adm-sys-val" style="color:var(--green)">12%</span></div>
+          <div class="adm-sys-item"><span class="adm-sys-key">Errors/hr</span><span class="adm-sys-val" style="color:var(--green)">0</span></div>
+        </div>
+        <div class="adm-sys-card">
+          <div class="adm-sys-title"><i class="bi bi-plug" style="color:var(--purple)"></i> التكاملات</div>
+          <div class="adm-sys-item"><span class="adm-sys-key">Webhooks نشطة</span><span class="adm-sys-val">3</span></div>
+          <div class="adm-sys-item"><span class="adm-sys-key">API Keys</span><span class="adm-sys-val">2</span></div>
+          <div class="adm-sys-item"><span class="adm-sys-key">PWA</span><span class="adm-sys-val" style="color:var(--green)">مفعّل</span></div>
+          <div class="adm-sys-item"><span class="adm-sys-key">Service Worker</span><span class="adm-sys-val" style="color:var(--green)">نشط</span></div>
+        </div>
+      `;
+        }
+
+        // Logs
+        function renderLogs() {
+            const logs = [
+                { time: '12:45:22', level: 'INFO', color: 'var(--blue)', msg: '[API] POST /api/kpi-entries — 201 Created (user: khaled)' },
+                { time: '12:44:15', level: 'INFO', color: 'var(--blue)', msg: '[API] GET /api/objectives — 200 OK (user: ahmed)' },
+                { time: '12:40:33', level: 'WARN', color: 'var(--yellow)', msg: '[Webhook] Slack delivery delayed — retry in 5s' },
+                { time: '12:38:10', level: 'INFO', color: 'var(--blue)', msg: '[Auth] Login successful — user: sara@stratix.sa' },
+                { time: '12:30:00', level: 'INFO', color: 'var(--green)', msg: '[System] Health check passed — all services operational' },
+                { time: '12:15:45', level: 'INFO', color: 'var(--blue)', msg: '[API] POST /api/comments — 201 Created (user: sara)' },
+                { time: '11:55:20', level: 'WARN', color: 'var(--yellow)', msg: '[Rate Limit] IP 192.168.1.50 — 95/100 requests per minute' },
+                { time: '11:30:00', level: 'INFO', color: 'var(--green)', msg: '[Backup] Daily backup completed — 24.5 MB' },
+                { time: '10:00:00', level: 'INFO', color: 'var(--green)', msg: '[Server] Application started on port 3000' },
+                { time: '09:58:30', level: 'INFO', color: 'var(--blue)', msg: '[Prisma] Database connection established' },
+            ];
+            document.getElementById('sysLogs').innerHTML = logs.map(l => `
+        <div class="adm-log">
+          <span class="adm-log-time">${l.time}</span>
+          <span class="adm-log-level" style="background:${l.color}15;color:${l.color}">${l.level}</span>
+          <span style="font-family:monospace;font-size:12px">${l.msg}</span>
+        </div>
+      `).join('');
+        }
+
+        // Security
+        function renderSecurity() {
+            document.getElementById('securityInfo').innerHTML = `
+        <div class="adm-sys-card">
+          <div class="adm-sys-title"><i class="bi bi-shield-check" style="color:var(--green)"></i> حالة الأمان</div>
+          <div class="adm-sys-item"><span class="adm-sys-key">CORS</span><span class="adm-sys-val" style="color:var(--green)">✅ مفعّل</span></div>
+          <div class="adm-sys-item"><span class="adm-sys-key">Helmet</span><span class="adm-sys-val" style="color:var(--green)">✅ مفعّل</span></div>
+          <div class="adm-sys-item"><span class="adm-sys-key">Rate Limiting</span><span class="adm-sys-val" style="color:var(--green)">✅ 100 req/min</span></div>
+          <div class="adm-sys-item"><span class="adm-sys-key">JWT</span><span class="adm-sys-val" style="color:var(--green)">✅ HS256</span></div>
+          <div class="adm-sys-item"><span class="adm-sys-key">كلمات المرور</span><span class="adm-sys-val" style="color:var(--green)">✅ bcrypt (12 rounds)</span></div>
+        </div>
+        <div class="adm-sys-card">
+          <div class="adm-sys-title"><i class="bi bi-key" style="color:var(--yellow)"></i> الجلسات النشطة</div>
+          <div class="adm-sys-item"><span class="adm-sys-key">جلسات نشطة</span><span class="adm-sys-val">4</span></div>
+          <div class="adm-sys-item"><span class="adm-sys-key">محاولات فاشلة (24h)</span><span class="adm-sys-val" style="color:var(--green)">0</span></div>
+          <div class="adm-sys-item"><span class="adm-sys-key">آخر تغيير كلمة مرور</span><span class="adm-sys-val">منذ 15 يوم</span></div>
+          <div class="adm-sys-item"><span class="adm-sys-key">2FA</span><span class="adm-sys-val" style="color:var(--yellow)">⚠️ غير مفعّل</span></div>
+        </div>
+        <div class="adm-sys-card">
+          <div class="adm-sys-title"><i class="bi bi-clock-history" style="color:var(--primary)"></i> النسخ الاحتياطي</div>
+          <div class="adm-sys-item"><span class="adm-sys-key">آخر نسخة</span><span class="adm-sys-val" style="color:var(--green)">اليوم 11:30</span></div>
+          <div class="adm-sys-item"><span class="adm-sys-key">التكرار</span><span class="adm-sys-val">يومياً</span></div>
+          <div class="adm-sys-item"><span class="adm-sys-key">الحجم</span><span class="adm-sys-val">24.5 MB</span></div>
+          <div class="adm-sys-item"><span class="adm-sys-key">الاحتفاظ</span><span class="adm-sys-val">30 يوم</span></div>
+        </div>
+      `;
+        }
+
+        renderUsers(); renderSystem(); renderLogs(); renderSecurity();
+
+        function exportUsers() {
+            const statusLabels = { online: 'متصل', offline: 'غير متصل' };
+            const csvHeaders = ['الاسم', 'البريد الإلكتروني', 'الدور', 'الحالة', 'آخر دخول', 'تاريخ الانضمام', 'الإجراءات'];
+            const csvRows = users.map(u => [
+                u.name,
+                u.email,
+                roleLabels[u.role] || u.role,
+                statusLabels[u.status] || u.status,
+                u.lastLogin,
+                u.joined,
+                u.actions
+            ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+
+            const bom = '\uFEFF';
+            const csv = bom + csvHeaders.join(',') + '\n' + csvRows.join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const date = new Date().toISOString().split('T')[0];
+            a.href = url;
+            a.download = `users_${date}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            // Success toast
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--primary),var(--secondary));color:white;padding:12px 28px;border-radius:12px;font-family:Tajawal;font-size:14px;font-weight:700;z-index:9999;display:flex;align-items:center;gap:8px;box-shadow:0 8px 30px rgba(102,126,234,0.4);animation:fadeIn .3s';
+            toast.innerHTML = `<i class="bi bi-check-circle-fill"></i> تم تصدير ${users.length} مستخدم بنجاح`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // ===== Invite Modal =====
+        let inviteModal;
+        document.addEventListener('DOMContentLoaded', () => {
+            inviteModal = new bootstrap.Modal(document.getElementById('inviteModal'));
+        });
+
+        const roleColors = { OWNER: '#ef4444', ADMIN: '#f97316', EDITOR: '#667eea', VIEWER: '#22c55e', DATA_ENTRY: '#a78bfa' };
+        const roleIcons = { OWNER: 'bi-crown', ADMIN: 'bi-shield-check', EDITOR: 'bi-pencil-square', VIEWER: 'bi-eye', DATA_ENTRY: 'bi-input-cursor-text' };
+        const roleHints = {
+            OWNER: { color: '#ef4444', text: 'المالك لديه صلاحيات مطلقة — يمكنه حذف الكيان وإدارة جميع المستخدمين وتغيير أي إعداد' },
+            ADMIN: { color: '#f97316', text: 'المشرف يمكنه إدارة المستخدمين والإعدادات والتقارير، لكن لا يمكنه حذف الكيان' },
+            EDITOR: { color: '#667eea', text: 'المحرر يمكنه تعديل الأهداف والمبادرات والمؤشرات لكن لا يمكنه إدارة المستخدمين' },
+            VIEWER: { color: '#22c55e', text: 'المشاهد يمكنه فقط عرض البيانات والتقارير بدون أي صلاحية تعديل' },
+            DATA_ENTRY: { color: '#a78bfa', text: 'مُدخل البيانات يمكنه فقط إدخال قيم المؤشرات الفعلية مع عرض الأهداف والمؤشرات' }
+        };
+
+        function showInviteModal() {
+            document.getElementById('invName').value = '';
+            document.getElementById('invEmail').value = '';
+            document.getElementById('invRole').value = 'EDITOR';
+            document.getElementById('invMessage').value = '';
+            document.querySelectorAll('#inviteTplGrid .inv-tpl').forEach(el => el.style.boxShadow = 'none');
+            updateRoleHint();
+            updateInvitePreview();
+            if (!inviteModal) inviteModal = new bootstrap.Modal(document.getElementById('inviteModal'));
+            inviteModal.show();
+        }
+
+        function fillInviteTpl(role) {
+            document.getElementById('invRole').value = role;
+            const tplNames = { OWNER: 'عبدالرحمن المالكي', ADMIN: 'سارة الحربي', EDITOR: 'أحمد العتيبي', VIEWER: 'نورة السبيعي', DATA_ENTRY: 'خالد الشمري' };
+            const tplEmails = { OWNER: 'owner@company.sa', ADMIN: 'admin@company.sa', EDITOR: 'editor@company.sa', VIEWER: 'viewer@company.sa', DATA_ENTRY: 'data@company.sa' };
+            const tplMsgs = {
+                OWNER: 'مرحباً بك كمالك للمنظمة! لديك صلاحيات كاملة للوصول لجميع الميزات.',
+                ADMIN: 'مرحباً بك كمشرف! ستساعدنا في إدارة الفريق والإعدادات.',
+                EDITOR: 'أهلاً بك في فريق التحرير! يمكنك الآن تعديل الأهداف والمبادرات.',
+                VIEWER: 'مرحباً! يمكنك الآن متابعة التقدم الاستراتيجي والاطلاع على التقارير.',
+                DATA_ENTRY: 'مرحباً! مهمتك الأساسية هي إدخال القيم الفعلية لمؤشرات الأداء.'
+            };
+            document.getElementById('invName').value = tplNames[role] || '';
+            document.getElementById('invEmail').value = tplEmails[role] || '';
+            document.getElementById('invMessage').value = tplMsgs[role] || '';
+            // Highlight selected
+            const idx = ['OWNER', 'ADMIN', 'EDITOR', 'VIEWER', 'DATA_ENTRY'].indexOf(role);
+            document.querySelectorAll('#inviteTplGrid .inv-tpl').forEach((el, i) => {
+                el.style.boxShadow = i === idx ? `0 0 0 2px ${roleColors[role]}, 0 4px 12px ${roleColors[role]}40` : 'none';
+            });
+            updateRoleHint();
+            updateInvitePreview();
+        }
+
+        function updateRoleHint() {
+            const role = document.getElementById('invRole').value;
+            const hint = roleHints[role] || roleHints.EDITOR;
+            const box = document.getElementById('roleHintBox');
+            box.style.background = `${hint.color}10`;
+            box.style.borderColor = `${hint.color}33`;
+            box.querySelector('i').style.color = hint.color;
+            box.querySelector('span').textContent = hint.text;
+        }
+
+        function updateInvitePreview() {
+            const name = document.getElementById('invName').value.trim();
+            const email = document.getElementById('invEmail').value.trim();
+            const role = document.getElementById('invRole').value;
+            const preview = document.getElementById('invPreview');
+
+            if (!name && !email) {
+                preview.innerHTML = '<div style="text-align:center;padding:14px;opacity:0.5"><i class="bi bi-person-plus" style="font-size:22px;display:block;margin-bottom:6px"></i>أدخل بيانات المستخدم لرؤية المعاينة</div>';
+                return;
+            }
+
+            const color = roleColors[role] || '#667eea';
+            const icon = roleIcons[role] || 'bi-person';
+            const label = roleLabels[role] || role;
+            const initial = (name || 'م').charAt(0);
+            preview.innerHTML = `
+                <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;align-items:center;gap:14px">
+                    <div style="width:44px;height:44px;border-radius:12px;background:${color};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:white;flex-shrink:0">${initial}</div>
+                    <div style="flex:1;min-width:0">
+                        <div style="font-weight:700;font-size:14px;color:var(--text)">${name || 'اسم المستخدم'}</div>
+                        <div style="font-size:11px;color:var(--muted);direction:ltr;text-align:right">${email || 'email@example.com'}</div>
+                    </div>
+                    <span style="padding:4px 12px;border-radius:8px;font-size:11px;font-weight:700;background:${color}18;color:${color};display:flex;align-items:center;gap:4px"><i class="bi ${icon}" style="font-size:12px"></i> ${label}</span>
+                    <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--green)"><div style="width:6px;height:6px;border-radius:50%;background:var(--green)"></div>دعوة معلقة</div>
+                </div>
+            `;
+        }
+
+        function sendInvite() {
+            const name = document.getElementById('invName').value.trim();
+            const email = document.getElementById('invEmail').value.trim();
+            const role = document.getElementById('invRole').value;
+
+            if (!name) return alert('الرجاء إدخال اسم المستخدم');
+            if (!email) return alert('الرجاء إدخال البريد الإلكتروني');
+            if (!email.includes('@')) return alert('البريد الإلكتروني غير صحيح');
+
+            // Add to demo users list
+            users.push({
+                name, email, role,
+                status: 'offline',
+                lastLogin: 'لم يسجل بعد',
+                color: roleColors[role] || '#667eea',
+                joined: new Date().toISOString().split('T')[0],
+                actions: 0
+            });
+            renderUsers();
+            inviteModal.hide();
+
+            // Show success notification
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#22c55e,#16a34a);color:white;padding:12px 28px;border-radius:12px;font-family:Tajawal;font-size:14px;font-weight:700;z-index:9999;display:flex;align-items:center;gap:8px;box-shadow:0 8px 30px rgba(34,197,94,0.4);animation:fadeIn .3s';
+            toast.innerHTML = `<i class="bi bi-check-circle-fill"></i> تم إرسال الدعوة بنجاح إلى ${name}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3500);
+        }
+    </script>
+</body>
+
+</html>

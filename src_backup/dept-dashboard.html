@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس — لوحة مدير الإدارة</title>
+    <meta name="description" content="لوحة تحكم مدير الإدارة لمتابعة مؤشرات القسم والمهام">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="/assets/js/sidebar.js" defer></script>
+    <style>
+        :root {
+            --bg: #0f1219;
+            --bg-2: #161b26;
+            --bg-card: #1a1f2e;
+            --bg-card-hover: #1f2538;
+            --text: #e2e8f0;
+            --text-muted: #8b8ba7;
+            --border: rgba(255, 255, 255, 0.06);
+            --accent: #f59e0b;
+            --accent-glow: rgba(245, 158, 11, 0.1);
+            --green: #22c55e;
+            --yellow: #f59e0b;
+            --red: #ef4444;
+            --blue: #3b82f6;
+            --purple: #a78bfa;
+            --sidebar-w: 280px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .main-content {
+            margin-right: var(--sidebar-w);
+            padding: 28px 32px;
+            min-height: 100vh;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-right: 0;
+                padding: 16px;
+            }
+        }
+
+        /* Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .page-header h1 {
+            font-size: 26px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-header h1 span {
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text);
+            font-family: 'Tajawal', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent);
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 0%, var(--card-glow, transparent), transparent 70%);
+            pointer-events: none;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Grid Layout */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* KPI List */
+        .kpi-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            margin-bottom: 8px;
+            transition: background 0.2s;
+        }
+
+        .kpi-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .kpi-info {
+            flex: 1;
+        }
+
+        .kpi-name {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .kpi-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .kpi-progress {
+            width: 80px;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .kpi-progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1s ease;
+        }
+
+        .kpi-value {
+            font-size: 14px;
+            font-weight: 700;
+            min-width: 48px;
+            text-align: center;
+        }
+
+        /* Tasks */
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+
+        .task-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .task-status {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .task-info {
+            flex: 1;
+        }
+
+        .task-name {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .task-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .task-badge {
+            padding: 3px 10px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* Alerts Section */
+        .alert-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border-right: 3px solid var(--alert-color, var(--yellow));
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .alert-icon {
+            flex-shrink: 0;
+            font-size: 18px;
+        }
+
+        .alert-title {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .alert-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .alert-time {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .quick-action {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .quick-action:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+            background: var(--bg-card-hover);
+        }
+
+        .quick-action i {
+            font-size: 22px;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .quick-action span {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Full-width card */
+        .full-card {
+            grid-column: 1 / -1;
+        }
+
+        /* Health indicator */
+        .health-meter {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .health-score {
+            font-size: 36px;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .health-bar {
+            flex: 1;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .health-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1.2s ease;
+        }
+
+        .health-label {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .health-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Loading */
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 24px;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease both;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .empty-text {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        /* === Welcome Board (New User) === */
+        .welcome-board {
+            animation: fadeIn 0.6s ease both;
+        }
+
+        .welcome-hero {
+            text-align: center;
+            padding: 40px 24px 32px;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(239, 68, 68, 0.06));
+            border: 1px solid rgba(245, 158, 11, 0.15);
+            border-radius: 20px;
+            margin-bottom: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-hero::before {
+            content: '';
+            position: absolute;
+            top: -60px;
+            right: -60px;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.12), transparent 70%);
+            pointer-events: none;
+        }
+
+        .welcome-emoji {
+            font-size: 56px;
+            margin-bottom: 12px;
+            animation: bounceIn 0.8s ease;
+        }
+
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .welcome-title {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .welcome-subtitle {
+            color: var(--text-muted);
+            font-size: 15px;
+            line-height: 1.8;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .roadmap-title {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .roadmap-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .roadmap-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 28px 24px;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text);
+            display: block;
+            overflow: hidden;
+        }
+
+        .roadmap-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--card-accent, var(--accent));
+            border-radius: 0 4px 4px 0;
+        }
+
+        .roadmap-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--card-accent, var(--accent));
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .roadmap-step {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--card-accent, var(--accent));
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .roadmap-icon {
+            font-size: 36px;
+            margin-bottom: 14px;
+        }
+
+        .roadmap-card-title {
+            font-size: 17px;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .roadmap-card-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 14px;
+        }
+
+        .roadmap-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 18px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.06);
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--card-accent, var(--accent));
+            transition: all 0.2s;
+        }
+
+        .roadmap-card:hover .roadmap-cta {
+            background: var(--card-accent, var(--accent));
+            color: #fff;
+        }
+
+        .roadmap-card.done {
+            opacity: 0.6;
+        }
+
+        .roadmap-card.done .roadmap-step {
+            background: var(--green);
+        }
+
+        .roadmap-card.done .roadmap-step::after {
+            content: '✓';
+        }
+
+        .tip-banner {
+            background: var(--bg-card);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 14px;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .tip-icon {
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .tip-text {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+
+        .tip-text strong {
+            color: var(--text);
+        }
+
+        .stagger-1 {
+            animation-delay: 0.1s;
+        }
+
+        .stagger-2 {
+            animation-delay: 0.2s;
+        }
+
+        .stagger-3 {
+            animation-delay: 0.3s;
+        }
+
+        .stagger-4 {
+            animation-delay: 0.4s;
+        }
+    </style>
+</head>
+
+<body>
+
+    <aside class="sidebar-placeholder" id="sidebarContainer"></aside>
+
+    <main class="main-content" id="mainContent">
+        <div class="loading-state" id="loadingState">
+            <div class="spinner"></div>
+            <p>جاري تحميل بيانات إدارتك...</p>
+        </div>
+
+        <!-- === Welcome Board (New Users) === -->
+        <div id="welcomeBoard" style="display:none" class="welcome-board">
+            <div class="welcome-hero">
+                <div class="welcome-emoji">🎉</div>
+                <div class="welcome-title" id="wbTitle">أهلاً بك في لوحة إدارتك!</div>
+                <div class="welcome-subtitle" id="wbSubtitle">
+                    التشخيص كشف لك نقاط القوة والضعف في إدارتك 👇<br>
+                    الخطوات التالية تساعدك تحوّل هذا التشخيص إلى خطة عمل واضحة
+                </div>
+            </div>
+
+            <div class="roadmap-title">🗺️ رحلتك الاستراتيجية — 5 خطوات</div>
+
+            <div class="roadmap-grid" id="roadmapGrid">
+                <a class="roadmap-card fade-in stagger-1" id="step1Card" href="/internal-env.html"
+                    style="--card-accent:#3b82f6">
+                    <div class="roadmap-step">1</div>
+                    <div class="roadmap-icon">🏥</div>
+                    <div class="roadmap-card-title">حلّل بيئة إدارتك الداخلية</div>
+                    <div class="roadmap-card-desc">
+                        ابدأ بفهم الوضع الداخلي — الهيكل، العمليات، الموارد، والثقافة.<br>
+                        هذا الأساس لأي تحليل استراتيجي صحيح
+                    </div>
+                    <div class="roadmap-cta"><i class="bi bi-heart-pulse"></i> ابدأ التحليل</div>
+                </a>
+
+                <!-- الخطوة 2: التحليل العميق -->
+                <a class="roadmap-card fade-in stagger-2" id="step2Card" href="/dept-deep.html?single=1"
+                    style="--card-accent:#8b5cf6">
+                    <div class="roadmap-step">2</div>
+                    <div class="roadmap-icon">🔬</div>
+                    <div class="roadmap-card-title">تحليل أعمق لإدارتك</div>
+                    <div class="roadmap-card-desc">
+                        6 محاور تفصيلية — تشخيص متقدم + اكتشاف نقاط القوة والضعف تلقائياً.<br>
+                        يبني على نتائج البيئة الداخلية ويعطيك صورة أدق
+                    </div>
+                    <div class="roadmap-cta"><i class="bi bi-search-heart"></i> ابدأ التحليل العميق</div>
+                </a>
+
+                <!-- الخطوة 3: SWOT -->
+                <a class="roadmap-card fade-in stagger-3" id="step3Card" href="/swot.html"
+                    style="--card-accent:#f59e0b">
+                    <div class="roadmap-step">3</div>
+                    <div class="roadmap-icon">🔍</div>
+                    <div class="roadmap-card-title">تحليل SWOT</div>
+                    <div class="roadmap-card-desc">
+                        بناءً على فهمك للبيئة والتحليل العميق — حدد نقاط القوة والضعف والفرص والتهديدات.<br>
+                        التشخيص اللي سويته يساعدك تعبّيها بسهولة
+                    </div>
+                    <div class="roadmap-cta"><i class="bi bi-grid-1x2-fill"></i> ابدأ SWOT</div>
+                </a>
+
+                <!-- الخطوة 4: التوجهات الاستراتيجية -->
+                <a class="roadmap-card fade-in stagger-4" id="step4Card" href="/directions.html"
+                    style="--card-accent:#a78bfa">
+                    <div class="roadmap-step">4</div>
+                    <div class="roadmap-icon">🎯</div>
+                    <div class="roadmap-card-title">حدد أهدافك الاستراتيجية</div>
+                    <div class="roadmap-card-desc">
+                        بناءً على التحليل — حدد التوجهات اللي تبي إدارتك تمشي عليها.<br>
+                        مثال: تحسين الكفاءة التشغيلية، رفع جودة الخدمة
+                    </div>
+                    <div class="roadmap-cta"><i class="bi bi-compass"></i> حدد التوجهات</div>
+                </a>
+
+                <!-- الخطوة 5: مؤشرات الأداء + المبادرات -->
+                <a class="roadmap-card fade-in stagger-4" id="step5Card" href="/kpis.html"
+                    style="--card-accent:#22c55e">
+                    <div class="roadmap-step">5</div>
+                    <div class="roadmap-icon">📊</div>
+                    <div class="roadmap-card-title">أضف مؤشرات وأنشئ مبادرات</div>
+                    <div class="roadmap-card-desc">
+                        حط مؤشرات أداء (KPIs) تقيس تقدّمك، وأنشئ مبادرات تحسينية.<br>
+                        هنا تبدأ رحلة التنفيذ الحقيقية 🚀
+                    </div>
+                    <div class="roadmap-cta"><i class="bi bi-plus-circle"></i> ابدأ البناء</div>
+                </a>
+            </div>
+
+            <e <div id="kpiList">
+        </div>
+        </div>
+
+        <!-- Initiatives / Tasks -->
+        <div class="card fade-in">
+            <div class="card-title">🚀 مبادرات ومهام</div>
+            <div id="taskList"></div>
+        </div>
+
+        <!-- Alerts -->
+        <div class="card fade-in">
+            <div class="card-title">🔔 تنبيهات مهمة</div>
+            <div id="alertList"></div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card fade-in">
+            <div class="card-title">📋 آخر النشاطات</div>
+            <div id="activityList"></div>
+        </div>
+    </main>
+
+    <script>
+        // ✅ النسخة النظيفة: إزالة الاستعلامات الكارثية من الـ URL والـ localStorage القديمة
+        // ✅ الاعتماد الكلي على بيانات الـ userData الموثوقة 100%
+
+        const DEPT_NAMES = {
+            'hr': 'الموارد البشرية', 'finance': 'المالية', 'marketing': 'التسويق',
+            'operations': 'العمليات', 'sales': 'المبيعات', 'it': 'تقنية المعلومات',
+            'cs': 'خدمة العملاء', 'compliance': 'الامتثال والحوكمة', 'quality': 'الجودة',
+            'projects': 'إدارة المشاريع', 'support': 'الخدمات المساندة'
+        };
+
+        // ==========================================
+        //  الكاش السريع 
+        // ==========================================
+        const CACHE_TTL = 5 * 60 * 1000;
+        function cacheSet(key, data) {
+            try {
+                sessionStorage.setItem('_cache_' + key, JSON.stringify({
+                    ts: Date.now(),
+                    data: data
+                }));
+            } catch (e) { /* full storage */ }
+        }
+
+        function cacheGet(key) {
+            const raw = sessionStorage.getItem('_cache_' + key);
+            if (!raw) return null;
+            try {
+                const { ts, data } = JSON.parse(raw);
+                if (Date.now() - ts > CACHE_TTL) {
+                    sessionStorage.removeItem('_cache_' + key);
+                    return null;
+                }
+                return data;
+            } catch (e) { return null; }
+        }
+
+        function sanitize(str) {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // ✅ Fix: استخدام window.apiRequest بدلاً من fetch المباشر للاستفادة الكاملة من المعالجة المركزية
+        async function cachedFetch(url) {
+            const cached = cacheGet(url);
+            if (cached) return cached;
+            const data = await window.apiRequest(url);
+            cacheSet(url, data);
+            return data;
+        }
+
+        // معالجة الأحداث المباشرة من أزرار إعادة التحميل أو التوجيه (data-action)
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            const action = btn.dataset.action;
+            if (action === 'reload') window.location.reload();
+            if (action === 'onboarding') window.location.href = '/onboarding.html?mode=dept';
+        });
+
+        // ===================================
+        // الدالة الرئيسية: الـ Bootstrapper 
+        // ===================================
+        (async function initDashboard() {
+            try {
+                // 1. استدعاء آمن ومحكم بهوية السيرفر
+                const userData = await window.api.getCurrentUser();
+
+                // التوجيه مع رسالة الطرد بدلاً من الاستثناء
+                if (!userData || userData.userType !== 'DEPT_MANAGER') {
+                    window.location.href = '/dashboard.html?reason=unauthorized';
+                    return;
+                }
+
+                const entityId = userData.entity?.id;
+                const deptKey = userData.department?.key || '';
+                const deptName = userData.department?.name || DEPT_NAMES[deptKey] || 'إدارتك';
+
+                // تخزين الأسماء للاستخدام المجرد الداخلي في سياق العرض
+                window.currentDeptContext = { key: deptKey, name: deptName };
+
+                // إذا ما عنده كيان → يروح يكمل الإعداد أولاً
+                if (!entityId) {
+                    const loadingSt = document.getElementById('loadingState');
+                    loadingSt.innerHTML = `
+                        <div style="text-align:center;">
+                            <div style="font-size:56px;margin-bottom:16px">🏗️</div>
+                            <p style="font-size:16px;font-weight:700;margin-bottom:8px">إعداد ${deptName} لم يكتمل بعد</p>
+                            <p style="font-size:13px;color:var(--text-muted);margin-bottom:20px">أكمل خطوات الإعداد عشان نجهز لك الداشبورد</p>
+                        </div>
+                    `;
+                    const btn = document.createElement('button');
+                    btn.className = 'btn';
+                    btn.innerHTML = '<i class="bi bi-gear" style="margin-left:8px"></i> أكمل الإعداد';
+                    btn.style.cssText = 'display:inline-flex;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;border:none;padding:14px 28px;font-size:15px;font-weight:700;border-radius:14px;cursor:pointer';
+                    btn.addEventListener('click', () => { window.location.href = '/onboarding.html?mode=dept'; });
+                    loadingSt.querySelector('div').appendChild(btn);
+                    return;
+                }
+
+                // 2. سحب البيانات المدمجة بثلاث طلبات باستخدام Fetch الآلي المخفي الهوية
+                const [dashResult, healthResult, alertResult] = await Promise.allSettled([
+                    cachedFetch(`/api/dashboard/entity/${entityId}`),
+                    cachedFetch(`/api/dashboard/health/${entityId}`),
+                    cachedFetch(`/api/alert-engine/entity/${entityId}`),
+                ]);
+
+                // استخراج البيانات مع fallback آمن
+                const dashData = dashResult.status === 'fulfilled' ? dashResult.value : {};
+                const healthData = healthResult.status === 'fulfilled' ? healthResult.value : {};
+                const alertData = alertResult.status === 'fulfilled' ? alertResult.value : {};
+
+                // إشعار المستخدم إذا فشل أي طلب
+                const failedRequests = [dashResult, healthResult, alertResult].filter(r => r.status === 'rejected');
+                if (failedRequests.length > 0 && failedRequests.length < 3) {
+                    console.warn('بعض البيانات لم تُحمَّل:', failedRequests.map(r => r.reason?.message));
+                    const banner = document.createElement('div');
+                    banner.style.cssText = 'background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:10px 16px;margin:0 0 16px;font-size:13px;color:#f59e0b;text-align:center;';
+                    banner.innerHTML = `<i class="bi bi-exclamation-triangle"></i> بعض البيانات لم تُحمَّل بالكامل — <a href="#" onclick="location.reload();return false" style="color:#f59e0b;text-decoration:underline;">أعد المحاولة</a>`;
+                    const contentArea = document.getElementById('contentArea');
+                    if (contentArea) contentArea.prepend(banner);
+                } else if (failedRequests.length === 3) {
+                    throw new Error('فشل شامل في تحميل البيانات الأساسية للوحة التحكم');
+                }
+
+                document.getElementById('loadingState').style.display = 'none';
+
+                // التمييز بين "مستخدم جديد حقيقي" و "فشل الشبكة"
+                const dashLoaded = dashResult.status === 'fulfilled';
+                const kpiCount = dashData.kpiSummary?.total || 0;
+                const iniCount = dashData.initiativeSummary?.total || 0;
+                const isNewUser = dashLoaded && (kpiCount === 0 && iniCount === 0);
+                const networkFailed = !dashLoaded;
+
+                if (networkFailed) {
+                    // فشل الشبكة
+                    document.getElementById('contentArea').style.display = 'block';
+                    const retryBanner = document.createElement('div');
+                    retryBanner.style.cssText = 'background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:14px;padding:24px;text-align:center;margin:20px 0;';
+                    retryBanner.innerHTML = `
+                        <div style="font-size:32px;margin-bottom:12px">⚠️</div>
+                        <div style="font-size:16px;font-weight:700;color:#ef4444;margin-bottom:8px">تعذر الاتصال بالخادم</div>
+                        <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">لم نتمكن من تحميل بياناتك — تأكد من الاتصال بالإنترنت</div>
+                    `;
+                    const rtyBtn = document.createElement('button');
+                    rtyBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> إعادة المحاولة';
+                    rtyBtn.style.cssText = 'padding:10px 28px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--secondary));color:white;border:none;font-weight:700;font-size:14px;cursor:pointer';
+                    rtyBtn.addEventListener('click', () => { window.location.reload(); });
+                    retryBanner.appendChild(rtyBtn);
+                    document.getElementById('contentArea').prepend(retryBanner);
+                } else if (isNewUser) {
+                    document.getElementById('welcomeBoard').style.display = 'block';
+                    if (typeof updateWelcomeBoard === 'function') {
+                        updateWelcomeBoard(userData, deptName);
+                    }
+                } else {
+                    document.getElementById('contentArea').style.display = 'block';
+                    if (userData.name) {
+                        document.getElementById('welcomeMsg').textContent = `مرحباً ${userData.name} — إليك أداء ${deptName} اليوم`;
+                    }
+
+                    renderHealth(healthData);
+                    renderStats(dashData, healthData);
+                    renderQuickActions();
+                    if (typeof renderKPIs === 'function') await renderKPIs(dashData);
+                    if (typeof renderTasks === 'function') renderTasks(dashData);
+                    if (typeof renderAlerts === 'function') renderAlerts(alertData);
+                    if (typeof renderActivity === 'function') renderActivity(dashData);
+                }
+
+            } catch (err) {
+                console.error('Error loading dept dashboard:', err);
+                const loadingSt = document.getElementById('loadingState');
+                loadingSt.innerHTML = `
+                    <div style="text-align:center; padding: 20px;">
+                        <i class="bi bi-exclamation-triangle" style="font-size:48px;color:var(--red);margin-bottom:16px;display:block"></i>
+                        <div class="error-message" style="color:var(--red);font-weight:bold;margin-bottom:16px">حدث خطأ في تحميل البيانات. يرجى المحاولة لاحقاً.</div>
+                        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px">${sanitize(err.message)}</p>
+                    </div>
+                `;
+                const errBtn = document.createElement('button');
+                errBtn.className = 'btn';
+                errBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> إعادة المحاولة';
+                errBtn.style.margin = 'auto';
+                errBtn.addEventListener('click', () => { window.location.reload(); });
+                loadingSt.querySelector('div').appendChild(errBtn);
+                loadingSt.style.display = 'block';
+            }
+        })();
+
+        function renderHealth(data) {
+            const score = data.healthScore || 0;
+            const color = getHealthColor(score);
+            document.getElementById('healthScore').textContent = score;
+            document.getElementById('healthScore').style.color = color;
+            document.getElementById('healthFill').style.width = score + '%';
+            document.getElementById('healthFill').style.background = color;
+            document.getElementById('healthMsg').textContent = data.message || '';
+        }
+
+        function renderStats(dash, health) {
+            const kpi = dash.kpiSummary || {};
+            const ini = dash.initiativeSummary || {};
+            const stats = [
+                { value: kpi.total || 0, label: '📊 مؤشرات', color: '#3b82f6', glow: 'rgba(59,130,246,0.08)' },
+                { value: kpi.onTrack || 0, label: '✅ على المسار', color: '#22c55e', glow: 'rgba(34,197,94,0.08)' },
+                { value: kpi.warning || 0, label: '⚠️ تحذير', color: '#f59e0b', glow: 'rgba(245,158,11,0.08)' },
+                { value: kpi.critical || 0, label: '🔴 حرج', color: '#ef4444', glow: 'rgba(239,68,68,0.08)' },
+                { value: ini.total || 0, label: '🚀 مبادرات', color: '#a78bfa', glow: 'rgba(167,139,250,0.08)' },
+                { value: ini.overdue || 0, label: '⏰ متأخرة', color: '#f97316', glow: 'rgba(249,115,22,0.08)' },
+            ];
+            document.getElementById('statsRow').innerHTML = stats.map(s => `
+                        < div class="stat-card" style = "--card-glow:${s.glow}" >
+                    <div class="stat-value" style="color:${s.color}">${s.value}</div>
+                    <div class="stat-label">${s.label}</div>
+                </div >
+                        `).join('');
+        }
+
+        function renderQuickActions() {
+            // أزلنا الاعتماد على ?dept= لأن الصفحات أصبحت محمية وموجهة بالـ userData
+            const actions = [
+                { icon: 'bi-graph-up', label: 'تحديث KPIs', href: '/kpis.html', color: '#3b82f6' },
+                { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html', color: '#22c55e' },
+                { icon: 'bi-clipboard-check', label: 'مراجعة دورية', href: '/reviews.html', color: '#a78bfa' },
+                { icon: 'bi-shield-exclamation', label: 'المخاطر', href: '/risk-map.html', color: '#f59e0b' },
+                { icon: 'bi-bar-chart', label: 'التحليل', href: '/analytics-dashboard.html', color: '#ef4444' }
+            ];
+            document.getElementById('quickActions').innerHTML = actions.map(a => `
+                        < a class="quick-action" href = "${a.href}" >
+                    <i class="bi ${a.icon}" style="color:${a.color}"></i>
+                    <span>${a.label}</span>
+                </a >
+                        `).join('');
+        }
+
+        async function renderKPIs(data) {
+            const list = document.getElementById('kpiList');
+            const dept = window.currentDeptContext?.key || '';
+            if (kpi.total === 0) {
+                list.innerHTML = `< div class="empty-text" > لا توجد مؤشرات بعد — <a href="/kpis.html" style="color:var(--accent)">ابدأ بإضافة KPIs</a></div > `;
+                return;
+            }
+
+            // ═══ محاولة جلب المؤشرات الفردية ═══
+            let individualKPIs = null;
+            try {
+                // استخدام الـ Fetch المعقم (مع credentials: include من الدالة نفسها)
+                const entityId = (await window.api.getCurrentUser()).entity?.id;
+                const kpiData = await cachedFetch(`/api/kpis/entity/${entityId}`);
+                if (kpiData.kpis?.length) individualKPIs = kpiData.kpis;
+            } catch(e) { /* fallback to summary */ }
+
+            if (individualKPIs && individualKPIs.length > 0) {
+                // ═══ عرض المؤشرات الفردية ═══
+                list.innerHTML = individualKPIs.slice(0, 6).map(k => {
+                    const actual = k.actualValue ?? k.actual ?? null;
+                    const target = k.targetValue ?? k.target ?? 0;
+                    const pct = target > 0 && actual != null ? Math.min(100, Math.round((actual / target) * 100)) : 0;
+                    const status = k.status || (pct >= 80 ? 'ON_TRACK' : pct >= 50 ? 'WARNING' : 'CRITICAL');
+                    const statusMap = {
+                        ON_TRACK: { color: 'var(--green)', icon: '✅', label: 'على المسار' },
+                        WARNING: { color: 'var(--yellow)', icon: '⚠️', label: 'تحذير' },
+                        CRITICAL: { color: 'var(--red)', icon: '🔴', label: 'حرج' },
+                        NO_DATA: { color: 'var(--text-muted)', icon: '⬜', label: 'بدون بيانات' }
+                    };
+                    const s = statusMap[status] || statusMap.NO_DATA;
+                    return `
+                        < div class="kpi-item" >
+                        <div class="kpi-info">
+                            <div class="kpi-name">${sanitize(k.name || k.title || 'مؤشر')}</div>
+                            <div class="kpi-sub">${actual != null ? actual : '—'} / ${target} ${sanitize(k.unit || '')}</div>
+                        </div>
+                        <div class="kpi-progress"><div class="kpi-progress-fill" style="width:${pct}%;background:${s.color}"></div></div>
+                        <div class="kpi-value" style="color:${s.color}" title="${s.label}">${s.icon} ${pct}%</div>
+                    </div > `;
+                }).join('') + (individualKPIs.length > 6 ? `
+                        < div style = "text-align:center;color:var(--text-muted);font-size:12px;margin-top:8px" >
+                            +${individualKPIs.length - 6} مؤشرات أخرى
+                    </div > ` : '') + `
+                        < div style = "text-align:center;margin-top:12px" >
+                            <a href="/kpis.html" class="btn" style="display:inline-flex;font-size:12px;padding:8px 16px">
+                                <i class="bi bi-pencil-square"></i> عرض كل المؤشرات
+                            </a>
+                    </div > `;
+            } else {
+                // ═══ Fallback: ملخص KPIs ═══
+                const items = [];
+                if (kpi.onTrack > 0) items.push({ name: 'مؤشرات على المسار', value: kpi.onTrack, pct: (kpi.onTrack / kpi.total) * 100, color: 'var(--green)', icon: '✅' });
+                if (kpi.warning > 0) items.push({ name: 'مؤشرات تحذيرية', value: kpi.warning, pct: (kpi.warning / kpi.total) * 100, color: 'var(--yellow)', icon: '⚠️' });
+                if (kpi.critical > 0) items.push({ name: 'مؤشرات حرجة', value: kpi.critical, pct: (kpi.critical / kpi.total) * 100, color: 'var(--red)', icon: '🔴' });
+                const noData = kpi.total - (kpi.onTrack + kpi.warning + kpi.critical);
+                if (noData > 0) items.push({ name: 'بدون بيانات', value: noData, pct: (noData / kpi.total) * 100, color: 'var(--text-muted)', icon: '⬜' });
+
+                list.innerHTML = items.map(k => `
+                    <div class="kpi-item">
+                        <div class="kpi-info">
+                            <div class="kpi-name">${k.icon} ${k.name}</div>
+                            <div class="kpi-sub">${k.value} من ${kpi.total} مؤشر</div>
+                        </div>
+                        <div class="kpi-progress"><div class="kpi-progress-fill" style="width:${k.pct}%;background:${k.color}"></div></div>
+                        <div class="kpi-value" style="color:${k.color}">${Math.round(k.pct)}%</div>
+                    </div>
+                `).join('') + `
+                    <div style="text-align:center;margin-top:12px">
+                        <a href="/kpis.html" class="btn" style="display:inline-flex;font-size:12px;padding:8px 16px">
+                            <i class="bi bi-pencil-square"></i> تحديث المؤشرات
+                        </a>
+                    </div>
+                `;
+            }
+        }
+
+        function renderTasks(data) {
+            const list = document.getElementById('taskList');
+            const ini = data.initiativeSummary || {};
+
+            if (ini.total === 0) {
+                list.innerHTML = '<div class="empty-text">لا توجد مبادرات بعد — <a href="/initiatives.html" style="color:var(--accent)">ابدأ بإضافة مبادرات</a></div>';
+                return;
+            }
+
+            const statuses = [
+                { name: 'مكتملة', count: ini.completed || 0, color: 'var(--green)', icon: '✅' },
+                { name: 'قيد التنفيذ', count: ini.inProgress || 0, color: 'var(--blue)', icon: '🔵' },
+                { name: 'مخططة', count: ini.planned || 0, color: 'var(--text-muted)', icon: '⬜' },
+                { name: 'متأخرة', count: ini.overdue || 0, color: 'var(--red)', icon: '🔴' },
+            ].filter(s => s.count > 0);
+
+            list.innerHTML = statuses.map(s => `
+                        < div class="task-item" >
+                    <div class="task-status" style="background:${s.color}"></div>
+                    <div class="task-info">
+                        <div class="task-name">${s.icon} ${s.name}</div>
+                        <div class="task-meta">${s.count} مبادرة</div>
+                    </div>
+                    <span class="task-badge" style="background:${s.color}22;color:${s.color}">${s.count}</span>
+                </div >
+                        `).join('') + `
+                        < div style = "text-align:center;margin-top:12px" >
+                            <a href="/initiatives.html" class="btn" style="display:inline-flex;font-size:12px;padding:8px 16px">
+                                <i class="bi bi-list-task"></i> إدارة المبادرات
+                            </a>
+                </div >
+                        `;
+        }
+
+        function renderAlerts(data) {
+            const list = document.getElementById('alertList');
+            const alerts = data.alerts || data.recentAlerts || [];
+
+            if (!alerts.length) {
+                list.innerHTML = '<div class="empty-text">🎉 لا توجد تنبيهات — ممتاز!</div>';
+                return;
+            }
+
+            list.innerHTML = alerts.slice(0, 5).map(a => {
+                const severityColors = { HIGH: 'var(--red)', MEDIUM: 'var(--yellow)', LOW: 'var(--blue)' };
+                const color = severityColors[a.severity] || 'var(--yellow)';
+                const icons = { HIGH: '🔴', MEDIUM: '⚠️', LOW: 'ℹ️' };
+                return `
+                        < div class="alert-item" style = "--alert-color:${color}" >
+                    <span class="alert-icon">${icons[a.severity] || '⚠️'}</span>
+                    <div>
+                        <div class="alert-title">${sanitize(a.title || a.type || 'تنبيه')}</div>
+                        <div class="alert-desc">${sanitize(a.description || '')}</div>
+                        <div class="alert-time">${a.createdAt ? new Date(a.createdAt).toLocaleDateString('ar-SA') : ''}</div>
+                    </div>
+                </div >
+                        `;
+            }).join('');
+        }
+
+        function renderActivity(data) {
+            const list = document.getElementById('activityList');
+            const reviews = data.recentReviews || [];
+
+            if (!reviews.length) {
+                list.innerHTML = '<div class="empty-text">لا توجد مراجعات حديثة — <a href="/reviews.html" style="color:var(--accent)">ابدأ المراجعة</a></div>';
+                return;
+            }
+
+            list.innerHTML = reviews.map(r => {
+                const decisionIcons = { CONTINUE: '✅', ADJUST: '🔄', PIVOT: '🔀', NONE: '⬜' };
+                const decisionLabels = { CONTINUE: 'استمرار', ADJUST: 'تعديل', PIVOT: 'تحول', NONE: 'بدون' };
+                return `
+                        < div class="task-item" >
+                    <span style="font-size:18px">${decisionIcons[r.decision] || '📋'}</span>
+                    <div class="task-info">
+                        <div class="task-name">${sanitize(r.title || 'مراجعة')}</div>
+                        <div class="task-meta">${r.createdAt ? new Date(r.createdAt).toLocaleDateString('ar-SA') : ''} • ${sanitize(r.status || '')}</div>
+                    </div>
+                    <span class="task-badge" style="background:rgba(167,139,250,0.15);color:var(--purple)">${decisionLabels[r.decision] || sanitize(r.decision) || '—'}</span>
+                </div >
+                `;
+            }).join('');
+        }
+
+        function getHealthColor(score) {
+            if (score >= 80) return '#22c55e';
+            if (score >= 60) return '#3b82f6';
+            if (score >= 40) return '#f59e0b';
+            if (score >= 20) return '#ef4444';
+            return '#8b8ba7';
+        }
+    </script>
+    <script src="/assets/js/ai-advisor.js"></script>
+    <script src="/assets/js/path-tracker.js"></script>
+    <script src="/assets/js/dashboard-filter.js"></script>
+</body>
+
+</html>

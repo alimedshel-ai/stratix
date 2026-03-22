@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس — تحليل الموارد البشرية العميق</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <link href="/assets/css/sidebar.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --bg: #0f1117;
+            --bg-card: #1a1d2e;
+            --bg-card-hover: #232640;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --teal: #14b8a6;
+            --purple: #a78bfa;
+            --accent: #818cf8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .top-nav {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 14px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .3);
+        }
+
+        .top-nav .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .top-nav .nav-links {
+            display: flex;
+            gap: 6px;
+        }
+
+        .top-nav .nav-links a {
+            color: rgba(255, 255, 255, .85);
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            transition: .2s;
+        }
+
+        .top-nav .nav-links a:hover {
+            background: rgba(255, 255, 255, .15);
+        }
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .btn-logout {
+            background: rgba(239, 68, 68, .3);
+            color: #fff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .layout {
+            display: flex;
+            min-height: calc(100vh - 60px);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            max-width: calc(100% - 220px);
+            overflow-y: auto;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, rgba(139, 92, 246, .08), rgba(139, 92, 246, .02));
+            border: 1px solid rgba(139, 92, 246, .2);
+            border-radius: 20px;
+            padding: 28px 32px;
+            margin-bottom: 28px;
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .hero-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .hero h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .hero p {
+            color: var(--text-muted);
+            font-size: .9rem;
+            line-height: 1.7;
+        }
+
+        .wiz-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+
+        .wiz-step {
+            flex: 1;
+            min-width: 140px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            color: var(--text-muted);
+            text-align: center;
+            cursor: pointer;
+            transition: all .3s;
+        }
+
+        .wiz-step.active {
+            background: rgba(139, 92, 246, .1);
+            border-color: rgba(139, 92, 246, .4);
+            color: var(--purple);
+        }
+
+        .wiz-step.done {
+            background: rgba(34, 197, 94, .06);
+            border-color: rgba(34, 197, 94, .2);
+            color: var(--success);
+        }
+
+        .wiz-step .step-num {
+            display: block;
+            font-size: 18px;
+            margin-bottom: 2px;
+        }
+
+        .section-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px 28px;
+            margin-bottom: 20px;
+            animation: fadeIn .4s ease;
+        }
+
+        .section-card h3 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-card h3 .badge {
+            font-size: .7rem;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-grid.c3 {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: .82rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-muted);
+        }
+
+        .form-group label i {
+            color: var(--purple);
+        }
+
+        .form-input {
+            width: 100%;
+            background: rgba(255, 255, 255, .04);
+            border: 1.5px solid var(--border);
+            color: var(--text);
+            padding: 11px 14px;
+            border-radius: 10px;
+            font-size: .95rem;
+            font-family: 'Tajawal', sans-serif;
+            transition: .2s;
+            text-align: left;
+            direction: ltr;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--purple);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, .12);
+        }
+
+        .form-input::placeholder {
+            color: rgba(148, 163, 184, .5);
+        }
+
+        .form-hint {
+            font-size: .72rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .form-select {
+            appearance: none;
+            direction: rtl;
+            text-align: right;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .toggle-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .toggle-btn {
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 1.5px solid var(--border);
+            background: rgba(255, 255, 255, .02);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: .85rem;
+            font-weight: 600;
+            transition: all .2s;
+        }
+
+        .toggle-btn.on {
+            border-color: rgba(139, 92, 246, .5);
+            background: rgba(139, 92, 246, .1);
+            color: var(--purple);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 11px 28px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: .9rem;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all .2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(139, 92, 246, .3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1.5px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #fff;
+        }
+
+        .results-section {
+            display: none;
+        }
+
+        .results-section.visible {
+            display: block;
+        }
+
+        .health-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            padding: 32px;
+            text-align: center;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .health-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .health-card.good::before {
+            background: linear-gradient(90deg, #22c55e, #4ade80);
+        }
+
+        .health-card.warn::before {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        }
+
+        .health-card.danger::before {
+            background: linear-gradient(90deg, #ef4444, #f87171);
+        }
+
+        .health-score {
+            font-size: 4rem;
+            font-weight: 900;
+            margin: 12px 0;
+        }
+
+        .health-label {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .health-sub {
+            color: var(--text-muted);
+            font-size: .85rem;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px;
+            text-align: center;
+            transition: .3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary);
+        }
+
+        .kpi-card .kpi-icon {
+            font-size: 1.8rem;
+            margin-bottom: 6px;
+        }
+
+        .kpi-card .kpi-value {
+            font-size: 1.6rem;
+            font-weight: 900;
+        }
+
+        .kpi-card .kpi-label {
+            font-size: .75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .kpi-card .kpi-status {
+            font-size: .7rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            display: inline-block;
+            margin-top: 6px;
+        }
+
+        .kpi-card .kpi-status.good {
+            background: rgba(34, 197, 94, .12);
+            color: #4ade80;
+        }
+
+        .kpi-card .kpi-status.warn {
+            background: rgba(245, 158, 11, .12);
+            color: #fbbf24;
+        }
+
+        .kpi-card .kpi-status.bad {
+            background: rgba(239, 68, 68, .12);
+            color: #f87171;
+        }
+
+        .reco-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px 22px;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            transition: .2s;
+        }
+
+        .reco-card:hover {
+            border-color: var(--primary);
+        }
+
+        .reco-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .reco-card h4 {
+            font-size: .9rem;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .reco-card p {
+            font-size: .8rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .chart-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+        }
+
+        .chart-box h3 {
+            font-size: .95rem;
+            font-weight: 700;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        @media(max-width:900px) {
+            .main-content {
+                max-width: 100%;
+                padding: 16px;
+            }
+
+            .form-grid,
+            .form-grid.c3,
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+
+            .wiz-step {
+                min-width: 100px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="top-nav">
+        <a href="/dashboard" class="brand"><i class="bi bi-rocket-takeoff-fill"></i> ستارتكس</a>
+        <div class="nav-links">
+            <a href="/dashboard"><i class="bi bi-house"></i> الرئيسية</a>
+            <a href="/finance-deep"><i class="bi bi-cash-stack"></i> المالية</a>
+        </div>
+        <div class="user-area">
+            <span style="color:#fff;font-size:13px" id="userName">مدير النظام</span>
+            <div class="user-avatar" id="userAvatar">م</div>
+            <button class="btn-logout" onclick="location.href='/login'">خروج</button>
+        </div>
+    </nav>
+
+    <div class="layout">
+        <nav class="sidebar"></nav>
+        <main class="main-content">
+
+            <div class="hero">
+                <div class="hero-icon">👥</div>
+                <div>
+                    <h2>تحليل الموارد البشرية العميق</h2>
+                    <p>أدخل بيانات فريقك الحقيقية — وسيحلل النظام <strong>12 مؤشر للموارد البشرية</strong> تلقائياً:
+                        معدل الدوران، نسبة التوطين، تكلفة الموظف، فجوة الكوادر، وامتثال العقود. تشخيص مبني على أرقام —
+                        مو تقديرات.</p>
+                </div>
+            </div>
+
+            <div class="wiz-bar">
+                <div class="wiz-step active" onclick="showStep(1)" id="ws1"><span class="step-num">👥</span> هيكل القوى
+                </div>
+                <div class="wiz-step" onclick="showStep(2)" id="ws2"><span class="step-num">💰</span> التكاليف والمزايا
+                </div>
+                <div class="wiz-step" onclick="showStep(3)" id="ws3"><span class="step-num">⚖️</span> الأداء والامتثال
+                </div>
+                <div class="wiz-step" onclick="showStep(4)" id="ws4"><span class="step-num">🤖</span> التقرير الذكي
+                </div>
+            </div>
+
+            <!-- ═══ STEP 1: هيكل القوى العاملة ═══ -->
+            <div id="step1" class="section-card">
+                <h3>👥 هيكل القوى العاملة <span class="badge"
+                        style="background:rgba(139,92,246,.1);color:#a78bfa;">القسم 1 من 3</span></h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label><i class="bi bi-people-fill"></i> إجمالي عدد الموظفين</label>
+                        <input type="number" class="form-input" id="totalEmployees" placeholder="مثال: 45" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="bi bi-flag"></i> عدد الموظفين السعوديين</label>
+                        <input type="number" class="form-input" id="saudiEmployees" placeholder="مثال: 15" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="bi bi-person-plus"></i> عدد الموظفين الجدد (آخر 6 أشهر)</label>
+                        <input type="number" class="form-input" id="newHires" placeholder="مثال: 8" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="bi bi-person-dash"></i> عدد المستقيلين (آخر 12 شهر)</label>
+                        <input type="number" class="form-input" id="resignations" placeholder="مثال: 6" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="bi bi-briefcase"></i> عدد المناصب الشاغرة حالياً</label>
+                        <input type="number" class="form-input" id="vacancies" placeholder="مثال: 4" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="bi bi-building"></i> عدد الإدارات / الأقسام</label>
+                        <input type="number" class="form-input" id="departments" placeholder="مثال: 5" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="bi bi-person-workspace"></i> عدد المناصب القيادية (مدراء)</label>
+                        <input type="number" class="form-input" id="managers" placeholder="مثال: 6" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="bi bi-clock-history"></i> متوسط سنوات الخبرة في الفريق</label>
+                        <input type="number" class="form-input" id="avgExperience" placeholder="مثال: 4" min="0"
+                            step="0.5">
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="showStep(2)">التالي: التكاليف <i
+                            class="bi bi-arrow-left"></i></button>
+                </div>
+            </div>
+
+            <!-- ═══ STEP 2: التكاليف والمزايا ═══ -->
+            <div id="step2" class="section-card" style="display:none">
+                <h3>💰 التكاليف والمزايا <span class="badge" style="background:rgba(245,158,11,.1);color:#fbbf24;">القسم
+                        2 من 3</span></h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label><i class="bi bi-wallet2"></i> إجمالي الرواتب الشهرية (ريال)</label>
+                        <input type="text" class="form-input" id="totalSalaries" placeholder="مثال: 180000"
+                            oninput="formatNum(this)">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="bi bi-heart-pulse"></i> تكلفة التأمين الطبي (سنوي)</label>
+                        <input type="text" class="form-input" id="medicalInsuranceCost" placeholder="مثال: 75000"
+                            oninput="formatNum(this)">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="bi bi-mortarboard"></i> ميزانية التدريب (سنوي)</label>
+                        <input type="text" class="form-input" id="trainingBudget" placeholder="مثال: 30000"
+                            oninput="formatNum(this)">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="bi bi-gift"></i> تكلفة المزايا الأخرى (سنوي)</label>
+                        <input type="text" class="form-input" id="otherBenefits" placeholder="سكن، نقل، بدلات..."
+                            oninput="formatNum(this)">
+                        <div class="form-hint">سكن، نقل، بدلات، مكافآت</div>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="bi bi-currency-dollar"></i> أعلى راتب في المنشأة (شهري)</label>
+                        <input type="text" class="form-input" id="highestSalary" placeholder="مثال: 25000"
+                            oninput="formatNum(this)">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="bi bi-currency-dollar"></i> أدنى راتب في المنشأة (شهري)</label>
+                        <input type="text" class="form-input" id="lowestSalary" placeholder="مثال: 3500"
+                            oninput="formatNum(this)">
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-secondary" onclick="showStep(1)"><i class="bi bi-arrow-right"></i>
+                        السابق</button>
+                    <button class="btn btn-primary" onclick="showStep(3)">التالي: الأداء <i
+                            class="bi bi-arrow-left"></i></button>
+                </div>
+            </div>
+
+            <!-- ═══ STEP 3: الأداء والامتثال ═══ -->
+            <div id="step3" class="section-card" style="display:none">
+                <h3>⚖️ الأداء والامتثال <span class="badge" style="background:rgba(34,197,94,.1);color:#4ade80;">القسم 3
+                        من 3</span></h3>
+
+                <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:16px;">اضغط على كل بند موجود عندك ✅</p>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label style="color:var(--purple);font-weight:800;font-size:.9rem;">📋 الامتثال النظامي</label>
+                        <div class="toggle-row" id="complianceToggles">
+                            <button class="toggle-btn" data-key="contracts_qiwa" onclick="toggleC(this)">📄 عقود موثقة
+                                في قوى</button>
+                            <button class="toggle-btn" data-key="mudad" onclick="toggleC(this)">💳 حماية أجور
+                                (مدد)</button>
+                            <button class="toggle-btn" data-key="medical" onclick="toggleC(this)">🏥 تأمين طبي
+                                شامل</button>
+                            <button class="toggle-btn" data-key="work_rules" onclick="toggleC(this)">📑 لائحة عمل
+                                معتمدة</button>
+                            <button class="toggle-btn" data-key="gosi" onclick="toggleC(this)">🏦 تأمينات
+                                اجتماعية</button>
+                            <button class="toggle-btn" data-key="safety" onclick="toggleC(this)">🦺 لجنة سلامة
+                                مهنية</button>
+                        </div>
+                    </div>
+                    <div class="form-group full-width">
+                        <label style="color:var(--teal);font-weight:800;font-size:.9rem;">🎯 إدارة الأداء</label>
+                        <div class="toggle-row" id="performanceToggles">
+                            <button class="toggle-btn" data-key="perf_review" onclick="toggleC(this)">📊 تقييم أداء
+                                سنوي</button>
+                            <button class="toggle-btn" data-key="job_desc" onclick="toggleC(this)">📝 وصف وظيفي
+                                واضح</button>
+                            <button class="toggle-btn" data-key="org_chart" onclick="toggleC(this)">🏗️ هيكل تنظيمي
+                                محدّث</button>
+                            <button class="toggle-btn" data-key="succession" onclick="toggleC(this)">🔄 خطة تعاقب
+                                وظيفي</button>
+                            <button class="toggle-btn" data-key="hr_system" onclick="toggleC(this)">💻 نظام HR
+                                إلكتروني</button>
+                            <button class="toggle-btn" data-key="training_plan" onclick="toggleC(this)">📚 خطة تدريب
+                                سنوية</button>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 style="font-size:.9rem;margin-top:18px;">📈 رضا الموظفين</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>هل يوجد استبيان رضا موظفين؟</label>
+                        <select class="form-input form-select" id="hasSurvey">
+                            <option value="">— اختر —</option>
+                            <option value="yes_recent">نعم (آخر 6 أشهر)</option>
+                            <option value="yes_old">نعم (أقدم من 6 أشهر)</option>
+                            <option value="no">لا يوجد</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>نسبة رضا الموظفين (لو معروفة) %</label>
+                        <input type="number" class="form-input" id="satisfactionRate" placeholder="مثال: 72" min="0"
+                            max="100">
+                    </div>
+                </div>
+
+                <div class="btn-row">
+                    <button class="btn btn-secondary" onclick="showStep(2)"><i class="bi bi-arrow-right"></i>
+                        السابق</button>
+                    <button class="btn btn-success" onclick="runAnalysis()"><i class="bi bi-cpu"></i> شغّل التحليل
+                        الذكي</button>
+                </div>
+            </div>
+
+            <!-- ═══ STEP 4: النتائج ═══ -->
+            <div id="step4" class="results-section">
+                <div class="health-card" id="healthCard">
+                    <div
+                        style="font-size:.8rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:2px;font-weight:700;">
+                        صحة الموارد البشرية</div>
+                    <div class="health-score" id="healthScore">—</div>
+                    <div class="health-label" id="healthLabel">—</div>
+                    <div class="health-sub" id="healthSub">—</div>
+                </div>
+                <div class="kpi-grid" id="kpiGrid"></div>
+                <div class="charts-row">
+                    <div class="chart-box">
+                        <h3><i class="bi bi-pie-chart" style="color:var(--purple)"></i> توزيع القوى العاملة</h3><canvas
+                            id="workforceChart" height="200"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <h3><i class="bi bi-bar-chart" style="color:var(--teal)"></i> مؤشرات الامتثال</h3><canvas
+                            id="complianceChart" height="200"></canvas>
+                    </div>
+                </div>
+                <div class="section-card">
+                    <h3>🤖 التوصيات الذكية</h3>
+                    <div id="recommendations"></div>
+                </div>
+                <div class="btn-row" style="justify-content:center;margin-top:28px;">
+                    <button class="btn btn-secondary" onclick="showStep(1)"><i class="bi bi-pencil"></i> تعديل
+                        البيانات</button>
+                    <button class="btn btn-primary" onclick="saveAndContinue()"><i class="bi bi-check-lg"></i> حفظ
+                        ومتابعة لـ SWOT</button>
+                    <button class="btn btn-secondary" style="border-color:rgba(6,182,212,.4);color:#06b6d4"
+                        onclick="window.location.href='/simulation-lab.html?dept=hr'"><i class="bi bi-lightning"></i> 🔮
+                        محاكاة قرارات</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/assets/js/hr-handlers.js"></script>
+    <script src="/assets/js/sidebar.js"></script>
+    <script>
+        function $(id) { return document.getElementById(id); }
+        function num(id) { return parseFloat(($(id)?.value || '0').replace(/,/g, '')) || 0; }
+        function formatNum(el) { let v = el.value.replace(/[^\d.]/g, ''); if (v) { const p = v.split('.'); p[0] = parseInt(p[0]).toLocaleString('en-US'); el.value = p.join('.'); } }
+        function fmt(n) { return Math.round(n).toLocaleString('ar-SA'); }
+        function pct(n) { return Math.round(n) + '%'; }
+
+        // Toggle compliance/performance items
+        const activeToggles = new Set();
+        function toggleC(btn) { const k = btn.dataset.key; if (activeToggles.has(k)) { activeToggles.delete(k); btn.classList.remove('on'); } else { activeToggles.add(k); btn.classList.add('on'); } }
+
+        let currentStep = 1;
+        function showStep(n) {
+            for (let i = 1; i <= 4; i++) {
+                const el = $('step' + i); if (el) el.style.display = (i === n) ? 'block' : 'none';
+                const ws = $('ws' + i); if (ws) ws.className = 'wiz-step' + (i === n ? ' active' : (i < n ? ' done' : ''));
+            }
+            if (n === 4) { $('step4').style.display = 'block'; $('step4').classList.add('visible'); }
+            currentStep = n; window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function runAnalysis() {
+            const d = {
+                total: num('totalEmployees') || 1, saudis: num('saudiEmployees'),
+                newHires: num('newHires'), resignations: num('resignations'),
+                vacancies: num('vacancies'), departments: num('departments') || 1,
+                managers: num('managers'), avgExperience: num('avgExperience'),
+                totalSalaries: num('totalSalaries'), medicalCost: num('medicalInsuranceCost'),
+                trainingBudget: num('trainingBudget'), otherBenefits: num('otherBenefits'),
+                highestSalary: num('highestSalary'), lowestSalary: num('lowestSalary'),
+                hasSurvey: $('hasSurvey').value, satisfactionRate: num('satisfactionRate'),
+            };
+
+            // ─── Calculate KPIs ───
+            const saudizationRate = (d.saudis / d.total * 100);
+            const turnoverRate = (d.resignations / d.total * 100);
+            const vacancyRate = (d.vacancies / (d.total + d.vacancies) * 100);
+            const avgSalary = d.totalSalaries / d.total;
+            const totalCostPerEmployee = (d.totalSalaries * 12 + d.medicalCost + d.trainingBudget + d.otherBenefits) / d.total;
+            const trainingPerHead = d.trainingBudget / d.total;
+            const spanOfControl = d.managers > 0 ? ((d.total - d.managers) / d.managers) : d.total;
+            const salaryGap = d.highestSalary > 0 && d.lowestSalary > 0 ? (d.highestSalary / d.lowestSalary) : 0;
+            const foreigners = d.total - d.saudis;
+
+            // Compliance score
+            const complianceItems = ['contracts_qiwa', 'mudad', 'medical', 'work_rules', 'gosi', 'safety'];
+            const perfItems = ['perf_review', 'job_desc', 'org_chart', 'succession', 'hr_system', 'training_plan'];
+            const complianceCount = complianceItems.filter(k => activeToggles.has(k)).length;
+            const perfCount = perfItems.filter(k => activeToggles.has(k)).length;
+            const complianceScore = Math.round(complianceCount / complianceItems.length * 100);
+            const perfScore = Math.round(perfCount / perfItems.length * 100);
+
+            // ─── Health Score ───
+            let score = 50;
+            // Saudization
+            if (saudizationRate >= 40) score += 10; else if (saudizationRate >= 25) score += 5; else score -= 10;
+            // Turnover
+            if (turnoverRate < 10) score += 10; else if (turnoverRate < 20) score += 5; else if (turnoverRate < 30) score -= 5; else score -= 15;
+            // Vacancy
+            if (vacancyRate < 5) score += 5; else if (vacancyRate < 15) score += 0; else score -= 10;
+            // Compliance
+            score += Math.round((complianceScore - 50) / 5);
+            // Performance mgmt
+            score += Math.round((perfScore - 50) / 5);
+            // Training
+            if (trainingPerHead > 2000) score += 5; else if (trainingPerHead < 500) score -= 5;
+            // Satisfaction
+            if (d.satisfactionRate > 75) score += 5; else if (d.satisfactionRate > 0 && d.satisfactionRate < 50) score -= 10;
+            // Span of control
+            if (spanOfControl > 15) score -= 5; // too thin management
+            score = Math.max(0, Math.min(100, score));
+
+            // Health card
+            $('healthScore').textContent = score + '/100';
+            $('healthCard').className = 'health-card ' + (score >= 70 ? 'good' : score >= 40 ? 'warn' : 'danger');
+            $('healthScore').style.color = score >= 70 ? '#4ade80' : score >= 40 ? '#fbbf24' : '#f87171';
+            if (score >= 80) { $('healthLabel').textContent = '🟢 صحة موارد بشرية ممتازة'; $('healthSub').textContent = 'فريق مستقر، امتثال عالي — ركّز على التطوير والنمو'; }
+            else if (score >= 60) { $('healthLabel').textContent = '🟡 صحة مقبولة — تحتاج تحسين'; $('healthSub').textContent = 'بعض المؤشرات تحتاج انتباه لتجنب مشاكل مستقبلية'; }
+            else if (score >= 40) { $('healthLabel').textContent = '🟠 وضع يحتاج تدخل سريع'; $('healthSub').textContent = 'عدة فجوات حرجة في الامتثال أو الاستقرار الوظيفي'; }
+            else { $('healthLabel').textContent = '🔴 وضع خطير — خطر تشغيلي ونظامي'; $('healthSub').textContent = 'تحتاج خطة إصلاح عاجلة — راجع التوصيات بالأسفل'; }
+
+            // ─── KPI Cards ───
+            const kpis = [
+                { icon: '🇸🇦', label: 'نسبة التوطين', value: pct(saudizationRate), status: saudizationRate >= 35 ? 'good' : saudizationRate >= 20 ? 'warn' : 'bad', statusText: saudizationRate >= 35 ? 'ممتاز' : saudizationRate >= 20 ? 'مقبول' : 'ضعيف', color: '#22c55e' },
+                { icon: '🔄', label: 'معدل الدوران (سنوي)', value: pct(turnoverRate), status: turnoverRate < 10 ? 'good' : turnoverRate < 25 ? 'warn' : 'bad', statusText: turnoverRate < 10 ? 'مستقر' : turnoverRate < 25 ? 'متوسط' : 'مرتفع', color: '#ef4444' },
+                { icon: '🪑', label: 'نسبة الشواغر', value: pct(vacancyRate), status: vacancyRate < 8 ? 'good' : vacancyRate < 18 ? 'warn' : 'bad', statusText: vacancyRate < 8 ? 'ممتلئ' : vacancyRate < 18 ? 'يحتاج توظيف' : 'نقص حاد', color: '#f59e0b' },
+                { icon: '💰', label: 'متوسط الراتب', value: fmt(avgSalary) + ' ر.س', status: avgSalary > 6000 ? 'good' : avgSalary > 4000 ? 'warn' : 'bad', statusText: avgSalary > 6000 ? 'تنافسي' : avgSalary > 4000 ? 'متوسط' : 'ضعيف', color: '#8b5cf6' },
+                { icon: '📚', label: 'استثمار التدريب / موظف', value: fmt(trainingPerHead) + ' ر.س', status: trainingPerHead > 1500 ? 'good' : trainingPerHead > 500 ? 'warn' : 'bad', statusText: trainingPerHead > 1500 ? 'قوي' : trainingPerHead > 500 ? 'متواضع' : 'ضعيف', color: '#3b82f6' },
+                { icon: '⚖️', label: 'الامتثال النظامي', value: pct(complianceScore), status: complianceScore >= 80 ? 'good' : complianceScore >= 50 ? 'warn' : 'bad', statusText: complianceScore >= 80 ? 'ملتزم' : complianceScore >= 50 ? 'جزئي' : 'ضعيف', color: '#14b8a6' },
+                { icon: '🎯', label: 'نضج إدارة الأداء', value: pct(perfScore), status: perfScore >= 70 ? 'good' : perfScore >= 40 ? 'warn' : 'bad', statusText: perfScore >= 70 ? 'ناضج' : perfScore >= 40 ? 'نامي' : 'بدائي', color: '#ec4899' },
+                { icon: '👔', label: 'نطاق الإشراف', value: Math.round(spanOfControl) + ':1', status: spanOfControl >= 5 && spanOfControl <= 10 ? 'good' : 'warn', statusText: spanOfControl >= 5 && spanOfControl <= 10 ? 'مثالي' : spanOfControl > 10 ? 'واسع جداً' : 'ضيق', color: '#667eea' },
+                { icon: '📊', label: 'فجوة الرواتب (أعلى/أدنى)', value: salaryGap > 0 ? salaryGap.toFixed(1) + 'x' : '—', status: salaryGap > 0 && salaryGap < 8 ? 'good' : salaryGap >= 8 ? 'warn' : 'good', statusText: salaryGap >= 10 ? 'فجوة كبيرة' : salaryGap >= 7 ? 'عالية' : 'مقبولة', color: '#06b6d4' },
+            ];
+            $('kpiGrid').innerHTML = kpis.map((k, i) => `<div class="kpi-card"><div style="position:absolute;top:0;left:0;right:0;height:3px;background:${k.color}"></div><div class="kpi-icon">${k.icon}</div><div class="kpi-value">${k.value}</div><div class="kpi-label">${k.label}</div><span class="kpi-status ${k.status}">${k.statusText}</span></div>`).join('');
+
+            // ─── Charts ───
+            const wCtx = $('workforceChart').getContext('2d');
+            if (window._wC) window._wC.destroy();
+            window._wC = new Chart(wCtx, { type: 'doughnut', data: { labels: ['سعوديين', 'أجانب', 'شواغر'], datasets: [{ data: [d.saudis, foreigners, d.vacancies], backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b'], borderWidth: 0 }] }, options: { responsive: true, plugins: { legend: { labels: { color: '#94a3b8', font: { family: 'Tajawal' } } } } } });
+
+            const cCtx = $('complianceChart').getContext('2d');
+            if (window._cC) window._cC.destroy();
+            const cLabels = ['عقود قوى', 'مدد', 'تأمين طبي', 'لائحة عمل', 'تأمينات', 'سلامة'];
+            const cData = complianceItems.map(k => activeToggles.has(k) ? 100 : 0);
+            window._cC = new Chart(cCtx, { type: 'bar', data: { labels: cLabels, datasets: [{ label: 'الامتثال', data: cData, backgroundColor: cData.map(v => v > 0 ? 'rgba(34,197,94,.6)' : 'rgba(239,68,68,.4)'), borderRadius: 6 }] }, options: { responsive: true, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { max: 100, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,.05)' } }, y: { ticks: { color: '#94a3b8', font: { family: 'Tajawal', size: 11 } }, grid: { display: false } } } } });
+
+            // ─── Recommendations ───
+            const recos = [];
+            if (saudizationRate < 20) recos.push({ icon: '🇸🇦', color: '#ef4444', bg: 'rgba(239,68,68,.1)', title: `نسبة التوطين ${pct(saudizationRate)} — خطر نطاقات أحمر`, desc: `تحتاج ${Math.ceil(d.total * 0.3 - d.saudis)} سعودي إضافي للوصول لـ 30%. ابحث في برامج تمهير وطاقات.` });
+            else if (saudizationRate < 30) recos.push({ icon: '🇸🇦', color: '#f59e0b', bg: 'rgba(245,158,11,.1)', title: `نسبة التوطين ${pct(saudizationRate)} — تحتاج تحسين`, desc: 'ادرس توظيف سعوديين في المناصب الشاغرة أولاً. استفد من دعم هدف.' });
+
+            if (turnoverRate > 25) recos.push({ icon: '🚪', color: '#ef4444', bg: 'rgba(239,68,68,.1)', title: `معدل دوران خطير: ${pct(turnoverRate)}`, desc: `فقدت ${d.resignations} موظف في السنة. تكلفة الاستبدال تقديرياً: ${fmt(d.resignations * avgSalary * 3)} ر.س. ابحث عن الأسباب (رواتب؟ بيئة عمل؟ قيادة؟)` });
+            else if (turnoverRate > 15) recos.push({ icon: '⚠️', color: '#f59e0b', bg: 'rgba(245,158,11,.1)', title: `معدل دوران أعلى من الطبيعي: ${pct(turnoverRate)}`, desc: 'سوّ استبيان خروج (Exit Interview) لكل مستقيل. اكتشف الأنماط.' });
+
+            if (vacancyRate > 15) recos.push({ icon: '🪑', color: '#ef4444', bg: 'rgba(239,68,68,.1)', title: `${d.vacancies} مناصب شاغرة — نقص حاد`, desc: 'الشواغر تضغط على الموظفين الحاليين وتزيد الدوران. أولوية قصوى: سد الشواغر الحرجة خلال 30 يوم.' });
+
+            if (complianceScore < 50) recos.push({ icon: '⚖️', color: '#ef4444', bg: 'rgba(239,68,68,.1)', title: `امتثال ضعيف: ${pct(complianceScore)} فقط`, desc: 'بنود غير مكتملة تعرّضك لغرامات. الأولوية: توثيق العقود في قوى + حماية الأجور عبر مدد.' });
+
+            if (trainingPerHead < 500) recos.push({ icon: '📚', color: '#f59e0b', bg: 'rgba(245,158,11,.1)', title: `استثمار تدريب ضعيف: ${fmt(trainingPerHead)} ر.س/موظف`, desc: 'المنشآت الناجحة تستثمر 2,000-5,000 ر.س/موظف سنوياً. التدريب يقلل الدوران ويرفع الإنتاجية.' });
+
+            if (!activeToggles.has('perf_review')) recos.push({ icon: '🎯', color: '#f59e0b', bg: 'rgba(245,158,11,.1)', title: 'لا يوجد تقييم أداء سنوي', desc: 'بدون تقييم، ما تقدر تحدد من يستحق ترقية أو تطوير. ابدأ بنموذج بسيط (KPIs + سلوكيات).' });
+
+            if (!activeToggles.has('succession')) recos.push({ icon: '🔄', color: '#f59e0b', bg: 'rgba(245,158,11,.1)', title: 'لا يوجد خطة تعاقب وظيفي', desc: 'لو استقال مدير رئيسي غداً — مين البديل؟ حدد بديل لكل منصب قيادي.' });
+
+            if (d.hasSurvey === 'no') recos.push({ icon: '😐', color: '#f59e0b', bg: 'rgba(245,158,11,.1)', title: 'لا يوجد استبيان رضا موظفين', desc: 'ما تقدر تحسّن اللي ما تقيسه. سوّ استبيان سريع (10 أسئلة) كل 6 أشهر.' });
+
+            if (salaryGap >= 10) recos.push({ icon: '📊', color: '#f59e0b', bg: 'rgba(245,158,11,.1)', title: `فجوة رواتب كبيرة: ${salaryGap.toFixed(1)}x`, desc: `أعلى راتب يفوق الأدنى بـ ${salaryGap.toFixed(0)} ضعف. هذا يسبب استياء. راجع هيكل الرواتب.` });
+
+            if (recos.length === 0) recos.push({ icon: '✅', color: '#22c55e', bg: 'rgba(34,197,94,.1)', title: 'وضع ممتاز — لا توجد تحذيرات حرجة', desc: 'استمر بالتطوير. ركّز على برامج التدريب والاحتفاظ بالمواهب.' });
+
+            $('recommendations').innerHTML = recos.map(r => `<div class="reco-card"><div class="reco-icon" style="background:${r.bg};color:${r.color}">${r.icon}</div><div><h4>${r.title}</h4><p>${r.desc}</p></div></div>`).join('');
+
+            // Save (dual-write: old key + new stratix_ key)
+            const resultPayload = { score, data: d, saudizationRate, turnoverRate, vacancyRate, complianceScore, perfScore, compliance: [...activeToggles], timestamp: new Date().toISOString() };
+            localStorage.setItem('hrDeepResults', JSON.stringify(resultPayload));
+            localStorage.setItem('stratix_hr_deep_results', JSON.stringify(resultPayload));
+            showStep(4);
+        }
+
+        function saveAndContinue() {
+            const results = JSON.parse(localStorage.getItem('hrDeepResults') || '{}');
+
+            // 1. حفظ في companyHealth (للتوافق مع company-health.html)
+            const existing = JSON.parse(localStorage.getItem('companyHealth') || '{}');
+            existing.hr = results;
+            existing.lastUpdated = new Date().toISOString();
+            localStorage.setItem('companyHealth', JSON.stringify(existing));
+
+            // 2. استخلاص نقاط القوة والضعف
+            const { strengths, weaknesses } = extractHRInsights(results);
+            localStorage.setItem('stratix_hr_strengths', JSON.stringify(strengths));
+            localStorage.setItem('stratix_hr_weaknesses', JSON.stringify(weaknesses));
+
+            // 3. تسجيل إكمال الخطوة 1
+            updateCompletedSteps(1);
+
+            // 4. إشعار + انتقال لـ SWOT
+            showToast('تم إكمال تحليل الموارد البشرية — جاري الانتقال لـ SWOT', 'success');
+            setTimeout(() => {
+                window.location.href = '/swot.html?dept=hr';
+            }, 1200);
+        }
+
+        // Load saved
+        (function () {
+            try {
+                const s = JSON.parse(localStorage.getItem('hrDeepResults') || '{}');
+                if (s.data) {
+                    const k = s.data;
+                    if (k.total) $('totalEmployees').value = k.total;
+                    if (k.saudis) $('saudiEmployees').value = k.saudis;
+                    if (k.newHires) $('newHires').value = k.newHires;
+                    if (k.resignations) $('resignations').value = k.resignations;
+                    if (k.vacancies) $('vacancies').value = k.vacancies;
+                    if (k.departments) $('departments').value = k.departments;
+                    if (k.managers) $('managers').value = k.managers;
+                    if (k.avgExperience) $('avgExperience').value = k.avgExperience;
+                    if (k.totalSalaries) $('totalSalaries').value = k.totalSalaries.toLocaleString();
+                    if (k.medicalCost) $('medicalInsuranceCost').value = k.medicalCost.toLocaleString();
+                    if (k.trainingBudget) $('trainingBudget').value = k.trainingBudget.toLocaleString();
+                    if (k.otherBenefits) $('otherBenefits').value = k.otherBenefits.toLocaleString();
+                    if (k.highestSalary) $('highestSalary').value = k.highestSalary.toLocaleString();
+                    if (k.lowestSalary) $('lowestSalary').value = k.lowestSalary.toLocaleString();
+                    if (k.hasSurvey) $('hasSurvey').value = k.hasSurvey;
+                    if (k.satisfactionRate) $('satisfactionRate').value = k.satisfactionRate;
+                }
+                if (s.compliance) s.compliance.forEach(k => { activeToggles.add(k); document.querySelector(`[data-key="${k}"]`)?.classList.add('on'); });
+                const u = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                if (u.name) { $('userName').textContent = u.name; $('userAvatar').textContent = u.name[0]; }
+            } catch (e) { }
+        })();
+    </script>
+</body>
+
+</html>

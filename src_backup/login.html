@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس - الدخول أو التسجيل</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --bg: #0f1117;
+            --bg-card: #1a1d2e;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --success: #10b981;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 20% 80%, rgba(102, 126, 234, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(118, 75, 162, 0.08) 0%, transparent 50%);
+            z-index: -1;
+            animation: bgPulse 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes bgPulse {
+            0% {
+                opacity: 0.6;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .auth-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 36px 32px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 460px;
+            animation: slideUp 0.6s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 14px;
+            padding: 4px;
+            margin-bottom: 28px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px 16px;
+            border-radius: 11px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+            border: none;
+            background: transparent;
+        }
+
+        .auth-tab:hover {
+            color: var(--text);
+        }
+
+        .auth-tab.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.35);
+        }
+
+        .auth-tab i {
+            margin-left: 6px;
+            font-size: 1rem;
+        }
+
+        .auth-panel {
+            display: none;
+            animation: fadeIn 0.35s ease;
+        }
+
+        .auth-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-label {
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: white;
+            border-radius: 12px;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-weight: bold;
+            font-size: 1.05rem;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .info-icon {
+            cursor: pointer;
+            color: var(--primary);
+            font-size: 0.85rem;
+        }
+
+        .password-rules {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+        }
+
+        .rule.valid {
+            color: var(--success);
+        }
+
+        .header-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-size: 26px;
+            color: var(--primary);
+        }
+
+        .brand-name {
+            font-weight: 800;
+            font-size: 1.6rem;
+            background: linear-gradient(135deg, var(--primary), #a78bfa);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .brand-sub {
+            color: var(--text-muted);
+            font-size: 0.88rem;
+            margin-top: 2px;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 0;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .switch-link {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 0.88rem;
+        }
+
+        .switch-link a {
+            color: var(--primary);
+            font-weight: bold;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .switch-link a:hover {
+            text-decoration: underline;
+        }
+
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast-msg {
+            background: var(--bg-card);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(4px);
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .toast-success {
+            border-right: 4px solid #10b981;
+        }
+
+        .toast-error {
+            border-right: 4px solid #ef4444;
+        }
+
+        .toast-warning {
+            border-right: 4px solid #f59e0b;
+        }
+
+        .toast-info {
+            border-right: 4px solid #3b82f6;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- حفظ عنوان العودة إلى sessionStorage -->
+    <script>
+        (function () {
+            const params = new URLSearchParams(window.location.search);
+            const explicitRedirect = params.get('redirect');
+            if (explicitRedirect) {
+                sessionStorage.setItem('stratix_return_url', decodeURIComponent(explicitRedirect));
+                return;
+            }
+            const ref = document.referrer;
+            if (ref && !sessionStorage.getItem('stratix_return_url')) {
+                try {
+                    const refUrl = new URL(ref);
+                    if (refUrl.origin === window.location.origin &&
+                        !refUrl.pathname.includes('login') &&
+                        !refUrl.pathname.includes('landing') &&
+                        refUrl.pathname !== '/') {
+                        sessionStorage.setItem('stratix_return_url', refUrl.pathname + refUrl.search);
+                    }
+                } catch (e) { }
+            }
+        })();
+    </script>
+
+    <div class="auth-card">
+        <div class="text-center mb-3">
+            <div class="header-icon"><i class="bi bi-rocket-takeoff"></i></div>
+            <div class="brand-name">ستارتكس</div>
+            <div class="brand-sub" id="headerSub">ابدأ رحلتك الاستراتيجية</div>
+        </div>
+
+        <!-- التبويبات -->
+        <div class="auth-tabs">
+            <button class="auth-tab" id="tab-signup" data-action="switch-tab" data-tab="signup">
+                <i class="bi bi-person-plus"></i> حساب جديد
+            </button>
+            <button class="auth-tab active" id="tab-login" data-action="switch-tab" data-tab="login">
+                <i class="bi bi-box-arrow-in-left"></i> تسجيل الدخول
+            </button>
+        </div>
+
+        <!-- نموذج تسجيل الدخول -->
+        <div class="auth-panel active" id="panel-login">
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label class="form-label">البريد الإلكتروني</label>
+                    <input type="email" id="login-email" class="form-control" placeholder="name@company.com" required>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label">كلمة المرور</label>
+                    <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-shield-lock me-1"></i> دخول آمن
+                </button>
+                <div class="switch-link">
+                    <span class="text-muted">ليس لديك حساب؟ </span>
+                    <a data-action="switch-tab" data-tab="signup">أنشئ حساباً مجاناً</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- نموذج إنشاء حساب -->
+        <div class="auth-panel" id="panel-signup">
+            <div id="diagPathBanner"
+                style="display:none; background:linear-gradient(135deg,rgba(102,126,234,0.12),rgba(118,75,162,0.12)); border:1px solid rgba(102,126,234,0.2); border-radius:14px; padding:14px 18px; margin-bottom:20px; text-align:center;">
+                <div style="font-size:0.82rem; color:#94a3b8; margin-bottom:4px;">مسارك المقترح:</div>
+                <div id="diagPathName" style="font-size:1.1rem; font-weight:700; color:#fff;"></div>
+                <div id="diagPathSub" style="font-size:0.8rem; color:#667eea; margin-top:2px;"></div>
+            </div>
+            <form id="signupForm">
+                <div class="mb-3">
+                    <label class="form-label">الاسم الكامل</label>
+                    <input type="text" id="signup-name" class="form-control" placeholder="مثال: أحمد محمد">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">البريد الإلكتروني</label>
+                    <input type="email" id="signup-email" class="form-control" placeholder="name@company.com" required>
+                </div>
+                <div class="mb-3" id="companySection">
+                    <label class="form-label" id="companyLabel">اسم المنشأة</label>
+                    <input type="text" id="signup-company" class="form-control" placeholder="شركة التقنية الحديثة"
+                        required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">رقم الجوال</label>
+                    <input type="tel" id="signup-phone" class="form-control" placeholder="05xxxxxxxx" dir="ltr">
+                    <div class="form-text" style="color:var(--text-muted);font-size:0.78rem">اختياري</div>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label">كلمة المرور</label>
+                    <input type="password" class="form-control" id="signup-password" placeholder="••••••••" required>
+                    <div class="password-rules">
+                        <div class="rule" id="rule-length"><i class="bi bi-circle"></i> 8 أحرف على الأقل</div>
+                        <div class="rule" id="rule-upper"><i class="bi bi-circle"></i> حرف كبير (A-Z)</div>
+                        <div class="rule" id="rule-lower"><i class="bi bi-circle"></i> حرف صغير (a-z)</div>
+                        <div class="rule" id="rule-number"><i class="bi bi-circle"></i> رقم (0-9)</div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-rocket-takeoff me-1"></i> إنشاء الحساب والبدء
+                </button>
+                <div class="switch-link">
+                    <span class="text-muted">لديك حساب بالفعل؟ </span>
+                    <a data-action="switch-tab" data-tab="login">سجل دخولك</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ربط السكربتات المحدثة الجديدة -->
+    <script src="/assets/js/api.js"></script>
+    <!-- تم إضافة الدالة المركزية auth-handler بدلاً من auth.js لتنسيق المسارات -->
+    <script src="/assets/js/auth-handler.js"></script>
+
+    <script>
+        // ============================================================
+        // دوال مساعدة
+        // ============================================================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `toast-msg toast-${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3500);
+        }
+
+        function attachPasswordRules() {
+            const pwdInput = document.getElementById('signup-password');
+            if (!pwdInput) return;
+
+            const rules = {
+                length: { id: 'rule-length', regex: /.{8,}/ },
+                upper: { id: 'rule-upper', regex: /[A-Z]/ },
+                lower: { id: 'rule-lower', regex: /[a-z]/ },
+                number: { id: 'rule-number', regex: /[0-9]/ }
+            };
+
+            pwdInput.addEventListener('input', function (e) {
+                const val = e.target.value;
+                for (const key in rules) {
+                    const ruleDiv = document.getElementById(rules[key].id);
+                    const icon = ruleDiv.querySelector('i');
+                    if (rules[key].regex.test(val)) {
+                        ruleDiv.classList.add('valid');
+                        icon.classList.replace('bi-circle', 'bi-check-circle-fill');
+                    } else {
+                        ruleDiv.classList.remove('valid');
+                        icon.classList.replace('bi-check-circle-fill', 'bi-circle');
+                    }
+                }
+            });
+        }
+
+        function showDiagBanner() {
+            try {
+                const raw = sessionStorage.getItem('diagnosticResult');
+                if (!raw) return;
+                const result = JSON.parse(raw);
+                const banner = document.getElementById('diagPathBanner');
+                const nameEl = document.getElementById('diagPathName');
+                const subEl = document.getElementById('diagPathSub');
+                if (!banner || !nameEl) return;
+
+                if (result.category === 'manager') {
+                    nameEl.textContent = (result.emoji || '🎯') + ' مسار إدارة ' + (result.name || '');
+                } else if (result.category === 'investor') {
+                    nameEl.textContent = (result.emoji || '👁️') + ' ' + (result.name || '');
+                } else {
+                    nameEl.textContent = (result.emoji || '✨') + ' ' + (result.pathName || result.patternKey || '');
+                    if (result.variant && result.variant.subtitle) {
+                        subEl.textContent = result.variant.subtitle;
+                    }
+                }
+                banner.style.display = 'block';
+
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('from') === 'diagnostic') {
+                    switchTab('signup');
+                }
+            } catch (e) { }
+        }
+
+        // ============================================================
+        // التبويبات
+        // ============================================================
+        function switchTab(tab) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            document.getElementById('panel-' + tab).classList.add('active');
+
+            const sub = document.getElementById('headerSub');
+            if (tab === 'login') {
+                sub.textContent = 'سجل الدخول لمتابعة أداء استراتيجيتك';
+            } else {
+                sub.textContent = 'أنشئ حسابك المجاني وابدأ رحلتك';
+            }
+        }
+
+        // ============================================================
+        // معالجة الأحداث المركزية (data-action)
+        // ============================================================
+        function attachEventHandlers() {
+            const authCard = document.querySelector('.auth-card');
+            if (!authCard) return;
+
+            authCard.addEventListener('click', (e) => {
+                const target = e.target.closest('[data-action]');
+                if (!target) return;
+                const action = target.dataset.action;
+                if (action === 'switch-tab') {
+                    const tab = target.dataset.tab;
+                    if (tab === 'login' || tab === 'signup') {
+                        switchTab(tab);
+                    }
+                }
+            });
+        }
+
+        // ============================================================
+        // تسجيل الدخول
+        // ============================================================
+        async function handleLogin(email, password) {
+            try {
+                const data = await window.apiRequest('/api/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ email, password })
+                });
+                if (data && data.user) {
+                    handleAuthResponse(data);
+                } else {
+                    showToast(data.message || 'فشل تسجيل الدخول', 'error');
+                }
+            } catch (err) {
+                console.error('Login error:', err);
+                showToast(err.message || 'خطأ في الاتصال بالسيرفر', 'error');
+            }
+        }
+
+        // ============================================================
+        // إنشاء حساب
+        // ============================================================
+        async function handleSignup(data) {
+            try {
+                const response = await window.apiRequest('/api/auth/register', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                if (response && response.user) {
+                    handleAuthResponse(response);
+                } else {
+                    showToast(response.error || response.message || 'فشل إنشاء الحساب', 'error');
+                }
+            } catch (err) {
+                console.error('Signup error:', err);
+                showToast(err.message || 'خطأ في الاتصال بالسيرفر', 'error');
+            }
+        }
+
+        // ============================================================
+        // ربط الأحداث بالنماذج
+        // ============================================================
+        function attachFormHandlers() {
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    const btn = loginForm.querySelector('button[type="submit"]');
+                    const originalText = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> جاري الدخول...';
+
+                    const email = document.getElementById('login-email').value.trim();
+                    const password = document.getElementById('login-password').value;
+                    if (!email || !password) {
+                        showToast('يرجى إدخال البريد الإلكتروني وكلمة المرور', 'warning');
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                        return;
+                    }
+                    await handleLogin(email, password);
+
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                });
+            }
+
+            const signupForm = document.getElementById('signupForm');
+            if (signupForm) {
+                signupForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    const btn = signupForm.querySelector('button[type="submit"]');
+                    const originalText = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> جاري إنشاء الحساب...';
+
+                    const name = document.getElementById('signup-name').value.trim();
+                    const email = document.getElementById('signup-email').value.trim();
+                    const companyName = document.getElementById('signup-company').value.trim();
+                    const phone = document.getElementById('signup-phone').value.trim();
+                    const password = document.getElementById('signup-password').value;
+
+                    if (!name || !email || !companyName || !password) {
+                        showToast('يرجى تعبئة جميع الحقول المطلوبة', 'warning');
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                        return;
+                    }
+
+                    // ✅ استخدام sessionStorage فقط للبيانات المؤقتة
+                    let diagnosticData = null;
+                    let uCategory = 'EXPLORER';
+                    let uType = 'COMPANY_MANAGER';
+                    try {
+                        const sessionDiag = sessionStorage.getItem('diagnosticResult');
+                        if (sessionDiag) {
+                            diagnosticData = JSON.parse(sessionDiag);
+                            if (diagnosticData.category === 'owner') {
+                                uCategory = diagnosticData.patternKey || 'EXPLORER';
+                                uType = 'COMPANY_MANAGER';
+                            } else if (diagnosticData.category === 'manager') {
+                                uCategory = 'DEPT_' + (diagnosticData.department || '').toUpperCase();
+                                uType = 'DEPT_MANAGER';
+                            } else if (diagnosticData.category === 'investor') {
+                                uCategory = 'INVESTOR_BOARD';
+                                uType = 'BOARD_VIEWER';
+                            }
+                        }
+                    } catch (e) { }
+
+                    await handleSignup({
+                        name, email, password,
+                        phone: phone || undefined,
+                        companyName,
+                        userCategory: uCategory,
+                        userType: uType,
+                        diagnosticData
+                    });
+
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                });
+            }
+        }
+
+        // ============================================================
+        // التهيئة
+        // ============================================================
+        function init() {
+            if (!document.getElementById('toastContainer')) {
+                const toastDiv = document.createElement('div');
+                toastDiv.id = 'toastContainer';
+                toastDiv.className = 'toast-container';
+                document.body.appendChild(toastDiv);
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const defaultTab = urlParams.get('tab') === 'login' ? 'login' : 'signup';
+            switchTab(defaultTab);
+
+            attachEventHandlers();
+            attachPasswordRules();
+            attachFormHandlers();
+            showDiagBanner();
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>

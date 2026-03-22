@@ -4,7 +4,7 @@
  */
 const express = require('express');
 const multer = require('multer');
-const XLSX = require('xlsx');
+const ExcelJS = require('exceljs');
 const mammoth = require('mammoth');
 const path = require('path');
 const fs = require('fs');
@@ -63,7 +63,7 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
         let result;
 
         if (['.xlsx', '.xls', '.csv'].includes(ext)) {
-            result = parseExcel(filePath, type);
+            result = await parseExcel(filePath, type);
         } else if (['.docx', '.doc'].includes(ext)) {
             result = await parseWord(filePath);
         } else {
@@ -158,47 +158,47 @@ router.post('/confirm', verifyToken, async (req, res) => {
 
 // ============ 3. DOWNLOAD TEMPLATE ============
 // تحميل قالب فارغ
-router.get('/templates/:type', verifyToken, (req, res) => {
+router.get('/templates/:type', verifyToken, async (req, res) => {
     try {
         const { type } = req.params;
-        const wb = XLSX.utils.book_new();
+        const wb = new ExcelJS.Workbook();
         let ws;
 
         switch (type) {
             case 'KPI_ENTRY':
-                ws = XLSX.utils.aoa_to_sheet([
+                ws = wb.addWorksheet('إدخال المؤشرات');
+                ws.addRows([
                     ['اسم المؤشر', 'القيمة الفعلية', 'بداية الفترة', 'نهاية الفترة', 'ملاحظات'],
                     ['نسبة رضا العملاء', 85, '2026-01-01', '2026-01-31', 'بيانات يناير'],
                     ['معدل الإنتاجية', 92, '2026-01-01', '2026-01-31', ''],
                 ]);
-                XLSX.utils.book_append_sheet(wb, ws, 'إدخال المؤشرات');
                 break;
 
             case 'FINANCIAL':
-                ws = XLSX.utils.aoa_to_sheet([
+                ws = wb.addWorksheet('القرارات المالية');
+                ws.addRows([
                     ['العنوان', 'الوصف', 'المبلغ', 'العملة', 'النوع', 'الحالة', 'تاريخ القرار'],
                     ['استثمار تقني', 'شراء خوادم جديدة', 500000, 'SAR', 'INVESTMENT', 'PROPOSED', '2026-03-01'],
                 ]);
-                XLSX.utils.book_append_sheet(wb, ws, 'القرارات المالية');
                 break;
 
             case 'SWOT':
-                ws = XLSX.utils.aoa_to_sheet([
+                ws = wb.addWorksheet('تحليل SWOT');
+                ws.addRows([
                     ['النوع', 'العنوان', 'الوصف', 'التأثير'],
                     ['STRENGTH', 'فريق عمل متميز', 'خبرات متنوعة ومؤهلات عالية', 'HIGH'],
                     ['WEAKNESS', 'بنية تقنية قديمة', 'أنظمة بحاجة لتحديث', 'MEDIUM'],
                     ['OPPORTUNITY', 'سوق جديد', 'فرصة توسع إقليمي', 'HIGH'],
                     ['THREAT', 'منافسة شديدة', 'دخول منافسين جدد', 'MEDIUM'],
                 ]);
-                XLSX.utils.book_append_sheet(wb, ws, 'تحليل SWOT');
                 break;
 
             case 'INITIATIVES':
-                ws = XLSX.utils.aoa_to_sheet([
+                ws = wb.addWorksheet('المبادرات');
+                ws.addRows([
                     ['العنوان', 'الوصف', 'المسؤول', 'الحالة', 'تاريخ البداية', 'تاريخ النهاية', 'الميزانية', 'الأولوية'],
                     ['التحول الرقمي', 'أتمتة العمليات الأساسية', 'أحمد محمد', 'PLANNED', '2026-01-01', '2026-06-30', 200000, 'HIGH'],
                 ]);
-                XLSX.utils.book_append_sheet(wb, ws, 'المبادرات');
                 break;
 
             default:
@@ -206,10 +206,10 @@ router.get('/templates/:type', verifyToken, (req, res) => {
         }
 
         // إرسال الملف
-        const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', `attachment; filename=template_${type}.xlsx`);
-        res.send(buffer);
+        await wb.xlsx.write(res);
+        res.end();
     } catch (error) {
         console.error('Template download error:', error);
         res.status(500).json({ error: 'فشل في تحميل القالب' });
@@ -255,13 +255,24 @@ router.get('/history', verifyToken, (req, res) => {
 /**
  * Excel/CSV Parser
  */
-function parseExcel(filePath, type) {
-    const workbook = XLSX.readFile(filePath);
-    const sheetName = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[sheetName];
+async function parseExcel(filePath, type) {
+    const workbook = new ExcelJS.Workbook();
+    if (filePath.endsWith('.csv')) {
+        await workbook.csv.readFile(filePath);
+    } else {
+        await workbook.xlsx.readFile(filePath);
+    }
 
-    // إلى JSON
-    const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+    const worksheet = workbook.worksheets[0];
+    const jsonData = [];
+
+    worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+        const rowValues = [];
+        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+            rowValues[colNumber - 1] = cell.value?.toString() || '';
+        });
+        jsonData.push(rowValues);
+    });
 
     if (jsonData.length === 0) {
         return { summary: { error: 'الملف فارغ' }, headers: [], rows: [], validation: { valid: 0, warnings: 0, errors: 1 } };
@@ -285,8 +296,8 @@ function parseExcel(filePath, type) {
 
     return {
         summary: {
-            sheets: workbook.SheetNames.length,
-            activeSheet: sheetName,
+            sheets: workbook.worksheets.length,
+            activeSheet: worksheet.name,
             totalRows: rows.length,
             columns: headers.length,
         },

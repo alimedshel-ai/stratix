@@ -905,66 +905,100 @@
         // ═══ Auto-fill from Diagnostic Payload ═══
         (function autoFillFromDiagnostic() {
             const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
-            if (!diag) return;
+            const sessionDiag = JSON.parse(sessionStorage.getItem('diagnosticResult') || 'null');
+            const tempCompany = localStorage.getItem('stratix_temp_company_name');
+
+            if (!diag && !sessionDiag && !tempCompany) return;
 
             const banner = document.getElementById('diagDataBanner');
             const tagsEl = document.getElementById('diagDataTags');
             const tags = [];
 
             // Company name
-            if (diag.companyName) {
+            const compName = tempCompany || diag?.companyName;
+            if (compName) {
                 const orgNameEl = document.getElementById('orgName');
                 if (orgNameEl) {
-                    orgNameEl.value = diag.companyName;
+                    orgNameEl.value = compName;
                     orgNameEl.style.borderColor = 'rgba(34,197,94,0.4)';
                 }
-                tags.push('🏷️ ' + diag.companyName);
+                tags.push('🏷️ ' + compName);
             }
 
             // Entity type
-            const ENTITY_LABELS = { P: 'قطاع خاص', G: 'جهة حكومية', N: 'غير ربحي', M: 'مختلط' };
-            if (diag.entityType) {
+            const act = sessionDiag?.answers?.activity || '';
+            let entType = diag?.entityType;
+            if (!entType && sessionDiag) {
+                if (act.startsWith('gov_') || act === 'public_sector') entType = 'G';
+                else if (act.startsWith('npo_')) entType = 'N';
+                else if (act.startsWith('mixed_') || act === 'mixed_sector') entType = 'M';
+                else if (act) entType = 'P';
+            }
+            if (entType) {
+                const ENTITY_LABELS = { P: 'قطاع خاص', G: 'جهة حكومية', N: 'غير ربحي', M: 'مختلط' };
                 const orgTypeEl = document.getElementById('orgType');
-                orgTypeEl.value = diag.entityType;
-                orgTypeEl.style.borderColor = 'rgba(34,197,94,0.4)';
-                document.getElementById('orgTypeAutoTag').style.display = 'inline';
-                tags.push('🏢 ' + (ENTITY_LABELS[diag.entityType] || diag.entityType));
+                if (orgTypeEl) {
+                    orgTypeEl.value = entType;
+                    orgTypeEl.style.borderColor = 'rgba(34,197,94,0.4)';
+                    document.getElementById('orgTypeAutoTag').style.display = 'inline';
+                    tags.push('🏢 ' + (ENTITY_LABELS[entType] || entType));
+                }
             }
 
             // Size
-            const SIZE_MAP = { micro: '1-10', small: '11-50', medium: '51-200', large: '201-500', enterprise: '500+' };
-            const SIZE_LABELS = { micro: 'متناهية الصغر', small: 'صغيرة', medium: 'متوسطة', large: 'كبيرة', enterprise: 'عملاقة' };
-            if (diag.size) {
-                const mappedSize = SIZE_MAP[diag.size] || diag.size;
+            const sizeRaw = diag?.size || sessionDiag?.answers?.size;
+            if (sizeRaw) {
+                const SIZE_MAP = {
+                    'micro': '1-10', '1-5': '1-10',
+                    'small': '11-50', '6-30': '11-50',
+                    'medium': '51-200', '31-200': '51-200',
+                    'large': '201-500', '200+': '201-500',
+                    'enterprise': '500+'
+                };
+                const SIZE_LABELS = { '1-10': 'متناهية الصغر', '11-50': 'صغيرة', '51-200': 'متوسطة', '201-500': 'كبيرة', '500+': 'عملاقة' };
+                const mappedSize = SIZE_MAP[sizeRaw] || sizeRaw;
                 const orgSizeEl = document.getElementById('orgSize');
-                orgSizeEl.value = mappedSize;
-                orgSizeEl.style.borderColor = 'rgba(34,197,94,0.4)';
-                document.getElementById('orgSizeAutoTag').style.display = 'inline';
-                tags.push('📏 ' + (SIZE_LABELS[diag.size] || diag.size));
+                if (orgSizeEl) {
+                    orgSizeEl.value = mappedSize;
+                    orgSizeEl.style.borderColor = 'rgba(34,197,94,0.4)';
+                    document.getElementById('orgSizeAutoTag').style.display = 'inline';
+                    tags.push('📏 ' + (SIZE_LABELS[mappedSize] || mappedSize));
+                }
             }
 
             // Sector — show in Step 2 banner
-            const SECTOR_LABELS = {
-                services: 'الخدمي', commercial: 'التجاري', industrial: 'الصناعي',
-                gov_services: 'خدمات حكومية', gov_infrastructure: 'بنية تحتية',
-                npo_charity: 'جمعيات خيرية', npo_dev: 'تنمية'
-            };
-            if (diag.sector) {
+            const sectorRaw = diag?.sector || sessionDiag?.answers?.activity;
+            if (sectorRaw && !['public_sector', 'mixed_sector'].includes(sectorRaw)) {
+                const SECTOR_LABELS = {
+                    services: 'الخدمي', commercial: 'التجاري', industrial: 'الصناعي',
+                    gov_services: 'خدمات وإدارة عامة', gov_infrastructure: 'بنية تحتية ومشاريع', gov_regulator: 'هيئات تشريعية وتنظيمية',
+                    npo_charity: 'جمعيات خيرية وإغاثية', npo_dev: 'تنمية ومجتمع', npo_waqf: 'أوقاف ومؤسسات مانحة',
+                    mixed_semi_gov: 'شركات شبه حكومية', mixed_ppp: 'شراكة عام وخاص (PPP)',
+                    tech: 'تقنية وبرمجيات', ecommerce: 'تجارة إلكترونية', retail: 'تجارة تجزئة',
+                    food: 'مطاعم ومقاهي', construction: 'مقاولات وبناء', manufacturing: 'صناعة وإنتاج',
+                    healthcare: 'رعاية صحية', realestate: 'عقارات وأملاك', logistics: 'لوجستيات ونقل',
+                    consulting: 'استشارات وأعمال', admin: 'إداري وتشغيلي', engineering: 'هندسي وتصميم'
+                };
                 const sectorBanner = document.getElementById('diagSectorBanner');
                 const sectorNameEl = document.getElementById('diagSectorName');
-                if (sectorBanner) {
+                if (sectorBanner && sectorNameEl) {
                     sectorBanner.style.display = 'block';
-                    sectorNameEl.textContent = SECTOR_LABELS[diag.sector] || diag.sector;
+                    sectorNameEl.textContent = SECTOR_LABELS[sectorRaw] || sectorRaw;
                     if (diag.subsector) sectorNameEl.textContent += ' — ' + diag.subsector;
                 }
                 // Hide manual sector selection since it's from diagnostic
                 const sectorSection = document.getElementById('sectorSelectionSection');
                 if (sectorSection) sectorSection.style.display = 'none';
-                tags.push('🏭 ' + (SECTOR_LABELS[diag.sector] || diag.sector));
+
+                if (typeof selectedSectors !== 'undefined') {
+                    selectedSectors.push(sectorRaw);
+                }
+
+                tags.push('🏭 ' + (SECTOR_LABELS[sectorRaw] || sectorRaw));
             }
 
             // Employee count
-            if (diag.employees) {
+            if (diag && diag.employees) {
                 tags.push('👥 ' + diag.employees + ' موظف');
             }
 
@@ -1157,90 +1191,74 @@
             localStorage.setItem('onboarding_data', JSON.stringify(data));
 
             // حفظ في الباك إند — إنشاء Company + Entity + Member + Version
-            const token = localStorage.getItem('token');
-            if (token) {
-                try {
-                    const res = await fetch('/api/auth/complete-onboarding', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        credentials: 'same-origin', // 🔒 HttpOnly Cookie
-                        body: JSON.stringify({
-                            companyName: data.orgName,
-                            sector: data.sector,
-                            orgSize: data.orgSize,
-                            orgType: data.orgType,
-                        })
-                    });
-                    const result = await res.json();
-                    if (res.ok) {
-                        console.log('✅ Onboarding saved:', result);
-                        // تحديث localStorage
-                        localStorage.setItem('onboarding_completed', 'true');
-                        const user = JSON.parse(localStorage.getItem('user') || '{}');
-                        user.onboardingCompleted = true;
-                        if (result.entity) user.entity = result.entity;
-                        if (result.entityId) {
-                            user.entityId = result.entityId;
-                            localStorage.setItem('entityId', result.entityId);
-                        }
-                        if (result.companyId) {
-                            localStorage.setItem('companyId', result.companyId);
-                        }
-                        // تحديث التوكن لو رجع واحد جديد (الكوكي أُضبط تلقائياً)
-                        if (result.token) {
-                            localStorage.setItem('token', 'httponly-managed');
-                            // استخراج userType من التوكن الجديد
-                            try {
-                                const payload = JSON.parse(atob(result.token.split('.')[1]));
-                                if (payload.userType) user.userType = payload.userType;
-                                if (payload.role) user.role = payload.role;
-                            } catch (e) { }
-                        }
-                        localStorage.setItem('user', JSON.stringify(user));
+            try {
+                const result = await window.apiRequest('/api/auth/complete-onboarding', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        companyName: data.orgName,
+                        sector: data.sector,
+                        orgSize: data.orgSize,
+                        orgType: data.orgType,
+                    })
+                });
 
-                        // ✨ S1.5: ربط القطاع بـ SectorConfig
-                        if (result.entityId && selectedSectors.length > 0) {
-                            const SECTOR_MAP = {
-                                'construction': 'CONSTRUCTION',
-                                'restaurant': 'RESTAURANT', 'food_beverage': 'RESTAURANT',
-                                'retail': 'RETAIL',
-                                'manufacturing': 'MANUFACTURING', 'industrial': 'MANUFACTURING',
-                                'ecommerce': 'ECOMMERCE',
-                                'healthcare': 'HEALTHCARE', 'medical': 'HEALTHCARE',
-                                'tech': 'TECH', 'technology': 'TECH', 'it': 'TECH',
-                                'professional_services': 'SERVICES', 'consulting': 'SERVICES', 'services': 'SERVICES',
-                            };
-                            const primarySector = selectedSectors.find(s => s !== 'other' && !s.startsWith('custom:'));
-                            const configCode = SECTOR_MAP[primarySector];
-                            if (configCode) {
-                                try {
-                                    await fetch('/api/sector-configs/link-entity', {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json'
-                                        },
-                                        credentials: 'same-origin', // 🔒 HttpOnly Cookie
-                                        body: JSON.stringify({
-                                            entityId: result.entityId,
-                                            sectorConfigCode: configCode
-                                        })
-                                    });
-                                    console.log(`✅ Entity linked to sector: ${configCode}`);
-                                } catch (e) {
-                                    console.warn('Sector link failed:', e);
-                                }
+                if (result) {
+                    console.log('✅ Onboarding saved:', result);
+                    // تحديث localStorage
+                    localStorage.setItem('onboarding_completed', 'true');
+                    const user = JSON.parse(localStorage.getItem('user') || '{}');
+                    user.onboardingCompleted = true;
+                    if (result.entity) user.entity = result.entity;
+                    if (result.entityId) {
+                        user.entityId = result.entityId;
+                        localStorage.setItem('entityId', result.entityId);
+                    }
+                    if (result.companyId) {
+                        localStorage.setItem('companyId', result.companyId);
+                    }
+                    // تحديث التوكن لو رجع واحد جديد (الكوكي أُضبط تلقائياً)
+                    if (result.token) {
+                        // استخراج userType من التوكن الجديد
+                        try {
+                            const payload = JSON.parse(atob(result.token.split('.')[1]));
+                            if (payload.userType) user.userType = payload.userType;
+                            if (payload.role) user.role = payload.role;
+                        } catch (e) { }
+                    }
+                    localStorage.setItem('user', JSON.stringify(user));
+
+                    // ✨ S1.5: ربط القطاع بـ SectorConfig
+                    if (result.entityId && selectedSectors.length > 0) {
+                        const SECTOR_MAP = {
+                            'construction': 'CONSTRUCTION',
+                            'restaurant': 'RESTAURANT', 'food_beverage': 'RESTAURANT',
+                            'retail': 'RETAIL',
+                            'manufacturing': 'MANUFACTURING', 'industrial': 'MANUFACTURING',
+                            'ecommerce': 'ECOMMERCE',
+                            'healthcare': 'HEALTHCARE', 'medical': 'HEALTHCARE',
+                            'tech': 'TECH', 'technology': 'TECH', 'it': 'TECH',
+                            'professional_services': 'SERVICES', 'consulting': 'SERVICES', 'services': 'SERVICES',
+                        };
+                        const primarySector = selectedSectors.find(s => s !== 'other' && !s.startsWith('custom:'));
+                        const configCode = SECTOR_MAP[primarySector];
+                        if (configCode) {
+                            try {
+                                await window.apiRequest('/api/sector-configs/link-entity', {
+                                    method: 'POST',
+                                    body: JSON.stringify({
+                                        entityId: result.entityId,
+                                        sectorConfigCode: configCode
+                                    })
+                                });
+                                console.log(`✅ Entity linked to sector: ${configCode}`);
+                            } catch (e) {
+                                console.warn('Sector link failed:', e);
                             }
                         }
-                    } else {
-                        console.warn('⚠️ Onboarding save warning:', result);
                     }
-                } catch (e) {
-                    console.log('Onboarding save fallback:', e);
-                    localStorage.setItem('onboarding_completed', 'true');
                 }
-            } else {
+            } catch (e) {
+                console.log('Onboarding save fallback/error:', e);
                 localStorage.setItem('onboarding_completed', 'true');
             }
 
@@ -1249,6 +1267,9 @@
 
             // === ✅ تحويل تلقائي للداشبورد بعد ٣ ثواني ===
             setTimeout(() => {
+                localStorage.removeItem('stratix_temp_company_name');
+                localStorage.removeItem('stratix_diagnostic_payload');
+                sessionStorage.removeItem('diagnosticResult');
                 const btn = document.getElementById('onboardNextBtn');
                 const targetHref = btn ? btn.getAttribute('href') : '/dashboard.html';
                 window.location.href = targetHref;
@@ -1501,12 +1522,13 @@
         }
 
         // Check if already completed — redirect to dashboard
-        if (localStorage.getItem('onboarding_completed') === 'true') {
-            // إذا المستخدم رجع لصفحة الإعداد وهو مكمّل ← حوّله للداشبورد
+        const currentUserData = JSON.parse(localStorage.getItem('user') || '{}');
+        if (currentUserData.onboardingCompleted === true) {
+            // إذا المستخدم رجع لصفحة الإعداد وهو مكمّل فعلياً ← حوّله للداشبورد الرئيسي
             const urlMode = new URLSearchParams(window.location.search).get('mode');
             if (!urlMode) {
                 // ما نحوّل إذا فيه mode (مثل ?mode=dept) ← يقدر يعدّل
-                window.location.href = '/dashboard.html';
+                window.location.href = '/ceo-dashboard.html';
             }
         }
 
@@ -1522,6 +1544,7 @@
             });
         }
     </script>
+    <script src="/assets/js/api.js"></script>
     <script src="/assets/js/ai-advisor.js"></script>
 </body>
 

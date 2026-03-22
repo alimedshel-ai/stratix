@@ -33,11 +33,11 @@ router.post('/:versionId', verifyToken, async (req, res) => {
         // 1. SWOT — من AnalysisPoint (عبر Assessment)
         results.SWOT = await syncSWOT(versionId, version.entityId, req.user?.id);
 
-        // 2. PESTEL — من ExternalAnalysis
-        results.PESTEL = await syncPESTEL(versionId, req.user?.id);
+        // 2. PESTEL — محفوظ الآن كـ Direct Tool في CompanyAnalysis
+        results.PESTEL = await syncDirectTool(versionId, 'PESTEL', req.user?.id);
 
-        // 3. PORTER — من ExternalAnalysis
-        results.PORTER = await syncPORTER(versionId, req.user?.id);
+        // 3. PORTER — محفوظ الآن كـ Direct Tool في CompanyAnalysis
+        results.PORTER = await syncDirectTool(versionId, 'PORTER', req.user?.id);
 
         // 4. ANSOFF — من StrategicChoice
         results.ANSOFF = await syncANSOFF(versionId, req.user?.id);
@@ -85,21 +85,17 @@ router.post('/:versionId/:toolCode', verifyToken, async (req, res) => {
                 result = await syncSWOT(versionId, version.entityId, req.user?.id);
                 break;
             case 'PESTEL':
-                result = await syncPESTEL(versionId, req.user?.id);
-                break;
             case 'PORTER':
-                result = await syncPORTER(versionId, req.user?.id);
+            case 'CUSTOMER_JOURNEY':
+            case 'VALUE_CHAIN':
+            case 'CORE_COMPETENCY':
+                result = await syncDirectTool(versionId, code, req.user?.id);
                 break;
             case 'ANSOFF':
                 result = await syncANSOFF(versionId, req.user?.id);
                 break;
             case 'BSC':
                 result = await syncBSC(versionId, req.user?.id);
-                break;
-            case 'CUSTOMER_JOURNEY':
-            case 'VALUE_CHAIN':
-            case 'CORE_COMPETENCY':
-                result = await syncDirectTool(versionId, code, req.user?.id);
                 break;
             default:
                 return res.status(400).json({ error: `Tool '${code}' does not support auto-sync` });
@@ -129,50 +125,34 @@ router.get('/:versionId/status', verifyToken, async (req, res) => {
             return res.status(404).json({ error: 'Version not found' });
         }
 
-        // Count data in each source table
-        const ALL_TOOLS = ['SWOT', 'PESTEL', 'PORTER', 'ANSOFF', 'BSC', 'CUSTOMER_JOURNEY', 'VALUE_CHAIN', 'CORE_COMPETENCY'];
-
-        const [swotCount, pestelCount, porterCount, ansoffCount, bscCount] = await Promise.all([
-            // SWOT: AnalysisPoints linked to entity's assessments
+        // جلب الإحصائيات من الجداول الأصلية مع معالجة الأخطاء الجزئية
+        const [
+            swotCount,
+            ansoffCount,
+            bscCount,
+            directCounts
+        ] = await Promise.all([
             prisma.analysisPoint.count({
                 where: { assessment: { entityId: version.entityId } }
-            }),
-            // PESTEL: ExternalAnalysis with PESTEL types
-            prisma.externalAnalysis.count({
-                where: {
-                    versionId,
-                    type: { in: ['POLITICAL', 'ECONOMIC', 'SOCIAL', 'TECHNOLOGICAL', 'ENVIRONMENTAL', 'LEGAL'] }
-                }
-            }),
-            // PORTER: ExternalAnalysis with Porter types
-            prisma.externalAnalysis.count({
-                where: {
-                    versionId,
-                    type: { in: ['PORTER_RIVALRY', 'PORTER_NEW_ENTRANTS', 'PORTER_SUBSTITUTES', 'PORTER_SUPPLIERS', 'PORTER_BUYERS'] }
-                }
-            }),
-            // ANSOFF: StrategicChoice with choiceType
+            }).catch(() => 0),
             prisma.strategicChoice.count({
                 where: { versionId, choiceType: { not: null } }
-            }),
-            // BSC: StrategicObjective with perspective
+            }).catch(() => 0),
             prisma.strategicObjective.count({
                 where: { versionId, perspective: { not: null } }
-            })
+            }).catch(() => 0),
+            // جلب سجلات CompanyAnalysis لجميع الأدوات
+            prisma.companyAnalysis.findMany({
+                where: { versionId, toolCode: { in: ['SWOT', 'PESTEL', 'PORTER', 'ANSOFF', 'BSC', 'CUSTOMER_JOURNEY', 'VALUE_CHAIN', 'CORE_COMPETENCY'] } },
+                select: { toolCode: true, data: true, progress: true, status: true, updatedAt: true }
+            }).catch(() => [])
         ]);
 
-        // Get existing CompanyAnalysis records (including direct-input tools)
-        const existing = await prisma.companyAnalysis.findMany({
-            where: { versionId, toolCode: { in: ALL_TOOLS } },
-            select: { toolCode: true, status: true, progress: true, updatedAt: true, data: true }
-        });
+        const directMap = {};
+        directCounts.forEach(rec => { directMap[rec.toolCode] = rec; });
 
-        const existingMap = {};
-        existing.forEach(e => { existingMap[e.toolCode] = e; });
-
-        // Check if direct-input tools have data
         function directToolHasData(toolCode) {
-            const rec = existingMap[toolCode];
+            const rec = directMap[toolCode];
             if (!rec?.data) return false;
             try {
                 const parsed = typeof rec.data === 'string' ? JSON.parse(rec.data) : rec.data;
@@ -186,80 +166,80 @@ router.get('/:versionId/status', verifyToken, async (req, res) => {
                 sourceTable: 'AnalysisPoint',
                 sourceCount: swotCount,
                 hasData: swotCount > 0 || directToolHasData('SWOT'),
-                synced: !!existingMap.SWOT,
-                status: existingMap.SWOT?.status || 'NOT_SYNCED',
-                progress: existingMap.SWOT?.progress || 0,
-                lastSync: existingMap.SWOT?.updatedAt || null
+                synced: !!directMap.SWOT,
+                status: directMap.SWOT?.status || 'NOT_SYNCED',
+                progress: directMap.SWOT?.progress || 0,
+                lastSync: directMap.SWOT?.updatedAt || null
             },
             {
                 code: 'PESTEL',
-                sourceTable: 'ExternalAnalysis',
-                sourceCount: pestelCount,
-                hasData: pestelCount > 0,
-                synced: !!existingMap.PESTEL,
-                status: existingMap.PESTEL?.status || 'NOT_SYNCED',
-                progress: existingMap.PESTEL?.progress || 0,
-                lastSync: existingMap.PESTEL?.updatedAt || null
+                sourceTable: 'CompanyAnalysis (مباشر)',
+                sourceCount: directToolHasData('PESTEL') ? 1 : 0,
+                hasData: directToolHasData('PESTEL'),
+                synced: !!directMap.PESTEL,
+                status: directMap.PESTEL?.status || 'NOT_SYNCED',
+                progress: directMap.PESTEL?.progress || 0,
+                lastSync: directMap.PESTEL?.updatedAt || null
             },
             {
                 code: 'PORTER',
-                sourceTable: 'ExternalAnalysis',
-                sourceCount: porterCount,
-                hasData: porterCount > 0,
-                synced: !!existingMap.PORTER,
-                status: existingMap.PORTER?.status || 'NOT_SYNCED',
-                progress: existingMap.PORTER?.progress || 0,
-                lastSync: existingMap.PORTER?.updatedAt || null
+                sourceTable: 'CompanyAnalysis (مباشر)',
+                sourceCount: directToolHasData('PORTER') ? 1 : 0,
+                hasData: directToolHasData('PORTER'),
+                synced: !!directMap.PORTER,
+                status: directMap.PORTER?.status || 'NOT_SYNCED',
+                progress: directMap.PORTER?.progress || 0,
+                lastSync: directMap.PORTER?.updatedAt || null
             },
             {
                 code: 'ANSOFF',
                 sourceTable: 'StrategicChoice',
                 sourceCount: ansoffCount,
                 hasData: ansoffCount > 0,
-                synced: !!existingMap.ANSOFF,
-                status: existingMap.ANSOFF?.status || 'NOT_SYNCED',
-                progress: existingMap.ANSOFF?.progress || 0,
-                lastSync: existingMap.ANSOFF?.updatedAt || null
+                synced: !!directMap.ANSOFF,
+                status: directMap.ANSOFF?.status || 'NOT_SYNCED',
+                progress: directMap.ANSOFF?.progress || 0,
+                lastSync: directMap.ANSOFF?.updatedAt || null
             },
             {
                 code: 'BSC',
                 sourceTable: 'StrategicObjective',
                 sourceCount: bscCount,
                 hasData: bscCount > 0,
-                synced: !!existingMap.BSC,
-                status: existingMap.BSC?.status || 'NOT_SYNCED',
-                progress: existingMap.BSC?.progress || 0,
-                lastSync: existingMap.BSC?.updatedAt || null
+                synced: !!directMap.BSC,
+                status: directMap.BSC?.status || 'NOT_SYNCED',
+                progress: directMap.BSC?.progress || 0,
+                lastSync: directMap.BSC?.updatedAt || null
             },
             {
                 code: 'CUSTOMER_JOURNEY',
                 sourceTable: 'CompanyAnalysis (مباشر)',
                 sourceCount: directToolHasData('CUSTOMER_JOURNEY') ? 1 : 0,
                 hasData: directToolHasData('CUSTOMER_JOURNEY'),
-                synced: !!existingMap.CUSTOMER_JOURNEY,
-                status: existingMap.CUSTOMER_JOURNEY?.status || 'NOT_SYNCED',
-                progress: existingMap.CUSTOMER_JOURNEY?.progress || 0,
-                lastSync: existingMap.CUSTOMER_JOURNEY?.updatedAt || null
+                synced: !!directMap.CUSTOMER_JOURNEY,
+                status: directMap.CUSTOMER_JOURNEY?.status || 'NOT_SYNCED',
+                progress: directMap.CUSTOMER_JOURNEY?.progress || 0,
+                lastSync: directMap.CUSTOMER_JOURNEY?.updatedAt || null
             },
             {
                 code: 'VALUE_CHAIN',
                 sourceTable: 'CompanyAnalysis (مباشر)',
                 sourceCount: directToolHasData('VALUE_CHAIN') ? 1 : 0,
                 hasData: directToolHasData('VALUE_CHAIN'),
-                synced: !!existingMap.VALUE_CHAIN,
-                status: existingMap.VALUE_CHAIN?.status || 'NOT_SYNCED',
-                progress: existingMap.VALUE_CHAIN?.progress || 0,
-                lastSync: existingMap.VALUE_CHAIN?.updatedAt || null
+                synced: !!directMap.VALUE_CHAIN,
+                status: directMap.VALUE_CHAIN?.status || 'NOT_SYNCED',
+                progress: directMap.VALUE_CHAIN?.progress || 0,
+                lastSync: directMap.VALUE_CHAIN?.updatedAt || null
             },
             {
                 code: 'CORE_COMPETENCY',
                 sourceTable: 'CompanyAnalysis (مباشر)',
                 sourceCount: directToolHasData('CORE_COMPETENCY') ? 1 : 0,
                 hasData: directToolHasData('CORE_COMPETENCY'),
-                synced: !!existingMap.CORE_COMPETENCY,
-                status: existingMap.CORE_COMPETENCY?.status || 'NOT_SYNCED',
-                progress: existingMap.CORE_COMPETENCY?.progress || 0,
-                lastSync: existingMap.CORE_COMPETENCY?.updatedAt || null
+                synced: !!directMap.CORE_COMPETENCY,
+                status: directMap.CORE_COMPETENCY?.status || 'NOT_SYNCED',
+                progress: directMap.CORE_COMPETENCY?.progress || 0,
+                lastSync: directMap.CORE_COMPETENCY?.updatedAt || null
             }
         ];
 
@@ -539,7 +519,12 @@ async function syncDirectTool(versionId, toolCode, userId) {
         return val !== null && val !== undefined;
     });
 
-    const progress = keys.length > 0 ? Math.round((filledKeys.length / Math.max(keys.length, 1)) * 100) : (existing.progress || 0);
+    let totalSections = keys.length;
+    if (toolCode === 'PESTEL') totalSections = 6;
+    if (toolCode === 'PORTER') totalSections = 5;
+    if (toolCode === 'VALUE_CHAIN') totalSections = 9; // ✅ 5 أساسية + 4 داعمة
+
+    const progress = keys.length > 0 ? Math.round((filledKeys.length / Math.max(totalSections, 1)) * 100) : (existing.progress || 0);
     const status = progress >= 80 ? 'COMPLETED' : progress > 0 ? 'IN_PROGRESS' : 'DRAFT';
 
     // Count items for summary

@@ -362,6 +362,7 @@ model StrategyVersion {
   objectives         StrategicObjective[]
   kpis               KPI[]
   initiatives        StrategicInitiative[]
+  projects           StrategicProject[]
   reviews            StrategicReview[]
   choices            StrategicChoice[]
   risks              StrategicRisk[]
@@ -556,7 +557,7 @@ model StrategicInitiative {
   autoCreated Boolean @default(false) // أُنشئت تلقائياً من نمط الشركة
   budgetSpent Float?  @default(0)
 
-  version    StrategyVersion  @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  version    StrategyVersion    @relation(fields: [versionId], references: [id], onDelete: Cascade)
   tasks      InitiativeTask[]
   kpis       InitiativeKpi[]
   milestones Milestone[]
@@ -564,6 +565,28 @@ model StrategicInitiative {
 
   @@index([versionId])
   @@map("strategic_initiatives")
+}
+
+model StrategicProject {
+  id           String    @id @default(cuid())
+  versionId    String
+  name         String
+  description  String?
+  initiative   String?
+  objective    String?
+  status       String    @default("planning")
+  progress     Int       @default(0)
+  startDate    DateTime?
+  endDate      DateTime?
+  manager      String?
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  version      StrategyVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@index([versionId])
+  @@map("strategic_projects")
 }
 
 model InitiativeTask {

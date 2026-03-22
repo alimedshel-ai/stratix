@@ -1159,15 +1159,16 @@
         </div>
     </div>
 
+    <!-- تحميل السكربتات الأساسية قبل تنفيذ المنطق -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/data-layer.js"></script>
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/hr-handlers.js"></script>
+    <script src="/assets/js/finance-handlers.js"></script>
+    <script src="/assets/js/sidebar.js"></script>
+    <script src="/assets/js/ai-advisor.js"></script>
+    <script src="/assets/js/impersonation.js"></script>
     <script>
-        const token = localStorage.getItem('token') || '';
-        const headers = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-        const user = StratixData.getLocal('user', {});
-        document.getElementById('userName').textContent = user.name || 'مستخدم';
-        document.getElementById('userAvatar').textContent = (user.name || 'م')[0];
-
         const typeLabel = {
             VISION: 'الرؤية', MISSION: 'الرسالة', VALUES: 'القيم',
             ISSUES: 'القضايا الكبرى', LONG_TERM_GOALS: 'الأهداف طويلة المدى'
@@ -1185,6 +1186,14 @@
 
         async function init() {
             modal = new bootstrap.Modal(document.getElementById('directionModal'));
+
+            try {
+                const user = await window.api.getCurrentUser();
+                if (user) {
+                    document.getElementById('userName').textContent = user.name || 'مستخدم';
+                    document.getElementById('userAvatar').textContent = (user.name || 'م')[0];
+                }
+            } catch (e) { }
 
             // ═══ Dept-specific: تخصيص العنوان + عرض اقتراحات من الفحص ═══
             // ⚠️ لازم يكون قبل loadVersions عشان لو فشلت ما يتأثر العنوان
@@ -1249,7 +1258,7 @@
 
         async function loadVersions() {
             try {
-                const res = await fetch('/api/versions', { headers, credentials: 'same-origin' });
+                const res = await window.apiRequest('/api/versions');
                 const data = await res.json();
                 const sel = document.getElementById('versionFilter');
                 sel.innerHTML = '<option value="">-- اختر الإصدار --</option>';
@@ -1293,7 +1302,7 @@
             `;
 
             try {
-                const res = await fetch(`/api/directions/grouped/${versionId}`, { headers, credentials: 'same-origin' });
+                const res = await window.apiRequest(`/api/directions/grouped/${versionId}`);
                 const data = await res.json();
 
                 let html = '';
@@ -1729,10 +1738,8 @@
             const versionId = document.getElementById('versionFilter').value;
             if (!versionId) return alert('الرجاء اختيار إصدار أولاً');
             try {
-                const res = await fetch('/api/directions', {
+                const res = await window.apiRequest('/api/directions', {
                     method: 'POST',
-                    headers,
-                    credentials: 'same-origin',
                     body: JSON.stringify({ type, content, order: 0, versionId })
                 });
                 if (!res.ok) throw new Error('Failed');
@@ -1776,7 +1783,7 @@
 
         async function edit(id) {
             try {
-                const res = await fetch(`/api/directions/${id}`, { headers, credentials: 'same-origin' });
+                const res = await window.apiRequest(`/api/directions/${id}`);
                 const d = await res.json();
                 document.getElementById('editId').value = d.id;
                 document.getElementById('dirType').value = d.type;
@@ -1806,7 +1813,7 @@
                 const url = editId ? `/api/directions/${editId}` : '/api/directions';
                 const method = editId ? 'PATCH' : 'POST';
 
-                const res = await fetch(url, { method, headers, credentials: 'same-origin', body: JSON.stringify(body) });
+                const res = await window.apiRequest(url, { method, body: JSON.stringify(body) });
                 if (!res.ok) throw new Error('Failed');
 
                 modal.hide();
@@ -1841,7 +1848,7 @@
         async function del(id) {
             if (!confirm('هل أنت متأكد من حذف هذا التوجه؟ لا يمكن التراجع عن هذا الإجراء.')) return;
             try {
-                const res = await fetch(`/api/directions/${id}`, { method: 'DELETE', headers, credentials: 'same-origin' });
+                const res = await window.apiRequest(`/api/directions/${id}`, { method: 'DELETE' });
                 if (!res.ok) {
                     const err = await res.json().catch(() => ({}));
                     alert(err.message || err.error || `خطأ في الحذف (${res.status})`);
@@ -1854,17 +1861,10 @@
             }
         }
 
-        function logout() { localStorage.removeItem('token'); localStorage.removeItem('user'); fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).finally(() => location.href = '/login.html'); }
+        function logout() { if (window.globalLogout) window.globalLogout(); }
 
         init();
     </script>
-    <script src="/assets/js/hr-handlers.js"></script>
-    <script src="/assets/js/finance-handlers.js"></script>
-    <script src="/js/data-layer.js"></script>
-    <script src="/assets/js/api.js"></script>
-    <script src="/assets/js/sidebar.js"></script>
-    <script src="/assets/js/ai-advisor.js"></script>
-    <script src="/assets/js/impersonation.js"></script>
 
     <!-- 🔧 إصلاح مستقل: تحديث العنوان حسب الإدارة — script منفصل عشان ما يتأثر بأخطاء ثانية -->
     <script>

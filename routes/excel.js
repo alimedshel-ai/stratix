@@ -1,6 +1,6 @@
 const express = require('express');
 const multer = require('multer');
-const XLSX = require('xlsx');
+const ExcelJS = require('exceljs');
 const prisma = require('../lib/prisma');
 const { verifyToken } = require('../middleware/auth');
 const { checkDataEntryPermission } = require('../middleware/permission');
@@ -34,11 +34,30 @@ router.post('/upload', verifyToken, checkDataEntryPermission('canEnterKPI'), upl
             return res.status(400).json({ error: 'لم يتم رفع أي ملف' });
         }
 
-        // Parse the Excel file
-        const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        const rows = XLSX.utils.sheet_to_json(sheet, { defval: null });
+        // Parse the Excel file with ExcelJS
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(req.file.buffer);
+        const worksheet = workbook.worksheets[0];
+
+        const rows = [];
+        let headers = [];
+        worksheet.eachRow((row, rowNumber) => {
+            if (rowNumber === 1) {
+                row.eachCell((cell, colNumber) => {
+                    headers[colNumber] = cell.value?.toString() || `Col_${colNumber}`;
+                });
+            } else {
+                const rowData = {};
+                let hasData = false;
+                row.eachCell((cell, colNumber) => {
+                    if (headers[colNumber]) {
+                        rowData[headers[colNumber]] = cell.value?.toString() || cell.value;
+                        hasData = true;
+                    }
+                });
+                if (hasData) rows.push(rowData);
+            }
+        });
 
         if (!rows.length) {
             return res.status(400).json({ error: 'الملف فارغ أو لا يحتوي على بيانات' });
@@ -259,59 +278,63 @@ router.get('/template', verifyToken, async (req, res) => {
             'القسم (مرجع)': perspectiveAr[k.bscPerspective] || '',
         }));
 
-        // Create workbook
-        const wb = XLSX.utils.book_new();
+        // Create workbook using ExcelJS
+        const wb = new ExcelJS.Workbook();
 
         // Data entry sheet
-        const ws = XLSX.utils.json_to_sheet(templateData);
+        const ws = wb.addWorksheet('إدخال البيانات');
+
+        const headers = ['اسم المؤشر', 'القيمة', 'الفترة', 'السنة', 'ملاحظات', '---', 'الوحدة (مرجع)', 'المستهدف (مرجع)', 'التكرار (مرجع)', 'القسم (مرجع)'];
+        ws.addRow(headers);
+
+        templateData.forEach(data => {
+            const row = [];
+            headers.forEach(h => row.push(data[h]));
+            ws.addRow(row);
+        });
 
         // Set column widths
-        ws['!cols'] = [
-            { wch: 25 }, // اسم المؤشر
-            { wch: 15 }, // القيمة
-            { wch: 12 }, // الفترة
-            { wch: 8 },  // السنة
-            { wch: 20 }, // ملاحظات
-            { wch: 3 },  // ---
-            { wch: 12 }, // الوحدة
-            { wch: 15 }, // المستهدف
-            { wch: 12 }, // التكرار
-            { wch: 15 }, // القسم
-        ];
-
-        XLSX.utils.book_append_sheet(wb, ws, 'إدخال البيانات');
+        ws.getColumn(1).width = 25;
+        ws.getColumn(2).width = 15;
+        ws.getColumn(3).width = 12;
+        ws.getColumn(4).width = 8;
+        ws.getColumn(5).width = 20;
+        ws.getColumn(6).width = 5;
+        ws.getColumn(7).width = 15;
+        ws.getColumn(8).width = 15;
+        ws.getColumn(9).width = 15;
+        ws.getColumn(10).width = 20;
 
         // Instructions sheet
+        const wsInst = wb.addWorksheet('تعليمات');
+        wsInst.getColumn(1).width = 60;
+
         const instructions = [
-            { 'تعليمات استخدام القالب': '📋 دليل استخدام قالب إدخال البيانات' },
-            { 'تعليمات استخدام القالب': '' },
-            { 'تعليمات استخدام القالب': '1️⃣ الأعمدة المطلوبة:' },
-            { 'تعليمات استخدام القالب': '   • اسم المؤشر — اسم المؤشر كما هو (لا تقم بتعديله)' },
-            { 'تعليمات استخدام القالب': '   • القيمة — القيمة الفعلية المُحققة' },
-            { 'تعليمات استخدام القالب': '   • الفترة — اسم الشهر (يناير، فبراير...) أو رقمه (1-12)' },
-            { 'تعليمات استخدام القالب': '   • السنة — سنة التقرير (مثال: 2026)' },
-            { 'تعليمات استخدام القالب': '   • ملاحظات — أي ملاحظات إضافية (اختياري)' },
-            { 'تعليمات استخدام القالب': '' },
-            { 'تعليمات استخدام القالب': '2️⃣ الأعمدة المرجعية (بعد خط الفاصل ---):' },
-            { 'تعليمات استخدام القالب': '   • هذه أعمدة للمرجع فقط — لا تقم بتعديلها' },
-            { 'تعليمات استخدام القالب': '   • تُظهر الوحدة والمستهدف لمساعدتك في الإدخال' },
-            { 'تعليمات استخدام القالب': '' },
-            { 'تعليمات استخدام القالب': '3️⃣ ملاحظات مهمة:' },
-            { 'تعليمات استخدام القالب': '   • يمكنك حذف صفوف المؤشرات التي لا تريد تعبئتها' },
-            { 'تعليمات استخدام القالب': '   • إذا تركت الفترة فارغة ستُستخدم الفترة الحالية' },
-            { 'تعليمات استخدام القالب': '   • الملف يقبل أرقام عربية وإنجليزية' },
+            '📋 دليل استخدام قالب إدخال البيانات',
+            '',
+            '1️⃣ الأعمدة المطلوبة:',
+            '   • اسم المؤشر — اسم المؤشر كما هو (لا تقم بتعديله)',
+            '   • القيمة — القيمة الفعلية المُحققة',
+            '   • الفترة — اسم الشهر (يناير، فبراير...) أو رقمه (1-12)',
+            '   • السنة — سنة التقرير (مثال: 2026)',
+            '   • ملاحظات — أي ملاحظات إضافية (اختياري)',
+            '',
+            '2️⃣ الأعمدة المرجعية (بعد خط الفاصل ---):',
+            '   • هذه أعمدة للمرجع فقط — لا تقم بتعديلها',
+            '   • تُظهر الوحدة والمستهدف لمساعدتك في الإدخال',
+            '',
+            '3️⃣ ملاحظات مهمة:',
+            '   • يمكنك حذف صفوف المؤشرات التي لا تريد تعبئتها',
+            '   • إذا تركت الفترة فارغة ستُستخدم الفترة الحالية',
+            '   • الملف يقبل أرقام عربية وإنجليزية',
         ];
 
-        const wsInst = XLSX.utils.json_to_sheet(instructions);
-        wsInst['!cols'] = [{ wch: 60 }];
-        XLSX.utils.book_append_sheet(wb, wsInst, 'تعليمات');
-
-        // Generate buffer
-        const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+        instructions.forEach(inst => wsInst.addRow([inst]));
 
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', 'attachment; filename=stratix_data_template.xlsx');
-        res.send(buffer);
+        await wb.xlsx.write(res);
+        res.end();
 
     } catch (error) {
         console.error('Template download error:', error);

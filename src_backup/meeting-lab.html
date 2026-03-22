@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس - معمل الاجتماعات</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --bg: #0f1117;
+            --bg-card: #1a1d2e;
+            --bg-card-hover: #232640;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.06);
+            --green: #22c55e;
+            --red: #ef4444;
+            --yellow: #facc15;
+            --info: #38bdf8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .top-nav {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 14px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            color: white;
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, .15);
+            border: none;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .layout {
+            display: flex;
+            min-height: calc(100vh - 56px);
+        }
+
+        .sidebar {
+            width: 260px;
+            flex-shrink: 0;
+        }
+
+        .main-content {
+            flex: 1;
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 28px 24px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+        .page-header h1 {
+            font-size: 22px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-header h1 i {
+            color: var(--primary);
+        }
+
+        .page-subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, .3);
+        }
+
+        /* ── Stats ── */
+        .mini-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .mini-stat {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mini-stat::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+        .mini-stat:nth-child(1)::before {
+            background: var(--primary);
+        }
+
+        .mini-stat:nth-child(2)::before {
+            background: var(--green);
+        }
+
+        .mini-stat:nth-child(3)::before {
+            background: var(--yellow);
+        }
+
+        .mini-stat:nth-child(4)::before {
+            background: var(--info);
+        }
+
+        .ms-value {
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .ms-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+
+        /* ── Tabs ── */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all .3s;
+        }
+
+        .tab:hover {
+            border-color: rgba(255, 255, 255, .15);
+        }
+
+        .tab.active {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(102, 126, 234, .08);
+        }
+
+        /* ── Meeting Cards ── */
+        .meeting-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .meeting-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px 22px;
+            cursor: pointer;
+            transition: all .3s;
+        }
+
+        .meeting-card:hover {
+            border-color: rgba(255, 255, 255, .15);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, .3);
+        }
+
+        .meeting-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .meeting-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .meeting-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .meeting-decisions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .decision-badge {
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .decision-done {
+            background: rgba(34, 197, 94, .12);
+            color: var(--green);
+        }
+
+        .decision-pending {
+            background: rgba(250, 204, 21, .12);
+            color: var(--yellow);
+        }
+
+        .execution-bar {
+            flex: 1;
+            max-width: 120px;
+            height: 5px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, .06);
+            overflow: hidden;
+        }
+
+        .execution-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width .5s;
+        }
+
+        .meeting-type-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+        }
+
+        /* ── Wizard Modal ── */
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            color: var(--text);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 16px 16px 0 0;
+            padding: 18px 24px;
+            border-bottom: none;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Wizard Steps */
+        .wizard-steps {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 20px;
+        }
+
+        .wizard-step {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, .02);
+            border: 1px solid var(--border);
+            transition: all .3s;
+        }
+
+        .wizard-step.active {
+            background: rgba(102, 126, 234, .1);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .wizard-step.done {
+            background: rgba(34, 197, 94, .08);
+            border-color: rgba(34, 197, 94, .2);
+            color: var(--green);
+        }
+
+        .wizard-panel {
+            display: none;
+        }
+
+        .wizard-panel.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--text-muted);
+        }
+
+        .form-input {
+            width: 100%;
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-input option {
+            background: var(--bg-card);
+            color: var(--text);
+        }
+
+        textarea.form-input {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        /* Dynamic list items */
+        .dyn-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .dyn-item {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: rgba(255, 255, 255, .02);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+        }
+
+        .dyn-item input,
+        .dyn-item select {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .dyn-item .dyn-remove {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: 1px solid rgba(239, 68, 68, .2);
+            background: transparent;
+            color: var(--red);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .dyn-add {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px dashed rgba(102, 126, 234, .3);
+            background: transparent;
+            color: var(--primary);
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Decision special */
+        .decision-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            background: rgba(255, 255, 255, .02);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+        }
+
+        .decision-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .decision-row input,
+        .decision-row select {
+            flex: 1;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 6px 10px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 12px;
+        }
+
+        .decision-row select {
+            max-width: 140px;
+        }
+
+        .decision-row select option {
+            background: var(--bg-card);
+        }
+
+        .btn-modal-save {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-modal-cancel {
+            background: rgba(255, 255, 255, .06);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 14px;
+            opacity: .4;
+        }
+
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 9999;
+        }
+
+        .toast-msg {
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            animation: slideUp .3s ease;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(34, 197, 94, .9);
+            color: white;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mini-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .main-content {
+                max-width: 100%;
+                padding: 16px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="top-nav">
+        <a href="/dashboard.html" class="brand"><i class="bi bi-gem"></i> ستارتكس</a>
+        <div class="user-area">
+            <div class="user-avatar">م</div>
+            <button class="btn-logout" onclick="localStorage.clear(); location.href='/login.html'"><i
+                    class="bi bi-box-arrow-right"></i> خروج</button>
+        </div>
+    </nav>
+
+    <div class="layout">
+        <aside class="sidebar"></aside>
+        <div class="main-content">
+            <div class="page-header">
+                <div>
+                    <h1><i class="bi bi-people-fill"></i> معمل الاجتماعات</h1>
+                    <p class="page-subtitle">سجّل اجتماعاتك، حوّل القرارات لمهام تلقائية، وتابع معدل التنفيذ</p>
+                </div>
+                <button class="btn-add" onclick="openWizard()"><i class="bi bi-plus-lg"></i> اجتماع جديد</button>
+            </div>
+
+            <!-- Stats -->
+            <div class="mini-stats">
+                <div class="mini-stat">
+                    <div class="ms-value" id="sTotal">0</div>
+                    <div class="ms-label">إجمالي الاجتماعات</div>
+                </div>
+                <div class="mini-stat">
+                    <div class="ms-value" id="sDecisions">0</div>
+                    <div class="ms-label">إجمالي القرارات</div>
+                </div>
+                <div class="mini-stat">
+                    <div class="ms-value" id="sExecuted">0</div>
+                    <div class="ms-label">قرارات منفذة</div>
+                </div>
+                <div class="mini-stat">
+                    <div class="ms-value" id="sRate">0%</div>
+                    <div class="ms-label">معدل التنفيذ</div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('all',this)">الكل</div>
+                <div class="tab" onclick="switchTab('weekly',this)">أسبوعي</div>
+                <div class="tab" onclick="switchTab('monthly',this)">شهري</div>
+                <div class="tab" onclick="switchTab('strategic',this)">استراتيجي</div>
+                <div class="tab" onclick="switchTab('emergency',this)">طارئ</div>
+            </div>
+
+            <!-- Meeting List -->
+            <div class="meeting-list" id="meetingList"></div>
+        </div>
+    </div>
+
+    <!-- ══════════ Wizard Modal ══════════ -->
+    <div class="modal fade" id="meetingModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle"><i class="bi bi-people-fill"></i> اجتماع جديد</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Wizard Steps -->
+                    <div class="wizard-steps">
+                        <div class="wizard-step active" id="ws1">① بيانات الاجتماع</div>
+                        <div class="wizard-step" id="ws2">② محاور النقاش</div>
+                        <div class="wizard-step" id="ws3">③ القرارات والتكليفات</div>
+                    </div>
+
+                    <!-- Step 1: Meeting Info -->
+                    <div class="wizard-panel active" id="panel1">
+                        <div class="form-group"><label>عنوان الاجتماع</label><input type="text" class="form-input"
+                                id="fTitle" placeholder="مثال: اجتماع مراجعة Q1"></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>التاريخ</label><input type="date" class="form-input"
+                                    id="fDate"></div>
+                            <div class="form-group"><label>النوع</label>
+                                <select class="form-input" id="fType">
+                                    <option value="weekly">📅 أسبوعي</option>
+                                    <option value="monthly">📆 شهري</option>
+                                    <option value="strategic">🎯 استراتيجي</option>
+                                    <option value="emergency">🚨 طارئ</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group"><label>الحضور (أسماء، مفصولة بفاصلة)</label><input type="text"
+                                class="form-input" id="fAttendees" placeholder="أحمد، سارة، خالد"></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>🎯 ربط بـ OKR (اختياري)</label>
+                                <select class="form-input" id="fOKR">
+                                    <option value="">— بدون —</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label>🚀 ربط بمبادرة (اختياري)</label>
+                                <select class="form-input" id="fInitiative">
+                                    <option value="">— بدون —</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Topics -->
+                    <div class="wizard-panel" id="panel2">
+                        <label
+                            style="font-size:13px;font-weight:700;color:var(--text-muted);margin-bottom:8px;display:block;">📋
+                            محاور النقاش</label>
+                        <div class="dyn-list" id="topicsList"></div>
+                        <button class="dyn-add" onclick="addTopic()"><i class="bi bi-plus-circle"></i> إضافة
+                            محور</button>
+                    </div>
+
+                    <!-- Step 3: Decisions -->
+                    <div class="wizard-panel" id="panel3">
+                        <label
+                            style="font-size:13px;font-weight:700;color:var(--text-muted);margin-bottom:8px;display:block;">⚡
+                            القرارات والتكليفات</label>
+                        <p style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">كل قرار سيتحول تلقائياً
+                            لمهمة في صفحة المهام</p>
+                        <div class="dyn-list" id="decisionsList"></div>
+                        <button class="dyn-add" onclick="addDecision()"><i class="bi bi-plus-circle"></i> إضافة
+                            قرار</button>
+                    </div>
+                </div>
+                <div class="modal-footer" style="display:flex;justify-content:space-between;">
+                    <button class="btn-modal-cancel" id="btnPrev" onclick="wizardPrev()" style="display:none;"><i
+                            class="bi bi-arrow-right"></i> السابق</button>
+                    <div style="display:flex;gap:8px;margin-right:auto;">
+                        <button class="btn-modal-cancel" data-bs-dismiss="modal">إلغاء</button>
+                        <button class="btn-modal-save" id="btnNext" onclick="wizardNext()">التالي <i
+                                class="bi bi-arrow-left"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="modal fade" id="detailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailTitle">تفاصيل الاجتماع</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="detailBody"></div>
+                <div class="modal-footer">
+                    <button class="btn-modal-cancel" data-bs-dismiss="modal">إغلاق</button>
+                    <button class="btn-modal-save" id="btnDeleteMeeting" style="background:var(--red);"><i
+                            class="bi bi-trash3"></i> حذف الاجتماع</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/sidebar.js"></script>
+    <script src="/assets/js/ai-advisor.js"></script>
+    <script>
+        if (window.StartixAPI?.showEntityBanner) {
+            StartixAPI.showEntityBanner({ toolName: 'معمل الاجتماعات' });
+        }
+    </script>
+    <script>
+        /* ═══════════════════════════════════════
+           Phase 11B — Meeting Lab
+           Wizard + Auto-Cases + Archive
+        ═══════════════════════════════════════ */
+        const TYPE_CONFIG = {
+            weekly: { label: 'أسبوعي', icon: '📅', color: 'var(--primary)' },
+            monthly: { label: 'شهري', icon: '📆', color: 'var(--info)' },
+            strategic: { label: 'استراتيجي', icon: '🎯', color: 'var(--green)' },
+            emergency: { label: 'طارئ', icon: '🚨', color: 'var(--red)' },
+        };
+
+        let meetings = JSON.parse(localStorage.getItem('stratix_meetings') || '[]');
+        let wizardStep = 1;
+        let editingId = null;
+        let currentFilter = 'all';
+
+        function saveMeetings() { localStorage.setItem('stratix_meetings', JSON.stringify(meetings)); }
+        function getOKRs() { return JSON.parse(localStorage.getItem('stratix_okrs') || '[]'); }
+        function getInitiatives() {
+            const saved = localStorage.getItem('stratix_initiatives');
+            if (saved) return JSON.parse(saved);
+            return [
+                { id: 'init_1', name: 'إطلاق التطبيق الرقمي للعملاء', objective: 'رفع رضا العملاء' },
+                { id: 'init_2', name: 'برنامج التحول الرقمي الداخلي', objective: 'أتمتة العمليات' },
+                { id: 'init_3', name: 'توسيع الفريق التقني', objective: 'تطوير الكوادر' },
+            ];
+        }
+
+        // ── Stats ──
+        function renderStats() {
+            document.getElementById('sTotal').textContent = meetings.length;
+            const allDecisions = meetings.flatMap(m => m.decisions || []);
+            const total = allDecisions.length;
+            const executed = allDecisions.filter(d => d.executed).length;
+            document.getElementById('sDecisions').textContent = total;
+            document.getElementById('sExecuted').textContent = executed;
+            document.getElementById('sRate').textContent = total > 0 ? Math.round((executed / total) * 100) + '%' : '—';
+        }
+
+        // ── Meeting List ──
+        function renderList() {
+            let data = meetings;
+            if (currentFilter !== 'all') data = data.filter(m => m.type === currentFilter);
+            data.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (data.length === 0) {
+                document.getElementById('meetingList').innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-people"></i>
+                        <div style="font-size:16px;font-weight:700;margin-bottom:6px;">لا توجد اجتماعات</div>
+                        <div style="font-size:13px;">أنشئ اجتماعاً جديداً لبدء تتبع القرارات</div>
+                    </div>`;
+                return;
+            }
+
+            document.getElementById('meetingList').innerHTML = data.map(m => {
+                const tc = TYPE_CONFIG[m.type] || TYPE_CONFIG.weekly;
+                const decisions = m.decisions || [];
+                const executed = decisions.filter(d => d.executed).length;
+                const total = decisions.length;
+                const pct = total > 0 ? Math.round((executed / total) * 100) : 0;
+                const attendeeCount = (m.attendees || []).length;
+                const topicCount = (m.topics || []).length;
+
+                return `
+                <div class="meeting-card" onclick="showDetail('${m.id}')">
+                    <div class="meeting-title">
+                        <span class="meeting-type-badge" style="background:${tc.color}15;color:${tc.color};">${tc.icon} ${tc.label}</span>
+                        ${m.title}
+                    </div>
+                    <div class="meeting-meta">
+                        <span><i class="bi bi-calendar3"></i> ${m.date}</span>
+                        <span><i class="bi bi-people"></i> ${attendeeCount} حاضر</span>
+                        <span><i class="bi bi-chat-dots"></i> ${topicCount} محور</span>
+                        ${m.okrTitle ? `<span style="color:var(--primary)"><i class="bi bi-bullseye"></i> ${m.okrTitle.substring(0, 25)}</span>` : ''}
+                    </div>
+                    <div class="meeting-decisions">
+                        <span class="decision-badge decision-done">✅ ${executed} منفّذ</span>
+                        ${total - executed > 0 ? `<span class="decision-badge decision-pending">⏳ ${total - executed} معلّق</span>` : ''}
+                        <div class="execution-bar">
+                            <div class="execution-fill" style="width:${pct}%;background:${pct >= 70 ? 'var(--green)' : pct >= 40 ? 'var(--yellow)' : 'var(--red)'};"></div>
+                        </div>
+                        <span style="font-size:11px;font-weight:700;color:${pct >= 70 ? 'var(--green)' : pct >= 40 ? 'var(--yellow)' : 'var(--red)'};">${pct}%</span>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function switchTab(filter, el) {
+            currentFilter = filter;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            renderList();
+        }
+
+        function renderAll() { renderStats(); renderList(); }
+
+        // ── Wizard ──
+        function openWizard() {
+            editingId = null;
+            wizardStep = 1;
+            document.getElementById('modalTitle').innerHTML = '<i class="bi bi-people-fill"></i> اجتماع جديد';
+            document.getElementById('fTitle').value = '';
+            document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('fType').value = 'weekly';
+            document.getElementById('fAttendees').value = '';
+            document.getElementById('topicsList').innerHTML = '';
+            document.getElementById('decisionsList').innerHTML = '';
+            addTopic(); // start with one
+            addDecision(); // start with one
+            populateDropdowns();
+            updateWizardUI();
+            new bootstrap.Modal(document.getElementById('meetingModal')).show();
+        }
+
+        function populateDropdowns() {
+            const okrs = getOKRs();
+            const inits = getInitiatives();
+            document.getElementById('fOKR').innerHTML = '<option value="">— بدون —</option>' + okrs.map(o => `<option value="${o.id}" data-title="${o.objective || o.title}">${(o.objective || o.title).substring(0, 50)}</option>`).join('');
+            document.getElementById('fInitiative').innerHTML = '<option value="">— بدون —</option>' + inits.map(i => `<option value="${i.name}">${i.name}</option>`).join('');
+        }
+
+        function updateWizardUI() {
+            [1, 2, 3].forEach(i => {
+                document.getElementById('panel' + i).classList.toggle('active', i === wizardStep);
+                const ws = document.getElementById('ws' + i);
+                ws.classList.remove('active', 'done');
+                if (i === wizardStep) ws.classList.add('active');
+                if (i < wizardStep) ws.classList.add('done');
+            });
+            document.getElementById('btnPrev').style.display = wizardStep > 1 ? '' : 'none';
+            document.getElementById('btnNext').innerHTML = wizardStep === 3
+                ? '<i class="bi bi-check-lg"></i> حفظ وإنشاء المهام'
+                : 'التالي <i class="bi bi-arrow-left"></i>';
+        }
+
+        function wizardNext() {
+            if (wizardStep < 3) { wizardStep++; updateWizardUI(); return; }
+            // Save meeting
+            saveMeeting();
+        }
+
+        function wizardPrev() {
+            if (wizardStep > 1) { wizardStep--; updateWizardUI(); }
+        }
+
+        // ── Dynamic Lists ──
+        function addTopic() {
+            const list = document.getElementById('topicsList');
+            const div = document.createElement('div');
+            div.className = 'dyn-item';
+            div.innerHTML = `
+                <input type="text" placeholder="محور النقاش..." class="topic-input">
+                <button class="dyn-remove" onclick="this.parentElement.remove()"><i class="bi bi-x"></i></button>`;
+            list.appendChild(div);
+        }
+
+        function addDecision() {
+            const list = document.getElementById('decisionsList');
+            const div = document.createElement('div');
+            div.className = 'decision-item';
+            div.innerHTML = `
+                <div class="decision-row">
+                    <input type="text" placeholder="نص القرار..." class="dec-text" style="flex:2;">
+                    <button class="dyn-remove" onclick="this.closest('.decision-item').remove()"><i class="bi bi-x"></i></button>
+                </div>
+                <div class="decision-row">
+                    <input type="text" placeholder="المكلّف" class="dec-assignee">
+                    <input type="date" class="dec-due" value="${futureDate(7)}">
+                    <select class="dec-priority">
+                        <option value="HIGH">🔴 عالية</option>
+                        <option value="MEDIUM" selected>🟡 متوسطة</option>
+                        <option value="LOW">🟢 منخفضة</option>
+                    </select>
+                </div>`;
+            list.appendChild(div);
+        }
+
+        function futureDate(days) {
+            const d = new Date();
+            d.setDate(d.getDate() + days);
+            return d.toISOString().split('T')[0];
+        }
+
+        // ── Save Meeting ──
+        function saveMeeting() {
+            const title = document.getElementById('fTitle').value.trim();
+            if (!title) { showToast('أدخل عنوان الاجتماع'); return; }
+
+            const topics = [...document.querySelectorAll('.topic-input')].map(i => i.value.trim()).filter(Boolean);
+            const decisions = [...document.querySelectorAll('.decision-item')].map(item => {
+                const text = item.querySelector('.dec-text').value.trim();
+                if (!text) return null;
+                return {
+                    id: 'dec_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                    text,
+                    assignee: item.querySelector('.dec-assignee').value.trim(),
+                    due: item.querySelector('.dec-due').value,
+                    priority: item.querySelector('.dec-priority').value,
+                    executed: false,
+                };
+            }).filter(Boolean);
+
+            const okrSelect = document.getElementById('fOKR');
+            const okrId = okrSelect.value;
+            const okrTitle = okrId ? okrSelect.selectedOptions[0]?.dataset.title || '' : '';
+            const initiative = document.getElementById('fInitiative').value;
+
+            const meeting = {
+                id: editingId || 'mtg_' + Date.now(),
+                title,
+                date: document.getElementById('fDate').value,
+                type: document.getElementById('fType').value,
+                attendees: document.getElementById('fAttendees').value.split(/[,،]/).map(s => s.trim()).filter(Boolean),
+                topics,
+                decisions,
+                okrId,
+                okrTitle,
+                initiative,
+                createdAt: new Date().toISOString(),
+            };
+
+            if (editingId) {
+                const idx = meetings.findIndex(m => m.id === editingId);
+                if (idx >= 0) meetings[idx] = meeting;
+            } else {
+                meetings.unshift(meeting);
+            }
+            saveMeetings();
+
+            // ── Auto-generate tasks from decisions ──
+            if (decisions.length > 0) {
+                const tasks = JSON.parse(localStorage.getItem('stratix_tasks') || '[]');
+                decisions.forEach(dec => {
+                    tasks.unshift({
+                        id: 'task_' + dec.id,
+                        title: dec.text,
+                        project: meeting.title,
+                        initiative: initiative || '',
+                        objective: okrTitle || '',
+                        okrId: okrId || '',
+                        assignee: dec.assignee,
+                        priority: dec.priority,
+                        status: 'todo',
+                        due: dec.due,
+                        source: 'meeting',
+                        meetingId: meeting.id,
+                        meetingTitle: meeting.title,
+                    });
+                });
+                localStorage.setItem('stratix_tasks', JSON.stringify(tasks));
+            }
+
+            bootstrap.Modal.getInstance(document.getElementById('meetingModal')).hide();
+            renderAll();
+            showToast(`✅ تم حفظ الاجتماع + ${decisions.length} مهمة جديدة`);
+        }
+
+        // ── Detail View ──
+        function showDetail(id) {
+            const m = meetings.find(x => x.id === id);
+            if (!m) return;
+            const tc = TYPE_CONFIG[m.type] || TYPE_CONFIG.weekly;
+            const tasks = JSON.parse(localStorage.getItem('stratix_tasks') || '[]');
+
+            document.getElementById('detailTitle').innerHTML = `<i class="bi bi-people-fill"></i> ${m.title}`;
+
+            let html = `
+            <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+                <span class="meeting-type-badge" style="background:${tc.color}15;color:${tc.color};font-size:12px;padding:4px 12px;">${tc.icon} ${tc.label}</span>
+                <span style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:4px;"><i class="bi bi-calendar3"></i> ${m.date}</span>
+                <span style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:4px;"><i class="bi bi-people"></i> ${(m.attendees || []).join('، ')}</span>
+            </div>`;
+
+            if (m.okrTitle) html += `<div style="margin-bottom:12px;font-size:12px;"><span style="padding:3px 10px;border-radius:6px;background:rgba(102,126,234,.1);color:var(--primary);font-weight:600;"><i class="bi bi-bullseye"></i> ${m.okrTitle}</span></div>`;
+            if (m.initiative) html += `<div style="margin-bottom:12px;font-size:12px;"><span style="padding:3px 10px;border-radius:6px;background:rgba(250,204,21,.1);color:var(--yellow);font-weight:600;"><i class="bi bi-rocket-takeoff"></i> ${m.initiative}</span></div>`;
+
+            // Topics
+            if (m.topics?.length) {
+                html += `<div style="margin-bottom:16px;">
+                    <div style="font-size:13px;font-weight:700;color:var(--text-muted);margin-bottom:8px;">📋 محاور النقاش</div>
+                    ${m.topics.map((t, i) => `<div style="padding:8px 14px;margin-bottom:4px;border-radius:8px;background:rgba(255,255,255,.02);border:1px solid var(--border);font-size:13px;">
+                        <span style="color:var(--primary);font-weight:700;">${i + 1}.</span> ${t}
+                    </div>`).join('')}
+                </div>`;
+            }
+
+            // Decisions
+            if (m.decisions?.length) {
+                const executed = m.decisions.filter(d => d.executed).length;
+                const pct = Math.round((executed / m.decisions.length) * 100);
+                html += `<div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <span style="font-size:13px;font-weight:700;color:var(--text-muted);">⚡ القرارات (${executed}/${m.decisions.length})</span>
+                        <span style="font-size:12px;font-weight:800;color:${pct >= 70 ? 'var(--green)' : pct >= 40 ? 'var(--yellow)' : 'var(--red)'};">${pct}%</span>
+                    </div>
+                    ${m.decisions.map(d => {
+                    const task = tasks.find(t => t.meetingId === m.id && t.title === d.text);
+                    const taskDone = task?.status === 'done';
+                    return `<div style="padding:10px 14px;margin-bottom:6px;border-radius:8px;background:rgba(255,255,255,.02);border:1px solid var(--border);display:flex;align-items:center;gap:10px;${d.executed || taskDone ? 'opacity:.6;' : ''}">
+                            <div style="width:24px;height:24px;border-radius:6px;border:2px solid ${d.executed || taskDone ? 'var(--green)' : 'var(--border)'};background:${d.executed || taskDone ? 'var(--green)' : 'transparent'};display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;" onclick="toggleDecision('${m.id}','${d.id}')">
+                                ${d.executed || taskDone ? '<i class="bi bi-check" style="color:white;font-size:14px;"></i>' : ''}
+                            </div>
+                            <div style="flex:1;">
+                                <div style="font-size:13px;font-weight:600;${d.executed || taskDone ? 'text-decoration:line-through;color:var(--text-muted);' : ''}">${d.text}</div>
+                                <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">
+                                    ${d.assignee ? `<i class="bi bi-person"></i> ${d.assignee}` : ''}
+                                    ${d.due ? ` · <i class="bi bi-calendar3"></i> ${d.due}` : ''}
+                                    <span style="margin-right:6px;font-size:9px;padding:1px 6px;border-radius:4px;background:rgba(250,204,21,.1);color:var(--yellow);font-weight:600;">📋 من اجتماع</span>
+                                </div>
+                            </div>
+                        </div>`;
+                }).join('')}
+                </div>`;
+            }
+
+            document.getElementById('detailBody').innerHTML = html;
+            document.getElementById('btnDeleteMeeting').onclick = () => deleteMeeting(m.id);
+            new bootstrap.Modal(document.getElementById('detailModal')).show();
+        }
+
+        function toggleDecision(meetingId, decisionId) {
+            const m = meetings.find(x => x.id === meetingId);
+            if (!m) return;
+            const d = m.decisions.find(x => x.id === decisionId);
+            if (d) {
+                d.executed = !d.executed;
+                saveMeetings();
+                // Sync with tasks
+                const tasks = JSON.parse(localStorage.getItem('stratix_tasks') || '[]');
+                const task = tasks.find(t => t.meetingId === meetingId && t.title === d.text);
+                if (task) {
+                    task.status = d.executed ? 'done' : 'todo';
+                    localStorage.setItem('stratix_tasks', JSON.stringify(tasks));
+                }
+            }
+            renderAll();
+            // Refresh detail modal
+            showDetail(meetingId);
+        }
+
+        function deleteMeeting(id) {
+            if (!confirm('حذف هذا الاجتماع؟')) return;
+            meetings = meetings.filter(m => m.id !== id);
+            saveMeetings();
+            // Remove associated tasks
+            const tasks = JSON.parse(localStorage.getItem('stratix_tasks') || '[]');
+            localStorage.setItem('stratix_tasks', JSON.stringify(tasks.filter(t => t.meetingId !== id)));
+            bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();
+            renderAll();
+            showToast('تم حذف الاجتماع ✓');
+        }
+
+        function showToast(msg) {
+            const t = document.createElement('div');
+            t.className = 'toast-msg';
+            t.innerHTML = `<i class="bi bi-check-circle"></i> ${msg}`;
+            document.getElementById('toastContainer').appendChild(t);
+            setTimeout(() => t.remove(), 3000);
+        }
+
+        renderAll();
+    </script>
+</body>
+
+</html>

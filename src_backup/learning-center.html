@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس — مركز التعلم المؤسسي</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="/assets/js/sidebar.js" defer></script>
+    <style>
+        :root {
+            --bg: #0f1219;
+            --bg2: #161b26;
+            --card: #1a1f2e;
+            --border: rgba(255, 255, 255, 0.06);
+            --text: #e2e8f0;
+            --muted: #8b8ba7;
+            --accent: #667eea;
+            --red: #ef4444;
+            --yellow: #f59e0b;
+            --green: #22c55e;
+            --blue: #3b82f6;
+            --purple: #a78bfa;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .layout {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 260px;
+            flex-shrink: 0;
+        }
+
+        .main {
+            flex: 1;
+            overflow-y: auto;
+            min-height: 100vh;
+        }
+
+        .container-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 32px 28px 80px;
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 26px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 900;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 8px 18px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all .2s;
+        }
+
+        .tab-btn.active {
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--accent);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+
+        .tab-btn:hover {
+            border-color: rgba(102, 126, 234, 0.2);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Lesson Card */
+        .lesson-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 12px;
+            transition: all .3s;
+            cursor: pointer;
+        }
+
+        .lesson-card:hover {
+            border-color: rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .lesson-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .lesson-title {
+            font-size: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .lesson-dept {
+            font-size: 10px;
+            padding: 3px 10px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .lesson-body {
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+
+        .lesson-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .lesson-tag {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--accent);
+        }
+
+        /* Error Log */
+        .error-card {
+            background: var(--card);
+            border: 1px solid rgba(239, 68, 68, 0.15);
+            border-right: 3px solid var(--red);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 12px;
+        }
+
+        .error-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--red);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .error-body {
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.8;
+            margin-bottom: 8px;
+        }
+
+        .error-root {
+            font-size: 12px;
+            padding: 10px 14px;
+            background: rgba(239, 68, 68, 0.04);
+            border: 1px solid rgba(239, 68, 68, 0.1);
+            border-radius: 10px;
+        }
+
+        .error-root strong {
+            color: var(--red);
+        }
+
+        /* Knowledge Base */
+        .kb-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 12px;
+            transition: all .3s;
+        }
+
+        .kb-card:hover {
+            border-color: rgba(34, 197, 94, 0.2);
+        }
+
+        .kb-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .kb-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .kb-desc {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        .kb-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 14px;
+        }
+
+        /* Expert System */
+        .expert-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.06), rgba(118, 75, 162, 0.04));
+            border: 1px solid rgba(102, 126, 234, 0.15);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+
+        .expert-q {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .expert-a {
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.8;
+            padding-right: 34px;
+        }
+
+        /* Add Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px;
+            width: 90%;
+            max-width: 520px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-box h2 {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--muted);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 13px;
+        }
+
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 16px;
+        }
+
+        .btn-save {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-cancel {
+            padding: 8px 20px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: transparent;
+            color: var(--muted);
+            font-family: inherit;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        /* Add Button */
+        .add-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 18px;
+            border: 1px dashed rgba(102, 126, 234, 0.3);
+            border-radius: 12px;
+            background: transparent;
+            color: var(--accent);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all .2s;
+            margin-bottom: 16px;
+        }
+
+        .add-btn:hover {
+            background: rgba(102, 126, 234, 0.06);
+            border-color: var(--accent);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--muted);
+        }
+
+        .empty-state i {
+            font-size: 40px;
+            opacity: 0.3;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        @media(max-width:768px) {
+            .layout {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .kb-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar" id="sidebarContainer"></aside>
+        <div class="main">
+            <div class="container-inner">
+                <div class="page-header">
+                    <div class="page-title">📚 مركز التعلم المؤسسي</div>
+                    <div class="page-subtitle">
+                        الذاكرة المؤسسية — الدروس المستفادة وقاعدة المعرفة والمستشار الخبير. المنظمة "تتذكر" بدلاً من
+                        "تعيد اكتشاف"
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="statLessons" style="color:var(--accent)">0</div>
+                        <div class="stat-label">📝 درس مستفاد</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statErrors" style="color:var(--red)">0</div>
+                        <div class="stat-label">🔴 خطأ موثق</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statKB" style="color:var(--green)">0</div>
+                        <div class="stat-label">📖 مقالة معرفية</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statAdvice" style="color:var(--purple)">0</div>
+                        <div class="stat-label">💡 نصيحة خبير</div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="lessons">📝 الدروس المستفادة</button>
+                    <button class="tab-btn" data-tab="errors">🔴 الأخطاء القاتلة</button>
+                    <button class="tab-btn" data-tab="knowledge">📖 قاعدة المعرفة</button>
+                    <button class="tab-btn" data-tab="expert">🧠 المستشار الخبير</button>
+                </div>
+
+                <!-- Tab: Lessons Learned -->
+                <div class="tab-content active" id="tab-lessons">
+                    <button class="add-btn" onclick="openModal('lesson')"><i class="bi bi-plus-lg"></i> إضافة درس
+                        مستفاد</button>
+                    <div id="lessonsList"></div>
+                </div>
+
+                <!-- Tab: Fatal Errors -->
+                <div class="tab-content" id="tab-errors">
+                    <button class="add-btn" onclick="openModal('error')"><i class="bi bi-plus-lg"></i> توثيق
+                        خطأ</button>
+                    <div id="errorsList"></div>
+                </div>
+
+                <!-- Tab: Knowledge Base -->
+                <div class="tab-content" id="tab-knowledge">
+                    <div class="kb-grid" id="kbGrid"></div>
+                </div>
+
+                <!-- Tab: Expert System -->
+                <div class="tab-content" id="tab-expert">
+                    <div id="expertList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal-overlay" id="addModal">
+        <div class="modal-box">
+            <h2 id="modalTitle"><i class="bi bi-pencil-square"></i> إضافة</h2>
+            <input type="hidden" id="editType">
+            <input type="hidden" id="editId">
+            <div class="form-group">
+                <label>العنوان</label>
+                <input id="fieldTitle" placeholder="عنوان الدرس أو الخطأ">
+            </div>
+            <div class="form-group">
+                <label>التفاصيل</label>
+                <textarea id="fieldBody" placeholder="اشرح ماذا حدث وما الذي تعلمته"></textarea>
+            </div>
+            <div class="form-group">
+                <label>الإدارة المعنية</label>
+                <select id="fieldDept">
+                    <option value="">— اختر —</option>
+                    <option value="compliance">الامتثال</option>
+                    <option value="finance">المالية</option>
+                    <option value="sales">المبيعات</option>
+                    <option value="hr">الموارد البشرية</option>
+                    <option value="marketing">التسويق</option>
+                    <option value="operations">العمليات</option>
+                    <option value="support">الخدمات المساندة</option>
+                    <option value="general">عام</option>
+                </select>
+            </div>
+            <div class="form-group" id="rootCauseGroup" style="display:none">
+                <label>السبب الجذري</label>
+                <textarea id="fieldRootCause" placeholder="ما السبب الحقيقي وراء هذا الخطأ؟"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
+                <button class="btn-save" onclick="saveEntry()"><i class="bi bi-check-lg"></i> حفظ</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'stratix_learning_center';
+        const DEPT_NAMES = { compliance: 'الامتثال', finance: 'المالية', sales: 'المبيعات', hr: 'الموارد البشرية', marketing: 'التسويق', operations: 'العمليات', support: 'الخدمات المساندة', general: 'عام' };
+        const DEPT_COLORS = { compliance: '#ef4444', finance: '#f59e0b', sales: '#10b981', hr: '#3b82f6', marketing: '#8b5cf6', operations: '#6366f1', support: '#64748b', general: '#667eea' };
+
+        function load() {
+            try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{"lessons":[],"errors":[],"kb":[],"expert":[]}'); }
+            catch { return { lessons: [], errors: [], kb: [], expert: [] }; }
+        }
+        function save(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+        function esc(str) { const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+            });
+        });
+
+        function render() {
+            const data = load();
+            renderLessons(data.lessons);
+            renderErrors(data.errors);
+            renderKB();
+            renderExpert();
+            // Stats
+            document.getElementById('statLessons').textContent = data.lessons.length;
+            document.getElementById('statErrors').textContent = data.errors.length;
+            document.getElementById('statKB').textContent = '12'; // Pre-built
+            document.getElementById('statAdvice').textContent = '8'; // Pre-built
+        }
+
+        function renderLessons(lessons) {
+            const container = document.getElementById('lessonsList');
+            if (!lessons.length) {
+                container.innerHTML = '<div class="empty-state"><i class="bi bi-journal-text"></i><p>لم تضف دروساً مستفادة بعد. أضف أول درس!</p></div>';
+                return;
+            }
+            container.innerHTML = lessons.sort((a, b) => new Date(b.date) - new Date(a.date)).map(l => `
+                <div class="lesson-card">
+                    <div class="lesson-header">
+                        <div class="lesson-title">${esc(l.title)}</div>
+                        <span class="lesson-dept" style="background:${DEPT_COLORS[l.dept] || '#667eea'}20;color:${DEPT_COLORS[l.dept] || '#667eea'}">${DEPT_NAMES[l.dept] || 'عام'}</span>
+                    </div>
+                    <div class="lesson-body">${esc(l.body)}</div>
+                    <div class="lesson-meta">
+                        <span>📅 ${new Date(l.date).toLocaleDateString('ar-SA')}</span>
+                        ${l.initiative ? `<span>🚀 مبادرة: ${esc(l.initiative)}</span>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderErrors(errors) {
+            const container = document.getElementById('errorsList');
+            if (!errors.length) {
+                container.innerHTML = '<div class="empty-state"><i class="bi bi-exclamation-octagon"></i><p>لم توثق أخطاء بعد. التوثيق يمنع تكرارها!</p></div>';
+                return;
+            }
+            container.innerHTML = errors.sort((a, b) => new Date(b.date) - new Date(a.date)).map(e => `
+                <div class="error-card">
+                    <div class="error-title"><i class="bi bi-exclamation-triangle-fill"></i> ${esc(e.title)}</div>
+                    <div class="error-body">${esc(e.body)}</div>
+                    ${e.rootCause ? `<div class="error-root"><strong>السبب الجذري:</strong> ${esc(e.rootCause)}</div>` : ''}
+                    <div class="lesson-meta" style="margin-top:10px;">
+                        <span>📅 ${new Date(e.date).toLocaleDateString('ar-SA')}</span>
+                        <span class="lesson-dept" style="background:${DEPT_COLORS[e.dept] || '#667eea'}20;color:${DEPT_COLORS[e.dept] || '#667eea'}">${DEPT_NAMES[e.dept] || 'عام'}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderKB() {
+            const grid = document.getElementById('kbGrid');
+            const articles = [
+                { icon: '⚖️', title: 'دليل الامتثال السعودي', desc: 'ZATCA والفواتير الإلكترونية، PDPL لحماية البيانات، قيود نظام العمل والنطاقات' },
+                { icon: '💰', title: 'أساسيات الصحة المالية', desc: 'كيف تقرأ قائمة الدخل والميزانية، وتحسب Break-even، وتبني احتياطي 3 أشهر' },
+                { icon: '📈', title: 'بناء قمع مبيعات فعال', desc: 'من الاستقطاب للإغلاق — 6 مراحل لتحسين معدل التحويل وقيمة الصفقة' },
+                { icon: '👥', title: 'إدارة الموارد البشرية', desc: 'توظيف السعوديين، هيكل الرواتب، نظام تقييم الأداء، وتقليل الدوران الوظيفي' },
+                { icon: '📣', title: 'التسويق الرقمي المتكامل', desc: 'بناء الهوية البصرية، استراتيجية المحتوى، وقياس العائد على الاستثمار التسويقي' },
+                { icon: '⚙️', title: 'توثيق العمليات SOPs', desc: 'كيف توثق 80% من عملياتك في 30 يوم — قوالب جاهزة + أدوات الأتمتة' },
+                { icon: '🎯', title: 'بناء OKRs ذكية', desc: 'من الأهداف العامة إلى نتائج قابلة للقياس — أمثلة لكل إدارة' },
+                { icon: '🧠', title: 'VRIO والميزة التنافسية', desc: 'كيف تختبر قوتك الفعلية — هل هي ميزة مستدامة أم مؤقتة؟' },
+                { icon: '🔄', title: 'إدارة التغيير', desc: 'كيف تستعد لمقاومة الفريق وتبني خطة تغيير تدريجية ناجحة' },
+                { icon: '📊', title: 'قراءة BSC بذكاء', desc: '4 محاور لبطاقة الأداء المتوازن — كيف تربطها بالرؤية والأهداف' },
+                { icon: '🛡️', title: 'إدارة المخاطر', desc: 'خريطة المخاطر، تقييم الأثر والاحتمالية، وخطط الاستجابة' },
+                { icon: '📋', title: 'التخطيط السنوي AOP', desc: 'كيف تبني خطة تشغيلية من 4 أرباع ربط بالأهداف والميزانية' },
+            ];
+            grid.innerHTML = articles.map(a => `
+                <div class="kb-card">
+                    <div class="kb-icon">${a.icon}</div>
+                    <div class="kb-title">${a.title}</div>
+                    <div class="kb-desc">${a.desc}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderExpert() {
+            const container = document.getElementById('expertList');
+            // Context-aware advice based on current data
+            const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
+            const deptDeep = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
+
+            const tips = [];
+
+            // Compliance insights
+            if (diag?.complianceScore < 50) {
+                tips.push({ q: 'لاحظت أن الامتثال أقل من 50% — هل تعرف المخاطر؟', a: 'الجمع بين نطاق أحمر وعدم تحديث GOSI يضاعف الغرامات. الأولوية: تحديث بيانات التأمينات ثم مراجعة النطاقات. تكلفة التصحيح أقل بكثير من تكلفة المخالفة.' });
+            }
+
+            // General wisdom
+            tips.push(
+                { q: 'ما أكبر خطأ يرتكبه رواد الأعمال في السنة الأولى؟', a: 'الانشغال بالتفاصيل التشغيلية بدلاً من بناء النظام. كل ساعة تقضيها في التوثيق والأتمتة اليوم = 100 ساعة توفرها لاحقاً.' },
+                { q: 'متى أوظف أول مدير إدارة؟', a: 'عندما تقضي أكثر من 30% من وقتك في مهام ليست استراتيجية. إذا كنت تدير المالية والـ HR والعمليات بنفسك — أنت متأخر.' },
+                { q: 'كيف أعرف إن استراتيجيتي تعمل؟', a: '3 مؤشرات: ① KPIs تتحسن كل ربع ② نسبة إنجاز المبادرات > 60% ③ الفريق يعرف أهدافه بدون ما تذكّره.' },
+                { q: 'ما الفرق بين الهدف والمبادرة والمهمة؟', a: 'الهدف = وين تبي توصل (زيادة الإيرادات 30%). المبادرة = كيف توصل (إطلاق قناة بيع أونلاين). المهمة = خطوة واحدة (تصميم الموقع). الخيط الذهبي يربطهم.' },
+                { q: 'كيف أتعامل مع مقاومة التغيير في فريقي؟', a: '① اشرح "لماذا" قبل "كيف" ② ابدأ بمن يدعمك (20%) ③ حقق نجاح سريع في 30 يوم ④ احتفل بالإنجازات الصغيرة. المقاومة طبيعية — إدارتها هي المهارة.' },
+                { q: 'هل أحتاج مستشار خارجي؟', a: 'إذا كنت في 3 أشهر بدون تقدم ملموس في خطة واحدة على الأقل — نعم. المستشار يوفر عليك أخطاء تكلّف أضعاف أتعابه.' },
+                { q: 'ما أفضل وقت للتخطيط الاستراتيجي؟', a: 'ربع رابع من كل سنة لخطة السنة القادمة. لكن المراجعة الربعية أهم — 80% من الشركات تفشل في التنفيذ لا في التخطيط.' },
+                { q: 'كيف أقيس عائد الاستثمار في التدريب؟', a: 'قبل التدريب: حدد KPI واضح (مثل: وقت الخدمة). بعد 90 يوم: قِس التغيير. إذا تحسن 15%+ = التدريب ناجح. إذا لم يتحسن = المشكلة ليست في المهارات.' }
+            );
+
+            container.innerHTML = tips.map(t => `
+                <div class="expert-card">
+                    <div class="expert-q">💡 ${esc(t.q)}</div>
+                    <div class="expert-a">${esc(t.a)}</div>
+                </div>
+            `).join('');
+        }
+
+        // Modal
+        function openModal(type) {
+            document.getElementById('editType').value = type;
+            document.getElementById('editId').value = '';
+            document.getElementById('fieldTitle').value = '';
+            document.getElementById('fieldBody').value = '';
+            document.getElementById('fieldDept').value = '';
+            document.getElementById('fieldRootCause').value = '';
+            document.getElementById('rootCauseGroup').style.display = type === 'error' ? 'block' : 'none';
+            document.getElementById('modalTitle').innerHTML = type === 'lesson'
+                ? '<i class="bi bi-journal-plus"></i> إضافة درس مستفاد'
+                : '<i class="bi bi-exclamation-octagon"></i> توثيق خطأ';
+            document.getElementById('addModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('addModal').classList.remove('active');
+        }
+
+        function saveEntry() {
+            const type = document.getElementById('editType').value;
+            const title = document.getElementById('fieldTitle').value.trim();
+            const body = document.getElementById('fieldBody').value.trim();
+            const dept = document.getElementById('fieldDept').value;
+            const rootCause = document.getElementById('fieldRootCause').value.trim();
+
+            if (!title || !body) { alert('يرجى ملء العنوان والتفاصيل'); return; }
+
+            const data = load();
+            const entry = { id: Date.now().toString(), title, body, dept, date: new Date().toISOString() };
+
+            if (type === 'lesson') {
+                data.lessons.push(entry);
+            } else {
+                entry.rootCause = rootCause;
+                data.errors.push(entry);
+            }
+
+            save(data);
+            closeModal();
+            render();
+        }
+
+        // Close modal on overlay click
+        document.getElementById('addModal').addEventListener('click', e => {
+            if (e.target === e.currentTarget) closeModal();
+        });
+
+        render();
+    </script>
+</body>
+
+</html>

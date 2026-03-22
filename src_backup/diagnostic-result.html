@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس — نتيجة التشخيص</title>
+    <meta name="description" content="المسار الاستراتيجي المقترح لك بناءً على إجاباتك">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <link href="/assets/css/diagnostic.css" rel="stylesheet">
+</head>
+
+<body class="diagnostic-page">
+
+    <div class="diag-header">
+        <a href="/" class="diag-logo"><i class="bi bi-activity"></i> Startix</a>
+        <div class="diag-subtitle">نتيجة التشخيص</div>
+    </div>
+
+    <div class="diag-container">
+
+        <!-- بطاقة النتيجة الرئيسية -->
+        <div class="diag-result-card" id="resultCard">
+            <div class="diag-result-emoji" id="resultEmoji">✨</div>
+            <div class="diag-result-name" id="resultName">جاري التحليل...</div>
+            <div class="diag-result-subtitle" id="resultSubtitle"></div>
+            <div class="diag-result-reason" id="resultReason"></div>
+
+            <!-- إحصائيات المسار -->
+            <div class="diag-result-stats" id="resultStats" style="display:none;">
+                <div class="diag-stat">
+                    <div class="diag-stat-num" id="stepsCount">—</div>
+                    <div class="diag-stat-label">خطوة</div>
+                </div>
+                <div class="diag-stat">
+                    <div class="diag-stat-num" id="estimatedTime">—</div>
+                    <div class="diag-stat-label">الوقت التقديري</div>
+                </div>
+            </div>
+
+            <!-- خطوات المسار -->
+            <div class="diag-result-steps" id="resultSteps"></div>
+        </div>
+
+        <!-- شريط التسجيل -->
+        <div class="diag-register-bar">
+            <i class="bi bi-lock-fill"></i>
+            <div class="diag-register-bar-text">
+                <h4>🔒 للتقدم والاستفادة الكاملة سجّل في المنصة</h4>
+                <p>التشخيص مجاني — التسجيل يفتح لك كل الأدوات وحفظ تقدمك</p>
+            </div>
+            <a href="#" class="diag-btn diag-btn-primary" id="registerBtn" onclick="acceptPath()">
+                <i class="bi bi-rocket-takeoff"></i> يناسبني — سجّل وابدأ
+            </a>
+        </div>
+
+        <!-- أزرار التحكم -->
+        <div style="display:flex; gap:12px; margin-top:20px; flex-wrap:wrap; justify-content:center;">
+            <button class="diag-btn diag-btn-secondary" onclick="changePath()">
+                <i class="bi bi-arrow-repeat"></i> غيّر المسار
+            </button>
+            <button class="diag-btn diag-btn-secondary" onclick="selectComprehensive()">
+                <i class="bi bi-compass"></i> المسار الشامل
+            </button>
+            <button class="diag-btn diag-btn-ghost" onclick="goBackToDiag()">
+                <i class="bi bi-arrow-right"></i> رجوع للتشخيص
+            </button>
+        </div>
+
+        <!-- قسم تغيير المسار (مخفي) -->
+        <div id="changePathSection" style="display:none; margin-top:32px;">
+            <h3 style="color:#fff; font-size:1.2rem; font-weight:700; margin-bottom:20px; text-align:center;">
+                اختر المسار الذي تريده:
+            </h3>
+            <div class="diag-cards" id="allPathsGrid"
+                style="grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));">
+                <!-- يُملأ بالجافاسكريبت -->
+            </div>
+        </div>
+
+    </div>
+
+    <script src="/assets/js/path-engine.js"></script>
+    <script src="/assets/js/diagnostic-engine.js"></script>
+    <script>
+        let currentResult = null;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // استرجاع النتيجة من sessionStorage
+            currentResult = DiagnosticEngine.getFromSession();
+
+            if (!currentResult) {
+                // لا يوجد تشخيص → رجوع
+                window.location.href = '/select-type';
+                return;
+            }
+
+            renderResult(currentResult);
+        });
+
+        function renderResult(result) {
+            const card = document.getElementById('resultCard');
+
+            if (result.category === 'manager') {
+                // مدير إدارة
+                document.getElementById('resultEmoji').textContent = result.emoji || '🎯';
+                document.getElementById('resultName').textContent = 'مسار إدارة ' + result.name;
+                document.getElementById('resultSubtitle').textContent = '';
+                document.getElementById('resultReason').textContent = result.reason;
+
+                // خطوات المدير
+                const stepsEl = document.getElementById('resultSteps');
+                stepsEl.innerHTML = '';
+                if (result.steps) {
+                    result.steps.forEach(s => {
+                        stepsEl.innerHTML += `<span class="diag-step-badge"><i class="bi ${s.icon}"></i> ${s.label}</span>`;
+                    });
+                }
+                document.getElementById('resultStats').style.display = 'flex';
+                document.getElementById('stepsCount').textContent = (result.steps || []).length;
+                document.getElementById('estimatedTime').textContent = '1-2 يوم';
+
+            } else if (result.category === 'investor') {
+                // مستثمر
+                document.getElementById('resultEmoji').textContent = result.emoji || '👁️';
+                document.getElementById('resultName').textContent = result.name;
+                document.getElementById('resultSubtitle').textContent = '';
+                document.getElementById('resultReason').textContent = result.reason;
+                document.getElementById('resultStats').style.display = 'none';
+                document.getElementById('resultSteps').innerHTML = '';
+
+            } else {
+                // صاحب مشروع
+                const pathDef = (typeof PathEngine !== 'undefined' && PathEngine.PATH_DEFINITIONS)
+                    ? PathEngine.PATH_DEFINITIONS[result.patternKey]
+                    : null;
+
+                document.getElementById('resultEmoji').textContent = pathDef ? pathDef.emoji : '✨';
+                document.getElementById('resultName').textContent = pathDef ? pathDef.name : result.patternKey;
+
+                // sizeVariant subtitle
+                const variant = result.variant || DiagnosticEngine.getSizeVariant(result.patternKey, result.sizeCategory);
+                document.getElementById('resultSubtitle').textContent = variant.subtitle || '';
+
+                document.getElementById('resultReason').textContent = result.reason;
+
+                // خطوات المسار
+                const stepsEl = document.getElementById('resultSteps');
+                stepsEl.innerHTML = '';
+                if (pathDef && pathDef.steps) {
+                    pathDef.steps.forEach(s => {
+                        stepsEl.innerHTML += `<span class="diag-step-badge"><i class="bi ${s.icon}"></i> ${s.label}</span>`;
+                    });
+                }
+
+                document.getElementById('resultStats').style.display = 'flex';
+                document.getElementById('stepsCount').textContent = pathDef ? pathDef.steps.length : '—';
+                document.getElementById('estimatedTime').textContent = pathDef ? pathDef.estimatedTime : '—';
+
+                // نصيحة حسب الحجم
+                if (variant.tip) {
+                    const tipDiv = document.createElement('div');
+                    tipDiv.style.cssText = 'margin-top:16px; padding:12px 16px; background:rgba(74,222,128,0.08); border:1px solid rgba(74,222,128,0.15); border-radius:12px; font-size:0.88rem; color:#4ade80;';
+                    tipDiv.innerHTML = '<i class="bi bi-lightbulb"></i> <strong>نصيحة:</strong> ' + variant.tip;
+                    card.appendChild(tipDiv);
+                }
+            }
+        }
+
+        function acceptPath() {
+            // حفظ القرار
+            if (currentResult) {
+                DiagnosticEngine.saveToSession(currentResult);
+            }
+            // الذهاب للتسجيل
+            window.location.href = '/login?tab=signup&from=diagnostic';
+        }
+
+        function changePath() {
+            const section = document.getElementById('changePathSection');
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+                renderAllPaths();
+                section.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                section.style.display = 'none';
+            }
+        }
+
+        function renderAllPaths() {
+            const grid = document.getElementById('allPathsGrid');
+            grid.innerHTML = '';
+
+            if (typeof PathEngine === 'undefined' || !PathEngine.PATH_DEFINITIONS) return;
+
+            const defs = PathEngine.PATH_DEFINITIONS;
+            for (const [key, def] of Object.entries(defs)) {
+                const isActive = currentResult && currentResult.patternKey === key;
+                grid.innerHTML += `
+                    <div class="diag-card ${isActive ? 'selected' : ''}" onclick="selectPath('${key}')" style="padding:24px 16px;">
+                        <span class="diag-card-emoji" style="font-size:2rem;">${def.emoji}</span>
+                        <div class="diag-card-title" style="font-size:1rem;">${def.name}</div>
+                        <div class="diag-card-desc" style="font-size:0.8rem;">${def.description}</div>
+                        <div style="margin-top:8px;">
+                            <span class="diag-step-badge" style="font-size:0.75rem;"><i class="bi bi-clock"></i> ${def.estimatedTime}</span>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function selectPath(patternKey) {
+            const pathDef = PathEngine.PATH_DEFINITIONS[patternKey];
+            if (!pathDef) return;
+
+            // تحديث النتيجة
+            currentResult = {
+                ...currentResult,
+                patternKey,
+                reason: 'اخترت هذا المسار يدوياً.',
+                variant: DiagnosticEngine.getSizeVariant(patternKey, currentResult?.sizeCategory || 'medium'),
+            };
+
+            // إعادة حفظ
+            DiagnosticEngine.saveToSession(currentResult);
+
+            // إخفاء القائمة وتحديث العرض
+            document.getElementById('changePathSection').style.display = 'none';
+
+            // إزالة النصيحة القديمة إن وجدت
+            const oldTip = document.querySelector('.diag-result-card > div[style*="lightbulb"]');
+            if (oldTip) oldTip.remove();
+
+            renderResult(currentResult);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function selectComprehensive() {
+            selectPath('default_strategic');
+        }
+
+        function goBackToDiag() {
+            const cat = currentResult?.category || sessionStorage.getItem('diagnosticCategory') || 'owner';
+            switch (cat) {
+                case 'owner': window.location.href = '/diagnostic-owner'; break;
+                case 'manager': window.location.href = '/diagnostic-manager'; break;
+                case 'investor': window.location.href = '/diagnostic-investor'; break;
+                default: window.location.href = '/select-type';
+            }
+        }
+    </script>
+
+</body>
+
+</html>

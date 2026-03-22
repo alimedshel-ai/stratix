@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس - مصفوفة RACI</title>
+    <meta name="description" content="مصفوفة المسؤوليات RACI — حدد من المسؤول، المعتمد، المستشار، والمُطلع لكل مهمة">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --bg: #0f1117;
+            --bg-card: #1a1d2e;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --success: #22c55e;
+            --warning: #facc15;
+            --danger: #ef4444;
+            --info: #38bdf8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .top-nav {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 14px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .top-nav .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .layout {
+            display: flex;
+            min-height: calc(100vh - 60px);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            max-width: calc(100% - 220px);
+        }
+
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 28px;
+        }
+
+        .page-header h1 {
+            font-size: 26px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-header h1 i {
+            color: var(--primary);
+        }
+
+        .page-subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        /* Legend */
+        .raci-legend {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+        }
+
+        .legend-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 800;
+            color: white;
+        }
+
+        .dot-R {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .dot-A {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .dot-C {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+
+        .dot-I {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+
+        /* Stats */
+        .mini-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .mini-stat {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px;
+            text-align: center;
+            transition: all .3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mini-stat::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+        .mini-stat:nth-child(1)::before {
+            background: #ef4444;
+        }
+
+        .mini-stat:nth-child(2)::before {
+            background: #f59e0b;
+        }
+
+        .mini-stat:nth-child(3)::before {
+            background: #3b82f6;
+        }
+
+        .mini-stat:nth-child(4)::before {
+            background: #8b5cf6;
+        }
+
+        .ms-value {
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        .ms-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* RACI Table */
+        .raci-table-wrap {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .raci-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .raci-table th {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 14px 16px;
+            font-size: 13px;
+            font-weight: 700;
+            text-align: center;
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .raci-table th:first-child {
+            text-align: right;
+            min-width: 220px;
+        }
+
+        .raci-table td {
+            padding: 12px 16px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+            vertical-align: middle;
+        }
+
+        .raci-table td:first-child {
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .raci-table tr:hover {
+            background: rgba(102, 126, 234, 0.04);
+        }
+
+        .raci-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* RACI Cell */
+        .raci-cell {
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .raci-cell:hover {
+            transform: scale(1.1);
+        }
+
+        .raci-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 800;
+            color: white;
+            transition: all .3s;
+        }
+
+        .raci-badge.R {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+        }
+
+        .raci-badge.A {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+        }
+
+        .raci-badge.C {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        .raci-badge.I {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+        }
+
+        .raci-badge.empty {
+            background: transparent;
+            border: 2px dashed var(--border);
+            color: var(--text-muted);
+            font-size: 12px;
+            box-shadow: none;
+        }
+
+        /* Task Row Info */
+        .task-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .task-name {
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .task-initiative {
+            font-size: 11px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Add Row */
+        .add-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .add-row input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .add-row input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Buttons */
+        .btn-add {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all .3s;
+            white-space: nowrap;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .btn-sm:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .btn-sm.del:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        /* Alerts */
+        .alert-bar {
+            padding: 14px 20px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .alert-bar.warn {
+            background: rgba(250, 204, 21, 0.08);
+            border: 1px solid rgba(250, 204, 21, 0.2);
+            color: #facc15;
+        }
+
+        .alert-bar.danger {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 9999;
+        }
+
+        .toast-msg {
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            animation: slideUp .3s ease;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(34, 197, 94, 0.9);
+            color: white;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width:1024px) {
+            .mini-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .raci-table-wrap {
+                overflow-x: auto;
+            }
+        }
+
+        @media (max-width:768px) {
+            .main-content {
+                max-width: 100%;
+                padding: 16px;
+            }
+
+            .raci-legend {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="top-nav">
+        <a href="/dashboard.html" class="brand"><i class="bi bi-gem"></i> ستارتكس</a>
+    </nav>
+
+    <div class="layout">
+        <aside class="sidebar"></aside>
+        <div class="main-content">
+            <div class="page-header">
+                <div>
+                    <h1><i class="bi bi-grid-3x3"></i> مصفوفة RACI</h1>
+                    <p class="page-subtitle">حدد المسؤوليات بوضوح — من ينفذ، من يعتمد، من يُستشار، ومن يُبلّغ</p>
+                </div>
+                <button class="btn-add" onclick="addTask()"><i class="bi bi-plus-lg"></i> مهمة جديدة</button>
+            </div>
+
+            <!-- Legend -->
+            <div class="raci-legend">
+                <div class="legend-item">
+                    <div class="legend-dot dot-R">R</div>
+                    <div><strong>Responsible</strong><br><span style="color:var(--text-muted);font-size:11px">المسؤول —
+                            من ينفّذ العمل</span></div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot dot-A">A</div>
+                    <div><strong>Accountable</strong><br><span style="color:var(--text-muted);font-size:11px">المعتمد —
+                            من يتحمل المسؤولية النهائية</span></div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot dot-C">C</div>
+                    <div><strong>Consulted</strong><br><span style="color:var(--text-muted);font-size:11px">المستشار —
+                            تُطلب مشورته</span></div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot dot-I">I</div>
+                    <div><strong>Informed</strong><br><span style="color:var(--text-muted);font-size:11px">المُطلع —
+                            يُبلّغ بالنتائج</span></div>
+                </div>
+            </div>
+
+            <!-- Alerts -->
+            <div id="alertsArea"></div>
+
+            <!-- Stats -->
+            <div class="mini-stats" id="statsArea">
+                <div class="mini-stat">
+                    <div class="ms-value" id="sR">0</div>
+                    <div class="ms-label">مُكلّفات (R)</div>
+                </div>
+                <div class="mini-stat">
+                    <div class="ms-value" id="sA">0</div>
+                    <div class="ms-label">اعتمادات (A)</div>
+                </div>
+                <div class="mini-stat">
+                    <div class="ms-value" id="sC">0</div>
+                    <div class="ms-label">استشارات (C)</div>
+                </div>
+                <div class="mini-stat">
+                    <div class="ms-value" id="sI">0</div>
+                    <div class="ms-label">إبلاغات (I)</div>
+                </div>
+            </div>
+
+            <!-- RACI Table -->
+            <div class="raci-table-wrap">
+                <table class="raci-table" id="raciTable"></table>
+            </div>
+
+            <!-- Add Row -->
+            <div class="add-row">
+                <input type="text" id="newTaskName" placeholder="اسم المهمة الجديدة..."
+                    onkeydown="if(event.key==='Enter')addTask()">
+                <input type="text" id="newTaskInit" placeholder="المبادرة المرتبطة (اختياري)">
+                <button class="btn-add" onclick="addTask()"><i class="bi bi-plus-lg"></i> أضف</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/assets/js/sidebar.js"></script>
+
+    <script>
+        // ══════════════════════════════════════
+        // البيانات
+        // ══════════════════════════════════════
+        const ROLES = ['R', 'A', 'C', 'I'];
+        const ROLE_CYCLE = { '': 'R', 'R': 'A', 'A': 'C', 'C': 'I', 'I': '' };
+
+        // أعضاء الفريق (من localStorage أو بيانات تجريبية)
+        let members = [];
+        try {
+            const stored = localStorage.getItem('user');
+            if (stored) {
+                const u = JSON.parse(stored);
+                members = [{ id: 'u1', name: u.name || 'أنت', role: 'المالك' }];
+            }
+        } catch (e) { }
+
+        if (members.length < 2) {
+            members = [
+                { id: 'm1', name: 'أحمد المدير', role: 'CEO' },
+                { id: 'm2', name: 'سارة', role: 'CFO' },
+                { id: 'm3', name: 'خالد', role: 'COO' },
+                { id: 'm4', name: 'نورة', role: 'CMO' },
+                { id: 'm5', name: 'فهد', role: 'CTO' },
+                { id: 'm6', name: 'ريم', role: 'HR' },
+            ];
+        }
+
+        // المهام مع تكليفات RACI
+        let tasks = [
+            { id: 't1', name: 'إطلاق التطبيق الرقمي', initiative: 'التحول الرقمي', assignments: { m1: 'A', m3: 'R', m5: 'R', m4: 'C', m2: 'I' } },
+            { id: 't2', name: 'تحديث سياسة الامتثال', initiative: 'الحوكمة', assignments: { m1: 'A', m3: 'C', m6: 'R', m2: 'I' } },
+            { id: 't3', name: 'حملة تسويق Q2', initiative: 'النمو', assignments: { m1: 'I', m4: 'R', m2: 'A', m3: 'C' } },
+            { id: 't4', name: 'توظيف 10 مطورين', initiative: 'الموارد البشرية', assignments: { m6: 'R', m5: 'C', m1: 'A', m2: 'I' } },
+            { id: 't5', name: 'تقرير مالي ربعي', initiative: 'المالية', assignments: { m2: 'R', m1: 'A', m3: 'I', m6: 'I' } },
+            { id: 't6', name: 'بناء نظام CRM', initiative: 'التحول الرقمي', assignments: { m5: 'R', m3: 'A', m4: 'C', m1: 'I' } },
+            { id: 't7', name: 'تدريب القيادات', initiative: 'الموارد البشرية', assignments: { m6: 'R', m1: 'A', m3: 'C' } },
+            { id: 't8', name: 'مراجعة سلسلة التوريد', initiative: 'العمليات', assignments: { m3: 'R', m1: 'A', m2: 'C', m5: 'I' } },
+        ];
+
+        // ══════════════════════════════════════
+        // Render
+        // ══════════════════════════════════════
+        function render() {
+            const table = document.getElementById('raciTable');
+            // Header
+            let html = `<thead><tr>
+                <th style="text-align:right">المهمة / النشاط</th>
+                ${members.map(m => `<th><div style="font-size:12px">${m.name}</div><div style="font-size:10px;color:var(--text-muted);font-weight:400">${m.role}</div></th>`).join('')}
+                <th style="width:50px"></th>
+            </tr></thead><tbody>`;
+
+            // Rows
+            tasks.forEach(task => {
+                html += `<tr>
+                    <td><div class="task-info">
+                        <span class="task-name">${task.name}</span>
+                        ${task.initiative ? `<span class="task-initiative"><i class="bi bi-link-45deg"></i> ${task.initiative}</span>` : ''}
+                    </div></td>
+                    ${members.map(m => {
+                    const val = task.assignments[m.id] || '';
+                    const cls = val || 'empty';
+                    const label = val || '+';
+                    return `<td class="raci-cell" onclick="cycleRaci('${task.id}','${m.id}')">
+                            <span class="raci-badge ${cls}">${label}</span>
+                        </td>`;
+                }).join('')}
+                    <td><button class="btn-sm del" onclick="deleteTask('${task.id}')" title="حذف"><i class="bi bi-trash3"></i></button></td>
+                </tr>`;
+            });
+
+            html += '</tbody>';
+            table.innerHTML = html;
+            renderStats();
+            checkAlerts();
+        }
+
+        function renderStats() {
+            let counts = { R: 0, A: 0, C: 0, I: 0 };
+            tasks.forEach(t => {
+                Object.values(t.assignments).forEach(v => { if (counts[v] !== undefined) counts[v]++; });
+            });
+            document.getElementById('sR').textContent = counts.R;
+            document.getElementById('sA').textContent = counts.A;
+            document.getElementById('sC').textContent = counts.C;
+            document.getElementById('sI').textContent = counts.I;
+        }
+
+        function checkAlerts() {
+            const area = document.getElementById('alertsArea');
+            let alerts = [];
+
+            // مهمة بدون R
+            const noR = tasks.filter(t => !Object.values(t.assignments).includes('R'));
+            if (noR.length) alerts.push({ type: 'danger', msg: `⚠️ ${noR.length} مهمة بدون مسؤول (R): ${noR.map(t => t.name).join('، ')}` });
+
+            // مهمة بدون A
+            const noA = tasks.filter(t => !Object.values(t.assignments).includes('A'));
+            if (noA.length) alerts.push({ type: 'warn', msg: `⚡ ${noA.length} مهمة بدون معتمد (A): ${noA.map(t => t.name).join('، ')}` });
+
+            // عضو overloaded (أكثر من 4 R)
+            members.forEach(m => {
+                const rCount = tasks.filter(t => t.assignments[m.id] === 'R').length;
+                if (rCount > 4) alerts.push({ type: 'warn', msg: `🔥 ${m.name} مُكلّف بـ ${rCount} مهام (R) — خطر إرهاق` });
+            });
+
+            area.innerHTML = alerts.map(a => `<div class="alert-bar ${a.type}">${a.msg}</div>`).join('');
+        }
+
+        // ══════════════════════════════════════
+        // Actions
+        // ══════════════════════════════════════
+        function cycleRaci(taskId, memberId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+            const current = task.assignments[memberId] || '';
+            const next = ROLE_CYCLE[current];
+            if (next) task.assignments[memberId] = next;
+            else delete task.assignments[memberId];
+            render();
+            showToast('تم التحديث ✓');
+        }
+
+        function addTask() {
+            const nameEl = document.getElementById('newTaskName');
+            const initEl = document.getElementById('newTaskInit');
+            const name = nameEl.value.trim();
+            if (!name) { nameEl.focus(); return; }
+            tasks.push({
+                id: 't' + Date.now(),
+                name,
+                initiative: initEl.value.trim(),
+                assignments: {}
+            });
+            nameEl.value = '';
+            initEl.value = '';
+            render();
+            showToast('تم إضافة المهمة ✓');
+        }
+
+        function deleteTask(id) {
+            if (!confirm('حذف هذه المهمة؟')) return;
+            tasks = tasks.filter(t => t.id !== id);
+            render();
+            showToast('تم الحذف ✓');
+        }
+
+        function showToast(msg) {
+            const t = document.createElement('div');
+            t.className = 'toast-msg';
+            t.innerHTML = `<i class="bi bi-check-circle"></i> ${msg}`;
+            document.getElementById('toastContainer').appendChild(t);
+            setTimeout(() => t.remove(), 2500);
+        }
+
+        // Init
+        render();
+    </script>
+</body>
+
+</html>

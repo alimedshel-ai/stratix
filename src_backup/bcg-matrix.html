@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس - مصفوفة BCG</title>
+    <meta name="description"
+        content="مصفوفة BCG — صنّف منتجاتك ووحداتك حسب النمو والحصة السوقية: نجوم، أبقار، علامات استفهام، كلاب">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --bg: #0f1117;
+            --bg-card: #1a1d2e;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --success: #22c55e;
+            --warning: #facc15;
+            --danger: #ef4444;
+            --info: #38bdf8
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+            min-height: 100vh
+        }
+
+        .top-nav {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 14px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3)
+        }
+
+        .top-nav .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: 700
+        }
+
+        .layout {
+            display: flex;
+            min-height: calc(100vh - 60px)
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            max-width: calc(100% - 220px)
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 28px
+        }
+
+        .page-header h1 {
+            font-size: 26px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .page-header h1 i {
+            color: var(--primary)
+        }
+
+        .page-subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 4px
+        }
+
+        /* BCG Grid */
+        .bcg-container {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap
+        }
+
+        .bcg-matrix {
+            flex: 1;
+            min-width: 500px;
+            position: relative
+        }
+
+        .bcg-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 3px;
+            border-radius: 20px;
+            overflow: hidden;
+            aspect-ratio: 1
+        }
+
+        .bcg-quad {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            min-height: 220px;
+            transition: all .3s;
+            cursor: pointer
+        }
+
+        .bcg-quad:hover {
+            filter: brightness(1.1)
+        }
+
+        .bcg-quad.stars {
+            background: linear-gradient(135deg, rgba(250, 204, 21, 0.12), rgba(245, 158, 11, 0.08));
+            border: 1px solid rgba(250, 204, 21, 0.15)
+        }
+
+        .bcg-quad.questions {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(59, 130, 246, 0.08));
+            border: 1px solid rgba(56, 189, 248, 0.15)
+        }
+
+        .bcg-quad.cows {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(22, 163, 74, 0.08));
+            border: 1px solid rgba(34, 197, 94, 0.15)
+        }
+
+        .bcg-quad.dogs {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(220, 38, 38, 0.08));
+            border: 1px solid rgba(239, 68, 68, 0.15)
+        }
+
+        .quad-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px
+        }
+
+        .quad-emoji {
+            font-size: 28px
+        }
+
+        .quad-title {
+            font-size: 15px;
+            font-weight: 800
+        }
+
+        .quad-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 12px
+        }
+
+        .quad-items {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px
+        }
+
+        .quad-item {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            transition: all .2s
+        }
+
+        .quad-item:hover {
+            background: rgba(255, 255, 255, 0.08)
+        }
+
+        .quad-item-name {
+            font-weight: 700
+        }
+
+        .quad-item-rev {
+            font-size: 11px;
+            color: var(--text-muted)
+        }
+
+        .quad-item-actions {
+            display: flex;
+            gap: 4px
+        }
+
+        .qi-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .2s
+        }
+
+        .qi-btn:hover {
+            background: rgba(255, 255, 255, 0.06)
+        }
+
+        .qi-btn.del:hover {
+            border-color: var(--danger);
+            color: var(--danger)
+        }
+
+        /* Axis Labels */
+        .axis-y {
+            position: absolute;
+            right: -30px;
+            top: 50%;
+            transform: rotate(90deg) translateX(-50%);
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 700;
+            white-space: nowrap
+        }
+
+        .axis-x {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 700
+        }
+
+        .axis-label-high-y {
+            position: absolute;
+            right: -24px;
+            top: 10px;
+            font-size: 10px;
+            color: var(--text-muted)
+        }
+
+        .axis-label-low-y {
+            position: absolute;
+            right: -24px;
+            bottom: 10px;
+            font-size: 10px;
+            color: var(--text-muted)
+        }
+
+        .axis-label-high-x {
+            position: absolute;
+            bottom: -22px;
+            right: 10px;
+            font-size: 10px;
+            color: var(--text-muted)
+        }
+
+        .axis-label-low-x {
+            position: absolute;
+            bottom: -22px;
+            left: 10px;
+            font-size: 10px;
+            color: var(--text-muted)
+        }
+
+        /* Side Panel */
+        .bcg-side {
+            width: 340px
+        }
+
+        .side-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 22px;
+            margin-bottom: 16px
+        }
+
+        .side-title {
+            font-size: 15px;
+            font-weight: 800;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .add-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px
+        }
+
+        .add-form input,
+        .add-form select {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 13px
+        }
+
+        .add-form input:focus,
+        .add-form select:focus {
+            outline: none;
+            border-color: var(--primary)
+        }
+
+        .add-form select option {
+            background: var(--bg-card)
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4)
+        }
+
+        /* Stats */
+        .stat-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px
+        }
+
+        .stat-chip {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center
+        }
+
+        .stat-val {
+            font-size: 20px;
+            font-weight: 800
+        }
+
+        .stat-lbl {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 2px
+        }
+
+        /* Strategy Cards */
+        .strat-item {
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            margin-bottom: 8px;
+            font-size: 12px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start
+        }
+
+        .strat-emoji {
+            font-size: 18px;
+            flex-shrink: 0
+        }
+
+        .strat-text {
+            line-height: 1.6
+        }
+
+        .strat-text strong {
+            color: var(--text)
+        }
+
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 9999
+        }
+
+        .toast-msg {
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            animation: slideUp .3s ease;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(34, 197, 94, 0.9);
+            color: white
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1
+            }
+        }
+
+        @media(max-width:1024px) {
+            .bcg-container {
+                flex-direction: column
+            }
+
+            .bcg-side {
+                width: 100%
+            }
+
+            .bcg-grid {
+                aspect-ratio: auto
+            }
+        }
+
+        @media(max-width:768px) {
+            .main-content {
+                max-width: 100%;
+                padding: 16px
+            }
+
+            .bcg-grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        /* Product Recommendation Badge */
+        .qi-rec {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .qi-rec.invest {
+            background: rgba(250, 204, 21, 0.12);
+            color: #facc15;
+        }
+
+        .qi-rec.decide {
+            background: rgba(56, 189, 248, 0.12);
+            color: #38bdf8;
+        }
+
+        .qi-rec.harvest {
+            background: rgba(34, 197, 94, 0.12);
+            color: #22c55e;
+        }
+
+        .qi-rec.divest {
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
+        }
+
+        .qi-initiative {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            background: rgba(102, 126, 234, 0.08);
+            color: #667eea;
+            cursor: pointer;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .2s;
+        }
+
+        .qi-initiative:hover {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+            transform: scale(1.1);
+        }
+
+        /* Success Path */
+        .success-path-wrap {
+            margin-top: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px 24px;
+        }
+
+        .success-path-title {
+            font-size: 14px;
+            font-weight: 800;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sp-track {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            flex-wrap: wrap;
+        }
+
+        .sp-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 16px;
+            border-radius: 12px;
+            border: 1.5px solid var(--border);
+            background: rgba(255, 255, 255, 0.02);
+            transition: all .3s;
+            min-width: 90px;
+        }
+
+        .sp-node.highlight {
+            border-color: rgba(250, 204, 21, 0.4);
+            background: rgba(250, 204, 21, 0.06);
+        }
+
+        .sp-node .sp-emoji {
+            font-size: 24px;
+        }
+
+        .sp-node .sp-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .sp-node .sp-count {
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .sp-arrow {
+            font-size: 20px;
+            color: var(--text-muted);
+            margin: 0 6px;
+        }
+
+        .sp-desc {
+            margin-top: 12px;
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="top-nav"><a href="/dashboard.html" class="brand"><i class="bi bi-gem"></i> ستارتكس</a></nav>
+    <div class="layout">
+        <aside class="sidebar"></aside>
+        <div class="main-content">
+            <div class="page-header">
+                <div>
+                    <h1><i class="bi bi-grid-1x2"></i> مصفوفة BCG</h1>
+                    <p class="page-subtitle">صنّف منتجاتك ووحداتك حسب معدل نمو السوق والحصة السوقية النسبية</p>
+                </div>
+            </div>
+
+            <div class="bcg-container">
+                <!-- Matrix -->
+                <div class="bcg-matrix">
+                    <div class="bcg-grid" id="bcgGrid"></div>
+                    <div class="axis-y">↑ معدل نمو السوق</div>
+                    <div class="axis-x">← الحصة السوقية النسبية →</div>
+                    <div class="axis-label-high-y">عالي</div>
+                    <div class="axis-label-low-y">منخفض</div>
+                    <div class="axis-label-high-x">عالية</div>
+                    <div class="axis-label-low-x">منخفضة</div>
+                </div>
+
+                <!-- Success Path -->
+                <div class="success-path-wrap">
+                    <div class="success-path-title">🛤️ مسار النجاح المثالي</div>
+                    <div id="successPath"></div>
+                </div>
+
+                <!-- Side Panel -->
+                <div class="bcg-side">
+                    <!-- Stats -->
+                    <div class="side-card">
+                        <div class="side-title">📊 التوزيع</div>
+                        <div class="stat-row">
+                            <div class="stat-chip">
+                                <div class="stat-val" style="color:#facc15" id="sStar">0</div>
+                                <div class="stat-lbl">⭐ نجوم</div>
+                            </div>
+                            <div class="stat-chip">
+                                <div class="stat-val" style="color:#38bdf8" id="sQuestion">0</div>
+                                <div class="stat-lbl">❓ استفهام</div>
+                            </div>
+                        </div>
+                        <div class="stat-row">
+                            <div class="stat-chip">
+                                <div class="stat-val" style="color:#22c55e" id="sCow">0</div>
+                                <div class="stat-lbl">🐄 أبقار</div>
+                            </div>
+                            <div class="stat-chip">
+                                <div class="stat-val" style="color:#ef4444" id="sDog">0</div>
+                                <div class="stat-lbl">🐕 كلاب</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add Form -->
+                    <div class="side-card">
+                        <div class="side-title"><i class="bi bi-plus-circle"></i> إضافة وحدة / منتج</div>
+                        <div class="add-form">
+                            <input type="text" id="fName" placeholder="اسم المنتج أو الوحدة">
+                            <input type="text" id="fRevenue" placeholder="الإيرادات (مثال: 500,000)">
+                            <select id="fQuad">
+                                <option value="stars">⭐ نجوم — نمو عالي + حصة عالية</option>
+                                <option value="questions">❓ علامات استفهام — نمو عالي + حصة منخفضة</option>
+                                <option value="cows">🐄 أبقار نقدية — نمو منخفض + حصة عالية</option>
+                                <option value="dogs">🐕 كلاب — نمو منخفض + حصة منخفضة</option>
+                            </select>
+                            <button class="btn-add" onclick="addItem()"><i class="bi bi-plus-lg"></i> أضف</button>
+                        </div>
+                    </div>
+
+                    <!-- Strategy Recommendations -->
+                    <div class="side-card">
+                        <div class="side-title">💡 الاستراتيجية المقترحة</div>
+                        <div id="stratRecs"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="toast-container" id="toastContainer"></div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/assets/js/sidebar.js"></script>
+    <script>
+        const QUADS = {
+            stars: {
+                emoji: '⭐', title: 'نجوم',
+                desc: 'نمو عالي + حصة عالية — استثمر بقوة',
+                strategy: 'استثمر بقوة للحفاظ على الريادة. هذه المنتجات تحتاج موارد لكنها تعود بعوائد عالية.',
+                action: 'استثمر', actionClass: 'invest', actionIcon: '📈'
+            },
+            questions: {
+                emoji: '❓', title: 'علامات استفهام',
+                desc: 'نمو عالي + حصة منخفضة — قرّر: استثمر أو اخرج',
+                strategy: 'قرّر بسرعة: إما استثمار مكثف لتحويلها لنجوم، أو تصفيتها. لا تتركها معلّقة.',
+                action: 'قرّر', actionClass: 'decide', actionIcon: '🤔'
+            },
+            cows: {
+                emoji: '🐄', title: 'أبقار نقدية',
+                desc: 'نمو منخفض + حصة عالية — احلبها وأعد الاستثمار',
+                strategy: 'حافظ عليها كمصدر تمويل. لا تستثمر فيها كثيراً — استخدم أرباحها لتمويل النجوم وعلامات الاستفهام.',
+                action: 'احتفظ', actionClass: 'harvest', actionIcon: '🥛'
+            },
+            dogs: {
+                emoji: '🐕', title: 'كلاب',
+                desc: 'نمو منخفض + حصة منخفضة — أوقف أو صفِّ',
+                strategy: 'فكّر جدياً في التخلص منها. إذا لم تكن تحقق ربح أو قيمة استراتيجية، أوقفها وحرّر الموارد.',
+                action: 'صفِّ', actionClass: 'divest', actionIcon: '🚫'
+            }
+        };
+
+        let items = [
+            { id: '1', name: 'التطبيق الرقمي', quad: 'stars', revenue: '1,200,000' },
+            { id: '2', name: 'خدمات الاستشارات', quad: 'cows', revenue: '3,500,000' },
+            { id: '3', name: 'منصة التدريب', quad: 'questions', revenue: '400,000' },
+            { id: '4', name: 'المنتج المطبوع', quad: 'dogs', revenue: '150,000' },
+            { id: '5', name: 'حل الذكاء الاصطناعي', quad: 'stars', revenue: '800,000' },
+            { id: '6', name: 'خدمة التقارير', quad: 'cows', revenue: '2,100,000' },
+            { id: '7', name: 'دخول السوق الخليجي', quad: 'questions', revenue: '200,000' },
+        ];
+
+        function render() {
+            const grid = document.getElementById('bcgGrid');
+            // Order: stars(top-right), questions(top-left), cows(bottom-right), dogs(bottom-left)
+            const order = ['questions', 'stars', 'dogs', 'cows'];
+            grid.innerHTML = order.map(q => {
+                const cfg = QUADS[q];
+                const qItems = items.filter(i => i.quad === q);
+                return `<div class="bcg-quad ${q}">
+                    <div class="quad-header">
+                        <div><span class="quad-emoji">${cfg.emoji}</span> <span class="quad-title">${cfg.title}</span></div>
+                        <span style="font-size:11px;color:var(--text-muted)">${qItems.length}</span>
+                    </div>
+                    <div class="quad-desc">${cfg.desc}</div>
+                    <div class="quad-items">${qItems.map(i => `
+                        <div class="quad-item">
+                            <div style="flex:1">
+                                <span class="quad-item-name">${i.name}</span><br>
+                                <span class="quad-item-rev">${i.revenue} ﷼</span>
+                            </div>
+                            <span class="qi-rec ${cfg.actionClass}">${cfg.actionIcon} ${cfg.action}</span>
+                            <div class="quad-item-actions">
+                                <button class="qi-initiative" onclick="event.stopPropagation();createInitiative('${i.name}','${q}')" title="أنشئ مبادرة">
+                                    <i class="bi bi-rocket-takeoff"></i>
+                                </button>
+                                <button class="qi-btn" onclick="moveItem('${i.id}')" title="نقل"><i class="bi bi-arrow-left-right"></i></button>
+                                <button class="qi-btn del" onclick="deleteItem('${i.id}')" title="حذف"><i class="bi bi-trash3"></i></button>
+                            </div>
+                        </div>
+                    `).join('')}</div>
+                </div>`;
+            }).join('');
+
+            // Stats
+            document.getElementById('sStar').textContent = items.filter(i => i.quad === 'stars').length;
+            document.getElementById('sQuestion').textContent = items.filter(i => i.quad === 'questions').length;
+            document.getElementById('sCow').textContent = items.filter(i => i.quad === 'cows').length;
+            document.getElementById('sDog').textContent = items.filter(i => i.quad === 'dogs').length;
+
+            // Success Path
+            renderSuccessPath();
+
+            // Strategy
+            const recs = document.getElementById('stratRecs');
+            let strategies = [];
+            if (items.filter(i => i.quad === 'dogs').length > 0)
+                strategies.push({ e: '⚠️', t: `<strong>${items.filter(i => i.quad === 'dogs').length} منتجات في ربع الكلاب</strong> — راجع جدواها وفكّر في التصفية` });
+            if (items.filter(i => i.quad === 'questions').length > 2)
+                strategies.push({ e: '❓', t: '<strong>علامات استفهام كثيرة</strong> — لازم تقرر أيها تستثمر فيها وأيها توقفها' });
+            if (items.filter(i => i.quad === 'stars').length > 0 && items.filter(i => i.quad === 'cows').length > 0)
+                strategies.push({ e: '💰', t: '<strong>توازن ممتاز!</strong> — استخدم أرباح الأبقار لتمويل النجوم' });
+            if (items.filter(i => i.quad === 'cows').length === 0)
+                strategies.push({ e: '🚨', t: '<strong>لا توجد أبقار نقدية!</strong> — تحتاج مصدر تمويل مستقر' });
+
+            // New: specific action recommendations
+            const qCount = items.filter(i => i.quad === 'questions').length;
+            const sCount = items.filter(i => i.quad === 'stars').length;
+            if (qCount > 0 && sCount > 0)
+                strategies.push({ e: '🎯', t: `<strong>فرصة تحويل:</strong> لديك ${qCount} علامة استفهام يمكن تحويلها لنجوم بالاستثمار المناسب` });
+            if (items.filter(i => i.quad === 'dogs').length > items.filter(i => i.quad === 'stars').length)
+                strategies.push({ e: '🔴', t: '<strong>تحذير:</strong> الكلاب أكثر من النجوم — المحفظة في خطر' });
+
+            if (!strategies.length) strategies.push({ e: '✅', t: 'محفظة متوازنة — استمر في المتابعة' });
+            recs.innerHTML = strategies.map(s => `<div class="strat-item"><span class="strat-emoji">${s.e}</span><div class="strat-text">${s.t}</div></div>`).join('');
+        }
+
+        function addItem() {
+            const name = document.getElementById('fName').value.trim();
+            if (!name) { document.getElementById('fName').focus(); return; }
+            items.push({
+                id: 'i' + Date.now(),
+                name,
+                revenue: document.getElementById('fRevenue').value || '0',
+                quad: document.getElementById('fQuad').value
+            });
+            document.getElementById('fName').value = '';
+            document.getElementById('fRevenue').value = '';
+            render(); showToast('تم الإضافة ✓');
+        }
+
+        function deleteItem(id) {
+            if (!confirm('حذف؟')) return;
+            items = items.filter(i => i.id !== id);
+            render(); showToast('تم الحذف ✓');
+        }
+
+        function moveItem(id) {
+            const item = items.find(i => i.id === id);
+            if (!item) return;
+            const quads = ['stars', 'questions', 'cows', 'dogs'];
+            const idx = quads.indexOf(item.quad);
+            item.quad = quads[(idx + 1) % 4];
+            render(); showToast(`نُقل إلى ${QUADS[item.quad].title} ✓`);
+        }
+
+        function showToast(msg) {
+            const t = document.createElement('div'); t.className = 'toast-msg';
+            t.innerHTML = `<i class="bi bi-check-circle"></i> ${msg}`;
+            document.getElementById('toastContainer').appendChild(t);
+            setTimeout(() => t.remove(), 2500);
+        }
+
+        // ═══ Success Path Visualization ═══
+        function renderSuccessPath() {
+            const path = document.getElementById('successPath');
+            const counts = {
+                questions: items.filter(i => i.quad === 'questions').length,
+                stars: items.filter(i => i.quad === 'stars').length,
+                cows: items.filter(i => i.quad === 'cows').length,
+                dogs: items.filter(i => i.quad === 'dogs').length
+            };
+
+            const steps = [
+                { key: 'questions', emoji: '❓', label: 'استفهام', color: '#38bdf8' },
+                { key: 'stars', emoji: '⭐', label: 'نجوم', color: '#facc15' },
+                { key: 'cows', emoji: '🐄', label: 'أبقار', color: '#22c55e' }
+            ];
+
+            let html = '<div class="sp-track">';
+            steps.forEach((step, i) => {
+                const isHighlight = counts[step.key] > 0;
+                html += `
+                    <div class="sp-node ${isHighlight ? 'highlight' : ''}" style="${isHighlight ? 'border-color:' + step.color + '40;background:' + step.color + '0a' : ''}">
+                        <span class="sp-emoji">${step.emoji}</span>
+                        <span class="sp-count" style="color:${step.color}">${counts[step.key]}</span>
+                        <span class="sp-label">${step.label}</span>
+                    </div>`;
+                if (i < steps.length - 1) {
+                    html += '<span class="sp-arrow">→</span>';
+                }
+            });
+
+            // Dogs = separate path (exit)
+            html += `
+                <div style="margin-right:24px;display:flex;align-items:center;gap:6px">
+                    <span class="sp-arrow" style="color:#ef4444">✕</span>
+                    <div class="sp-node" style="${counts.dogs > 0 ? 'border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.06)' : ''}">
+                        <span class="sp-emoji">🐕</span>
+                        <span class="sp-count" style="color:#ef4444">${counts.dogs}</span>
+                        <span class="sp-label">تصفية</span>
+                    </div>
+                </div>`;
+
+            html += '</div>';
+
+            // Description
+            html += '<div class="sp-desc">';
+            if (counts.questions > 0 && counts.stars > 0 && counts.cows > 0) {
+                html += '✅ <strong style="color:#22c55e">المسار المثالي يعمل!</strong> — علامات الاستفهام تتحول لنجوم ثم تنضج لأبقار نقدية';
+            } else if (counts.questions > 0 && counts.stars === 0) {
+                html += '⚠️ لديك علامات استفهام لكن بدون نجوم — تحتاج استثمار لتحويل بعضها';
+            } else if (counts.stars > 0 && counts.cows === 0) {
+                html += '⚠️ نجوم بدون أبقار — من يموّل النجوم؟ انتظر حتى تنضج بعضها';
+            } else {
+                html += '🛤️ المسار المثالي: ❓ استثمر → ⭐ أبدع → 🐄 احصد — والكلاب 🐕 صفِّها';
+            }
+            html += '</div>';
+
+            path.innerHTML = html;
+        }
+
+        // ═══ Create Initiative from BCG ═══
+        function createInitiative(productName, quad) {
+            const cfg = QUADS[quad];
+            const actionMap = {
+                stars: `تعزيز الاستثمار في "${productName}" للحفاظ على الريادة`,
+                questions: `تقييم جدوى الاستثمار في "${productName}" وتحديد القرار`,
+                cows: `تحسين كفاءة "${productName}" وإعادة استثمار الأرباح`,
+                dogs: `خطة تصفية أو إعادة هيكلة "${productName}"`
+            };
+            const title = actionMap[quad] || `مبادرة: ${productName}`;
+
+            // Save to sessionStorage for initiatives page to pick up
+            sessionStorage.setItem('bcg_initiative', JSON.stringify({
+                title,
+                source: 'BCG Matrix',
+                product: productName,
+                quadrant: cfg.title,
+                strategy: cfg.strategy,
+                timestamp: new Date().toISOString()
+            }));
+
+            showToast(`تم تجهيز مبادرة لـ "${productName}" — جاري التحويل...`);
+            setTimeout(() => {
+                window.location.href = '/initiatives';
+            }, 1000);
+        }
+
+        render();
+    </script>
+</body>
+
+</html>

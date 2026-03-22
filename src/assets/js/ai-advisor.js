@@ -1407,72 +1407,112 @@
   function applySuggestion(sectionKey, text, chipEl) {
     if (!text || chipEl.classList.contains('added')) return;
 
-    const colorMap = {
-      political: '#ef4444', economic: '#22c55e', social: '#3b82f6',
-      technological: '#8b5cf6', environmental: '#10b981', legal: '#f59e0b',
-      strengths: '#22c55e', weaknesses: '#ef4444', opportunities: '#3b82f6', threats: '#f59e0b',
-      rivalry: '#ef4444', newEntrants: '#f97316', substitutes: '#eab308',
-      supplierPower: '#3b82f6', buyerPower: '#8b5cf6',
-      eliminate: '#ef4444', reduce: '#f97316', raise: '#3b82f6', create: '#22c55e',
-      inbound: '#3b82f6', operations: '#f97316', outbound: '#22c55e',
-      marketing: '#8b5cf6', service: '#ef4444',
-      so: '#22c55e', wo: '#3b82f6', st: '#f97316', wt: '#ef4444'
-    };
-    const color = colorMap[sectionKey] || '#667eea';
+    chipEl.classList.add('adding');
+    chipEl.innerHTML = `⏳ جاري الإضافة...`;
 
-    // تحقق: هل يمكن الإضافة المباشرة؟ (يحتاج versionId + addItem)
-    const hasVersion = typeof window.state !== 'undefined' && window.state?.versionId;
-    const hasAddItem = typeof window.addItem === 'function';
+    // 1. البحث عن حقل الإدخال بجميع الصيغ (مهم لأن الصفحات تختلف تسمياتها)
+    const keysToTry = [
+      `input-${sectionKey}`,
+      sectionKey,
+      `input-${sectionKey.toUpperCase()}`,
+      sectionKey.toUpperCase(),
+      `${sectionKey}-input`,
+      `input_${sectionKey}`,
+      `input-${sectionKey.toLowerCase()}`
+    ];
 
-    if (hasAddItem && hasVersion) {
-      chipEl.classList.add('adding');
-      chipEl.innerHTML = `⏳ جاري الإضافة...`;
-
-      try {
-        const result = window.addItem(sectionKey, text, color);
-        if (result && typeof result.then === 'function') {
-          result.then(() => {
-            chipEl.classList.remove('adding');
-            chipEl.classList.add('added');
-            chipEl.innerHTML = `✓ ${text}`;
-            chipEl.disabled = true;
-          }).catch(() => {
-            chipEl.classList.remove('adding');
-            fillInput(sectionKey, text, chipEl);
-          });
-        } else {
-          chipEl.classList.remove('adding');
-          chipEl.classList.add('added');
-          chipEl.innerHTML = `✓ ${text}`;
-          chipEl.disabled = true;
-        }
-      } catch (e) {
-        chipEl.classList.remove('adding');
-        fillInput(sectionKey, text, chipEl);
-      }
-    } else {
-      // لا يوجد نسخة مختارة → ننسخ النص في الحقل
-      fillInput(sectionKey, text, chipEl);
+    let input = null;
+    for (const k of keysToTry) {
+      input = document.getElementById(k);
+      if (input) break;
     }
-  }
 
-  function fillInput(sectionKey, text, chipEl) {
-    const input = document.getElementById(`input-${sectionKey}`);
-    if (input) {
-      input.value = text;
-      input.focus();
+    if (!input) {
+      // إذا لم نجد الحقل، نمرر البيانات للدالة مباشرة إن وُجدت
+      if (typeof window.addItem === 'function') {
+        try {
+          const res = window.addItem(sectionKey, text, '#667eea');
+          if (res && typeof res.then === 'function') {
+            res.then(() => markChipAdded(chipEl, text)).catch(() => {
+              chipEl.classList.remove('adding');
+              showToast({ icon: '⚠️', title: 'خطأ', message: 'فشلت الإضافة المباشرة' });
+            });
+          } else {
+            markChipAdded(chipEl, text);
+          }
+          return;
+        } catch (e) {
+          chipEl.classList.remove('adding');
+          showToast({ icon: '⚠️', title: 'خطأ', message: 'تعذرت الإضافة المباشرة ولم نجد الحقل' });
+          return;
+        }
+      }
+      chipEl.classList.remove('adding');
+      showToast({ icon: '⚠️', title: 'خطأ', message: 'لم يتم العثور على حقل الإدخال لـ (' + sectionKey + ')' });
+      return;
+    }
+
+    // 2. وضع النص داخل حقل الإدخال وإطلاق أحداث التغيير
+    input.value = text;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+
+    // 3. محاولة الضغط على زر "إضافة" المرتبط بالحقل تلقائياً
+    let added = false;
+    const parentDiv = input.parentElement;
+    const closestContainer = input.closest('.input-group, .section-box, .card, div');
+
+    let addBtn = null;
+    if (parentDiv) {
+      addBtn = Array.from(parentDiv.querySelectorAll('button')).find(b => !b.classList.contains('ai-suggest-chip'));
+    }
+    if (!addBtn && closestContainer) {
+      addBtn = Array.from(closestContainer.querySelectorAll('button')).find(b =>
+        (b.getAttribute('onclick') || '').includes('addItem') ||
+        (b.getAttribute('onclick') || '').includes('add') ||
+        b.classList.contains('btn-add') ||
+        b.textContent.includes('إضافة') ||
+        b.innerHTML.includes('plus')
+      );
+    }
+
+    if (addBtn) {
+      addBtn.click();
+      added = true;
+    } else if (typeof window.addItem === 'function') {
+      // إذا لم نجد الزر، نستدعي دالة الإضافة (وتُقرأ القيمة من الحقل)
+      try {
+        window.addItem(sectionKey);
+        added = true;
+      } catch (e) {
+        console.warn('addItem function call failed', e);
+      }
+    }
+
+    // 4. التغذية البصرية للمستخدم
+    if (added) {
+      markChipAdded(chipEl, text);
+      input.value = ''; // تفريغ الحقل بعد الإضافة
       input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      // highlight animation
-      input.style.transition = 'box-shadow 0.3s';
+    } else {
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
       input.style.boxShadow = '0 0 0 2px rgba(102, 126, 234, 0.5)';
       setTimeout(() => { input.style.boxShadow = ''; }, 2000);
+
+      chipEl.classList.remove('adding');
       chipEl.classList.add('added');
       chipEl.innerHTML = `📋 ${text}`;
       chipEl.disabled = true;
-      showToast({ icon: '📋', title: 'تم النسخ', message: 'النص جاهز في الحقل — اضغط Enter أو + لإضافته' });
-    } else {
-      showToast({ icon: '⚠️', title: 'خطأ', message: 'لم يتم العثور على حقل الإدخال' });
+      showToast({ icon: '📋', title: 'تم النسخ', message: 'تم وضع النص في الحقل — اضغط إضافة يدوياً' });
     }
+  }
+
+  function markChipAdded(chipEl, text) {
+    chipEl.classList.remove('adding');
+    chipEl.classList.add('added');
+    chipEl.innerHTML = `✓ ${text}`;
+    chipEl.disabled = true;
+    showToast({ icon: '✅', title: 'تمت الإضافة', message: 'تم إضافة الاقتراح بنجاح' });
   }
 
   // API عامة (يمكن استدعاؤها من صفحات أخرى)

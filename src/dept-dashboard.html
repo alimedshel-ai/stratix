@@ -8,6 +8,7 @@
     <meta name="description" content="لوحة تحكم مدير الإدارة لمتابعة مؤشرات القسم والمهام">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="/assets/js/api.js"></script>
     <script src="/assets/js/sidebar.js" defer></script>
     <style>
         :root {
@@ -700,7 +701,7 @@
                 </a>
 
                 <!-- الخطوة 2: التحليل العميق -->
-                <a class="roadmap-card fade-in stagger-2" id="step2Card" href="/dept-deep.html?dept=compliance&single=1"
+                <a class="roadmap-card fade-in stagger-2" id="step2Card" href="/dept-deep.html?single=1"
                     style="--card-accent:#8b5cf6">
                     <div class="roadmap-step">2</div>
                     <div class="roadmap-icon">🔬</div>
@@ -751,184 +752,48 @@
                     <div class="roadmap-cta"><i class="bi bi-plus-circle"></i> ابدأ البناء</div>
                 </a>
             </div>
-
-            <!-- ═══ تحديث الروابط والعناوين — يعمل بعد تحميل getDept ═══ -->
-            <script>
-                // ✅ Fix: ننتظر تحميل السكريبت الرئيسي (الذي يعرّف getDept) ثم نحدّث
-                document.addEventListener('DOMContentLoaded', function () {
-                    if (typeof getDept !== 'function') return;
-                    const { key: dept, name: deptName } = getDept();
-                    if (!dept) return;
-
-                    // تحديث روابط الرحلة
-                    const steps = {
-                        step1Card: '/internal-env.html?dept=' + dept,
-                        step2Card: '/dept-deep.html?dept=' + dept + '&single=1',
-                        step3Card: '/swot.html?dept=' + dept,
-                        step4Card: '/directions.html?dept=' + dept,
-                        step5Card: '/kpis.html?dept=' + dept,
-                    };
-                    for (const [id, href] of Object.entries(steps)) {
-                        const el = document.getElementById(id);
-                        if (el) el.href = href;
-                    }
-
-                    // تحديث العناوين
-                    const s1 = document.getElementById('step1Card');
-                    if (s1) {
-                        const t = s1.querySelector('.roadmap-card-title');
-                        const d = s1.querySelector('.roadmap-card-desc');
-                        if (t) t.textContent = 'حلّل بيئة ' + deptName + ' الداخلية';
-                        if (d) d.innerHTML = 'ابدأ بفهم الوضع الداخلي لإدارة <strong>' + deptName + '</strong> — أسئلة مركّزة + نتائج فورية.<br>هذا الأساس لأي تحليل استراتيجي صحيح';
-                    }
-                    const s2 = document.getElementById('step2Card');
-                    if (s2) {
-                        const t = s2.querySelector('.roadmap-card-title');
-                        if (t) t.textContent = 'تحليل أعمق — ' + deptName;
-                    }
-
-                    // عنوان الترحيب + الوصف
-                    const wbTitle = document.getElementById('wbTitle');
-                    if (wbTitle) {
-                        wbTitle.dataset.deptName = deptName;
-                        try {
-                            const userName = JSON.parse(localStorage.getItem('user') || '{}').name || '';
-                            wbTitle.textContent = userName
-                                ? 'أهلاً ' + userName + '! 🎉 لوحة ' + deptName + ' جاهزة'
-                                : 'أهلاً بك في لوحة ' + deptName + '!';
-                        } catch (e) { }
-                    }
-                    const wbSub = document.getElementById('wbSubtitle');
-                    if (wbSub) {
-                        wbSub.innerHTML = 'التشخيص كشف لك نقاط القوة والضعف في <strong>' + deptName + '</strong> 👇<br>الخطوات التالية تساعدك تحوّل هذا التشخيص إلى خطة عمل واضحة';
-                    }
-                });
-            </script>
-
-            <div class="tip-banner">
-                <div class="tip-icon">💡</div>
-                <div class="tip-text">
-                    <strong>نصيحة:</strong> ابدأ بالخطوة الأولى — حلل بيئة إدارتك الداخلية.
-                    ثم انتقل للتحليل العميق لتكتشف فجوات أدق.
-                    بعدها سوّ SWOT وأكمل باقي الخطوات 🎯
-                </div>
-            </div>
         </div>
 
-        <!-- === Real Dashboard (With Data) === -->
-        <div id="contentArea" style="display:none">
-            <!-- Header -->
-            <div class="page-header fade-in">
-                <div>
-                    <h1>📊 <span>لوحة مدير الإدارة</span></h1>
-                    <div class="subtitle" id="welcomeMsg">مرحباً — إليك أداء إدارتك اليوم</div>
-                </div>
-                <div style="display:flex;gap:10px">
-                    <button class="btn" onclick="location.reload()"><i class="bi bi-arrow-clockwise"></i> تحديث</button>
-                    <button class="btn" onclick="location.href='/dashboard.html'"><i class="bi bi-speedometer2"></i>
-                        القيادة</button>
-                </div>
-            </div>
+        <!-- KPIs -->
+        <div class="card fade-in">
+            <div class="card-title">📊 المؤشرات</div>
+            <div id="kpiList"></div>
+        </div>
 
-            <!-- Health Meter -->
-            <div class="health-meter fade-in" id="healthMeter">
-                <div>
-                    <div class="health-score" id="healthScore" style="color:var(--yellow)">—</div>
-                    <div class="health-sub">من 100</div>
-                </div>
-                <div style="flex:1">
-                    <div class="health-label" id="healthLabel">صحة الإدارة</div>
-                    <div class="health-bar">
-                        <div class="health-bar-fill" id="healthFill" style="width:0%;background:var(--yellow)"></div>
-                    </div>
-                    <div class="health-sub" id="healthMsg" style="margin-top:4px">جاري الحساب...</div>
-                </div>
-            </div>
+        <!-- Initiatives / Tasks -->
+        <div class="card fade-in">
+            <div class="card-title">🚀 مبادرات ومهام</div>
+            <div id="taskList"></div>
+        </div>
 
-            <!-- Stats -->
-            <div class="stats-row fade-in" id="statsRow"></div>
+        <!-- Alerts -->
+        <div class="card fade-in">
+            <div class="card-title">🔔 تنبيهات مهمة</div>
+            <div id="alertList"></div>
+        </div>
 
-            <!-- Quick Actions -->
-            <div class="quick-actions fade-in" id="quickActions"></div>
-
-            <!-- Main Grid -->
-            <div class="grid-2">
-                <!-- KPIs -->
-                <div class="card fade-in">
-                    <div class="card-title">📈 مؤشرات الإدارة (KPIs)</div>
-                    <div id="kpiList"></div>
-                </div>
-
-                <!-- Initiatives / Tasks -->
-                <div class="card fade-in">
-                    <div class="card-title">🚀 مبادرات ومهام</div>
-                    <div id="taskList"></div>
-                </div>
-
-                <!-- Alerts -->
-                <div class="card fade-in">
-                    <div class="card-title">🔔 تنبيهات مهمة</div>
-                    <div id="alertList"></div>
-                </div>
-
-                <!-- Recent Activity -->
-                <div class="card fade-in">
-                    <div class="card-title">📋 آخر النشاطات</div>
-                    <div id="activityList"></div>
-                </div>
-            </div>
+        <!-- Recent Activity -->
+        <div class="card fade-in">
+            <div class="card-title">📋 آخر النشاطات</div>
+            <div id="activityList"></div>
         </div>
     </main>
 
     <script>
-        // ✅ Fix #1: getDept() معرّفة هنا في السكريبت الرئيسي — مضمون التحميل قبل أي استدعاء
-        // ✅ Fix #4: closure-scoped cache بدلاً من window._deptContext
-        let _deptCache = null;
-        function getDept() {
-            if (_deptCache) return _deptCache;
+        // ✅ النسخة النظيفة: إزالة الاستعلامات الكارثية من الـ URL والـ localStorage القديمة
+        // ✅ الاعتماد الكلي على بيانات الـ userData الموثوقة 100%
 
-            const DEPT_NAMES = {
-                'hr': 'الموارد البشرية', 'finance': 'المالية', 'marketing': 'التسويق',
-                'operations': 'العمليات', 'sales': 'المبيعات', 'it': 'تقنية المعلومات',
-                'cs': 'خدمة العملاء', 'compliance': 'الامتثال والحوكمة', 'quality': 'الجودة',
-                'projects': 'إدارة المشاريع', 'support': 'الخدمات المساندة'
-            };
-            const LEGACY_MAP = {
-                'DEPT_HR': 'hr', 'DEPT_FINANCE': 'finance', 'DEPT_MARKETING': 'marketing',
-                'DEPT_OPS': 'operations', 'DEPT_SERVICE': 'cs', 'DEPT_SALES': 'sales',
-                'DEPT_IT': 'it', 'DEPT_LEGAL': 'compliance', 'DEPT_RND': 'projects',
-                'DEPT_PROCUREMENT': 'operations', 'DEPT_QUALITY': 'compliance', 'DEPT_PMO': 'projects'
-            };
+        const DEPT_NAMES = {
+            'hr': 'الموارد البشرية', 'finance': 'المالية', 'marketing': 'التسويق',
+            'operations': 'العمليات', 'sales': 'المبيعات', 'it': 'تقنية المعلومات',
+            'cs': 'خدمة العملاء', 'compliance': 'الامتثال والحوكمة', 'quality': 'الجودة',
+            'projects': 'إدارة المشاريع', 'support': 'الخدمات المساندة'
+        };
 
-            const sources = [
-                () => new URLSearchParams(window.location.search).get('dept'),
-                () => localStorage.getItem('stratix_v10_dept'),
-                () => { const s = localStorage.getItem('stratix_dept'); return LEGACY_MAP[s] || ''; },
-                () => { try { const d = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || '{}'); return d.department || d.dept || ''; } catch { return ''; } }
-            ];
-
-            let key = '';
-            for (const src of sources) {
-                key = src() || '';
-                if (key && DEPT_NAMES[key]) break;
-            }
-
-            _deptCache = { key, name: DEPT_NAMES[key] || key || 'إدارتك' };
-            return _deptCache;
-        }
-
-        const token = localStorage.getItem('token');
-        if (!token) { sessionStorage.setItem('stratix_return_url', location.pathname + location.search); location.href = '/login?from=restore'; }
-
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const entityId = user?.entity?.id || localStorage.getItem('entityId') || '';
-        const { key: userDept, name: userDeptName } = getDept();
-
-        // ═══════════════════════════════════════════════
-        //  sessionStorage Cache — 5 دقائق TTL
-        // ═══════════════════════════════════════════════
+        // ==========================================
+        //  الكاش السريع 
+        // ==========================================
         const CACHE_TTL = 5 * 60 * 1000;
-
         function cacheSet(key, data) {
             try {
                 sessionStorage.setItem('_cache_' + key, JSON.stringify({
@@ -948,14 +813,9 @@
                     return null;
                 }
                 return data;
-            } catch (e) {
-                console.warn('[Cache] بيانات تالفة للمفتاح:', key, e.message);
-                sessionStorage.removeItem('_cache_' + key);
-                return null;
-            }
+            } catch (e) { return null; }
         }
 
-        /** sanitize — حماية من XSS عند إدخال بيانات API في innerHTML */
         function sanitize(str) {
             if (str == null) return '';
             return String(str)
@@ -966,46 +826,69 @@
                 .replace(/'/g, '&#39;');
         }
 
-        // ✅ Fix #2: cachedFetch يرمي خطأ عند الفشل بدلاً من إرجاع {} صامتاً
-        async function cachedFetch(url, headers) {
+        // ✅ Fix: استخدام window.apiRequest بدلاً من fetch المباشر للاستفادة الكاملة من المعالجة المركزية
+        async function cachedFetch(url) {
             const cached = cacheGet(url);
             if (cached) return cached;
-            const res = await fetch(url, { headers });
-            if (!res.ok) {
-                throw new Error(`فشل الطلب: ${url} (${res.status})`);
-            }
-            const data = await res.json();
+            const data = await window.apiRequest(url);
             cacheSet(url, data);
             return data;
         }
 
-        // إذا ما عنده entity → يروح يكمل الإعداد أولاً
-        if (!entityId) {
-            document.getElementById('loadingState').innerHTML = `
-                <div style="text-align:center;">
-                    <div style="font-size:56px;margin-bottom:16px">🏗️</div>
-                    <p style="font-size:16px;font-weight:700;margin-bottom:8px">إعداد ${userDeptName} لم يكتمل بعد</p>
-                    <p style="font-size:13px;color:var(--text-muted);margin-bottom:20px">أكمل خطوات الإعداد عشان نجهز لك الداشبورد</p>
-                    <button class="btn" onclick="location.href='/onboarding.html?mode=dept'" style="display:inline-flex;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;border:none;padding:14px 28px;font-size:15px;font-weight:700;border-radius:14px;cursor:pointer">
-                        <i class="bi bi-gear" style="margin-left:8px"></i> أكمل الإعداد
-                    </button>
-                </div>
-            `;
-        } else {
-            init();
-        }
+        // معالجة الأحداث المباشرة من أزرار إعادة التحميل أو التوجيه (data-action)
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            const action = btn.dataset.action;
+            if (action === 'reload') window.location.reload();
+            if (action === 'onboarding') window.location.href = '/onboarding.html?mode=dept';
+        });
 
-
-
-        // ✅ Fix #3: Promise.allSettled بدلاً من Promise.all — فشل طلب واحد لا يُسقط الباقي
-        async function init() {
+        // ===================================
+        // الدالة الرئيسية: الـ Bootstrapper 
+        // ===================================
+        (async function initDashboard() {
             try {
-                const authHeaders = { 'Authorization': `Bearer ${token}` };
+                // 1. استدعاء آمن ومحكم بهوية السيرفر
+                const userData = await window.api.getCurrentUser();
 
+                // التوجيه مع رسالة الطرد بدلاً من الاستثناء
+                if (!userData || userData.userType !== 'DEPT_MANAGER') {
+                    window.location.href = '/dashboard.html?reason=unauthorized';
+                    return;
+                }
+
+                const entityId = userData.entity?.id;
+                const deptKey = userData.department?.key || '';
+                const deptName = userData.department?.name || DEPT_NAMES[deptKey] || 'إدارتك';
+
+                // تخزين الأسماء للاستخدام المجرد الداخلي في سياق العرض
+                window.currentDeptContext = { key: deptKey, name: deptName };
+
+                // إذا ما عنده كيان → يروح يكمل الإعداد أولاً
+                if (!entityId) {
+                    const loadingSt = document.getElementById('loadingState');
+                    loadingSt.innerHTML = `
+                        <div style="text-align:center;">
+                            <div style="font-size:56px;margin-bottom:16px">🏗️</div>
+                            <p style="font-size:16px;font-weight:700;margin-bottom:8px">إعداد ${deptName} لم يكتمل بعد</p>
+                            <p style="font-size:13px;color:var(--text-muted);margin-bottom:20px">أكمل خطوات الإعداد عشان نجهز لك الداشبورد</p>
+                        </div>
+                    `;
+                    const btn = document.createElement('button');
+                    btn.className = 'btn';
+                    btn.innerHTML = '<i class="bi bi-gear" style="margin-left:8px"></i> أكمل الإعداد';
+                    btn.style.cssText = 'display:inline-flex;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;border:none;padding:14px 28px;font-size:15px;font-weight:700;border-radius:14px;cursor:pointer';
+                    btn.addEventListener('click', () => { window.location.href = '/onboarding.html?mode=dept'; });
+                    loadingSt.querySelector('div').appendChild(btn);
+                    return;
+                }
+
+                // 2. سحب البيانات المدمجة بثلاث طلبات باستخدام Fetch الآلي المخفي الهوية
                 const [dashResult, healthResult, alertResult] = await Promise.allSettled([
-                    cachedFetch(`/api/dashboard/entity/${entityId}`, authHeaders),
-                    cachedFetch(`/api/dashboard/health/${entityId}`, authHeaders),
-                    cachedFetch(`/api/alert-engine/entity/${entityId}`, authHeaders),
+                    cachedFetch(`/api/dashboard/entity/${entityId}`),
+                    cachedFetch(`/api/dashboard/health/${entityId}`),
+                    cachedFetch(`/api/alert-engine/entity/${entityId}`),
                 ]);
 
                 // استخراج البيانات مع fallback آمن
@@ -1013,33 +896,30 @@
                 const healthData = healthResult.status === 'fulfilled' ? healthResult.value : {};
                 const alertData = alertResult.status === 'fulfilled' ? alertResult.value : {};
 
-                // إشعار المستخدم إذا فشل أي طلب (بدلاً من الصمت)
+                // إشعار المستخدم إذا فشل أي طلب
                 const failedRequests = [dashResult, healthResult, alertResult].filter(r => r.status === 'rejected');
                 if (failedRequests.length > 0 && failedRequests.length < 3) {
                     console.warn('بعض البيانات لم تُحمَّل:', failedRequests.map(r => r.reason?.message));
-                    // عرض شريط تنبيه خفيف
                     const banner = document.createElement('div');
                     banner.style.cssText = 'background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:10px 16px;margin:0 0 16px;font-size:13px;color:#f59e0b;text-align:center;';
                     banner.innerHTML = `<i class="bi bi-exclamation-triangle"></i> بعض البيانات لم تُحمَّل بالكامل — <a href="#" onclick="location.reload();return false" style="color:#f59e0b;text-decoration:underline;">أعد المحاولة</a>`;
                     const contentArea = document.getElementById('contentArea');
                     if (contentArea) contentArea.prepend(banner);
                 } else if (failedRequests.length === 3) {
-                    throw new Error('فشل تحميل جميع البيانات');
+                    throw new Error('فشل شامل في تحميل البيانات الأساسية للوحة التحكم');
                 }
 
                 document.getElementById('loadingState').style.display = 'none';
 
-                // 🔒 Fix: التمييز بين "مستخدم جديد حقيقي" و "فشل الشبكة"
+                // التمييز بين "مستخدم جديد حقيقي" و "فشل الشبكة"
                 const dashLoaded = dashResult.status === 'fulfilled';
                 const kpiCount = dashData.kpiSummary?.total || 0;
                 const iniCount = dashData.initiativeSummary?.total || 0;
                 const isNewUser = dashLoaded && (kpiCount === 0 && iniCount === 0);
                 const networkFailed = !dashLoaded;
 
-                const deptName = getDept().name;
-
                 if (networkFailed) {
-                    // فشل الشبكة — لا نعرض شاشة الترحيب بل رسالة خطأ
+                    // فشل الشبكة
                     document.getElementById('contentArea').style.display = 'block';
                     const retryBanner = document.createElement('div');
                     retryBanner.style.cssText = 'background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:14px;padding:24px;text-align:center;margin:20px 0;';
@@ -1047,40 +927,52 @@
                         <div style="font-size:32px;margin-bottom:12px">⚠️</div>
                         <div style="font-size:16px;font-weight:700;color:#ef4444;margin-bottom:8px">تعذر الاتصال بالخادم</div>
                         <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">لم نتمكن من تحميل بياناتك — تأكد من الاتصال بالإنترنت</div>
-                        <button onclick="location.reload()" style="padding:10px 28px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--secondary));color:white;border:none;font-weight:700;font-size:14px;cursor:pointer">
-                            <i class="bi bi-arrow-clockwise"></i> إعادة المحاولة
-                        </button>
                     `;
+                    const rtyBtn = document.createElement('button');
+                    rtyBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> إعادة المحاولة';
+                    rtyBtn.style.cssText = 'padding:10px 28px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--secondary));color:white;border:none;font-weight:700;font-size:14px;cursor:pointer';
+                    rtyBtn.addEventListener('click', () => { window.location.reload(); });
+                    retryBanner.appendChild(rtyBtn);
                     document.getElementById('contentArea').prepend(retryBanner);
                 } else if (isNewUser) {
                     document.getElementById('welcomeBoard').style.display = 'block';
-                    if (user.name) {
-                        document.getElementById('wbTitle').textContent = `أهلاً ${user.name}! 🎉 لوحة ${deptName} جاهزة`;
+                    if (typeof updateWelcomeBoard === 'function') {
+                        updateWelcomeBoard(userData, deptName);
                     }
                 } else {
                     document.getElementById('contentArea').style.display = 'block';
-                    if (user.name) {
-                        document.getElementById('welcomeMsg').textContent = `مرحباً ${user.name} — إليك أداء ${deptName} اليوم`;
+                    if (userData.name) {
+                        document.getElementById('welcomeMsg').textContent = `مرحباً ${userData.name} — إليك أداء ${deptName} اليوم`;
                     }
 
                     renderHealth(healthData);
                     renderStats(dashData, healthData);
                     renderQuickActions();
-                    await renderKPIs(dashData);
-                    renderTasks(dashData);
-                    renderAlerts(alertData);
-                    renderActivity(dashData);
+                    if (typeof renderKPIs === 'function') await renderKPIs(dashData);
+                    if (typeof renderTasks === 'function') renderTasks(dashData);
+                    if (typeof renderAlerts === 'function') renderAlerts(alertData);
+                    if (typeof renderActivity === 'function') renderActivity(dashData);
                 }
 
             } catch (err) {
                 console.error('Error loading dept dashboard:', err);
-                document.getElementById('loadingState').innerHTML = `
-                    <i class="bi bi-exclamation-triangle" style="font-size:48px;color:var(--red);margin-bottom:16px"></i>
-                    <p>${sanitize(err.message) || 'فشل في تحميل البيانات'}</p>
-                    <button class="btn" onclick="location.reload()" style="margin-top:16px"><i class="bi bi-arrow-clockwise"></i> إعادة المحاولة</button>
+                const loadingSt = document.getElementById('loadingState');
+                loadingSt.innerHTML = `
+                    <div style="text-align:center; padding: 20px;">
+                        <i class="bi bi-exclamation-triangle" style="font-size:48px;color:var(--red);margin-bottom:16px;display:block"></i>
+                        <div class="error-message" style="color:var(--red);font-weight:bold;margin-bottom:16px">حدث خطأ في تحميل البيانات. يرجى المحاولة لاحقاً.</div>
+                        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px">${sanitize(err.message)}</p>
+                    </div>
                 `;
+                const errBtn = document.createElement('button');
+                errBtn.className = 'btn';
+                errBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> إعادة المحاولة';
+                errBtn.style.margin = 'auto';
+                errBtn.addEventListener('click', () => { window.location.reload(); });
+                loadingSt.querySelector('div').appendChild(errBtn);
+                loadingSt.style.display = 'block';
             }
-        }
+        })();
 
         function renderHealth(data) {
             const score = data.healthScore || 0;
@@ -1104,48 +996,46 @@
                 { value: ini.overdue || 0, label: '⏰ متأخرة', color: '#f97316', glow: 'rgba(249,115,22,0.08)' },
             ];
             document.getElementById('statsRow').innerHTML = stats.map(s => `
-                <div class="stat-card" style="--card-glow:${s.glow}">
+                        < div class="stat-card" style = "--card-glow:${s.glow}" >
                     <div class="stat-value" style="color:${s.color}">${s.value}</div>
                     <div class="stat-label">${s.label}</div>
-                </div>
-            `).join('');
+                </div >
+                        `).join('');
         }
 
         function renderQuickActions() {
-            const dept = getDept().key;
-            const deptQ = dept ? '?dept=' + dept : '';
+            // أزلنا الاعتماد على ?dept= لأن الصفحات أصبحت محمية وموجهة بالـ userData
             const actions = [
-                { icon: 'bi-graph-up', label: 'تحديث KPIs', href: '/kpis.html' + deptQ, color: '#3b82f6' },
-                { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html' + deptQ, color: '#22c55e' },
-                { icon: 'bi-clipboard-check', label: 'مراجعة دورية', href: '/reviews.html' + deptQ, color: '#a78bfa' },
-                { icon: 'bi-shield-exclamation', label: 'المخاطر', href: '/risk-map.html' + deptQ, color: '#f59e0b' },
-                { icon: 'bi-bar-chart', label: 'التحليل', href: '/analytics-dashboard.html' + deptQ, color: '#ef4444' },
+                { icon: 'bi-graph-up', label: 'تحديث KPIs', href: '/kpis.html', color: '#3b82f6' },
+                { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html', color: '#22c55e' },
+                { icon: 'bi-clipboard-check', label: 'مراجعة دورية', href: '/reviews.html', color: '#a78bfa' },
+                { icon: 'bi-shield-exclamation', label: 'المخاطر', href: '/risk-map.html', color: '#f59e0b' },
+                { icon: 'bi-bar-chart', label: 'التحليل', href: '/analytics-dashboard.html', color: '#ef4444' }
             ];
             document.getElementById('quickActions').innerHTML = actions.map(a => `
-                <a class="quick-action" href="${a.href}">
+                        < a class="quick-action" href = "${a.href}" >
                     <i class="bi ${a.icon}" style="color:${a.color}"></i>
                     <span>${a.label}</span>
-                </a>
-            `).join('');
+                </a >
+                        `).join('');
         }
 
         async function renderKPIs(data) {
             const list = document.getElementById('kpiList');
-            const kpi = data.kpiSummary || {};
-            const dept = getDept().key;
-            const deptQ = dept ? '?dept=' + dept : '';
-
+            const dept = window.currentDeptContext?.key || '';
             if (kpi.total === 0) {
-                list.innerHTML = `<div class="empty-text">لا توجد مؤشرات بعد — <a href="/kpis.html${deptQ}" style="color:var(--accent)">ابدأ بإضافة KPIs</a></div>`;
+                list.innerHTML = `< div class="empty-text" > لا توجد مؤشرات بعد — <a href="/kpis.html" style="color:var(--accent)">ابدأ بإضافة KPIs</a></div > `;
                 return;
             }
 
             // ═══ محاولة جلب المؤشرات الفردية ═══
             let individualKPIs = null;
             try {
-                const kpiData = await cachedFetch(`/api/kpis/entity/${entityId}`, { 'Authorization': `Bearer ${token}` });
+                // استخدام الـ Fetch المعقم (مع credentials: include من الدالة نفسها)
+                const entityId = (await window.api.getCurrentUser()).entity?.id;
+                const kpiData = await cachedFetch(`/api/kpis/entity/${entityId}`);
                 if (kpiData.kpis?.length) individualKPIs = kpiData.kpis;
-            } catch { /* fallback to summary */ }
+            } catch (e) { /* fallback to summary */ }
 
             if (individualKPIs && individualKPIs.length > 0) {
                 // ═══ عرض المؤشرات الفردية ═══
@@ -1162,23 +1052,23 @@
                     };
                     const s = statusMap[status] || statusMap.NO_DATA;
                     return `
-                    <div class="kpi-item">
+                        < div class="kpi-item" >
                         <div class="kpi-info">
                             <div class="kpi-name">${sanitize(k.name || k.title || 'مؤشر')}</div>
                             <div class="kpi-sub">${actual != null ? actual : '—'} / ${target} ${sanitize(k.unit || '')}</div>
                         </div>
                         <div class="kpi-progress"><div class="kpi-progress-fill" style="width:${pct}%;background:${s.color}"></div></div>
                         <div class="kpi-value" style="color:${s.color}" title="${s.label}">${s.icon} ${pct}%</div>
-                    </div>`;
+                    </div > `;
                 }).join('') + (individualKPIs.length > 6 ? `
-                    <div style="text-align:center;color:var(--text-muted);font-size:12px;margin-top:8px">
-                        +${individualKPIs.length - 6} مؤشرات أخرى
-                    </div>` : '') + `
-                    <div style="text-align:center;margin-top:12px">
-                        <a href="/kpis.html${deptQ}" class="btn" style="display:inline-flex;font-size:12px;padding:8px 16px">
-                            <i class="bi bi-pencil-square"></i> عرض كل المؤشرات
-                        </a>
-                    </div>`;
+                        < div style = "text-align:center;color:var(--text-muted);font-size:12px;margin-top:8px" >
+                            +${individualKPIs.length - 6} مؤشرات أخرى
+                    </div > ` : '') + `
+                        < div style = "text-align:center;margin-top:12px" >
+                            <a href="/kpis.html" class="btn" style="display:inline-flex;font-size:12px;padding:8px 16px">
+                                <i class="bi bi-pencil-square"></i> عرض كل المؤشرات
+                            </a>
+                    </div > `;
             } else {
                 // ═══ Fallback: ملخص KPIs ═══
                 const items = [];
@@ -1199,7 +1089,7 @@
                     </div>
                 `).join('') + `
                     <div style="text-align:center;margin-top:12px">
-                        <a href="/kpis.html${deptQ}" class="btn" style="display:inline-flex;font-size:12px;padding:8px 16px">
+                        <a href="/kpis.html" class="btn" style="display:inline-flex;font-size:12px;padding:8px 16px">
                             <i class="bi bi-pencil-square"></i> تحديث المؤشرات
                         </a>
                     </div>
@@ -1224,21 +1114,21 @@
             ].filter(s => s.count > 0);
 
             list.innerHTML = statuses.map(s => `
-                <div class="task-item">
+                        < div class="task-item" >
                     <div class="task-status" style="background:${s.color}"></div>
                     <div class="task-info">
                         <div class="task-name">${s.icon} ${s.name}</div>
                         <div class="task-meta">${s.count} مبادرة</div>
                     </div>
                     <span class="task-badge" style="background:${s.color}22;color:${s.color}">${s.count}</span>
-                </div>
-            `).join('') + `
-                <div style="text-align:center;margin-top:12px">
-                    <a href="/initiatives.html" class="btn" style="display:inline-flex;font-size:12px;padding:8px 16px">
-                        <i class="bi bi-list-task"></i> إدارة المبادرات
-                    </a>
-                </div>
-            `;
+                </div >
+                        `).join('') + `
+                        < div style = "text-align:center;margin-top:12px" >
+                            <a href="/initiatives.html" class="btn" style="display:inline-flex;font-size:12px;padding:8px 16px">
+                                <i class="bi bi-list-task"></i> إدارة المبادرات
+                            </a>
+                </div >
+                        `;
         }
 
         function renderAlerts(data) {
@@ -1255,15 +1145,15 @@
                 const color = severityColors[a.severity] || 'var(--yellow)';
                 const icons = { HIGH: '🔴', MEDIUM: '⚠️', LOW: 'ℹ️' };
                 return `
-                <div class="alert-item" style="--alert-color:${color}">
+                        < div class="alert-item" style = "--alert-color:${color}" >
                     <span class="alert-icon">${icons[a.severity] || '⚠️'}</span>
                     <div>
                         <div class="alert-title">${sanitize(a.title || a.type || 'تنبيه')}</div>
                         <div class="alert-desc">${sanitize(a.description || '')}</div>
                         <div class="alert-time">${a.createdAt ? new Date(a.createdAt).toLocaleDateString('ar-SA') : ''}</div>
                     </div>
-                </div>
-                `;
+                </div >
+                        `;
             }).join('');
         }
 
@@ -1280,14 +1170,14 @@
                 const decisionIcons = { CONTINUE: '✅', ADJUST: '🔄', PIVOT: '🔀', NONE: '⬜' };
                 const decisionLabels = { CONTINUE: 'استمرار', ADJUST: 'تعديل', PIVOT: 'تحول', NONE: 'بدون' };
                 return `
-                <div class="task-item">
+                        < div class="task-item" >
                     <span style="font-size:18px">${decisionIcons[r.decision] || '📋'}</span>
                     <div class="task-info">
                         <div class="task-name">${sanitize(r.title || 'مراجعة')}</div>
                         <div class="task-meta">${r.createdAt ? new Date(r.createdAt).toLocaleDateString('ar-SA') : ''} • ${sanitize(r.status || '')}</div>
                     </div>
                     <span class="task-badge" style="background:rgba(167,139,250,0.15);color:var(--purple)">${decisionLabels[r.decision] || sanitize(r.decision) || '—'}</span>
-                </div>
+                </div >
                 `;
             }).join('');
         }

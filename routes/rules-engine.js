@@ -465,10 +465,10 @@ const CROSS_FUNCTIONAL_RULES = [
         deptCodes: ['FINANCE'],
         icon: '🔴',
         evaluate: (data) => {
-            const cfo = data.CFO;
-            if (!cfo) return { triggered: false };
+            const finDept = data.FINANCE;
+            if (!finDept) return { triggered: false };
 
-            const beResult = cfo._breakEvenResult?.results;
+            const beResult = finDept.data?._breakEvenResult?.results;
             if (!beResult || beResult.safetyMargin === null || beResult.safetyMargin === undefined) return { triggered: false };
 
             if (beResult.safetyMargin < 0) {
@@ -507,12 +507,12 @@ const CROSS_FUNCTIONAL_RULES = [
         deptCodes: ['FINANCE', 'MARKETING'],
         icon: '📉',
         evaluate: (data) => {
-            const cfo = data.CFO;
-            const cmo = data.CMO;
-            if (!cfo || !cmo) return { triggered: false };
+            const finDept = data.FINANCE;
+            const mktDept = data.MARKETING;
+            if (!finDept || !mktDept) return { triggered: false };
 
-            const marketingBudget = parseFloat(cmo.monthly_marketing_budget || cmo.marketing_spend || 0);
-            const beResult = cfo._breakEvenResult?.results;
+            const marketingBudget = parseFloat(mktDept.data?.monthly_marketing_budget || mktDept.data?.marketing_spend || 0);
+            const beResult = finDept.data?._breakEvenResult?.results;
 
             if (beResult && beResult.safetyMargin !== null && beResult.safetyMargin < 20 && marketingBudget > 0) {
                 const annualMarketing = marketingBudget * 12;
@@ -560,15 +560,15 @@ const CROSS_FUNCTIONAL_RULES = [
         deptCodes: ['OPERATIONS', 'FINANCE'],
         icon: '⏱️',
         evaluate: (data) => {
-            const coo = data.COO;
-            const cfo = data.CFO;
-            if (!coo || !cfo) return { triggered: false };
+            const opsDept = data.OPERATIONS;
+            const finDept = data.FINANCE;
+            if (!opsDept || !finDept) return { triggered: false };
 
-            const ontimeDelivery = parseFloat(coo.ontime_delivery_pct || 100);
-            const reworkRate = parseFloat(coo.rework_pct || 0);
+            const ontimeDelivery = parseFloat(opsDept.data?.ontime_delivery_pct || 100);
+            const reworkRate = parseFloat(opsDept.data?.rework_pct || 0);
 
             if (ontimeDelivery < 75 || reworkRate > 10) {
-                const beResult = cfo._breakEvenResult?.results;
+                const beResult = finDept.data?._breakEvenResult?.results;
                 const revenueImpact = beResult?.annualRevenue
                     ? Math.round(beResult.annualRevenue * (100 - ontimeDelivery) / 100 * 0.3)
                     : null;
@@ -606,13 +606,13 @@ const CROSS_FUNCTIONAL_RULES = [
         deptCodes: ['MARKETING', 'FINANCE'],
         icon: '💸',
         evaluate: (data) => {
-            const cmo = data.CMO;
-            const cfo = data.CFO;
-            if (!cmo || !cfo) return { triggered: false };
+            const mktDept = data.MARKETING;
+            const finDept = data.FINANCE;
+            if (!mktDept || !finDept) return { triggered: false };
 
-            const cac = parseFloat(cmo.cac || 0);
-            const ltv = parseFloat(cmo.ltv || 0);
-            const beResult = cfo._breakEvenResult?.results;
+            const cac = parseFloat(mktDept.data?.cac || 0);
+            const ltv = parseFloat(mktDept.data?.ltv || 0);
+            const beResult = finDept.data?._breakEvenResult?.results;
 
             // LTV:CAC ratio check (should be > 3)
             if (cac > 0 && ltv > 0 && ltv / cac < 3) {
@@ -651,13 +651,13 @@ const CROSS_FUNCTIONAL_RULES = [
         deptCodes: ['OPERATIONS', 'MARKETING'],
         icon: '🔄',
         evaluate: (data) => {
-            const coo = data.COO;
-            const cmo = data.CMO;
-            if (!coo || !cmo) return { triggered: false };
+            const opsDept = data.OPERATIONS;
+            const mktDept = data.MARKETING;
+            if (!opsDept || !mktDept) return { triggered: false };
 
-            const turnover = parseFloat(coo.staff_turnover_pct || coo.worker_turnover_pct || coo.turnover_rate || 0);
-            const satisfaction = parseFloat(cmo.google_rating || cmo.patient_satisfaction || cmo.client_satisfaction || 0);
-            const complaintRate = parseFloat(cmo.complaint_rate || 0);
+            const turnover = parseFloat(opsDept.data?.staff_turnover_pct || opsDept.data?.worker_turnover_pct || opsDept.data?.turnover_rate || 0);
+            const satisfaction = parseFloat(mktDept.data?.google_rating || mktDept.data?.patient_satisfaction || mktDept.data?.client_satisfaction || 0);
+            const complaintRate = parseFloat(mktDept.data?.complaint_rate || 0);
 
             if (turnover > 30 && (satisfaction < 4 || complaintRate > 5)) {
                 return {
@@ -714,7 +714,14 @@ router.post('/analyze/:entityId', verifyToken, async (req, res) => {
         let totalAnswers = 0;
 
         for (const dept of departments) {
-            const raw = dept.dataSummary ? JSON.parse(dept.dataSummary) : {};
+            let raw = {};
+            if (dept.dataSummary) {
+                try {
+                    raw = JSON.parse(dept.dataSummary);
+                } catch (err) {
+                    console.error('Failed to parse dataSummary for dept', dept.code, err);
+                }
+            }
             const { _meta, ...answers } = raw;
             deptData[dept.code] = {
                 data: answers,

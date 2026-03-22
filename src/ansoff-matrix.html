@@ -365,6 +365,124 @@
             box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4)
         }
 
+        /* Custom Select Options */
+        .form-group-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-top: 4px;
+            margin-bottom: 4px;
+        }
+
+        .choice-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .choice-chip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.02);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: right;
+        }
+
+        .choice-chip:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .choice-chip.selected.quad-pen {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
+            box-shadow: 0 0 0 1px #22c55e;
+        }
+
+        .choice-chip.selected.quad-mdev {
+            border-color: #38bdf8;
+            background: rgba(56, 189, 248, 0.1);
+            box-shadow: 0 0 0 1px #38bdf8;
+        }
+
+        .choice-chip.selected.quad-pdev {
+            border-color: #facc15;
+            background: rgba(250, 204, 21, 0.1);
+            box-shadow: 0 0 0 1px #facc15;
+        }
+
+        .choice-chip.selected.quad-div {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+            box-shadow: 0 0 0 1px #ef4444;
+        }
+
+        .choice-chip .emoji {
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .choice-chip .title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .choice-chip .desc {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .status-grid {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .status-chip {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.02);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .status-chip:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text);
+        }
+
+        .status-chip.selected[data-v="planned"] {
+            border-color: #94a3b8;
+            background: rgba(148, 163, 184, 0.15);
+            color: #cbd5e1;
+        }
+
+        .status-chip.selected[data-v="active"] {
+            border-color: #38bdf8;
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+        }
+
+        .status-chip.selected[data-v="done"] {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+        }
+
         /* Risk meter */
         .risk-meter {
             display: flex;
@@ -494,18 +612,56 @@
                     <div class="side-card">
                         <div class="side-title"><i class="bi bi-plus-circle"></i> إضافة مبادرة نمو</div>
                         <div class="add-form">
-                            <input type="text" id="fName" placeholder="اسم المبادرة">
-                            <select id="fQuad">
-                                <option value="penetration">🟢 اختراق السوق — منتج حالي + سوق حالي</option>
-                                <option value="market-dev">🔵 تطوير السوق — منتج حالي + سوق جديد</option>
-                                <option value="product-dev">🟡 تطوير المنتج — منتج جديد + سوق حالي</option>
-                                <option value="diversification">🔴 تنويع — منتج جديد + سوق جديد</option>
+                            <input type="text" id="fName" placeholder="اسم المبادرة (أو اختر من القائمة 👇)">
+                            <select id="fSelect" onchange="document.getElementById('fName').value = this.value">
+                                <option value="">-- أو اختر مبادرة مسجلة مسبقاً --</option>
                             </select>
-                            <select id="fStatus">
-                                <option value="planned">مخطط</option>
-                                <option value="active">نشط</option>
-                                <option value="done">مكتمل</option>
-                            </select>
+
+                            <div class="form-group-label">اختر الاستراتيجية المناسبة:</div>
+                            <div class="choice-grid">
+                                <div class="choice-chip quad-pen selected"
+                                    onclick="selectAnsoffQuad('penetration', this)">
+                                    <div class="emoji">🟢</div>
+                                    <div>
+                                        <div class="title">اختراق السوق (أقل مخاطرة)</div>
+                                        <div class="desc">بيع منتجك الحالي لعملائك الحاليين</div>
+                                    </div>
+                                </div>
+                                <div class="choice-chip quad-mdev" onclick="selectAnsoffQuad('market-dev', this)">
+                                    <div class="emoji">🔵</div>
+                                    <div>
+                                        <div class="title">تطوير السوق</div>
+                                        <div class="desc">طرح منتجك الحالي في أسواق أو شرائح جديدة</div>
+                                    </div>
+                                </div>
+                                <div class="choice-chip quad-pdev" onclick="selectAnsoffQuad('product-dev', this)">
+                                    <div class="emoji">🟡</div>
+                                    <div>
+                                        <div class="title">تطوير المنتج</div>
+                                        <div class="desc">ابتكار منتج أو خدمة جديدة لعملائك الحاليين</div>
+                                    </div>
+                                </div>
+                                <div class="choice-chip quad-div" onclick="selectAnsoffQuad('diversification', this)">
+                                    <div class="emoji">🔴</div>
+                                    <div>
+                                        <div class="title">التنويع (أعلى مخاطرة)</div>
+                                        <div class="desc">طرح منتج جديد تماماً لعملاء جدد تماماً</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="fQuad" value="penetration">
+
+                            <div class="form-group-label">حالة المبادرة:</div>
+                            <div class="status-grid">
+                                <div class="status-chip selected" data-v="planned"
+                                    onclick="selectAnsoffStatus('planned', this)">مخطط</div>
+                                <div class="status-chip" data-v="active" onclick="selectAnsoffStatus('active', this)">
+                                    نشط</div>
+                                <div class="status-chip" data-v="done" onclick="selectAnsoffStatus('done', this)">مكتمل
+                                </div>
+                            </div>
+                            <input type="hidden" id="fStatus" value="planned">
+
                             <button class="btn-add" onclick="addItem()"><i class="bi bi-plus-lg"></i> أضف</button>
                         </div>
                     </div>
@@ -606,6 +762,43 @@
             ins.innerHTML = tips.map(t => `<div class="insight-box" style="background:${t.bg};border-color:${t.border}">${t.text}</div>`).join('');
         }
 
+        function selectAnsoffQuad(val, el) {
+            document.querySelectorAll('.choice-chip').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('fQuad').value = val;
+        }
+
+        function selectAnsoffStatus(val, el) {
+            document.querySelectorAll('.status-chip').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('fStatus').value = val;
+        }
+
+        function loadInitiativesDropdown() {
+            const select = document.getElementById('fSelect');
+            let initList = [];
+            try {
+                const saved = localStorage.getItem('stratix_initiatives');
+                if (saved) initList = JSON.parse(saved);
+            } catch (e) { }
+
+            if (initList.length === 0) {
+                initList = [
+                    { title: 'توسيع الحملات التسويقية' },
+                    { title: 'دخول سوق دول الخليج' },
+                    { title: 'تطوير تطبيق الهواتف الذكية' },
+                    { title: 'الاستحواذ على منافس محلي' }
+                ];
+            }
+
+            initList.forEach(init => {
+                const opt = document.createElement('option');
+                opt.value = init.name || init.title;
+                opt.textContent = init.name || init.title;
+                select.appendChild(opt);
+            });
+        }
+
         function addItem() {
             const name = document.getElementById('fName').value.trim();
             if (!name) { document.getElementById('fName').focus(); return; }
@@ -627,6 +820,7 @@
             setTimeout(() => t.remove(), 2500);
         }
 
+        loadInitiativesDropdown();
         render();
     </script>
 </body>

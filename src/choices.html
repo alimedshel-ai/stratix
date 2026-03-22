@@ -645,6 +645,24 @@
             padding: 20px 24px;
         }
 
+        .choice-tpl {
+            padding: 6px 12px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .choice-tpl:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(102, 126, 234, 0.08);
+        }
+
         .modal-footer {
             padding: 16px 24px;
             border-top: 1px solid var(--border);
@@ -709,6 +727,43 @@
             display: flex;
             align-items: center;
             gap: 6px;
+        }
+
+        /* === Explainer Banner === */
+        .explainer-banner {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.05));
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .explainer-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: rgba(102, 126, 234, 0.15);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .explainer-text h3 {
+            font-size: 15px;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .explainer-text p {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.6;
         }
 
         .btn-save {
@@ -831,6 +886,24 @@
                 </div>
             </div>
 
+            <!-- Explainer Banner -->
+            <div class="explainer-banner">
+                <div class="explainer-icon"><i class="bi bi-lightbulb-fill"></i></div>
+                <div class="explainer-text">
+                    <h3>كيف تعمل هذه الصفحة؟</h3>
+                    <p>
+                        <strong>١. الخيارات الاستراتيجية:</strong> بعد تحليل TOWS، تقوم بتسجيل الخيارات والمبادرات
+                        الكبرى هنا لتقييمها.<br>
+                        <strong>٢. التقييم والمفاضلة:</strong> قيّم كل خيار من ناحية (جاذبية السوق، الميزة التنافسية،
+                        وقابلية التنفيذ).<br>
+                        <strong>٣. سجل المخاطر:</strong> ادرس المخاطر المحتملة لكل خيار لتكون مستعداً بخطط طوارئ قبل
+                        البدء بالتنفيذ.<br>
+                        <em>في النهاية، اختر الخيارات <b>المعتمدة</b> لتبدأ في تحويلها إلى أهداف ومبادرات في الخطوات
+                            القادمة.</em>
+                    </p>
+                </div>
+            </div>
+
             <!-- Stats -->
             <div class="stats-row">
                 <div class="stat-card">
@@ -885,7 +958,9 @@
                         <div class="matrix-cell cell-med-low"><span class="count" id="m-MEDIUM-LOW">0</span></div>
                         <div class="matrix-cell cell-high-low"><span class="count" id="m-HIGH-LOW">0</span></div>
                     </div>
-                    <div style="text-align:center;margin-top:8px;font-size:.75rem;color:var(--text-muted)">← الأثر →
+                    <div
+                        style="text-align:center;margin-top:8px;font-size:.8rem;font-weight:600;color:var(--text-muted)">
+                        ← قوة الأثر (Impact) →
                         &nbsp;&nbsp;&nbsp; ↑ الاحتمالية</div>
                 </div>
                 <div class="chart-card">
@@ -939,7 +1014,9 @@
                             <tbody id="choicesTable">
                                 <tr>
                                     <td colspan="9" class="empty-state">
-                                        <div class="emoji">⏳</div>جاري التحميل...
+                                        <div class="emoji">🎯</div>
+                                        <h4>لا توجد خيارات مسجلة</h4>
+                                        <p>ابدأ بإضافة خيار استراتيجي لتقييمه والمفاضلة بينه وبين الخيارات الأخرى</p>
                                     </td>
                                 </tr>
                             </tbody>
@@ -995,7 +1072,9 @@
                             <tbody id="risksTable">
                                 <tr>
                                     <td colspan="9" class="empty-state">
-                                        <div class="emoji">⏳</div>جاري التحميل...
+                                        <div class="emoji">🛡️</div>
+                                        <h4>سجل المخاطر فارغ</h4>
+                                        <p>سجّل المخاطر المحتملة للخيارات الاستراتيجية لإدارتها بشكل استباقي</p>
                                     </td>
                                 </tr>
                             </tbody>
@@ -1015,65 +1094,139 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" id="choiceId">
+
+                <!-- Templates -->
+                <div id="choiceTplSection" style="margin-bottom:18px">
+                    <label
+                        style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;margin-bottom:10px">
+                        <i class="bi bi-lightning-charge-fill" style="color:var(--warning)"></i> قوالب جاهزة للبدء
+                        السريع
+                    </label>
+                    <div style="display:flex; gap:8px; flex-wrap: wrap;">
+                        <span class="choice-tpl"
+                            onclick="fillChoiceTpl('توسيع الحصة السوقية بالمنتجات الحالية', 'MARKET_PENETRATION')">🎯
+                            اختراق السوق</span>
+                        <span class="choice-tpl"
+                            onclick="fillChoiceTpl('دخول أسواق أو مناطق جغرافية جديدة', 'MARKET_DEVELOPMENT')">🌍 تطوير
+                            السوق</span>
+                        <span class="choice-tpl"
+                            onclick="fillChoiceTpl('تطوير منتجات أو خدمات جديدة', 'PRODUCT_DEVELOPMENT')">📦 تطوير
+                            منتج</span>
+                        <span class="choice-tpl" onclick="fillChoiceTpl('بناء شراكات وتحالفات استراتيجية', 'OTHER')">🤝
+                            شراكة استراتيجية</span>
+                        <span class="choice-tpl" onclick="fillChoiceTpl('أتمتة العمليات والتحول الرقمي', 'OTHER')">💻
+                            تحول رقمي</span>
+                    </div>
+                </div>
+
                 <div class="section-divider"><i class="bi bi-info-circle"></i> المعلومات الأساسية</div>
-                <div class="form-group"><label>العنوان *</label><input type="text" id="choiceTitle" class="form-input"
-                        required></div>
-                <div class="form-group"><label>الوصف</label><textarea id="choiceDesc" class="form-input"
-                        rows="2"></textarea></div>
+                <div class="form-group">
+                    <label><i class="bi bi-bookmark-star" style="color:var(--primary)"></i> عنوان الخيار الاستراتيجي
+                        *</label>
+                    <input type="text" id="choiceTitle" class="form-input"
+                        placeholder="مثال: دخول أسواق المنطقة الغربية" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="bi bi-card-text" style="color:var(--info)"></i> الوصف والتبرير</label><textarea
+                        id="choiceDesc" class="form-input" placeholder="اشرح لماذا هذا الخيار مهم وكيف يخدم الرؤية..."
+                        rows="2"></textarea>
+                </div>
                 <div class="form-row">
-                    <div class="form-group"><label>إصدار الاستراتيجية *</label><select id="choiceVersion"
-                            class="form-input" required>
+                    <div class="form-group"><label><i class="bi bi-collection" style="color:var(--purple)"></i> إصدار
+                            الاستراتيجية *</label><select id="choiceVersion" class="form-input" required>
                             <option value="">-- اختر --</option>
                         </select></div>
-                    <div class="form-group"><label>نوع الخيار</label>
+                    <div class="form-group"><label><i class="bi bi-tags" style="color:var(--warning)"></i> نوع
+                            الخيار</label>
                         <select id="choiceType" class="form-input">
                             <option value="">غير محدد</option>
-                            <option value="MARKET_PENETRATION">اختراق السوق</option>
-                            <option value="MARKET_DEVELOPMENT">تطوير السوق</option>
-                            <option value="PRODUCT_DEVELOPMENT">تطوير المنتج</option>
-                            <option value="DIVERSIFICATION">التنويع</option>
-                            <option value="COST_LEADERSHIP">قيادة التكلفة</option>
-                            <option value="DIFFERENTIATION">التمييز</option>
-                            <option value="FOCUS">التركيز</option>
-                            <option value="BEST_COST">أفضل تكلفة</option>
+                            <option value="MARKET_PENETRATION">🎯 اختراق السوق</option>
+                            <option value="MARKET_DEVELOPMENT">🌍 تطوير السوق</option>
+                            <option value="PRODUCT_DEVELOPMENT">📦 تطوير المنتج</option>
+                            <option value="DIVERSIFICATION">🔀 التنويع</option>
+                            <option value="COST_LEADERSHIP">💰 قيادة التكلفة</option>
+                            <option value="DIFFERENTIATION">⭐ التمييز</option>
+                            <option value="FOCUS">🔍 التركيز</option>
+                            <option value="BEST_COST">⚖️ أفضل تكلفة</option>
                         </select>
                     </div>
                 </div>
-                <div class="section-divider"><i class="bi bi-star"></i> التقييم والتصنيف</div>
+                <div class="section-divider"><i class="bi bi-star"></i> التقييم الاستراتيجي (للمفاضلة)</div>
+                <p style="font-size:11px; color:var(--text-muted); margin-bottom:12px;">قيّم هذا الخيار من 1 إلى 5 (حيث
+                    5 هو الأفضل) للمساعدة في ترتيب الأولويات تلقائياً.</p>
                 <div class="form-row three">
-                    <div class="form-group"><label>جاذبية السوق (1-5)</label><input type="number" id="choiceMarketAttr"
-                            class="form-input" min="1" max="5"></div>
-                    <div class="form-group"><label>الميزة التنافسية (1-5)</label><input type="number" id="choiceCompAdv"
-                            class="form-input" min="1" max="5"></div>
-                    <div class="form-group"><label>قابلية التنفيذ (1-5)</label><input type="number"
-                            id="choiceFeasibility" class="form-input" min="1" max="5"></div>
+                    <div class="form-group"><label><i class="bi bi-magnet" style="color:var(--success)"></i> جاذبية
+                            السوق</label>
+                        <select id="choiceMarketAttr" class="form-input">
+                            <option value="">-- لم يُقيّم --</option>
+                            <option value="5">⭐⭐⭐⭐⭐ عالية جداً (5)</option>
+                            <option value="4">⭐⭐⭐⭐ عالية (4)</option>
+                            <option value="3">⭐⭐⭐ متوسطة (3)</option>
+                            <option value="2">⭐⭐ ضعيفة (2)</option>
+                            <option value="1">⭐ منعدمة (1)</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label><i class="bi bi-trophy" style="color:var(--warning)"></i> الميزة
+                            التنافسية</label>
+                        <select id="choiceCompAdv" class="form-input">
+                            <option value="">-- لم يُقيّم --</option>
+                            <option value="5">⭐⭐⭐⭐⭐ قوية جداً (5)</option>
+                            <option value="4">⭐⭐⭐⭐ قوية (4)</option>
+                            <option value="3">⭐⭐⭐ متوسطة (3)</option>
+                            <option value="2">⭐⭐ ضعيفة (2)</option>
+                            <option value="1">⭐ منعدمة (1)</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label><i class="bi bi-tools" style="color:var(--info)"></i> قابلية
+                            التنفيذ</label>
+                        <select id="choiceFeasibility" class="form-input">
+                            <option value="">-- لم يُقيّم --</option>
+                            <option value="5">⭐⭐⭐⭐⭐ سهلة جداً (5)</option>
+                            <option value="4">⭐⭐⭐⭐ سهلة (4)</option>
+                            <option value="3">⭐⭐⭐ متوسطة (3)</option>
+                            <option value="2">⭐⭐ صعبة (2)</option>
+                            <option value="1">⭐ معقدة (1)</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="section-divider"><i class="bi bi-sliders"></i> الحالة والمخاطر</div>
+                <div class="section-divider"><i class="bi bi-sliders"></i> التنفيذ والمخاطر</div>
                 <div class="form-row three">
-                    <div class="form-group"><label>الأولوية</label><select id="choicePriority" class="form-input">
-                            <option value="HIGH">عالية</option>
-                            <option value="MEDIUM" selected>متوسطة</option>
-                            <option value="LOW">منخفضة</option>
+                    <div class="form-group"><label><i class="bi bi-sort-numeric-down" style="color:var(--danger)"></i>
+                            الأولوية</label><select id="choicePriority" class="form-input">
+                            <option value="HIGH">🔴 عالية</option>
+                            <option value="MEDIUM" selected>🟡 متوسطة</option>
+                            <option value="LOW">🟢 منخفضة</option>
                         </select></div>
-                    <div class="form-group"><label>الحالة</label><select id="choiceStatus" class="form-input">
-                            <option value="ACTIVE">نشط</option>
-                            <option value="COMPLETED">مكتمل</option>
-                            <option value="DROPPED">ملغي</option>
+                    <div class="form-group"><label><i class="bi bi-flag" style="color:var(--primary)"></i>
+                            الحالة</label><select id="choiceStatus" class="form-input">
+                            <option value="ACTIVE">🔵 نشط</option>
+                            <option value="COMPLETED">✅ مكتمل</option>
+                            <option value="DROPPED">❌ ملغي</option>
                         </select></div>
-                    <div class="form-group"><label>مستوى الخطر</label><select id="choiceRiskLevel" class="form-input">
+                    <div class="form-group"><label><i class="bi bi-shield-exclamation" style="color:var(--warning)"></i>
+                            مستوى الخطر</label><select id="choiceRiskLevel" class="form-input">
                             <option value="">غير محدد</option>
-                            <option value="HIGH">عالي</option>
-                            <option value="MEDIUM">متوسط</option>
-                            <option value="LOW">منخفض</option>
+                            <option value="HIGH">🔴 عالي</option>
+                            <option value="MEDIUM">🟡 متوسط</option>
+                            <option value="LOW">🟢 منخفض</option>
                         </select></div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group"><label>القدرات المطلوبة</label><textarea id="choiceCapabilities"
-                            class="form-input" rows="2"></textarea></div>
-                    <div class="form-group" style="display:flex;align-items:center;padding-top:24px"><label
-                            style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                                id="choiceIsSelected" style="width:18px;height:18px;accent-color:var(--primary)"> خيار
-                            معتمد ✅</label></div>
+                <div class="form-group">
+                    <label><i class="bi bi-lightning-charge" style="color:var(--purple)"></i> القدرات المطلوبة
+                        للتنفيذ</label>
+                    <textarea id="choiceCapabilities" class="form-input" rows="2"
+                        placeholder="ما الموارد أو المهارات التي نحتاجها لتنفيذ هذا الخيار؟ (مالية، بشرية، تقنية)"></textarea>
+                </div>
+                <div class="form-group"
+                    style="background:rgba(34,197,94,0.05); padding:16px; border:1px solid rgba(34,197,94,0.2); border-radius:10px; margin-top:8px;">
+                    <label
+                        style="display:flex;align-items:center;gap:10px;cursor:pointer;margin:0;color:var(--success)">
+                        <input type="checkbox" id="choiceIsSelected"
+                            style="width:20px;height:20px;accent-color:var(--success)">
+                        <span style="font-weight:800; font-size:14px;">اعتماد هذا الخيار للتنفيذ ✅</span>
+                    </label>
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:4px; margin-right:30px;">تحديد هذا
+                        المربع يعني أن المنظمة قررت تبني هذا الخيار وتحويله إلى أهداف ومبادرات فعلية.</div>
                 </div>
             </div>
             <div class="modal-footer"><button class="btn-cancel"
@@ -1091,72 +1244,105 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" id="riskId">
+
+                <!-- Risk Templates -->
+                <div id="riskTplSection" style="margin-bottom:18px">
+                    <label
+                        style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;margin-bottom:10px">
+                        <i class="bi bi-lightning-charge-fill" style="color:var(--warning)"></i> قوالب مخاطر جاهزة للبدء
+                        السريع
+                    </label>
+                    <div style="display:flex; gap:8px; flex-wrap: wrap;">
+                        <span class="choice-tpl"
+                            onclick="fillRiskTpl('تغير مفاجئ في التشريعات والأنظمة', 'STRATEGIC')">⚖️ تغير
+                            تشريعات</span>
+                        <span class="choice-tpl"
+                            onclick="fillRiskTpl('تسرب الكفاءات الرئيسية من الفريق', 'OPERATIONAL')">👥 تسرب
+                            كفاءات</span>
+                        <span class="choice-tpl" onclick="fillRiskTpl('نقص في السيولة أو تعثر التمويل', 'FINANCIAL')">💸
+                            نقص تمويل</span>
+                        <span class="choice-tpl"
+                            onclick="fillRiskTpl('تعطل الأنظمة التقنية أو اختراق سيبراني', 'OPERATIONAL')">🛡️ اختراق
+                            تقني</span>
+                        <span class="choice-tpl" onclick="fillRiskTpl('دخول منافسين جدد بأسعار أقل', 'STRATEGIC')">⚔️
+                            منافسة شرسة</span>
+                    </div>
+                </div>
+
                 <div class="section-divider"><i class="bi bi-info-circle"></i> المعلومات الأساسية</div>
-                <div class="form-group"><label>العنوان *</label><input type="text" id="riskTitle" class="form-input"
-                        required></div>
-                <div class="form-group"><label>الوصف</label><textarea id="riskDesc" class="form-input"
-                        rows="2"></textarea></div>
+                <div class="form-group"><label><i class="bi bi-exclamation-triangle" style="color:var(--danger)"></i>
+                        عنوان الخطر *</label><input type="text" id="riskTitle" class="form-input"
+                        placeholder="مثال: تغير التشريعات في السوق المستهدف" required></div>
+                <div class="form-group"><label><i class="bi bi-card-text" style="color:var(--info)"></i> الوصف والتأثير
+                        المتوقع</label><textarea id="riskDesc" class="form-input" rows="2"
+                        placeholder="اشرح طبيعة الخطر وكيف يمكن أن يؤثر على العمليات أو الإيرادات..."></textarea></div>
                 <div class="form-row">
-                    <div class="form-group"><label>إصدار الاستراتيجية *</label><select id="riskVersion"
-                            class="form-input" required>
+                    <div class="form-group"><label><i class="bi bi-collection" style="color:var(--purple)"></i> إصدار
+                            الاستراتيجية *</label><select id="riskVersion" class="form-input" required>
                             <option value="">-- اختر --</option>
                         </select></div>
-                    <div class="form-group"><label>الخيار المرتبط</label><select id="riskChoice" class="form-input">
+                    <div class="form-group"><label><i class="bi bi-signpost-split" style="color:var(--primary)"></i>
+                            الخيار المرتبط</label><select id="riskChoice" class="form-input">
                             <option value="">-- بدون --</option>
                         </select></div>
                 </div>
-                <div class="section-divider"><i class="bi bi-speedometer2"></i> تقييم المخاطر</div>
+                <div class="section-divider"><i class="bi bi-speedometer2"></i> التقييم والتصنيف</div>
                 <div class="form-row three">
-                    <div class="form-group"><label>الاحتمالية</label><select id="riskProbability" class="form-input">
-                            <option value="HIGH">عالي</option>
-                            <option value="MEDIUM" selected>متوسط</option>
-                            <option value="LOW">منخفض</option>
+                    <div class="form-group"><label><i class="bi bi-dice-5" style="color:var(--warning)"></i> احتمالية
+                            الحدوث</label><select id="riskProbability" class="form-input">
+                            <option value="HIGH">🔴 عالية</option>
+                            <option value="MEDIUM" selected>🟡 متوسطة</option>
+                            <option value="LOW">🟢 منخفضة</option>
                         </select></div>
-                    <div class="form-group"><label>الأثر</label><select id="riskImpact" class="form-input">
-                            <option value="HIGH">عالي</option>
-                            <option value="MEDIUM" selected>متوسط</option>
-                            <option value="LOW">منخفض</option>
+                    <div class="form-group"><label><i class="bi bi-bullseye" style="color:var(--danger)"></i> الأثر
+                            المتوقع</label><select id="riskImpact" class="form-input">
+                            <option value="HIGH">🔴 عالي</option>
+                            <option value="MEDIUM" selected>🟡 متوسط</option>
+                            <option value="LOW">🟢 منخفض</option>
                         </select></div>
-                    <div class="form-group"><label>الحالة</label>
+                    <div class="form-group"><label><i class="bi bi-flag" style="color:var(--primary)"></i>
+                            الحالة</label>
                         <select id="riskStatus" class="form-input">
-                            <option value="OPEN">مفتوح</option>
-                            <option value="IDENTIFIED">محدد</option>
-                            <option value="ASSESSING">قيد التقييم</option>
-                            <option value="MONITORING">مراقبة</option>
-                            <option value="MITIGATED">تم التخفيف</option>
-                            <option value="CLOSED">مغلق</option>
+                            <option value="OPEN">⭕ مفتوح</option>
+                            <option value="IDENTIFIED">🔍 محدد</option>
+                            <option value="ASSESSING">⚖️ قيد التقييم</option>
+                            <option value="MONITORING">👁️ مراقبة</option>
+                            <option value="MITIGATED">🛡️ تم التخفيف</option>
+                            <option value="CLOSED">✅ مغلق</option>
                         </select>
                     </div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group"><label>التصنيف</label><select id="riskCategory" class="form-input">
+                    <div class="form-group"><label><i class="bi bi-tags" style="color:var(--info)"></i>
+                            التصنيف</label><select id="riskCategory" class="form-input">
                             <option value="">غير محدد</option>
-                            <option value="STRATEGIC">استراتيجي</option>
-                            <option value="OPERATIONAL">تشغيلي</option>
-                            <option value="FINANCIAL">مالي</option>
-                            <option value="COMPLIANCE">امتثال</option>
-                            <option value="REPUTATIONAL">سمعة</option>
+                            <option value="STRATEGIC">🎯 استراتيجي</option>
+                            <option value="OPERATIONAL">⚙️ تشغيلي</option>
+                            <option value="FINANCIAL">💰 مالي</option>
+                            <option value="COMPLIANCE">⚖️ امتثال</option>
+                            <option value="REPUTATIONAL">📢 سمعة</option>
                         </select></div>
-                    <div class="form-group"><label>المسؤول</label><input type="text" id="riskOwner" class="form-input">
+                    <div class="form-group"><label><i class="bi bi-person-badge" style="color:var(--success)"></i>
+                            المسؤول عن الإدارة</label><input type="text" id="riskOwner" class="form-input"
+                            placeholder="اسم الشخص أو الإدارة">
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group"><label>احتمالية كمية (1-5)</label><input type="number" id="riskProbScore"
-                            class="form-input" min="1" max="5"></div>
-                    <div class="form-group"><label>أثر كمي (1-5)</label><input type="number" id="riskImpactScore"
-                            class="form-input" min="1" max="5"></div>
-                </div>
                 <div class="section-divider"><i class="bi bi-shield-check"></i> خطط المعالجة</div>
-                <div class="form-group"><label>خطة التخفيف</label><textarea id="riskMitigation" class="form-input"
-                        rows="2"></textarea></div>
-                <div class="form-group"><label>خطة الطوارئ</label><textarea id="riskContingency" class="form-input"
-                        rows="2"></textarea></div>
+                <div class="form-group"><label><i class="bi bi-shield-plus" style="color:var(--green)"></i> خطة التخفيف
+                        (Mitigation)</label><textarea id="riskMitigation" class="form-input" rows="2"
+                        placeholder="ما هي الخطوات الاستباقية لتقليل احتمالية أو أثر الخطر؟"></textarea></div>
+                <div class="form-group"><label><i class="bi bi-life-preserver" style="color:var(--danger)"></i> خطة
+                        الطوارئ (Contingency)</label><textarea id="riskContingency" class="form-input" rows="2"
+                        placeholder="ماذا سنفعل إذا وقع الخطر بالفعل؟"></textarea></div>
             </div>
             <div class="modal-footer"><button class="btn-cancel" onclick="closeModal('riskModal')">إلغاء</button><button
                     class="btn-save" onclick="saveRisk()" style="background:linear-gradient(135deg,#ef4444,#dc2626)">💾
                     حفظ</button></div>
         </div>
     </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
 
     <script src="/assets/js/api.js"></script>
     <script src="/assets/js/sidebar.js"></script>
@@ -1185,9 +1371,22 @@
 
         function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
+        // ===== TOAST NOTIFICATION =====
+        function showToast(msg) {
+            const t = document.createElement('div');
+            t.className = 'toast-msg';
+            t.innerHTML = `<i class="bi bi-check-circle"></i> ${msg}`;
+            document.getElementById('toastContainer').appendChild(t);
+            setTimeout(() => t.remove(), 3000);
+        }
+
         async function api(url, opts = {}) {
             const res = await fetch(url, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...opts.headers } });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            if (!res.ok) {
+                let errMsg = `HTTP ${res.status}`;
+                try { const errObj = await res.json(); errMsg = errObj.error || errObj.message || errMsg; } catch (e) { }
+                throw new Error(errMsg);
+            }
             return res.json();
         }
 
@@ -1205,6 +1404,18 @@
                     });
                 });
             } catch (e) { console.error(e); }
+        }
+
+        // Template filler function
+        function fillChoiceTpl(title, type) {
+            document.getElementById('choiceTitle').value = title;
+            document.getElementById('choiceType').value = type;
+        }
+
+        // Template filler function for risks
+        function fillRiskTpl(title, category) {
+            document.getElementById('riskTitle').value = title;
+            document.getElementById('riskCategory').value = category;
         }
 
         // ===== CHOICES =====
@@ -1247,10 +1458,20 @@
 
         function showChoiceModal() {
             ['choiceId', 'choiceTitle', 'choiceDesc', 'choiceMarketAttr', 'choiceCompAdv', 'choiceFeasibility', 'choiceCapabilities'].forEach(id => document.getElementById(id).value = '');
-            document.getElementById('choiceVersion').value = ''; document.getElementById('choicePriority').value = 'MEDIUM';
+
+            // الاختيار التلقائي للإصدار لتجنب فشل الحفظ
+            let defaultVersion = document.getElementById('choiceVersionFilter').value;
+            if (!defaultVersion && allVersions && allVersions.length > 0) {
+                const active = allVersions.find(v => v.isActive);
+                defaultVersion = active ? active.id : allVersions[0].id;
+            }
+
+            document.getElementById('choiceVersion').value = defaultVersion || '';
+            document.getElementById('choicePriority').value = 'MEDIUM';
             document.getElementById('choiceStatus').value = 'ACTIVE'; document.getElementById('choiceType').value = '';
             document.getElementById('choiceRiskLevel').value = ''; document.getElementById('choiceIsSelected').checked = false;
             document.getElementById('choiceModalTitle').textContent = 'خيار استراتيجي جديد';
+            document.getElementById('choiceTplSection').style.display = 'block';
             document.getElementById('choiceModal').classList.add('show');
         }
 
@@ -1265,6 +1486,7 @@
                 document.getElementById('choiceRiskLevel').value = c.riskLevel || ''; document.getElementById('choiceIsSelected').checked = c.isSelected || false;
                 document.getElementById('choiceCapabilities').value = c.requiredCapabilities || '';
                 document.getElementById('choiceModalTitle').textContent = 'تعديل الخيار';
+                document.getElementById('choiceTplSection').style.display = 'none';
                 document.getElementById('choiceModal').classList.add('show');
             } catch (e) { alert('فشل تحميل البيانات'); }
         }
@@ -1276,23 +1498,32 @@
             if (!title || !versionId) { alert('العنوان والإصدار مطلوبان'); return; }
             try {
                 const body = {
-                    title, description: document.getElementById('choiceDesc').value.trim(),
-                    priority: document.getElementById('choicePriority').value, status: document.getElementById('choiceStatus').value,
+                    title,
+                    description: document.getElementById('choiceDesc').value.trim(),
+                    priority: document.getElementById('choicePriority').value,
+                    status: document.getElementById('choiceStatus').value,
                     choiceType: document.getElementById('choiceType').value || null,
-                    marketAttractiveness: document.getElementById('choiceMarketAttr').value || null,
-                    competitiveAdvantage: document.getElementById('choiceCompAdv').value || null,
-                    feasibility: document.getElementById('choiceFeasibility').value || null,
+                    marketAttractiveness: document.getElementById('choiceMarketAttr').value ? parseInt(document.getElementById('choiceMarketAttr').value) : null,
+                    competitiveAdvantage: document.getElementById('choiceCompAdv').value ? parseInt(document.getElementById('choiceCompAdv').value) : null,
+                    feasibility: document.getElementById('choiceFeasibility').value ? parseInt(document.getElementById('choiceFeasibility').value) : null,
                     riskLevel: document.getElementById('choiceRiskLevel').value || null,
                     isSelected: document.getElementById('choiceIsSelected').checked,
                     requiredCapabilities: document.getElementById('choiceCapabilities').value.trim() || null,
                 };
                 if (!editId) body.versionId = versionId;
-                await api(editId ? `/api/choices/${editId}` : '/api/choices', { method: editId ? 'PATCH' : 'POST', body: JSON.stringify(body) });
+                const res = await api(editId ? `/api/choices/${editId}` : '/api/choices', { method: editId ? 'PATCH' : 'POST', body: JSON.stringify(body) });
+                if (res && res.error) {
+                    throw new Error(res.error);
+                }
                 closeModal('choiceModal'); loadChoices();
-            } catch (e) { alert('خطأ في الحفظ'); }
+                showToast('تم حفظ الخيار الاستراتيجي بنجاح');
+            } catch (e) {
+                console.error(e);
+                alert('خطأ في الحفظ: ' + (e.message || 'تأكد من صحة البيانات المدخلة'));
+            }
         }
 
-        async function deleteChoice(id) { if (!confirm('حذف هذا الخيار؟')) return; try { await api(`/api/choices/${id}`, { method: 'DELETE' }); loadChoices(); } catch (e) { alert('فشل الحذف'); } }
+        async function deleteChoice(id) { if (!confirm('هل تريد فعلاً حذف هذا الخيار؟')) return; try { await api(`/api/choices/${id}`, { method: 'DELETE' }); loadChoices(); showToast('تم حذف الخيار بنجاح'); } catch (e) { alert('فشل الحذف'); } }
 
         // ===== RISKS =====
         async function loadRisks() {
@@ -1330,11 +1561,20 @@
         }
 
         function showRiskModal() {
-            ['riskId', 'riskTitle', 'riskDesc', 'riskMitigation', 'riskContingency', 'riskOwner', 'riskProbScore', 'riskImpactScore'].forEach(id => document.getElementById(id).value = '');
-            document.getElementById('riskVersion').value = ''; document.getElementById('riskChoice').value = '';
+            ['riskId', 'riskTitle', 'riskDesc', 'riskMitigation', 'riskContingency', 'riskOwner'].forEach(id => document.getElementById(id).value = '');
+
+            // الاختيار التلقائي للإصدار
+            let defaultVersion = document.getElementById('riskVersionFilter').value;
+            if (!defaultVersion && allVersions && allVersions.length > 0) {
+                const active = allVersions.find(v => v.isActive);
+                defaultVersion = active ? active.id : allVersions[0].id;
+            }
+
+            document.getElementById('riskVersion').value = defaultVersion || '';
+            document.getElementById('riskChoice').value = '';
             document.getElementById('riskProbability').value = 'MEDIUM'; document.getElementById('riskImpact').value = 'MEDIUM';
-            document.getElementById('riskStatus').value = 'OPEN'; document.getElementById('riskCategory').value = '';
             document.getElementById('riskModalTitle').textContent = 'إضافة خطر جديد';
+            document.getElementById('riskTplSection').style.display = 'block';
             loadChoicesForRisk(); document.getElementById('riskModal').classList.add('show');
         }
 
@@ -1358,8 +1598,8 @@
                 document.getElementById('riskImpact').value = r.impact; document.getElementById('riskStatus').value = r.status;
                 document.getElementById('riskMitigation').value = r.mitigation || ''; document.getElementById('riskContingency').value = r.contingency || '';
                 document.getElementById('riskOwner').value = r.owner || ''; document.getElementById('riskCategory').value = r.category || '';
-                document.getElementById('riskProbScore').value = r.probabilityScore || ''; document.getElementById('riskImpactScore').value = r.impactScore || '';
                 document.getElementById('riskModalTitle').textContent = 'تعديل الخطر';
+                document.getElementById('riskTplSection').style.display = 'none';
                 document.getElementById('riskModal').classList.add('show');
             } catch (e) { alert('فشل تحميل البيانات'); }
         }
@@ -1371,24 +1611,37 @@
             if (!title || !versionId) { alert('العنوان والإصدار مطلوبان'); return; }
             try {
                 const choiceId = document.getElementById('riskChoice').value;
+
+                // التحويل التلقائي لدرجات الخطر (لتبسيط الواجهة)
+                const probMap = { 'HIGH': 5, 'MEDIUM': 3, 'LOW': 1 };
+                const probVal = document.getElementById('riskProbability').value;
+                const impactVal = document.getElementById('riskImpact').value;
+
                 const body = {
-                    title, description: document.getElementById('riskDesc').value.trim(),
-                    probability: document.getElementById('riskProbability').value, impact: document.getElementById('riskImpact').value,
-                    status: document.getElementById('riskStatus').value, mitigation: document.getElementById('riskMitigation').value.trim(),
+                    title,
+                    description: document.getElementById('riskDesc').value.trim(),
+                    probability: probVal,
+                    impact: impactVal,
+                    status: document.getElementById('riskStatus').value,
+                    mitigation: document.getElementById('riskMitigation').value.trim(),
                     owner: document.getElementById('riskOwner').value.trim(),
                     category: document.getElementById('riskCategory').value || null,
-                    probabilityScore: document.getElementById('riskProbScore').value || null,
-                    impactScore: document.getElementById('riskImpactScore').value || null,
+                    probabilityScore: probMap[probVal] || 3,
+                    impactScore: probMap[impactVal] || 3,
                     contingency: document.getElementById('riskContingency').value.trim() || null,
                 };
                 if (!editId) body.versionId = versionId;
                 if (choiceId) body.choiceId = choiceId;
                 await api(editId ? `/api/choices/risks/${editId}` : '/api/choices/risks', { method: editId ? 'PATCH' : 'POST', body: JSON.stringify(body) });
                 closeModal('riskModal'); loadRisks();
-            } catch (e) { alert('خطأ في الحفظ'); }
+                showToast('تم حفظ الخطر بنجاح');
+            } catch (e) {
+                console.error(e);
+                alert('خطأ في الحفظ: ' + e.message);
+            }
         }
 
-        async function deleteRisk(id) { if (!confirm('حذف هذا الخطر؟')) return; try { await api(`/api/choices/risks/${id}`, { method: 'DELETE' }); loadRisks(); } catch (e) { alert('فشل الحذف'); } }
+        async function deleteRisk(id) { if (!confirm('هل تريد فعلاً حذف هذا الخطر؟')) return; try { await api(`/api/choices/risks/${id}`, { method: 'DELETE' }); loadRisks(); showToast('تم حذف الخطر بنجاح'); } catch (e) { alert('فشل الحذف'); } }
 
         // ===== STATS & CHARTS =====
         function updateStats() {

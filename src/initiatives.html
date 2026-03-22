@@ -532,6 +532,24 @@
             color: var(--danger);
         }
 
+        .init-tpl {
+            padding: 6px 12px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .init-tpl:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(102, 126, 234, 0.08);
+        }
+
         /* Modal */
         .modal-content {
             background: var(--bg-card);
@@ -940,6 +958,25 @@
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="editId">
+
+                    <!-- Templates -->
+                    <div id="initTplSection" style="margin-bottom:18px">
+                        <label
+                            style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;margin-bottom:10px">
+                            <i class="bi bi-lightning-charge-fill" style="color:var(--warning)"></i> قوالب جاهزة للبدء
+                            السريع
+                            <span style="font-size:10px;color:var(--text-muted);font-weight:400">(اضغط لتعبئة
+                                تلقائية)</span>
+                        </label>
+                        <div style="display:flex; gap:8px; flex-wrap: wrap;">
+                            <span class="init-tpl" onclick="fillInitTpl(0)">💻 تحول رقمي</span>
+                            <span class="init-tpl" onclick="fillInitTpl(1)">📢 حملة تسويقية</span>
+                            <span class="init-tpl" onclick="fillInitTpl(2)">👥 تطوير الفريق</span>
+                            <span class="init-tpl" onclick="fillInitTpl(3)">⭐ تجربة العميل</span>
+                            <span class="init-tpl" onclick="fillInitTpl(4)">✅ تطبيق الجودة</span>
+                        </div>
+                    </div>
+
                     <div class="form-group"><label>اسم المبادرة</label><input type="text" class="form-input"
                             id="formName" placeholder="مثال: إطلاق التطبيق الرقمي"></div>
                     <div class="form-group"><label>الوصف</label><textarea class="form-input" id="formDesc"
@@ -1202,6 +1239,35 @@
             board.innerHTML = statuses.map(status => {
                 const cfg = statusConfig[status];
                 const items = initiatives.filter(i => i.status === status);
+
+                // ── قوالب المبادرات السريعة ──
+                const initTemplates = [
+                    { name: 'برنامج التحول الرقمي والأتمتة', desc: 'أتمتة العمليات الورقية والتحول إلى بيئة عمل رقمية متكاملة', obj: 'التميز التشغيلي', priority: 'HIGH', budget: '250000' },
+                    { name: 'حملة تسويقية شاملة', desc: 'إطلاق حملة إعلانية لزيادة الوعي بالعلامة التجارية وجذب شرائح عملاء جدد', obj: 'زيادة الإيرادات', priority: 'MEDIUM', budget: '100000' },
+                    { name: 'برنامج تدريب وتطوير الكوادر', desc: 'رفع كفاءة الفريق من خلال دورات متخصصة وشهادات مهنية', obj: 'تطوير رأس المال البشري', priority: 'MEDIUM', budget: '50000' },
+                    { name: 'تحسين تجربة رحلة العميل', desc: 'إعادة تصميم نقاط التواصل مع العملاء لتسهيل الإجراءات وتسريع الخدمة', obj: 'رفع رضا العملاء', priority: 'HIGH', budget: '80000' },
+                    { name: 'تطبيق معايير الجودة الشاملة', desc: 'تأهيل المنظمة لتطبيق أفضل الممارسات واجتياز التدقيق لشهادات الجودة', obj: 'الامتثال والحوكمة', priority: 'HIGH', budget: '120000' }
+                ];
+
+                function fillInitTpl(idx) {
+                    const t = initTemplates[idx];
+                    if (!t) return;
+                    document.getElementById('formName').value = t.name;
+                    document.getElementById('formDesc').value = t.desc;
+                    document.getElementById('formObj').value = t.obj;
+                    document.getElementById('formPriority').value = t.priority;
+                    document.getElementById('formBudget').value = t.budget;
+
+                    // التأثير البصري للزر المختار
+                    document.querySelectorAll('.init-tpl').forEach((el, i) => {
+                        el.style.borderColor = i === idx ? 'var(--primary)' : 'var(--border)';
+                        el.style.color = i === idx ? 'var(--primary)' : 'var(--text)';
+                        el.style.background = i === idx ? 'rgba(102, 126, 234, 0.08)' : 'rgba(255, 255, 255, 0.04)';
+                    });
+
+                    if (typeof updateBurnPreview === 'function') updateBurnPreview();
+                }
+
                 return `
           <div class="kanban-col ${cfg.colClass}">
             <div class="kanban-col-header">
@@ -1267,6 +1333,15 @@
             document.getElementById('formStatus').value = 'PLANNED';
             document.getElementById('formPriority').value = 'MEDIUM';
             document.getElementById('formProgress').value = 0;
+
+            // إظهار القوالب السريعة وتصفير اختيارها
+            document.getElementById('initTplSection').style.display = 'block';
+            document.querySelectorAll('.init-tpl').forEach(el => {
+                el.style.borderColor = 'var(--border)';
+                el.style.color = 'var(--text)';
+                el.style.background = 'rgba(255, 255, 255, 0.04)';
+            });
+
             new bootstrap.Modal(document.getElementById('initModal')).show();
         }
 
@@ -1286,6 +1361,10 @@
             document.getElementById('formStart').value = i.startDate;
             document.getElementById('formEnd').value = i.endDate;
             updateBurnPreview();
+
+            // إخفاء القوالب السريعة في وضع التعديل
+            document.getElementById('initTplSection').style.display = 'none';
+
             new bootstrap.Modal(document.getElementById('initModal')).show();
         }
 

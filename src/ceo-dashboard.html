@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
         rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg: #0a0b10;
@@ -567,47 +568,10 @@
 
         /* Timeline Chart */
         .chart-area {
-            height: 200px;
+            height: 250px;
             position: relative;
-            display: flex;
-            align-items: flex-end;
-            gap: 6px;
-            padding: 20px 0;
-        }
-
-        .chart-bar-group {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .chart-bars {
-            display: flex;
-            gap: 3px;
-            align-items: flex-end;
-            height: 140px;
             width: 100%;
-            justify-content: center;
-        }
-
-        .chart-bar {
-            width: 12px;
-            border-radius: 4px 4px 0 0;
-            transition: height 1s ease;
-            min-height: 4px;
-            position: relative;
-        }
-
-        .chart-bar:hover {
-            filter: brightness(1.3);
-        }
-
-        .chart-label {
-            font-size: 10px;
-            color: var(--muted);
-            text-align: center;
+            padding: 10px 0;
         }
 
         .chart-legend {
@@ -679,37 +643,63 @@
         /* Quick Actions */
         .quick-actions {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: 8px;
         }
 
         .quick-action {
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.02);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px 12px;
-            text-align: center;
+            border-radius: 14px;
+            padding: 16px;
+            text-align: right;
             cursor: pointer;
             transition: all 0.3s;
             text-decoration: none;
-            color: var(--text);
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
         }
 
         .quick-action:hover {
-            background: rgba(102, 126, 234, 0.08);
-            border-color: rgba(102, 126, 234, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.12);
             transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
         }
 
-        .quick-action i {
-            font-size: 22px;
+        .qa-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .qa-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .qa-title {
             display: block;
-            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: var(--text);
         }
 
-        .quick-action span {
-            font-size: 12px;
-            font-weight: 600;
+        .qa-desc {
+            display: block;
+            font-size: 11px;
+            color: var(--muted);
+            line-height: 1.5;
         }
 
         /* Toast */
@@ -756,6 +746,10 @@
             .ceo-grid {
                 grid-template-columns: 1fr 1fr;
             }
+
+            .quick-actions {
+                grid-template-columns: repeat(4, 1fr);
+            }
         }
 
         @media(max-width:768px) {
@@ -795,7 +789,7 @@
             }
 
             .quick-actions {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(3, 1fr);
             }
 
             .health-factors {
@@ -825,6 +819,9 @@
 
             .pulse-card {
                 padding: 20px 16px;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 16px !important;
             }
 
             .section-card {
@@ -839,6 +836,10 @@
                 height: 160px;
             }
 
+            .health-factors {
+                grid-template-columns: 1fr !important;
+            }
+
             .chart-bars {
                 height: 110px;
             }
@@ -847,7 +848,7 @@
         @media(max-width:480px) {
             .quick-actions {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 8px;
+                gap: 10px;
             }
 
             .quick-action {
@@ -871,15 +872,17 @@
 </head>
 
 <body>
-    <div class="sidebar-overlay-ceo" id="ceoSidebarOverlay" onclick="toggleCeoSidebar()"></div>
+    <div class="sidebar-overlay-ceo" id="ceoSidebarOverlay" data-action="toggle-sidebar"></div>
     <div class="page-wrapper">
-        <div id="sidebar-container"></div>
+        <div id="sidebar-container">
+            <aside class="sidebar"></aside>
+        </div>
         <div class="main-content">
 
             <!-- Header -->
             <div class="ceo-header">
                 <div style="display:flex;align-items:center;gap:12px;">
-                    <button class="ceo-hamburger" onclick="toggleCeoSidebar()" aria-label="القائمة">
+                    <button class="ceo-hamburger" data-action="toggle-sidebar" aria-label="القائمة">
                         <i class="bi bi-list"></i>
                     </button>
                     <div>
@@ -961,86 +964,92 @@
                     </div>
                 </div>
 
-                <!-- Strategic Pulse (Gauge) -->
-                <div class="pulse-card">
-                    <div class="pulse-header">
-                        <div class="pulse-icon"><i class="bi bi-heart-pulse"></i></div>
-                        <div>
-                            <div class="pulse-label">النبض الاستراتيجي</div>
-                            <div class="pulse-value">مؤشر الصحة العام</div>
+                <!-- Strategic Pulse (Gauge & Factors) — Wide Premium Design -->
+                <div class="pulse-card ceo-grid-full"
+                    style="display:grid;grid-template-columns:1fr 2fr;align-items:center;gap:32px">
+                    <div style="display:flex;flex-direction:column;align-items:center">
+                        <div class="pulse-header" style="margin-bottom:0">
+                            <div class="pulse-icon"><i class="bi bi-heart-pulse"></i></div>
+                            <div>
+                                <div class="pulse-label">النبض الاستراتيجي</div>
+                                <div class="pulse-value">مؤشر الصحة العام</div>
+                            </div>
+                        </div>
+                        <div class="gauge-wrap">
+                            <svg class="gauge-svg" viewBox="0 0 200 120">
+                                <path class="gauge-bg" d="M 20 100 A 80 80 0 0 1 180 100" />
+                                <path class="gauge-fill" id="gaugeFill" d="M 20 100 A 80 80 0 0 1 180 100"
+                                    stroke="url(#gaugeGrad)" stroke-dasharray="251" stroke-dashoffset="251" />
+                                <defs>
+                                    <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#ef4444" />
+                                        <stop offset="50%" stop-color="#facc15" />
+                                        <stop offset="100%" stop-color="#22c55e" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                            <div class="gauge-score">
+                                <div class="gauge-number" id="gaugeNumber">0</div>
+                                <div class="gauge-text">من 100</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="gauge-wrap">
-                        <svg class="gauge-svg" viewBox="0 0 200 120">
-                            <path class="gauge-bg" d="M 20 100 A 80 80 0 0 1 180 100" />
-                            <path class="gauge-fill" id="gaugeFill" d="M 20 100 A 80 80 0 0 1 180 100"
-                                stroke="url(#gaugeGrad)" stroke-dasharray="251" stroke-dashoffset="251" />
-                            <defs>
-                                <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                                    <stop offset="0%" stop-color="#ef4444" />
-                                    <stop offset="50%" stop-color="#facc15" />
-                                    <stop offset="100%" stop-color="#22c55e" />
-                                </linearGradient>
-                            </defs>
-                        </svg>
-                        <div class="gauge-score">
-                            <div class="gauge-number" id="gaugeNumber">0</div>
-                            <div class="gauge-text">من 100</div>
-                        </div>
-                    </div>
-                    <div class="health-factors" id="healthFactors"></div>
+
+                    <div class="health-factors" id="healthFactors"
+                        style="grid-template-columns:repeat(2, 1fr); gap:16px;"></div>
                 </div>
 
-                <!-- Stat Cards -->
-                <div style="display:grid;gap:12px;grid-template-columns:1fr 1fr;">
-                    <div class="stat-card green" onclick="location.href='/objectives.html'">
-                        <div class="stat-top">
-                            <div class="stat-icon" style="background:rgba(34,197,94,0.1);color:var(--green)"><i
-                                    class="bi bi-bullseye"></i></div>
-                            <div class="stat-trend up"><i class="bi bi-arrow-up-short"></i> 12%</div>
+                <!-- Execution Stats Bar -->
+                <div class="ceo-grid-full" style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+                    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:all 0.2s"
+                        onclick="location.href='/objectives.html'" onmouseover="this.style.borderColor='var(--green)'"
+                        onmouseout="this.style.borderColor='var(--border)'">
+                        <div
+                            style="width:48px;height:48px;border-radius:12px;background:rgba(34,197,94,0.1);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:22px">
+                            <i class="bi bi-bullseye"></i>
                         </div>
-                        <div class="stat-number" id="statObjectives">0</div>
-                        <div class="stat-label">أهداف استراتيجية</div>
-                        <div class="stat-bar">
-                            <div class="stat-bar-fill" id="barObjectives" style="width:0%;background:var(--green)">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="stat-card blue" onclick="location.href='/kpis.html'">
-                        <div class="stat-top">
-                            <div class="stat-icon" style="background:rgba(56,189,248,0.1);color:var(--blue)"><i
-                                    class="bi bi-graph-up-arrow"></i></div>
-                            <div class="stat-trend up"><i class="bi bi-arrow-up-short"></i> 8%</div>
-                        </div>
-                        <div class="stat-number" id="statKPIs">0</div>
-                        <div class="stat-label">مؤشرات أداء</div>
-                        <div class="stat-bar">
-                            <div class="stat-bar-fill" id="barKPIs" style="width:0%;background:var(--blue)"></div>
+                        <div>
+                            <div style="font-size:12px;color:var(--muted)">أهداف استراتيجية</div>
+                            <div style="font-size:24px;font-weight:800;line-height:1" id="statObjectives">0</div>
                         </div>
                     </div>
-                    <div class="stat-card purple" onclick="location.href='/initiatives.html'">
-                        <div class="stat-top">
-                            <div class="stat-icon" style="background:rgba(167,139,250,0.1);color:var(--purple)"><i
-                                    class="bi bi-kanban"></i></div>
-                            <div class="stat-trend flat"><i class="bi bi-dash"></i> 0%</div>
+
+                    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:all 0.2s"
+                        onclick="location.href='/kpis.html'" onmouseover="this.style.borderColor='var(--blue)'"
+                        onmouseout="this.style.borderColor='var(--border)'">
+                        <div
+                            style="width:48px;height:48px;border-radius:12px;background:rgba(56,189,248,0.1);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:22px">
+                            <i class="bi bi-graph-up-arrow"></i>
                         </div>
-                        <div class="stat-number" id="statInitiatives">0</div>
-                        <div class="stat-label">مبادرات نشطة</div>
-                        <div class="stat-bar">
-                            <div class="stat-bar-fill" id="barInitiatives" style="width:0%;background:var(--purple)">
-                            </div>
+                        <div>
+                            <div style="font-size:12px;color:var(--muted)">مؤشرات أداء</div>
+                            <div style="font-size:24px;font-weight:800;line-height:1" id="statKPIs">0</div>
                         </div>
                     </div>
-                    <div class="stat-card yellow" onclick="location.href='/tasks.html'">
-                        <div class="stat-top">
-                            <div class="stat-icon" style="background:rgba(250,204,21,0.1);color:var(--yellow)"><i
-                                    class="bi bi-check2-square"></i></div>
-                            <div class="stat-trend down"><i class="bi bi-arrow-down-short"></i> 5%</div>
+
+                    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:all 0.2s"
+                        onclick="location.href='/initiatives.html'" onmouseover="this.style.borderColor='var(--purple)'"
+                        onmouseout="this.style.borderColor='var(--border)'">
+                        <div
+                            style="width:48px;height:48px;border-radius:12px;background:rgba(167,139,250,0.1);color:var(--purple);display:flex;align-items:center;justify-content:center;font-size:22px">
+                            <i class="bi bi-kanban"></i>
                         </div>
-                        <div class="stat-number" id="statTasks">0</div>
-                        <div class="stat-label">مهام قيد التنفيذ</div>
-                        <div class="stat-bar">
-                            <div class="stat-bar-fill" id="barTasks" style="width:0%;background:var(--yellow)"></div>
+                        <div>
+                            <div style="font-size:12px;color:var(--muted)">مبادرات نشطة</div>
+                            <div style="font-size:24px;font-weight:800;line-height:1" id="statInitiatives">0</div>
+                        </div>
+                    </div>
+
+                    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:all 0.2s"
+                        onclick="location.href='/tasks.html'" onmouseover="this.style.borderColor='var(--yellow)'"
+                        onmouseout="this.style.borderColor='var(--border)'">
+                        <div
+                            style="width:48px;height:48px;border-radius:12px;background:rgba(250,204,21,0.1);color:var(--yellow);display:flex;align-items:center;justify-content:center;font-size:22px">
+                            <i class="bi bi-check2-square"></i>
+                        </div>
+                        <div>
+                            <div style="font-size:12px;color:var(--muted)">مهام قيد التنفيذ</div>
+                            <div style="font-size:24px;font-weight:800;line-height:1" id="statTasks">0</div>
                         </div>
                     </div>
                 </div>
@@ -1105,7 +1114,9 @@
                         <a href="/reviews.html" class="section-more">عرض التفاصيل <i
                                 class="bi bi-arrow-left-short"></i></a>
                     </div>
-                    <div class="chart-area" id="chartArea"></div>
+                    <div class="chart-area">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
                     <div class="chart-legend">
                         <div class="chart-legend-item">
                             <div class="chart-legend-dot" style="background:var(--green)"></div> أهداف محققة
@@ -1127,59 +1138,12 @@
                     <div id="activityFeed">
                         <div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">
                             <div class="spinner-border spinner-border-sm" role="status"></div>
+                            <div class="spinner-border spinner-border-sm" role="status"></div>
                             جارٍ التحميل...
                         </div>
                     </div>
                 </div>
 
-                <!-- Quick Actions -->
-                <div class="section-card ceo-grid-full">
-                    <div class="section-title">
-                        <h3><i class="bi bi-lightning" style="color:var(--yellow)"></i> إجراءات سريعة</h3>
-                    </div>
-                    <div class="quick-actions">
-                        <a href="/strategic-advisor.html" class="quick-action">
-                            <i class="bi bi-robot" style="color:var(--primary)"></i>
-                            <span>المستشار الذكي</span>
-                        </a>
-                        <a href="/team.html" class="quick-action">
-                            <i class="bi bi-people-fill" style="color:var(--green)"></i>
-                            <span>الفريق</span>
-                        </a>
-                        <a href="/objectives.html" class="quick-action">
-                            <i class="bi bi-bullseye" style="color:var(--yellow)"></i>
-                            <span>الأهداف</span>
-                        </a>
-                        <a href="/reviews.html" class="quick-action">
-                            <i class="bi bi-journal-check" style="color:var(--blue)"></i>
-                            <span>مراجعة</span>
-                        </a>
-                        <a href="/kpi-entries.html" class="quick-action">
-                            <i class="bi bi-input-cursor-text" style="color:var(--purple)"></i>
-                            <span>تحديث KPIs</span>
-                        </a>
-                        <a href="/analysis.html" class="quick-action">
-                            <i class="bi bi-lightbulb" style="color:var(--yellow)"></i>
-                            <span>تحليل جديد</span>
-                        </a>
-                        <a href="/intelligence.html" class="quick-action">
-                            <i class="bi bi-cpu" style="color:var(--blue)"></i>
-                            <span>الذكاء الاستراتيجي</span>
-                        </a>
-                        <a href="/simulation-lab.html" class="quick-action">
-                            <i class="bi bi-lightning" style="color:var(--red)"></i>
-                            <span>مختبر المحاكاة</span>
-                        </a>
-                        <a href="/contradictions.html" class="quick-action">
-                            <i class="bi bi-lightning-charge" style="color:#a78bfa"></i>
-                            <span>التناقضات</span>
-                        </a>
-                        <a href="/break-even-result.html" class="quick-action">
-                            <i class="bi bi-bar-chart-line" style="color:var(--yellow)"></i>
-                            <span>نقطة التعادل</span>
-                        </a>
-                    </div>
-                </div>
 
             </div><!-- /grid -->
         </div><!-- /main -->
@@ -1187,9 +1151,9 @@
 
     <div class="toast-container" id="toastContainer"></div>
 
-    <script src="/assets/js/api.js"></script>
-    <script src="/assets/js/sidebar.js"></script>
-    <script src="/assets/js/ai-advisor.js"></script>
+    <script src="/assets/js/api.js?v=3"></script>
+    <script src="/assets/js/sidebar.js?v=3"></script>
+    <script src="/assets/js/ai-advisor.js?v=3"></script>
     <script>
         // === Date ===
         const now = new Date();
@@ -1197,10 +1161,7 @@
         const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
         document.getElementById('currentDate').innerHTML = `<strong>${days[now.getDay()]}</strong> ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
 
-        // === Auth ===
-        const token = localStorage.getItem('token');
-        const entityId = localStorage.getItem('entityId');
-
+        // === Auth (Handled by api.js) ===
         const DEPT_COLORS = {
             FINANCE: '#f59e0b', MARKETING: '#8b5cf6', OPERATIONS: '#3b82f6',
             HR: '#10b981', TECH: '#06b6d4', SALES: '#ef4444',
@@ -1215,20 +1176,13 @@
         // === Load Stats ===
         async function loadDashboard() {
             try {
-                if (!token) { setDemoData(); return; }
-                const res = await fetch('/api/dashboard/stats', { headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await window.apiRequest('/api/dashboard/stats');
                 if (!res.ok) { setDemoData(); return; }
                 const data = await res.json();
                 animateNumber('statObjectives', data.objectives || data.totalObjectives || 12);
                 animateNumber('statKPIs', data.kpis || data.totalKPIs || 28);
                 animateNumber('statInitiatives', data.initiatives || data.totalInitiatives || 8);
                 animateNumber('statTasks', data.tasks || data.activeTasks || 45);
-                setTimeout(() => {
-                    document.getElementById('barObjectives').style.width = '72%';
-                    document.getElementById('barKPIs').style.width = '65%';
-                    document.getElementById('barInitiatives').style.width = '58%';
-                    document.getElementById('barTasks').style.width = '48%';
-                }, 300);
             } catch (e) { setDemoData(); }
         }
 
@@ -1237,12 +1191,6 @@
             animateNumber('statKPIs', 28);
             animateNumber('statInitiatives', 8);
             animateNumber('statTasks', 45);
-            setTimeout(() => {
-                document.getElementById('barObjectives').style.width = '72%';
-                document.getElementById('barKPIs').style.width = '65%';
-                document.getElementById('barInitiatives').style.width = '58%';
-                document.getElementById('barTasks').style.width = '48%';
-            }, 300);
         }
 
         // === Animate Number ===
@@ -1310,15 +1258,12 @@
 
         // === LIVE: Rules Engine Insights ===
         async function loadInsights() {
-            if (!token || !entityId) {
+            if (!window.entityId) {
                 renderInsightsFallback();
                 return;
             }
             try {
-                const res = await fetch(`/api/rules-engine/analyze/${entityId}`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                const res = await window.apiRequest(`/api/rules-engine/analyze/${window.entityId}`, { method: 'POST' });
                 if (!res.ok) { renderInsightsFallback(); return; }
                 const data = await res.json();
 
@@ -1380,14 +1325,12 @@
 
         // === LIVE: Department Coverage ===
         async function loadDeptCoverage() {
-            if (!token || !entityId) {
+            if (!window.entityId) {
                 renderDeptFallback();
                 return;
             }
             try {
-                const res = await fetch(`/api/departments/${entityId}/team-overview`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                const res = await window.apiRequest(`/api/departments/${window.entityId}/team-overview`);
                 if (!res.ok) { renderDeptFallback(); return; }
                 const data = await res.json();
 
@@ -1430,23 +1373,52 @@
         // === Chart ===
         function renderChart() {
             const data = [
+                { label: 'Q4 2024', objectives: 50, kpis: 45, initiatives: 30 },
                 { label: 'Q1 2025', objectives: 60, kpis: 55, initiatives: 40 },
                 { label: 'Q2 2025', objectives: 65, kpis: 62, initiatives: 50 },
                 { label: 'Q3 2025', objectives: 70, kpis: 68, initiatives: 55 },
-                { label: 'Q4 2025', objectives: 72, kpis: 65, initiatives: 60 },
-                { label: 'Q1 2026', objectives: 78, kpis: 72, initiatives: 68 },
+                { label: 'Q4 2025', objectives: 78, kpis: 72, initiatives: 65 },
             ];
-            const chart = document.getElementById('chartArea');
-            chart.innerHTML = data.map(d => `
-        <div class="chart-bar-group">
-          <div class="chart-bars">
-            <div class="chart-bar" style="height:${d.objectives}%;background:var(--green)" title="أهداف ${d.objectives}%"></div>
-            <div class="chart-bar" style="height:${d.kpis}%;background:var(--blue)" title="KPIs ${d.kpis}%"></div>
-            <div class="chart-bar" style="height:${d.initiatives}%;background:var(--purple)" title="مبادرات ${d.initiatives}%"></div>
-          </div>
-          <div class="chart-label">${d.label}</div>
-        </div>
-      `).join('');
+
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(d => d.label),
+                    datasets: [
+                        { label: 'أهداف محققة', data: data.map(d => d.objectives), backgroundColor: '#22c55e', borderRadius: 4, barPercentage: 0.6, categoryPercentage: 0.8 },
+                        { label: 'KPIs في المسار', data: data.map(d => d.kpis), backgroundColor: '#38bdf8', borderRadius: 4, barPercentage: 0.6, categoryPercentage: 0.8 },
+                        { label: 'مبادرات مكتملة', data: data.map(d => d.initiatives), backgroundColor: '#a78bfa', borderRadius: 4, barPercentage: 0.6, categoryPercentage: 0.8 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 17, 23, 0.95)',
+                            titleFont: { family: 'Tajawal', size: 13, weight: 'bold' },
+                            bodyFont: { family: 'Tajawal', size: 12 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            rtl: true,
+                            textDirection: 'rtl',
+                            borderColor: 'rgba(255,255,255,0.1)',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true, max: 100,
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#8b8ba7', font: { family: 'Tajawal' }, callback: val => val + '%' }
+                        },
+                        x: { grid: { display: false }, ticks: { color: '#8b8ba7', font: { family: 'Tajawal' } } }
+                    }
+                }
+            });
         }
 
         // === Decision Handler ===
@@ -1488,11 +1460,9 @@
         ];
 
         async function loadActivities() {
-            if (!token || !entityId) { renderDemoActivities(); return; }
+            if (!window.entityId) { renderDemoActivities(); return; }
             try {
-                const res = await fetch(`/api/activities?entityId=${entityId}&limit=6`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                const res = await window.apiRequest(`/api/activities?entityId=${window.entityId}&limit=6`);
                 if (!res.ok) { renderDemoActivities(); return; }
                 const data = await res.json();
                 if (!data.success || !data.data.length) { renderDemoActivities(); return; }
@@ -1549,11 +1519,9 @@
 
         // === Load Break-Even Data ===
         async function loadBreakEven() {
-            if (!token || !entityId) return;
+            if (!window.entityId) return;
             try {
-                const res = await fetch(`/api/break-even/result/${entityId}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                const res = await window.apiRequest(`/api/break-even/result/${window.entityId}`);
                 if (!res.ok) return;
                 const data = await res.json();
                 const r = data.results || data;
@@ -1583,12 +1551,9 @@
 
         // === Load Alerts from Rules Engine ===
         async function loadAlerts() {
-            if (!token || !entityId) return;
+            if (!window.entityId) return;
             try {
-                const res = await fetch(`/api/rules-engine/analyze/${entityId}`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                const res = await window.apiRequest(`/api/rules-engine/analyze/${window.entityId}`, { method: 'POST' });
                 if (!res.ok) return;
                 const data = await res.json();
                 const insights = data.insights || [];
@@ -1647,13 +1612,45 @@
         }
 
         // === Init ===
-        loadDashboard();
-        loadInsights();
-        loadDeptCoverage();
-        loadActivities();
-        loadBreakEven();
-        loadAlerts();
-        renderChart();
+        async function initCeoDashboard() {
+            const user = await window.api.getCurrentUser();
+            if (!user) return;
+            window.entityId = user.entityId;
+
+            attachEventHandlers();
+
+            loadDashboard();
+            loadInsights();
+            loadDeptCoverage();
+            loadActivities();
+            loadBreakEven();
+            loadAlerts();
+            renderChart();
+        }
+
+        function attachEventHandlers() {
+            const container = document.querySelector('.main-content');
+            if (container) {
+                container.addEventListener('click', async (e) => {
+                    const target = e.target.closest('[data-action]');
+                    if (!target) return;
+
+                    const action = target.dataset.action;
+                    if (action === 'toggle-sidebar') {
+                        toggleCeoSidebar();
+                    }
+                    if (action === 'logout') {
+                        e.preventDefault();
+                        if (window.apiRequest) {
+                            try { await window.apiRequest('/api/auth/logout', { method: 'POST' }); } catch (err) { }
+                        }
+                        window.location.href = '/login.html';
+                    }
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initCeoDashboard);
     </script>
 
     <!-- Mobile sidebar toggle -->

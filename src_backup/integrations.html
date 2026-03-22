@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس - مركز التكامل</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --bg: #0f1117;
+            --bg-card: #1a1d2e;
+            --bg-card-hover: #232640;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --success: #22c55e;
+            --warning: #facc15;
+            --danger: #ef4444;
+            --info: #38bdf8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .top-nav {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 14px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .top-nav .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .layout {
+            display: flex;
+            min-height: calc(100vh - 60px);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            max-width: calc(100% - 220px);
+        }
+
+        .page-header {
+            margin-bottom: 28px;
+        }
+
+        .page-header h1 {
+            font-size: 26px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-header h1 i {
+            color: var(--primary);
+        }
+
+        .page-subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        /* Architecture Diagram */
+        .arch-section {
+            margin-bottom: 32px;
+        }
+
+        .arch-title {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .arch-title i {
+            color: var(--primary);
+        }
+
+        .arch-flow {
+            display: flex;
+            align-items: stretch;
+            gap: 0;
+            margin-bottom: 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .arch-block {
+            flex: 1;
+            padding: 28px 24px;
+            text-align: center;
+            position: relative;
+        }
+
+        .arch-block::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 20%;
+            bottom: 20%;
+            width: 1px;
+            background: var(--border);
+        }
+
+        .arch-block:last-child::after {
+            display: none;
+        }
+
+        .arch-block-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            margin: 0 auto 12px;
+        }
+
+        .arch-block-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .arch-block-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .arch-block-items {
+            margin-top: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+        }
+
+        .arch-item {
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .arch-arrow {
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            font-size: 28px;
+            color: var(--primary);
+        }
+
+        .arch-flow-labels {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+        }
+
+        .afl {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Integration Cards */
+        .int-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .int-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .int-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .int-card-bar {
+            height: 4px;
+        }
+
+        .int-card-body {
+            padding: 24px;
+        }
+
+        .int-card-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .int-logo {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .int-name {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .int-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: auto;
+        }
+
+        .int-status.connected {
+            color: var(--success);
+        }
+
+        .int-status.available {
+            color: var(--text-muted);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-dot.connected {
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.available {
+            background: var(--text-muted);
+        }
+
+        .int-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 14px;
+        }
+
+        .int-features {
+            margin-bottom: 16px;
+        }
+
+        .int-feature {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            padding: 6px 0;
+        }
+
+        .int-feature i {
+            color: var(--success);
+            font-size: 14px;
+        }
+
+        .int-sync {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+        }
+
+        .int-sync-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .int-sync-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .sync-arrow {
+            color: var(--primary);
+        }
+
+        .sync-in {
+            color: var(--info);
+        }
+
+        .sync-out {
+            color: var(--warning);
+        }
+
+        .int-btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .int-btn.connect {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+        }
+
+        .int-btn.connect:hover {
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .int-btn.connected {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .int-btn.connected:hover {
+            background: rgba(34, 197, 94, 0.15);
+        }
+
+        /* API Docs */
+        .api-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 28px;
+        }
+
+        .api-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .api-endpoint {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        .api-method {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            min-width: 55px;
+            text-align: center;
+        }
+
+        .api-method.POST {
+            background: rgba(34, 197, 94, 0.12);
+            color: var(--success);
+        }
+
+        .api-method.GET {
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--info);
+        }
+
+        .api-method.PUT {
+            background: rgba(250, 204, 21, 0.12);
+            color: var(--warning);
+        }
+
+        .api-path {
+            color: var(--text);
+            flex: 1;
+        }
+
+        .api-desc {
+            color: var(--text-muted);
+            font-family: 'Tajawal';
+            font-size: 12px;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 9999;
+        }
+
+        .toast-msg {
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            animation: slideUp 0.3s ease;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(34, 197, 94, 0.9);
+            color: white;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .arch-flow {
+                flex-direction: column;
+            }
+
+            .arch-arrow {
+                transform: rotate(90deg);
+                justify-content: center;
+                padding: 8px;
+            }
+
+            .arch-block::after {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .int-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .main-content {
+                max-width: 100%;
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="top-nav">
+        <a href="/dashboard.html" class="brand"><i class="bi bi-gem"></i> ستارتكس</a>
+        <div class="user-area">
+            <div class="user-avatar">م</div>
+            <button class="btn-logout" onclick="localStorage.clear(); location.href='/login.html'"><i
+                    class="bi bi-box-arrow-right"></i> خروج</button>
+        </div>
+    </nav>
+
+    <div class="layout">
+        <aside class="sidebar"></aside>
+        <div class="main-content">
+            <div class="page-header">
+                <h1><i class="bi bi-plug-fill"></i> مركز التكامل (Integration Hub)</h1>
+                <p class="page-subtitle">اربط ستارتكس مع منصات التنفيذ التشغيلي — أرسل المبادرات واستقبل نسب الإنجاز
+                    تلقائياً</p>
+            </div>
+
+            <!-- Architecture Diagram -->
+            <div class="arch-section">
+                <div class="arch-title"><i class="bi bi-diagram-3"></i> المعمارية التكاملية</div>
+                <div class="arch-flow">
+                    <div class="arch-block">
+                        <div class="arch-block-icon" style="background:rgba(102,126,234,0.12);color:var(--primary)"><i
+                                class="bi bi-gem"></i></div>
+                        <div class="arch-block-title">ستارتكس</div>
+                        <div class="arch-block-desc">المستوى الاستراتيجي والتكتيكي<br>بناء الاستراتيجية وقياس الأداء
+                        </div>
+                        <div class="arch-block-items">
+                            <span class="arch-item"
+                                style="background:rgba(102,126,234,0.1);color:var(--primary)">الأهداف</span>
+                            <span class="arch-item"
+                                style="background:rgba(250,204,21,0.1);color:var(--warning)">المبادرات</span>
+                            <span class="arch-item"
+                                style="background:rgba(34,197,94,0.1);color:var(--success)">KPIs</span>
+                            <span class="arch-item"
+                                style="background:rgba(56,189,248,0.1);color:var(--info)">التقييمات</span>
+                        </div>
+                    </div>
+                    <div class="arch-arrow"><i class="bi bi-arrow-left-right"></i></div>
+                    <div class="arch-block">
+                        <div class="arch-block-icon" style="background:rgba(167,139,250,0.12);color:#a78bfa"><i
+                                class="bi bi-plug"></i></div>
+                        <div class="arch-block-title">نقطة الربط (API)</div>
+                        <div class="arch-block-desc">المبادرات المعتمدة تُرسل تلقائياً<br>نسب الإنجاز تعود حياً</div>
+                        <div class="arch-block-items">
+                            <span class="arch-item" style="background:rgba(250,204,21,0.1);color:var(--warning)">← إرسال
+                                مبادرات</span>
+                            <span class="arch-item" style="background:rgba(34,197,94,0.1);color:var(--success)">→
+                                استقبال إنجاز</span>
+                        </div>
+                    </div>
+                    <div class="arch-arrow"><i class="bi bi-arrow-left-right"></i></div>
+                    <div class="arch-block">
+                        <div class="arch-block-icon" style="background:rgba(56,189,248,0.12);color:var(--info)"><i
+                                class="bi bi-kanban"></i></div>
+                        <div class="arch-block-title">المنصات التشغيلية</div>
+                        <div class="arch-block-desc">المستوى التشغيلي واليومي<br>تحويل المبادرات لمشاريع ومهام</div>
+                        <div class="arch-block-items">
+                            <span class="arch-item"
+                                style="background:rgba(56,189,248,0.1);color:var(--info)">مشاريع</span>
+                            <span class="arch-item" style="background:rgba(239,68,68,0.1);color:var(--danger)">مهام
+                                يومية</span>
+                            <span class="arch-item" style="background:rgba(34,197,94,0.1);color:var(--success)">توزيع
+                                أدوار</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="arch-flow-labels">
+                    <span class="afl"><i class="bi bi-shield-check"></i> التخطيط والقرار هنا</span>
+                    <span class="afl"><i class="bi bi-arrow-repeat"></i> تزامن ثنائي الاتجاه</span>
+                    <span class="afl"><i class="bi bi-people"></i> التنفيذ اليومي هنا</span>
+                </div>
+            </div>
+
+            <!-- Integration Cards -->
+            <div class="arch-title"><i class="bi bi-grid-3x3-gap"></i> المنصات المتاحة للتكامل</div>
+            <div class="int-grid">
+                <!-- dePower -->
+                <div class="int-card">
+                    <div class="int-card-bar" style="background:linear-gradient(90deg, #667eea, #764ba2)"></div>
+                    <div class="int-card-body">
+                        <div class="int-card-header">
+                            <div class="int-logo"
+                                style="background:linear-gradient(135deg, #667eea, #764ba2);color:white">dP</div>
+                            <div>
+                                <div class="int-name">dePower</div>
+                                <div class="int-status connected">
+                                    <div class="status-dot connected"></div> متصل
+                                </div>
+                            </div>
+                        </div>
+                        <div class="int-desc">منصة إدارة المشاريع والمهام المتكاملة — الشريك الرئيسي لستارتكس في
+                            التنفيذ التشغيلي.</div>
+                        <div class="int-features">
+                            <div class="int-feature"><i class="bi bi-check-circle-fill"></i> تحويل المبادرات المعتمدة
+                                إلى مشاريع تلقائياً</div>
+                            <div class="int-feature"><i class="bi bi-check-circle-fill"></i> تفريع المشاريع إلى مهام
+                                يومية بأدوار ومواعيد</div>
+                            <div class="int-feature"><i class="bi bi-check-circle-fill"></i> تحديث نسب الإنجاز حياً على
+                                لوحة ستارتكس</div>
+                            <div class="int-feature"><i class="bi bi-check-circle-fill"></i> إشعارات تنبيهية عند تأخر
+                                المهام</div>
+                        </div>
+                        <div class="int-sync">
+                            <div class="int-sync-title">تفاصيل التزامن</div>
+                            <div class="int-sync-row"><span class="sync-out">← يُرسل:</span> المبادرات المعتمدة +
+                                الأهداف المرتبطة</div>
+                            <div class="int-sync-row"><span class="sync-in">→ يستقبل:</span> نسبة إنجاز المشاريع + حالة
+                                المهام + تقارير أداء الفريق</div>
+                        </div>
+                        <button class="int-btn connected" onclick="showToast('dePower متصل ونشط ✓')"><i
+                                class="bi bi-check-circle"></i> متصل ونشط — آخر مزامنة: منذ 3 دقائق</button>
+                    </div>
+                </div>
+
+                <!-- Asana -->
+                <div class="int-card">
+                    <div class="int-card-bar" style="background:linear-gradient(90deg, #f06a6a, #ff9a9a)"></div>
+                    <div class="int-card-body">
+                        <div class="int-card-header">
+                            <div class="int-logo"
+                                style="background:linear-gradient(135deg, #f06a6a, #ff9a9a);color:white"><i
+                                    class="bi bi-kanban"></i></div>
+                            <div>
+                                <div class="int-name">Asana</div>
+                                <div class="int-status available">
+                                    <div class="status-dot available"></div> متاح
+                                </div>
+                            </div>
+                        </div>
+                        <div class="int-desc">أداة عالمية لإدارة المشاريع والمهام — مثالية للفرق المعتادة على بيئة
+                            Asana.</div>
+                        <div class="int-features">
+                            <div class="int-feature"><i class="bi bi-check-circle-fill"></i> إنشاء مشاريع Asana من
+                                مبادرات ستارتكس</div>
+                            <div class="int-feature"><i class="bi bi-check-circle-fill"></i> مزامنة حالة المهام وتواريخ
+                                التسليم</div>
+                            <div class="int-feature"><i class="bi bi-check-circle-fill"></i> تحديث تقدم البورتفوليو
+                                تلقائياً</div>
+                        </div>
+                        <div class="int-sync">
+                            <div class="int-sync-title">تفاصيل التزامن</div>
+                            <div class="int-sync-row"><span class="sync-out">← يُرسل:</span> المبادرات + الأهداف + KPIs
+                            </div>
+                            <div class="int-sync-row"><span class="sync-in">→ يستقبل:</span> حالة المشاريع + إحصائيات
+                                المهام</div>
+                        </div>
+                        <button class="int-btn connect" onclick="showToast('جاري إعداد الاتصال بـ Asana...')"><i
+                                class="bi bi-plug"></i> ربط مع Asana</button>
+                    </div>
+                </div>
+
+                <!-- Odoo -->
+                <div class="int-card">
+                    <div class="int-card-bar" style="background:linear-gradient(90deg, #714B67, #a76b97)"></div>
+                    <div class="int-card-body">
+                        <div class="int-card-header">
+                            <div class="int-logo"
+                                style="background:linear-gradient(135deg, #714B67, #a76b97);color:white"><i
+                                    class="bi bi-box"></i></div>
+                            <div>
+                                <div class="int-name">Odoo</div>
+                                <div class="int-status available">
+                                    <div class="status-dot available"></div> متاح
+                                </div>
+                            </div>
+                        </div>
+                        <div class="int-desc">نظام ERP متكامل — مناسب عندما تريد ربط الاستراتيجية بالموارد المالية
+                            والبشرية مباشرة.</div>
+                        <div class="int-features">
+                            <div class="int-feature"><i class="bi bi-check-circle-fill"></i> مزامنة المبادرات مع مشاريع
+                                Odoo</div>
+                            <div class="int-feature"><i class="bi bi-check-circle-fill"></i> ربط الميزانيات والمصروفات
+                                تلقائياً</div>
+                            <div class="int-feature"><i class="bi bi-check-circle-fill"></i> تتبع ساعات العمل مقابل
+                                المهام</div>
+                        </div>
+                        <div class="int-sync">
+                            <div class="int-sync-title">تفاصيل التزامن</div>
+                            <div class="int-sync-row"><span class="sync-out">← يُرسل:</span> المبادرات + الميزانيات
+                                المعتمدة</div>
+                            <div class="int-sync-row"><span class="sync-in">→ يستقبل:</span> المصروفات الفعلية + ساعات
+                                العمل + إنجاز المشاريع</div>
+                        </div>
+                        <button class="int-btn connect" onclick="showToast('جاري إعداد الاتصال بـ Odoo...')"><i
+                                class="bi bi-plug"></i> ربط مع Odoo</button>
+                    </div>
+                </div>
+
+                <!-- Zoho -->
+                <div class="int-card">
+                    <div class="int-card-bar" style="background:linear-gradient(90deg, #e8384f, #f06a6a)"></div>
+                    <div class="int-card-body">
+                        <div class="int-card-header">
+                            <div class="int-logo"
+                                style="background:linear-gradient(135deg, #e8384f, #f06a6a);color:white">Z</div>
+                            <div>
+                                <div class="int-name">Zoho Projects</div>
+                                <div class="int-status available">
+                                    <div class="status-dot available"></div> متاح
+                                </div>
+                            </div>
+                        </div>
+                        <div class="int-desc">جزء من منظومة Zoho الشاملة — خيار ممتاز للمنظمات التي تستخدم Zoho CRM.
+                        </div>
+                        <div class="int-features">
+                            <div class="int-feature"><i class="bi bi-check-circle-fill"></i> إنشاء مشاريع من مبادرات
+                                ستارتكس</div>
+                            <div class="int-feature"><i class="bi bi-check-circle-fill"></i> تتبع Milestones والمهام
+                            </div>
+                            <div class="int-feature"><i class="bi bi-check-circle-fill"></i> تقارير Gantt Chart تلقائية
+                            </div>
+                        </div>
+                        <div class="int-sync">
+                            <div class="int-sync-title">تفاصيل التزامن</div>
+                            <div class="int-sync-row"><span class="sync-out">← يُرسل:</span> المبادرات + الجدول الزمني
+                            </div>
+                            <div class="int-sync-row"><span class="sync-in">→ يستقبل:</span> تقدم المراحل + حالة التسليم
+                            </div>
+                        </div>
+                        <button class="int-btn connect" onclick="showToast('جاري إعداد الاتصال بـ Zoho...')"><i
+                                class="bi bi-plug"></i> ربط مع Zoho</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Documentation -->
+            <div class="api-section">
+                <div class="api-title"><i class="bi bi-code-slash" style="color:var(--primary)"></i> نقاط الربط البرمجية
+                    (API)</div>
+                <div class="api-endpoint">
+                    <span class="api-method POST">POST</span>
+                    <span class="api-path">/api/integrations/push-initiative</span>
+                    <span class="api-desc">إرسال مبادرة معتمدة للمنصة الخارجية</span>
+                </div>
+                <div class="api-endpoint">
+                    <span class="api-method POST">POST</span>
+                    <span class="api-path">/api/integrations/webhook/progress</span>
+                    <span class="api-desc">استقبال تحديثات الإنجاز من المنصة الخارجية</span>
+                </div>
+                <div class="api-endpoint">
+                    <span class="api-method GET">GET</span>
+                    <span class="api-path">/api/integrations/sync-status</span>
+                    <span class="api-desc">فحص حالة التزامن مع المنصات المتصلة</span>
+                </div>
+                <div class="api-endpoint">
+                    <span class="api-method GET">GET</span>
+                    <span class="api-path">/api/integrations/external-tasks/{initiativeId}</span>
+                    <span class="api-desc">جلب المهام الخارجية المرتبطة بمبادرة محددة</span>
+                </div>
+                <div class="api-endpoint">
+                    <span class="api-method PUT">PUT</span>
+                    <span class="api-path">/api/integrations/config/{platform}</span>
+                    <span class="api-desc">تحديث إعدادات الاتصال لمنصة معينة</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/sidebar.js"></script>
+    <script src="/assets/js/ai-advisor.js"></script>
+    <script>
+        function showToast(msg) {
+            const t = document.createElement('div');
+            t.className = 'toast-msg';
+            t.innerHTML = `<i class="bi bi-check-circle"></i> ${msg}`;
+            document.getElementById('toastContainer').appendChild(t);
+            setTimeout(() => t.remove(), 3000);
+        }
+    </script>
+</body>
+
+</html>

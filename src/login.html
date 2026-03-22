@@ -76,7 +76,6 @@
             }
         }
 
-        /* ═══ التبويبات ═══ */
         .auth-tabs {
             display: flex;
             gap: 4px;
@@ -98,7 +97,6 @@
             transition: all 0.3s ease;
             border: none;
             background: transparent;
-            position: relative;
         }
 
         .auth-tab:hover {
@@ -116,7 +114,6 @@
             font-size: 1rem;
         }
 
-        /* ═══ النماذج ═══ */
         .auth-panel {
             display: none;
             animation: fadeIn 0.35s ease;
@@ -261,50 +258,70 @@
         .switch-link a:hover {
             text-decoration: underline;
         }
+
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast-msg {
+            background: var(--bg-card);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(4px);
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .toast-success {
+            border-right: 4px solid #10b981;
+        }
+
+        .toast-error {
+            border-right: 4px solid #ef4444;
+        }
+
+        .toast-warning {
+            border-right: 4px solid #f59e0b;
+        }
+
+        .toast-info {
+            border-right: 4px solid #3b82f6;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 
 <body>
-    <!-- بوابة: الدخول فقط من صفحة الهبوط -->
-    <script>
-        (function () {
-            // السماح إذا كان لديه token بالفعل (مستخدم مسجل)
-            if (localStorage.getItem('token')) return;
-
-            // السماح إذا جاء من أي مصدر معروف في المنصة
-            const params = new URLSearchParams(window.location.search);
-            const from = params.get('from') || '';
-            const allowedSources = ['landing', 'smart-guide', 'diagnostic', 'ceo', 'dept', 'restore', 'beginner', 'founder', 'pain'];
-            if (allowedSources.includes(from)) return;
-
-            // السماح إذا كان لديه tab parameter (رابط مباشر)
-            if (params.get('tab')) return;
-
-            // السماح إذا كان الـ referrer من نفس الموقع
-            const ref = document.referrer;
-            if (ref) {
-                try {
-                    const refUrl = new URL(ref);
-                    if (refUrl.origin === window.location.origin) return;
-                } catch (e) { }
-            }
-
-            // غير ذلك → إعادة توجيه لصفحة الهبوط
-            window.location.replace('/');
-        })();
-    </script>
-
-    <!-- 🔄 إعادة التوجيه الذكية: حفظ الصفحة اللي كان فيها المستخدم -->
+    <!-- حفظ عنوان العودة إلى sessionStorage -->
     <script>
         (function () {
             const params = new URLSearchParams(window.location.search);
-            // 1. redirect= parameter صريح (أولوية)
             const explicitRedirect = params.get('redirect');
             if (explicitRedirect) {
                 sessionStorage.setItem('stratix_return_url', decodeURIComponent(explicitRedirect));
                 return;
             }
-            // 2. document.referrer — إذا جاي من صفحة داخلية (انتهت جلسته)
             const ref = document.referrer;
             if (ref && !sessionStorage.getItem('stratix_return_url')) {
                 try {
@@ -321,7 +338,6 @@
     </script>
 
     <div class="auth-card">
-        <!-- الشعار -->
         <div class="text-center mb-3">
             <div class="header-icon"><i class="bi bi-rocket-takeoff"></i></div>
             <div class="brand-name">ستارتكس</div>
@@ -330,53 +346,37 @@
 
         <!-- التبويبات -->
         <div class="auth-tabs">
-            <button class="auth-tab" id="tab-signup" onclick="switchTab('signup')">
+            <button class="auth-tab" id="tab-signup" data-action="switch-tab" data-tab="signup">
                 <i class="bi bi-person-plus"></i> حساب جديد
             </button>
-            <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">
+            <button class="auth-tab active" id="tab-login" data-action="switch-tab" data-tab="login">
                 <i class="bi bi-box-arrow-in-left"></i> تسجيل الدخول
             </button>
         </div>
 
-        <!-- ═══ نموذج تسجيل الدخول ═══ -->
+        <!-- نموذج تسجيل الدخول -->
         <div class="auth-panel active" id="panel-login">
             <form id="loginForm">
                 <div class="mb-3">
-                    <label class="form-label">
-                        البريد الإلكتروني
-                        <i class="bi bi-info-circle info-icon" data-bs-toggle="tooltip"
-                            title="أدخل بريد العمل المسجل في النظام"></i>
-                    </label>
+                    <label class="form-label">البريد الإلكتروني</label>
                     <input type="email" id="login-email" class="form-control" placeholder="name@company.com" required>
                 </div>
-
                 <div class="mb-4">
-                    <label class="form-label">
-                        كلمة المرور
-                        <i class="bi bi-info-circle info-icon" data-bs-toggle="tooltip"
-                            title="تأكد من إدخال كلمة المرور بشكل صحيح"></i>
-                    </label>
+                    <label class="form-label">كلمة المرور</label>
                     <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
-                    <div class="text-start mt-2">
-                        <a href="#" style="color: var(--text-muted); font-size: 0.82rem; text-decoration: none;">نسيت
-                            كلمة المرور؟</a>
-                    </div>
                 </div>
-
                 <button type="submit" class="btn btn-primary w-100">
                     <i class="bi bi-shield-lock me-1"></i> دخول آمن
                 </button>
-
                 <div class="switch-link">
                     <span class="text-muted">ليس لديك حساب؟ </span>
-                    <a onclick="switchTab('signup')">أنشئ حساباً مجاناً</a>
+                    <a data-action="switch-tab" data-tab="signup">أنشئ حساباً مجاناً</a>
                 </div>
             </form>
         </div>
 
-        <!-- ═══ نموذج إنشاء حساب ═══ -->
+        <!-- نموذج إنشاء حساب -->
         <div class="auth-panel" id="panel-signup">
-            <!-- شريط المسار المقترح (يظهر بعد التشخيص) -->
             <div id="diagPathBanner"
                 style="display:none; background:linear-gradient(135deg,rgba(102,126,234,0.12),rgba(118,75,162,0.12)); border:1px solid rgba(102,126,234,0.2); border-radius:14px; padding:14px 18px; margin-bottom:20px; text-align:center;">
                 <div style="font-size:0.82rem; color:#94a3b8; margin-bottom:4px;">مسارك المقترح:</div>
@@ -385,56 +385,25 @@
             </div>
             <form id="signupForm">
                 <div class="mb-3">
-                    <label class="form-label">
-                        الاسم الكامل
-                        <i class="bi bi-info-circle info-icon" data-bs-toggle="tooltip"
-                            title="اكتب اسمك كما تحب أن يظهر في لوحة التحكم"></i>
-                    </label>
+                    <label class="form-label">الاسم الكامل</label>
                     <input type="text" id="signup-name" class="form-control" placeholder="مثال: أحمد محمد">
                 </div>
-
                 <div class="mb-3">
-                    <label class="form-label">
-                        البريد الإلكتروني
-                        <i class="bi bi-info-circle info-icon" data-bs-toggle="tooltip"
-                            title="سنرسل إشعارات النظام المهمة على هذا البريد"></i>
-                    </label>
+                    <label class="form-label">البريد الإلكتروني</label>
                     <input type="email" id="signup-email" class="form-control" placeholder="name@company.com" required>
                 </div>
-
-                <!-- ═══ نوع المستخدم — منشأة فقط حالياً ═══ -->
-                <div class="mb-3" id="userTypeSection" style="display:none;">
-                    <!-- فرد ومدير إدارة مؤجلة -->
-                </div>
-
-                <!-- ═══ اسم المنشأة/الشركة (يظهر حسب النوع) ═══ -->
                 <div class="mb-3" id="companySection">
-                    <label class="form-label" id="companyLabel">
-                        اسم المنشأة
-                        <i class="bi bi-info-circle info-icon" data-bs-toggle="tooltip" id="companyTooltip"
-                            title="اسم شركتك أو مؤسستك"></i>
-                    </label>
+                    <label class="form-label" id="companyLabel">اسم المنشأة</label>
                     <input type="text" id="signup-company" class="form-control" placeholder="شركة التقنية الحديثة"
                         required>
                 </div>
-
                 <div class="mb-3">
-                    <label class="form-label">
-                        رقم الجوال
-                        <i class="bi bi-info-circle info-icon" data-bs-toggle="tooltip"
-                            title="رقم الجوال يساعدك في استرجاع حسابك"></i>
-                    </label>
-                    <input type="tel" id="signup-phone" class="form-control" placeholder="05xxxxxxxx" dir="ltr"
-                        style="text-align:left">
+                    <label class="form-label">رقم الجوال</label>
+                    <input type="tel" id="signup-phone" class="form-control" placeholder="05xxxxxxxx" dir="ltr">
                     <div class="form-text" style="color:var(--text-muted);font-size:0.78rem">اختياري</div>
                 </div>
-
                 <div class="mb-4">
-                    <label class="form-label">
-                        كلمة المرور
-                        <i class="bi bi-info-circle info-icon" data-bs-toggle="tooltip"
-                            title="كلمة المرور القوية تحمي بياناتك"></i>
-                    </label>
+                    <label class="form-label">كلمة المرور</label>
                     <input type="password" class="form-control" id="signup-password" placeholder="••••••••" required>
                     <div class="password-rules">
                         <div class="rule" id="rule-length"><i class="bi bi-circle"></i> 8 أحرف على الأقل</div>
@@ -443,47 +412,64 @@
                         <div class="rule" id="rule-number"><i class="bi bi-circle"></i> رقم (0-9)</div>
                     </div>
                 </div>
-
                 <button type="submit" class="btn btn-primary w-100">
                     <i class="bi bi-rocket-takeoff me-1"></i> إنشاء الحساب والبدء
                 </button>
-
                 <div class="switch-link">
                     <span class="text-muted">لديك حساب بالفعل؟ </span>
-                    <a onclick="switchTab('login')">سجل دخولك</a>
+                    <a data-action="switch-tab" data-tab="login">سجل دخولك</a>
                 </div>
             </form>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // ═══ التبويبات ═══
-        function switchTab(tab) {
-            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
-            document.getElementById('tab-' + tab).classList.add('active');
-            document.getElementById('panel-' + tab).classList.add('active');
+    <!-- ربط السكربتات المحدثة الجديدة -->
+    <script src="/assets/js/api.js"></script>
+    <!-- تم إضافة الدالة المركزية auth-handler بدلاً من auth.js لتنسيق المسارات -->
+    <script src="/assets/js/auth-handler.js"></script>
 
-            const sub = document.getElementById('headerSub');
-            if (tab === 'login') {
-                sub.textContent = 'سجل الدخول لمتابعة أداء استراتيجيتك';
-            } else {
-                sub.textContent = 'أنشئ حسابك المجاني وابدأ رحلتك';
-            }
+    <script>
+        // ============================================================
+        // دوال مساعدة
+        // ============================================================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `toast-msg toast-${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3500);
         }
 
-        // تحقق من URL parameter لتحديد التاب الافتراضي
-        const urlParams = new URLSearchParams(window.location.search);
-        const defaultTab = urlParams.get('tab') || 'signup';
-        switchTab(defaultTab);
+        function attachPasswordRules() {
+            const pwdInput = document.getElementById('signup-password');
+            if (!pwdInput) return;
 
-        // Tooltips
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.map(el => new bootstrap.Tooltip(el));
+            const rules = {
+                length: { id: 'rule-length', regex: /.{8,}/ },
+                upper: { id: 'rule-upper', regex: /[A-Z]/ },
+                lower: { id: 'rule-lower', regex: /[a-z]/ },
+                number: { id: 'rule-number', regex: /[0-9]/ }
+            };
 
-        // ═══ عرض شريط المسار المقترح (إذا جاي من التشخيص الجديد) ═══
-        (function showDiagBanner() {
+            pwdInput.addEventListener('input', function (e) {
+                const val = e.target.value;
+                for (const key in rules) {
+                    const ruleDiv = document.getElementById(rules[key].id);
+                    const icon = ruleDiv.querySelector('i');
+                    if (rules[key].regex.test(val)) {
+                        ruleDiv.classList.add('valid');
+                        icon.classList.replace('bi-circle', 'bi-check-circle-fill');
+                    } else {
+                        ruleDiv.classList.remove('valid');
+                        icon.classList.replace('bi-check-circle-fill', 'bi-circle');
+                    }
+                }
+            });
+        }
+
+        function showDiagBanner() {
             try {
                 const raw = sessionStorage.getItem('diagnosticResult');
                 if (!raw) return;
@@ -505,441 +491,208 @@
                 }
                 banner.style.display = 'block';
 
-                // تبديل للتسجيل تلقائياً إذا جاي من التشخيص
+                const urlParams = new URLSearchParams(window.location.search);
                 if (urlParams.get('from') === 'diagnostic') {
                     switchTab('signup');
                 }
             } catch (e) { }
-        })();
+        }
 
-        // ═══ التحقق من كلمة المرور (التسجيل) ═══
-        const pwdInput = document.getElementById('signup-password');
-        const rules = {
-            length: { id: 'rule-length', regex: /.{8,}/ },
-            upper: { id: 'rule-upper', regex: /[A-Z]/ },
-            lower: { id: 'rule-lower', regex: /[a-z]/ },
-            number: { id: 'rule-number', regex: /[0-9]/ }
-        };
+        // ============================================================
+        // التبويبات
+        // ============================================================
+        function switchTab(tab) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            document.getElementById('panel-' + tab).classList.add('active');
 
-        pwdInput.addEventListener('input', function (e) {
-            const val = e.target.value;
-            for (const key in rules) {
-                const ruleDiv = document.getElementById(rules[key].id);
-                const icon = ruleDiv.querySelector('i');
-                if (rules[key].regex.test(val)) {
-                    ruleDiv.classList.add('valid');
-                    icon.classList.replace('bi-circle', 'bi-check-circle-fill');
-                } else {
-                    ruleDiv.classList.remove('valid');
-                    icon.classList.replace('bi-check-circle-fill', 'bi-circle');
-                }
+            const sub = document.getElementById('headerSub');
+            if (tab === 'login') {
+                sub.textContent = 'سجل الدخول لمتابعة أداء استراتيجيتك';
+            } else {
+                sub.textContent = 'أنشئ حسابك المجاني وابدأ رحلتك';
             }
-        });
+        }
 
-        // ═══ تسجيل الدخول ═══
-        document.getElementById('loginForm').addEventListener('submit', async function (e) {
-            e.preventDefault();
-            const btn = this.querySelector('button[type="submit"]');
-            const originalText = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> جاري الدخول...';
+        // ============================================================
+        // معالجة الأحداث المركزية (data-action)
+        // ============================================================
+        function attachEventHandlers() {
+            const authCard = document.querySelector('.auth-card');
+            if (!authCard) return;
 
-            const email = document.getElementById('login-email').value.trim();
-            const password = document.getElementById('login-password').value;
+            authCard.addEventListener('click', (e) => {
+                const target = e.target.closest('[data-action]');
+                if (!target) return;
+                const action = target.dataset.action;
+                if (action === 'switch-tab') {
+                    const tab = target.dataset.tab;
+                    if (tab === 'login' || tab === 'signup') {
+                        switchTab(tab);
+                    }
+                }
+            });
+        }
 
+        // ============================================================
+        // تسجيل الدخول
+        // ============================================================
+        async function handleLogin(email, password) {
             try {
-                const res = await fetch('/api/auth/login', {
+                const res = await window.fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password }),
-                    credentials: 'include' // 🔒 إرسال واستقبال HttpOnly Cookie
+                    body: JSON.stringify({ email, password })
                 });
-
                 const data = await res.json();
-
                 if (res.ok && data.user) {
-                    // 🔒 الكوكي HttpOnly أُضبط تلقائياً من السيرفر
-                    // نخزن علامة فقط لتمرير فحوصات if (!token) في الصفحات القديمة
-                    localStorage.setItem('token', 'httponly-managed');
-                    localStorage.setItem('user', JSON.stringify(data.user));
-
-                    // حفظ entityId و companyId — مطلوب للداشبورد والمستشار الذكي
-                    const _eid = data.user?.entity?.id || data.user?.entityId || null;
-                    const _cid = data.user?.entity?.company?.id || data.user?.companyId || null;
-                    if (_eid) localStorage.setItem('entityId', _eid);
-                    if (_cid) localStorage.setItem('companyId', _cid);
-
-                    // 🔄 إعادة التوجيه الذكية: لو كان المستخدم في صفحة وانتهت جلسته → يرجع لها
-                    const _returnUrl = sessionStorage.getItem('stratix_return_url');
-                    if (_returnUrl) {
-                        sessionStorage.removeItem('stratix_return_url');
-                        try {
-                            const _rUrl = new URL(_returnUrl, window.location.origin);
-                            if (_rUrl.origin === window.location.origin && !_rUrl.pathname.includes('login')) {
-                                window.location.href = _rUrl.pathname + _rUrl.search;
-                                return;
-                            }
-                        } catch (e) { }
-                    }
-
-                    const role = data.user.role || 'VIEWER';
-                    const sysRole = data.user.systemRole || 'USER';
-                    const uType = data.user.userType || 'EXPLORER';
-                    const uCategory = data.user.userCategory || '';
-                    const hasEntity = !!data.user.entity;
-                    const onboardingDone = data.user.onboardingCompleted || false;
-
-                    // 1. SUPER_ADMIN → لوحة الإدارة (مالك المنصة)
-                    if (sysRole === 'SUPER_ADMIN') {
-                        window.location.href = '/admin-dashboard.html';
-                    }
-                    // 1b. ADMIN → لوحة الإدارة (مدير النظام)
-                    else if (sysRole === 'ADMIN' || role === 'ADMIN') {
-                        window.location.href = '/admin-dashboard.html';
-                    }
-                    // 2. ما أكمل التأسيس → onboarding أولاً (قبل أي حكم على الدور)
-                    else if (!onboardingDone && !hasEntity) {
-                        window.location.href = '/onboarding.html';
-                    }
-                    // 3. الفرد أو المستشار المستقل
-                    else if (['INDIVIDUAL', 'PERSONAL', 'CAREER', 'IDEA', 'CONSULTANT_SOLO'].includes(uCategory) || uCategory.startsWith('INDIVIDUAL_')) {
-                        window.location.href = '/individual-dashboard.html';
-                    }
-                    // 4. مدير إدارة
-                    else if (uType === 'DEPT_MANAGER' || uCategory.startsWith('DEPT_')) {
-                        window.location.href = hasEntity ? '/dept-dashboard.html' : '/onboarding.html?mode=dept';
-                    }
-                    // 5. أي مستشار
-                    else if (uType === 'CONSULTANT' || uCategory.startsWith('CONSULTANT')) {
-                        window.location.href = '/consultant-dashboard.html';
-                    }
-                    // 6a. مستثمر → لوحة المستثمر (الفرص + المحفظة)
-                    else if (uCategory === 'INVESTOR' || uCategory.startsWith('INVESTOR_')) {
-                        window.location.href = '/investor-dashboard.html';
-                    }
-                    // 6b. عضو مجلس → لوحة المجلس (مراقبة + تقارير)
-                    else if (uCategory === 'BOARD_MEMBER' || uCategory.startsWith('BOARD_')) {
-                        window.location.href = '/board-dashboard.html';
-                    }
-                    // 7. VIEWER/DATA_ENTRY حقيقي (عنده entity بس دور محدود)
-                    else if (hasEntity && (role === 'VIEWER' || role === 'DATA_ENTRY')) {
-                        window.location.href = '/viewer-hub.html';
-                    }
-                    // 8. عنده كيان + التأسيس مكتمل → توجيه ذكي حسب المسار
-                    else if (hasEntity && onboardingDone) {
-                        // التوجيه حسب حجم المنظمة ومسارها
-                        const _diagPayload = (() => { try { return JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || '{}'); } catch (e) { return {}; } })();
-                        const _painAmb = (() => { try { return JSON.parse(localStorage.getItem('painAmbition') || '{}'); } catch (e) { return {}; } })();
-                        const _role = _diagPayload.role || '';
-                        const _pKey = _painAmb.patternKey || '';
-                        const _size = _diagPayload.size || _painAmb.sizeCategory || '';
-
-                        // مستثمر → لوحة المستثمر
-                        if (_role === 'investor') {
-                            window.location.href = '/investor-dashboard.html';
-                        }
-                        // مجلس إدارة → لوحة المجلس
-                        else if (_role === 'board') {
-                            window.location.href = '/board-dashboard.html';
-                        }
-                        // مسارات متقدمة (نامية طموحة + ناضجة) → CEO Dashboard
-                        else if (['growing_ambitious', 'mature_renewing', 'mature_competitive', 'default_strategic'].includes(_pKey)) {
-                            window.location.href = '/ceo-dashboard.html';
-                        }
-                        // شركات كبيرة/متوسطة بدون مسار محدد
-                        else if (['large', 'enterprise'].includes(_size)) {
-                            window.location.href = '/ceo-dashboard.html';
-                        }
-                        // الباقي (ناشئة / صغيرة / default)
-                        else {
-                            window.location.href = '/dashboard.html';
-                        }
-                    }
-                    // 9. Default
-                    else {
-                        window.location.href = '/dashboard.html';
-                    }
+                    handleAuthResponse(data);
                 } else {
-                    if (data.suspended) {
-                        if (data.token) localStorage.setItem('token', 'httponly-managed');
-                        localStorage.setItem('user', JSON.stringify(data.user || {}));
-                        localStorage.setItem('suspendReason', data.reason || '');
-                        localStorage.setItem('suspendedAt', data.suspendedAt || '');
-                        window.location.href = '/account-suspended.html';
-                        return;
-                    }
-                    let errDiv = document.getElementById('loginError');
-                    if (!errDiv) {
-                        errDiv = document.createElement('div');
-                        errDiv.id = 'loginError';
-                        errDiv.className = 'alert alert-danger mt-3';
-                        errDiv.style.borderRadius = '12px';
-                        errDiv.style.fontSize = '0.9rem';
-                        this.appendChild(errDiv);
-                    }
-                    errDiv.textContent = data.message || data.errors?.[0]?.msg || 'فشل تسجيل الدخول';
+                    showToast(data.error || data.message || 'فشل تسجيل الدخول', 'error');
                 }
             } catch (err) {
                 console.error('Login error:', err);
-                alert('خطأ في الاتصال بالسيرفر');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            }
-        });
-
-        // ═══ اختيار نوع المستخدم ═══
-        let selectedUserType = 'BUSINESS'; // منشأة فقط حالياً — فرد ومدير إدارة مؤجلة
-
-        // تنظيف بيانات قديمة إذا مو جاي من تشخيص حالي
-        const signupParams = new URLSearchParams(window.location.search);
-        const comingFromDiag = signupParams.get('from') === 'diagnostic' || signupParams.get('from') === 'smart-guide' || signupParams.get('from') === 'dept';
-        if (!comingFromDiag && !localStorage.getItem('token')) {
-            // مستخدم جديد بدون تشخيص → ننظف بيانات جلسة قديمة
-            localStorage.removeItem('diagnosticPath');
-            localStorage.removeItem('stratix_category');
-            localStorage.removeItem('stratix_user_type');
-            localStorage.removeItem('stratix_company_name');
-            localStorage.removeItem('stratix_sector');
-            localStorage.removeItem('stratix_dept');
-            localStorage.removeItem('stratix_smart_guide');
-            localStorage.removeItem('stratix_diagnostic_started');
-        }
-
-        // إذا جاي من تشخيص → أخفي سؤال النوع وأحدده تلقائياً
-        const diagPath = localStorage.getItem('diagnosticPath') || localStorage.getItem('stratix_category') || '';
-        const savedUserType = localStorage.getItem('stratix_user_type') || '';
-        if (diagPath) {
-            const typeSection = document.getElementById('userTypeSection');
-            if (typeSection) typeSection.style.display = 'none';
-
-            // أولاً: إذا select-type حدد النوع مسبقاً
-            if (savedUserType) {
-                selectedUserType = savedUserType;
-            }
-            // ثانياً: استنتاج من الكاتيجوري
-            else if (['PERSONAL', 'CAREER', 'IDEA'].includes(diagPath) || diagPath.startsWith('INDIVIDUAL_') || diagPath === 'CONSULTANT_SOLO') {
-                selectedUserType = 'INDIVIDUAL';
-            } else if (diagPath.startsWith('DEPT_')) {
-                selectedUserType = 'DEPT_MANAGER';
-            } else if (diagPath === 'CONSULTANT_AGENCY') {
-                selectedUserType = 'BUSINESS';
-            } else {
-                selectedUserType = 'BUSINESS';
-            }
-
-            // أظهر حقل المنشأة إذا مطلوب (مدير الإدارة لا يحتاجه هنا — الـ onboarding بعدين يسأله)
-            if (selectedUserType !== 'INDIVIDUAL' && selectedUserType !== 'DEPT_MANAGER') {
-                const cs = document.getElementById('companySection');
-                if (cs) cs.style.display = 'block';
-
-                // لو اسم الشركة محفوظ من select-type → تعبئة تلقائية
-                const savedCompany = localStorage.getItem('stratix_company_name');
-                if (savedCompany) {
-                    const companyInput = document.getElementById('signup-company');
-                    if (companyInput) {
-                        companyInput.value = savedCompany;
-                        companyInput.readOnly = true;
-                        companyInput.style.opacity = '0.7';
-                    }
-                }
+                showToast('خطأ في الاتصال بالسيرفر', 'error');
             }
         }
 
-        function selectUserType(el) {
-            document.querySelectorAll('.user-type-option').forEach(o => {
-                o.style.borderColor = 'var(--border)';
-                o.style.background = 'rgba(255,255,255,0.05)';
-            });
-            el.style.borderColor = 'var(--primary)';
-            el.style.background = 'rgba(102,126,234,0.12)';
-            selectedUserType = el.dataset.utype;
-
-            const companySection = document.getElementById('companySection');
-            const companyLabel = document.getElementById('companyLabel');
-            const companyInput = document.getElementById('signup-company');
-
-            if (selectedUserType === 'INDIVIDUAL') {
-                companySection.style.display = 'none';
-            } else if (selectedUserType === 'DEPT_MANAGER') {
-                // مدير الإدارة — ما يحتاج اسم الشركة هنا (بياخذه في صفحة التأسيس)
-                companySection.style.display = 'none';
-            } else {
-                companySection.style.display = 'block';
-                companyLabel.innerHTML = 'اسم المنشأة <i class="bi bi-info-circle info-icon" data-bs-toggle="tooltip" title="اسم شركتك أو مؤسستك"></i>';
-                companyInput.placeholder = 'شركة التقنية الحديثة';
-            }
-        }
-
-        // ═══ إنشاء حساب ═══
-        document.getElementById('signupForm').addEventListener('submit', async function (e) {
-            e.preventDefault();
-
-            // التحقق من اختيار النوع
-            if (!selectedUserType && !diagPath) {
-                const sec = document.getElementById('userTypeSection');
-                sec.style.border = '2px solid #ef4444';
-                sec.style.borderRadius = '14px';
-                sec.style.padding = '8px';
-                setTimeout(() => { sec.style.border = 'none'; sec.style.padding = '0'; }, 2000);
-                return;
-            }
-
-            const btn = this.querySelector('button[type="submit"]');
-            const originalText = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> جاري إنشاء الحساب...';
-
-            const name = document.getElementById('signup-name').value.trim();
-            const email = document.getElementById('signup-email').value.trim();
-            const phone = document.getElementById('signup-phone').value.trim();
-            const companyEl = document.getElementById('signup-company');
-            const companyName = companyEl ? companyEl.value.trim() : '';
-            const password = document.getElementById('signup-password').value;
-
-            // تحديد userCategory
-            let userCategory = diagPath || selectedUserType || 'EXPLORER';
-
-            // جمع بيانات التشخيص — الجديد (sessionStorage) + القديم (localStorage)
-            let diagnosticData = null;
+        // ============================================================
+        // إنشاء حساب
+        // ============================================================
+        async function handleSignup(payload) {
             try {
-                // أولاً: المحرك الجديد (diagnostic-engine.js)
-                const sessionDiag = sessionStorage.getItem('diagnosticResult');
-                if (sessionDiag) {
-                    diagnosticData = JSON.parse(sessionDiag);
-                } else {
-                    // Fallback: البيانات القديمة
-                    const pa = localStorage.getItem('painAmbition') || localStorage.getItem('diagnosticData');
-                    if (pa) diagnosticData = JSON.parse(pa);
-                }
-            } catch (e) { }
-
-            let smartGuideData = null;
-            try {
-                const sg = localStorage.getItem('stratix_smart_guide');
-                if (sg) smartGuideData = JSON.parse(sg);
-            } catch (e) { }
-
-            try {
-                const res = await fetch('/api/auth/register', {
+                const res = await window.fetch('/api/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name, email, password,
-                        phone: phone || undefined,
-                        companyName: companyName || null,
-                        userCategory,
-                        userType: selectedUserType || undefined,
-                        diagnosticData,
-                        smartGuideData,
-                        sector: localStorage.getItem('stratix_sector') || undefined,
-                        department: localStorage.getItem('stratix_dept') || undefined
-                    })
+                    body: JSON.stringify(payload)
                 });
-                const data = await res.json();
+                const response = await res.json();
+                if (res.ok && response.user) {
+                    handleAuthResponse(response);
+                } else {
+                    showToast(response.error || response.message || 'فشل إنشاء الحساب', 'error');
+                }
+            } catch (err) {
+                console.error('Signup error:', err);
+                showToast('خطأ في الاتصال بالسيرفر', 'error');
+            }
+        }
 
-                if (res.ok && (data.token || data.user)) {
-                    // 🔒 الكوكي HttpOnly أُضبط تلقائياً من السيرفر
-                    localStorage.setItem('token', 'httponly-managed');
-                    // إضافة userType للـ user data إذا ما كان موجود
-                    if (selectedUserType && !data.user.userType) {
-                        data.user.userType = selectedUserType;
+        // ============================================================
+        // ربط الأحداث بالنماذج
+        // ============================================================
+        function attachFormHandlers() {
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    const btn = loginForm.querySelector('button[type="submit"]');
+                    const originalText = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> جاري الدخول...';
+
+                    const email = document.getElementById('login-email').value.trim();
+                    const password = document.getElementById('login-password').value;
+                    if (!email || !password) {
+                        showToast('يرجى إدخال البريد الإلكتروني وكلمة المرور', 'warning');
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                        return;
                     }
-                    localStorage.setItem('user', JSON.stringify(data.user));
+                    await handleLogin(email, password);
 
-                    // ═══ المرحلة 6: نقل بيانات التشخيص → localStorage (dual-write) ═══
-                    let diagFirstPage = null;
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                });
+            }
+
+            const signupForm = document.getElementById('signupForm');
+            if (signupForm) {
+                signupForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    const btn = signupForm.querySelector('button[type="submit"]');
+                    const originalText = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> جاري إنشاء الحساب...';
+
+                    const name = document.getElementById('signup-name').value.trim();
+                    const email = document.getElementById('signup-email').value.trim();
+                    const companyName = document.getElementById('signup-company').value.trim();
+                    const phone = document.getElementById('signup-phone').value.trim();
+                    const password = document.getElementById('signup-password').value;
+
+                    if (!name || !email || !companyName || !password) {
+                        showToast('يرجى تعبئة جميع الحقول المطلوبة', 'warning');
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                        return;
+                    }
+
+                    // ✅ استخدام sessionStorage فقط للبيانات المؤقتة
+                    let diagnosticData = null;
+                    let uCategory = 'EXPLORER';
+                    let uType = 'COMPANY_MANAGER';
                     try {
                         const sessionDiag = sessionStorage.getItem('diagnosticResult');
                         if (sessionDiag) {
-                            const diagResult = JSON.parse(sessionDiag);
-
-                            // Dual-write: painAmbition + stratix_diagnostic_payload
-                            if (diagResult.patternKey) {
-                                localStorage.setItem('painAmbition', JSON.stringify({
-                                    patternKey: diagResult.patternKey,
-                                    category: diagResult.category || 'owner',
-                                    sizeCategory: diagResult.sizeCategory || 'medium',
-                                    reason: diagResult.reason || '',
-                                    diagnosticAnswers: diagResult.answers || {},
-                                    diagnosticDate: new Date().toISOString(),
-                                }));
+                            diagnosticData = JSON.parse(sessionDiag);
+                            if (diagnosticData.category === 'owner') {
+                                uCategory = diagnosticData.patternKey || 'EXPLORER';
+                                uType = 'COMPANY_MANAGER';
+                            } else if (diagnosticData.category === 'manager') {
+                                uCategory = 'DEPT_' + (diagnosticData.department || '').toUpperCase();
+                                uType = 'DEPT_MANAGER';
+                            } else if (diagnosticData.category === 'investor') {
+                                uCategory = 'INVESTOR_BOARD';
+                                uType = 'BOARD_VIEWER';
                             }
-                            localStorage.setItem('stratix_diagnostic_payload', JSON.stringify({
-                                role: diagResult.category === 'owner' ? 'founder' : (diagResult.category === 'manager' ? 'manager' : 'board'),
-                                size: diagResult.sizeCategory || 'medium',
-                                department: diagResult.department || '',
-                                answers: diagResult.answers || {},
-                                completedAt: new Date().toISOString(),
-                            }));
-
-                            // تحديد أول صفحة في المسار
-                            if (diagResult.category === 'manager') {
-                                diagFirstPage = diagResult.dashboardPath || '/dept-dashboard.html';
-                                // حفظ الإدارة المختارة
-                                if (diagResult.department) {
-                                    localStorage.setItem('stratix_dept', diagResult.department);
-                                    localStorage.setItem('stratix_category', 'DEPT_' + diagResult.department.toUpperCase());
-                                    localStorage.setItem('stratix_user_type', 'DEPT_MANAGER');
-                                }
-                            } else if (diagResult.category === 'investor') {
-                                diagFirstPage = diagResult.dashboardPath || '/investor-dashboard.html';
-                            } else if (diagResult.patternKey) {
-                                // صاحب مشروع → نوجهه للـ onboarding أولاً ثم المسار
-                                diagFirstPage = null; // يروح onboarding أولاً
-                                localStorage.setItem('stratix_suggested_next', diagResult.patternKey);
-                            }
-
-                            // تنظيف sessionStorage
-                            sessionStorage.removeItem('diagnosticResult');
-                            sessionStorage.removeItem('diagnosticTimestamp');
                         }
-                    } catch (diagErr) {
-                        console.warn('Diagnostic promote failed:', diagErr);
+                    } catch (e) { }
+
+                    if (companyName) {
+                        localStorage.setItem('stratix_temp_company_name', companyName);
                     }
 
-                    // التوجيه حسب النوع
-                    const savedRedirect = localStorage.getItem('stratix_redirect_after_login');
-                    if (savedRedirect) {
-                        localStorage.setItem('stratix_suggested_next', savedRedirect);
-                        localStorage.removeItem('stratix_redirect_after_login');
-                    }
+                    await handleSignup({
+                        name, email, password,
+                        phone: phone || undefined,
+                        companyName,
+                        userCategory: uCategory,
+                        userType: uType,
+                        diagnosticData
+                    });
 
-                    // ═══ أولوية 1: التشخيص الجديد حدد صفحة ═══
-                    if (diagFirstPage) {
-                        window.location.href = diagFirstPage;
-                    }
-                    // ═══ أولوية 2: التوجيه القديم حسب النوع ═══
-                    else if (['INDIVIDUAL', 'PERSONAL', 'CAREER', 'IDEA', 'CONSULTANT_SOLO'].includes(userCategory) || userCategory.startsWith('INDIVIDUAL_')) {
-                        window.location.href = '/individual-dashboard.html';
-                    } else if (userCategory.startsWith('DEPT_') || selectedUserType === 'DEPT_MANAGER') {
-                        const hasEntity = !!(data.user?.entity?.id);
-                        window.location.href = hasEntity ? '/dept-dashboard.html' : '/onboarding.html?mode=dept';
-                    } else if (userCategory === 'CONSULTANT_AGENCY') {
-                        window.location.href = '/consultant-dashboard.html';
-                    } else {
-                        // ✅ الافتراضي: لوحة التحكم
-                        window.location.href = '/dashboard.html';
-                    }
-                } else {
-                    let errDiv = document.getElementById('signupError');
-                    if (!errDiv) {
-                        errDiv = document.createElement('div');
-                        errDiv.id = 'signupError';
-                        errDiv.className = 'alert alert-danger mt-3';
-                        errDiv.style.borderRadius = '12px';
-                        errDiv.style.fontSize = '0.9rem';
-                        this.appendChild(errDiv);
-                    }
-                    errDiv.textContent = data.error || data.message || 'فشل إنشاء الحساب';
-                }
-            } catch (err) {
-                alert('خطأ في الاتصال بالسيرفر');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                });
             }
-        });
+        }
+
+        // ============================================================
+        // التهيئة
+        // ============================================================
+        function init() {
+            if (!document.getElementById('toastContainer')) {
+                const toastDiv = document.createElement('div');
+                toastDiv.id = 'toastContainer';
+                toastDiv.className = 'toast-container';
+                document.body.appendChild(toastDiv);
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const defaultTab = urlParams.get('tab') === 'login' ? 'login' : 'signup';
+            switchTab(defaultTab);
+
+            attachEventHandlers();
+            attachPasswordRules();
+            attachFormHandlers();
+            showDiagBanner();
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 

@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس — وين أكبر ألم في منشأتك؟</title>
+    <meta name="description" content="حدد التحدي الأكبر في منشأتك لنبدأ التشخيص من المكان الصح">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0d14;
+            --bg-card: #141825;
+            --text: #e2e8f0;
+            --text-muted: #8b8ba7;
+            --border: rgba(255, 255, 255, 0.06);
+            --primary: #7c3aed;
+            --accent: #38bdf8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 28px 20px 40px;
+            overflow-y: auto;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 30% 20%, rgba(124, 58, 237, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(239, 68, 68, 0.05) 0%, transparent 50%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* === Back === */
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            z-index: 100;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .back-btn:hover {
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* === Step Badge === */
+        .step-badge {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            color: rgba(255, 255, 255, 0.5);
+            z-index: 100;
+        }
+
+        .step-badge i {
+            color: var(--primary);
+        }
+
+        /* === Header === */
+        .header {
+            text-align: center;
+            margin-bottom: 36px;
+            position: relative;
+            z-index: 1;
+            animation: fadeIn 0.5s ease;
+            max-width: 600px;
+        }
+
+        .company-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 16px;
+            padding: 6px 18px;
+            border-radius: 20px;
+            background: rgba(124, 58, 237, 0.1);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            color: #a78bfa;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 900;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .header h1 .highlight {
+            background: linear-gradient(135deg, #ef4444, #f97316);
+            background-clip: text;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 15px;
+            line-height: 1.7;
+        }
+
+        /* === Pain Options === */
+        .pain-grid {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 560px;
+            width: 100%;
+            animation: fadeIn 0.5s ease 0.1s both;
+        }
+
+        .pain-option {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 18px 20px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .pain-option:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: var(--pain-color, var(--primary));
+            transform: translateX(-4px);
+        }
+
+        .pain-option.selected {
+            border-color: var(--pain-color, var(--primary));
+            background: color-mix(in srgb, var(--pain-color, var(--primary)) 10%, transparent);
+        }
+
+        .pain-option.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--pain-color, var(--primary));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            animation: popIn 0.3s ease;
+        }
+
+        .pain-icon {
+            font-size: 32px;
+            flex-shrink: 0;
+            width: 52px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .pain-info {
+            flex: 1;
+        }
+
+        .pain-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 3px;
+        }
+
+        .pain-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* === Smart Redirect Overlay === */
+        .redirect-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .redirect-overlay.active {
+            display: flex;
+        }
+
+        .redirect-card {
+            background: #1a1d2e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 36px 28px;
+            max-width: 480px;
+            width: 100%;
+            animation: slideUp 0.4s ease;
+            text-align: center;
+        }
+
+        .redirect-pain-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .redirect-title {
+            font-size: 15px;
+            font-weight: 800;
+            color: #fbbf24;
+            margin-bottom: 16px;
+        }
+
+        .redirect-stat {
+            font-size: 16px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+
+        .redirect-bullets {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        .redirect-bullets li {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 8px;
+            line-height: 1.6;
+            list-style: none;
+            padding-right: 20px;
+            position: relative;
+        }
+
+        .redirect-bullets li::before {
+            content: '←';
+            position: absolute;
+            right: 0;
+            color: #fbbf24;
+            font-weight: 700;
+        }
+
+        .redirect-bridge {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 24px;
+            line-height: 1.7;
+        }
+
+        .redirect-cta {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .redirect-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+        }
+
+        .redirect-skip {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            border: none;
+            background: none;
+            color: rgba(255, 255, 255, 0.35);
+            font-family: 'Tajawal', sans-serif;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .redirect-skip:hover {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* === Animations === */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0);
+            }
+
+            to {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 26px;
+            }
+
+            .pain-option {
+                padding: 14px 16px;
+                gap: 12px;
+            }
+
+            .pain-icon {
+                width: 44px;
+                height: 44px;
+                font-size: 26px;
+            }
+
+            .redirect-card {
+                padding: 28px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="step-badge">
+        <i class="bi bi-2-circle-fill"></i> الخطوة 2 من 7
+    </div>
+
+    <a href="/select-type" class="back-btn" id="backBtn">
+        <i class="bi bi-arrow-right"></i> رجوع
+    </a>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="company-tag" id="companyTag">
+            <i class="bi bi-building"></i>
+            <span id="companyName">منشأتك</span>
+        </div>
+        <h1>وين <span class="highlight">أكبر ألم</span> في منشأتك؟</h1>
+        <p>حدد المحور الذي يسبب لك أكبر قلق الآن — سنبدأ منه ونربطه ببقية المحاور تلقائياً</p>
+    </div>
+
+    <!-- Pain Options -->
+    <div class="pain-grid">
+
+        <div class="pain-option" data-pain="FINANCE" style="--pain-color: #10b981;" onclick="selectPain(this)">
+            <div class="pain-icon">💰</div>
+            <div class="pain-info">
+                <div class="pain-title">الوضع المالي</div>
+                <div class="pain-desc">سيولة، أرباح، تكاليف، تدفقات نقدية — الأرقام ما ترضيني</div>
+            </div>
+        </div>
+
+        <div class="pain-option" data-pain="HR" style="--pain-color: #8b5cf6;" onclick="selectPain(this)">
+            <div class="pain-icon">👥</div>
+            <div class="pain-info">
+                <div class="pain-title">الموارد البشرية</div>
+                <div class="pain-desc">توظيف، استقالات، إنتاجية، رواتب — الفريق يقلقني</div>
+            </div>
+        </div>
+
+        <div class="pain-option" data-pain="OPS" style="--pain-color: #f59e0b;" onclick="selectPain(this)">
+            <div class="pain-icon">⚙️</div>
+            <div class="pain-info">
+                <div class="pain-title">العمليات</div>
+                <div class="pain-desc">هدر، تأخير، جودة، سلسلة توريد — الكفاءة ضعيفة</div>
+            </div>
+        </div>
+
+        <div class="pain-option" data-pain="SALES" style="--pain-color: #3b82f6;" onclick="selectPain(this)">
+            <div class="pain-icon">📈</div>
+            <div class="pain-info">
+                <div class="pain-title">المبيعات</div>
+                <div class="pain-desc">نمو بطيء، تحصيل متأخر، مبيعات لا تتحول لأرباح</div>
+            </div>
+        </div>
+
+        <div class="pain-option" data-pain="COMPLIANCE" style="--pain-color: #ef4444;" onclick="selectPain(this)">
+            <div class="pain-icon">⚖️</div>
+            <div class="pain-info">
+                <div class="pain-title">الامتثال والتنظيم</div>
+                <div class="pain-desc">تراخيص، أنظمة، غرامات، متطلبات حكومية — خايف من مخالفة</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ═══ Smart Redirect Overlay ═══ -->
+    <div class="redirect-overlay" id="redirectOverlay">
+        <div class="redirect-card">
+            <div class="redirect-pain-badge" id="redirectBadge">
+                <span id="redirectIcon"></span>
+                <span id="redirectLabel"></span>
+            </div>
+            <div class="redirect-title">💡 هل تعلم؟</div>
+            <div class="redirect-stat" id="redirectStat"></div>
+            <ul class="redirect-bullets" id="redirectBullets"></ul>
+            <div class="redirect-bridge" id="redirectBridge"></div>
+            <button class="redirect-cta" id="redirectCta" onclick="proceedToFinance()"></button>
+            <button class="redirect-skip" onclick="closeRedirect()">لا، رجعني لاختيار الألم</button>
+        </div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════
+        // البيانات من الخطوة السابقة
+        // ═══════════════════════════════════════════
+
+        const companyName = localStorage.getItem('stratix_company_name') || 'منشأتك';
+        const sector = localStorage.getItem('stratix_sector') || '';
+        const country = localStorage.getItem('stratix_country') || '';
+        const category = localStorage.getItem('stratix_category') || '';
+
+        // عرض اسم الشركة في الهيدر
+        document.getElementById('companyName').textContent = companyName;
+
+        // ═══════════════════════════════════════════
+        // رسائل الـ Redirect الذكية (من المصفوفة المعتمدة)
+        // ═══════════════════════════════════════════
+
+        const REDIRECT_MESSAGES = {
+            HR: {
+                painIcon: '👥',
+                painLabel: 'ألمك في الفريق — أولوية مفهومة',
+                badgeColor: 'rgba(139, 92, 246, 0.15)',
+                badgeBorder: 'rgba(139, 92, 246, 0.3)',
+                insightStat: '80% من مشاكل الموارد البشرية جذورها مالية',
+                bullets: [
+                    'الاستقالات المفاجئة ← غالباً بسبب رواتب غير تنافسية (= مشكلة ميزانية)',
+                    'ضعف التوظيف ← ميزانية توظيف غير كافية أو عدم وجود حوافز',
+                    'تدني الإنتاجية ← هل الفريق مُحمَّل فوق طاقته بسبب نقص الموظفين (= تكلفة)؟'
+                ],
+                bridgeText: 'نبدأ بالفحص المالي أولاً (دقيقتان فقط) — وبعده نوصلك لتشخيص الفريق مباشرة.',
+                ctaText: '💰 ابدأ الفحص المالي — سنصل لألمك'
+            },
+            OPS: {
+                painIcon: '⚙️',
+                painLabel: 'ألمك في العمليات — أولوية مفهومة',
+                badgeColor: 'rgba(245, 158, 11, 0.15)',
+                badgeBorder: 'rgba(245, 158, 11, 0.3)',
+                insightStat: 'الهدر التشغيلي يظهر أولاً في الأرقام المالية',
+                bullets: [
+                    'تكلفة المبيعات المرتفعة (COGS) ← مؤشر مباشر على هدر تشغيلي',
+                    'هوامش الربح المضغوطة ← غالباً بسبب عمليات غير فعّالة',
+                    'مصاريف إدارية متضخمة ← عمليات معقدة أو مكررة تستنزف الموارد'
+                ],
+                bridgeText: 'نفحص الوضع المالي أولاً (دقيقتان فقط) — الأرقام ستكشف لنا أين بالضبط الهدر التشغيلي.',
+                ctaText: '💰 ابدأ الفحص المالي — نكشف الهدر بالأرقام'
+            },
+            SALES: {
+                painIcon: '📈',
+                painLabel: 'ألمك في المبيعات — أولوية مفهومة',
+                badgeColor: 'rgba(59, 130, 246, 0.15)',
+                badgeBorder: 'rgba(59, 130, 246, 0.3)',
+                insightStat: 'كثير من مشاكل المبيعات ليست مشاكل مبيعات فعلاً',
+                bullets: [
+                    'مبيعات جيدة لكن لا كاش ← مشكلة تحصيل (= مشكلة مالية)',
+                    'نمو في الإيرادات لكن لا أرباح ← تسعير خاطئ أو تكاليف مخفية',
+                    'فريق مبيعات "يبيع بخسارة" ← هوامش سالبة لا يراها أحد'
+                ],
+                bridgeText: 'نفحص الأرقام المالية أولاً (دقيقتان فقط) — لنعرف: هل مشكلتك فعلاً في المبيعات أم في مكان آخر؟',
+                ctaText: '💰 ابدأ الفحص المالي — نحدد المشكلة الحقيقية'
+            },
+            COMPLIANCE: {
+                painIcon: '⚖️',
+                painLabel: 'ألمك في الامتثال — أولوية مفهومة',
+                badgeColor: 'rgba(239, 68, 68, 0.15)',
+                badgeBorder: 'rgba(239, 68, 68, 0.3)',
+                insightStat: 'الامتثال بدون صحة مالية مخاطرة عالية',
+                bullets: [
+                    'الغرامات والمخالفات تضرب السيولة مباشرة ← كم تتحمل منشأتك؟',
+                    'تكلفة الامتثال (تراخيص، تأمينات، رسوم) ← هل محسوبة في مصاريفك؟',
+                    'عدم الامتثال العمالي (قوى/مدد) ← غرامات مالية + إيقاف نشاط'
+                ],
+                bridgeText: 'نفحص الوضع المالي أولاً لنعرف: هل منشأتك مستعدة لأي التزام مفاجئ؟ دقيقتان فقط.',
+                ctaText: '💰 افحص المناعة المالية — هل منشأتك مستعدة؟'
+            }
+        };
+
+        // ═══════════════════════════════════════════
+        // التفاعل
+        // ═══════════════════════════════════════════
+
+        let selectedPain = null;
+
+        function selectPain(el) {
+            // إلغاء الاختيار السابق
+            document.querySelectorAll('.pain-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+
+            const pain = el.dataset.pain;
+            selectedPain = pain;
+
+            // حفظ الألم
+            localStorage.setItem('stratix_pain', pain);
+
+            // تأخير قصير للتأثير البصري
+            setTimeout(() => {
+                if (pain === 'FINANCE') {
+                    // المالية → مباشرة لصفحة 3
+                    window.location.href = '/financial-input';
+                } else {
+                    // غير المالية → عرض رسالة ذكية
+                    showSmartRedirect(pain);
+                }
+            }, 400);
+        }
+
+        function showSmartRedirect(pain) {
+            const msg = REDIRECT_MESSAGES[pain];
+            if (!msg) return;
+
+            // تعبئة الـ Overlay
+            const badge = document.getElementById('redirectBadge');
+            badge.style.background = msg.badgeColor;
+            badge.style.border = `1px solid ${msg.badgeBorder}`;
+            document.getElementById('redirectIcon').textContent = msg.painIcon;
+            document.getElementById('redirectLabel').textContent = msg.painLabel;
+            document.getElementById('redirectStat').textContent = msg.insightStat;
+
+            // النقاط
+            const bulletsEl = document.getElementById('redirectBullets');
+            bulletsEl.innerHTML = '';
+            msg.bullets.forEach(b => {
+                const li = document.createElement('li');
+                li.textContent = b;
+                bulletsEl.appendChild(li);
+            });
+
+            document.getElementById('redirectBridge').textContent = msg.bridgeText;
+            document.getElementById('redirectCta').textContent = msg.ctaText;
+
+            // عرض
+            document.getElementById('redirectOverlay').classList.add('active');
+        }
+
+        function proceedToFinance() {
+            // الألم الأصلي محفوظ بالفعل — نضيف علامة أنه تم التوجيه
+            localStorage.setItem('stratix_redirected_from', selectedPain);
+            window.location.href = '/financial-input';
+        }
+
+        function closeRedirect() {
+            document.getElementById('redirectOverlay').classList.remove('active');
+            // إلغاء الاختيار
+            document.querySelectorAll('.pain-option').forEach(o => o.classList.remove('selected'));
+            selectedPain = null;
+            localStorage.removeItem('stratix_pain');
+        }
+
+        // ═══════════════════════════════════════════
+        // استعادة الاختيار السابق (لو رجع من صفحة 3)
+        // ═══════════════════════════════════════════
+
+        const savedPain = localStorage.getItem('stratix_pain');
+        if (savedPain) {
+            const el = document.querySelector(`[data-pain="${savedPain}"]`);
+            if (el) {
+                el.classList.add('selected');
+                selectedPain = savedPain;
+            }
+        }
+
+        // ═══════════════════════════════════════════
+        // حماية: لو ما عنده بيانات الخطوة 1 — رجّعه
+        // ═══════════════════════════════════════════
+
+        // ═══════════════════════════════════════════
+        // تجاوز تلقائي: إذا التشخيص مكتمل → مباشرة
+        // ═══════════════════════════════════════════
+        if (localStorage.getItem('stratix_diagnostic_completed') === 'true' && localStorage.getItem('stratix_pain')) {
+            console.log('⏭️ تجاوز pain-screen — التشخيص مكتمل، الألم:', localStorage.getItem('stratix_pain'));
+            window.location.replace('/dashboard');
+        } else if (!localStorage.getItem('stratix_category')) {
+            window.location.replace('/select-type');
+        }
+    </script>
+</body>
+
+</html>

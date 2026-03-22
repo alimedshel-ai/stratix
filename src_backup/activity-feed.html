@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس - سجل النشاطات</title>
+    <meta name="description" content="تتبع كل الأحداث والتغييرات في المنصة">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0b10;
+            --bg2: #12141f;
+            --card: #171a2a;
+            --card-hover: #1e2236;
+            --text: #e2e8f0;
+            --muted: #7a8599;
+            --border: rgba(255, 255, 255, 0.06);
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --green: #22c55e;
+            --yellow: #facc15;
+            --red: #ef4444;
+            --blue: #38bdf8;
+            --purple: #a78bfa;
+            --orange: #f97316
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+            min-height: 100vh
+        }
+
+        .page-wrapper {
+            display: flex;
+            min-height: 100vh
+        }
+
+        .main-content {
+            flex: 1;
+            min-width: 0;
+            padding: 28px 32px
+        }
+
+        .feed-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px
+        }
+
+        .feed-title {
+            font-size: 28px;
+            font-weight: 900
+        }
+
+        .feed-title span {
+            background: linear-gradient(135deg, var(--green), #059669);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        /* Stats row */
+        .feed-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px
+        }
+
+        .feed-stat {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px
+        }
+
+        .feed-stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0
+        }
+
+        .feed-stat-num {
+            font-size: 24px;
+            font-weight: 900
+        }
+
+        .feed-stat-label {
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        /* Filters */
+        .feed-filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 20px
+        }
+
+        .feed-filter {
+            padding: 7px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--muted);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s
+        }
+
+        .feed-filter:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            color: var(--text)
+        }
+
+        .feed-filter.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white
+        }
+
+        /* Feed */
+        .feed-timeline {
+            position: relative;
+            padding-right: 30px
+        }
+
+        .feed-timeline::before {
+            content: '';
+            position: absolute;
+            right: 14px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border)
+        }
+
+        .feed-group {
+            margin-bottom: 24px
+        }
+
+        .feed-group-header {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--muted);
+            margin-bottom: 12px;
+            padding: 6px 12px;
+            background: var(--bg2);
+            border-radius: 8px;
+            display: inline-block;
+            position: relative;
+            z-index: 1
+        }
+
+        .feed-item {
+            display: flex;
+            gap: 14px;
+            margin-bottom: 4px;
+            padding: 14px 16px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            transition: all 0.3s;
+            position: relative;
+            animation: feedIn 0.4s ease
+        }
+
+        @keyframes feedIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .feed-item:hover {
+            background: var(--card-hover);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateX(-3px)
+        }
+
+        .feed-dot {
+            position: absolute;
+            right: -23px;
+            top: 20px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--bg);
+            z-index: 1
+        }
+
+        .feed-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 800;
+            color: white;
+            flex-shrink: 0
+        }
+
+        .feed-body {
+            flex: 1;
+            min-width: 0
+        }
+
+        .feed-text {
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 4px
+        }
+
+        .feed-text strong {
+            color: var(--primary)
+        }
+
+        .feed-text .target {
+            color: var(--green);
+            cursor: pointer
+        }
+
+        .feed-text .target:hover {
+            text-decoration: underline
+        }
+
+        .feed-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 11px;
+            color: var(--muted)
+        }
+
+        .feed-action-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700
+        }
+
+        /* Top contributors */
+        .feed-sidebar {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px
+        }
+
+        .feed-sidebar h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .contributor {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .contributor:last-child {
+            border-bottom: none
+        }
+
+        .contributor-rank {
+            font-size: 18px;
+            min-width: 28px;
+            text-align: center
+        }
+
+        .contributor-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 800;
+            color: white
+        }
+
+        .contributor-name {
+            font-size: 13px;
+            font-weight: 700;
+            flex: 1
+        }
+
+        .contributor-count {
+            font-size: 12px;
+            color: var(--primary);
+            font-weight: 700;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 3px 10px;
+            border-radius: 8px
+        }
+
+        @media(max-width:768px) {
+            .main-content {
+                padding: 16px
+            }
+
+            .feed-timeline {
+                padding-right: 0
+            }
+
+            .feed-timeline::before {
+                display: none
+            }
+
+            .feed-dot {
+                display: none
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <div id="sidebar-container"></div>
+        <div class="main-content">
+
+            <div class="feed-header">
+                <div>
+                    <h1 class="feed-title"><i class="bi bi-activity"></i> سجل <span>النشاطات</span></h1>
+                    <div style="font-size:13px;color:var(--muted);margin-top:4px">كل التغييرات والأحداث في المنصة —
+                        مباشرة</div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="feed-stats" id="feedStats">
+                <div class="feed-stat">
+                    <div class="feed-stat-icon" style="background:rgba(34,197,94,0.1);color:var(--green)"><i
+                            class="bi bi-activity"></i></div>
+                    <div>
+                        <div class="feed-stat-num" id="statTotal">0</div>
+                        <div class="feed-stat-label">إجمالي النشاطات</div>
+                    </div>
+                </div>
+                <div class="feed-stat">
+                    <div class="feed-stat-icon" style="background:rgba(102,126,234,0.1);color:var(--primary)"><i
+                            class="bi bi-calendar-week"></i></div>
+                    <div>
+                        <div class="feed-stat-num" id="statWeek">0</div>
+                        <div class="feed-stat-label">هذا الأسبوع</div>
+                    </div>
+                </div>
+                <div class="feed-stat">
+                    <div class="feed-stat-icon" style="background:rgba(167,139,250,0.1);color:var(--purple)"><i
+                            class="bi bi-people"></i></div>
+                    <div>
+                        <div class="feed-stat-num" id="statUsers">0</div>
+                        <div class="feed-stat-label">أعضاء نشطين</div>
+                    </div>
+                </div>
+                <div class="feed-stat">
+                    <div class="feed-stat-icon" style="background:rgba(250,204,21,0.1);color:var(--yellow)"><i
+                            class="bi bi-chat-dots"></i></div>
+                    <div>
+                        <div class="feed-stat-num" id="statComments">0</div>
+                        <div class="feed-stat-label">تعليقات</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="feed-filters" id="feedFilters">
+                <button class="feed-filter active" data-filter="all">الكل</button>
+                <button class="feed-filter" data-filter="CREATED">✨ إنشاء</button>
+                <button class="feed-filter" data-filter="UPDATED">📝 تعديل</button>
+                <button class="feed-filter" data-filter="COMPLETED">✅ إكمال</button>
+                <button class="feed-filter" data-filter="COMMENTED">💬 تعليق</button>
+                <button class="feed-filter" data-filter="APPROVED">👍 اعتماد</button>
+                <button class="feed-filter" data-filter="DELETED">🗑️ حذف</button>
+            </div>
+
+            <!-- Feed Timeline -->
+            <div class="feed-timeline" id="feedTimeline"></div>
+
+            <!-- Top Contributors -->
+            <div class="feed-sidebar" id="topContributors"></div>
+        </div>
+    </div>
+
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/sidebar.js"></script>
+    <script src="/assets/js/ai-advisor.js"></script>
+    <script src="/assets/js/achievements.js"></script>
+    <script src="/assets/js/notifications.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+
+        // === Demo Activities ===
+        const demoActivities = [
+            { action: 'CREATED', targetType: 'OBJECTIVE', userName: 'أحمد المالكي', targetName: 'تحسين تجربة العميل الرقمية', createdAt: ago(10), avatar: 'أ', color: '#667eea' },
+            { action: 'UPDATED', targetType: 'KPI', userName: 'سارة الحربي', targetName: 'معدل رضا العملاء', details: '{"oldValue":"72%","newValue":"78%"}', createdAt: ago(35), avatar: 'س', color: '#22c55e' },
+            { action: 'COMPLETED', targetType: 'TASK', userName: 'محمد العتيبي', targetName: 'إعداد تقرير الربع الرابع', createdAt: ago(60), avatar: 'م', color: '#f59e0b' },
+            { action: 'COMMENTED', targetType: 'INITIATIVE', userName: 'نورة السبيعي', targetName: 'مبادرة التوسع الإقليمي', details: '{"preview":"نحتاج تحديث الجدول الزمني للمرحلة الثانية"}', createdAt: ago(90), avatar: 'ن', color: '#ef4444' },
+            { action: 'APPROVED', targetType: 'REVIEW', userName: 'خالد الشهري', targetName: 'مراجعة الربع الأول', createdAt: ago(120), avatar: 'خ', color: '#8b5cf6' },
+            { action: 'CREATED', targetType: 'INITIATIVE', userName: 'أحمد المالكي', targetName: 'برنامج تدريب القيادات', createdAt: ago(180), avatar: 'أ', color: '#667eea' },
+            { action: 'UPDATED', targetType: 'OBJECTIVE', userName: 'سارة الحربي', targetName: 'زيادة الحصة السوقية', details: '{"field":"المستهدف","oldValue":"20%","newValue":"25%"}', createdAt: ago(240), avatar: 'س', color: '#22c55e' },
+            { action: 'CREATED', targetType: 'KPI', userName: 'محمد العتيبي', targetName: 'معدل دوران الموظفين', createdAt: ago(300), avatar: 'م', color: '#f59e0b' },
+            { action: 'COMPLETED', targetType: 'PROJECT', userName: 'نورة السبيعي', targetName: 'مشروع إعادة تصميم الموقع', createdAt: ago(400), avatar: 'ن', color: '#ef4444' },
+            { action: 'COMMENTED', targetType: 'OBJECTIVE', userName: 'خالد الشهري', targetName: 'نمو الإيرادات 25%', details: '{"preview":"الأداء الحالي ممتاز، نحتاج المحافظة على هذا المستوى"}', createdAt: ago(600), avatar: 'خ', color: '#8b5cf6' },
+            { action: 'CREATED', targetType: 'ASSESSMENT', userName: 'أحمد المالكي', targetName: 'تقييم SWOT للربع الأول', createdAt: ago(720), avatar: 'أ', color: '#667eea' },
+            { action: 'UPDATED', targetType: 'INITIATIVE', userName: 'سارة الحربي', targetName: 'مبادرة التحول الرقمي', details: '{"field":"الحالة","oldValue":"قيد التنفيذ","newValue":"متأخرة"}', createdAt: ago(800), avatar: 'س', color: '#22c55e' },
+            { action: 'DELETED', targetType: 'TASK', userName: 'محمد العتيبي', targetName: 'مراجعة ميزانية السفر (مكررة)', createdAt: ago(900), avatar: 'م', color: '#f59e0b' },
+            { action: 'APPROVED', targetType: 'OBJECTIVE', userName: 'خالد الشهري', targetName: 'تطوير منتج SaaS جديد', createdAt: ago(1200), avatar: 'خ', color: '#8b5cf6' },
+            { action: 'CREATED', targetType: 'PROJECT', userName: 'نورة السبيعي', targetName: 'مشروع نظام إدارة الأداء', createdAt: ago(1500), avatar: 'ن', color: '#ef4444' },
+        ];
+
+        function ago(minutes) { return new Date(Date.now() - minutes * 60000).toISOString(); }
+
+        const actionMeta = {
+            CREATED: { label: 'أنشأ', icon: '✨', color: 'var(--green)', bg: 'rgba(34,197,94,0.1)' },
+            UPDATED: { label: 'عدّل', icon: '📝', color: 'var(--blue)', bg: 'rgba(56,189,248,0.1)' },
+            COMPLETED: { label: 'أكمل', icon: '✅', color: 'var(--green)', bg: 'rgba(34,197,94,0.15)' },
+            COMMENTED: { label: 'علّق على', icon: '💬', color: 'var(--purple)', bg: 'rgba(167,139,250,0.1)' },
+            APPROVED: { label: 'اعتمد', icon: '👍', color: 'var(--primary)', bg: 'rgba(102,126,234,0.1)' },
+            REJECTED: { label: 'رفض', icon: '❌', color: 'var(--red)', bg: 'rgba(239,68,68,0.1)' },
+            DELETED: { label: 'حذف', icon: '🗑️', color: 'var(--red)', bg: 'rgba(239,68,68,0.08)' },
+        };
+
+        const targetLabels = {
+            OBJECTIVE: 'هدف', INITIATIVE: 'مبادرة', PROJECT: 'مشروع', TASK: 'مهمة',
+            KPI: 'مؤشر', REVIEW: 'مراجعة', ASSESSMENT: 'تقييم', COMMENT: 'تعليق',
+        };
+
+        // === Format Time ===
+        function formatTime(iso) {
+            const diff = Math.floor((Date.now() - new Date(iso)) / 60000);
+            if (diff < 1) return 'الآن';
+            if (diff < 60) return `منذ ${diff} دقيقة`;
+            if (diff < 1440) return `منذ ${Math.floor(diff / 60)} ساعة`;
+            return `منذ ${Math.floor(diff / 1440)} يوم`;
+        }
+
+        function getDateGroup(iso) {
+            const d = new Date(iso);
+            const today = new Date();
+            const diff = Math.floor((today - d) / 86400000);
+            if (diff === 0) return 'اليوم';
+            if (diff === 1) return 'أمس';
+            if (diff < 7) return 'هذا الأسبوع';
+            return 'أقدم';
+        }
+
+        // === Render Feed ===
+        function renderFeed(filter = 'all') {
+            let items = demoActivities;
+            if (filter !== 'all') items = items.filter(a => a.action === filter);
+
+            // Group by date
+            const groups = {};
+            items.forEach(a => {
+                const group = getDateGroup(a.createdAt);
+                if (!groups[group]) groups[group] = [];
+                groups[group].push(a);
+            });
+
+            const container = document.getElementById('feedTimeline');
+            let html = '';
+
+            Object.entries(groups).forEach(([label, activities]) => {
+                html += `<div class="feed-group"><div class="feed-group-header">${label}</div>`;
+                activities.forEach((a, i) => {
+                    const meta = actionMeta[a.action] || actionMeta.CREATED;
+                    const targetLabel = targetLabels[a.targetType] || a.targetType;
+                    let detailText = '';
+                    try {
+                        const d = JSON.parse(a.details || '{}');
+                        if (d.preview) detailText = ` — "${d.preview}"`;
+                        if (d.oldValue && d.newValue) detailText = ` (${d.oldValue} → ${d.newValue})`;
+                        if (d.field) detailText = ` — ${d.field}${detailText}`;
+                    } catch { }
+
+                    html += `
+            <div class="feed-item" style="animation-delay:${i * 0.05}s">
+              <div class="feed-dot" style="background:${a.color}"></div>
+              <div class="feed-avatar" style="background:linear-gradient(135deg,${a.color},${a.color}dd)">${a.avatar}</div>
+              <div class="feed-body">
+                <div class="feed-text">
+                  <strong>${a.userName}</strong>
+                  <span class="feed-action-badge" style="background:${meta.bg};color:${meta.color}">${meta.icon} ${meta.label}</span>
+                  ${targetLabel}: <span class="target">${a.targetName}</span>${detailText}
+                </div>
+                <div class="feed-meta">
+                  <span><i class="bi bi-clock"></i> ${formatTime(a.createdAt)}</span>
+                  <span><i class="bi bi-tag"></i> ${targetLabel}</span>
+                </div>
+              </div>
+            </div>
+          `;
+                });
+                html += '</div>';
+            });
+
+            container.innerHTML = html || '<div style="text-align:center;padding:40px;color:var(--muted)"><i class="bi bi-inbox" style="font-size:40px;display:block;margin-bottom:12px;opacity:0.3"></i>لا توجد نشاطات</div>';
+        }
+
+        // === Render Stats ===
+        function renderStats() {
+            animNum('statTotal', demoActivities.length);
+            animNum('statWeek', demoActivities.filter(a => getDateGroup(a.createdAt) !== 'أقدم').length);
+            animNum('statUsers', [...new Set(demoActivities.map(a => a.userName))].length);
+            animNum('statComments', demoActivities.filter(a => a.action === 'COMMENTED').length);
+        }
+
+        function animNum(id, target) {
+            const el = document.getElementById(id);
+            let cur = 0; const step = Math.max(1, Math.ceil(target / 20));
+            const iv = setInterval(() => { cur += step; if (cur >= target) { cur = target; clearInterval(iv); } el.textContent = cur; }, 30);
+        }
+
+        // === Render Contributors ===
+        function renderContributors() {
+            const counts = {};
+            demoActivities.forEach(a => {
+                if (!counts[a.userName]) counts[a.userName] = { name: a.userName, avatar: a.avatar, color: a.color, count: 0 };
+                counts[a.userName].count++;
+            });
+            const sorted = Object.values(counts).sort((a, b) => b.count - a.count);
+            const medals = ['🥇', '🥈', '🥉', '4', '5'];
+
+            document.getElementById('topContributors').innerHTML = `
+        <h3><i class="bi bi-star" style="color:var(--yellow)"></i> الأكثر نشاطاً هذا الأسبوع</h3>
+        ${sorted.map((c, i) => `
+          <div class="contributor">
+            <div class="contributor-rank">${medals[i] || i + 1}</div>
+            <div class="contributor-avatar" style="background:linear-gradient(135deg,${c.color},${c.color}dd)">${c.avatar}</div>
+            <div class="contributor-name">${c.name}</div>
+            <div class="contributor-count">${c.count} نشاط</div>
+          </div>
+        `).join('')}
+      `;
+        }
+
+        // === Filter handlers ===
+        document.getElementById('feedFilters').addEventListener('click', e => {
+            if (!e.target.classList.contains('feed-filter')) return;
+            document.querySelectorAll('.feed-filter').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            renderFeed(e.target.dataset.filter);
+        });
+
+        // === Init ===
+        renderFeed();
+        renderStats();
+        renderContributors();
+    </script>
+</body>
+
+</html>

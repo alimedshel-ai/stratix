@@ -759,9 +759,15 @@
 <body>
     <nav class="top-nav">
         <a href="/dashboard.html" class="brand"><i class="bi bi-gem"></i> ستارتكس</a>
+        <div class="nav-links">
+            <a href="/dashboard.html"><i class="bi bi-house"></i> الرئيسية</a>
+            <a href="/kpis.html"><i class="bi bi-graph-up"></i> المؤشرات</a>
+            <a href="/intelligence.html"><i class="bi bi-bell"></i> التنبيهات</a>
+        </div>
         <div class="user-area">
             <div class="user-avatar" id="userInitial">م</div>
-            <button class="btn-logout" onclick="localStorage.clear(); location.href='/login.html'">
+            <button class="btn-logout"
+                onclick="if(window.globalLogout) window.globalLogout(); else { localStorage.clear(); location.href='/login.html'; }">
                 <i class="bi bi-box-arrow-right"></i> خروج
             </button>
         </div>
@@ -849,6 +855,9 @@
         </div>
     </div>
 
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
     <script src="/assets/js/path-engine.js"></script>
     <script src="/assets/js/hr-handlers.js"></script>
     <script src="/assets/js/finance-handlers.js"></script>
@@ -862,12 +871,15 @@
         // ============================================================
         //  DETECT USER TYPE (Individual vs Company)
         // ============================================================
-        const _sgData = JSON.parse(localStorage.getItem('stratix_smart_guide') || 'null');
+        function safeParse(key, fallback = null) {
+            try { const val = localStorage.getItem(key); return val ? JSON.parse(val) : fallback; } catch (e) { return fallback; }
+        }
+        const _sgData = safeParse('stratix_smart_guide', null);
         const _userCategory = _sgData?.category || localStorage.getItem('stratix_category') || '';
         const _isIndividual = _userCategory.startsWith('INDIVIDUAL_');
 
         // ═══ كشف مدير الإدارة ═══
-        const _userObj = JSON.parse(localStorage.getItem('user') || '{}');
+        const _userObj = safeParse('user', {});
         // 🔧 إصلاح: كشف ?dept= من الـ URL — لو موجود = نعامله كمدير إدارة
         const _swotDeptParam = new URLSearchParams(window.location.search).get('dept');
         const _isDeptMgrUser = _userObj.userType === 'DEPT_MANAGER' || _userObj.userCategory === 'DEPT_MANAGER';
@@ -879,6 +891,7 @@
             'compliance': 'الامتثال', 'support': 'الخدمات المساندة'
         };
         // 🔧 أولاً نستخدم ?dept= من URL، ثانياً من التشخيص
+        const _diagPayload = safeParse('stratix_diagnostic_payload', {});
         const _mgrDeptKey = _swotDeptParam || _diagPayload.department || '';
         const _mgrDeptName = _DEPT_NAME_MAP[_mgrDeptKey] || _mgrDeptKey || 'إدارتك';
 
@@ -1427,22 +1440,50 @@
         }
 
         function applyDraft() {
-            const draft = window._pendingDraft;
-            if (draft) {
-                state.answers = draft.answers || {};
-                state.currentSection = draft.currentSection || 0;
-                state.currentQuestion = draft.currentQuestion || 0;
-                renderWizSteps();
-                renderQuestion();
-                updateProgress();
+            try {
+                const draft = window._pendingDraft;
+                if (draft) {
+                    // ندمج إجابات المسودة مع ما قام الذكاء الاصطناعي بحقنه (حتى لا نمسحه)
+                    const mergedAnswers = { ...state.answers };
+                    if (draft.answers) {
+                        for (let key in draft.answers) {
+                            // إذا كان هناك إجابات سابقة للسؤال، ندمجها (بدون تكرار)
+                            if (mergedAnswers[key]) {
+                                draft.answers[key].forEach(ans => {
+                                    if (!mergedAnswers[key].includes(ans)) mergedAnswers[key].push(ans);
+                                });
+                            } else {
+                                mergedAnswers[key] = draft.answers[key];
+                            }
+                        }
+                    }
+                    state.answers = mergedAnswers;
+                    state.currentSection = parseInt(draft.currentSection) || 0;
+                    state.currentQuestion = parseInt(draft.currentQuestion) || 0;
+
+                    // الحماية الاختيارية (لو كان اليوزر مكمل الرحلة)
+                    if (state.currentSection >= SWOT_SECTIONS.length) {
+                        showResults();
+                    } else {
+                        renderWizSteps();
+                        renderQuestion();
+                    }
+                    updateProgress();
+                }
+                document.getElementById('draftOverlay')?.remove();
+                showAutoSaveToast();
+            } catch (e) {
+                console.error("Draft parsing failed:", e);
+                // السقوط الآمن: مسح النافذة المنبثقة للتمكن من الاستخدام!
+                document.getElementById('draftOverlay')?.remove();
             }
-            document.getElementById('draftOverlay')?.remove();
-            showAutoSaveToast();
         }
 
         function discardDraft() {
-            localStorage.removeItem(DRAFT_KEY);
-            document.getElementById('draftOverlay')?.remove();
+            try {
+                localStorage.removeItem(DRAFT_KEY);
+                document.getElementById('draftOverlay')?.remove();
+            } catch (e) { }
         }
 
         // تنبيه قبل الخروج
@@ -1461,7 +1502,7 @@
         //  API HELPER
         // ============================================================
         async function api(url) {
-            const res = await fetch(url, {
+            const res = await window.apiRequest(url, {
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
             });
             if (res.status === 401) { location.href = '/login.html'; return null; }
@@ -1477,8 +1518,21 @@
             if (typeof loadSidebar === 'function') loadSidebar();
 
             // Set user initial
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const user = safeParse('user', {});
             if (user?.name) document.getElementById('userInitial').textContent = user.name.charAt(0);
+
+            // 🔧 جلب نسخة الاستراتيجية تلقائياً إذا كانت مفقودة (لتجنب تعطل الحفظ)
+            if (!state.versionId) {
+                try {
+                    const vData = await api('/api/versions');
+                    const versions = vData?.versions || vData || [];
+                    const activeV = versions.find(v => v.isActive) || versions[0];
+                    if (activeV) {
+                        state.versionId = activeV.id;
+                        localStorage.setItem('selectedVersionId', state.versionId);
+                    }
+                } catch (e) { console.warn('Could not auto-fetch versionId', e); }
+            }
 
             // ═══ تكييف الواجهة حسب نوع المستخدم ═══
             if (_isDeptMgr) {
@@ -1516,8 +1570,8 @@
                 if (heroDesc) heroDesc.innerHTML = `تحليل نقاط القوة والضعف في <strong>${deptName}</strong> بناءً على نتائج الفحص + أضف الفرص والتهديدات.`;
 
                 // تحميل S/W من localStorage
-                const deptStrengths = JSON.parse(localStorage.getItem('stratix_' + _deptParam + '_strengths') || '[]');
-                const deptWeaknesses = JSON.parse(localStorage.getItem('stratix_' + _deptParam + '_weaknesses') || '[]');
+                const deptStrengths = safeParse('stratix_' + _deptParam + '_strengths', []);
+                const deptWeaknesses = safeParse('stratix_' + _deptParam + '_weaknesses', []);
 
                 if (!state.prefilled) state.prefilled = { strengths: [], weaknesses: [], opportunities: [], threats: [] };
 
@@ -1749,38 +1803,49 @@
         };
 
         async function checkDiagnosticBridge() {
-            const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
+            const diag = safeParse('stratix_diagnostic_payload', null);
             // 📊 المرحلة 3: قراءة dept-deep من DB أولاً
             let dept = null;
             try {
                 const result = await StratixData.getDeptDeep();
                 if (!result._error) dept = result;
             } catch (e) { }
-            if (!dept) dept = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
+            if (!dept) dept = safeParse('stratix_dept_deep_payload', null);
             if (!diag && !dept) return;
+
+            // 🚀 قم بعملية التوليد التلقائي والسحب الذكي مباشرة دون انتظار نقرة المستخدم!
+            await generateFromDiagnostic(true);
 
             const banner = document.getElementById('diagnosticBridgeBanner');
             const summary = document.getElementById('bridgeSummary');
+
+            // نجعل المظهر أكثر ذكاءً بدلاً من طلب النقر
             banner.style.display = 'flex';
+            banner.style.background = 'rgba(34,197,94,0.1)';
+            banner.style.borderColor = 'rgba(34,197,94,0.2)';
+            banner.querySelector('div').textContent = '🤖'; // أيقونة الذكاء الاصطناعي بدلاً من الرابط
+
+            const btn = banner.querySelector('button');
+            if (btn) btn.style.display = 'none';
 
             const parts = [];
-            if (diag) parts.push(`تشخيص عام (نضج ${diag.results?.maturity ?? '?'}%)`);
+            if (diag) parts.push(`التشخيص العام للشركة`);
             if (dept) {
                 const doneCount = Object.values(dept).filter(v => v?.completed).length;
-                if (doneCount > 0) parts.push(`${doneCount} إدارات مكتملة`);
+                if (doneCount > 0) parts.push(`${doneCount} إدارات تشغيلية`);
             }
-            summary.textContent = parts.join(' · ') + ' — جاهز للتحويل لـ SWOT';
+            summary.textContent = 'تم استيراد وتحليل بيانات (' + parts.join(' و ') + ') بنجاح لتغذية مصفوفة SWOT الخاصة بك تلقائياً ✨';
         }
 
-        async function generateFromDiagnostic() {
-            const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
+        async function generateFromDiagnostic(isSilent = false) {
+            const diag = safeParse('stratix_diagnostic_payload', null);
             // 📊 المرحلة 3: قراءة dept-deep من DB أولاً
             let depth = null;
             try {
                 const result = await StratixData.getDeptDeep();
                 if (!result._error) depth = result;
             } catch (e) { }
-            if (!depth) depth = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
+            if (!depth) depth = safeParse('stratix_dept_deep_payload', null);
 
             const S = [], W = [], O = [], T = [];
 
@@ -1844,24 +1909,50 @@
 
             // ── دمج في state.prefilled (with confidence) ──
             if (!state.prefilled) state.prefilled = { strengths: [], weaknesses: [], opportunities: [], threats: [] };
-            const mergeWithConf = (arr, items) => {
+
+            const injectNativeChips = (sectionId, items) => {
+                const arr = state.prefilled[sectionId];
+                const key = sectionId + '_0'; // Inject into Q1 of the section
+                if (!state.answers[key]) state.answers[key] = [];
+
+                const q0 = SWOT_SECTIONS.find(s => s.id === sectionId)?.questions[0];
+
+                // 1. Merge the new items into the prefilled array
                 items.forEach(item => {
                     const text = typeof item === 'string' ? item : item.text;
                     if (!arr.some(x => (typeof x === 'string' ? x : x.text) === text)) {
                         arr.push(item);
                     }
                 });
+
+                // 2. NOW, inject EVERYTHING inside arr (which includes painAmbition items) into Q0 options and answers!
+                arr.forEach(item => {
+                    const text = typeof item === 'string' ? item : item.text;
+                    // Add to native options if not present
+                    if (q0 && q0.type === 'chips' && !q0.options.includes(text)) {
+                        q0.options.unshift(text); // Add at the very top!
+                    }
+                    // Pre-select it
+                    if (!state.answers[key].includes(text)) {
+                        state.answers[key].push(text);
+                    }
+                });
             };
-            mergeWithConf(state.prefilled.strengths ||= [], S);
-            mergeWithConf(state.prefilled.weaknesses ||= [], W);
-            mergeWithConf(state.prefilled.opportunities ||= [], O);
-            mergeWithConf(state.prefilled.threats ||= [], T);
+
+            injectNativeChips('strengths', S);
+            injectNativeChips('weaknesses', W);
+            injectNativeChips('opportunities', O);
+            injectNativeChips('threats', T);
+
+            // Update progress immediately so UI reflects the pre-filled states
+            updateProgress();
 
             // إخفاء زر التوليد بعد الاستخدام
-            document.getElementById('diagnosticBridgeBanner').style.display = 'none';
+            const btn = document.getElementById('diagnosticBridgeBanner').querySelector('button');
+            if (btn) btn.style.display = 'none';
 
-            // إظهار banner العناصر المدمجة
-            showPrefillBanner();
+            // إظهار banner العناصر المدمجة فقط إذا لم يتم استدعاؤه بشكل صامت (isSilent)
+            if (!isSilent) showPrefillBanner();
 
             console.log('⚡ Auto-SWOT from Diagnostic Bridge:', { S: S.length, W: W.length, O: O.length, T: T.length });
         }
@@ -2586,7 +2677,7 @@
                     : '/api/company-analysis';
                 const method = state.analysisId ? 'PATCH' : 'POST';
 
-                const res = await fetch(url, {
+                const res = await window.apiRequest(url, {
                     method,
                     headers,
                     credentials: 'same-origin',

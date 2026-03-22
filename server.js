@@ -4,6 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
 const prisma = require('./lib/prisma');
 const { verifyToken } = require('./middleware/auth');
 const { inputSanitizer, suspiciousPatternDetector, securityHeaders, securityLogger } = require('./middleware/security');
@@ -157,6 +158,7 @@ app.use('/api/', suspiciousPatternDetector);
 
 // Basic Middleware
 app.use(express.json({ limit: '10mb' }));
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // CORS Configuration
@@ -206,7 +208,7 @@ app.get('/api/user/me', verifyToken, async (req, res) => {
         systemRole: true,
         userCategory: true,
         onboardingCompleted: true,
-        suspended: true,
+        disabled: true,
         memberships: {
           select: {
             id: true,
@@ -230,7 +232,7 @@ app.get('/api/user/me', verifyToken, async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    if (user.suspended) {
+    if (user.disabled) {
       return res.status(403).json({ suspended: true, reason: 'الحساب معلّق' });
     }
 
@@ -298,11 +300,12 @@ const objectivesSyncRoutes = require('./routes/objectives-sync');
 app.use('/api/strategic/objectives', objectivesSyncRoutes);
 app.use('/api/versions', versionsRoutes);
 app.use('/api/choices', choicesRoutes);
+app.use('/api/projects', projectsRoutes);
 app.use('/api/corrections', correctionsRoutes);
 app.use('/api/analysis', analysisRoutes);
 app.use('/api/directions', directionsRoutes);
 app.use('/api/external-analysis', externalAnalysisRoutes);
-app.use('/api/tools', toolsRoutes);
+app.use('/api/tools', toolsRoutes.router);
 app.use('/api/company-analysis', companyAnalysisRoutes);
 app.use('/api/user-progress', userProgressRoutes);
 // TODO: [DEFERRED] causal-links — يُفعّل مع Strategy Map
@@ -522,71 +525,84 @@ app.use((req, res) => {
 });
 
 // Start the server
-app.listen(PORT, () => {
-  console.log(`🚀 Stratix server is running on http://localhost:${PORT}`);
-  console.log(`📝 Login at http://localhost:${PORT}/login`);
+async function startServer() {
+  console.log('⏳ جاري تحميل بيانات النظام الأساسية...');
 
-  // ============ AUTO-SCAN SCHEDULER ============
-  const SCAN_INTERVAL = 2 * 60 * 60 * 1000; // 2 hours
-  let scanRunning = false;
-  let scanFailCount = 0;
-
-  async function autoScan() {
-    if (scanRunning) {
-      console.log('⏭️ [Auto-Scan] Already running, skipping...');
-      return;
-    }
-    scanRunning = true;
-    try {
-      console.log('🔍 [Auto-Scan] Starting scheduled alert engine scan...');
-      const entities = await prisma.entity.findMany({
-        select: { id: true }
-      });
-      let totalAlerts = 0;
-
-      for (const entity of entities) {
-        const activeVersion = await prisma.strategyVersion.findFirst({
-          where: { entityId: entity.id, isActive: true },
-          select: { id: true }
-        });
-        if (!activeVersion) continue;
-
-        const kpis = await prisma.kPI.findMany({
-          where: { versionId: activeVersion.id },
-          select: { id: true, name: true, actual: true, target: true, criticalThreshold: true }
-        });
-
-        for (const kpi of kpis) {
-          if (!kpi.target || kpi.target === 0 || kpi.actual == null) continue;
-          const ratio = kpi.actual / kpi.target;
-          if (ratio >= 0.9) continue;
-
-          const existing = await prisma.strategicAlert.findFirst({
-            where: { entityId: entity.id, referenceId: kpi.id, referenceType: 'KPI', isDismissed: false, createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } }
-          });
-          if (existing) continue;
-
-          const critThresh = kpi.criticalThreshold || 0.5;
-          if (ratio <= critThresh) {
-            await prisma.strategicAlert.create({ data: { entityId: entity.id, type: 'KPI_CRITICAL', severity: 'CRITICAL', title: `⛔ مؤشر "${kpi.name}" في وضع حرج`, message: `الأداء (${(ratio * 100).toFixed(1)}%) — ${kpi.actual} من ${kpi.target}`, referenceId: kpi.id, referenceType: 'KPI' } });
-            totalAlerts++;
-          }
-        }
-      }
-
-      scanFailCount = 0;
-      console.log(`✅ [Auto-Scan] Complete — ${totalAlerts} new alerts generated`);
-    } catch (err) {
-      scanFailCount++;
-      console.error(`❌ [Auto-Scan] Error (fail #${scanFailCount}):`, err.message);
-      if (scanFailCount >= 3) {
-        console.error('🚨 [Auto-Scan] 3 consecutive failures — possible DB issue');
-      }
-    } finally {
-      scanRunning = false;
-    }
+  // ✅ انتظار تحميل بيانات الأدوات قبل تشغيل الخادم
+  const toolsLoaded = await toolsRoutes.loadToolsData();
+  if (!toolsLoaded) {
+    console.error('❌ [FATAL] فشل تحميل بيانات tools-data.json، إيقاف التشغيل.');
+    process.exit(1);
   }
 
-  setTimeout(autoScan, 30000);
-  setInterval(autoScan, SCAN_INTERVAL);
-});
+  app.listen(PORT, () => {
+    console.log(`🚀 Stratix server is running on http://localhost:${PORT}`);
+    console.log(`📝 Login at http://localhost:${PORT}/login`);
+
+    // ============ AUTO-SCAN SCHEDULER ============
+    const SCAN_INTERVAL = 2 * 60 * 60 * 1000; // 2 hours
+    let scanRunning = false;
+    let scanFailCount = 0;
+
+    async function autoScan() {
+      if (scanRunning) {
+        console.log('⏭️ [Auto-Scan] Already running, skipping...');
+        return;
+      }
+      scanRunning = true;
+      try {
+        console.log('🔍 [Auto-Scan] Starting scheduled alert engine scan...');
+        const entities = await prisma.entity.findMany({
+          select: { id: true }
+        });
+        let totalAlerts = 0;
+
+        for (const entity of entities) {
+          const activeVersion = await prisma.strategyVersion.findFirst({
+            where: { entityId: entity.id, isActive: true },
+            select: { id: true }
+          });
+          if (!activeVersion) continue;
+
+          const kpis = await prisma.kPI.findMany({
+            where: { versionId: activeVersion.id },
+            select: { id: true, name: true, actual: true, target: true, criticalThreshold: true }
+          });
+
+          for (const kpi of kpis) {
+            if (!kpi.target || kpi.target === 0 || kpi.actual == null) continue;
+            const ratio = kpi.actual / kpi.target;
+            if (ratio >= 0.9) continue;
+
+            const existing = await prisma.strategicAlert.findFirst({
+              where: { entityId: entity.id, referenceId: kpi.id, referenceType: 'KPI', isDismissed: false, createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } }
+            });
+            if (existing) continue;
+
+            const critThresh = kpi.criticalThreshold || 0.5;
+            if (ratio <= critThresh) {
+              await prisma.strategicAlert.create({ data: { entityId: entity.id, type: 'KPI_CRITICAL', severity: 'CRITICAL', title: `⛔ مؤشر "${kpi.name}" في وضع حرج`, message: `الأداء (${(ratio * 100).toFixed(1)}%) — ${kpi.actual} من ${kpi.target}`, referenceId: kpi.id, referenceType: 'KPI' } });
+              totalAlerts++;
+            }
+          }
+        }
+
+        scanFailCount = 0;
+        console.log(`✅ [Auto-Scan] Complete — ${totalAlerts} new alerts generated`);
+      } catch (err) {
+        scanFailCount++;
+        console.error(`❌ [Auto-Scan] Error (fail #${scanFailCount}):`, err.message);
+        if (scanFailCount >= 3) {
+          console.error('🚨 [Auto-Scan] 3 consecutive failures — possible DB issue');
+        }
+      } finally {
+        scanRunning = false;
+      }
+    }
+
+    setTimeout(autoScan, 30000);
+    setInterval(autoScan, SCAN_INTERVAL);
+  });
+}
+
+startServer();

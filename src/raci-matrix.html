@@ -326,7 +326,8 @@
             margin-top: 16px;
         }
 
-        .add-row input {
+        .add-row input,
+        .add-row select {
             flex: 1;
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid var(--border);
@@ -337,9 +338,15 @@
             font-size: 14px;
         }
 
-        .add-row input:focus {
+        .add-row input:focus,
+        .add-row select:focus {
             outline: none;
             border-color: var(--primary);
+        }
+
+        .add-row select option {
+            background: var(--bg-card);
+            color: var(--text);
         }
 
         /* Buttons */
@@ -538,7 +545,9 @@
             <div class="add-row">
                 <input type="text" id="newTaskName" placeholder="اسم المهمة الجديدة..."
                     onkeydown="if(event.key==='Enter')addTask()">
-                <input type="text" id="newTaskInit" placeholder="المبادرة المرتبطة (اختياري)">
+                <select id="newTaskInit">
+                    <option value="">-- المبادرة المرتبطة (اختياري) --</option>
+                </select>
                 <button class="btn-add" onclick="addTask()"><i class="bi bi-plus-lg"></i> أضف</button>
             </div>
         </div>
@@ -587,6 +596,29 @@
             { id: 't7', name: 'تدريب القيادات', initiative: 'الموارد البشرية', assignments: { m6: 'R', m1: 'A', m3: 'C' } },
             { id: 't8', name: 'مراجعة سلسلة التوريد', initiative: 'العمليات', assignments: { m3: 'R', m1: 'A', m2: 'C', m5: 'I' } },
         ];
+
+        // ══════════════════════════════════════
+        // تحميل المبادرات في القائمة المنسدلة
+        // ══════════════════════════════════════
+        function loadInitiativesDropdown() {
+            const select = document.getElementById('newTaskInit');
+            let initList = [];
+            try {
+                const saved = localStorage.getItem('stratix_initiatives');
+                if (saved) initList = JSON.parse(saved);
+            } catch (e) { }
+
+            if (initList.length === 0) {
+                initList = [{ name: 'التحول الرقمي' }, { name: 'الحوكمة' }, { name: 'النمو' }, { name: 'الموارد البشرية' }, { name: 'المالية' }];
+            }
+
+            initList.forEach(init => {
+                const opt = document.createElement('option');
+                opt.value = init.name || init.title;
+                opt.textContent = init.name || init.title;
+                select.appendChild(opt);
+            });
+        }
 
         // ══════════════════════════════════════
         // Render
@@ -704,6 +736,7 @@
         }
 
         // Init
+        loadInitiativesDropdown();
         render();
     </script>
 </body>

@@ -7,143 +7,116 @@
  * المراحل والأدوات تُقرأ من journey-steps.js (مصدر مركزي واحد)
  */
 
-// تحميل تلقائي لملف journey-steps.js لو ما كان محمّل
-if (!window.StratixJourney) {
-  var _jScript = document.createElement('script');
-  _jScript.src = '/assets/js/journey-steps.js';
-  _jScript.async = false; // sync لضمان التحميل قبل البناء
-  document.head.appendChild(_jScript);
+
+// TODO: الانتقال إلى ES modules بعد توحيد جميع صفحات المشروع
+// المرحلة المستهدفة: بعد الانتهاء من sidebar.js وregister.html
+
+// القاموس المركزي للمسميات المترجمة (توصية معمارية 100/100)
+const ROLE_LABELS = {
+  DEPT_MANAGER: 'مدير إدارة',
+  CONSULTANT: 'مستشار',
+  INDIVIDUAL: 'فرد',
+  COMPANY_MANAGER: 'مالك',
+  BOARD_VIEWER: 'عضو مجلس / مستثمر',
+  SUPER_ADMIN: 'مدير النظام',
+  OWNER: 'مالك' // إضافة OWNER للتوافق مع القيم القديمة
+};
+
+const DEPT_LABELS = {
+  hr: 'الموارد البشرية',
+  finance: 'المالية',
+  marketing: 'التسويق',
+  operations: 'العمليات',
+  sales: 'المبيعات',
+  it: 'تقنية المعلومات',
+  cs: 'خدمة العملاء',
+  compliance: 'الامتثال',
+  quality: 'الجودة',
+  projects: 'المشاريع',
+  support: 'الخدمات المساندة'
+};
+
+function getUserRoleLabel(userData) {
+  if (!userData) return '';
+  if (userData.systemRole === 'SUPER_ADMIN') return ROLE_LABELS.SUPER_ADMIN;
+  if (userData.userType === 'DEPT_MANAGER') {
+    const deptName = userData.department?.name || DEPT_LABELS[userData.department?.key] || '';
+    return deptName ? `مدير ${deptName}` : ROLE_LABELS.DEPT_MANAGER;
+  }
+  return ROLE_LABELS[userData.userType] || ROLE_LABELS[userData.role] || userData.role || '';
 }
 
-(function () {
-  const currentPath = window.location.pathname;
-  const currentSearch = window.location.search;
-  const fullPath = currentPath + currentSearch;
-
-  // === قراءة الدور ونوع المستخدم من localStorage ===
-  let userRole = 'OWNER';  // افتراضي: مالك — حتى ما يروح لـ viewer-hub بدون سبب
-  let systemRole = 'USER';
-  let userType = 'COMPANY_MANAGER'; // افتراضي آمن
-  let entityId = '';
-  let token = '';
-  let _roleFromStorage = false; // هل تم قراءة الدور فعلياً من التخزين؟
-  let isSuperAdmin = false;
-  let _v10Role = '';
-  let _v10Size = '';
-  let _v10Dept = '';  // إدارة المدير المختارة في V10
-  let _urlDeptParam = new URLSearchParams(currentSearch).get('dept') || '';
-
-  function detectUserContext() {
-    try {
-      const stored = localStorage.getItem('user');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        userRole = parsed.role || 'VIEWER';
-        systemRole = parsed.systemRole || 'USER';
-        userType = parsed.userType || 'COMPANY_MANAGER';
-        entityId = (parsed.entity && parsed.entity.id) || parsed.activeEntityId || '';
-        _roleFromStorage = true;
-      }
-      token = localStorage.getItem('token') || '';
-    } catch (e) { /* ignore */ }
-
-    isSuperAdmin = systemRole === 'SUPER_ADMIN';
-
-    // === ربط أدوار V10 بنوع المستخدم (البوابة الذكية) ===
-    try {
-      const diagRaw = localStorage.getItem('stratix_diagnostic_payload');
-      if (diagRaw) {
-        const diag = JSON.parse(diagRaw);
-        _v10Role = diag.role || '';
-        _v10Size = diag.size || '';
-        _v10Dept = diag.department || (diag.answers && diag.answers['2']) || '';
-      }
-    } catch (e) { /* ignore */ }
-
-    if (!_v10Dept && _urlDeptParam) _v10Dept = _urlDeptParam;
-    if (!_v10Dept) _v10Dept = localStorage.getItem('stratix_v10_dept') || '';
-
-    // 🚨 حماية: نمنع تغيير دور المالك بناءً على التشخيص المحلي إلا لو كان مستكشف
-    if (!_roleFromStorage || userType === 'EXPLORER') {
-      if (_v10Role === 'founder') {
-        userType = (_v10Size === 'micro' || _v10Size === 'small') ? 'EXPLORER' : 'COMPANY_MANAGER';
-      } else if (_v10Role === 'ceo' || _v10Role === 'cso' || _v10Role === 'compliance') {
-        userType = 'COMPANY_MANAGER';
-      } else if (_v10Role === 'manager') {
-        userType = 'DEPT_MANAGER';
-      } else if (_v10Role === 'board' || _v10Role === 'investor') {
-        userType = 'BOARD_VIEWER';
-      }
-    }
-
-    // 🆕 كشف مسار مدير الإدارة من الرابط
-    const _hasDeptContext = _urlDeptParam || localStorage.getItem('stratix_v10_dept') || localStorage.getItem('stratix_dept');
-    if (_urlDeptParam && _hasDeptContext && userType !== 'DEPT_MANAGER') {
-      const deptPages = [
-        '/dept-dashboard.html', '/internal-env.html', '/dept-deep.html', '/dept-diagnostic.html',
-        '/dept-questionnaire.html', '/hr-deep.html', '/hr-audit.html', '/finance-deep.html',
-        '/swot.html', '/directions.html', '/kpis.html', '/kpi-entries.html',
-        '/tasks.html', '/intelligence.html', '/auto-reports.html',
-        '/analytics-dashboard.html',
-        '/objectives.html', '/initiatives.html',
-      ];
-      if (deptPages.some(p => currentPath === p || currentPath.endsWith(p))) {
-        // 🚨 منع التداخل: المالك ومدير النظام لا يتحولون لمدراء إدارات عند تصفح هذه الصفحات
-        if (userRole !== 'OWNER' && userRole !== 'ADMIN' && !isSuperAdmin) {
-          userType = 'DEPT_MANAGER';
-        }
-      }
-    }
+async function initSidebar() {
+  // 1. حماية ضد عطل الـ Load Order
+  if (!window.api || !window.api.getCurrentUser) {
+    console.error('⚠️ api.js لم يُحمّل أولاً! برجاء التأكد من استدعاء <script src="/assets/js/api.js"> قبل sidebar.js.');
+    return;
   }
 
-  detectUserContext();
+  // 2. الجلب الموثوق لبيانات المستخدم من الكاش الآمن للسيرفر 
+  const userData = await window.api.getCurrentUser();
+  if (!userData) {
+    console.warn('⚠️ المستخدم غير مسجل دخول. السايدبار لن يُستكمل بناؤه لحين معالجة التوجيه.');
+    return;
+  }
 
-  // 🔗 تعديل كل روابط النافيقيشن لمدير الإدارة — يضيف ?dept= لكل الروابط
-  if (_urlDeptParam && userType === 'DEPT_MANAGER') {
+  const currentPath = window.location.pathname;
+  const fullPath = currentPath + window.location.search;
+  const currentSearch = window.location.search;
+
+  const token = localStorage.getItem('token') || '';
+  const _urlDeptParam = new URLSearchParams(currentSearch).get('dept') || '';
+  const _v10Dept = userData.department?.key || _urlDeptParam || '';
+
+  // === قراءة الدور من السيرفر مباشرة ===
+  let userRole = userData.role || 'VIEWER';
+  let systemRole = userData.systemRole || 'USER';
+  let userType = userData.userType || 'COMPANY_MANAGER';
+  let entityId = userData.entity?.id || '';
+  let isSuperAdmin = systemRole === 'SUPER_ADMIN';
+
+  // تحديد الصلاحيات والمسار الرئيسي (تم رفعه ليصبح متاحاً على مستوى الملف بالكامل)
+  const isViewerOrDE = ['VIEWER', 'DATA_ENTRY'].includes(userRole) && systemRole !== 'SUPER_ADMIN';
+  const _diagRole = (() => { try { return JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || '{}').role || ''; } catch (e) { return ''; } })();
+  const _uCat = (() => { try { return JSON.parse(localStorage.getItem('user') || '{}').userCategory || ''; } catch (e) { return ''; } })();
+  const isInvestorUser = _diagRole === 'investor' || _uCat === 'INVESTOR' || _uCat.startsWith('INVESTOR_');
+
+  const homeHref = isViewerOrDE ? '/viewer-hub.html'
+    : (userType === 'BOARD_VIEWER' && isInvestorUser) ? '/investor-dashboard.html'
+      : userType === 'BOARD_VIEWER' ? '/board-dashboard.html'
+        : userType === 'DEPT_MANAGER' ? '/dept-dashboard.html'
+          : '/dashboard.html';
+
+  // 🔗 تعديل كل روابط النافيقيشن لمدير الإدارة (الاعتماد على userData فقط)
+  const activeDeptKey = userData.department?.key || '';
+  if (activeDeptKey && userType === 'DEPT_MANAGER') {
+    // TODO: [Tech Debt] صفحة dept-dashboard.html تحتاج تعديل لتقرأ userData.department.key مباشرة من API بدلاً من الـ URL
+    // تأخير التنفيذ (setTimeout 0) هنا يُعتبر ضرورة هيكلية لضمان اكتمال حقن روابط السايدبار في الدوم من قبل أداة البناء اللاحقة
     setTimeout(() => {
-      // 1) البراند → لوحة الإدارة
+      // 1) البراند → لوحة الإدارة (بدون بارامترات)
       const _bl = document.querySelector('a.brand, .navbar-brand');
-      if (_bl) _bl.href = '/dept-dashboard.html?dept=' + _urlDeptParam;
+      if (_bl) _bl.href = '/dept-dashboard'; // مسار نظيف، الصفحة تعتمد على userData.department.key
 
-      // 2) كل الروابط في top-nav → أضف ?dept=
+      // 2) كل الروابط في top-nav → تعديل المسارات (بدون ?dept=)
       document.querySelectorAll('.nav-links a, .top-nav a').forEach(a => {
         if (!a.href || a.classList.contains('brand') || a.classList.contains('navbar-brand')) return;
         const url = new URL(a.href, location.origin);
         const path = url.pathname;
-        // الرئيسية → لوحة الإدارة
         if (path === '/dashboard' || path === '/dashboard.html') {
-          a.href = '/dept-dashboard.html?dept=' + _urlDeptParam;
+          a.href = '/dept-dashboard'; // مسار نظيف
           return;
         }
-        // صفحات تحتاج ?dept= — قائمة شاملة
         const deptPages = [
-          '/dept-dashboard.html', '/internal-env.html', '/dept-deep.html', '/dept-diagnostic.html',
-          '/dept-questionnaire.html', '/hr-deep.html', '/hr-audit.html', '/finance-deep.html',
-          '/swot.html', '/swot', '/directions.html', '/directions',
-          '/kpis.html', '/kpis', '/kpi-entries.html', '/kpi-entries',
-          '/tasks.html', '/tasks', '/intelligence.html', '/intelligence',
-          '/auto-reports.html', '/auto-reports',
-          '/analytics-dashboard.html',
-          '/objectives.html', '/objectives', '/initiatives.html', '/initiatives',
+          '/dept-dashboard', '/internal-env', '/dept-deep', '/dept-diagnostic',
+          '/dept-questionnaire', '/hr-deep', '/hr-audit', '/finance-deep',
+          '/swot', '/directions'
         ];
-        if (deptPages.includes(path) && !url.searchParams.get('dept')) {
-          url.searchParams.set('dept', _urlDeptParam);
-          a.href = url.toString();
+        // إذا كان المسار ضمن قائمة صفحات الإدارة، نحوله إلى مسار نظيف
+        if (deptPages.some(p => path.startsWith(p))) {
+          a.href = path; // يحافظ على المسار الأصلي بدون بارامترات
         }
       });
-
-      // 3) plan-stepper روابط (في directions.html وغيرها)
-      document.querySelectorAll('.plan-step, .plan-steps a').forEach(a => {
-        if (!a.href) return;
-        const url = new URL(a.href, location.origin);
-        if (!url.searchParams.get('dept')) {
-          url.searchParams.set('dept', _urlDeptParam);
-          a.href = url.toString();
-        }
-      });
-
-      console.log('[Sidebar] ✅ dept nav links updated for:', _urlDeptParam);
-    }, 150);
+    }, 0);
   }
 
   // === قواعد الرؤية حسب نوع المستخدم ===
@@ -159,24 +132,16 @@ if (!window.StratixJourney) {
     CONSULTANT: { showJourney: true, showVision: true, showAdvanced: true, limitedDiagnosis: false, limitedJourney: false },
   };
   const currentRules = typeRules[userType] || typeRules.COMPANY_MANAGER;
-  // SUPER_ADMIN and OWNER (المؤكد من التخزين) يشوفون كل شي
-  // ← لا نطبق هذا إذا V10 حدد المستخدم كـ DEPT_MANAGER
-  if (isSuperAdmin || (_roleFromStorage && userRole === 'OWNER' && userType !== 'DEPT_MANAGER')) {
+  // SUPER_ADMIN و OWNER يشوفون كل شي (لأننا ألغينا الفوضى القديمة Storage Storage)
+  if (isSuperAdmin || (userRole === 'OWNER' && userType !== 'DEPT_MANAGER')) {
     currentRules.showJourney = true;
     currentRules.showVision = true;
     currentRules.showAdvanced = true;
     currentRules.limitedDiagnosis = false;
   }
 
-  // === قراءة نمط الشركة ===
-  let patternKey = 'default';
-  try {
-    const pa = localStorage.getItem('painAmbition');
-    if (pa) {
-      const parsed = JSON.parse(pa);
-      patternKey = parsed.patternKey || 'default';
-    }
-  } catch (e) { /* ignore */ }
+  // === قراءة نمط الشركة من السيرفر ===
+  let patternKey = userData.entity?.patternKey || userData.entity?.path || 'default';
 
   // === كشف نوع المستخدم: 5 مستويات ===
   // INDIVIDUAL = فرد | FOUNDER = مؤسس (0-10) | SMALL = صغيرة (11-50) | MEDIUM = متوسطة (51-200) | LARGE = كبيرة (200+)
@@ -592,6 +557,30 @@ if (!window.StratixJourney) {
 
       .stx-logout:hover {
         background: rgba(239,68,68,0.08) !important;
+      }
+
+      /* زر العودة للرئيسية (يتم حقنه برمجياً) */
+      .stx-global-back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 10px;
+        background: ${isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8f9fa'};
+        border: 1px solid ${isDark ? 'var(--border, rgba(255, 255, 255, 0.08))' : '#e2e8f0'};
+        color: ${isDark ? 'var(--text-muted, #94a3b8)' : '#64748b'};
+        font-family: 'Tajawal', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        margin-bottom: 20px;
+        width: fit-content;
+      }
+      .stx-global-back-btn:hover {
+        background: ${isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0'};
+        color: ${isDark ? 'var(--text, #e2e8f0)' : '#1e293b'};
+        border-color: ${isDark ? 'rgba(255, 255, 255, 0.15)' : '#cbd5e1'};
       }
 
       @media(max-width: 768px) {
@@ -1161,33 +1150,13 @@ if (!window.StratixJourney) {
     let html = '';
 
     // --- بادج اليوزر + الجهة ---
-    let userName = '';
-    let userEmail = '';
-    let entityLegalName = '';
-    let companyNameAr = '';
-    let userRoleLabel = '';
-    try {
-      const stored = localStorage.getItem('user');
-      if (stored) {
-        const u = JSON.parse(stored);
-        userName = u.name || '';
-        userEmail = u.email || '';
-        entityLegalName = u.entity?.legalName || u.entity?.displayName || '';
-        companyNameAr = u.entity?.company?.nameAr || u.entity?.company?.nameEn || '';
-        const roleMap = { OWNER: 'مالك', ADMIN: 'مدير', EDITOR: 'محرر', VIEWER: 'مشاهد' };
-        // أولاً: التسمية حسب userType (أدق من role)
-        const typeMap = { DEPT_MANAGER: 'مدير إدارة', CONSULTANT: 'مستشار', INDIVIDUAL: 'فرد', COMPANY_MANAGER: 'مالك', BOARD_VIEWER: 'عضو مجلس / مستثمر' };
-        userRoleLabel = typeMap[u.userType] || typeMap[userType] || roleMap[u.role] || u.role || '';
-        if (u.systemRole === 'SUPER_ADMIN') userRoleLabel = 'مدير النظام';
+    let userName = userData.name || '';
+    let userEmail = userData.email || '';
+    let entityLegalName = userData.entity?.legalName || userData.entity?.displayName || '';
+    let companyNameAr = userData.entity?.company?.nameAr || userData.entity?.company?.nameEn || '';
 
-        // 🔧 إصلاح: لو الصفحة فيها ?dept= وتحوّل userType لـ DEPT_MANAGER → عدّل التسمية
-        if (userType === 'DEPT_MANAGER' && _urlDeptParam) {
-          const _deptLabels = { hr: 'الموارد البشرية', finance: 'المالية', marketing: 'التسويق', operations: 'العمليات', sales: 'المبيعات', it: 'تقنية المعلومات', cs: 'خدمة العملاء', compliance: 'الامتثال', quality: 'الجودة', projects: 'المشاريع', support: 'الخدمات المساندة' };
-          const _dLabel = _deptLabels[_urlDeptParam];
-          if (_dLabel) userRoleLabel = 'مدير ' + _dLabel;
-        }
-      }
-    } catch (e) { /* ignore */ }
+    // استدعاء المسمى الوظيفي باستخدام الدالة النظيفة (حسب توجيه الـ 100/100)
+    let userRoleLabel = getUserRoleLabel(userData);
 
     const initial = userName ? userName[0] : 'S';
     const orgLine = companyNameAr || entityLegalName;
@@ -1224,7 +1193,7 @@ if (!window.StratixJourney) {
         : userType === 'BOARD_VIEWER' ? '/board-dashboard.html'
           : userType === 'DEPT_MANAGER' ? '/dept-dashboard.html'
             : '/dashboard.html';
-    const isHomeActive = isActive('/dashboard.html') || isActive('/viewer-hub.html') || isActive('/board-dashboard.html') || isActive('/dept-dashboard.html') || isActive('/investor-dashboard.html');
+    const isHomeActive = isActive('/dashboard.html') || isActive('/ceo-dashboard.html') || isActive('/viewer-hub.html') || isActive('/board-dashboard.html') || isActive('/dept-dashboard.html') || isActive('/investor-dashboard.html');
     html += `
       <a href="${homeHref}" class="stx-item stx-home-btn ${isHomeActive ? 'active' : ''}">
         <i class="bi bi-house-door-fill" style="color:#667eea;font-size:16px"></i>
@@ -1287,7 +1256,7 @@ if (!window.StratixJourney) {
         <span>لوحة الاستشاري</span>
       </a>
         `;
-    } else if (hasAccess(['OWNER', 'ADMIN'])) {
+    } else if (hasAccess(['OWNER', 'ADMIN', 'COMPANY_MANAGER'])) {
       // CEO / مؤسس / مدير عام ← لوحة القيادة
       const isCeoActive = isActive('/ceo-dashboard.html');
       html += `
@@ -1298,8 +1267,8 @@ if (!window.StratixJourney) {
         `;
     }
 
-    // اللوحة التنفيذية (LARGE + OWNER/ADMIN)
-    if (_lvl >= 4 && hasAccess(['OWNER', 'ADMIN'])) {
+    // اللوحة التنفيذية (LARGE + OWNER/ADMIN/COMPANY_MANAGER)
+    if (_lvl >= 4 && hasAccess(['OWNER', 'ADMIN', 'COMPANY_MANAGER'])) {
       const isExecActive = isActive('/exec-dashboard.html');
       html += `
         <a href="/exec-dashboard.html" class="stx-item stx-mypath ${isExecActive ? 'active' : ''}">
@@ -1423,7 +1392,7 @@ if (!window.StratixJourney) {
         const percent = stageData ? stageData.percent : 0;
         const completed = stageData ? stageData.completed : false;
 
-        const isHighRole = systemRole === 'SUPER_ADMIN' || (_roleFromStorage && ['OWNER', 'ADMIN'].includes(userRole));
+        const isHighRole = systemRole === 'SUPER_ADMIN' || ['OWNER', 'ADMIN'].includes(userRole);
         const isLocked = isHighRole ? false : (stageData ? !!stageData.locked : (idx > 0));
         const unlockMsg = stageData ? (stageData.unlockMsg || '') : '';
 
@@ -1448,7 +1417,7 @@ if (!window.StratixJourney) {
         if (isLocked) {
           html += `
         <div class="stx-phase phase-locked" data-phase="${idx}">
-          <div class="stx-phase-header" onclick="showLockToast('${unlockMsg || 'أكمل المرحلة السابقة أولاً'}')" style="--phase-color: ${phase.color}; opacity:0.45; cursor:not-allowed">
+          <div class="stx-phase-header" onclick="showLockToast('${(unlockMsg || 'أكمل المرحلة السابقة أولاً').replace(/'/g, "\\'")}')" style="--phase-color: ${phase.color}; opacity:0.45; cursor:not-allowed">
             <span class="stx-phase-status"><i class="bi bi-lock-fill" style="font-size:13px;color:#ef4444"></i></span>
             <span class="stx-phase-name">
               <i class="bi ${phase.icon}" style="color:${phase.color}"></i>
@@ -1603,9 +1572,9 @@ if (!window.StratixJourney) {
     }
 
     // ╔═══════════════════════════════════════════╗
-    // ║  ⚙️ النظام (OWNER/ADMIN)                   ║
+    // ║  ⚙️ النظام (OWNER/ADMIN/COMPANY_MANAGER)   ║
     // ╚═══════════════════════════════════════════╝
-    if (hasAccess(['OWNER', 'ADMIN'])) {
+    if (hasAccess(['OWNER', 'ADMIN', 'COMPANY_MANAGER'])) {
       const sysHasActive = systemItems.some(item => isActive(item.href)) || isActive('/webhooks.html');
 
       html += `
@@ -1675,7 +1644,7 @@ if (!window.StratixJourney) {
     return new Promise((resolve) => {
       if (window.PathEngine) { resolve(); return; }
       const script = document.createElement('script');
-      script.src = '/assets/js/path-engine.js';
+      script.src = '/assets/js/path-engine.js?v=3';
       script.onload = () => resolve();
       script.onerror = () => resolve(); // fail silently
       document.head.appendChild(script);
@@ -1687,7 +1656,7 @@ if (!window.StratixJourney) {
     return new Promise((resolve) => {
       if (window.SuggestedTools) { resolve(); return; }
       const script = document.createElement('script');
-      script.src = '/assets/js/suggested-tools.js';
+      script.src = '/assets/js/suggested-tools.js?v=3';
       script.onload = () => {
         if (window.SuggestedTools) window.SuggestedTools.injectCSS();
         resolve();
@@ -1702,7 +1671,7 @@ if (!window.StratixJourney) {
     return new Promise((resolve) => {
       if (window.StratixProgress) { resolve(); return; }
       const script = document.createElement('script');
-      script.src = '/assets/js/progress-engine.js';
+      script.src = '/assets/js/progress-engine.js?v=3';
       script.onload = () => resolve();
       script.onerror = () => resolve(); // fail silently
       document.head.appendChild(script);
@@ -1850,10 +1819,22 @@ if (!window.StratixJourney) {
     // === تحميل المستشار الذكي تلقائياً ===
     if (!document.querySelector('script[src*="ai-advisor"]')) {
       const aiScript = document.createElement('script');
-      aiScript.src = '/js/ai-advisor.js';
+      aiScript.src = '/assets/js/ai-advisor.js?v=3';
       aiScript.defer = true;
       document.body.appendChild(aiScript);
     }
   }); // end loadPathEngine().then()
 
-})();
+}
+
+// ════════ الـ Bootstrapper (التشغيل النهائي للسايدبار) ════════
+// تم تأجيل استدعائه لأسفل الملف لمنع الرفع (Hoisting) وتطبيق أفضل الممارسات
+if (!window.StratixJourney) {
+  var _jScript = document.createElement('script');
+  _jScript.src = '/assets/js/journey-steps.js?v=3';
+  _jScript.async = true; // استخدام async مع onload لضمان التحميل
+  _jScript.onload = () => initSidebar();
+  document.head.appendChild(_jScript);
+} else {
+  initSidebar();
+}

@@ -968,7 +968,7 @@
 <body>
     <div class="container">
 
-        <a href="/dashboard.html" class="back-btn">
+        <a href="/ceo-dashboard.html" class="back-btn">
             <i class="bi bi-arrow-right"></i> العودة للوحة القيادة
         </a>
 
@@ -1020,10 +1020,10 @@
             <div class="section-title"><i class="bi bi-grid-3x3-gap-fill"></i> الإدارات</div>
             <!-- Mode Toggle: Summary vs Assessment -->
             <div class="wiz-mode-toggle" id="deptModeToggle">
-                <button class="wiz-mode-btn active" data-mode="summary" onclick="setDeptMode('summary')">
+                <button class="wiz-mode-btn active" data-action="dept-mode" data-mode="summary">
                     <i class="bi bi-grid-3x3-gap"></i> ملخص الإدارات
                 </button>
-                <button class="wiz-mode-btn" data-mode="assess" onclick="setDeptMode('assess')">
+                <button class="wiz-mode-btn" data-action="dept-mode" data-mode="assess">
                     <i class="bi bi-clipboard2-pulse"></i> تقييم إدارة
                 </button>
             </div>
@@ -1039,11 +1039,6 @@
             </div>
         </div>
 
-        <div id="tabValuechain" class="tab-content">
-            <div class="section-title"><i class="bi bi-link"></i> سلسلة القيمة</div>
-            <div id="valueChainContent"></div>
-        </div>
-
         <div id="tabDeep" class="tab-content">
             <div class="section-title"><i class="bi bi-search-heart"></i> تعمق في الإدارات</div>
             <div id="deepContent"></div>
@@ -1054,6 +1049,43 @@
     <script>
         (function () {
             'use strict';
+
+            // ═══ Event Delegation (CSP Safe) ═══
+            document.body.addEventListener('click', function (e) {
+                const target = e.target.closest('[data-action]');
+                if (!target) return;
+
+                const action = target.dataset.action;
+                switch (action) {
+                    case 'wiz-select':
+                        selectWizAnswer(parseInt(target.dataset.qi), parseInt(target.dataset.val));
+                        break;
+                    case 'wiz-next':
+                        nextWizQ();
+                        break;
+                    case 'wiz-prev':
+                        prevWizQ();
+                        break;
+                    case 'wiz-finish':
+                        finishWizDept();
+                        break;
+                    case 'wiz-cancel':
+                        cancelWizDept();
+                        break;
+                    case 'wiz-start':
+                        startWizDept(target.dataset.dept);
+                        break;
+                    case 'dept-navigate':
+                        window.location.href = target.dataset.href;
+                        break;
+                    case 'dept-mode-summary':
+                        setDeptMode('summary');
+                        break;
+                    case 'dept-mode':
+                        setDeptMode(target.dataset.mode);
+                        break;
+                }
+            });
 
             // ==================== الإعدادات العامة ====================
             const DEPTS = [
@@ -1068,9 +1100,9 @@
 
             // مراحل النمو حسب حجم الشركة (للإدارات)
             const SIZE_DEPTS = {
-                small: ['finance', 'operations', 'sales'], // 3 إدارات فقط
+                small: DEPTS.map(d => d.key), // عرض كافة الإدارات السبع دائماً بناءً على رغبة المالك
                 medium: DEPTS.map(d => d.key), // 7 إدارات
-                large: DEPTS.map(d => d.key)  // 7 + يمكن إضافة المزيد
+                large: DEPTS.map(d => d.key)  // 7 إدارات فأكثر
             };
 
             const AXIS_MAP = {
@@ -1160,7 +1192,6 @@
             const tabs = [
                 { id: 'overview', label: 'نظرة عامة', icon: 'bi-eye-fill', always: true },
                 { id: 'departments', label: 'الإدارات', icon: 'bi-grid-3x3-gap-fill', always: true },
-                { id: 'valuechain', label: 'سلسلة القيمة', icon: 'bi-link', condition: sizeCategory !== 'small' },
                 { id: 'deep', label: 'تعمق', icon: 'bi-search-heart', condition: sizeCategory === 'large' }
             ];
 
@@ -1198,7 +1229,6 @@
 
                 if (tabId === 'overview') renderOverview();
                 else if (tabId === 'departments') renderDepartments();
-                else if (tabId === 'valuechain') renderValueChain();
                 else if (tabId === 'deep') renderDeep();
             }
 
@@ -1251,7 +1281,34 @@
                 const offset = avgScore != null ? circumference - (avgScore / 100) * circumference : circumference;
 
                 document.getElementById('overallBanner').innerHTML = `
-                <div class="overall-banner">
+                <!-- 1. CEO General Assessment (Company Level) -->
+                <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:18px; padding:24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:20px; position:relative; overflow:hidden;">
+                    <div style="position:absolute; top:0; right:0; width:4px; height:100%; background:linear-gradient(to bottom, #6366f1, #a855f7);"></div>
+                    <div style="display:flex; align-items:center; gap:16px;">
+                        <div style="width:54px; height:54px; border-radius:14px; background:rgba(99, 102, 241, 0.1); color:#6366f1; display:flex; align-items:center; justify-content:center; font-size:24px;">
+                            <i class="bi bi-building-check"></i>
+                        </div>
+                        <div>
+                            <h2 style="font-size:16px; font-weight:800; margin:0 0 6px 0; color:var(--text); display:flex; align-items:center; gap:8px;">الفحص الداخلي للشركة <span style="font-size:10px; padding:2px 8px; background:rgba(255,255,255,0.05); border-radius:6px; color:var(--text-muted); font-weight:700;">تقييم القيادة العليا</span></h2>
+                            <p style="font-size:13px; color:var(--text-muted); margin:0;">مؤشر يعكس مدى النضج المؤسسي، قوة نموذج العمل، والجاهزية الرقمية للشركة ككل.</p>
+                        </div>
+                    </div>
+                    ${genAssessmentScore != null
+                        ? `<div style="display:flex; align-items:center; gap:20px; background:rgba(255,255,255,0.02); padding:10px 24px; border-radius:14px; border:1px solid var(--border);">
+                             <div style="text-align:center;">
+                                 <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">النتيجة الشاملة</div>
+                                 <div style="font-size:26px; font-weight:900; line-height:1; color:${scoreColor(genAssessmentScore)}">${genAssessmentScore}%</div>
+                             </div>
+                             <div style="width:1px; height:40px; background:var(--border);"></div>
+                             <a href="/internal-env.html" style="padding: 10px 18px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 13px; font-weight: 700; text-decoration: none; transition: all 0.2s;">إعادة الفحص</a>
+                           </div>`
+                        : `<a href="/internal-env.html" style="padding: 12px 28px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; border-radius: 12px; color: white; font-size: 14px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 16px rgba(102,126,234,0.3);"><i class="bi bi-search"></i> ابدأ الفحص الشامل لشركتك</a>`
+                    }
+                </div>
+
+                <!-- 2. Departments Average Health (Operational Level) -->
+                <div class="overall-banner" style="position:relative; margin-bottom:0;">
+                    <div style="position:absolute; top:24px; left:24px; font-size:11px; font-weight:800; color:var(--text-muted); padding:4px 10px; background:rgba(255,255,255,0.05); border-radius:6px;">مستوى التفعيل والتشغيل للإدارات</div>
                     <div class="overall-score-circle">
                         <svg width="100" height="100" viewBox="0 0 100 100">
                             <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="6"/>
@@ -1263,31 +1320,14 @@
                         <div class="overall-score-label">${avgScore != null ? 'متوسط' : ''}</div>
                     </div>
                     <div class="overall-info">
-                        <h2>الصحة العامة — ${avgStatus}</h2>
-                        <p>متوسط درجة الإدارات المُقيّمة${companyName ? ' لـ ' + companyName : ''}. هذه الدرجة تعكس تحليل ${scoredCount} إدارات من أصل ${relevantDepts.length}.</p>
+                        <h2>صحة الإدارات — ${avgStatus}</h2>
+                        <p>هذا المتوسط يقرأ أداء الإدارات في أرض الواقع. يعكس المؤشر إنجاز ${scoredCount} إدارات من أصل ${relevantDepts.length} إدارة مُفعلة${companyName ? ' في ' + companyName : ''}.</p>
                         
-                        <div style="margin: 18px 0; padding: 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-                            <div>
-                                <div style="font-size: 14px; font-weight: 800; color: var(--text);">الفحص الداخلي العام للشركة</div>
-                                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">تحليل النضج المؤسسي، والجاهزية الرقمية، ونموذج العمل.</div>
-                            </div>
-                            ${genAssessmentScore != null
-                        ? `<div style="display:flex; align-items:center; gap:12px;">
-                                     <div style="text-align:center;">
-                                         <div style="font-size:18px; font-weight:900; color:${scoreColor(genAssessmentScore)}">${genAssessmentScore}%</div>
-                                         <div style="font-size:10px; color:var(--text-muted);">النتيجة</div>
-                                     </div>
-                                     <a href="/internal-env.html" style="padding: 8px 16px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 12px; font-weight: 700; text-decoration: none; transition: all 0.2s;">إعادة الفحص</a>
-                                   </div>`
-                        : `<a href="/internal-env.html" style="padding: 16px 36px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; border-radius: 14px; color: white; font-size: 16px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: transform 0.2s; box-shadow: 0 6px 20px rgba(102,126,234,0.35);"><i class="bi bi-search"></i> ابدأ فحص البيئة الداخلية</a>`
-                    }
-                        </div>
-
-                        <div class="overall-stats">
-                            <div class="overall-stat"><div class="val" style="color:var(--green)">${completedCount}</div><div class="lbl">مكتملة</div></div>
-                            <div class="overall-stat"><div class="val" style="color:var(--blue)">${managersAssigned}</div><div class="lbl">مدير معيّن</div></div>
-                            <div class="overall-stat"><div class="val" style="color:var(--purple)">${scoredCount}</div><div class="lbl">مُقيّمة</div></div>
-                            <div class="overall-stat"><div class="val" style="color:var(--yellow)">${relevantDepts.length - completedCount}</div><div class="lbl">متبقية</div></div>
+                        <div class="overall-stats" style="margin-top:20px; border-top:1px solid rgba(255,255,255,0.04); padding-top:20px;">
+                            <div class="overall-stat"><div class="val" style="color:var(--green)">${completedCount}</div><div class="lbl">أقسام مكتملة</div></div>
+                            <div class="overall-stat"><div class="val" style="color:var(--blue)">${managersAssigned}</div><div class="lbl">مدراء مُعينين</div></div>
+                            <div class="overall-stat"><div class="val" style="color:var(--purple)">${scoredCount}</div><div class="lbl">أقسام مُقيّمة</div></div>
+                            <div class="overall-stat"><div class="val" style="color:var(--yellow)">${relevantDepts.length - completedCount}</div><div class="lbl">أقسام متبقية</div></div>
                         </div>
                     </div>
                 </div>`;
@@ -1431,19 +1471,28 @@
                     const score = getDeptScore(dept.key);
                     const status = scoreStatus(score);
                     const isCompleted = d.completed === true;
+                    const ansCount = Object.keys(d.answers || {}).length;
+
+                    // متوسط لعدد الأسئلة التقريبي هو 15-20 سؤال
+                    const estimatedTotal = 15;
+                    let progressVal = isCompleted ? 100 : (ansCount === 0 ? 0 : Math.min(Math.round((ansCount / estimatedTotal) * 100), 95));
+
                     const metrics = [];
                     if (d.challenges?.length) metrics.push(`${d.challenges.length} تحديات`);
                     if (d.goals?.length) metrics.push(`${d.goals.length} أهداف`);
                     if (d.model) metrics.push(d.model);
 
                     return `
-                    <div class="dept-card" onclick="location.href='/dept-deep.html?dept=${dept.key}'" style="--accent:${dept.color}${_deptParam ? ';grid-column:1/-1;max-width:600px;margin:0 auto' : ''}">
+                    <div class="dept-card" data-action="dept-navigate" data-href="/dept-deep.html?dept=${dept.key}" style="--accent:${dept.color}${_deptParam ? ';grid-column:1/-1;max-width:600px;cursor:pointer;margin:0 auto' : ';cursor:pointer'}">
                         <div style="position:absolute;top:0;right:0;width:100%;height:3px;background:${dept.color};opacity:.6;border-radius:16px 16px 0 0"></div>
                         <div class="dept-card-header">
                             <div class="dept-icon-box" style="background:${dept.color}22">${dept.icon}</div>
-                            <div><div class="dept-card-name">${dept.label}</div></div>
-                            <span class="dept-card-status ${isCompleted ? 'completed' : (Object.keys(d.answers || {}).length ? 'pending' : 'empty')}">
-                                ${isCompleted ? '✓ مكتمل' : (Object.keys(d.answers || {}).length ? 'قيد التحليل' : 'لم يبدأ')}
+                            <div>
+                                <div class="dept-card-name">${dept.label}</div>
+                                <div style="font-size:11px; color:var(--text-muted); margin-top:4px; font-weight:700;">مُنجز ${progressVal}%</div>
+                            </div>
+                            <span class="dept-card-status ${isCompleted ? 'completed' : (ansCount ? 'pending' : 'empty')}">
+                                ${isCompleted ? '✓ التقييم' : (ansCount ? 'تقييم مستمر' : 'لم يبدأ')}
                             </span>
                         </div>
 
@@ -1471,127 +1520,17 @@
                     </div>`;
                 }).join('');
 
-                document.getElementById('deptGrid').innerHTML = html;
-            }
-
-            // ==================== عرض سلسلة القيمة (Value Chain) ====================
-            function renderValueChain() {
-                // محاولة قراءة بيانات Value Chain المحفوظة من tool-detail
-                let vcData = null;
-                try {
-                    const saved = localStorage.getItem('stratix_tool_VALUE_CHAIN');
-                    if (saved) vcData = JSON.parse(saved);
-                } catch (e) { }
-
-                // إذا ما فيه بيانات محفوظة — عرض CTA
-                if (!vcData || !vcData.answers || Object.keys(vcData.answers).length === 0) {
-                    document.getElementById('valueChainContent').innerHTML = `
-                        <div class="empty-state" style="max-width:520px;margin:40px auto">
-                            <div class="empty-state-icon">🔗</div>
-                            <div class="empty-state-title">لم تُجرِ تحليل سلسلة القيمة بعد</div>
-                            <div class="empty-state-desc" style="margin-bottom:20px">
-                                سلسلة القيمة تحلّل أنشطة الشركة الأساسية والمساندة<br>
-                                وتكشف أين يتم خلق القيمة وأين يمكن التحسين
-                            </div>
-                            <a href="/tool-detail.html?code=VALUE_CHAIN" style="
-                                display:inline-flex;align-items:center;gap:8px;
-                                padding:12px 28px;border-radius:12px;
-                                background:linear-gradient(135deg,#0891B2,#06B6D4);
-                                color:#fff;text-decoration:none;font-weight:700;font-size:14px;
-                                box-shadow:0 4px 12px rgba(8,145,178,0.3);transition:all .3s
-                            ">
-                                <i class="bi bi-link-45deg"></i> ابدأ تحليل سلسلة القيمة
-                            </a>
-                        </div>`;
-                    return;
-                }
-
-                // بناء البيانات من الإجابات المحفوظة
-                const PRIMARY_ACTIVITIES = [
-                    { key: 'inbound', name: 'اللوجستيات الداخلية', icon: '📦', desc: 'استلام وتخزين المواد والمدخلات' },
-                    { key: 'operations', name: 'العمليات', icon: '⚙️', desc: 'تحويل المدخلات إلى منتجات أو خدمات' },
-                    { key: 'outbound', name: 'اللوجستيات الخارجية', icon: '🚚', desc: 'توزيع المنتجات للعملاء' },
-                    { key: 'marketing', name: 'التسويق والمبيعات', icon: '📣', desc: 'جذب العملاء وإتمام عمليات البيع' },
-                    { key: 'service', name: 'خدمات ما بعد البيع', icon: '🤝', desc: 'دعم العملاء وضمان الرضا' },
-                ];
-                const SUPPORT_ACTIVITIES = [
-                    { key: 'procurement', name: 'المشتريات', icon: '🛒', desc: 'شراء المواد والخدمات' },
-                    { key: 'tech', name: 'تطوير التقنية', icon: '💻', desc: 'البحث والتطوير والابتكار' },
-                    { key: 'hr_vc', name: 'إدارة الموارد البشرية', icon: '👥', desc: 'توظيف وتدريب وتطوير الكوادر' },
-                    { key: 'infra', name: 'البنية التحتية', icon: '🏢', desc: 'إدارة عامة ومالية وقانونية' },
-                ];
-
-                // حساب الدرجات من الإجابات
-                function calcScoreFromAnswers(activityKey) {
-                    const answers = vcData.answers || {};
-                    // نحاول ربط الأسئلة بالأنشطة
-                    const relatedAnswers = Object.entries(answers).filter(([q]) =>
-                        q.toLowerCase().includes(activityKey.toLowerCase())
-                    );
-                    if (relatedAnswers.length > 0) {
-                        const total = relatedAnswers.reduce((s, [, v]) => s + (parseInt(v) || 0), 0);
-                        return Math.round((total / (relatedAnswers.length * 4)) * 100);
-                    }
-                    // fallback: نسبة عشوائية ثابتة من الـ overall
-                    return vcData.score ? Math.max(30, vcData.score + Math.floor(Math.random() * 20 - 10)) : null;
-                }
-
-                const primaryScores = PRIMARY_ACTIVITIES.map(a => ({
-                    ...a, score: calcScoreFromAnswers(a.key)
-                }));
-                const supportScores = SUPPORT_ACTIVITIES.map(a => ({
-                    ...a, score: calcScoreFromAnswers(a.key)
-                }));
-
-                const avgPrimary = Math.round(primaryScores.reduce((s, a) => s + (a.score || 0), 0) / primaryScores.length);
-                const avgSupport = Math.round(supportScores.reduce((s, a) => s + (a.score || 0), 0) / supportScores.length);
-                const overallVC = Math.round((avgPrimary + avgSupport) / 2);
-
-                function renderActivity(act) {
-                    const s = act.score || 0;
-                    return `
-                    <div class="value-chain-item" style="border-right-color:${scoreColor(s)}">
-                        <div class="value-chain-item-header">
-                            <span class="value-chain-item-name">${act.icon} ${act.name}</span>
-                            <span class="value-chain-item-score" style="color:${scoreColor(s)}">${s}%</span>
+                const addDeptCard = _deptParam ? '' : `
+                    <div class="dept-card" onclick="alert('ميزة إضافة (إدارات مخصصة) غير قياسية ستكون متاحة قريباً في إصدار خطة المؤسسات (Enterprise Plan).')" style="border: 2px dashed var(--border); background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; cursor: pointer; min-height: 180px; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(99,102,241,0.5)'; this.querySelector('.plus-icon').style.background='rgba(99,102,241,0.1)'; this.querySelector('.plus-icon').style.color='#6366f1';" onmouseout="this.style.borderColor='var(--border)'; this.querySelector('.plus-icon').style.background='rgba(255,255,255,0.05)'; this.querySelector('.plus-icon').style.color='var(--text-muted)';">
+                        <div class="plus-icon" style="width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.05); color: var(--text-muted); display: flex; align-items: center; justify-content: center; font-size: 24px; transition: all 0.2s;">
+                            <i class="bi bi-plus-lg"></i>
                         </div>
-                        <div class="value-chain-item-desc">${act.desc}</div>
-                        <div style="height:4px;background:rgba(255,255,255,0.06);border-radius:4px;margin-top:8px;overflow:hidden">
-                            <div style="height:100%;width:${s}%;background:${scoreColor(s)};border-radius:4px;transition:width .8s ease"></div>
-                        </div>
-                    </div>`;
-                }
-
-                const primaryHtml = primaryScores.map(renderActivity).join('');
-                const supportHtml = supportScores.map(renderActivity).join('');
-
-                document.getElementById('valueChainContent').innerHTML = `
-                    <div style="background:rgba(8,145,178,0.06);border:1px solid rgba(8,145,178,0.15);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
-                        <div>
-                            <div style="font-size:14px;font-weight:700;color:var(--text)">🔗 تحليل سلسلة القيمة</div>
-                            <div style="font-size:12px;color:var(--text-muted);margin-top:4px">آخر تحديث: ${vcData.date ? new Date(vcData.date).toLocaleDateString('ar-SA') : 'غير محدد'}</div>
-                        </div>
-                        <div style="display:flex;align-items:center;gap:20px">
-                            <div style="text-align:center">
-                                <div style="font-size:28px;font-weight:900;color:${scoreColor(overallVC)}">${overallVC}%</div>
-                                <div style="font-size:10px;color:var(--text-muted)">الدرجة الكلية</div>
-                            </div>
-                            <a href="/tool-detail.html?code=VALUE_CHAIN" style="padding:8px 16px;border-radius:10px;border:1px solid rgba(8,145,178,0.3);color:#06B6D4;text-decoration:none;font-size:12px;font-weight:700">
-                                <i class="bi bi-arrow-repeat"></i> إعادة التحليل
-                            </a>
-                        </div>
-                    </div>
-                    <div class="value-chain-grid">
-                        <div class="value-chain-col">
-                            <h3><i class="bi bi-boxes"></i> الأنشطة الأساسية <span style="font-size:12px;color:${scoreColor(avgPrimary)};font-weight:700;margin-right:8px">${avgPrimary}%</span></h3>
-                            ${primaryHtml}
-                        </div>
-                        <div class="value-chain-col">
-                            <h3><i class="bi bi-gear"></i> الأنشطة المساندة <span style="font-size:12px;color:${scoreColor(avgSupport)};font-weight:700;margin-right:8px">${avgSupport}%</span></h3>
-                            ${supportHtml}
-                        </div>
+                        <div style="font-weight: 700; color: var(--text-muted); font-size: 14px;">إضافة إدارة جديدة</div>
+                        <div style="font-size: 11px; color: var(--text-muted); text-align: center;">إدارات مخصصة، مصانع، أو فروع</div>
                     </div>
                 `;
+
+                document.getElementById('deptGrid').innerHTML = html + addDeptCard;
             }
 
             // ==================== عرض التعمق (Deep) ====================
@@ -1934,7 +1873,7 @@
                     const d = healthData.departments[dept.key] || {};
                     const isDone = d.completed === true;
                     const score = getDeptScore(dept.key);
-                    return `<div class="wiz-dept-chip ${isDone ? 'done' : ''}" onclick="startWizDept('${dept.key}')" ${_deptParam ? 'style="max-width:400px;margin:0 auto"' : ''}>
+                    return `<div class="wiz-dept-chip ${isDone ? 'done' : ''}" data-action="wiz-start" data-dept="${dept.key}" ${_deptParam ? 'style="max-width:400px;margin:0 auto"' : ''}>
                         <div class="wiz-chip-emoji">${dept.icon}</div>
                         <div class="wiz-chip-name">${dept.label}</div>
                         <div class="wiz-chip-status">${isDone ? '✅ ' + (score != null ? score + '%' : 'مكتمل') : 'ابدأ التقييم'}</div>
@@ -1977,7 +1916,9 @@
                     <div class="wiz-q-options">
                         ${q.opts.map(opt => `
                             <div class="wiz-q-opt ${currentAns === opt.v ? 'selected' : ''}"
-                                 onclick="selectWizAnswer(${qi}, ${opt.v})">
+                                 data-action="wiz-select"
+                                 data-qi="${qi}"
+                                 data-val="${opt.v}">
                                 <div class="wiz-radio"></div>
                                 <span>${opt.icon} ${opt.t}</span>
                             </div>
@@ -1990,15 +1931,15 @@
                         <div class="wiz-progress-text">${qi + 1} / ${qs.length}</div>
                     </div>
                     <div class="wiz-nav">
-                        <button class="wiz-btn prev" onclick="${qi === 0 ? 'cancelWizDept()' : 'prevWizQ()'}" >
+                        <button class="wiz-btn prev" data-action="${qi === 0 ? 'wiz-cancel' : 'wiz-prev'}" >
                             <i class="bi bi-arrow-right"></i> ${qi === 0 ? 'رجوع' : 'السابق'}
                         </button>
                         ${qi < qs.length - 1 ? `
-                            <button class="wiz-btn next" onclick="nextWizQ()" ${!currentAns ? 'disabled' : ''}>
+                            <button class="wiz-btn next" data-action="wiz-next" ${!currentAns ? 'disabled' : ''}>
                                 التالي <i class="bi bi-arrow-left"></i>
                             </button>
                         ` : `
-                            <button class="wiz-btn next" onclick="finishWizDept()" ${!currentAns ? 'disabled' : ''}
+                            <button class="wiz-btn next" data-action="wiz-finish" ${!currentAns ? 'disabled' : ''}
                                     style="background:linear-gradient(135deg,#22c55e,#16a34a)">
                                 🎯 شوف النتيجة <i class="bi bi-arrow-left"></i>
                             </button>
@@ -2064,10 +2005,10 @@
                     <div style="font-size:14px;font-weight:700;margin-bottom:8px;color:${statusColor}">${statusText}</div>
                     <div style="font-size:13px;color:var(--text-muted);line-height:1.7;margin-bottom:16px">${verdict}</div>
                     <div style="display:flex;gap:10px;flex-wrap:wrap">
-                        <button class="wiz-btn next" onclick="cancelWizDept()" style="background:var(--bg-card);color:var(--text);border:1px solid var(--border)">
+                        <button class="wiz-btn next" data-action="wiz-cancel" style="background:var(--bg-card);color:var(--text);border:1px solid var(--border)">
                             <i class="bi bi-${urlParams.get('dept') ? 'arrow-repeat' : 'grid-3x3-gap'}"></i> ${urlParams.get('dept') ? 'إعادة التقييم' : 'تقييم إدارة أخرى'}
                         </button>
-                        <button class="wiz-btn next" onclick="setDeptMode('summary')" style="background:linear-gradient(135deg,#667eea,#764ba2)">
+                        <button class="wiz-btn next" data-action="dept-mode-summary" style="background:linear-gradient(135deg,#667eea,#764ba2)">
                             <i class="bi bi-eye"></i> عرض الملخص
                         </button>
                     </div>
@@ -2081,13 +2022,8 @@
             // جلب ملخص صحة الشركة من الإدارات (لا يعتمد على localStorage)
             (async function loadLiveHealth() {
                 try {
-                    const token = localStorage.getItem('token');
-                    if (!token) return; // لا توكن = لا API
-
-                    const res = await fetch('/api/company-health/summary', {
-                        headers: { 'Authorization': 'Bearer ' + token },
-                        credentials: 'include'
-                    });
+                    // ✅ بدون token من localStorage — fetchWithTimeout tetawala el amr
+                    const res = await fetchWithTimeout('/api/company-health/summary');
                     if (!res.ok) return;
 
                     const data = await res.json();
@@ -2211,7 +2147,7 @@
             const _pageTitle = document.querySelector('.page-header h1, .logo-text');
             if (_pageTitle) {
                 const h1 = document.querySelector('.page-header h1');
-                if (h1) h1.innerHTML = '🏥 صحة إدارة ' + _dn;
+                if (h1) h1.textContent = '🏥 صحة إدارة ' + _dn;
             }
             const _subtitle = document.getElementById('companyName');
             if (_subtitle) _subtitle.textContent = 'تحليل شامل لإدارة ' + _dn;
@@ -2229,7 +2165,7 @@
             if (_deptSectionTitle) _deptSectionTitle.innerHTML = '<i class="bi bi-building"></i> إدارتي — ' + _dn;
 
             // 4. إخفاء زر "العودة للوحة القيادة" وتغييره للوحة الإدارة
-            const _backBtn = document.querySelector('a[href*="dashboard.html"]');
+            const _backBtn = document.querySelector('a[href*="ceo-dashboard.html"]');
             if (_backBtn && !_backBtn.href.includes('dept-dashboard')) {
                 _backBtn.href = '/dept-dashboard.html?dept=' + _dp;
                 _backBtn.innerHTML = '← العودة للوحة إدارتي';

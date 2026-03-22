@@ -162,11 +162,11 @@ router.post('/register', async (req, res) => {
         userType: detectedUserType,
       },
       process.env.JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '30d' }
     );
 
-    // 7.5 حقن التوكن في HttpOnly Cookie
     res.cookie('token', token, {
+      path: '/',
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
@@ -407,11 +407,11 @@ router.post('/login', (req, res, next) => {
         companyId: primaryEntity?.company?.id || primaryEntity?.companyId || null,
       },
       process.env.JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '30d' }
     );
 
-    // حقن التوكن في HttpOnly Cookie
     res.cookie('token', token, {
+      path: '/',
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
@@ -758,11 +758,11 @@ router.post('/complete-onboarding', verifyToken, async (req, res) => {
         companyId: result.company.id,
       },
       process.env.JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '30d' }
     );
 
-    // حقن التوكن في HttpOnly Cookie
     res.cookie('token', newToken, {
+      path: '/',
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',

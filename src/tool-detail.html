@@ -1185,10 +1185,10 @@
             <div class="progress-fill" id="progressBar" style="width:0%;"></div>
         </div>
         <div class="progress-actions">
-            <button class="btn-tool btn-tool-primary" id="btnSync" onclick="syncTool()">
+            <button class="btn-tool btn-tool-primary" id="btnSync" data-action="sync-tool">
                 <i class="bi bi-arrow-repeat"></i> مزامنة البيانات
             </button>
-            <button class="btn-tool btn-tool-secondary" onclick="window.location.href='/tools'">
+            <button class="btn-tool btn-tool-secondary" data-action="go-tools">
                 <i class="bi bi-arrow-right"></i> العودة للمسار
             </button>
         </div>
@@ -1241,10 +1241,10 @@
             if (code && typeof StatsPanel !== 'undefined') StatsPanel.init(code);
         })();
     </script>
+    <script src="/assets/js/api.js"></script>
     <script>
         // ===== STATE =====
         const state = {
-            token: localStorage.getItem('token'),
             toolCode: new URLSearchParams(window.location.search).get('code') || '',
             versionId: new URLSearchParams(window.location.search).get('v') || localStorage.getItem('selectedVersionId') || '',
             tool: null,
@@ -1289,11 +1289,8 @@
         // ═══ SECURITY: Central event delegation for dynamic content ═══
         // بدل onclick inline — نستخدم data-action attributes
         function attachEventHandlers() {
-            const area = document.getElementById('contentArea');
-            if (!area) return;
-
             // Event delegation — single listener for all dynamic actions
-            area.addEventListener('click', function (e) {
+            document.body.addEventListener('click', function (e) {
                 const target = e.target.closest('[data-action]');
                 if (!target) return;
 
@@ -1303,6 +1300,12 @@
                 const idx = target.dataset.idx;
 
                 switch (action) {
+                    case 'go-tools':
+                        window.location.href = '/tools.html';
+                        break;
+                    case 'sync-tool':
+                        syncTool();
+                        break;
                     case 'add-item':
                         addPestelItem(key, color);
                         break;
@@ -1313,7 +1316,7 @@
                         target.closest('.pestel-questions')?.classList.toggle('open');
                         break;
                     case 'fill-input': {
-                        const input = document.getElementById('input-' + key);
+                        const input = document.getElementById('input-' + key) || document.getElementById('vcInput_' + key);
                         if (input) { input.value = target.textContent.trim(); input.focus(); }
                         break;
                     }
@@ -1340,6 +1343,19 @@
                         const el = document.getElementById('section-' + key);
                         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         break;
+                    }
+                }
+            });
+
+            document.body.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    const target = e.target;
+                    if (target.dataset.action === 'add-vc-item') {
+                        e.preventDefault();
+                        if (typeof addVcItem === 'function') addVcItem(target.dataset.key, target.value, target.dataset.color);
+                    } else if (target.dataset.action === 'add-pestel-item') {
+                        e.preventDefault();
+                        if (typeof addPestelItem === 'function') addPestelItem(target.dataset.key, target.dataset.color);
                     }
                 }
             });
@@ -1602,16 +1618,98 @@
             },
             BUSINESS_MODEL: {
                 grid: 'grid-3',
+                enhanced: true,
                 sections: [
-                    { key: 'customerSegments', nameAr: 'شرائح العملاء', icon: 'bi-people', color: '#2563EB', emoji: '👥' },
-                    { key: 'valueProposition', nameAr: 'القيمة المقدّمة', icon: 'bi-gift', color: '#7C3AED', emoji: '🎁' },
-                    { key: 'channels', nameAr: 'القنوات', icon: 'bi-broadcast', color: '#0891B2', emoji: '📡' },
-                    { key: 'customerRelationships', nameAr: 'علاقات العملاء', icon: 'bi-heart', color: '#DC2626', emoji: '❤️' },
-                    { key: 'revenueStreams', nameAr: 'مصادر الإيرادات', icon: 'bi-cash-stack', color: '#16A34A', emoji: '💰' },
-                    { key: 'keyResources', nameAr: 'الموارد الرئيسية', icon: 'bi-gem', color: '#D97706', emoji: '💎' },
-                    { key: 'keyActivities', nameAr: 'الأنشطة الرئيسية', icon: 'bi-gear', color: '#EA580C', emoji: '⚙️' },
-                    { key: 'keyPartners', nameAr: 'الشراكات الرئيسية', icon: 'bi-diagram-3', color: '#6D28D9', emoji: '🤝' },
-                    { key: 'costStructure', nameAr: 'هيكل التكاليف', icon: 'bi-calculator', color: '#B91C1C', emoji: '🧮' }
+                    {
+                        key: 'customerSegments', nameAr: 'شرائح العملاء', icon: 'bi-people', color: '#2563EB', emoji: '👥',
+                        desc: 'المنظمات أو الأفراد الذين تسعى شركتك للوصول إليهم وخدمتهم',
+                        questions: [
+                            'لمن نبتكر القيمة؟',
+                            'من هم أهم عملائنا؟',
+                            'هل نتعامل مع سوق جماهيري أم متخصص؟'
+                        ],
+                        examples: ['سوق متخصص (Niche)', 'سوق متعدد الجوانب', 'سوق جماهيري', 'منصات B2B']
+                    },
+                    {
+                        key: 'valueProposition', nameAr: 'القيمة المقدّمة', icon: 'bi-gift', color: '#7C3AED', emoji: '🎁',
+                        desc: 'المنتجات والخدمات التي تخلق قيمة لشرائح عملاء محددة',
+                        questions: [
+                            'ما القيمة التي نقدمها للعميل؟',
+                            'أي من مشاكل عملائنا نساعد في حلها؟',
+                            'ما هي حزم المنتجات/الخدمات المعروضة لكل شريحة؟'
+                        ],
+                        examples: ['حداثة وتصميم مبتكر', 'أداء أعلى وسعر أقل', 'تقليل المخاطر والتكلفة', 'سهولة الوصول (Accessibility)']
+                    },
+                    {
+                        key: 'channels', nameAr: 'القنوات', icon: 'bi-broadcast', color: '#0891B2', emoji: '📡',
+                        desc: 'كيفية التواصل والوصول إلى شرائح العملاء لتقديم القيمة',
+                        questions: [
+                            'عبر أي قنوات يرغب عملاؤنا بالوصول إليهم؟',
+                            'كيف نصل إليهم الآن؟',
+                            'أي القنوات هي الأفضل من حيث التكلفة والفعالية؟'
+                        ],
+                        examples: ['مبيعات الويب (منصات رقمية)', 'متاجر التجزئة الخاصة', 'قوة المبيعات المباشرة', 'الموزعون والشركاء']
+                    },
+                    {
+                        key: 'customerRelationships', nameAr: 'علاقات العملاء', icon: 'bi-heart', color: '#DC2626', emoji: '❤️',
+                        desc: 'أنواع العلاقات التي تؤسسها الشركة مع شرائح عملائها المحددة',
+                        questions: [
+                            'ما نوع العلاقة التي يتوقعها كل عميل منا؟',
+                            'ما هي العلاقات التي أسسناها بالفعل؟',
+                            'ما مدى تكلفتها وكيف تتكامل مع بقية النموذج؟'
+                        ],
+                        examples: ['المساعدة الشخصية', 'الخدمة الذاتية', 'خدمات الجيل الآلي', 'المجتمعات (Communities)']
+                    },
+                    {
+                        key: 'revenueStreams', nameAr: 'مصادر الإيرادات', icon: 'bi-cash-stack', color: '#16A34A', emoji: '💰',
+                        desc: 'الأموال الناتجة عن تقديم القيمة لشرائح العملاء',
+                        questions: [
+                            'ما هي القيمة التي يدفع عملاؤنا من أجلها؟',
+                            'كيف يدفعون حالياً؟',
+                            'كم يساهم كل مصدر في إجمالي الإيرادات؟'
+                        ],
+                        examples: ['مبيعات الأصول (المنتجات)', 'رسوم الاستخدام أو الاشتراك', 'التأجير والاستعارة', 'الترخيص والإعلانات']
+                    },
+                    {
+                        key: 'keyResources', nameAr: 'الموارد الرئيسية', icon: 'bi-gem', color: '#D97706', emoji: '💎',
+                        desc: 'الأصول الأهم المطلوبة لجعل نموذج الأعمال يعمل',
+                        questions: [
+                            'ما هي الموارد التي تتطلبها القيمة المقدمة؟',
+                            'ماذا تتطلب قنوات التوزيع وعلاقات العملاء؟',
+                            'هل تمتلك الشركة هذه الموارد أم تستأجرها؟'
+                        ],
+                        examples: ['عينية (مرافق وسيارات)', 'فكرية (براءات وعلامات)', 'بشرية (خبرات ومطورين)', 'مالية (أرصدة وخطوط ائتمان)']
+                    },
+                    {
+                        key: 'keyActivities', nameAr: 'الأنشطة الرئيسية', icon: 'bi-gear', color: '#EA580C', emoji: '⚙️',
+                        desc: 'أهم الأشياء التي يجب على الشركة القيام بها لينجح نموذجها',
+                        questions: [
+                            'ما الأنشطة التي تتطلبها القيمة المقدمة؟',
+                            'أي أنشطة نحتاجها لمصادر الإيرادات؟',
+                            'هل هي أنشطة إنتاج أم حل مشكلات أم إدارة منصة؟'
+                        ],
+                        examples: ['التطوير والإنتاج', 'دعم العملاء وحل المشاكل', 'إدارة الشبكات والمنصات', 'التسويق الاستراتيجي']
+                    },
+                    {
+                        key: 'keyPartners', nameAr: 'الشراكات الرئيسية', icon: 'bi-diagram-3', color: '#6D28D9', emoji: '🤝',
+                        desc: 'شبكة الموردين والشركاء الذين يجعلون النموذج يعمل',
+                        questions: [
+                            'من هم شركاؤنا وموردونا الرئيسيون؟',
+                            'ما الموارد الأساسية التي نحصل عليها من الشركاء؟',
+                            'ما الأنشطة التي يؤديها الشركاء أفضل منا؟'
+                        ],
+                        examples: ['تحالفات استراتيجية مع غير منافسين', 'شراكات وتكامل مع المنافسين', 'موردين حصريين', 'مشاريع مشتركة']
+                    },
+                    {
+                        key: 'costStructure', nameAr: 'هيكل التكاليف', icon: 'bi-calculator', color: '#B91C1C', emoji: '🧮',
+                        desc: 'أهم التكاليف المتكبدة لتشغيل نموذج الأعمال',
+                        questions: [
+                            'ما هي التكاليف الأهم الكامنة في نموذج العمل؟',
+                            'أي الموارد الرئيسية هي الأغلى؟',
+                            'هل النموذج مدفوع بالتكلفة (Cost-driven) أم بالقيمة (Value-driven)؟'
+                        ],
+                        examples: ['تكاليف ثابتة (رواتب وإيجار)', 'تكاليف متغيرة', 'اقتصاديات الحجم المفرط', 'أجور الموردين والتصنيع']
+                    }
                 ]
             },
             CUSTOMER_JOURNEY: {
@@ -1644,19 +1742,29 @@
 
         // ===== API =====
         async function api(url, opts = {}) {
-            if (!state.token) { sessionStorage.setItem('stratix_return_url', location.pathname + location.search); location.href = '/login?from=restore'; return; }
-            const res = await fetch(url, {
+            const res = await window.apiRequest(url, {
                 ...opts,
-                headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json', ...opts.headers }
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json', ...opts.headers }
             });
-            if (res.status === 401) { window.location.href = '/login'; return; }
+            if (res.status === 401) { window.location.href = '/select-type.html?error=401&url=' + encodeURIComponent(url); return; }
+            if (res.status === 403) { window.location.href = '/select-type.html?error=403&url=' + encodeURIComponent(url); return; }
             if (!res.ok) throw new Error(`API ${res.status}: ${url}`);
             return res.json();
         }
 
+        const DIAG_TOOLS = [
+            { code: 'INTERNAL_ENV', name: 'البيئة الداخلية', icon: '🏢', color: '#0D9488', href: '/company-health.html', phase: 'internal' },
+            { code: 'VALUE_CHAIN', name: 'سلسلة القيمة', icon: '🔗', color: '#0891B2', phase: 'internal' },
+            { code: 'PESTEL', name: 'تحليل PESTEL', icon: '🌍', color: '#0891b2', phase: 'external' },
+            { code: 'SWOT', name: 'تحليل SWOT', icon: '📊', color: '#22c55e', phase: 'synthesis' },
+            { code: 'TOWS', name: 'مصفوفة TOWS', icon: '🔲', color: '#059669', phase: 'synthesis' }
+        ];
+
+        const DIAG_TOOL_CODES = new Set(DIAG_TOOLS.map(t => t.code));
+
         // ===== INIT =====
         async function init() {
-            if (!state.token) { sessionStorage.setItem('stratix_return_url', location.pathname + location.search); location.href = '/login?from=restore'; return; }
             if (!state.toolCode) { window.location.href = '/tools'; return; }
 
             try {
@@ -1698,7 +1806,7 @@
                 renderContent();
 
                 // Render diagnosis journey bar (if diagnosis tool)
-                if (['SWOT', 'PESTEL', 'PORTER', 'VALUE_CHAIN', 'CORE_COMPETENCY', 'CUSTOMER_JOURNEY'].includes(state.toolCode)) {
+                if (DIAG_TOOL_CODES.has(state.toolCode)) {
                     await renderDiagnosisJourney();
                 }
 
@@ -1729,18 +1837,7 @@
         // ===== RENDER HEADER =====
         // ===== DIAGNOSIS JOURNEY BAR =====
         async function renderDiagnosisJourney() {
-            const diagTools = [
-                // المرحلة 1: الداخل (Inside-Out)
-                { code: 'INTERNAL_ENV', name: 'البيئة الداخلية', icon: '🏢', color: '#0D9488', href: '/company-health.html', phase: 'internal' },
-                { code: 'VALUE_CHAIN', name: 'سلسلة القيمة', icon: '🔗', color: '#0891B2', phase: 'internal' },
-                { code: 'CORE_COMPETENCY', name: 'القدرات الجوهرية', icon: '🏆', color: '#D97706', phase: 'internal' },
-                { code: 'CUSTOMER_JOURNEY', name: 'رحلة العميل', icon: '🚶', color: '#DB2777', phase: 'internal' },
-                // المرحلة 2: الخارج (Outside-In)
-                { code: 'PESTEL', name: 'تحليل PESTEL', icon: '🌍', color: '#0891b2', phase: 'external' },
-                { code: 'PORTER', name: 'قوى Porter', icon: '⚔️', color: '#f59e0b', phase: 'external' },
-                // المرحلة 3: التجميع
-                { code: 'SWOT', name: 'تحليل SWOT', icon: '📊', color: '#22c55e', phase: 'synthesis' },
-            ];
+            const diagTools = DIAG_TOOLS;
 
             // Load progress for each tool (parallel for speed)
             const toolProgress = {};
@@ -1836,7 +1933,8 @@
 
             diagTools.forEach((dt, i) => {
                 const prog = toolProgress[dt.code] || 0;
-                const isCurrent = dt.code === state.toolCode;
+                const currentCode = state.tool?.code || new URLSearchParams(location.search).get('code');
+                const isCurrent = dt.code === currentCode;
                 const isDone = prog >= 80;
                 if (isDone) completedCount++;
 
@@ -2016,7 +2114,7 @@
                             <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px">بيانات مقترحة من الألم والطموح</div>
                             <div style="font-size:12px;color:var(--text-muted)">سحبنا بيانات من إجاباتك السابقة (الألم والطموح). عدّل أو أضف حسب ما تشوف مناسب — أو احفظ مباشرة.</div>
                         </div>
-                        <button onclick="clearSuggestions()" style="padding:8px 16px;border-radius:10px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.06);color:#ef4444;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">✕ ابدأ فاضي</button>
+                        <button data-action="clear-suggestions" style="padding:8px 16px;border-radius:10px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.06);color:#ef4444;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">✕ ابدأ فاضي</button>
                     </div>
                     `;
                     autoSaveSuggestions(data);
@@ -2034,8 +2132,8 @@
                             <div style="flex:1;font-size:13px;color:var(--text)">
                                 عندك بيانات من <strong>الألم والطموح</strong> — تبي ندمجها مع SWOT الحالي؟
                             </div>
-                            <button onclick="mergePainAmbition()" style="padding:8px 16px;border-radius:10px;border:none;background:linear-gradient(135deg,#22c55e,#10b981);color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">⬇ ادمج البيانات</button>
-                            <button onclick="document.getElementById('painAmbitionBanner').remove()" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;font-family:inherit">تخطي</button>
+                            <button data-action="merge-pain-ambition" style="padding:8px 16px;border-radius:10px;border:none;background:linear-gradient(135deg,#22c55e,#10b981);color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">⬇ ادمج البيانات</button>
+                            <button data-action="remove-pain-ambition-banner" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;font-family:inherit">تخطي</button>
                         </div>
                         `;
                     }
@@ -2101,7 +2199,7 @@
               <div class="add-item-row">
                 <input type="text" placeholder="${isEnhanced ? 'اكتب العامل المؤثر...' : 'أضف عنصراً جديداً...'}" 
                        id="input-${section.key}"
-                       onkeydown="if(event.key==='Enter') addPestelItem('${section.key}', '${section.color}')">
+                       data-action="add-pestel-item" data-key="${section.key}" data-color="${section.color}">
                 <button data-action="add-item" data-key="${section.key}" data-color="${section.color}">
                   <i class="bi bi-plus"></i>
                 </button>
@@ -2462,8 +2560,8 @@
 
                 // Custom input
                 html += '<div style="display:flex;gap:8px;margin-bottom:14px">';
-                html += '<input type="text" id="input-competencies" placeholder="أو اكتب قدرة جوهرية خاصة بشركتك..." onkeydown="if(event.key===\'Enter\') addPestelItem(\'competencies\',\'#D97706\')" style="flex:1;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);font-family:inherit;font-size:13px">';
-                html += '<button onclick="addPestelItem(\'competencies\',\'#D97706\')" style="padding:10px 16px;border-radius:10px;border:none;background:#D97706;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer"><i class="bi bi-plus"></i> أضف</button>';
+                html += '<input type="text" id="input-competencies" placeholder="أو اكتب قدرة جوهرية خاصة بشركتك..." data-action="add-pestel-item" data-key="competencies" data-color="#D97706" style="flex:1;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);font-family:inherit;font-size:13px">';
+                html += '<button data-action="add-pestel-item" data-key="competencies" data-color="#D97706" style="padding:10px 16px;border-radius:10px;border:none;background:#D97706;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer"><i class="bi bi-plus"></i> أضف</button>';
                 html += '</div>';
 
                 // Existing competencies with VRIO visual cards
@@ -2475,7 +2573,7 @@
                         html += '<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:12px;background:rgba(217,119,6,0.04);border:1px solid rgba(217,119,6,0.15)">';
                         html += '<span style="font-size:18px">🏆</span>';
                         html += '<div style="flex:1"><div style="font-size:13px;font-weight:700;color:var(--text)">' + text + '</div></div>';
-                        html += '<button onclick="removeItem(\'competencies\',' + idx + ')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:11px;padding:4px" title="حذف">✕</button>';
+                        html += '<button data-action="remove-item" data-key="competencies" data-idx="' + idx + '" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:11px;padding:4px" title="حذف">✕</button>';
                         html += '</div>';
                     });
                     html += '</div>';
@@ -2625,7 +2723,7 @@
                     html += '<div style="margin-bottom:12px;border:1px solid ' + s.color + '20;border-radius:14px;overflow:hidden">';
 
                     // Stage header
-                    html += '<div onclick="toggleCjStage(\'' + s.key + '\')" style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:' + s.color + '08;cursor:pointer;transition:all .2s">';
+                    html += `<div data-action="toggle-cj" data-key="${s.key}" style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:${s.color}08;cursor:pointer;transition:all .2s">`;
                     html += '<div style="display:flex;align-items:center;gap:10px">';
                     html += '<span style="font-size:22px">' + s.emoji + '</span>';
                     html += '<div><div style="font-size:14px;font-weight:700;color:var(--text)">' + s.nameAr + '</div>';
@@ -2664,8 +2762,8 @@
 
                     // Custom input
                     html += '<div style="display:flex;gap:6px;margin-top:8px">';
-                    html += '<input type="text" id="input-' + s.key + '" placeholder="أو اكتب نقطة تواصل خاصة..." onkeydown="if(event.key===\'Enter\') addPestelItem(\'' + s.key + '\',\'' + s.color + '\')" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);font-family:inherit;font-size:12px">';
-                    html += '<button onclick="addPestelItem(\'' + s.key + '\',\'' + s.color + '\')" style="padding:8px 14px;border-radius:8px;border:none;background:' + s.color + ';color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer"><i class="bi bi-plus"></i></button>';
+                    html += '<input type="text" id="input-' + s.key + '" placeholder="أو اكتب نقطة تواصل خاصة..." data-action="add-pestel-item" data-key="' + s.key + '" data-color="' + s.color + '" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);font-family:inherit;font-size:12px">';
+                    html += '<button data-action="add-pestel-item" data-key="' + s.key + '" data-color="' + s.color + '" style="padding:8px 14px;border-radius:8px;border:none;background:' + s.color + ';color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer"><i class="bi bi-plus"></i></button>';
                     html += '</div>';
 
                     // Existing items
@@ -2753,6 +2851,48 @@
                             <div class="porter-legend-item"><div class="porter-legend-dot" style="background:#94a3b8"></div> لم يُقيّم بعد</div>
                         </div>
                     </div>`;
+                }
+
+                // ═══ Health Indicator & Scoring (For Enhanced Tools) ═══
+                if (config.enhanced) {
+                    const totalSections = config.sections.length;
+                    const filledSections = config.sections.filter(s => extractItems(data, s.key).length > 0).length;
+                    const completionPct = totalSections > 0 ? Math.round((filledSections / totalSections) * 100) : 0;
+
+                    let healthColor = '#ef4444'; // Red
+                    let healthIcon = '🔴';
+                    let healthMsg = 'النموذج منقوص، هناك فجوات في أبعاد استراتيجية خطيرة يجب تغطيتها.';
+
+                    if (completionPct === 100) {
+                        healthColor = '#10b981'; // Green
+                        healthIcon = '✅';
+                        healthMsg = 'النموذج شامل ومكتمل! تم فحص جميع الزوايا الإستراتيجية بنجاح.';
+                    } else if (completionPct >= 50) {
+                        healthColor = '#f59e0b'; // Yellow
+                        healthIcon = '🟡';
+                        healthMsg = 'النموذج ناضج جزئياً، لكن لا يزال هناك اختلال في بعض الأبعاد.';
+                    }
+
+                    html += `
+                    <div class="enhanced-health-banner fade-in" style="background:var(--bg-card);border:2px solid ${completionPct === 100 ? healthColor + '40' : 'var(--border)'};border-radius:18px;padding:24px;margin-bottom:24px;display:flex;flex-direction:column;gap:18px;box-shadow:0 8px 30px rgba(0,0,0,0.03)">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
+                            <div style="display:flex;align-items:center;gap:16px">
+                                <div style="width:52px;height:52px;border-radius:14px;background:${healthColor}15;display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 4px 15px ${healthColor}20">${healthIcon}</div>
+                                <div>
+                                    <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px">مؤشر صحة واكتمال النموذج (Health Score)</div>
+                                    <div style="font-size:12px;color:var(--text-muted)">${healthMsg}</div>
+                                </div>
+                            </div>
+                            <div style="text-align:left;min-width:80px">
+                                <div style="font-size:28px;font-weight:900;color:${healthColor};line-height:1">${completionPct}%</div>
+                                <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${filledSections} من ${totalSections} أبعاد</div>
+                            </div>
+                        </div>
+                        <div style="width:100%;height:10px;background:var(--bg-body);border-radius:10px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,0.1)">
+                            <div style="width:${completionPct}%;height:100%;background:linear-gradient(90deg, ${healthColor}AA, ${healthColor});border-radius:10px;transition:width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)"></div>
+                        </div>
+                    </div>
+                    `;
                 }
 
                 // Section cards grid
@@ -3365,7 +3505,7 @@
                     existingHtml += `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid var(--border)">
                         <span style="color:${section.color};font-size:14px">${section.emoji}</span>
                         <span style="flex:1;font-size:12px;font-weight:600">${text}</span>
-                        <button onclick="removeVcItem('${key}', ${idx}, '${section.color}')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:11px;padding:2px" title="حذف">✕</button>
+                        <button data-action="remove-vc-item" data-key="${key}" data-idx="${idx}" data-color="${section.color}" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:11px;padding:2px" title="حذف">✕</button>
                     </div>`;
                 });
                 existingHtml += '</div>';
@@ -3379,10 +3519,10 @@
             html += '<span style="font-size:28px">' + section.emoji + '</span>';
             html += '<div><div style="font-size:16px;font-weight:800;color:' + section.color + '">' + section.nameAr + '</div>';
             html += '<div style="font-size:11px;color:var(--text-muted)">' + groupLabel + '</div></div></div>';
-            html += '<button onclick="toggleVcActivity(\'' + key + '\')" style="background:none;border:1px solid var(--border);color:var(--text-muted);width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:14px">✕</button></div>';
+            html += '<button data-action="toggle-vc" data-key="' + key + '" style="background:none;border:1px solid var(--border);color:var(--text-muted);width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:14px">✕</button></div>';
             html += '<div style="background:rgba(245,158,11,0.04);border:1px dashed rgba(245,158,11,0.15);border-radius:10px;padding:8px 12px;margin-bottom:12px;font-size:10px;color:var(--text-muted);line-height:1.6"><strong style="color:#f59e0b">💡 نصيحة:</strong> ابدأ بالعناصر ⭐ <strong>الأساسية</strong> — هي اللي لازم تكون عندك. بعدها أضف 👍 <strong>المُوصى</strong> حسب وضعك. الـ ○ <strong>الاختياري</strong> حسب حجم شركتك.</div>';
             html += '<div style="margin-bottom:12px">' + chipsHtml + '</div>';
-            html += '<div style="display:flex;gap:8px;margin-bottom:14px"><input type="text" id="vcInput_' + key + '" placeholder="أو اكتب نشاطاً خاصاً بك..." onkeydown="if(event.key===\'Enter\') addVcItem(\'' + key + '\', this.value, \'' + section.color + '\')" style="flex:1;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);font-family:inherit;font-size:13px"><button onclick="addVcItem(\'' + key + '\', document.getElementById(\'vcInput_' + key + '\').value, \'' + section.color + '\')" style="padding:10px 16px;border-radius:10px;border:none;background:' + section.color + ';color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer"><i class="bi bi-plus"></i> أضف</button></div>';
+            html += '<div style="display:flex;gap:8px;margin-bottom:14px"><input type="text" id="vcInput_' + key + '" placeholder="أو اكتب نشاطاً خاصاً بك..." data-action="add-vc-item" data-key="' + key + '" data-color="' + section.color + '" style="flex:1;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);font-family:inherit;font-size:13px"><button data-action="add-vc-item" data-key="' + key + '" data-color="' + section.color + '" style="padding:10px 16px;border-radius:10px;border:none;background:' + section.color + ';color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer"><i class="bi bi-plus"></i> أضف</button></div>';
             html += existingHtml;
 
             panel.innerHTML = html;
@@ -3400,6 +3540,7 @@
             addPestelItem_direct(key, value.trim(), 'neutral', 'MEDIUM');
             // Re-render the panel + flow
             renderContent();
+            _activeVcKey = null; // يمنع إغلاق النافذة بعد التحديث
             setTimeout(() => toggleVcActivity(key), 50);
         }
 
@@ -3422,6 +3563,7 @@
                 // Save
                 savePestelData(data);
                 renderContent();
+                _activeVcKey = null; // يمنع إغلاق النافذة بعد التحديث
                 setTimeout(() => toggleVcActivity(key), 50);
             }
         }
@@ -3632,7 +3774,7 @@
 
             try {
                 // For direct-input tools: save local data first if exists
-                const DIRECT_TOOLS = ['CUSTOMER_JOURNEY', 'VALUE_CHAIN', 'CORE_COMPETENCY'];
+                const DIRECT_TOOLS = ['CUSTOMER_JOURNEY', 'VALUE_CHAIN', 'CORE_COMPETENCY', 'PESTEL', 'PORTER'];
                 if (DIRECT_TOOLS.includes(state.toolCode) && state.analysis?.parsedData) {
                     const data = state.analysis.parsedData;
                     const hasData = Object.keys(data).some(k => {

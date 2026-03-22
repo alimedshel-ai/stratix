@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس - القرارات الإدارية</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --bg: #0f1117;
+            --bg-card: #1a1d2e;
+            --bg-card-hover: #232640;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --success: #22c55e;
+            --warning: #facc15;
+            --danger: #ef4444;
+            --info: #38bdf8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .top-nav {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 14px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .top-nav .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .layout {
+            display: flex;
+            min-height: calc(100vh - 60px);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            max-width: calc(100% - 220px);
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 28px;
+        }
+
+        .page-header h1 {
+            font-size: 26px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-header h1 i {
+            color: var(--primary);
+        }
+
+        .page-subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .page-tip {
+            background: rgba(102, 126, 234, 0.08);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-size: 12px;
+            color: var(--info);
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Stats */
+        .mini-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .mini-stat {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px;
+            text-align: center;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mini-stat::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+        .mini-stat:nth-child(1)::before {
+            background: var(--primary);
+        }
+
+        .mini-stat:nth-child(2)::before {
+            background: var(--success);
+        }
+
+        .mini-stat:nth-child(3)::before {
+            background: var(--warning);
+        }
+
+        .mini-stat:nth-child(4)::before {
+            background: var(--danger);
+        }
+
+        .mini-stat:hover {
+            transform: translateY(-3px);
+        }
+
+        .ms-value {
+            font-size: 26px;
+            font-weight: 800;
+        }
+
+        .ms-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Tabs */
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 22px;
+            flex-wrap: wrap;
+        }
+
+        .ftab {
+            padding: 8px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-muted);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .ftab:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .ftab.active {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(102, 126, 234, 0.08);
+        }
+
+        /* Decision Cards */
+        .decisions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .decision-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 0;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .decision-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .dc-bar {
+            height: 4px;
+        }
+
+        .dc-bar.approved {
+            background: linear-gradient(90deg, var(--success), #4ade80);
+        }
+
+        .dc-bar.pending {
+            background: linear-gradient(90deg, var(--warning), #fde047);
+        }
+
+        .dc-bar.rejected {
+            background: linear-gradient(90deg, var(--danger), #f87171);
+        }
+
+        .dc-bar.draft {
+            background: linear-gradient(90deg, var(--text-muted), #cbd5e1);
+        }
+
+        .dc-body {
+            padding: 22px;
+        }
+
+        .dc-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 14px;
+        }
+
+        .dc-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .dc-icon.hr {
+            background: rgba(102, 126, 234, 0.12);
+            color: var(--primary);
+        }
+
+        .dc-icon.org {
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--info);
+        }
+
+        .dc-icon.policy {
+            background: rgba(250, 204, 21, 0.12);
+            color: var(--warning);
+        }
+
+        .dc-icon.ops {
+            background: rgba(34, 197, 94, 0.12);
+            color: var(--success);
+        }
+
+        .dc-icon.risk {
+            background: rgba(239, 68, 68, 0.12);
+            color: var(--danger);
+        }
+
+        .dc-title-row {
+            flex: 1;
+        }
+
+        .dc-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .dc-badges {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .dc-badge {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .dc-badge.approved {
+            background: rgba(34, 197, 94, 0.12);
+            color: var(--success);
+        }
+
+        .dc-badge.pending {
+            background: rgba(250, 204, 21, 0.12);
+            color: var(--warning);
+        }
+
+        .dc-badge.rejected {
+            background: rgba(239, 68, 68, 0.12);
+            color: var(--danger);
+        }
+
+        .dc-badge.draft {
+            background: rgba(148, 163, 184, 0.12);
+            color: var(--text-muted);
+        }
+
+        .dc-badge.priority-HIGH {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .dc-badge.priority-MEDIUM {
+            background: rgba(250, 204, 21, 0.1);
+            color: var(--warning);
+        }
+
+        .dc-badge.priority-LOW {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+        }
+
+        .dc-badge.category {
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary);
+        }
+
+        .dc-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 14px;
+        }
+
+        .dc-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .dc-detail {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+        }
+
+        .dc-detail i {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .dc-detail-label {
+            color: var(--text-muted);
+        }
+
+        .dc-detail-value {
+            font-weight: 700;
+            margin-right: 4px;
+        }
+
+        .dc-impact {
+            margin-bottom: 14px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .dc-impact-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dc-impact-text {
+            font-size: 13px;
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .dc-actions {
+            display: flex;
+            gap: 8px;
+            border-top: 1px solid var(--border);
+            padding-top: 14px;
+        }
+
+        .dc-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .dc-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .dc-btn.approve:hover {
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        .dc-btn.edit:hover {
+            border-color: var(--warning);
+            color: var(--warning);
+        }
+
+        .dc-btn.reject:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .dc-btn.view:hover {
+            border-color: var(--info);
+            color: var(--info);
+        }
+
+        /* Modal */
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            color: var(--text);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 16px 16px 0 0;
+            padding: 18px 24px;
+            border-bottom: none;
+        }
+
+        .modal-header .modal-title {
+            font-weight: 700;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-muted);
+        }
+
+        .form-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-input option {
+            background: var(--bg-card);
+            color: var(--text);
+        }
+
+        textarea.form-input {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .btn-modal-save {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-modal-cancel {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 9999;
+        }
+
+        .toast-msg {
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            animation: slideUp 0.3s ease;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(34, 197, 94, 0.9);
+            color: white;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mini-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .main-content {
+                max-width: 100%;
+                padding: 16px;
+            }
+
+            .dc-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="top-nav">
+        <a href="/dashboard.html" class="brand"><i class="bi bi-gem"></i> ستارتكس</a>
+        <div class="user-area">
+            <div class="user-avatar">م</div>
+            <button class="btn-logout" onclick="localStorage.clear(); location.href='/login.html'"><i
+                    class="bi bi-box-arrow-right"></i> خروج</button>
+        </div>
+    </nav>
+
+    <div class="layout">
+        <aside class="sidebar"></aside>
+        <div class="main-content">
+            <div class="page-header">
+                <div>
+                    <h1><i class="bi bi-clipboard2-check"></i> القرارات الإدارية</h1>
+                    <p class="page-subtitle">القرارات التنظيمية والتشغيلية — إدارة الموارد البشرية، السياسات، الهيكل
+                        التنظيمي والمخاطر</p>
+                    <div class="page-tip">
+                        <i class="bi bi-lightbulb"></i>
+                        <span><strong>نصيحة:</strong> سجّل كل قرار إداري مع الأثر المتوقع والمسؤول والموعد — يسهّل
+                            المتابعة والمساءلة لاحقاً.</span>
+                    </div>
+                </div>
+                <button class="btn-add" onclick="openCreateModal()"><i class="bi bi-plus-lg"></i> قرار جديد</button>
+            </div>
+
+            <!-- Stats -->
+            <div class="mini-stats">
+                <div class="mini-stat">
+                    <div class="ms-value" id="sTotal">8</div>
+                    <div class="ms-label">إجمالي القرارات</div>
+                </div>
+                <div class="mini-stat">
+                    <div class="ms-value" id="sApproved">3</div>
+                    <div class="ms-label">معتمدة</div>
+                </div>
+                <div class="mini-stat">
+                    <div class="ms-value" id="sPending">3</div>
+                    <div class="ms-label">بانتظار الاعتماد</div>
+                </div>
+                <div class="mini-stat">
+                    <div class="ms-value" id="sRejected">2</div>
+                    <div class="ms-label">مرفوضة / مؤجلة</div>
+                </div>
+            </div>
+
+            <!-- Filter -->
+            <div class="filter-tabs">
+                <div class="ftab active" onclick="filterDecisions('all',this)">الكل</div>
+                <div class="ftab" onclick="filterDecisions('approved',this)">✅ معتمدة</div>
+                <div class="ftab" onclick="filterDecisions('pending',this)">⏳ بانتظار</div>
+                <div class="ftab" onclick="filterDecisions('rejected',this)">❌ مرفوضة</div>
+                <div class="ftab" onclick="filterDecisions('draft',this)">📝 مسودة</div>
+            </div>
+
+            <!-- Decisions List -->
+            <div class="decisions-list" id="decisionsList"></div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="decisionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle"><i class="bi bi-plus-circle"></i> قرار إداري جديد</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editId">
+                    <div class="form-group"><label>عنوان القرار</label><input type="text" class="form-input"
+                            id="formTitle" placeholder="مثال: إعادة هيكلة إدارة المبيعات"></div>
+                    <div class="form-group"><label>الوصف والتفاصيل</label><textarea class="form-input" id="formDesc"
+                            placeholder="اشرح تفاصيل القرار وأسبابه..."></textarea></div>
+                    <div class="form-row">
+                        <div class="form-group"><label>التصنيف</label>
+                            <select class="form-input" id="formCategory">
+                                <option value="HR">👥 موارد بشرية</option>
+                                <option value="ORG">🏢 هيكل تنظيمي</option>
+                                <option value="POLICY">📋 سياسات ولوائح</option>
+                                <option value="OPS">⚙️ تشغيلي</option>
+                                <option value="RISK">🛡️ إدارة مخاطر</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>الأولوية</label>
+                            <select class="form-input" id="formPriority">
+                                <option value="HIGH">🔴 عالية — عاجل</option>
+                                <option value="MEDIUM">🟡 متوسطة</option>
+                                <option value="LOW">🟢 منخفضة</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>الحالة</label>
+                            <select class="form-input" id="formStatus">
+                                <option value="draft">مسودة</option>
+                                <option value="pending">بانتظار الاعتماد</option>
+                                <option value="approved">معتمد</option>
+                                <option value="rejected">مرفوض</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>المسؤول عن التنفيذ</label><input type="text" class="form-input"
+                                id="formOwner" placeholder="اسم المسؤول أو الإدارة"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>تاريخ القرار</label><input type="date" class="form-input"
+                                id="formDate"></div>
+                        <div class="form-group"><label>موعد التنفيذ</label><input type="date" class="form-input"
+                                id="formDeadline"></div>
+                    </div>
+                    <div class="form-group"><label>الأثر المتوقع</label><textarea class="form-input" id="formImpact"
+                            placeholder="ما هو التأثير المتوقع لهذا القرار على المنظمة؟"
+                            style="min-height:60px"></textarea></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-modal-cancel" data-bs-dismiss="modal">إلغاء</button>
+                    <button class="btn-modal-save" onclick="saveDecision()"><i class="bi bi-check-lg"></i> حفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/sidebar.js"></script>
+    <script src="/assets/js/ai-advisor.js"></script>
+    <script>
+        let currentFilter = 'all';
+        let decisions = [
+            {
+                id: '1', title: 'إعادة هيكلة إدارة المبيعات', category: 'ORG',
+                desc: 'دمج فريقي المبيعات المباشرة والرقمية تحت إدارة واحدة لتوحيد الجهود وتحسين التنسيق بين القنوات.',
+                status: 'approved', priority: 'HIGH', owner: 'م. سارة القحطاني', date: '2026-01-15', deadline: '2026-03-01',
+                impact: 'توفير 15% من التكاليف التشغيلية وزيادة كفاءة فريق المبيعات بنسبة 25%.'
+            },
+            {
+                id: '2', title: 'تطبيق نظام العمل الهجين', category: 'POLICY',
+                desc: 'السماح للموظفين بالعمل عن بعد 3 أيام أسبوعياً مع إلزامية الحضور يومي الأحد والأربعاء.',
+                status: 'approved', priority: 'MEDIUM', owner: 'إدارة الموارد البشرية', date: '2026-01-20', deadline: '2026-02-15',
+                impact: 'تحسين رضا الموظفين بنسبة 30% وتقليل معدل الدوران الوظيفي.'
+            },
+            {
+                id: '3', title: 'ترقية 5 موظفين للصف القيادي', category: 'HR',
+                desc: 'ترقية 5 موظفين متميزين من المناصب الإشرافية إلى مناصب قيادية بناءً على تقييم الأداء السنوي.',
+                status: 'approved', priority: 'MEDIUM', owner: 'نائب الرئيس التنفيذي', date: '2026-02-01', deadline: '2026-02-28',
+                impact: 'تعزيز الخط الثاني من القيادات وضمان استمرارية الأعمال.'
+            },
+            {
+                id: '4', title: 'إنشاء لجنة إدارة المخاطر', category: 'RISK',
+                desc: 'تشكيل لجنة دائمة من 5 أعضاء لتقييم ومتابعة المخاطر الاستراتيجية والتشغيلية بشكل ربعي.',
+                status: 'pending', priority: 'HIGH', owner: 'الرئيس التنفيذي', date: '2026-02-10', deadline: '2026-03-15',
+                impact: 'تقليل المخاطر غير المتوقعة بنسبة 40% وتحسين سرعة الاستجابة للأزمات.'
+            },
+            {
+                id: '5', title: 'تحديث سياسة الإجازات السنوية', category: 'POLICY',
+                desc: 'زيادة الإجازات السنوية من 21 إلى 25 يوماً للموظفين الذين أكملوا 3 سنوات خدمة.',
+                status: 'pending', priority: 'LOW', owner: 'إدارة الموارد البشرية', date: '2026-02-12', deadline: '2026-04-01',
+                impact: 'تحسين التوازن بين العمل والحياة وزيادة الاستبقاء الوظيفي.'
+            },
+            {
+                id: '6', title: 'تعيين مدير تقني جديد', category: 'HR',
+                desc: 'فتح باب التوظيف لمنصب Chief Technology Officer لقيادة مشاريع التحول الرقمي.',
+                status: 'pending', priority: 'HIGH', owner: 'لجنة التوظيف', date: '2026-02-15', deadline: '2026-04-30',
+                impact: 'تسريع مشاريع التحول الرقمي بنسبة 50% وتحسين الجودة التقنية.'
+            },
+            {
+                id: '7', title: 'إلغاء فرع المنطقة الشرقية مؤقتاً', category: 'OPS',
+                desc: 'تعليق عمليات فرع الدمام مؤقتاً بسبب انخفاض العوائد وإعادة توزيع الموارد.',
+                status: 'rejected', priority: 'HIGH', owner: 'المدير المالي', date: '2026-01-25', deadline: '2026-02-28',
+                impact: 'تم الرفض — الفرع يخدم عملاء حكوميين مهمين. تم اقتراح تقليص بدلاً من الإلغاء.'
+            },
+            {
+                id: '8', title: 'استبدال نظام ERP بنظام سحابي', category: 'OPS',
+                desc: 'الانتقال من نظام ERP محلي إلى حل سحابي SAP S/4HANA لتحسين المرونة.',
+                status: 'rejected', priority: 'MEDIUM', owner: 'إدارة تقنية المعلومات', date: '2026-02-05', deadline: '2026-06-30',
+                impact: 'تم التأجيل — الميزانية المطلوبة (2M ريال) تتجاوز المخصص. سيُعاد التقييم في Q3.'
+            },
+        ];
+
+        const categoryConfig = {
+            HR: { label: 'موارد بشرية', icon: 'bi-people', css: 'hr' },
+            ORG: { label: 'هيكل تنظيمي', icon: 'bi-building', css: 'org' },
+            POLICY: { label: 'سياسات ولوائح', icon: 'bi-journal-text', css: 'policy' },
+            OPS: { label: 'تشغيلي', icon: 'bi-gear', css: 'ops' },
+            RISK: { label: 'إدارة مخاطر', icon: 'bi-shield-check', css: 'risk' },
+        };
+        const statusLabels = { approved: 'معتمد', pending: 'بانتظار', rejected: 'مرفوض', draft: 'مسودة' };
+        const priorityLabels = { HIGH: 'عاجل', MEDIUM: 'متوسطة', LOW: 'منخفضة' };
+
+        function getFiltered() {
+            if (currentFilter === 'all') return decisions;
+            return decisions.filter(d => d.status === currentFilter);
+        }
+
+        function filterDecisions(f, el) {
+            currentFilter = f;
+            document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            renderAll();
+        }
+
+        function renderStats() {
+            document.getElementById('sTotal').textContent = decisions.length;
+            document.getElementById('sApproved').textContent = decisions.filter(d => d.status === 'approved').length;
+            document.getElementById('sPending').textContent = decisions.filter(d => d.status === 'pending').length;
+            document.getElementById('sRejected').textContent = decisions.filter(d => d.status === 'rejected').length;
+        }
+
+        function renderList() {
+            const data = getFiltered();
+            document.getElementById('decisionsList').innerHTML = data.map(d => {
+                const cat = categoryConfig[d.category];
+                return `
+        <div class="decision-card">
+          <div class="dc-bar ${d.status}"></div>
+          <div class="dc-body">
+            <div class="dc-header">
+              <div class="dc-icon ${cat.css}"><i class="bi ${cat.icon}"></i></div>
+              <div class="dc-title-row">
+                <div class="dc-title">${d.title}</div>
+                <div class="dc-badges">
+                  <span class="dc-badge ${d.status}">${statusLabels[d.status]}</span>
+                  <span class="dc-badge priority-${d.priority}">${priorityLabels[d.priority]}</span>
+                  <span class="dc-badge category">${cat.label}</span>
+                </div>
+              </div>
+            </div>
+            <div class="dc-desc">${d.desc}</div>
+            <div class="dc-details">
+              <div class="dc-detail"><i class="bi bi-person"></i><span class="dc-detail-label">المسؤول:</span><span class="dc-detail-value">${d.owner}</span></div>
+              <div class="dc-detail"><i class="bi bi-calendar3"></i><span class="dc-detail-label">تاريخ القرار:</span><span class="dc-detail-value">${d.date}</span></div>
+              <div class="dc-detail"><i class="bi bi-clock"></i><span class="dc-detail-label">موعد التنفيذ:</span><span class="dc-detail-value">${d.deadline}</span></div>
+            </div>
+            <div class="dc-impact">
+              <div class="dc-impact-title"><i class="bi bi-lightning-charge"></i> الأثر المتوقع</div>
+              <div class="dc-impact-text">${d.impact}</div>
+            </div>
+            <div class="dc-actions">
+              ${d.status === 'pending' ? `<button class="dc-btn approve" onclick="changeStatus('${d.id}','approved')"><i class="bi bi-check-circle"></i> اعتماد</button>` : ''}
+              <button class="dc-btn view" onclick="openEditModal('${d.id}')"><i class="bi bi-eye"></i> عرض</button>
+              <button class="dc-btn edit" onclick="openEditModal('${d.id}')"><i class="bi bi-pencil"></i> تعديل</button>
+              ${d.status === 'pending' ? `<button class="dc-btn reject" onclick="changeStatus('${d.id}','rejected')"><i class="bi bi-x-circle"></i> رفض</button>` : ''}
+            </div>
+          </div>
+        </div>`;
+            }).join('');
+        }
+
+        function renderAll() { renderStats(); renderList(); }
+
+        function changeStatus(id, status) {
+            const d = decisions.find(x => x.id === id);
+            if (d) { d.status = status; renderAll(); showToast(status === 'approved' ? 'تم اعتماد القرار ✓' : 'تم رفض القرار'); }
+        }
+
+        function openCreateModal() {
+            document.getElementById('modalTitle').innerHTML = '<i class="bi bi-plus-circle"></i> قرار إداري جديد';
+            document.getElementById('editId').value = '';
+            ['formTitle', 'formDesc', 'formOwner', 'formDate', 'formDeadline', 'formImpact'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('formCategory').value = 'HR';
+            document.getElementById('formPriority').value = 'MEDIUM';
+            document.getElementById('formStatus').value = 'draft';
+            new bootstrap.Modal(document.getElementById('decisionModal')).show();
+        }
+
+        function openEditModal(id) {
+            const d = decisions.find(x => x.id === id);
+            if (!d) return;
+            document.getElementById('modalTitle').innerHTML = '<i class="bi bi-pencil-square"></i> تعديل القرار';
+            document.getElementById('editId').value = d.id;
+            document.getElementById('formTitle').value = d.title;
+            document.getElementById('formDesc').value = d.desc;
+            document.getElementById('formCategory').value = d.category;
+            document.getElementById('formPriority').value = d.priority;
+            document.getElementById('formStatus').value = d.status;
+            document.getElementById('formOwner').value = d.owner;
+            document.getElementById('formDate').value = d.date;
+            document.getElementById('formDeadline').value = d.deadline;
+            document.getElementById('formImpact').value = d.impact;
+            new bootstrap.Modal(document.getElementById('decisionModal')).show();
+        }
+
+        function saveDecision() {
+            const id = document.getElementById('editId').value;
+            const data = {
+                title: document.getElementById('formTitle').value.trim(),
+                desc: document.getElementById('formDesc').value.trim(),
+                category: document.getElementById('formCategory').value,
+                priority: document.getElementById('formPriority').value,
+                status: document.getElementById('formStatus').value,
+                owner: document.getElementById('formOwner').value.trim(),
+                date: document.getElementById('formDate').value,
+                deadline: document.getElementById('formDeadline').value,
+                impact: document.getElementById('formImpact').value.trim(),
+            };
+            if (!data.title) return;
+            if (id) {
+                const d = decisions.find(x => x.id === id);
+                if (d) Object.assign(d, data);
+                showToast('تم تحديث القرار ✓');
+            } else {
+                decisions.unshift({ id: Date.now().toString(), ...data });
+                showToast('تم إنشاء القرار ✓');
+            }
+            bootstrap.Modal.getInstance(document.getElementById('decisionModal')).hide();
+            renderAll();
+        }
+
+        function showToast(msg) {
+            const t = document.createElement('div');
+            t.className = 'toast-msg';
+            t.innerHTML = `<i class="bi bi-check-circle"></i> ${msg}`;
+            document.getElementById('toastContainer').appendChild(t);
+            setTimeout(() => t.remove(), 3000);
+        }
+
+        renderAll();
+    </script>
+</body>
+
+</html>

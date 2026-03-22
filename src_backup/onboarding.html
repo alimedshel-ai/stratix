@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس — معالج الإعداد</title>
+    <meta name="description" content="أكمل إعداد منظمتك في ستارتكس - خطوات بسيطة للبدء">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --secondary: #764ba2;
+            --accent: #f093fb;
+            --bg: #f0f2f8;
+            --card-bg: #fff;
+            --text: #2d3748;
+            --text-muted: #718096;
+            --success: #48bb78;
+            --warning: #ed8936;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            color: var(--text);
+        }
+
+        /* ===== WIZARD CONTAINER ===== */
+        .wizard-wrapper {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== TOP BAR ===== */
+        .wizard-topbar {
+            background: #fff;
+            padding: 16px 0;
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .wizard-logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .skip-btn {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .skip-btn:hover {
+            color: var(--primary);
+        }
+
+        /* ===== PROGRESS ===== */
+        .wizard-progress {
+            background: #fff;
+            padding: 24px 0;
+            border-bottom: 1px solid #edf2f7;
+        }
+
+        .steps-track {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            white-space: nowrap;
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            border: 2px solid #e2e8f0;
+            background: #fff;
+            color: var(--text-muted);
+            transition: all 0.4s;
+            position: relative;
+        }
+
+        .step-circle.active {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+        }
+
+        .step-circle.done {
+            border-color: var(--success);
+            background: var(--success);
+            color: #fff;
+        }
+
+        .step-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .step-indicator.active .step-label {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .step-indicator.done .step-label {
+            color: var(--success);
+        }
+
+        .step-line {
+            width: 60px;
+            height: 2px;
+            background: #e2e8f0;
+            margin: 0 8px;
+            transition: background 0.4s;
+        }
+
+        .step-line.done {
+            background: var(--success);
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .wizard-body {
+            flex: 1;
+            padding: 40px 0;
+        }
+
+        .wizard-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            padding: 48px;
+            max-width: 700px;
+            margin: 0 auto;
+            animation: fadeUp 0.4s ease;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .wizard-card .step-header {
+            text-align: center;
+            margin-bottom: 36px;
+        }
+
+        .step-header .step-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: var(--primary);
+            margin: 0 auto 16px;
+        }
+
+        .step-header h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .step-header p {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        /* ===== FORM ELEMENTS ===== */
+        .form-label {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+
+        .form-control,
+        .form-select {
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1.5px solid #e2e8f0;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        }
+
+        .form-text {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        /* Selection Cards */
+        .selection-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .selection-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            background: #fff;
+        }
+
+        .selection-card:hover {
+            border-color: rgba(102, 126, 234, 0.4);
+            background: rgba(102, 126, 234, 0.02);
+        }
+
+        .selection-card.selected {
+            border-color: var(--primary);
+            background: rgba(102, 126, 234, 0.06);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.12);
+        }
+
+        .selection-card i {
+            font-size: 28px;
+            color: var(--primary);
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .selection-card .sel-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text);
+        }
+
+        .selection-card .sel-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* ===== BUTTONS ===== */
+        .wizard-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 36px;
+            padding-top: 24px;
+            border-top: 1px solid #edf2f7;
+        }
+
+        .btn-wizard {
+            padding: 12px 32px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .btn-wizard.primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+        }
+
+        .btn-wizard.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.35);
+        }
+
+        .btn-wizard.secondary {
+            background: #edf2f7;
+            color: var(--text);
+        }
+
+        .btn-wizard.secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-wizard:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* ===== SUCCESS STATE ===== */
+        .success-animation {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: #fff;
+            margin: 0 auto 24px;
+            animation: scaleIn 0.5s ease;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .confetti {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .confetti-piece {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            animation: confettiFall 3s ease-in forwards;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .wizard-card {
+                padding: 28px 20px;
+                margin: 0 12px;
+            }
+
+            .selection-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .steps-track {
+                gap: 0;
+            }
+
+            .step-label {
+                display: none;
+            }
+
+            .step-line {
+                width: 30px;
+            }
+        }
+
+        /* Step content visibility */
+        .step-content {
+            display: none;
+        }
+
+        .step-content.active {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wizard-wrapper">
+        <!-- Top Bar -->
+        <div class="wizard-topbar">
+            <div class="container d-flex align-items-center justify-content-between">
+                <a href="/" class="wizard-logo"><i class="bi bi-activity"></i> Startix</a>
+                <a href="/dashboard" class="skip-btn">تخطي <i class="bi bi-arrow-left"></i></a>
+            </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="wizard-progress">
+            <div class="container">
+                <div class="steps-track">
+                    <div class="step-indicator active" data-step="1">
+                        <div class="step-circle active">1</div>
+                        <span class="step-label">المنظمة</span>
+                    </div>
+                    <div class="step-line" id="line1"></div>
+                    <div class="step-indicator" data-step="2">
+                        <div class="step-circle">2</div>
+                        <span class="step-label">التفاصيل</span>
+                    </div>
+                    <div class="step-line" id="line2"></div>
+                    <div class="step-indicator" data-step="3">
+                        <div class="step-circle">3</div>
+                        <span class="step-label">الفريق</span>
+                    </div>
+                    <div class="step-line" id="line3"></div>
+                    <div class="step-indicator" data-step="4">
+                        <div class="step-circle">4</div>
+                        <span class="step-label">الانطلاق</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Body -->
+        <div class="wizard-body">
+            <!-- Step 1: Organization Info -->
+            <div class="step-content active" id="step1">
+                <div class="wizard-card">
+                    <div class="step-header">
+                        <div class="step-icon"><i class="bi bi-building"></i></div>
+                        <h2>أخبرنا عن منظمتك</h2>
+                        <p>ابدأ بإدخال المعلومات الأساسية لمنظمتك</p>
+                    </div>
+
+                    <!-- بانر: بيانات من التشخيص -->
+                    <div id="diagDataBanner"
+                        style="display:none;margin-bottom:20px;padding:14px 18px;border-radius:14px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                            <i class="bi bi-check-circle-fill" style="color:#22c55e;font-size:18px;"></i>
+                            <span style="font-weight:700;font-size:14px;color:#22c55e;">تم تعبئة بيانات من التشخيص
+                                تلقائياً</span>
+                        </div>
+                        <div id="diagDataTags" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">اسم المنشأة <span class="text-danger">*</span></label>
+                            <input type="text" id="orgName" class="form-control" placeholder="مثال: شركة رفارف للتقنية">
+                            <div class="form-text">هذا الحقل الوحيد المطلوب — الباقي معبّأ من التشخيص</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">نوع الكيان <span id="orgTypeAutoTag"
+                                    style="display:none;font-size:11px;color:#22c55e;font-weight:600;">✓ من
+                                    التشخيص</span></label>
+                            <select id="orgType" class="form-select">
+                                <option value="">اختر النوع</option>
+                                <option value="P">قطاع خاص</option>
+                                <option value="G">جهة حكومية</option>
+                                <option value="N">غير ربحي</option>
+                                <option value="M">مختلط</option>
+                                <option value="company">شركة</option>
+                                <option value="healthcare">مستشفى / قطاع صحي</option>
+                                <option value="education">مؤسسة تعليمية</option>
+                                <option value="other">أخرى</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">حجم المنشأة <span id="orgSizeAutoTag"
+                                    style="display:none;font-size:11px;color:#22c55e;font-weight:600;">✓ من
+                                    التشخيص</span></label>
+                            <select id="orgSize" class="form-select">
+                                <option value="">اختر الحجم</option>
+                                <option value="1-10">1-10 موظفين</option>
+                                <option value="11-50">11-50 موظف</option>
+                                <option value="51-200">51-200 موظف</option>
+                                <option value="201-500">201-500 موظف</option>
+                                <option value="500+">أكثر من 500</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">📅 عمر النشاط (سنوات التشغيل)</label>
+                            <select id="businessAge" class="form-select">
+                                <option value="">اختر</option>
+                                <option value="new">أقل من سنة (مشروع جديد)</option>
+                                <option value="1-3">1-3 سنوات</option>
+                                <option value="4-7">4-7 سنوات</option>
+                                <option value="8-15">8-15 سنة</option>
+                                <option value="15+">أكثر من 15 سنة</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">📍 المدينة / المنطقة</label>
+                            <select id="orgCity" class="form-select">
+                                <option value="">اختر المنطقة</option>
+                                <option value="riyadh">الرياض</option>
+                                <option value="jeddah">جدة</option>
+                                <option value="dammam">الدمام / الشرقية</option>
+                                <option value="makkah">مكة المكرمة</option>
+                                <option value="madinah">المدينة المنورة</option>
+                                <option value="abha">أبها / عسير</option>
+                                <option value="tabuk">تبوك</option>
+                                <option value="hail">حائل</option>
+                                <option value="jazan">جازان</option>
+                                <option value="najran">نجران</option>
+                                <option value="qassim">القصيم</option>
+                                <option value="aljouf">الجوف</option>
+                                <option value="northern">الحدود الشمالية</option>
+                                <option value="bahah">الباحة</option>
+                                <option value="other_sa">منطقة أخرى بالسعودية</option>
+                                <option value="other_gcc">دولة خليجية أخرى</option>
+                                <option value="other_intl">خارج الخليج</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">🏢 عدد الفروع</label>
+                            <select id="branchCount" class="form-select">
+                                <option value="">اختر</option>
+                                <option value="1">فرع واحد (المقر الرئيسي فقط)</option>
+                                <option value="2-5">2-5 فروع</option>
+                                <option value="6-20">6-20 فرع</option>
+                                <option value="20+">أكثر من 20 فرع</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">📄 رقم السجل التجاري <span
+                                    style="font-size:11px;color:var(--text-muted);">(اختياري)</span></label>
+                            <input type="text" id="crNumber" class="form-control" placeholder="مثال: 1010XXXXXX"
+                                maxlength="15">
+                        </div>
+                    </div>
+
+                    <div class="wizard-actions">
+                        <div></div>
+                        <button class="btn-wizard primary" onclick="nextStep(2)">
+                            التالي <i class="bi bi-arrow-left"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Strategy & Challenge -->
+            <div class="step-content" id="step2">
+                <div class="wizard-card">
+                    <div class="step-header">
+                        <div class="step-icon"><i class="bi bi-compass"></i></div>
+                        <h2>وضعك الاستراتيجي</h2>
+                        <p>أسئلة سريعة تساعدنا نخصص لك التجربة</p>
+                    </div>
+
+                    <!-- بانر القطاع من التشخيص -->
+                    <div id="diagSectorBanner"
+                        style="display:none;margin-bottom:20px;padding:14px 18px;border-radius:14px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <i class="bi bi-check-circle-fill" style="color:#22c55e;font-size:16px;"></i>
+                            <span style="font-weight:700;font-size:13px;color:#22c55e;">القطاع محدد من التشخيص:</span>
+                            <span id="diagSectorName" style="font-weight:700;font-size:13px;color:var(--text);"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">📋 هل عندك خطة استراتيجية حالياً؟</label>
+                            <div class="selection-grid" style="grid-template-columns:1fr 1fr 1fr;">
+                                <div class="selection-card" data-plan="yes" onclick="selectPlan(this)">
+                                    <i class="bi bi-check-circle" style="color:#22c55e;"></i>
+                                    <div class="sel-title">نعم</div>
+                                    <div class="sel-desc">عندنا خطة محدّثة</div>
+                                </div>
+                                <div class="selection-card" data-plan="old" onclick="selectPlan(this)">
+                                    <i class="bi bi-clock-history" style="color:#f59e0b;"></i>
+                                    <div class="sel-title">قديمة</div>
+                                    <div class="sel-desc">عندنا خطة لكنها قديمة</div>
+                                </div>
+                                <div class="selection-card" data-plan="no" onclick="selectPlan(this)">
+                                    <i class="bi bi-x-circle" style="color:#ef4444;"></i>
+                                    <div class="sel-title">لا</div>
+                                    <div class="sel-desc">ما عندنا خطة</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">🎯 وش أكبر تحدي تواجهه منشأتك الآن؟</label>
+                            <textarea id="biggestChallenge" class="form-control" rows="3"
+                                placeholder="مثال: صعوبة استقطاب كوادر مؤهلة / انخفاض المبيعات / عدم وضوح التوجه الاستراتيجي..."
+                                style="resize:none;"></textarea>
+                            <div class="form-text">هذا يساعدنا نحدد أولوياتك في الأدوات</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">🏛️ الهيكل التنظيمي</label>
+                            <div class="selection-grid">
+                                <div class="selection-card" data-structure="centralized"
+                                    onclick="selectStructure(this)">
+                                    <i class="bi bi-diagram-3" style="color:var(--primary);"></i>
+                                    <div class="sel-title">مركزي</div>
+                                    <div class="sel-desc">القرارات من الإدارة العليا</div>
+                                </div>
+                                <div class="selection-card" data-structure="decentralized"
+                                    onclick="selectStructure(this)">
+                                    <i class="bi bi-diagram-2" style="color:var(--primary);"></i>
+                                    <div class="sel-title">لامركزي</div>
+                                    <div class="sel-desc">صلاحيات موزعة على الإدارات</div>
+                                </div>
+                                <div class="selection-card" data-structure="hybrid" onclick="selectStructure(this)">
+                                    <i class="bi bi-intersect" style="color:var(--primary);"></i>
+                                    <div class="sel-title">مختلط</div>
+                                    <div class="sel-desc">مزيج بين المركزي واللامركزي</div>
+                                </div>
+                                <div class="selection-card" data-structure="flat" onclick="selectStructure(this)">
+                                    <i class="bi bi-grid" style="color:var(--primary);"></i>
+                                    <div class="sel-title">مسطّح</div>
+                                    <div class="sel-desc">فريق صغير بدون طبقات إدارية</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- قطاعات (فقط لو ما جاء من التشخيص) -->
+                    <div id="sectorSelectionSection">
+                        <hr style="margin:24px 0;border-color:#edf2f7;">
+                        <label class="form-label" style="margin-bottom:12px;">🏭 قطاع المنشأة <span
+                                style="font-size:11px;color:var(--text-muted);">(يمكن اختيار أكثر من
+                                قطاع)</span></label>
+                        <div id="sectorCounter"
+                            style="display:none;margin-bottom:10px;padding:6px 16px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.2);border-radius:20px;font-size:13px;color:var(--primary);width:fit-content;">
+                            <i class="bi bi-check-circle-fill" style="margin-left:4px"></i>
+                            <span id="sectorCountText">0 قطاعات محددة</span>
+                        </div>
+                        <div class="selection-grid" id="sectorGrid">
+                            <div class="selection-card" data-sector="technology" onclick="selectSector(this)"><i
+                                    class="bi bi-cpu"></i>
+                                <div class="sel-title">تقنية المعلومات</div>
+                            </div>
+                            <div class="selection-card" data-sector="healthcare" onclick="selectSector(this)"><i
+                                    class="bi bi-heart-pulse"></i>
+                                <div class="sel-title">الرعاية الصحية</div>
+                            </div>
+                            <div class="selection-card" data-sector="education" onclick="selectSector(this)"><i
+                                    class="bi bi-mortarboard"></i>
+                                <div class="sel-title">التعليم</div>
+                            </div>
+                            <div class="selection-card" data-sector="finance" onclick="selectSector(this)"><i
+                                    class="bi bi-bank2"></i>
+                                <div class="sel-title">المالية والبنوك</div>
+                            </div>
+                            <div class="selection-card" data-sector="retail" onclick="selectSector(this)"><i
+                                    class="bi bi-shop"></i>
+                                <div class="sel-title">التجزئة</div>
+                            </div>
+                            <div class="selection-card" data-sector="government" onclick="selectSector(this)"><i
+                                    class="bi bi-flag"></i>
+                                <div class="sel-title">القطاع الحكومي</div>
+                            </div>
+                            <div class="selection-card" data-sector="manufacturing" onclick="selectSector(this)"><i
+                                    class="bi bi-gear-wide-connected"></i>
+                                <div class="sel-title">الصناعة</div>
+                            </div>
+                            <div class="selection-card" data-sector="real_estate" onclick="selectSector(this)"><i
+                                    class="bi bi-building"></i>
+                                <div class="sel-title">العقارات</div>
+                            </div>
+                            <div class="selection-card" data-sector="construction" onclick="selectSector(this)"><i
+                                    class="bi bi-cone-striped"></i>
+                                <div class="sel-title">المقاولات</div>
+                            </div>
+                            <div class="selection-card" data-sector="logistics" onclick="selectSector(this)"><i
+                                    class="bi bi-truck"></i>
+                                <div class="sel-title">النقل واللوجستيات</div>
+                            </div>
+                            <div class="selection-card" data-sector="food_beverage" onclick="selectSector(this)"><i
+                                    class="bi bi-cup-hot"></i>
+                                <div class="sel-title">الأغذية والمشروبات</div>
+                            </div>
+                            <div class="selection-card" data-sector="energy" onclick="selectSector(this)"><i
+                                    class="bi bi-lightning-charge"></i>
+                                <div class="sel-title">الطاقة</div>
+                            </div>
+                            <div class="selection-card" data-sector="ecommerce" onclick="selectSector(this)"><i
+                                    class="bi bi-cart4"></i>
+                                <div class="sel-title">التجارة الإلكترونية</div>
+                            </div>
+                            <div class="selection-card" data-sector="professional_services"
+                                onclick="selectSector(this)"><i class="bi bi-briefcase"></i>
+                                <div class="sel-title">الخدمات المهنية</div>
+                            </div>
+                            <div class="selection-card" data-sector="telecom" onclick="selectSector(this)"><i
+                                    class="bi bi-wifi"></i>
+                                <div class="sel-title">الاتصالات</div>
+                            </div>
+                            <div class="selection-card" data-sector="agriculture" onclick="selectSector(this)"><i
+                                    class="bi bi-tree"></i>
+                                <div class="sel-title">الزراعة</div>
+                            </div>
+                            <div class="selection-card" data-sector="tourism" onclick="selectSector(this)"><i
+                                    class="bi bi-airplane"></i>
+                                <div class="sel-title">السياحة والضيافة</div>
+                            </div>
+                            <div class="selection-card" data-sector="other" onclick="selectSector(this)"><i
+                                    class="bi bi-grid-3x3-gap"></i>
+                                <div class="sel-title">أخرى</div>
+                            </div>
+                        </div>
+                        <div id="customSectorBox" style="display:none;margin-top:16px;">
+                            <input type="text" id="customSectorName" placeholder="اكتب اسم القطاع..." maxlength="50"
+                                class="form-control" oninput="updateCustomSector()">
+                        </div>
+                    </div>
+
+                    <div class="wizard-actions">
+                        <button class="btn-wizard secondary" onclick="prevStep(1)">
+                            <i class="bi bi-arrow-right"></i> السابق
+                        </button>
+                        <button class="btn-wizard primary" onclick="nextStep(3)" id="btnStep2Next">
+                            التالي <i class="bi bi-arrow-left"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Team Setup -->
+            <div class="step-content" id="step3">
+                <div class="wizard-card">
+                    <div class="step-header">
+                        <div class="step-icon"><i class="bi bi-people"></i></div>
+                        <h2>فريق العمل</h2>
+                        <p>هل عندك فريق عمل يشاركك التحليل والتخطيط؟</p>
+                    </div>
+
+                    <!-- سؤال الفريق -->
+                    <div class="mb-4">
+                        <div class="selection-grid" style="margin-bottom:20px;">
+                            <div class="selection-card" data-team="yes" onclick="selectTeam(this)">
+                                <i class="bi bi-people-fill" style="color:#22c55e;"></i>
+                                <div class="sel-title">نعم، عندي فريق</div>
+                                <div class="sel-desc">أبي أضيف أعضاء يشاركوني</div>
+                            </div>
+                            <div class="selection-card" data-team="no" onclick="selectTeam(this)">
+                                <i class="bi bi-person" style="color:var(--primary);"></i>
+                                <div class="sel-title">لا، أكمل لحالي</div>
+                                <div class="sel-desc">أقدر أضيف لاحقاً</div>
+                            </div>
+                        </div>
+
+                        <!-- نموذج إضافة الأعضاء (مخفي) -->
+                        <div id="teamAddSection" style="display:none;">
+                            <div
+                                style="padding:16px;border-radius:14px;background:rgba(102,126,234,0.04);border:1px solid rgba(102,126,234,0.15);margin-bottom:16px;">
+                                <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">👥 أضف
+                                    أعضاء الفريق</div>
+                                <div class="d-flex gap-2 mb-2">
+                                    <input type="text" id="memberName" class="form-control" placeholder="الاسم"
+                                        style="max-width:160px;">
+                                    <input type="email" id="memberEmail" class="form-control"
+                                        placeholder="البريد الإلكتروني">
+                                    <select id="memberRole" class="form-select" style="max-width:130px;">
+                                        <option value="EDITOR">محرر</option>
+                                        <option value="VIEWER">مشاهد</option>
+                                        <option value="ADMIN">مسؤول</option>
+                                    </select>
+                                    <button class="btn-wizard primary" onclick="addMember()"
+                                        style="padding:10px 14px;white-space:nowrap;">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </div>
+                                <div id="membersList"></div>
+                            </div>
+                            <div class="text-center">
+                                <small class="text-muted"><i class="bi bi-info-circle"></i> يمكنك إضافة أعضاء لاحقاً من
+                                    صفحة المستخدمين</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wizard-actions">
+                        <button class="btn-wizard secondary" onclick="prevStep(2)">
+                            <i class="bi bi-arrow-right"></i> السابق
+                        </button>
+                        <button class="btn-wizard primary" onclick="nextStep(4)">
+                            التالي <i class="bi bi-arrow-left"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Complete -->
+            <div class="step-content" id="step4">
+                <div class="wizard-card">
+                    <div class="success-animation">
+                        <div class="success-icon">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
+                        <h2 style="font-size:1.8rem; font-weight:800; margin-bottom:12px;">🎉 تم الإعداد بنجاح!</h2>
+                        <p id="onboardSuccessMsg"
+                            style="color:var(--text-muted); font-size:1.05rem; max-width:450px; margin:0 auto 24px;">
+                            منظمتك جاهزة. الخطوة التالية: ابدأ تشخيص وضعك الحالي.
+                        </p>
+                    </div>
+
+                    <!-- نمط الشركة (إذا محدد) -->
+                    <div id="patternBox" style="display:none; text-align:center; margin-bottom:20px;">
+                        <div id="patternBadge"
+                            style="display:inline-flex; align-items:center; gap:8px; padding:8px 20px; border-radius:30px; font-size:14px; font-weight:700; margin-bottom:8px;">
+                        </div>
+                        <p id="patternTip"
+                            style="font-size:13px; color:var(--text-muted); max-width:400px; margin:0 auto;"></p>
+                    </div>
+
+                    <!-- المسار القادم — يُبنى ديناميكياً -->
+                    <div class="mb-4" style="max-width:400px; margin:0 auto;">
+                        <div
+                            style="font-size:13px; font-weight:700; color:var(--text-muted); margin-bottom:10px; text-align:center;">
+                            🗺️ مسارك القادم</div>
+                        <div id="onboardRoadmapSteps" style="display:flex;flex-direction:column;gap:6px;">
+                            <!-- يُملأ بالجافاسكربت -->
+                        </div>
+                    </div>
+
+                    <div class="text-center" style="display:flex;flex-direction:column;gap:10px;align-items:center;">
+                        <a href="/dashboard.html" id="onboardNextBtn" class="btn-wizard primary"
+                            style="padding:14px 48px; font-size:1.1rem;">
+                            <i class="bi bi-speedometer2"></i>
+                            ادخل لوحة التحكم
+                        </a>
+                        <a href="/swot.html" style="font-size:13px;color:var(--text-muted);text-decoration:none;">
+                            أو ابدأ التشخيص (SWOT) مباشرةً ←
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let selectedSectors = [];
+        let members = [];
+        let selectedPlan = '';
+        let selectedStructure = '';
+        let selectedTeam = '';
+
+        // ═══ تخطي الإعداد لمدير الإدارة ═══
+        // مدير الإدارة ما يحتاج يعبّي بيانات الشركة — يروح مباشرة للوحته
+        (function skipForDeptManager() {
+            try {
+                const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
+                if (diag && diag.role === 'manager') {
+                    const dept = diag.department || '';
+                    const target = dept ? `/dept-dashboard.html?dept=${dept}` : '/dashboard.html';
+                    window.location.replace(target);
+                    return;
+                }
+            } catch (e) { /* ignore */ }
+        })();
+
+        // ═══ Auto-fill from Diagnostic Payload ═══
+        (function autoFillFromDiagnostic() {
+            const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
+            if (!diag) return;
+
+            const banner = document.getElementById('diagDataBanner');
+            const tagsEl = document.getElementById('diagDataTags');
+            const tags = [];
+
+            // Company name
+            if (diag.companyName) {
+                const orgNameEl = document.getElementById('orgName');
+                if (orgNameEl) {
+                    orgNameEl.value = diag.companyName;
+                    orgNameEl.style.borderColor = 'rgba(34,197,94,0.4)';
+                }
+                tags.push('🏷️ ' + diag.companyName);
+            }
+
+            // Entity type
+            const ENTITY_LABELS = { P: 'قطاع خاص', G: 'جهة حكومية', N: 'غير ربحي', M: 'مختلط' };
+            if (diag.entityType) {
+                const orgTypeEl = document.getElementById('orgType');
+                orgTypeEl.value = diag.entityType;
+                orgTypeEl.style.borderColor = 'rgba(34,197,94,0.4)';
+                document.getElementById('orgTypeAutoTag').style.display = 'inline';
+                tags.push('🏢 ' + (ENTITY_LABELS[diag.entityType] || diag.entityType));
+            }
+
+            // Size
+            const SIZE_MAP = { micro: '1-10', small: '11-50', medium: '51-200', large: '201-500', enterprise: '500+' };
+            const SIZE_LABELS = { micro: 'متناهية الصغر', small: 'صغيرة', medium: 'متوسطة', large: 'كبيرة', enterprise: 'عملاقة' };
+            if (diag.size) {
+                const mappedSize = SIZE_MAP[diag.size] || diag.size;
+                const orgSizeEl = document.getElementById('orgSize');
+                orgSizeEl.value = mappedSize;
+                orgSizeEl.style.borderColor = 'rgba(34,197,94,0.4)';
+                document.getElementById('orgSizeAutoTag').style.display = 'inline';
+                tags.push('📏 ' + (SIZE_LABELS[diag.size] || diag.size));
+            }
+
+            // Sector — show in Step 2 banner
+            const SECTOR_LABELS = {
+                services: 'الخدمي', commercial: 'التجاري', industrial: 'الصناعي',
+                gov_services: 'خدمات حكومية', gov_infrastructure: 'بنية تحتية',
+                npo_charity: 'جمعيات خيرية', npo_dev: 'تنمية'
+            };
+            if (diag.sector) {
+                const sectorBanner = document.getElementById('diagSectorBanner');
+                const sectorNameEl = document.getElementById('diagSectorName');
+                if (sectorBanner) {
+                    sectorBanner.style.display = 'block';
+                    sectorNameEl.textContent = SECTOR_LABELS[diag.sector] || diag.sector;
+                    if (diag.subsector) sectorNameEl.textContent += ' — ' + diag.subsector;
+                }
+                // Hide manual sector selection since it's from diagnostic
+                const sectorSection = document.getElementById('sectorSelectionSection');
+                if (sectorSection) sectorSection.style.display = 'none';
+                tags.push('🏭 ' + (SECTOR_LABELS[diag.sector] || diag.sector));
+            }
+
+            // Employee count
+            if (diag.employees) {
+                tags.push('👥 ' + diag.employees + ' موظف');
+            }
+
+            // Show banner
+            if (tags.length > 0) {
+                banner.style.display = 'block';
+                tagsEl.innerHTML = tags.map(t =>
+                    `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:8px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.15);font-size:12px;font-weight:600;color:#16a34a;">${t}</span>`
+                ).join('');
+            }
+        })();
+
+        // ═══ Selection Functions ═══
+        function selectPlan(card) {
+            document.querySelectorAll('[data-plan]').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            selectedPlan = card.dataset.plan;
+        }
+
+        function selectStructure(card) {
+            document.querySelectorAll('[data-structure]').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            selectedStructure = card.dataset.structure;
+        }
+
+        function selectTeam(card) {
+            document.querySelectorAll('[data-team]').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            selectedTeam = card.dataset.team;
+            const addSection = document.getElementById('teamAddSection');
+            if (addSection) {
+                addSection.style.display = selectedTeam === 'yes' ? 'block' : 'none';
+            }
+        }
+
+        function nextStep(step) {
+            if (step === 4) {
+                saveOnboardingData();
+                showConfetti();
+            }
+            showStep(step);
+        }
+
+        function prevStep(step) {
+            showStep(step);
+        }
+
+        function showStep(step) {
+            document.querySelectorAll('.step-content').forEach(s => s.classList.remove('active'));
+            document.getElementById('step' + step).classList.add('active');
+
+            document.querySelectorAll('.step-indicator').forEach(ind => {
+                const s = parseInt(ind.dataset.step);
+                ind.classList.remove('active', 'done');
+                ind.querySelector('.step-circle').classList.remove('active', 'done');
+
+                if (s < step) {
+                    ind.classList.add('done');
+                    ind.querySelector('.step-circle').classList.add('done');
+                    ind.querySelector('.step-circle').innerHTML = '<i class="bi bi-check-lg"></i>';
+                } else if (s === step) {
+                    ind.classList.add('active');
+                    ind.querySelector('.step-circle').classList.add('active');
+                    ind.querySelector('.step-circle').textContent = s;
+                } else {
+                    ind.querySelector('.step-circle').textContent = s;
+                }
+            });
+
+            for (let i = 1; i <= 3; i++) {
+                const line = document.getElementById('line' + i);
+                if (i < step) {
+                    line.classList.add('done');
+                } else {
+                    line.classList.remove('done');
+                }
+            }
+            currentStep = step;
+        }
+
+        function selectSector(card) {
+            const sector = card.dataset.sector;
+            if (sector === 'other') {
+                card.classList.toggle('selected');
+                const customBox = document.getElementById('customSectorBox');
+                if (card.classList.contains('selected')) {
+                    if (!selectedSectors.includes('other')) selectedSectors.push('other');
+                    customBox.style.display = 'block';
+                    document.getElementById('customSectorName').focus();
+                } else {
+                    selectedSectors = selectedSectors.filter(s => s !== 'other' && !s.startsWith('custom:'));
+                    customBox.style.display = 'none';
+                }
+            } else {
+                if (card.classList.contains('selected')) {
+                    card.classList.remove('selected');
+                    selectedSectors = selectedSectors.filter(s => s !== sector);
+                } else {
+                    card.classList.add('selected');
+                    selectedSectors.push(sector);
+                }
+            }
+
+            const count = selectedSectors.filter(s => s !== 'other').length;
+            const counter = document.getElementById('sectorCounter');
+            const countText = document.getElementById('sectorCountText');
+            if (count > 0) {
+                counter.style.display = 'block';
+                countText.textContent = count === 1 ? 'قطاع واحد محدد' : count + ' قطاعات محددة';
+            } else {
+                counter.style.display = 'none';
+            }
+        }
+
+        function updateCustomSector() {
+            const name = document.getElementById('customSectorName').value.trim();
+            selectedSectors = selectedSectors.filter(s => !s.startsWith('custom:') && s !== 'other');
+            if (name) {
+                selectedSectors.push('custom:' + name);
+            } else {
+                selectedSectors.push('other');
+            }
+        }
+
+        function addMember() {
+            const nameEl = document.getElementById('memberName');
+            const email = document.getElementById('memberEmail').value.trim();
+            const name = nameEl ? nameEl.value.trim() : '';
+            const role = document.getElementById('memberRole').value;
+
+            if (!email || !email.includes('@')) {
+                document.getElementById('memberEmail').style.borderColor = '#e53e3e';
+                return;
+            }
+            document.getElementById('memberEmail').style.borderColor = '#e2e8f0';
+
+            const roleLabels = { 'ADMIN': 'مسؤول', 'EDITOR': 'محرر', 'VIEWER': 'مشاهد' };
+            members.push({ name, email, role });
+
+            const list = document.getElementById('membersList');
+            const item = document.createElement('div');
+            item.className = 'd-flex align-items-center justify-content-between p-3 mb-2';
+            item.style.cssText = 'background:#f7fafc;border-radius:12px;border:1px solid #edf2f7;';
+            item.innerHTML = `
+                <div>
+                    <i class="bi bi-person-circle" style="color:var(--primary);margin-left:8px;"></i>
+                    <strong>${name || email}</strong>
+                    <span style="font-size:11px;color:var(--text-muted);margin:0 4px;">${name ? email : ''}</span>
+                    <span class="badge bg-light text-dark ms-2" style="font-size:0.75rem;">${roleLabels[role]}</span>
+                </div>
+                <button onclick="removeMember(this, '${email}')" class="btn btn-sm" style="color:#e53e3e;">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            `;
+            list.appendChild(item);
+
+            document.getElementById('memberEmail').value = '';
+            if (nameEl) nameEl.value = '';
+            document.getElementById('memberEmail').focus();
+        }
+
+        function removeMember(btn, email) {
+            members = members.filter(m => m.email !== email);
+            btn.closest('.d-flex').remove();
+        }
+
+        async function saveOnboardingData() {
+            // Read diagnostic data for sector fallback
+            const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
+            const diagSector = diag?.sector || '';
+
+            const data = {
+                orgName: document.getElementById('orgName').value.trim() || 'منشأتي',
+                orgType: document.getElementById('orgType').value,
+                orgSize: document.getElementById('orgSize').value,
+                sector: selectedSectors.length > 0 ? selectedSectors.join(',') : diagSector,
+                businessAge: document.getElementById('businessAge').value,
+                city: document.getElementById('orgCity').value,
+                branchCount: document.getElementById('branchCount').value,
+                crNumber: document.getElementById('crNumber').value.trim(),
+                hasPlan: selectedPlan,
+                biggestChallenge: document.getElementById('biggestChallenge').value.trim(),
+                orgStructure: selectedStructure,
+                hasTeam: selectedTeam,
+                members: members,
+                diagnosticLinked: !!diag,
+                completedAt: new Date().toISOString()
+            };
+
+            localStorage.setItem('onboarding_data', JSON.stringify(data));
+
+            // حفظ في الباك إند — إنشاء Company + Entity + Member + Version
+            try {
+                const result = await window.apiRequest('/api/auth/complete-onboarding', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        companyName: data.orgName,
+                        sector: data.sector,
+                        orgSize: data.orgSize,
+                        orgType: data.orgType,
+                    })
+                });
+
+                if (result) {
+                    console.log('✅ Onboarding saved:', result);
+                    // تحديث localStorage
+                    localStorage.setItem('onboarding_completed', 'true');
+                    const user = JSON.parse(localStorage.getItem('user') || '{}');
+                    user.onboardingCompleted = true;
+                    if (result.entity) user.entity = result.entity;
+                    if (result.entityId) {
+                        user.entityId = result.entityId;
+                        localStorage.setItem('entityId', result.entityId);
+                    }
+                    if (result.companyId) {
+                        localStorage.setItem('companyId', result.companyId);
+                    }
+                    // تحديث التوكن لو رجع واحد جديد (الكوكي أُضبط تلقائياً)
+                    if (result.token) {
+                        // استخراج userType من التوكن الجديد
+                        try {
+                            const payload = JSON.parse(atob(result.token.split('.')[1]));
+                            if (payload.userType) user.userType = payload.userType;
+                            if (payload.role) user.role = payload.role;
+                        } catch (e) { }
+                    }
+                    localStorage.setItem('user', JSON.stringify(user));
+
+                    // ✨ S1.5: ربط القطاع بـ SectorConfig
+                    if (result.entityId && selectedSectors.length > 0) {
+                        const SECTOR_MAP = {
+                            'construction': 'CONSTRUCTION',
+                            'restaurant': 'RESTAURANT', 'food_beverage': 'RESTAURANT',
+                            'retail': 'RETAIL',
+                            'manufacturing': 'MANUFACTURING', 'industrial': 'MANUFACTURING',
+                            'ecommerce': 'ECOMMERCE',
+                            'healthcare': 'HEALTHCARE', 'medical': 'HEALTHCARE',
+                            'tech': 'TECH', 'technology': 'TECH', 'it': 'TECH',
+                            'professional_services': 'SERVICES', 'consulting': 'SERVICES', 'services': 'SERVICES',
+                        };
+                        const primarySector = selectedSectors.find(s => s !== 'other' && !s.startsWith('custom:'));
+                        const configCode = SECTOR_MAP[primarySector];
+                        if (configCode) {
+                            try {
+                                await window.apiRequest('/api/sector-configs/link-entity', {
+                                    method: 'POST',
+                                    body: JSON.stringify({
+                                        entityId: result.entityId,
+                                        sectorConfigCode: configCode
+                                    })
+                                });
+                                console.log(`✅ Entity linked to sector: ${configCode}`);
+                            } catch (e) {
+                                console.warn('Sector link failed:', e);
+                            }
+                        }
+                    }
+                }
+            } catch (e) {
+                console.log('Onboarding save fallback/error:', e);
+                localStorage.setItem('onboarding_completed', 'true');
+            }
+
+            // === بناء الخارطة الديناميكية حسب المستوى ===
+            buildOnboardRoadmap(data.orgSize);
+
+            // === ✅ تحويل تلقائي للداشبورد بعد ٣ ثواني ===
+            setTimeout(() => {
+                const btn = document.getElementById('onboardNextBtn');
+                const targetHref = btn ? btn.getAttribute('href') : '/dashboard.html';
+                window.location.href = targetHref;
+            }, 3000);
+        }
+
+        function buildOnboardRoadmap(orgSize) {
+            // المسار الموحّد — 12 خطوة متفق عليها
+            const steps = [
+                { label: '① مركز التشخيص', done: true },
+                { label: '② التسجيل', done: true },
+                { label: '③ الإعداد', done: true },
+                { label: '④ استكشاف الإدارات (Dept-Deep)', current: true },
+                { label: '⑤ تحليل SWOT' },
+                { label: '⑥ تحليل TOWS' },
+                { label: '⑦ التوجهات الاستراتيجية' },
+                { label: '⑧ الأهداف الاستراتيجية' },
+                { label: '⑨ مؤشرات الأداء (KPIs)' },
+                { label: '⑩ المبادرات' },
+                { label: '⑪ لوحة التحكم' },
+                { label: '⑫ التقارير التلقائية' },
+            ];
+
+            const container = document.getElementById('onboardRoadmapSteps');
+            if (!container) return;
+
+            container.innerHTML = steps.map(s => {
+                if (s.done) {
+                    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-radius:10px;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2)">
+                        <span style="font-size:14px">✅</span>
+                        <span style="flex:1;font-weight:700;font-size:12px;color:#667eea">${s.label}</span>
+                        <span style="font-size:10px;font-weight:700;color:#22c55e">مكتمل</span>
+                    </div>`;
+                } else if (s.current) {
+                    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-radius:10px;background:rgba(245,158,11,0.08);border:2px solid rgba(245,158,11,0.3)">
+                        <span style="font-size:14px">👈</span>
+                        <span style="flex:1;font-weight:700;font-size:12px;color:#f59e0b">${s.label} — التالي</span>
+                        <span style="font-size:10px;font-weight:700;color:#f59e0b">ابدأ</span>
+                    </div>`;
+                } else {
+                    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid #edf2f7;opacity:0.5">
+                        <span style="font-size:14px">🔒</span>
+                        <span style="flex:1;font-weight:600;font-size:12px;color:var(--text-muted)">${s.label}</span>
+                    </div>`;
+                }
+            }).join('');
+
+            // تخصيص رسالة النجاح
+            const msgEl = document.getElementById('onboardSuccessMsg');
+            const btnEl = document.getElementById('onboardNextBtn');
+            if (msgEl) msgEl.textContent = 'منشأتك جاهزة! ادخل لوحة التحكم لمتابعة مسارك الاستراتيجي.';
+            if (btnEl) btnEl.innerHTML = '<i class="bi bi-speedometer2"></i> ادخل لوحة التحكم';
+        }
+
+        function showConfetti() {
+            const container = document.createElement('div');
+            container.className = 'confetti';
+            document.body.appendChild(container);
+
+            const colors = ['#667eea', '#764ba2', '#f093fb', '#48bb78', '#ed8936', '#22d3ee', '#ffd700'];
+
+            for (let i = 0; i < 80; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'confetti-piece';
+                piece.style.left = Math.random() * 100 + '%';
+                piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+                piece.style.animationDelay = Math.random() * 2 + 's';
+                piece.style.animationDuration = (2 + Math.random() * 2) + 's';
+                piece.style.width = (6 + Math.random() * 8) + 'px';
+                piece.style.height = (6 + Math.random() * 8) + 'px';
+                container.appendChild(piece);
+            }
+
+            setTimeout(() => container.remove(), 5000);
+        }
+
+        // ═══ Adaptive Onboarding — المرحلة 5 ═══
+        const sgData = JSON.parse(localStorage.getItem('stratix_smart_guide') || 'null');
+        const userCategory = sgData?.category || localStorage.getItem('stratix_category') || '';
+        const isIndividual = userCategory.startsWith('INDIVIDUAL_') || userCategory === 'CONSULTANT_SOLO';
+        const isConsultant = (userCategory === 'CONSULTANT_AGENCY') ||
+            (JSON.parse(localStorage.getItem('user') || '{}').userType === 'CONSULTANT' && !isIndividual);
+        const isDeptManager = userCategory.startsWith('DEPT_') ||
+            new URLSearchParams(window.location.search).get('mode') === 'dept';
+        const deptCategory = userCategory.startsWith('DEPT_') ? userCategory : '';
+
+        // ═══ مسار مدير الإدارة: خطوتين فقط (الشركة + القطاع) ═══
+        if (isDeptManager) {
+            // إخفاء خطوة الفريق من شريط التقدم
+            const indicators = document.querySelectorAll('.step-indicator');
+            const lines = document.querySelectorAll('.step-line');
+            if (indicators[2]) indicators[2].style.display = 'none'; // الفريق
+            if (lines[2]) lines[2].style.display = 'none'; // line3
+
+            // تحديث عنوان الخطوة 1 لمدير الإدارة
+            const step1Header = document.querySelector('#step1 .step-header');
+            if (step1Header) {
+                step1Header.querySelector('h2').textContent = 'معلومات شركتك';
+                step1Header.querySelector('p').textContent = 'نحتاج نعرف شركتك عشان نخصص تشخيص إدارتك';
+            }
+
+            // أسماء الإدارات
+            const deptNames = {
+                'DEPT_HR': 'الموارد البشرية', 'DEPT_FINANCE': 'المالية',
+                'DEPT_MARKETING': 'التسويق', 'DEPT_OPS': 'العمليات',
+                'DEPT_SERVICE': 'خدمة العملاء', 'DEPT_SALES': 'المبيعات'
+            };
+            const deptName = deptNames[deptCategory] || 'إدارتك';
+
+            // تحديث الخطوة 4 (الانطلاق) لمدير الإدارة
+            const step4Header = document.querySelector('#step4 .step-header');
+            if (step4Header) {
+                step4Header.querySelector('h2').textContent = '🎉 جاهز لتشخيص ' + deptName;
+            }
+
+            // عند الانتهاء من القطاع (خطوة 2) → تخطي الفريق → الانطلاق
+            const step2NextBtn = document.getElementById('btnStep2Next');
+            if (step2NextBtn) {
+                step2NextBtn.setAttribute('onclick', 'nextStep(4)');
+            }
+
+            // تعديل زر CTA النهائي → dept-dashboard
+            const ctaBtn = document.getElementById('onboardNextBtn');
+            if (ctaBtn) {
+                ctaBtn.innerHTML = '<i class="bi bi-speedometer2"></i> انتقل للوحة إدارتك';
+                ctaBtn.setAttribute('href', '/dept-dashboard.html');
+            }
+            const dashBtn = document.getElementById('onboardDashBtn');
+            if (dashBtn) {
+                dashBtn.setAttribute('href', '/dept-dashboard.html');
+                dashBtn.innerHTML = '<i class="bi bi-grid"></i> لوحة الإدارة';
+            }
+        }
+        // ═══ مسار المستشار (شركة استشارات): يحتاج تأسيس كامل كمنشأة ═══
+        // المستشار المستقل (CONSULTANT_SOLO) يُعامل كفرد ↓ else if (isIndividual)
+        else if (isConsultant) {
+            // شركة استشارات → onboarding كامل مثل المنشأة
+            // تخصيص العناوين لشركة الاستشارات
+            const step1Header = document.querySelector('#step1 .step-header');
+            if (step1Header) {
+                step1Header.querySelector('h2').textContent = 'معلومات شركة الاستشارات';
+                step1Header.querySelector('p').textContent = 'أدخل بيانات شركتك الاستشارية لتفعيل لوحة إدارة العملاء';
+            }
+
+            // Auto-fill placeholders
+            const orgNameEl = document.getElementById('orgName');
+            if (orgNameEl && !orgNameEl.value) {
+                orgNameEl.placeholder = 'مثال: شركة الخبراء للاستشارات';
+            }
+
+            // تعديل الـ CTA النهائي
+            const ctaBtn = document.getElementById('onboardNextBtn');
+            if (ctaBtn) {
+                ctaBtn.innerHTML = '<i class="bi bi-person-workspace"></i> انتقل للوحة العملاء';
+                ctaBtn.setAttribute('href', '/consultant-dashboard.html');
+            }
+            const dashBtn = document.getElementById('onboardDashBtn');
+            if (dashBtn) {
+                dashBtn.setAttribute('href', '/consultant-dashboard.html');
+                dashBtn.innerHTML = '<i class="bi bi-speedometer2"></i> لوحة العملاء';
+            }
+        } else if (isIndividual) {
+            // ═══ مسار الأفراد: خطوتين فقط (القطاع → الانطلاق) ═══
+
+            // إخفاء خطوة المنظمة والفريق في شريط التقدم
+            const indicators = document.querySelectorAll('.step-indicator');
+            const lines = document.querySelectorAll('.step-line');
+
+            // إخفاء Step 1 (المنظمة) و Step 3 (الفريق) indicators + الخطوط
+            if (indicators[0]) indicators[0].style.display = 'none'; // المنظمة
+            if (indicators[2]) indicators[2].style.display = 'none'; // الفريق
+            if (lines[0]) lines[0].style.display = 'none'; // line1
+            if (lines[1]) lines[1].style.display = 'none'; // line2
+
+            // تحديث labels
+            if (indicators[1]) {
+                indicators[1].querySelector('.step-label').textContent = 'اختر مجالك';
+                indicators[1].querySelector('.step-circle').classList.add('active');
+                indicators[1].classList.add('active');
+            }
+            if (indicators[3]) indicators[3].querySelector('.step-label').textContent = 'ابدأ!';
+
+            // البدء مباشرة من الخطوة 2 (القطاع)
+            document.getElementById('step1').classList.remove('active');
+            document.getElementById('step2').classList.add('active');
+
+            // تعديل الخطوة 2 header للأفراد
+            const step2Header = document.querySelector('#step2 .step-header');
+            if (step2Header) {
+                step2Header.querySelector('h2').textContent = 'اختر مجال اهتمامك';
+                step2Header.querySelector('p').textContent = 'هذا يساعدنا نخصص الأدوات والمحتوى لك';
+            }
+
+            // عند الضغط على "التالي" في القطاع → يروح direct للخطوة 4 (الاكتمال)
+            const step2NextBtn = document.getElementById('btnStep2Next');
+            if (step2NextBtn) {
+                step2NextBtn.setAttribute('onclick', 'nextStep(4)');
+            }
+
+            // Auto-fill org name as "شخصي"
+            document.getElementById('orgName').value = 'شخصي';
+
+        } else {
+            // ═══ مسار الشركات: auto-fill من Smart Guide ═══
+            if (sgData) {
+                const categoryNames = {
+                    'COMPANY_SMALL': 'شركة صغيرة',
+                    'COMPANY_MEDIUM': 'شركة متوسطة',
+                    'COMPANY_LARGE': 'شركة كبيرة',
+                    'NEW_PROJECT': 'مشروع جديد',
+                    'CEO': 'شركة'
+                };
+                const autoName = categoryNames[userCategory];
+                if (autoName && !document.getElementById('orgName').value) {
+                    // لا نملأ الاسم تلقائياً لكن نضع placeholder مفيد
+                    document.getElementById('orgName').placeholder = 'مثال: ' + autoName + ' التقنية';
+                }
+
+                // Auto-select org size
+                const sizeMap = { 'COMPANY_SMALL': '1-10', 'COMPANY_MEDIUM': '51-200', 'COMPANY_LARGE': '500+', 'NEW_PROJECT': '1-10' };
+                if (sizeMap[userCategory]) {
+                    document.getElementById('orgSize').value = sizeMap[userCategory];
+                }
+            }
+        }
+
+        // Show pattern if pain/ambition was completed
+        const painAmbition = JSON.parse(localStorage.getItem('painAmbition') || 'null');
+        if (painAmbition && painAmbition.pattern) {
+            // Phase 6: إعادة تسمية الأنماط السلبية
+            const patternRenames = { 'متعثرة': 'في مرحلة التحول' };
+            const displayPattern = patternRenames[painAmbition.pattern] || painAmbition.pattern;
+
+            const patternColors = { 'ناشئة': '#22c55e', 'نامية': '#3b82f6', 'ناضجة': '#8b5cf6', 'في مرحلة التحول': '#f59e0b', 'متعثرة': '#f59e0b' };
+            const patternTips = {
+                'ناشئة': 'ركّز على بناء الأساس أولاً — لا تتوسع قبل ما تستقر',
+                'نامية': 'عندك أساس جيد — الآن تحتاج هيكلة وتنظيم قبل التوسع',
+                'ناضجة': 'التحدي عندك مو البناء — بل التجديد والابتكار',
+                'في مرحلة التحول': '🌟 أولويتك: التركيز على 3 نقاط قوة رئيسية وبناء عليها',
+                'متعثرة': '🌟 أولويتك: التركيز على 3 نقاط قوة رئيسية وبناء عليها'
+            };
+            const color = patternColors[displayPattern] || '#667eea';
+            const box = document.getElementById('patternBox');
+            if (box) {
+                box.style.display = 'block';
+                document.getElementById('patternBadge').innerHTML = `نمط شركتك: <strong>${displayPattern}</strong>`;
+                document.getElementById('patternBadge').style.cssText = `display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:30px;font-size:14px;font-weight:700;background:${color}18;border:1px solid ${color}35;color:${color}`;
+                document.getElementById('patternTip').textContent = '💡 ' + (patternTips[displayPattern] || '');
+            }
+        }
+
+        // Check if already completed — redirect to dashboard
+        const currentUserData = JSON.parse(localStorage.getItem('user') || '{}');
+        if (currentUserData.onboardingCompleted === true) {
+            // إذا المستخدم رجع لصفحة الإعداد وهو مكمّل فعلياً ← حوّله للداشبورد الرئيسي
+            const urlMode = new URLSearchParams(window.location.search).get('mode');
+            if (!urlMode) {
+                // ما نحوّل إذا فيه mode (مثل ?mode=dept) ← يقدر يعدّل
+                window.location.href = '/ceo-dashboard.html';
+            }
+        }
+
+        // Enter key support (only for non-consultant flow)
+        if (!isConsultant) {
+            const memberEmailEl = document.getElementById('memberEmail');
+            const orgNameEl = document.getElementById('orgName');
+            if (memberEmailEl) memberEmailEl.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addMember();
+            });
+            if (orgNameEl) orgNameEl.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') nextStep(2);
+            });
+        }
+    </script>
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/ai-advisor.js"></script>
+</body>
+
+</html>

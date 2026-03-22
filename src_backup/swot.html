@@ -1,0 +1,2650 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس - تحليل SWOT</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --bg: #0f1117;
+            --bg-card: #1a1d2e;
+            --bg-card-hover: #232640;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --green: #22c55e;
+            --red: #ef4444;
+            --blue: #3b82f6;
+            --orange: #f97316;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .top-nav {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 14px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .top-nav .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .layout {
+            display: flex;
+            min-height: calc(100vh - 64px);
+        }
+
+        .sidebar {
+            width: 280px;
+            flex-shrink: 0;
+        }
+
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        /* HERO */
+        .hero {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.10), rgba(59, 130, 246, 0.06));
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #22c55e, #3b82f6, #f97316, #ef4444);
+        }
+
+        .hero h1 {
+            font-size: 26px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .hero p {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.8;
+        }
+
+        /* WIZARD STEPS */
+        .wizard-steps {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+
+        .wiz-step {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+            color: var(--text-muted);
+        }
+
+        .wiz-step.active {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.3);
+            color: var(--green);
+        }
+
+        .wiz-step.done {
+            background: rgba(34, 197, 94, 0.08);
+            border-color: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .wiz-step-num {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .wiz-step.active .wiz-step-num {
+            background: rgba(34, 197, 94, 0.2);
+        }
+
+        .wiz-step.done .wiz-step-num {
+            background: rgba(34, 197, 94, 0.2);
+        }
+
+        .wiz-arrow {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        /* ANIMATIONS */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .wizard-screen {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .wizard-screen.active {
+            display: block;
+        }
+
+        /* SECTION CARDS */
+        .section-select {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .section-select:hover {
+            background: var(--bg-card-hover);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .section-select.active {
+            border-color: var(--green);
+            background: rgba(34, 197, 94, 0.06);
+        }
+
+        .section-select .sec-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 8px;
+        }
+
+        .section-select .sec-emoji {
+            font-size: 28px;
+        }
+
+        .section-select .sec-title {
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .section-select .sec-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .section-select .sec-count {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        /* QUESTION CARDS */
+        .q-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 28px;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .q-card .q-num {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .q-card .q-text {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            line-height: 1.7;
+        }
+
+        .q-card .q-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            padding: 8px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+        }
+
+        /* ANSWER OPTIONS */
+        .answer-options {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .answer-chip {
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            background: var(--bg-card-hover);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--text);
+        }
+
+        .answer-chip:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .answer-chip.selected {
+            border-color: var(--green);
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--green);
+        }
+
+        /* TEXT INPUT */
+        .q-input {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: 1.5px solid var(--border);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+            margin-top: 10px;
+        }
+
+        .q-input:focus {
+            border-color: rgba(34, 197, 94, 0.4);
+        }
+
+        .q-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* NAVIGATION */
+        .btn-q {
+            padding: 14px 32px;
+            border-radius: 14px;
+            border: none;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-q.next {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        }
+
+        .btn-q.next:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-q.back {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+
+        .q-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 24px;
+        }
+
+        /* PROGRESS BAR */
+        .progress-bar-wrap {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 8px;
+            height: 6px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 8px;
+            transition: width 0.5s ease;
+            background: linear-gradient(90deg, #22c55e, #3b82f6);
+        }
+
+        .progress-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        /* PRE-FILLED BANNER */
+        .prefill-banner {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.05));
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .prefill-banner .pf-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .prefill-banner .pf-text {
+            flex: 1;
+            font-size: 13px;
+            color: var(--text);
+        }
+
+        .prefill-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary);
+        }
+
+        /* RESULTS */
+        .swot-matrix {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .swot-quad {
+            background: var(--bg-card);
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .swot-quad::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 3px;
+        }
+
+        .swot-quad.str::before {
+            background: var(--green);
+        }
+
+        .swot-quad.wk::before {
+            background: var(--red);
+        }
+
+        .swot-quad.opp::before {
+            background: var(--blue);
+        }
+
+        .swot-quad.thr::before {
+            background: var(--orange);
+        }
+
+        .swot-quad .sq-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .swot-quad .sq-emoji {
+            font-size: 22px;
+        }
+
+        .swot-quad .sq-title {
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .swot-quad .sq-count {
+            margin-right: auto;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .swot-item {
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            margin-bottom: 6px;
+            font-size: 13px;
+            line-height: 1.6;
+            border-right: 3px solid;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .swot-item .si-source {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 6px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        /* SCORE GAUGE */
+        .score-section {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .score-circle {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: 800;
+            border: 4px solid;
+        }
+
+        .score-label {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .score-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* RECOMMENDATIONS */
+        .rec-card {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(102, 126, 234, 0.05));
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 18px;
+            padding: 24px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .main-content {
+                padding: 16px;
+                max-width: 100%;
+            }
+
+            .top-nav {
+                padding: 10px 16px;
+            }
+
+            .top-nav .brand {
+                font-size: 16px;
+            }
+
+            .hero {
+                padding: 20px 16px;
+                margin-bottom: 16px;
+                border-radius: 14px;
+            }
+
+            .hero h1 {
+                font-size: 20px;
+            }
+
+            .hero p {
+                font-size: 13px;
+                line-height: 1.7;
+            }
+
+            .company-badge {
+                padding: 12px 14px;
+                gap: 10px;
+                margin-bottom: 12px;
+                border-radius: 12px;
+            }
+
+            .company-badge .cb-avatar {
+                width: 38px;
+                height: 38px;
+                font-size: 18px;
+                border-radius: 10px;
+            }
+
+            .company-badge .cb-name {
+                font-size: 14px;
+            }
+
+            .company-badge .cb-meta {
+                font-size: 10px;
+            }
+
+            .prefill-banner {
+                padding: 12px 14px;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+
+            .wizard-steps {
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+
+            .wiz-step {
+                font-size: 11px;
+                padding: 6px 10px;
+            }
+
+            .section-select {
+                padding: 14px;
+            }
+
+            .section-select .sec-emoji {
+                font-size: 22px;
+            }
+
+            .section-select .sec-title {
+                font-size: 14px;
+            }
+
+            .q-card {
+                padding: 18px;
+                border-radius: 14px;
+            }
+
+            .q-card .q-text {
+                font-size: 14px;
+            }
+
+            .btn-q {
+                padding: 12px 20px;
+                font-size: 13px;
+            }
+
+            .swot-matrix {
+                grid-template-columns: 1fr;
+            }
+
+            .answer-options {
+                flex-direction: column;
+            }
+
+            .answer-chip {
+                padding: 10px 14px;
+                font-size: 12px;
+            }
+
+            .score-circle {
+                width: 100px;
+                height: 100px;
+                font-size: 28px;
+            }
+        }
+
+        /* COMPANY BADGE */
+        .company-badge {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.10), rgba(118, 75, 162, 0.06));
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 16px;
+            padding: 16px 22px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .company-badge .cb-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: white;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .company-badge .cb-info {
+            flex: 1;
+        }
+
+        .company-badge .cb-name {
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .company-badge .cb-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: flex;
+            gap: 10px;
+            margin-top: 4px;
+            flex-wrap: wrap;
+        }
+
+        .company-badge .cb-tag {
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="top-nav">
+        <a href="/dashboard.html" class="brand"><i class="bi bi-gem"></i> ستارتكس</a>
+        <div class="user-area">
+            <div class="user-avatar" id="userInitial">م</div>
+            <button class="btn-logout" onclick="localStorage.clear(); location.href='/login.html'">
+                <i class="bi bi-box-arrow-right"></i> خروج
+            </button>
+        </div>
+    </nav>
+
+    <div class="layout">
+        <aside class="sidebar"></aside>
+        <div class="main-content">
+
+            <!-- Company/Entity Badge -->
+            <div class="company-badge" id="companyBadge" style="display:none">
+                <div class="cb-avatar" id="companyInitial">🏢</div>
+                <div class="cb-info">
+                    <div class="cb-name" id="companyName">جاري التحميل...</div>
+                    <div class="cb-meta" id="companyMeta"></div>
+                </div>
+            </div>
+
+            <!-- Hero -->
+            <div class="hero">
+                <h1>📊 تحليل SWOT</h1>
+                <p id="heroDesc">حلّل نقاط القوة والضعف الداخلية + الفرص والتهديدات الخارجية — ٤ أقسام × ٤ أسئلة موجّهة
+                    لكل قسم. الأجوبة تتحوّل تلقائياً لمصفوفة SWOT.</p>
+            </div>
+
+            <!-- Auto-Generate from Diagnostic Bridge (Phase 6A/6B) -->
+            <div id="diagnosticBridgeBanner" style="display:none;margin-bottom:16px;padding:14px 18px;
+                background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.25);
+                border-radius:14px;display:none;align-items:center;gap:14px;flex-wrap:wrap">
+                <div style="font-size:24px">🔗</div>
+                <div style="flex:1">
+                    <div style="font-weight:800;font-size:14px;margin-bottom:3px">بيانات التشخيص جاهزة للتوليد</div>
+                    <div id="bridgeSummary" style="font-size:12px;color:var(--text-muted)"></div>
+                </div>
+                <button onclick="generateFromDiagnostic()" style="
+                    padding:9px 18px;border-radius:10px;border:none;
+                    background:linear-gradient(135deg,#7c3aed,#a78bfa);
+                    color:#fff;font-family:'Tajawal',sans-serif;
+                    font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">
+                    ⚡ ولّد SWOT تلقائياً
+                </button>
+            </div>
+
+            <!-- PESTEL → SWOT Import Banner -->
+            <div id="pestelImportBanner" style="display:none;margin-bottom:16px;padding:14px 18px;
+                background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);
+                border-radius:14px;align-items:center;gap:14px;flex-wrap:wrap">
+                <div style="font-size:24px">🌍</div>
+                <div style="flex:1">
+                    <div style="font-weight:800;font-size:14px;margin-bottom:3px">بيانات PESTEL متاحة</div>
+                    <div id="pestelSummary" style="font-size:12px;color:var(--text-muted)"></div>
+                </div>
+                <button onclick="showPestelImportModal()" style="
+                    padding:9px 18px;border-radius:10px;border:none;
+                    background:linear-gradient(135deg,#3b82f6,#60a5fa);
+                    color:#fff;font-family:'Tajawal',sans-serif;
+                    font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">
+                    📥 استيراد إلى SWOT
+                </button>
+            </div>
+
+            <!-- Pre-fill banner -->
+            <div id="prefillBanner" style="display:none"></div>
+
+            <!-- Wizard Steps -->
+            <div class="wizard-steps" id="wizSteps"></div>
+
+            <!-- Progress -->
+            <div class="progress-text" id="progressText"></div>
+            <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+            </div>
+
+            <div class="wizard-container">
+                <!-- SCREEN 1: Questions -->
+                <div class="wizard-screen active" id="screen1">
+                    <div id="questionArea"></div>
+                </div>
+
+                <!-- SCREEN 2: Results -->
+                <div class="wizard-screen" id="screen2">
+                    <div id="resultsArea"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/assets/js/path-engine.js"></script>
+    <script src="/assets/js/hr-handlers.js"></script>
+    <script src="/assets/js/finance-handlers.js"></script>
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/sidebar.js"></script>
+    <script src="/assets/js/ai-advisor.js"></script>
+    <script src="/assets/js/stats-panel.js"></script>
+    <script src="/js/data-layer.js"></script>
+    <script>if (typeof StatsPanel !== 'undefined') StatsPanel.init('SWOT');</script>
+    <script>
+        // ============================================================
+        //  DETECT USER TYPE (Individual vs Company)
+        // ============================================================
+        const _sgData = JSON.parse(localStorage.getItem('stratix_smart_guide') || 'null');
+        const _userCategory = _sgData?.category || localStorage.getItem('stratix_category') || '';
+        const _isIndividual = _userCategory.startsWith('INDIVIDUAL_');
+
+        // ═══ كشف مدير الإدارة ═══
+        const _userObj = JSON.parse(localStorage.getItem('user') || '{}');
+        // 🔧 إصلاح: كشف ?dept= من الـ URL — لو موجود = نعامله كمدير إدارة
+        const _swotDeptParam = new URLSearchParams(window.location.search).get('dept');
+        const _isDeptMgrUser = _userObj.userType === 'DEPT_MANAGER' || _userObj.userCategory === 'DEPT_MANAGER';
+        const _isDeptMgr = !!_swotDeptParam || _isDeptMgrUser;
+        const _DEPT_NAME_MAP = {
+            'finance': 'المالية', 'hr': 'الموارد البشرية', 'marketing': 'التسويق',
+            'sales': 'المبيعات', 'it': 'تقنية المعلومات', 'operations': 'العمليات',
+            'cs': 'خدمة العملاء', 'quality': 'الجودة', 'projects': 'المشاريع',
+            'compliance': 'الامتثال', 'support': 'الخدمات المساندة'
+        };
+        // 🔧 أولاً نستخدم ?dept= من URL، ثانياً من التشخيص
+        const _mgrDeptKey = _swotDeptParam || _diagPayload.department || '';
+        const _mgrDeptName = _DEPT_NAME_MAP[_mgrDeptKey] || _mgrDeptKey || 'إدارتك';
+
+        // ============================================================
+        //  SWOT SECTIONS & QUESTIONS — Adaptive per user type
+        // ============================================================
+        const SWOT_SECTIONS = _isDeptMgr ? [
+            // ═══════════════════════════════════════════
+            //  أسئلة مدير الإدارة — SWOT إداري
+            // ═══════════════════════════════════════════
+            {
+                id: 'strengths', nameAr: 'نقاط القوة', emoji: '💪', color: '#22c55e', cssClass: 'str',
+                desc: `نقاط القوة في ${_mgrDeptName}`,
+                questions: [
+                    {
+                        text: `ما أقوى قدرة أو ميزة في ${_mgrDeptName}؟`,
+                        hint: 'فكّر في اللي يميز إدارتك عن باقي الإدارات أو عن المعيار المطلوب',
+                        type: 'chips',
+                        options: ['فريق مؤهل وخبير', 'عمليات منظمة وواضحة', 'تقنية متقدمة', 'سرعة الإنجاز', 'جودة المخرجات', 'تعاون الفريق'],
+                        allowCustom: true
+                    },
+                    {
+                        text: `ما أفضل مورد تملكه ${_mgrDeptName}؟`,
+                        hint: 'الموارد: كوادر، أنظمة، ميزانية، معرفة متراكمة',
+                        type: 'chips',
+                        options: ['كوادر متخصصة', 'أنظمة وإجراءات واضحة', 'ميزانية كافية', 'قاعدة بيانات غنية', 'علاقات مع إدارات أخرى', 'خبرة تراكمية'],
+                        allowCustom: true
+                    },
+                    {
+                        text: `ما أكثر شي تُشكر عليه ${_mgrDeptName} من الإدارات الأخرى أو العملاء الداخليين؟`,
+                        hint: 'ردود الفعل الإيجابية تكشف قوتك الحقيقية',
+                        type: 'chips',
+                        options: ['سرعة الاستجابة', 'دقة التقارير', 'حل المشكلات', 'التعاون والمرونة', 'الالتزام بالمواعيد', 'الابتكار'],
+                        allowCustom: true
+                    },
+                    {
+                        text: `ماذا تفعل ${_mgrDeptName} أفضل من المعيار أو التوقعات؟`,
+                        hint: 'الأداء الذي يتجاوز التوقعات = نقطة قوة حقيقية',
+                        type: 'text',
+                        placeholder: 'اكتب نقاط التميز في إدارتك... (فصل بفاصلة)'
+                    }
+                ]
+            },
+            {
+                id: 'weaknesses', nameAr: 'نقاط الضعف', emoji: '⚠️', color: '#ef4444', cssClass: 'wk',
+                desc: `المجالات اللي تحتاج تحسين في ${_mgrDeptName}`,
+                questions: [
+                    {
+                        text: `ما أكبر تحدي يواجه ${_mgrDeptName} حالياً؟`,
+                        hint: 'التحديات الداخلية: نقص موارد، عمليات بطيئة، ضعف تدريب',
+                        type: 'chips',
+                        options: ['نقص الكوادر المؤهلة', 'ضعف التدريب والتطوير', 'عمليات يدوية كثيرة', 'ضعف التواصل الداخلي', 'ميزانية محدودة', 'غياب مؤشرات أداء واضحة'],
+                        allowCustom: true
+                    },
+                    {
+                        text: `ما أكثر شكوى تسمعها عن ${_mgrDeptName}؟`,
+                        hint: 'شكاوى الإدارات الأخرى والعملاء الداخليين',
+                        type: 'chips',
+                        options: ['بطء في الاستجابة', 'عدم وضوح الإجراءات', 'تأخر في التسليم', 'جودة غير متسقة', 'صعوبة التواصل', 'نقص في التقارير'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ما العمليات في إدارتك التي تحتاج تطوير عاجل؟',
+                        hint: 'العمليات اللي تستهلك وقت ومجهود بدون نتائج مرضية',
+                        type: 'chips',
+                        options: ['إعداد التقارير', 'متابعة المهام', 'التنسيق مع الإدارات', 'اتخاذ القرارات', 'التوثيق والأرشفة', 'تقييم الأداء'],
+                        allowCustom: true
+                    },
+                    {
+                        text: `أين الفجوة بين أداء ${_mgrDeptName} الحالي والمطلوب؟`,
+                        hint: 'ركّز على أكبر فجوة تؤثر على نتائج الإدارة',
+                        type: 'text',
+                        placeholder: 'اكتب الفجوات... (فصل بفاصلة)'
+                    }
+                ]
+            },
+            {
+                id: 'opportunities', nameAr: 'الفرص', emoji: '🌟', color: '#3b82f6', cssClass: 'opp',
+                desc: `الفرص المتاحة لتطوير ${_mgrDeptName}`,
+                questions: [
+                    {
+                        text: `ما الفرص المتاحة لتحسين أداء ${_mgrDeptName}؟`,
+                        hint: 'تقنيات جديدة، تدريب، إعادة هيكلة، أتمتة',
+                        type: 'chips',
+                        options: ['أتمتة العمليات', 'تدريب وتطوير الفريق', 'أدوات وأنظمة جديدة', 'إعادة هيكلة العمليات', 'الاستعانة بخبرات خارجية', 'تحسين بيئة العمل'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'هل توجد مبادرات أو مشاريع في الشركة يمكن لإدارتك المشاركة فيها؟',
+                        hint: 'المشاركة في مبادرات الشركة = ظهور وتأثير أكبر',
+                        type: 'chips',
+                        options: ['التحول الرقمي', 'مشاريع تحسين الجودة', 'التوسع في أسواق جديدة', 'رؤية 2030', 'مبادرات الاستدامة', 'برامج ابتكار داخلية'],
+                        allowCustom: true
+                    },
+                    {
+                        text: `ما المهارات أو القدرات التي لو أضفتها لإدارتك ستحدث فرقاً كبيراً؟`,
+                        hint: 'المهارات الناقصة = فرص تطوير',
+                        type: 'chips',
+                        options: ['تحليل البيانات', 'إدارة المشاريع', 'مهارات قيادية', 'مهارات تقنية', 'مهارات تواصل', 'تفكير استراتيجي'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ما التحسينات التي اقترحتها ولم تُنفذ بعد؟',
+                        hint: 'الأفكار المعلقة قد تكون فرص ذهبية',
+                        type: 'text',
+                        placeholder: 'اكتب الفرص المتاحة... (فصل بفاصلة)'
+                    }
+                ]
+            },
+            {
+                id: 'threats', nameAr: 'التهديدات', emoji: '🔥', color: '#f97316', cssClass: 'thr',
+                desc: `المخاطر التي قد تؤثر على ${_mgrDeptName}`,
+                questions: [
+                    {
+                        text: `ما أكبر تهديد يواجه ${_mgrDeptName} حالياً؟`,
+                        hint: 'تهديدات داخلية (تقليص، إعادة هيكلة) أو خارجية (تقنية، تنظيمية)',
+                        type: 'chips',
+                        options: ['تقليص الميزانية', 'استقالة كوادر رئيسية', 'تغيير في الأولويات', 'ضغط عمل متزايد', 'تغيرات تنظيمية', 'تقنية تحل محل العمليات'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'هل توجد تغييرات في الشركة قد تؤثر سلباً على إدارتك؟',
+                        hint: 'إعادة هيكلة، تغيير قيادة، دمج إدارات، تقليص موازنات',
+                        type: 'chips',
+                        options: ['إعادة هيكلة متوقعة', 'تغيير في القيادة', 'دمج مع إدارة أخرى', 'تقليص الصلاحيات', 'تغيير الأنظمة المستخدمة', 'ضغط لتقليل التكاليف'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ما المخاطر التشغيلية التي تقلقك؟',
+                        hint: 'مخاطر مثل: فقدان بيانات، أخطاء تشغيلية، عدم امتثال',
+                        type: 'chips',
+                        options: ['فقدان بيانات مهمة', 'أخطاء تشغيلية كبيرة', 'عدم الامتثال للأنظمة', 'اعتماد على شخص واحد', 'انقطاع الخدمة', 'تسرب معلومات'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ما التهديدات الأخرى التي تراها في الأفق؟',
+                        hint: 'فكّر في ١-٣ سنوات قادمة',
+                        type: 'text',
+                        placeholder: 'اكتب التهديدات... (فصل بفاصلة)'
+                    }
+                ]
+            }
+        ] : _isIndividual ? [
+            // ═══════════════════════════════════════════
+            //  أسئلة الأفراد — SWOT شخصي
+            // ═══════════════════════════════════════════
+            {
+                id: 'strengths', nameAr: 'نقاط القوة', emoji: '💪', color: '#22c55e', cssClass: 'str',
+                desc: 'المهارات والقدرات اللي تميّزك',
+                questions: [
+                    {
+                        text: 'ما أقوى مهاراتك المهنية؟',
+                        hint: 'فكّر في المهارات اللي يشكرك عليها الناس أو زملاء العمل',
+                        type: 'chips',
+                        options: ['قيادة الفريق', 'حل المشكلات', 'التواصل الفعّال', 'التفكير الاستراتيجي', 'إدارة الوقت', 'التفاوض والإقناع'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ما أقوى مواردك الشخصية؟',
+                        hint: 'الموارد تشمل: خبرة، شهادات، شبكة علاقات، مهارات تقنية',
+                        type: 'chips',
+                        options: ['خبرة عملية طويلة', 'شهادات ودورات متقدمة', 'شبكة علاقات قوية', 'مهارات تقنية', 'ثقة بالنفس عالية', 'شغف وطاقة عالية'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ما أكثر شي يمدحك عليه الآخرون؟',
+                        hint: 'آراء الناس فيك تكشف نقاط قوتك الحقيقية',
+                        type: 'chips',
+                        options: ['الالتزام والمسؤولية', 'الإبداع والابتكار', 'المرونة والتكيّف', 'حسن التعامل', 'الدقة والتنظيم', 'القدرة على التعلّم'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'في ماذا تتميز عن أقرانك في مجالك؟',
+                        hint: 'فكّر في ميزتك التنافسية كمحترف',
+                        type: 'text',
+                        placeholder: 'اكتب نقاط تميزك... (فصل بفاصلة)'
+                    }
+                ]
+            },
+            {
+                id: 'weaknesses', nameAr: 'نقاط الضعف', emoji: '⚠️', color: '#ef4444', cssClass: 'wk',
+                desc: 'المجالات اللي تحتاج تطوير شخصي',
+                questions: [
+                    {
+                        text: 'ما أكبر تحدي يواجهك في تطورك المهني؟',
+                        hint: 'التحديات مثل: نقص مهارة معينة، قلة خبرة، ضعف شبكة علاقات',
+                        type: 'chips',
+                        options: ['ضعف المهارات التقنية', 'صعوبة إدارة الوقت', 'قلة الخبرة العملية', 'ضعف مهارات القيادة', 'التردد في اتخاذ القرار', 'ضعف اللغة الإنجليزية'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'أين يتفوق عليك زملاؤك أو منافسوك؟',
+                        hint: 'كن صريحاً — معرفة الفجوات أول خطوة لتطويرها',
+                        type: 'chips',
+                        options: ['شهادات أكثر', 'خبرة عملية أوسع', 'شبكة علاقات أقوى', 'مهارات عرض وتقديم', 'معرفة تقنية أعمق', 'حضور على السوشال ميديا'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ما أكثر شي تتلقى ملاحظات عليه؟',
+                        hint: 'الملاحظات المتكررة تكشف نقاط الضعف اللي تحتاج علاج',
+                        type: 'chips',
+                        options: ['التأخر في الإنجاز', 'عدم التنظيم', 'صعوبة التفويض', 'التواصل غير الواضح', 'الانفعال تحت الضغط', 'عدم المتابعة'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ما المهارات التي تحتاج تطويرها بشكل عاجل؟',
+                        hint: 'ركّز على المهارات اللي تؤثر مباشرة على تقدمك المهني',
+                        type: 'text',
+                        placeholder: 'اكتب المهارات المطلوبة... (فصل بفاصلة)'
+                    }
+                ]
+            },
+            {
+                id: 'opportunities', nameAr: 'الفرص', emoji: '🌟', color: '#3b82f6', cssClass: 'opp',
+                desc: 'الفرص الخارجية المتاحة لك',
+                questions: [
+                    {
+                        text: 'ما الاتجاهات الجديدة في مجالك اللي يمكنك الاستفادة منها؟',
+                        hint: 'الاتجاهات قد تكون تقنية، مهنية، أو في سوق العمل',
+                        type: 'chips',
+                        options: ['العمل عن بعد', 'الذكاء الاصطناعي', 'التحول الرقمي', 'العمل الحر / الاستشارات', 'التعلم المستمر', 'ريادة الأعمال'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ما الفرص المتاحة لك للتطور؟',
+                        hint: 'دورات، مؤتمرات، ترقيات، مشاريع جانبية',
+                        type: 'chips',
+                        options: ['دورات تدريبية متقدمة', 'شهادات مهنية معتمدة', 'توسيع شبكة العلاقات', 'الانتقال لشركة أفضل', 'بدء مشروع جانبي', 'التدريس أو التوجيه'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ما الفرص التي يتجاهلها أقرانك؟',
+                        hint: 'الفرص اللي ما ينتبه لها غيرك = ميزة تنافسية لك',
+                        type: 'chips',
+                        options: ['بناء علامة شخصية', 'كتابة محتوى متخصص', 'التطوع في مشاريع', 'تعلم مهارات نادرة', 'التواصل مع قيادات', 'حل مشاكل حقيقية'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ما العلاقات أو الشراكات المتاحة لك؟',
+                        hint: 'فكّر في من يمكنك التعاون معه أو الاستفادة من خبرته',
+                        type: 'text',
+                        placeholder: 'اكتب الفرص المتاحة... (فصل بفاصلة)'
+                    }
+                ]
+            },
+            {
+                id: 'threats', nameAr: 'التهديدات', emoji: '🔥', color: '#f97316', cssClass: 'thr',
+                desc: 'المخاطر الخارجية التي قد تؤثر على مسارك',
+                questions: [
+                    {
+                        text: 'ما أكبر تهديد لمسارك المهني حالياً؟',
+                        hint: 'تهديدات مثل: منافسة شديدة، تغيّر التقنية، ركود السوق',
+                        type: 'chips',
+                        options: ['منافسة شديدة في المجال', 'تغيّر سريع في التقنية', 'ركود سوق العمل', 'الأتمتة والذكاء الاصطناعي', 'عدم استقرار اقتصادي', 'احتراق وظيفي'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'هل توجد تغييرات في سوق العمل تقلقك؟',
+                        hint: 'تغييرات في الطلب على المهارات أو تقليص الوظائف',
+                        type: 'chips',
+                        options: ['تقليص الوظائف', 'متطلبات شهادات جديدة', 'تحول لمهارات مختلفة', 'زيادة المنافسة', 'تغيّر تفضيلات أصحاب العمل', 'ضغط الرواتب'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ما العوامل الشخصية التي قد تعيق تقدمك؟',
+                        hint: 'عوامل مثل: ظروف عائلية، صحية، مالية',
+                        type: 'chips',
+                        options: ['ضغوط عائلية', 'محدودية الوقت', 'ظروف مالية', 'بُعد جغرافي', 'مشاكل صحية', 'فقدان الحافز'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ما المخاطر التقنية على تخصصك؟',
+                        hint: 'التقنية قد تغيّر طبيعة عملك بالكامل',
+                        type: 'text',
+                        placeholder: 'اكتب المخاطر التقنية... (فصل بفاصلة)'
+                    }
+                ]
+            }
+        ] : [
+            // ═══════════════════════════════════════════
+            //  أسئلة الشركات — SWOT مؤسسي (الأصلي)
+            // ═══════════════════════════════════════════
+            {
+                id: 'strengths', nameAr: 'نقاط القوة', emoji: '💪', color: '#22c55e', cssClass: 'str',
+                desc: 'الميزات الداخلية اللي تمنحك تفوّق',
+                questions: [
+                    {
+                        text: 'ما أهم ميزة تنافسية عند شركتك؟',
+                        hint: 'مثال: جودة المنتج، سعر تنافسي، فريق خبير، علاقات عملاء قوية',
+                        type: 'chips',
+                        options: ['جودة المنتج/الخدمة', 'سعر تنافسي', 'فريق خبير ومتخصص', 'علاقات عملاء قوية', 'تقنية متقدمة', 'سمعة وبراند قوي'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ما أقوى مورد أو أصل تملكه الشركة؟',
+                        hint: 'الموارد قد تكون بشرية، مالية، تقنية، أو ملكية فكرية',
+                        type: 'chips',
+                        options: ['فريق كبير ومتنوع', 'تمويل قوي / سيولة', 'ملكية فكرية / براءات', 'بنية تقنية متقدمة', 'شبكة شراكات', 'قاعدة عملاء كبيرة'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ما أكثر شي تُشكر عليه من العملاء؟',
+                        hint: 'ردود الفعل الإيجابية من العملاء تكشف نقاط قوتك الحقيقية',
+                        type: 'chips',
+                        options: ['سرعة الاستجابة', 'جودة المنتج', 'خدمة ما بعد البيع', 'المرونة والتكيّف', 'الابتكار', 'الالتزام بالمواعيد'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ماذا تفعل أفضل من المنافسين؟',
+                        hint: 'فكّر في الأشياء اللي العملاء يختارونك بسببها',
+                        type: 'text',
+                        placeholder: 'اكتب نقاط التميز... (يمكنك كتابة أكثر من نقطة، فصل بينها بفاصلة)'
+                    }
+                ]
+            },
+            {
+                id: 'weaknesses', nameAr: 'نقاط الضعف', emoji: '⚠️', color: '#ef4444', cssClass: 'wk',
+                desc: 'المجالات اللي تحتاج تحسين داخلياً',
+                questions: [
+                    {
+                        text: 'ما أكبر تحدي داخلي يواجه شركتك حالياً؟',
+                        hint: 'التحديات الداخلية مثل: نقص موارد، عمليات بطيئة، ضعف تدريب',
+                        type: 'chips',
+                        options: ['نقص الكوادر المؤهلة', 'ضعف العمليات والأنظمة', 'محدودية الميزانية', 'غياب خطة استراتيجية', 'ضعف التسويق', 'ضعف التقنية'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'أين يتفوّق عليك المنافسون؟',
+                        hint: 'كن صريحاً — معرفة الفجوات أول خطوة لإغلاقها',
+                        type: 'chips',
+                        options: ['التسعير', 'جودة المنتج', 'التسويق الرقمي', 'تجربة العميل', 'سرعة التوصيل', 'التوسع الجغرافي', 'الابتكار'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ما أكثر شكوى تسمعها من عملائك؟',
+                        hint: 'شكاوى العملاء كنز — تكشف نقاط الضعف الفعلية',
+                        type: 'chips',
+                        options: ['بطء الخدمة', 'ارتفاع الأسعار', 'جودة غير متسقة', 'صعوبة التواصل', 'عدم الالتزام بالمواعيد', 'نقص الخيارات'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ما العمليات الداخلية التي تحتاج تحسين عاجل؟',
+                        hint: 'ركّز على العمليات اللي تؤثر مباشرة على الأداء والعملاء',
+                        type: 'text',
+                        placeholder: 'اكتب العمليات... (فصل بفاصلة)'
+                    }
+                ]
+            },
+            {
+                id: 'opportunities', nameAr: 'الفرص', emoji: '🌟', color: '#3b82f6', cssClass: 'opp',
+                desc: 'العوامل الخارجية اللي يمكن استغلالها',
+                questions: [
+                    {
+                        text: 'ما الاتجاهات الجديدة في سوقك اللي يمكن استغلالها؟',
+                        hint: 'الاتجاهات قد تكون تقنية، اجتماعية، أو تنظيمية',
+                        type: 'chips',
+                        options: ['التحول الرقمي', 'التجارة الإلكترونية', 'العمل عن بعد', 'الاستدامة والأخضر', 'الذكاء الاصطناعي', 'رؤية 2030'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'هل توجد شرائح عملاء جديدة يمكن استهدافها؟',
+                        hint: 'أسواق جديدة أو فئات عمرية أو مناطق جغرافية',
+                        type: 'chips',
+                        options: ['أسواق دولية', 'شريحة الشباب', 'قطاع B2B', 'قطاع B2C', 'مناطق جغرافية جديدة', 'شراكات حكومية'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ما الفرص التي يتجاهلها منافسوك؟',
+                        hint: 'الفرص اللي ما ينتبه لها المنافسين = ميزة لك',
+                        type: 'chips',
+                        options: ['خدمة ما بعد البيع', 'التخصيص والتفصيل', 'خدمات الاشتراك', 'محتوى تعليمي', 'تطبيق جوال', 'بيانات وتحليلات'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ما الشراكات أو التوسعات المتاحة لك؟',
+                        hint: 'فكّر في من يمكنك التعاون معه أو أين تتوسع',
+                        type: 'text',
+                        placeholder: 'اكتب الفرص المتاحة... (فصل بفاصلة)'
+                    }
+                ]
+            },
+            {
+                id: 'threats', nameAr: 'التهديدات', emoji: '🔥', color: '#f97316', cssClass: 'thr',
+                desc: 'المخاطر الخارجية التي قد تؤثر سلباً',
+                questions: [
+                    {
+                        text: 'من أقوى منافسيك وكيف يهددونك؟',
+                        hint: 'المنافسة الشديدة قد تقلص حصتك السوقية',
+                        type: 'chips',
+                        options: ['منافسون محليون أقوياء', 'دخول شركات عالمية', 'منافسة بالسعر', 'منتجات بديلة', 'منافسون رقميون', 'استحواذات'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'هل توجد تغييرات تنظيمية أو قانونية تؤثر عليك؟',
+                        hint: 'التغييرات الحكومية والتنظيمية قد تكون فرصة أو تهديد',
+                        type: 'chips',
+                        options: ['لوائح جديدة', 'ضرائب إضافية', 'متطلبات ترخيص', 'قوانين عمالة', 'حماية المستهلك', 'أمن المعلومات'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ما المخاطر الاقتصادية أو السوقية المحتملة؟',
+                        hint: 'التضخم، الركود، تقلبات العملة، نقص الإمداد',
+                        type: 'chips',
+                        options: ['تضخم وارتفاع تكاليف', 'ركود اقتصادي', 'نقص في سلاسل الإمداد', 'تغيّر سلوك المستهلك', 'ارتفاع تكلفة العمالة', 'تقلبات أسعار الطاقة'],
+                        allowCustom: true
+                    },
+                    {
+                        text: 'ما التهديدات التقنية لنموذج عملك؟',
+                        hint: 'التقنية قد تجعل منتجك أو خدمتك قديمة',
+                        type: 'text',
+                        placeholder: 'اكتب التهديدات التقنية... (فصل بفاصلة)'
+                    }
+                ]
+            }
+        ];
+
+        // ============================================================
+        //  STATE
+        // ============================================================
+        const state = {
+            currentSection: 0,
+            currentQuestion: 0,
+            answers: {},  // { 'strengths_0': ['...'], 'strengths_1': ['...'], ... }
+            prefilled: {}, // Items from pain/ambition
+            versionId: localStorage.getItem('selectedVersionId') || null,
+            entityId: null,
+            analysisId: null,
+            entityInfo: null // { legalName, displayName, sector, type, etc }
+        };
+
+        const token = localStorage.getItem('token');
+        const totalQuestions = SWOT_SECTIONS.length * 4; // 16
+
+        // ============================================================
+        //  DRAFT AUTO-SAVE SYSTEM
+        // ============================================================
+        const DRAFT_KEY = 'swot_draft_' + (state.versionId || 'new');
+        let _autoSaveTimer = null;
+        let _draftSaved = false; // يمنع التنبيه بعد الحفظ الفعلي
+
+        function swotAutoSave() {
+            if (Object.keys(state.answers).length === 0) return;
+            const draft = {
+                answers: state.answers,
+                currentSection: state.currentSection,
+                currentQuestion: state.currentQuestion,
+                timestamp: new Date().toISOString()
+            };
+            try {
+                localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+                showAutoSaveToast();
+            } catch (e) { /* ignore */ }
+        }
+
+        function showAutoSaveToast() {
+            let el = document.getElementById('swotAutoSaveToast');
+            if (!el) {
+                el = document.createElement('div');
+                el.id = 'swotAutoSaveToast';
+                el.style.cssText = `
+                    position:fixed;bottom:24px;left:24px;z-index:9999;
+                    background:rgba(16,185,129,0.95);color:#fff;
+                    padding:10px 20px;border-radius:12px;
+                    font-size:13px;font-weight:700;font-family:Tajawal,sans-serif;
+                    box-shadow:0 4px 20px rgba(0,0,0,0.3);
+                    opacity:0;transition:opacity 0.3s,transform 0.3s;
+                    transform:translateY(10px);
+                    display:flex;align-items:center;gap:8px;
+                `;
+                document.body.appendChild(el);
+            }
+            el.innerHTML = '✓ تم الحفظ التلقائي';
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+            setTimeout(() => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(10px)';
+            }, 2000);
+        }
+
+        function scheduleAutoSave() {
+            clearTimeout(_autoSaveTimer);
+            _autoSaveTimer = setTimeout(swotAutoSave, 2000);
+        }
+
+        function loadSwotDraft() {
+            try {
+                const raw = localStorage.getItem(DRAFT_KEY);
+                if (!raw) return null;
+                const draft = JSON.parse(raw);
+                if (!draft.answers || !draft.timestamp) return null;
+                // صلاحية 7 أيام
+                const days = (Date.now() - new Date(draft.timestamp).getTime()) / (1000 * 60 * 60 * 24);
+                if (days > 7) { localStorage.removeItem(DRAFT_KEY); return null; }
+                return draft;
+            } catch (e) { return null; }
+        }
+
+        function showDraftPrompt(draft) {
+            const overlay = document.createElement('div');
+            overlay.id = 'draftOverlay';
+            overlay.style.cssText = `
+                position:fixed;inset:0;z-index:10000;
+                background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);
+                display:flex;align-items:center;justify-content:center;
+                animation:fadeIn 0.3s ease;
+            `;
+            const draftDate = new Date(draft.timestamp);
+            const answeredCount = Object.keys(draft.answers).length;
+            overlay.innerHTML = `
+                <div style="
+                    background:#1a1d2e;border:1px solid rgba(255,255,255,0.1);
+                    border-radius:20px;padding:32px;max-width:420px;width:90%;
+                    text-align:center;font-family:Tajawal,sans-serif;color:#e2e8f0;
+                    box-shadow:0 20px 60px rgba(0,0,0,0.5);
+                ">
+                    <div style="font-size:40px;margin-bottom:12px">📄</div>
+                    <div style="font-size:18px;font-weight:800;margin-bottom:8px">مسودة محفوظة</div>
+                    <div style="font-size:13px;color:#94a3b8;margin-bottom:6px;line-height:1.8">
+                        لديك تحليل SWOT غير مكتمل من
+                        <strong style="color:#667eea">${draftDate.toLocaleDateString('ar-SA')}</strong>
+                        الساعة <strong style="color:#667eea">${draftDate.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</strong>
+                    </div>
+                    <div style="font-size:12px;color:#94a3b8;margin-bottom:20px">
+                        تم الإجابة على <strong style="color:#22c55e">${answeredCount}</strong> من ${totalQuestions} سؤال
+                    </div>
+                    <div style="display:flex;gap:10px;justify-content:center">
+                        <button onclick="applyDraft()" style="
+                            background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;
+                            border:none;padding:12px 28px;border-radius:12px;
+                            font-weight:700;font-size:14px;cursor:pointer;
+                            font-family:Tajawal,sans-serif;
+                        ">📥 استرجاع المسودة</button>
+                        <button onclick="discardDraft()" style="
+                            background:rgba(255,255,255,0.06);color:#94a3b8;
+                            border:1px solid rgba(255,255,255,0.1);
+                            padding:12px 28px;border-radius:12px;
+                            font-weight:700;font-size:14px;cursor:pointer;
+                            font-family:Tajawal,sans-serif;
+                        ">🗑️ بدء جديد</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            window._pendingDraft = draft;
+        }
+
+        function applyDraft() {
+            const draft = window._pendingDraft;
+            if (draft) {
+                state.answers = draft.answers || {};
+                state.currentSection = draft.currentSection || 0;
+                state.currentQuestion = draft.currentQuestion || 0;
+                renderWizSteps();
+                renderQuestion();
+                updateProgress();
+            }
+            document.getElementById('draftOverlay')?.remove();
+            showAutoSaveToast();
+        }
+
+        function discardDraft() {
+            localStorage.removeItem(DRAFT_KEY);
+            document.getElementById('draftOverlay')?.remove();
+        }
+
+        // تنبيه قبل الخروج
+        window.addEventListener('beforeunload', function (e) {
+            if (_draftSaved) return; // خلاص انحفظ في السيرفر
+            const hasAnswers = Object.keys(state.answers).length > 0;
+            if (hasAnswers) {
+                swotAutoSave(); // حفظ أخير قبل الخروج
+                e.preventDefault();
+                e.returnValue = 'لديك تحليل غير محفوظ. هل تريد المغادرة؟';
+                return e.returnValue;
+            }
+        });
+
+        // ============================================================
+        //  API HELPER
+        // ============================================================
+        async function api(url) {
+            const res = await window.apiRequest(url, {
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+            });
+            if (res.status === 401) { location.href = '/login.html'; return null; }
+            if (!res.ok) return null;
+            return res.json();
+        }
+
+        // ============================================================
+        //  INIT
+        // ============================================================
+        async function init() {
+            // Load sidebar
+            if (typeof loadSidebar === 'function') loadSidebar();
+
+            // Set user initial
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user?.name) document.getElementById('userInitial').textContent = user.name.charAt(0);
+
+            // ═══ تكييف الواجهة حسب نوع المستخدم ═══
+            if (_isDeptMgr) {
+                document.querySelector('.hero h1').textContent = `📊 تحليل SWOT — ${_mgrDeptName}`;
+                document.getElementById('heroDesc').innerHTML =
+                    `حلّل نقاط القوة والضعف في <strong>${_mgrDeptName}</strong> + اكتشف فرص التطوير والمخاطر — ٤ أقسام × ٤ أسئلة مخصصة لإدارتك. الأجوبة تتحوّل تلقائياً لمصفوفة SWOT.`;
+            } else if (_isIndividual) {
+                document.getElementById('heroDesc').innerHTML =
+                    'حلّل نقاط قوتك ومهاراتك الشخصية + اكتشف الفرص والتحديات في مسارك المهني — ٤ أقسام × ٤ أسئلة مخصصة لك. الأجوبة تتحوّل تلقائياً لمصفوفة SWOT شخصية.';
+                // إخفاء بادج الشركة للأفراد
+                document.getElementById('companyBadge').style.display = 'none';
+            }
+
+            // 1. Load entity/company info from version (للشركات فقط)
+            if (!_isIndividual) await loadEntityInfo();
+
+            // 2. Pull pain/ambition data from API
+            await loadPainAmbitionData();
+
+            // ═══ 2a. كشف ?dept=hr — تحميل S/W من فحص الموارد البشرية ═══
+            const _deptParam = new URLSearchParams(window.location.search).get('dept');
+            if (_deptParam) {
+                const deptNames = { hr: 'الموارد البشرية', finance: 'المالية', operations: 'العمليات', marketing: 'التسويق', sales: 'المبيعات', compliance: 'الامتثال' };
+                const deptName = deptNames[_deptParam] || _deptParam;
+
+                // تخصيص DRAFT_KEY بالإدارة
+                // Note: DRAFT_KEY is const, but we override it here for dept-specific drafts
+                window._deptSwotDraftKey = 'swot_draft_' + _deptParam + '_' + (state.versionId || 'new');
+
+                // تحديث عنوان الصفحة
+                document.title = 'ستارتكس — SWOT ' + deptName;
+                const heroH1 = document.querySelector('.hero h1');
+                if (heroH1) heroH1.textContent = '📊 تحليل SWOT — ' + deptName;
+                const heroDesc = document.getElementById('heroDesc');
+                if (heroDesc) heroDesc.innerHTML = `تحليل نقاط القوة والضعف في <strong>${deptName}</strong> بناءً على نتائج الفحص + أضف الفرص والتهديدات.`;
+
+                // تحميل S/W من localStorage
+                const deptStrengths = JSON.parse(localStorage.getItem('stratix_' + _deptParam + '_strengths') || '[]');
+                const deptWeaknesses = JSON.parse(localStorage.getItem('stratix_' + _deptParam + '_weaknesses') || '[]');
+
+                if (!state.prefilled) state.prefilled = { strengths: [], weaknesses: [], opportunities: [], threats: [] };
+
+                deptStrengths.forEach(s => {
+                    if (!state.prefilled.strengths.some(x => (typeof x === 'string' ? x : x.text) === s)) {
+                        state.prefilled.strengths.push({ text: s, confidence: 90, source: 'hr_deep' });
+                    }
+                });
+                deptWeaknesses.forEach(w => {
+                    if (!state.prefilled.weaknesses.some(x => (typeof x === 'string' ? x : x.text) === w)) {
+                        state.prefilled.weaknesses.push({ text: w, confidence: 90, source: 'hr_deep' });
+                    }
+                });
+
+                if (deptStrengths.length === 0 && deptWeaknesses.length === 0) {
+                    if (typeof showToast === 'function') {
+                        showToast('لم يتم العثور على بيانات الفحص — يرجى إكمال التحليل العميق أولاً', 'warning');
+                    }
+                } else {
+                    console.log(`📌 Loaded ${deptStrengths.length} strengths + ${deptWeaknesses.length} weaknesses from ${_deptParam} deep analysis`);
+                }
+            }
+
+            // 2b. Phase 6B — فحص جسر التشخيص (dept-deep + diagnostic-center)
+            await checkDiagnosticBridge();
+
+            // 2c. PESTEL → SWOT — فحص بيانات PESTEL المتاحة
+            if (!_isIndividual) await checkPestelData();
+
+            // 3. Show pre-fill banner if we have data
+            showPrefillBanner();
+
+            // 4. Build wizard steps
+            renderWizSteps();
+
+            // 5. Show first question
+            renderQuestion();
+            updateProgress();
+
+            // 6. Check existing SWOT analysis
+            if (state.versionId) {
+                try {
+                    const existing = await api(`/api/company-analysis/version/${state.versionId}/SWOT`);
+                    if (existing?.id) {
+                        state.analysisId = existing.id;
+                    }
+                } catch (e) { console.warn('No existing SWOT:', e); }
+            }
+
+            // 7. 📄 تحقق من وجود مسودة محفوظة
+            const draft = loadSwotDraft();
+            if (draft && Object.keys(draft.answers).length > 0) {
+                showDraftPrompt(draft);
+            }
+
+            // 8. 🔄 تفعيل الحفظ التلقائي كل 30 ثانية
+            setInterval(swotAutoSave, 30000);
+        }
+
+        // ============================================================
+        //  LOAD ENTITY/COMPANY INFO
+        // ============================================================
+        async function loadEntityInfo() {
+            if (!state.versionId) return;
+
+            try {
+                // Get versions list which includes entity info
+                const data = await api('/api/versions');
+                if (!data?.versions?.length) return;
+
+                // Find our version
+                const version = data.versions.find(v => v.id === state.versionId) || data.versions[0];
+                if (!version?.entity) return;
+
+                const entity = version.entity;
+                state.entityId = entity.id;
+                state.entityInfo = entity;
+
+                // Show company badge
+                const badge = document.getElementById('companyBadge');
+                badge.style.display = 'flex';
+
+                const name = entity.legalName || entity.displayName || 'غير محدد';
+                const initial = name.charAt(0);
+                document.getElementById('companyInitial').textContent = initial;
+                document.getElementById('companyName').textContent = name;
+
+                // Meta tags
+                let metaHtml = '';
+                if (entity.displayName && entity.displayName !== entity.legalName) {
+                    metaHtml += `<span class="cb-tag">📛 ${entity.displayName}</span>`;
+                }
+                if (entity.company?.nameAr) {
+                    metaHtml += `<span class="cb-tag">🏢 ${entity.company.nameAr}</span>`;
+                }
+                if (version.name) {
+                    metaHtml += `<span class="cb-tag">📋 ${version.name}</span>`;
+                }
+                metaHtml += `<span class="cb-tag" style="background:rgba(34,197,94,0.1);color:#22c55e">🔍 SWOT تحليل</span>`;
+                document.getElementById('companyMeta').innerHTML = metaHtml;
+
+                // Update hero with entity name
+                document.getElementById('heroDesc').innerHTML = `
+                    حلّل نقاط القوة والضعف الداخلية + الفرص والتهديدات الخارجية لـ <strong>${name}</strong> — ٤ أقسام × ٤ أسئلة موجّهة. الأجوبة تتحوّل تلقائياً لمصفوفة SWOT.
+                `;
+
+            } catch (e) {
+                console.warn('Could not load entity info:', e);
+            }
+        }
+
+        // ============================================================
+        //  PAIN/AMBITION DATA LOADING (from API + localStorage fallback)
+        // ============================================================
+        async function loadPainAmbitionData() {
+            let pa = null;
+
+            // Try API first (entity metadata)
+            if (state.entityId) {
+                try {
+                    const apiData = await api(`/api/user-progress/pain-ambition/${state.entityId}`);
+                    if (apiData) pa = apiData;
+                } catch (e) { console.warn('API pain-ambition not available:', e); }
+            }
+
+            // Fallback to localStorage
+            if (!pa) {
+                const raw = localStorage.getItem('painAmbition');
+                if (raw) { try { pa = JSON.parse(raw); } catch (e) { } }
+            }
+
+            if (!pa) return;
+            console.log('📦 Pain/Ambition data loaded:', pa);
+
+            // Map pains to weaknesses/threats pre-fill
+            const PAIN_MAP = {
+                no_strategy: { section: 'weaknesses', text: 'لا توجد خطة استراتيجية مكتوبة' },
+                no_measurement: { section: 'weaknesses', text: 'غياب مؤشرات قياس الأداء (KPIs)' },
+                plan_vs_execution: { section: 'weaknesses', text: 'فجوة بين التخطيط والتنفيذ' },
+                team_alignment: { section: 'weaknesses', text: 'عدم توافق الفريق على الأولويات' },
+                market_pressure: { section: 'threats', text: 'ضغط تنافسي متزايد من السوق' },
+                growth_stuck: { section: 'weaknesses', text: 'توقف النمو أو تراجع الإيرادات' }
+            };
+
+            // Map ambitions to opportunities pre-fill
+            const AMB_MAP = {
+                clear_strategy: { text: 'فرصة بناء خطة استراتيجية متكاملة' },
+                data_decisions: { text: 'التحول لقرارات مبنية على البيانات' },
+                team_ownership: { text: 'بناء فريق متحمس يعرف وجهته' },
+                market_lead: { text: 'التفوق على المنافسين في السوق' },
+                sustainable_growth: { text: 'تحقيق نمو مستدام ومخطط' },
+                execution_machine: { text: 'بناء نظام تنفيذ منتظم' }
+            };
+
+            state.prefilled = { strengths: [], weaknesses: [], opportunities: [], threats: [] };
+
+            // Map pains
+            if (pa.pains) {
+                pa.pains.forEach(p => {
+                    const mapped = PAIN_MAP[p];
+                    if (mapped) state.prefilled[mapped.section].push(mapped.text);
+                });
+            }
+
+            // Map ambitions
+            if (pa.ambitions) {
+                pa.ambitions.forEach(a => {
+                    const mapped = AMB_MAP[a];
+                    if (mapped) state.prefilled.opportunities.push(mapped.text);
+                });
+            }
+
+            // Custom text
+            if (pa.painCustom?.trim()) state.prefilled.weaknesses.push(pa.painCustom.trim());
+            if (pa.ambitionCustom?.trim()) state.prefilled.opportunities.push(pa.ambitionCustom.trim());
+
+            // Also load swotSeeds from localStorage (saved by pain-ambition page)
+            try {
+                const seedsRaw = localStorage.getItem('swotSeeds');
+                if (seedsRaw) {
+                    const seeds = JSON.parse(seedsRaw);
+                    if (seeds.weaknesses) {
+                        seeds.weaknesses.forEach(w => {
+                            if (!state.prefilled.weaknesses.includes(w)) state.prefilled.weaknesses.push(w);
+                        });
+                    }
+                    if (seeds.threats) {
+                        seeds.threats.forEach(t => {
+                            if (!state.prefilled.threats.includes(t)) state.prefilled.threats.push(t);
+                        });
+                    }
+                    console.log('📌 swotSeeds merged:', seeds);
+                }
+            } catch (e) { console.warn('swotSeeds parse error:', e); }
+
+            // Context strengths from depth
+            if (pa.depth) {
+                if (pa.depth.age === '7 - 15 سنة' || pa.depth.age === 'أكثر من 15 سنة') {
+                    state.prefilled.strengths.push('خبرة طويلة في السوق (' + pa.depth.age + ')');
+                }
+                if (pa.depth.teamSize === '51 - 200' || pa.depth.teamSize === 'أكثر من 200') {
+                    state.prefilled.strengths.push('فريق عمل كبير ومتنوع (' + pa.depth.teamSize + ' شخص)');
+                }
+            }
+        }
+
+        // ============================================================
+        //  PHASE 6B — AUTO-GENERATE SWOT FROM DIAGNOSTIC BRIDGE
+        // ============================================================
+        const AXIS_THRESHOLDS = { strong: 70, weak: 40 };
+
+        const DEPT_STRENGTH_RULES = {
+            compliance_officer: { strength: ['نعم — موظف متفرغ', 'مستشار خارجي'], weakness: ['لا — أنا أتولى ذلك'], sL: 'مسؤول امتثال متخصص', wL: 'لا يوجد مسؤول امتثال' },
+            license_review: { strength: ['هذا الشهر'], weakness: ['أكثر من سنة', 'لا أتذكر'], sL: 'متابعة دورية للتراخيص', wL: 'تراخيص غير محدّثة' },
+            violations: { strength: ['لا'], weakness: ['نعم — لا تزال قائمة'], sL: 'سجل نظيف من المخالفات', wL: 'مخالفة قائمة لم تُحل' },
+            accountant: { strength: ['داخلي'], weakness: ['لا'], sL: 'محاسب داخلي متخصص', wL: 'لا يوجد محاسب' },
+            profit_margin: { strength: ['نعم بدقة'], weakness: ['لا'], sL: 'وعي مالي دقيق بالهوامش', wL: 'جهل بهامش الربح الصافي' },
+            client_concentration: { strength: ['أقل 20%'], weakness: ['أكثر 50% (خطر)'], sL: 'تنويع صحي في قاعدة العملاء', wL: '⚠️ اعتماد خطير على عميل واحد' },
+            crm: { strength: ['نعم متكامل'], weakness: ['لا'], sL: 'نظام CRM متكامل', wL: 'لا يوجد نظام متابعة عملاء' },
+            repeat_clients: { strength: ['أكثر من 60%'], weakness: ['أقل من 30%'], sL: 'قاعدة عملاء متكررة قوية', wL: 'ضعف في الاحتفاظ بالعملاء' },
+            salary_structure: { strength: ['نعم موثق'], weakness: ['لا'], sL: 'هيكل رواتب وحوافز واضح', wL: 'غياب هيكل تعويضات' },
+            performance_eval: { strength: ['نعم — دوري'], weakness: ['لا'], sL: 'نظام تقييم أداء منتظم', wL: 'لا يوجد تقييم أداء' },
+            brand_identity: { strength: ['نعم — احترافية'], weakness: ['لا'], sL: 'هوية بصرية احترافية', wL: 'لا توجد هوية بصرية' },
+            content_frequency: { strength: ['يومياً', 'أسبوعياً'], weakness: ['لا'], sL: 'محتوى منتظم ونشط', wL: 'لا يوجد نشر محتوى' },
+            sops: { strength: ['نعم كاملة'], weakness: ['في الأذهان فقط'], sL: 'إجراءات موثقة SOPs', wL: 'العمليات غير موثقة' },
+            automation_level: { strength: ['معظمها أتمتة'], weakness: ['كثير'], sL: 'مستوى أتمتة عالي', wL: 'عمليات يدوية مرهقة' },
+            infra_growth: { strength: ['نعم'], weakness: ['ضعيفة'], sL: 'بنية تحتية تدعم النمو', wL: 'بنية تحتية ضعيفة' },
+            vendor_contracts: { strength: ['نعم'], weakness: ['لا'], sL: 'عقود موردين محدّثة', wL: 'عقود موردين منتهية/غائبة' },
+        };
+
+        async function checkDiagnosticBridge() {
+            const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
+            // 📊 المرحلة 3: قراءة dept-deep من DB أولاً
+            let dept = null;
+            try {
+                const result = await StratixData.getDeptDeep();
+                if (!result._error) dept = result;
+            } catch (e) { }
+            if (!dept) dept = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
+            if (!diag && !dept) return;
+
+            const banner = document.getElementById('diagnosticBridgeBanner');
+            const summary = document.getElementById('bridgeSummary');
+            banner.style.display = 'flex';
+
+            const parts = [];
+            if (diag) parts.push(`تشخيص عام (نضج ${diag.results?.maturity ?? '?'}%)`);
+            if (dept) {
+                const doneCount = Object.values(dept).filter(v => v?.completed).length;
+                if (doneCount > 0) parts.push(`${doneCount} إدارات مكتملة`);
+            }
+            summary.textContent = parts.join(' · ') + ' — جاهز للتحويل لـ SWOT';
+        }
+
+        async function generateFromDiagnostic() {
+            const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
+            // 📊 المرحلة 3: قراءة dept-deep من DB أولاً
+            let depth = null;
+            try {
+                const result = await StratixData.getDeptDeep();
+                if (!result._error) depth = result;
+            } catch (e) { }
+            if (!depth) depth = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
+
+            const S = [], W = [], O = [], T = [];
+
+            // ── المصدر 1: التشخيص العام (درجات المحاور) ──
+            if (diag?.radar?.axisScores) {
+                const AXIS_LABELS = {
+                    'مالي': 'الأداء المالي',
+                    'عمالة': 'إدارة الموارد البشرية',
+                    'إداري': 'الكفاءة التشغيلية',
+                    'تنظيمي': 'الامتثال التنظيمي',
+                    'قطاعي': 'الأداء في القطاع',
+                };
+                for (const [axis, score] of Object.entries(diag.radar.axisScores)) {
+                    const label = AXIS_LABELS[axis] || axis;
+                    if (score >= AXIS_THRESHOLDS.strong) S.push({ text: `أداء قوي في ${label} (${score}%)`, confidence: 90, source: 'diagnostic' });
+                    else if (score <= AXIS_THRESHOLDS.weak) W.push({ text: `فجوة حرجة في ${label} (${score}%)`, confidence: 90, source: 'diagnostic' });
+                }
+            }
+
+            // ── تهديدات الامتثال من التشخيص ──
+            if (diag?.results?.complianceGap > 50) {
+                T.push({ text: 'مخاطر امتثال عالية — تراخيص وتسجيلات معلقة', confidence: 90, source: 'diagnostic' });
+            }
+
+            // ── فرص من القطاع والحجم ──
+            const sector = diag?.company?.sector || localStorage.getItem('stratix_sector');
+            const size = diag?.company?.size;
+            if (sector) O.push({ text: `فرص نمو في قطاع ${sector}`, confidence: 60, source: 'diagnostic' });
+            if (size === 'صغيرة' || size === 'متناهية الصغر') O.push({ text: 'برامج دعم المنشآت الصغيرة (منشآت، صندوق الاستثمارات)', confidence: 60, source: 'diagnostic' });
+
+            // ── المصدر 2: إجابات الإدارات (dept-deep) ──
+            if (depth) {
+                for (const [deptKey, deptData] of Object.entries(depth)) {
+                    if (!deptData?.answers) continue;
+                    for (const [qId, val] of Object.entries(deptData.answers)) {
+                        const rule = DEPT_STRENGTH_RULES[qId];
+                        if (!rule) continue;
+                        const vals = Array.isArray(val) ? val : [val];
+                        if (vals.some(v => rule.strength.includes(v))) {
+                            if (!S.some(x => (x.text || x) === rule.sL)) S.push({ text: rule.sL, confidence: 80, source: 'dept_deep' });
+                        } else if (vals.some(v => rule.weakness.includes(v))) {
+                            if (!W.some(x => (x.text || x) === rule.wL)) W.push({ text: rule.wL, confidence: 80, source: 'dept_deep' });
+                        }
+                    }
+                    // التحديات المختارة → تهديدات
+                    if (deptData.challenges?.length) {
+                        deptData.challenges.forEach(c => {
+                            if (!T.some(x => (x.text || x) === c)) T.push({ text: c, confidence: 70, source: 'dept_deep' });
+                        });
+                    }
+                    // نموذج التشغيل
+                    if (deptData.model === 'مزود خارجي — راضٍ عن الأداء') {
+                        if (!S.some(x => (x.text || x) === 'تشغيل خارجي فعّال يقلل الأعباء'))
+                            S.push({ text: 'تشغيل خارجي فعّال يقلل الأعباء', confidence: 70, source: 'dept_rule' });
+                    } else if (deptData.model === 'مزود خارجي — أفكر في التغيير') {
+                        if (!W.some(x => (x.text || x) === 'مزود خارجي بأداء ضعيف'))
+                            W.push({ text: 'مزود خارجي بأداء ضعيف', confidence: 70, source: 'dept_rule' });
+                    }
+                }
+            }
+
+            // ── دمج في state.prefilled (with confidence) ──
+            if (!state.prefilled) state.prefilled = { strengths: [], weaknesses: [], opportunities: [], threats: [] };
+            const mergeWithConf = (arr, items) => {
+                items.forEach(item => {
+                    const text = typeof item === 'string' ? item : item.text;
+                    if (!arr.some(x => (typeof x === 'string' ? x : x.text) === text)) {
+                        arr.push(item);
+                    }
+                });
+            };
+            mergeWithConf(state.prefilled.strengths ||= [], S);
+            mergeWithConf(state.prefilled.weaknesses ||= [], W);
+            mergeWithConf(state.prefilled.opportunities ||= [], O);
+            mergeWithConf(state.prefilled.threats ||= [], T);
+
+            // إخفاء زر التوليد بعد الاستخدام
+            document.getElementById('diagnosticBridgeBanner').style.display = 'none';
+
+            // إظهار banner العناصر المدمجة
+            showPrefillBanner();
+
+            console.log('⚡ Auto-SWOT from Diagnostic Bridge:', { S: S.length, W: W.length, O: O.length, T: T.length });
+        }
+
+        // ============================================================
+        //  PESTEL → SWOT IMPORT
+        // ============================================================
+        let _pestelItems = null; // cached PESTEL items
+
+        async function checkPestelData() {
+            if (!state.versionId) return;
+            try {
+                const pestel = await api(`/api/company-analysis/version/${state.versionId}/PESTEL`);
+                if (!pestel?.data) return;
+
+                const data = typeof pestel.data === 'string' ? JSON.parse(pestel.data) : pestel.data;
+
+                // Extract threats & opportunities from PESTEL dimensions
+                const threats = [];
+                const opportunities = [];
+                const DIMENSION_LABELS = {
+                    political: 'سياسي', economic: 'اقتصادي', social: 'اجتماعي',
+                    technological: 'تقني', environmental: 'بيئي', legal: 'قانوني',
+                    P: 'سياسي', E: 'اقتصادي', S: 'اجتماعي',
+                    T: 'تقني', En: 'بيئي', L: 'قانوني'
+                };
+
+                // Handle different data structures
+                const factors = data.factors || data.items || [];
+                const dimensions = data.dimensions || data.categories || {};
+
+                // Structure 1: flat array of factors
+                if (factors.length > 0) {
+                    factors.forEach(f => {
+                        const dimLabel = DIMENSION_LABELS[f.dimension] || DIMENSION_LABELS[f.category] || f.dimension || '';
+                        const text = f.description || f.text || f.name || '';
+                        if (!text) return;
+                        const impact = f.impact || f.type || 'neutral';
+                        if (impact === 'negative' || impact === 'threat' || f.isTheat) {
+                            threats.push({ text: `[${dimLabel}] ${text}`, dimension: dimLabel });
+                        } else if (impact === 'positive' || impact === 'opportunity') {
+                            opportunities.push({ text: `[${dimLabel}] ${text}`, dimension: dimLabel });
+                        }
+                    });
+                }
+
+                // Structure 2: grouped by dimension { political: { threats: [...], opportunities: [...] } }
+                if (Object.keys(dimensions).length > 0) {
+                    for (const [dimKey, dimData] of Object.entries(dimensions)) {
+                        const dimLabel = DIMENSION_LABELS[dimKey] || dimKey;
+                        if (dimData.threats) {
+                            dimData.threats.forEach(t => {
+                                const text = typeof t === 'string' ? t : (t.text || t.description || '');
+                                if (text) threats.push({ text: `[${dimLabel}] ${text}`, dimension: dimLabel });
+                            });
+                        }
+                        if (dimData.opportunities) {
+                            dimData.opportunities.forEach(o => {
+                                const text = typeof o === 'string' ? o : (o.text || o.description || '');
+                                if (text) opportunities.push({ text: `[${dimLabel}] ${text}`, dimension: dimLabel });
+                            });
+                        }
+                        // Also check items with impact field
+                        if (dimData.items) {
+                            dimData.items.forEach(item => {
+                                const text = typeof item === 'string' ? item : (item.text || item.description || '');
+                                if (!text) return;
+                                if (item.impact === 'negative') threats.push({ text: `[${dimLabel}] ${text}`, dimension: dimLabel });
+                                else if (item.impact === 'positive') opportunities.push({ text: `[${dimLabel}] ${text}`, dimension: dimLabel });
+                            });
+                        }
+                    }
+                }
+
+                if (threats.length === 0 && opportunities.length === 0) return;
+
+                _pestelItems = { threats, opportunities };
+
+                // Show banner
+                const banner = document.getElementById('pestelImportBanner');
+                banner.style.display = 'flex';
+                document.getElementById('pestelSummary').textContent =
+                    `${opportunities.length} فرصة + ${threats.length} تهديد من تحليل PESTEL — اختر ما تريد إضافته`;
+
+                console.log('🌍 PESTEL data available:', { threats: threats.length, opportunities: opportunities.length });
+            } catch (e) {
+                console.warn('PESTEL check failed:', e);
+            }
+        }
+
+        function showPestelImportModal() {
+            if (!_pestelItems) return;
+
+            const overlay = document.createElement('div');
+            overlay.id = 'pestelOverlay';
+            overlay.style.cssText = `
+                position:fixed;inset:0;z-index:10000;
+                background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);
+                display:flex;align-items:center;justify-content:center;
+                animation:fadeIn 0.3s ease;
+            `;
+
+            let itemsHtml = '';
+
+            // Opportunities
+            if (_pestelItems.opportunities.length > 0) {
+                itemsHtml += `<div style="margin-bottom:16px">
+                    <div style="font-weight:800;font-size:14px;color:#3b82f6;margin-bottom:8px">🌟 فرص (${_pestelItems.opportunities.length})</div>`;
+                _pestelItems.opportunities.forEach((item, i) => {
+                    itemsHtml += `
+                        <label style="display:flex;align-items:flex-start;gap:8px;padding:8px 12px;
+                            border-radius:10px;margin-bottom:4px;cursor:pointer;
+                            background:rgba(59,130,246,0.04);border:1px solid rgba(59,130,246,0.1)">
+                            <input type="checkbox" checked data-type="opportunity" data-index="${i}"
+                                style="margin-top:4px;accent-color:#3b82f6">
+                            <span style="font-size:13px;line-height:1.6">${item.text}</span>
+                        </label>`;
+                });
+                itemsHtml += `</div>`;
+            }
+
+            // Threats
+            if (_pestelItems.threats.length > 0) {
+                itemsHtml += `<div>
+                    <div style="font-weight:800;font-size:14px;color:#f97316;margin-bottom:8px">🔥 تهديدات (${_pestelItems.threats.length})</div>`;
+                _pestelItems.threats.forEach((item, i) => {
+                    itemsHtml += `
+                        <label style="display:flex;align-items:flex-start;gap:8px;padding:8px 12px;
+                            border-radius:10px;margin-bottom:4px;cursor:pointer;
+                            background:rgba(249,115,22,0.04);border:1px solid rgba(249,115,22,0.1)">
+                            <input type="checkbox" checked data-type="threat" data-index="${i}"
+                                style="margin-top:4px;accent-color:#f97316">
+                            <span style="font-size:13px;line-height:1.6">${item.text}</span>
+                        </label>`;
+                });
+                itemsHtml += `</div>`;
+            }
+
+            overlay.innerHTML = `
+                <div style="
+                    background:#1a1d2e;border:1px solid rgba(255,255,255,0.1);
+                    border-radius:20px;padding:28px;max-width:520px;width:92%;
+                    font-family:Tajawal,sans-serif;color:#e2e8f0;
+                    box-shadow:0 20px 60px rgba(0,0,0,0.5);
+                    max-height:80vh;overflow-y:auto;
+                ">
+                    <div style="text-align:center;margin-bottom:16px">
+                        <div style="font-size:36px;margin-bottom:8px">🌍</div>
+                        <div style="font-size:18px;font-weight:800">استيراد من PESTEL</div>
+                        <div style="font-size:12px;color:#94a3b8;margin-top:4px">اختر العناصر التي تريد إضافتها لتحليل SWOT</div>
+                    </div>
+                    <div id="pestelItemsList">${itemsHtml}</div>
+                    <div style="display:flex;gap:10px;justify-content:center;margin-top:20px">
+                        <button onclick="confirmPestelImport()" style="
+                            background:linear-gradient(135deg,#3b82f6,#60a5fa);color:#fff;
+                            border:none;padding:12px 28px;border-radius:12px;
+                            font-weight:700;font-size:14px;cursor:pointer;
+                            font-family:Tajawal,sans-serif;
+                        ">✅ استيراد المحدد</button>
+                        <button onclick="document.getElementById('pestelOverlay')?.remove()" style="
+                            background:rgba(255,255,255,0.06);color:#94a3b8;
+                            border:1px solid rgba(255,255,255,0.1);
+                            padding:12px 28px;border-radius:12px;
+                            font-weight:700;font-size:14px;cursor:pointer;
+                            font-family:Tajawal,sans-serif;
+                        ">❌ إلغاء</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        function confirmPestelImport() {
+            const checkboxes = document.querySelectorAll('#pestelItemsList input[type=checkbox]:checked');
+            if (checkboxes.length === 0) {
+                document.getElementById('pestelOverlay')?.remove();
+                return;
+            }
+
+            if (!state.prefilled) state.prefilled = { strengths: [], weaknesses: [], opportunities: [], threats: [] };
+
+            let oppCount = 0, thrCount = 0;
+
+            checkboxes.forEach(cb => {
+                const type = cb.dataset.type;
+                const idx = parseInt(cb.dataset.index);
+                if (type === 'opportunity' && _pestelItems.opportunities[idx]) {
+                    const text = _pestelItems.opportunities[idx].text;
+                    if (!state.prefilled.opportunities.some(x => (typeof x === 'string' ? x : x.text) === text)) {
+                        state.prefilled.opportunities.push({ text, confidence: 85, source: 'pestel' });
+                        oppCount++;
+                    }
+                } else if (type === 'threat' && _pestelItems.threats[idx]) {
+                    const text = _pestelItems.threats[idx].text;
+                    if (!state.prefilled.threats.some(x => (typeof x === 'string' ? x : x.text) === text)) {
+                        state.prefilled.threats.push({ text, confidence: 85, source: 'pestel' });
+                        thrCount++;
+                    }
+                }
+            });
+
+            // Hide overlay & banner
+            document.getElementById('pestelOverlay')?.remove();
+            document.getElementById('pestelImportBanner').style.display = 'none';
+
+            // Update prefill banner
+            showPrefillBanner();
+
+            console.log(`🌍 PESTEL imported: ${oppCount} opportunities, ${thrCount} threats`);
+        }
+
+        function showPrefillBanner() {
+            const pf = state.prefilled;
+            if (!pf) return;
+
+            const total = (pf.strengths?.length || 0) + (pf.weaknesses?.length || 0) + (pf.opportunities?.length || 0) + (pf.threats?.length || 0);
+            if (total === 0) return;
+
+            const banner = document.getElementById('prefillBanner');
+            banner.style.display = 'flex';
+            banner.className = 'prefill-banner';
+            banner.innerHTML = `
+                <div class="pf-icon">✅</div>
+                <div class="pf-text">
+                    <strong>تم دمج ${total} عنصر تلقائياً من بيانات الألم والطموح</strong> — هذه العناصر ستُضاف لنتائج SWOT عند الانتهاء.
+                    <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+                        ${pf.strengths?.length ? `<span class="prefill-tag" style="background:rgba(34,197,94,0.1);color:#22c55e">💪 ${pf.strengths.length} قوة</span>` : ''}
+                        ${pf.weaknesses?.length ? `<span class="prefill-tag" style="background:rgba(239,68,68,0.1);color:#ef4444">⚠️ ${pf.weaknesses.length} ضعف</span>` : ''}
+                        ${pf.opportunities?.length ? `<span class="prefill-tag" style="background:rgba(59,130,246,0.1);color:#3b82f6">🌟 ${pf.opportunities.length} فرص</span>` : ''}
+                        ${pf.threats?.length ? `<span class="prefill-tag" style="background:rgba(249,115,22,0.1);color:#f97316">🔥 ${pf.threats.length} تهديد</span>` : ''}
+                    </div>
+                </div>
+            `;
+
+            // Update hero
+            document.getElementById('heroDesc').innerHTML = `
+                لديك بيانات سابقة من <strong>الألم والطموح</strong>. أجب الأسئلة التالية لإكمال تحليل SWOT — وسنعرض لك كل شي مجمّع في المصفوفة النهائية.
+            `;
+        }
+
+        // ============================================================
+        //  WIZARD STEPS
+        // ============================================================
+        function renderWizSteps() {
+            const el = document.getElementById('wizSteps');
+            let html = '';
+            SWOT_SECTIONS.forEach((sec, i) => {
+                const isCurrent = i === state.currentSection;
+                const isDone = i < state.currentSection;
+                const cls = isDone ? 'done' : (isCurrent ? 'active' : '');
+                html += `
+                    <div class="wiz-step ${cls}" id="wizSec${i}">
+                        <div class="wiz-step-num">${isDone ? '✓' : sec.emoji}</div>
+                        ${sec.nameAr}
+                    </div>
+                `;
+                if (i < SWOT_SECTIONS.length - 1) html += `<div class="wiz-arrow">←</div>`;
+            });
+            // Results step
+            html += `<div class="wiz-arrow">←</div>`;
+            html += `
+                <div class="wiz-step ${state.currentSection >= SWOT_SECTIONS.length ? 'active' : ''}" id="wizResults">
+                    <div class="wiz-step-num">📊</div>
+                    النتائج
+                </div>
+            `;
+            el.innerHTML = html;
+        }
+
+        // ============================================================
+        //  PROGRESS
+        // ============================================================
+        function updateProgress() {
+            const answered = Object.keys(state.answers).length;
+            const pct = Math.round((answered / totalQuestions) * 100);
+            document.getElementById('progressFill').style.width = pct + '%';
+            document.getElementById('progressText').textContent = `${answered} / ${totalQuestions} سؤال  —  ${pct}%`;
+        }
+
+        // ============================================================
+        //  RENDER QUESTION
+        // ============================================================
+        function renderQuestion() {
+            const sec = SWOT_SECTIONS[state.currentSection];
+            const qi = state.currentQuestion;
+            const q = sec.questions[qi];
+            const key = `${sec.id}_${qi}`;
+            const existing = state.answers[key] || [];
+
+            let html = `
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+                    <div style="width:42px;height:42px;border-radius:12px;background:${sec.color}20;display:flex;align-items:center;justify-content:center;font-size:20px">${sec.emoji}</div>
+                    <div>
+                        <div style="font-size:16px;font-weight:800;color:${sec.color}">${sec.nameAr}</div>
+                        <div style="font-size:11px;color:var(--text-muted)">${sec.desc}</div>
+                    </div>
+                    <div style="margin-right:auto;font-size:11px;color:var(--text-muted)">سؤال ${qi + 1} من ${sec.questions.length}</div>
+                </div>
+
+                <div class="q-card">
+                    <div class="q-num">القسم ${state.currentSection + 1}/${SWOT_SECTIONS.length} · سؤال ${qi + 1}</div>
+                    <div class="q-text">${q.text}</div>
+                    <div class="q-hint">💡 ${q.hint}</div>
+            `;
+
+            if (q.type === 'chips') {
+                html += `<div class="answer-options">`;
+                q.options.forEach(opt => {
+                    const selected = existing.includes(opt) ? 'selected' : '';
+                    html += `<div class="answer-chip ${selected}" onclick="toggleChip(this, '${key}')" data-value="${opt}">${opt}</div>`;
+                });
+                html += `</div>`;
+                if (q.allowCustom) {
+                    const customVal = existing.find(v => !q.options.includes(v)) || '';
+                    html += `<input type="text" class="q-input" id="customInput_${key}" placeholder="أو اكتب إجابتك الخاصة..." value="${customVal}" onchange="addCustomAnswer('${key}', this.value)">`;
+                }
+            } else {
+                const textVal = existing.join('، ') || '';
+                html += `<textarea class="q-input" id="textInput_${key}" placeholder="${q.placeholder}" rows="3" onchange="setTextAnswer('${key}', this.value)">${textVal}</textarea>`;
+            }
+
+            html += `</div>`; // close q-card
+
+            // Navigation
+            const globalIdx = state.currentSection * 4 + state.currentQuestion;
+            const isFirst = globalIdx === 0;
+            const isLast = state.currentSection === SWOT_SECTIONS.length - 1 && qi === 3;
+
+            html += `
+                <div class="q-nav">
+                    <button class="btn-q back" onclick="prevQuestion()" ${isFirst ? 'style="visibility:hidden"' : ''}>
+                        <i class="bi bi-arrow-right"></i> السابق
+                    </button>
+                    <button class="btn-q next" onclick="${isLast ? 'showResults()' : 'nextQuestion()'}">
+                        ${isLast ? 'عرض النتائج 📊' : 'التالي'} <i class="bi bi-arrow-left"></i>
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('questionArea').innerHTML = html;
+        }
+
+        // ============================================================
+        //  ANSWER HANDLING
+        // ============================================================
+        function toggleChip(el, key) {
+            el.classList.toggle('selected');
+            // Collect all selected chips
+            const container = el.parentElement;
+            const selected = [...container.querySelectorAll('.answer-chip.selected')].map(c => c.dataset.value);
+            state.answers[key] = selected;
+
+            // Add custom if exists
+            const customInput = document.getElementById(`customInput_${key}`);
+            if (customInput?.value.trim()) {
+                state.answers[key].push(customInput.value.trim());
+            }
+            updateProgress();
+            scheduleAutoSave();
+        }
+
+        function addCustomAnswer(key, value) {
+            if (!state.answers[key]) state.answers[key] = [];
+            // Remove previous custom, keep chips
+            const sec = SWOT_SECTIONS[state.currentSection];
+            const q = sec.questions[state.currentQuestion];
+            state.answers[key] = state.answers[key].filter(v => q.options.includes(v));
+            if (value.trim()) state.answers[key].push(value.trim());
+            updateProgress();
+            scheduleAutoSave();
+        }
+
+        function setTextAnswer(key, value) {
+            if (value.trim()) {
+                state.answers[key] = value.split(/[,،\n]/).map(s => s.trim()).filter(Boolean);
+            } else {
+                state.answers[key] = [];
+            }
+            updateProgress();
+            scheduleAutoSave();
+        }
+
+        // ============================================================
+        //  NAVIGATION
+        // ============================================================
+        function nextQuestion() {
+            if (state.currentQuestion < 3) {
+                state.currentQuestion++;
+            } else if (state.currentSection < SWOT_SECTIONS.length - 1) {
+                state.currentSection++;
+                state.currentQuestion = 0;
+            }
+            renderWizSteps();
+            renderQuestion();
+            updateProgress();
+        }
+
+        function prevQuestion() {
+            if (state.currentQuestion > 0) {
+                state.currentQuestion--;
+            } else if (state.currentSection > 0) {
+                state.currentSection--;
+                state.currentQuestion = 3;
+            }
+            renderWizSteps();
+            renderQuestion();
+            updateProgress();
+        }
+
+        // ============================================================
+        //  RESULTS
+        // ============================================================
+        function showResults() {
+            state.currentSection = SWOT_SECTIONS.length;
+            renderWizSteps();
+
+            document.getElementById('screen1').classList.remove('active');
+            document.getElementById('screen2').classList.add('active');
+
+            // Collect all items per section
+            const swotData = {};
+            SWOT_SECTIONS.forEach((sec, si) => {
+                swotData[sec.id] = [];
+                // Add answers from questions
+                for (let qi = 0; qi < 4; qi++) {
+                    const key = `${sec.id}_${qi}`;
+                    const answers = state.answers[key] || [];
+                    answers.forEach(a => {
+                        swotData[sec.id].push({ text: a, source: 'question', confidence: 50 });
+                    });
+                }
+                // Add pre-filled items from pain/ambition + diagnostic bridge
+                if (state.prefilled[sec.id]) {
+                    state.prefilled[sec.id].forEach(item => {
+                        const text = typeof item === 'string' ? item : item.text;
+                        const conf = typeof item === 'object' ? (item.confidence || 50) : 50;
+                        const src = typeof item === 'object' ? (item.source || 'pain_ambition') : 'pain_ambition';
+                        // Don't add duplicates
+                        if (!swotData[sec.id].some(x => x.text === text)) {
+                            swotData[sec.id].push({ text, source: src, confidence: conf });
+                        }
+                    });
+                }
+            });
+
+            // Calculate balance score
+            const sCount = swotData.strengths.length;
+            const wCount = swotData.weaknesses.length;
+            const oCount = swotData.opportunities.length;
+            const tCount = swotData.threats.length;
+            const total = sCount + wCount + oCount + tCount;
+            const positives = sCount + oCount;
+            const negatives = wCount + tCount;
+
+            let score, verdict, verdictColor, verdictEmoji;
+            if (total === 0) {
+                score = 0; verdict = 'لم يتم تحليل'; verdictColor = '#94a3b8'; verdictEmoji = '⏸️';
+            } else {
+                score = Math.round((positives / total) * 100);
+                if (score >= 70) {
+                    verdict = 'وضع قوي — استغل الفرص'; verdictColor = '#22c55e'; verdictEmoji = '🟢';
+                } else if (score >= 50) {
+                    verdict = 'وضع متوازن — حسّن نقاط الضعف'; verdictColor = '#f59e0b'; verdictEmoji = '🟡';
+                } else {
+                    verdict = 'وضع يحتاج تدخل — ركّز على المعالجة'; verdictColor = '#ef4444'; verdictEmoji = '🔴';
+                }
+            }
+
+            // Render results
+            let html = `
+                <div class="score-section">
+                    <div class="score-circle" style="border-color:${verdictColor};color:${verdictColor}">
+                        ${score}%
+                    </div>
+                    <div class="score-label">${verdictEmoji} ${verdict}</div>
+                    <div class="score-desc">القوة + الفرص = ${positives} | الضعف + التهديدات = ${negatives}</div>
+                </div>
+
+                <div class="swot-matrix">
+            `;
+
+            SWOT_SECTIONS.forEach(sec => {
+                const items = swotData[sec.id];
+                // ── Evidence v2: Sort by confidence (highest first) ──
+                items.sort((a, b) => (b.confidence || 50) - (a.confidence || 50));
+
+                html += `
+                    <div class="swot-quad ${sec.cssClass}">
+                        <div class="sq-header">
+                            <span class="sq-emoji">${sec.emoji}</span>
+                            <span class="sq-title">${sec.nameAr}</span>
+                            <span class="sq-count" style="background:${sec.color}15;color:${sec.color}">${items.length}</span>
+                        </div>
+                `;
+                if (items.length === 0) {
+                    html += `<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">لا توجد بيانات</div>`;
+                } else {
+                    items.forEach(item => {
+                        const conf = item.confidence || 50;
+                        const isLow = conf < 60;
+                        const opacity = isLow ? 'opacity:0.7;' : '';
+
+                        // Source tag with confidence
+                        let sourceTag = '';
+                        if (item.source === 'diagnostic') {
+                            sourceTag = `<span class="si-source" style="background:rgba(59,130,246,0.1);color:#60a5fa">🔬 التشخيص · ${conf}%</span>`;
+                        } else if (item.source === 'dept_deep') {
+                            sourceTag = `<span class="si-source" style="background:rgba(139,92,246,0.1);color:#a78bfa">🏢 dept-deep · ${conf}%</span>`;
+                        } else if (item.source === 'pain_ambition') {
+                            sourceTag = `<span class="si-source" style="background:rgba(102,126,234,0.1);color:var(--primary)">💡 الألم والطموح · ${conf}%</span>`;
+                        } else if (item.source === 'dept_rule') {
+                            sourceTag = `<span class="si-source" style="background:rgba(139,92,246,0.06);color:#9784c4">⚙️ قاعدة · ${conf}%</span>`;
+                        } else {
+                            sourceTag = `<span class="si-source" style="background:rgba(255,255,255,0.05);color:var(--text-muted)">✍️ إجاباتك · ${conf}%</span>`;
+                        }
+
+                        html += `
+                            <div class="swot-item" style="border-color:${sec.color};${opacity}">
+                                <div style="flex:1">${item.text}${isLow ? ' <span style="font-size:9px;color:var(--text-muted);font-weight:600">(إثبات ضعيف)</span>' : ''}</div>
+                                ${sourceTag}
+                            </div>
+                        `;
+                    });
+                }
+                html += `</div>`;
+            });
+
+            html += `</div>`; // close swot-matrix
+
+            // Entity name in results
+            const entityName = state.entityInfo?.legalName || state.entityInfo?.displayName || '';
+            if (entityName) {
+                html = `
+                    <div style="text-align:center;margin-bottom:20px">
+                        <div style="display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:12px;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.15)">
+                            <span style="font-size:16px">🏢</span>
+                            <span style="font-size:14px;font-weight:700;color:var(--primary)">${entityName}</span>
+                            <span style="font-size:11px;color:var(--text-muted)">— نتائج تحليل SWOT</span>
+                        </div>
+                    </div>
+                ` + html;
+            }
+
+            // Recommendations
+            html += buildRecommendations(swotData, score);
+
+            // Next Step CTA — Journey Progress
+            html += `
+                <div style="background:linear-gradient(135deg,rgba(167,139,250,0.08),rgba(102,126,234,0.05));border:1px solid rgba(167,139,250,0.2);border-radius:18px;padding:24px;margin-top:24px">
+                    <div style="font-size:15px;font-weight:900;margin-bottom:14px;text-align:center;color:var(--text)">🗺️ رحلتك التشخيصية — أكملت الخطوة ٦ من ٧</div>
+                    <div style="display:flex;gap:6px;text-align:center;justify-content:center;margin-bottom:16px;flex-wrap:wrap">
+                        <span style="font-size:10px;color:#22c55e;font-weight:700">✅ PESTEL</span>
+                        <span style="font-size:10px;color:#22c55e;font-weight:700">✅ بورتر</span>
+                        <span style="font-size:10px;color:#22c55e;font-weight:700">✅ البيئة الداخلية</span>
+                        <span style="font-size:10px;color:#22c55e;font-weight:700">✅ سلسلة القيمة</span>
+                        <span style="font-size:10px;color:#22c55e;font-weight:700">✅ الإدارات</span>
+                        <span style="font-size:10px;color:#22c55e;font-weight:700">✅ SWOT</span>
+                        <span style="font-size:10px;color:#8b5cf6;font-weight:700">👈 TOWS</span>
+                    </div>
+                    <div style="text-align:center">
+                        <a href="/tows.html" style="
+                            display:inline-flex;align-items:center;gap:10px;
+                            padding:14px 36px;border-radius:14px;
+                            background:linear-gradient(135deg,#a78bfa,#8b5cf6);
+                            color:white;text-decoration:none;font-size:15px;font-weight:700;
+                            box-shadow:0 4px 15px rgba(139,92,246,0.3);
+                            transition:transform 0.2s;font-family:inherit
+                        " onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                            ↔️ الخطوة التالية: مصفوفة TOWS ←
+                        </a>
+                    </div>
+                </div>
+            `;
+
+            // Other actions
+            html += `
+                <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap">
+                    <button class="btn-q next" onclick="saveAnalysis()">
+                        <i class="bi bi-cloud-arrow-up"></i> حفظ التحليل
+                    </button>
+                    <button class="btn-q back" onclick="restartAnalysis()">
+                        <i class="bi bi-arrow-clockwise"></i> إعادة التحليل
+                    </button>
+                    <a href="/tows.html" class="btn-q back" style="text-decoration:none">
+                        <i class="bi bi-arrows-fullscreen"></i> مصفوفة TOWS
+                    </a>
+                </div>
+            `;
+
+            document.getElementById('resultsArea').innerHTML = html;
+            document.getElementById('progressFill').style.width = '100%';
+            document.getElementById('progressText').textContent = 'اكتمل التحليل ✅';
+
+            // Save automatically
+            saveAnalysis();
+        }
+
+        // ============================================================
+        //  RECOMMENDATIONS
+        // ============================================================
+        function buildRecommendations(swotData, score) {
+            let insights = [];
+
+            const sCount = swotData.strengths.length;
+            const wCount = swotData.weaknesses.length;
+            const oCount = swotData.opportunities.length;
+            const tCount = swotData.threats.length;
+
+            if (wCount > sCount) {
+                insights.push({
+                    icon: '⚠️',
+                    text: `عندك ${wCount} نقاط ضعف مقابل ${sCount} قوة — ركّز على معالجة الضعف في خطتك`,
+                    action: 'حدد أولويات التحسين'
+                });
+            }
+            if (oCount > 0 && sCount > 0) {
+                insights.push({
+                    icon: '🚀',
+                    text: `عندك ${sCount} نقط قوة + ${oCount} فرص — ابنِ استراتيجيات هجومية (SO)`,
+                    action: 'انتقل لتحليل TOWS'
+                });
+            }
+            if (tCount > 0) {
+                insights.push({
+                    icon: '🛡️',
+                    text: `${tCount} تهديدات خارجية — جهّز خطط دفاعية (ST)`,
+                    action: 'حلل المنافسين بـ Porter'
+                });
+            }
+            if (wCount > 0 && oCount > 0) {
+                insights.push({
+                    icon: '🩹',
+                    text: `عالج نقاط الضعف لاستغلال الفرص (WO) — أولوية عالية`,
+                    action: 'حدد مبادرات تصحيحية'
+                });
+            }
+
+            if (insights.length === 0) {
+                insights.push({ icon: '✅', text: 'أكملت التحليل! الخطوة التالية: مصفوفة TOWS لتحويل النتائج إلى إجراءات', action: '' });
+            }
+
+            let html = `
+                <div class="rec-card">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+                        <span style="font-size:20px">🧭</span>
+                        <div>
+                            <div style="font-size:15px;font-weight:800">التوصيات الذكية</div>
+                            <div style="font-size:11px;color:var(--text-muted)">بناءً على نتائج SWOT</div>
+                        </div>
+                    </div>
+            `;
+            insights.forEach(ins => {
+                html += `
+                    <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:10px;margin-bottom:6px;border:1px solid var(--border)">
+                        <span style="font-size:16px;flex-shrink:0">${ins.icon}</span>
+                        <div style="flex:1;font-size:13px;line-height:1.7">${ins.text}</div>
+                        ${ins.action ? `<span style="font-size:11px;color:var(--primary);white-space:nowrap;font-weight:700">${ins.action}</span>` : ''}
+                    </div>
+                `;
+            });
+
+            // Smart links
+            html += `
+                <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+                    <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--text-muted)">🔗 خطواتك القادمة:</div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                        <a href="/tows.html" style="padding:8px 16px;border-radius:10px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);color:#22c55e;text-decoration:none;font-size:12px;font-weight:700">🔄 مصفوفة TOWS</a>
+                        <a href="/directions.html" style="padding:8px 16px;border-radius:10px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.2);color:#a78bfa;text-decoration:none;font-size:12px;font-weight:700">🎯 التوجهات الاستراتيجية</a>
+                        <a href="/tool-detail.html?code=PESTEL" style="padding:8px 16px;border-radius:10px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);color:#3b82f6;text-decoration:none;font-size:12px;font-weight:700">🌍 PESTEL</a>
+                        <a href="/tool-detail.html?code=PORTER" style="padding:8px 16px;border-radius:10px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.2);color:#f97316;text-decoration:none;font-size:12px;font-weight:700">⚔️ Porter</a>
+                    </div>
+                </div>
+            `;
+
+            html += `</div>`;
+            return html;
+        }
+
+        // ============================================================
+        //  SAVE ANALYSIS
+        // ============================================================
+        async function saveAnalysis() {
+            if (!state.versionId) return;
+
+            // Collect SWOT data in the standard format
+            const swotData = {};
+            SWOT_SECTIONS.forEach(sec => {
+                swotData[sec.id] = [];
+                for (let qi = 0; qi < 4; qi++) {
+                    const key = `${sec.id}_${qi}`;
+                    (state.answers[key] || []).forEach(a => {
+                        swotData[sec.id].push({ title: a, impact: 'MEDIUM', source: 'question', confidence: 50 });
+                    });
+                }
+                if (state.prefilled[sec.id]) {
+                    state.prefilled[sec.id].forEach(item => {
+                        const text = typeof item === 'string' ? item : item.text;
+                        const conf = typeof item === 'object' ? (item.confidence || 50) : 50;
+                        const src = typeof item === 'object' ? (item.source || 'pain_ambition') : 'pain_ambition';
+                        if (!swotData[sec.id].some(x => x.title === text)) {
+                            swotData[sec.id].push({ title: text, impact: conf >= 80 ? 'HIGH' : 'MEDIUM', source: src, confidence: conf });
+                        }
+                    });
+                }
+            });
+
+            const payload = {
+                versionId: state.versionId,
+                toolCode: 'SWOT',
+                data: JSON.stringify(swotData),
+                status: 'COMPLETED',
+                progress: 100,
+                summary: `SWOT: ${swotData.strengths.length} قوة, ${swotData.weaknesses.length} ضعف, ${swotData.opportunities.length} فرص, ${swotData.threats.length} تهديدات`
+            };
+
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            try {
+                const url = state.analysisId
+                    ? `/api/company-analysis/${state.analysisId}`
+                    : '/api/company-analysis';
+                const method = state.analysisId ? 'PATCH' : 'POST';
+
+                const res = await window.apiRequest(url, {
+                    method,
+                    headers,
+                    credentials: 'same-origin',
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    const result = await res.json();
+                    if (result?.id) state.analysisId = result.id;
+                    console.log('✅ SWOT saved');
+                    // مسح المسودة بعد الحفظ الناجح
+                    localStorage.removeItem(DRAFT_KEY);
+                    if (window._deptSwotDraftKey) localStorage.removeItem(window._deptSwotDraftKey);
+                    _draftSaved = true;
+
+                    // ═══ Dept-specific: حفظ SWOT + انتقال للتوجهات ═══
+                    const _dp = new URLSearchParams(window.location.search).get('dept');
+                    if (_dp) {
+                        // حفظ dual-write
+                        localStorage.setItem('stratix_' + _dp + '_swot', JSON.stringify(swotData));
+
+                        // تسجيل إكمال الخطوة 2
+                        if (typeof updateCompletedSteps === 'function') updateCompletedSteps(2);
+
+                        // إشعار + انتقال
+                        if (typeof showToast === 'function') {
+                            showToast('تم حفظ تحليل SWOT — جاري الانتقال للتوجهات', 'success');
+                        }
+                        setTimeout(() => {
+                            window.location.href = '/directions.html?dept=' + _dp;
+                        }, 1500);
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.warn('Save failed:', e);
+            }
+        }
+
+        // ============================================================
+        //  RESTART
+        // ============================================================
+        function restartAnalysis() {
+            state.currentSection = 0;
+            state.currentQuestion = 0;
+            state.answers = {};
+
+            document.getElementById('screen2').classList.remove('active');
+            document.getElementById('screen1').classList.add('active');
+
+            renderWizSteps();
+            renderQuestion();
+            updateProgress();
+        }
+
+        init();
+    </script>
+    <script src="/assets/js/path-tracker.js"></script>
+</body>
+
+</html>

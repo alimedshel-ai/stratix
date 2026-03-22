@@ -1993,10 +1993,10 @@ async function init() {
     const params = new URLSearchParams(location.search);
 
     // 1. Version Management
-    STATE._versionId = params.get('version') || STATE._versionId;
+    STATE._versionId = params.get('version') || localStorage.getItem('selectedVersionId') || STATE._versionId;
     if (!STATE._versionId) {
-        window.location.href = '/dept-dashboard.html';
-        return;
+        // بدلاً من الطرد، سنفترض إصدار افتراضي لمنع كسر تجربة المستخدم
+        STATE._versionId = 'v1';
     }
 
     const urlDept = params.get('dept');

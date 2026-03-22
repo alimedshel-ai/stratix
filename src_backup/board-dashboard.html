@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة مجلس الإدارة — ستارتكس</title>
+    <meta name="description" content="لوحة مراقبة للمستثمر وعضو مجلس الإدارة — عرض وقراءة فقط">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --secondary: #764ba2;
+            --accent: #f093fb;
+            --bg: #0f1117;
+            --bg-card: #1a1d2e;
+            --bg-card-hover: #222640;
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ═══ Navigation ═══ */
+        .board-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 28px;
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.06));
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(16px);
+        }
+
+        .logo {
+            font-size: 1.2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .nav-center {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            padding: 6px 16px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .nav-center i {
+            color: var(--primary);
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-align: right;
+        }
+
+        .user-badge .name {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .user-badge .role {
+            font-size: 0.75rem;
+            color: var(--primary);
+        }
+
+        .user-badge .avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.9rem;
+        }
+
+        /* ═══ Main Content ═══ */
+        .board-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 28px 24px;
+        }
+
+        /* ═══ Header ═══ */
+        .board-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .board-header h1 {
+            font-size: 1.6rem;
+            font-weight: 900;
+        }
+
+        .quarter-selector {
+            display: flex;
+            gap: 6px;
+        }
+
+        .quarter-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: transparent;
+            color: var(--text-muted);
+            font-family: 'Tajawal', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quarter-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-color: transparent;
+        }
+
+        .quarter-btn:hover:not(.active) {
+            border-color: var(--primary);
+            color: var(--text);
+        }
+
+        /* ═══ Waiting Banner ═══ */
+        .waiting-banner {
+            background: var(--bg-card);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 28px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .waiting-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+        }
+
+        .waiting-banner .banner-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(102, 126, 234, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin: 0 auto 16px;
+        }
+
+        .waiting-banner h3 {
+            font-size: 1.15rem;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .waiting-banner p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            max-width: 500px;
+            margin: 0 auto 20px;
+        }
+
+        /* ═══ Department Status Pills ═══ */
+        .dept-pills {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .dept-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.03);
+            transition: all 0.3s;
+        }
+
+        .dept-pill.done {
+            border-color: rgba(16, 185, 129, 0.3);
+            background: rgba(16, 185, 129, 0.06);
+            color: var(--success);
+        }
+
+        .dept-pill.pending {
+            border-color: rgba(245, 158, 11, 0.3);
+            background: rgba(245, 158, 11, 0.06);
+            color: var(--warning);
+        }
+
+        .banner-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-board {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-family: 'Tajawal', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .btn-board.primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .btn-board.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
+        }
+
+        .btn-board.secondary {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-board.secondary:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* ═══ Section Tabs ═══ */
+        .section-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 28px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 6px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            overflow-x: auto;
+        }
+
+        .section-tab {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--text-muted);
+            font-family: 'Tajawal', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .section-tab.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .section-tab:hover:not(.active) {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-panel {
+            display: none;
+            animation: fadeInUp 0.4s ease;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ═══ Section 1: Overview ═══ */
+        .overview-grid {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 24px;
+            margin-bottom: 28px;
+        }
+
+        .health-ring-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .health-ring-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--success), var(--primary));
+        }
+
+        .ring-container {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            margin: 0 auto 16px;
+        }
+
+        .ring-container svg {
+            transform: rotate(-90deg);
+        }
+
+        .ring-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.06);
+            stroke-width: 12;
+        }
+
+        .ring-fill {
+            fill: none;
+            stroke: url(#healthGrad);
+            stroke-width: 12;
+            stroke-linecap: round;
+            stroke-dasharray: 440;
+            stroke-dashoffset: 440;
+            transition: stroke-dashoffset 2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .ring-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .ring-value .pct {
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--success), var(--primary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .ring-value .label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .metric-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .metric-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .metric-trend {
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .metric-value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* ═══ Section 2: Maturity Radar ═══ */
+        .radar-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px;
+            text-align: center;
+        }
+
+        .radar-container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .radar-legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .radar-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.82rem;
+        }
+
+        .radar-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        /* ═══ Section 3: KPIs ═══ */
+        .kpi-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.3s;
+        }
+
+        .kpi-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .kpi-ring {
+            width: 56px;
+            height: 56px;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .kpi-ring svg {
+            transform: rotate(-90deg);
+        }
+
+        .kpi-ring-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.06);
+            stroke-width: 5;
+        }
+
+        .kpi-ring-fill {
+            fill: none;
+            stroke-width: 5;
+            stroke-linecap: round;
+            stroke-dasharray: 157;
+            transition: stroke-dashoffset 1.5s ease;
+        }
+
+        .kpi-pct {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.75rem;
+            font-weight: 800;
+        }
+
+        .kpi-info {
+            flex: 1;
+        }
+
+        .kpi-name {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .kpi-target {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .kpi-status {
+            font-size: 0.8rem;
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .kpi-status.good {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .kpi-status.warn {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .kpi-status.bad {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        /* ═══ Section 4: Alerts ═══ */
+        .alert-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .alert-level {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .alert-level.high {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+        }
+
+        .alert-level.medium {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+        }
+
+        .alert-level.low {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        .alert-info {
+            flex: 1;
+        }
+
+        .alert-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .alert-detail {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            opacity: 0.3;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .empty-state h3 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .empty-state p {
+            font-size: 0.85rem;
+        }
+
+        /* ═══ Section 5: Reports ═══ */
+        .report-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .report-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .report-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .report-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin: 0 auto 16px;
+        }
+
+        .report-card h4 {
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .report-card p {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        /* ═══ Comment Section (عضو مجلس فقط) ═══ */
+        .comment-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            margin-top: 28px;
+        }
+
+        .comment-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            color: var(--text);
+            font-family: 'Tajawal', sans-serif;
+            font-size: 0.95rem;
+            resize: vertical;
+            min-height: 80px;
+            outline: none;
+            margin-bottom: 12px;
+        }
+
+        .comment-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .readonly-badge {
+            font-size: 0.7rem;
+            padding: 3px 10px;
+            border-radius: 8px;
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary);
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        /* ═══ Responsive ═══ */
+        @media (max-width: 768px) {
+            .overview-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .board-nav {
+                padding: 12px 16px;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .section-tabs {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+            }
+
+            .kpi-card {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .report-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <div class="board-nav">
+        <div style="display:flex;align-items:center;gap:12px">
+            <a href="/" class="logo"><i class="bi bi-activity"></i> ستارتكس</a>
+            <a href="/"
+                style="color:var(--primary);font-size:12px;text-decoration:none;opacity:0.8;display:flex;align-items:center;gap:4px"><i
+                    class="bi bi-house-door-fill"></i> الرئيسية</a>
+        </div>
+        <div class="nav-center">
+            <i class="bi bi-eye"></i>
+            <span>وضع المراقبة — عرض فقط</span>
+        </div>
+        <div class="user-badge">
+            <div>
+                <div class="name" id="userName">مستثمر</div>
+                <div class="role" id="userRole">👁️ عضو مجلس الإدارة</div>
+            </div>
+            <div class="avatar" id="userAvatar">م</div>
+        </div>
+    </div>
+
+    <div class="board-content">
+        <!-- Header -->
+        <div class="board-header">
+            <h1>📊 لوحة مجلس الإدارة</h1>
+            <div class="quarter-selector">
+                <button class="quarter-btn" onclick="selectQuarter(this)">Q1</button>
+                <button class="quarter-btn" onclick="selectQuarter(this)">Q2</button>
+                <button class="quarter-btn" onclick="selectQuarter(this)">Q3</button>
+                <button class="quarter-btn active" onclick="selectQuarter(this)">Q4</button>
+            </div>
+        </div>
+
+        <!-- 🧭 Smart Guide -->
+        <div id="smartGuideCard" style="display:none; margin-bottom:24px;"></div>
+
+        <!-- Waiting Banner + Department Status -->
+        <div class="waiting-banner" id="waitingBanner">
+            <div class="banner-icon"><i class="bi bi-eye" style="color:var(--primary)"></i></div>
+            <h3 id="bannerTitle">وضع المراقبة — بانتظار بيانات الفريق</h3>
+            <p id="bannerDesc">البيانات الاستراتيجية تُعبّأ من قبل فريق الإدارة — ستظهر لك التقارير والمؤشرات فور
+                اكتمالها</p>
+            <div class="dept-pills" id="deptPills"></div>
+            <div class="banner-actions">
+                <a href="/analysis.html" class="btn-board primary"><i class="bi bi-file-earmark-text"></i> عرض التقارير
+                    المتاحة</a>
+                <a href="/intelligence.html" class="btn-board secondary"><i class="bi bi-robot"></i> الذكاء
+                    الاستراتيجي</a>
+            </div>
+        </div>
+
+        <!-- Section Tabs (5 أقسام حسب الخطة) -->
+        <div class="section-tabs" id="sectionTabs">
+            <button class="section-tab active" onclick="switchSection('overview')"><i class="bi bi-speedometer2"></i>
+                نظرة عامة</button>
+            <button class="section-tab" onclick="switchSection('radar')"><i class="bi bi-bullseye"></i> رادار
+                النضج</button>
+            <button class="section-tab" onclick="switchSection('kpis')"><i class="bi bi-graph-up-arrow"></i> KPIs
+                رئيسية</button>
+            <button class="section-tab" onclick="switchSection('alerts')"><i class="bi bi-shield-exclamation"></i>
+                تنبيهات</button>
+            <button class="section-tab" onclick="switchSection('reports')"><i class="bi bi-file-earmark-bar-graph"></i>
+                تقارير</button>
+        </div>
+
+        <!-- ═══ القسم 1: نظرة عامة ═══ -->
+        <div class="tab-panel active" id="panel-overview">
+            <div class="overview-grid">
+                <!-- Health Ring -->
+                <div class="health-ring-card">
+                    <div class="ring-container">
+                        <svg width="160" height="160">
+                            <defs>
+                                <linearGradient id="healthGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color: #10b981;" />
+                                    <stop offset="100%" style="stop-color: #667eea;" />
+                                </linearGradient>
+                            </defs>
+                            <circle class="ring-bg" cx="80" cy="80" r="70" />
+                            <circle class="ring-fill" id="healthRing" cx="80" cy="80" r="70" />
+                        </svg>
+                        <div class="ring-value">
+                            <div class="pct" id="healthPct">—</div>
+                            <div class="label">مؤشر الصحة</div>
+                        </div>
+                    </div>
+                    <h3 style="font-size:1rem;font-weight:700;margin-bottom:8px">الصحة الاستراتيجية</h3>
+                    <p style="font-size:0.8rem;color:var(--text-muted)" id="healthSubtext">بناءً على تقييمات الإدارات
+                    </p>
+                    <div id="healthDetails" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px">
+                    </div>
+                </div>
+                <!-- Key Metrics -->
+                <div class="metrics-grid" id="metricsGrid"></div>
+            </div>
+        </div>
+
+        <!-- ═══ القسم 2: رادار النضج ═══ -->
+        <div class="tab-panel" id="panel-radar">
+            <div class="radar-section">
+                <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:20px"><i class="bi bi-bullseye"
+                        style="color:var(--primary)"></i> رادار النضج الاستراتيجي <span class="readonly-badge">قراءة
+                        فقط</span></h3>
+                <div class="radar-container">
+                    <canvas id="radarCanvas" width="460" height="420"></canvas>
+                </div>
+                <div class="radar-legend" id="radarLegend"></div>
+            </div>
+        </div>
+
+        <!-- ═══ القسم 3: KPIs رئيسية ═══ -->
+        <div class="tab-panel" id="panel-kpis">
+            <div class="section-title"><i class="bi bi-graph-up-arrow" style="color:var(--success)"></i> أهم المؤشرات
+                <span class="readonly-badge">قراءة فقط</span></div>
+            <div class="kpi-list" id="kpiList"></div>
+        </div>
+
+        <!-- ═══ القسم 4: تنبيهات ═══ -->
+        <div class="tab-panel" id="panel-alerts">
+            <div class="section-title"><i class="bi bi-shield-exclamation" style="color:var(--danger)"></i> التنبيهات
+                والمخاطر <span class="readonly-badge">قراءة فقط</span></div>
+            <div id="alertsList"></div>
+        </div>
+
+        <!-- ═══ القسم 5: تقارير ═══ -->
+        <div class="tab-panel" id="panel-reports">
+            <div class="section-title"><i class="bi bi-file-earmark-bar-graph" style="color:var(--primary)"></i>
+                التقارير والعروض التقديمية</div>
+            <div class="report-cards" id="reportCards"></div>
+        </div>
+
+        <!-- Comment Section (عضو مجلس فقط) -->
+        <div class="comment-section" id="commentSection">
+            <div class="section-title" style="margin-top:0"><i class="bi bi-chat-left-text"
+                    style="color:var(--primary)"></i> ملاحظات عضو المجلس</div>
+            <textarea class="comment-input" id="boardComment"
+                placeholder="أضف ملاحظاتك أو استفساراتك هنا — ستصل للإدارة التنفيذية مباشرة..."></textarea>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:0.8rem;color:var(--text-muted)"><i class="bi bi-info-circle"></i> ملاحظاتك تصل لـ
+                    CEO مباشرة</span>
+                <div style="display:flex;gap:8px">
+                    <button class="btn-board secondary"
+                        onclick="document.getElementById('boardComment').value=''">مسح</button>
+                    <button class="btn-board primary" onclick="sendComment(this)"><i class="bi bi-send-fill"></i>
+                        إرسال</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/assets/js/smart-guide.js"></script>
+    <script>
+        // ═══════════════════════════════════════════════════════════
+        // لوحة مجلس الإدارة — ديناميكية حسب خطة المرحلة 3
+        // ═══════════════════════════════════════════════════════════
+
+        // ─── 1. بيانات المستخدم ───
+        const user = (() => { try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch (e) { return {}; } })();
+        const diagPayload = (() => { try { return JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || '{}'); } catch (e) { return {}; } })();
+        const memberType = diagPayload.investorType || diagPayload.boardType || 'board_member'; // observer | board_member | investor
+
+        // تحديث بيانات المستخدم في الـ Nav
+        const displayName = user.name || 'عضو المجلس';
+        document.getElementById('userName').textContent = displayName;
+        document.getElementById('userAvatar').textContent = displayName.charAt(0);
+
+        const roleLabels = {
+            observer: '👁️ مراقب',
+            board_member: '🏛️ عضو مجلس الإدارة',
+            investor: '💰 مستثمر'
+        };
+        document.getElementById('userRole').textContent = roleLabels[memberType] || '👁️ عضو مجلس الإدارة';
+
+        // إخفاء التعليقات للمراقب فقط (write-only for board_member + investor)
+        if (memberType === 'observer') {
+            const cs = document.getElementById('commentSection');
+            if (cs) cs.style.display = 'none';
+        }
+
+        // ─── 2. Smart Guide ───
+        if (typeof SmartGuide !== 'undefined') SmartGuide.render('smartGuideCard', 'board');
+
+        // ─── 3. بيانات الصحة ───
+        const DEPTS = [
+            { key: 'compliance', label: 'الامتثال والحوكمة', icon: '🛡️', color: '#ef4444' },
+            { key: 'finance', label: 'المالية', icon: '💰', color: '#f59e0b' },
+            { key: 'hr', label: 'الموارد البشرية', icon: '👥', color: '#3b82f6' },
+            { key: 'sales', label: 'المبيعات', icon: '📈', color: '#10b981' },
+            { key: 'marketing', label: 'التسويق', icon: '📢', color: '#8b5cf6' },
+            { key: 'operations', label: 'العمليات', icon: '⚙️', color: '#06b6d4' },
+            { key: 'it', label: 'تقنية المعلومات', icon: '💻', color: '#ec4899' },
+            { key: 'support', label: 'الخدمات المساندة', icon: '🤝', color: '#14b8a6' },
+        ];
+
+        // قراءة من الكائن الموحد (نفس المصدر اللي تستخدمه company-health.html)
+        let healthData = (() => {
+            try { return JSON.parse(localStorage.getItem('stratix_company_health') || 'null'); } catch (e) { return null; }
+        })();
+
+        // Fallback: قراءة من deptDeep القديم
+        if (!healthData) {
+            healthData = { departments: {}, sizeCategory: 'medium' };
+            try {
+                const dd = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || '{}');
+                DEPTS.forEach(dept => {
+                    const d = dd[dept.key] || {};
+                    healthData.departments[dept.key] = {
+                        score: d.score || null,
+                        completed: d.completed || false,
+                        manager: d.deptManagerInfo || {},
+                        challenges: d.challenges || [],
+                        goals: d.goals || []
+                    };
+                });
+            } catch (e) { }
+        }
+
+        const departments = healthData.departments || {};
+
+        // ─── 4. حساب الدرجات ───
+        const deptScores = DEPTS.map(dept => {
+            const d = departments[dept.key] || {};
+            return { ...dept, score: d.score || null, completed: !!d.completed || d.score > 0 };
+        });
+
+        const completedDepts = deptScores.filter(d => d.score > 0);
+        const totalScore = completedDepts.length > 0
+            ? Math.round(completedDepts.reduce((s, d) => s + d.score, 0) / completedDepts.length)
+            : 0;
+
+        // ─── 5. Department Pills (الحالة) ───
+        const pillsHtml = deptScores.map(d => {
+            const cls = d.completed ? 'done' : 'pending';
+            const label = d.completed ? `${d.score}%` : '⏳ قيد التجهيز';
+            return `<div class="dept-pill ${cls}">${d.icon} ${d.label} <span>${label}</span></div>`;
+        }).join('');
+        document.getElementById('deptPills').innerHTML = pillsHtml;
+
+        // تحديث البانر
+        if (completedDepts.length === 0) {
+            document.getElementById('bannerTitle').textContent = 'وضع المراقبة — بانتظار بيانات الفريق';
+        } else if (completedDepts.length < DEPTS.length) {
+            document.getElementById('bannerTitle').textContent = `وضع المراقبة — ${completedDepts.length}/${DEPTS.length} إدارات مكتملة`;
+            document.getElementById('bannerDesc').textContent = 'بعض الإدارات لم تكمل التقييم بعد — المؤشرات أدناه تعكس البيانات المتاحة.';
+        } else {
+            document.getElementById('bannerTitle').textContent = 'جميع البيانات متاحة ✅';
+            document.getElementById('bannerDesc').textContent = `تم تقييم جميع الإدارات — مؤشر الصحة العام: ${totalScore}%`;
+            document.getElementById('waitingBanner').style.borderColor = 'rgba(16,185,129,0.3)';
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // القسم 1: نظرة عامة
+        // ═══════════════════════════════════════════════════════
+
+        // Health Ring
+        setTimeout(() => {
+            if (totalScore > 0) {
+                const ring = document.getElementById('healthRing');
+                const offset = 440 - (440 * totalScore / 100);
+                ring.style.strokeDashoffset = offset;
+                document.getElementById('healthPct').textContent = totalScore + '%';
+                // Animate counter
+                let count = 0;
+                const interval = setInterval(() => {
+                    count += 2;
+                    if (count >= totalScore) { count = totalScore; clearInterval(interval); }
+                    document.getElementById('healthPct').textContent = count + '%';
+                }, 30);
+            } else {
+                document.getElementById('healthPct').textContent = '—';
+                document.getElementById('healthSubtext').textContent = 'لا توجد بيانات بعد';
+            }
+        }, 500);
+
+        // Health Details
+        const detailsHtml = completedDepts.slice(0, 4).map(d => {
+            const color = d.score >= 70 ? 'var(--success)' : d.score >= 50 ? 'var(--warning)' : 'var(--danger)';
+            return `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:0.8rem">
+                <div style="width:8px;height:8px;border-radius:50%;background:${color}"></div>
+                <span>${d.icon} ${d.label}: ${d.score}%</span>
+            </div>`;
+        }).join('');
+        document.getElementById('healthDetails').innerHTML = detailsHtml;
+
+        // Key Metrics
+        const metricsData = [
+            { label: 'الإدارات المقيّمة', value: `${completedDepts.length}/${DEPTS.length}`, icon: 'bi-building', color: 'var(--primary)', bg: 'rgba(102,126,234,0.15)' },
+            { label: 'أعلى درجة', value: completedDepts.length ? Math.max(...completedDepts.map(d => d.score)) + '%' : '—', icon: 'bi-arrow-up-circle', color: 'var(--success)', bg: 'rgba(16,185,129,0.15)' },
+            { label: 'أدنى درجة', value: completedDepts.length ? Math.min(...completedDepts.map(d => d.score)) + '%' : '—', icon: 'bi-arrow-down-circle', color: 'var(--danger)', bg: 'rgba(239,68,68,0.15)' },
+            { label: 'المتوسط العام', value: totalScore > 0 ? totalScore + '%' : '—', icon: 'bi-speedometer', color: 'var(--info)', bg: 'rgba(59,130,246,0.15)' },
+            { label: 'إدارات بحاجة تطوير', value: completedDepts.filter(d => d.score < 60).length + '', icon: 'bi-exclamation-triangle', color: 'var(--warning)', bg: 'rgba(245,158,11,0.15)' },
+            { label: 'إدارات ممتازة', value: completedDepts.filter(d => d.score >= 80).length + '', icon: 'bi-trophy', color: 'var(--accent)', bg: 'rgba(240,147,251,0.15)' },
+        ];
+
+        document.getElementById('metricsGrid').innerHTML = metricsData.map(m => `
+            <div class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-icon" style="background:${m.bg};color:${m.color}"><i class="bi ${m.icon}"></i></div>
+                </div>
+                <div class="metric-value">${m.value}</div>
+                <div class="metric-label">${m.label}</div>
+            </div>
+        `).join('');
+
+        // ═══════════════════════════════════════════════════════
+        // القسم 2: رادار النضج
+        // ═══════════════════════════════════════════════════════
+        function drawRadar() {
+            const canvas = document.getElementById('radarCanvas');
+            const ctx = canvas.getContext('2d');
+            const W = canvas.width, H = canvas.height;
+            const cx = W / 2, cy = H / 2 + 10;
+            const R = 170;
+
+            const labels = deptScores.map(d => d.label);
+            const scores = deptScores.map(d => d.score || 0);
+            const n = labels.length;
+            const step = (2 * Math.PI) / n;
+
+            ctx.clearRect(0, 0, W, H);
+
+            // Grid circles
+            [0.2, 0.4, 0.6, 0.8, 1.0].forEach(pct => {
+                ctx.beginPath();
+                for (let i = 0; i <= n; i++) {
+                    const angle = -Math.PI / 2 + i * step;
+                    const x = cx + R * pct * Math.cos(angle);
+                    const y = cy + R * pct * Math.sin(angle);
+                    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                }
+                ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            });
+
+            // Axes
+            for (let i = 0; i < n; i++) {
+                const angle = -Math.PI / 2 + i * step;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(cx + R * Math.cos(angle), cy + R * Math.sin(angle));
+                ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+                ctx.stroke();
+            }
+
+            // Data polygon
+            ctx.beginPath();
+            for (let i = 0; i <= n; i++) {
+                const idx = i % n;
+                const angle = -Math.PI / 2 + idx * step;
+                const r = R * (scores[idx] / 100);
+                const x = cx + r * Math.cos(angle);
+                const y = cy + r * Math.sin(angle);
+                i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            }
+            ctx.fillStyle = 'rgba(102, 126, 234, 0.2)';
+            ctx.fill();
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            // Data points + Labels
+            for (let i = 0; i < n; i++) {
+                const angle = -Math.PI / 2 + i * step;
+                const r = R * (scores[i] / 100);
+                const px = cx + r * Math.cos(angle);
+                const py = cy + r * Math.sin(angle);
+
+                // Point
+                ctx.beginPath();
+                ctx.arc(px, py, 5, 0, 2 * Math.PI);
+                ctx.fillStyle = scores[i] >= 70 ? '#10b981' : scores[i] >= 50 ? '#f59e0b' : scores[i] > 0 ? '#ef4444' : '#475569';
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Label
+                const lx = cx + (R + 30) * Math.cos(angle);
+                const ly = cy + (R + 30) * Math.sin(angle);
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '600 12px Tajawal';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(labels[i], lx, ly - 8);
+
+                // Score number
+                if (scores[i] > 0) {
+                    ctx.fillStyle = scores[i] >= 70 ? '#10b981' : scores[i] >= 50 ? '#f59e0b' : '#ef4444';
+                    ctx.font = '800 13px Tajawal';
+                    ctx.fillText(scores[i] + '%', lx, ly + 10);
+                } else {
+                    ctx.fillStyle = '#475569';
+                    ctx.font = '600 11px Tajawal';
+                    ctx.fillText('—', lx, ly + 10);
+                }
+            }
+        }
+        drawRadar();
+
+        // Radar legend
+        document.getElementById('radarLegend').innerHTML = `
+            <div class="radar-legend-item"><div class="radar-dot" style="background:var(--success)"></div> ممتاز (70%+)</div>
+            <div class="radar-legend-item"><div class="radar-dot" style="background:var(--warning)"></div> يحتاج تحسين (50-69%)</div>
+            <div class="radar-legend-item"><div class="radar-dot" style="background:var(--danger)"></div> ضعيف (أقل من 50%)</div>
+            <div class="radar-legend-item"><div class="radar-dot" style="background:#475569"></div> لم يُقيّم بعد</div>
+        `;
+
+        // ═══════════════════════════════════════════════════════
+        // القسم 3: KPIs رئيسية
+        // ═══════════════════════════════════════════════════════
+        function renderKPIs() {
+            // اقرأ بيانات الإدارات كـ KPIs ملخصة
+            const kpis = completedDepts.map(d => {
+                const statusCls = d.score >= 70 ? 'good' : d.score >= 50 ? 'warn' : 'bad';
+                const statusLabel = d.score >= 70 ? '✅ جيد' : d.score >= 50 ? '🟡 متوسط' : '🔴 ضعيف';
+                const ringOffset = 157 - (157 * d.score / 100);
+                const ringColor = d.score >= 70 ? 'var(--success)' : d.score >= 50 ? 'var(--warning)' : 'var(--danger)';
+
+                return `<div class="kpi-card">
+                    <div class="kpi-ring">
+                        <svg width="56" height="56">
+                            <circle class="kpi-ring-bg" cx="28" cy="28" r="25" />
+                            <circle class="kpi-ring-fill" cx="28" cy="28" r="25" style="stroke:${ringColor};stroke-dashoffset:${ringOffset}" />
+                        </svg>
+                        <div class="kpi-pct" style="color:${ringColor}">${d.score}%</div>
+                    </div>
+                    <div class="kpi-info">
+                        <div class="kpi-name">${d.icon} ${d.label}</div>
+                        <div class="kpi-target">مستوى الأداء الإداري — تقييم ${totalScore > 0 ? 'الربع الحالي' : ''}</div>
+                    </div>
+                    <div class="kpi-status ${statusCls}">${statusLabel}</div>
+                </div>`;
+            });
+
+            if (kpis.length === 0) {
+                document.getElementById('kpiList').innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-graph-up-arrow"></i>
+                        <h3>لا توجد مؤشرات بعد</h3>
+                        <p>سيتم عرض المؤشرات فور إتمام فريق الإدارة لتقييمات الإدارات</p>
+                    </div>`;
+            } else {
+                document.getElementById('kpiList').innerHTML = kpis.join('');
+            }
+        }
+        renderKPIs();
+
+        // ═══════════════════════════════════════════════════════
+        // القسم 4: تنبيهات
+        // ═══════════════════════════════════════════════════════
+        function renderAlerts() {
+            const alerts = [];
+
+            // تنبيهات من الإدارات الضعيفة
+            deptScores.forEach(d => {
+                if (d.score > 0 && d.score < 50) {
+                    alerts.push({ level: 'high', name: `${d.icon} ${d.label} — أداء ضعيف (${d.score}%)`, detail: 'يُوصى بمراجعة عاجلة مع مدير الإدارة' });
+                } else if (d.score >= 50 && d.score < 65) {
+                    alerts.push({ level: 'medium', name: `${d.icon} ${d.label} — يحتاج تحسين (${d.score}%)`, detail: 'أداء أقل من المتوسط المستهدف' });
+                }
+            });
+
+            // تنبيه الإدارات الغير مكتملة
+            const pending = deptScores.filter(d => !d.completed);
+            if (pending.length > 0) {
+                alerts.push({
+                    level: 'medium',
+                    name: `⏳ ${pending.length} إدارات لم تكمل التقييم`,
+                    detail: pending.map(d => d.label).join('، ')
+                });
+            }
+
+            // إذا المتوسط أقل من 60%
+            if (totalScore > 0 && totalScore < 60) {
+                alerts.push({ level: 'high', name: '📉 المتوسط العام أقل من 60%', detail: `المتوسط الحالي ${totalScore}% — يحتاج خطة تحسين عاجلة` });
+            }
+
+            if (alerts.length === 0) {
+                if (totalScore >= 70) {
+                    document.getElementById('alertsList').innerHTML = `
+                        <div class="empty-state">
+                            <i class="bi bi-shield-check"></i>
+                            <h3>لا توجد تنبيهات 🎉</h3>
+                            <p>جميع المؤشرات في المستوى المطلوب — أداء ممتاز</p>
+                        </div>`;
+                } else {
+                    document.getElementById('alertsList').innerHTML = `
+                        <div class="empty-state">
+                            <i class="bi bi-shield-exclamation"></i>
+                            <h3>لا توجد بيانات كافية</h3>
+                            <p>ستظهر التنبيهات فور اكتمال تقييمات الإدارات</p>
+                        </div>`;
+                }
+            } else {
+                document.getElementById('alertsList').innerHTML = alerts.map(a => `
+                    <div class="alert-card">
+                        <div class="alert-level ${a.level}">${a.level === 'high' ? '🔴' : a.level === 'medium' ? '🟡' : '🟢'}</div>
+                        <div class="alert-info">
+                            <div class="alert-name">${a.name}</div>
+                            <div class="alert-detail">${a.detail}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+        renderAlerts();
+
+        // ═══════════════════════════════════════════════════════
+        // القسم 5: تقارير
+        // ═══════════════════════════════════════════════════════
+        const reports = [
+            { title: 'تقرير مجلس الإدارة', desc: 'ملخص شامل لأداء المنظمة — جاهز للعرض في اجتماع المجلس', icon: 'bi-file-earmark-pdf', color: '#ef4444', bg: 'rgba(239,68,68,0.12)', action: 'تحميل PDF' },
+            { title: 'العرض التقديمي', desc: 'شرائح جاهزة تعرض المؤشرات الرئيسية والتوصيات', icon: 'bi-easel', color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)', action: 'عرض الشرائح' },
+            { title: 'تقرير المقارنة المعيارية', desc: 'مقارنة أداء شركتك مع متوسط القطاع', icon: 'bi-bar-chart-line', color: '#06b6d4', bg: 'rgba(6,182,212,0.12)', action: 'عرض التقرير' },
+            { title: 'تقرير المخاطر', desc: 'تحليل المخاطر الاستراتيجية والتشغيلية مع التوصيات', icon: 'bi-shield-exclamation', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', action: 'عرض التقرير' },
+        ];
+
+        document.getElementById('reportCards').innerHTML = reports.map(r => `
+            <div class="report-card">
+                <div class="report-icon" style="background:${r.bg};color:${r.color}"><i class="bi ${r.icon}"></i></div>
+                <h4>${r.title}</h4>
+                <p>${r.desc}</p>
+                <button class="btn-board primary" onclick="handleReport(this, '${r.title}')" style="width:100%;justify-content:center">
+                    <i class="bi ${r.icon}"></i> ${r.action}
+                </button>
+            </div>
+        `).join('');
+
+        // ═══════════════════════════════════════════════════════
+        // الدوال العامة
+        // ═══════════════════════════════════════════════════════
+
+        function switchSection(id) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.section-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('panel-' + id).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        function selectQuarter(btn) {
+            document.querySelectorAll('.quarter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function sendComment(btn) {
+            const comment = document.getElementById('boardComment').value.trim();
+            if (!comment) return;
+            document.getElementById('boardComment').value = '';
+            btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> تم الإرسال';
+            btn.style.background = 'var(--success)';
+            setTimeout(() => {
+                btn.innerHTML = '<i class="bi bi-send-fill"></i> إرسال';
+                btn.style.background = '';
+            }, 2000);
+        }
+
+        function handleReport(btn, title) {
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> جارٍ التحميل...';
+            btn.disabled = true;
+            setTimeout(() => {
+                btn.innerHTML = '<i class="bi bi-check-circle-fill" style="color:#10b981"></i> تم بنجاح!';
+                setTimeout(() => {
+                    btn.innerHTML = orig;
+                    btn.disabled = false;
+                }, 2000);
+            }, 1500);
+        }
+    </script>
+    <script src="/assets/js/ai-advisor.js"></script>
+</body>
+
+</html>

@@ -842,16 +842,54 @@
         let currentFilter = 'all';
         const colors = ['#667eea', '#22c55e', '#38bdf8', '#facc15', '#ef4444', '#a78bfa', '#f97316', '#06b6d4'];
 
-        let projects = [
-            { id: '1', name: 'تطوير واجهة التطبيق (UI/UX)', desc: 'تصميم وبرمجة واجهات المستخدم للتطبيق الرقمي بمعايير حديثة', objective: 'رفع رضا العملاء', initiative: 'إطلاق التطبيق الرقمي', status: 'active', progress: 75, start: '2026-01-15', end: '2026-04-30', manager: 'أحمد المطيري', tasks: { total: 24, done: 18, inProgress: 4, todo: 2 }, team: ['أ', 'م', 'س', 'ن'] },
-            { id: '2', name: 'بناء الـ Backend APIs', desc: 'بناء خدمات API للمدفوعات والإشعارات وإدارة الحسابات', objective: 'رفع رضا العملاء', initiative: 'إطلاق التطبيق الرقمي', status: 'active', progress: 60, start: '2026-01-20', end: '2026-05-15', manager: 'خالد العتيبي', tasks: { total: 32, done: 19, inProgress: 8, todo: 5 }, team: ['خ', 'ف', 'ع'] },
-            { id: '3', name: 'أتمتة عمليات الشراء', desc: 'ربط نظام الشراء الإلكتروني بالموردين وأتمتة الموافقات', objective: 'أتمتة العمليات', initiative: 'التحول الرقمي الداخلي', status: 'active', progress: 85, start: '2025-11-01', end: '2026-03-31', manager: 'نورة الشهري', tasks: { total: 18, done: 15, inProgress: 2, todo: 1 }, team: ['ن', 'ر', 'م', 'ع', 'ح'] },
-            { id: '4', name: 'نظام إدارة الوثائق الرقمي', desc: 'تحويل الأرشيف الورقي إلى رقمي مع نظام فهرسة ذكي', objective: 'أتمتة العمليات', initiative: 'التحول الرقمي الداخلي', status: 'active', progress: 40, start: '2026-01-01', end: '2026-06-30', manager: 'سارة القحطاني', tasks: { total: 20, done: 8, inProgress: 5, todo: 7 }, team: ['س', 'ل'] },
-            { id: '5', name: 'توظيف مهندسي بيانات', desc: 'عملية استقطاب وتقييم وتوظيف 5 مهندسي بيانات', objective: 'تطوير الكوادر', initiative: 'توسيع الفريق التقني', status: 'on_hold', progress: 30, start: '2026-02-01', end: '2026-05-31', manager: 'إدارة الموارد البشرية', tasks: { total: 12, done: 4, inProgress: 0, todo: 8 }, team: ['ر', 'م'] },
-            { id: '6', name: 'إعداد وثائق الجودة', desc: 'تجهيز 45 وثيقة معيارية مطلوبة لتدقيق ISO 9001', objective: 'تطبيق ISO 9001', initiative: 'شهادة ISO 9001', status: 'completed', progress: 100, start: '2025-06-15', end: '2026-01-31', manager: 'فهد الدوسري', tasks: { total: 45, done: 45, inProgress: 0, todo: 0 }, team: ['ف', 'أ', 'ه', 'م'] },
-            { id: '7', name: 'التدقيق الداخلي للجودة', desc: 'إجراء تدقيق داخلي شامل استعداداً للتدقيق الخارجي', objective: 'تطبيق ISO 9001', initiative: 'شهادة ISO 9001', status: 'completed', progress: 100, start: '2026-01-01', end: '2026-02-15', manager: 'فهد الدوسري', tasks: { total: 15, done: 15, inProgress: 0, todo: 0 }, team: ['ف', 'م', 'ع'] },
-            { id: '8', name: 'تصميم نظام النقاط والمكافآت', desc: 'بناء منظومة نقاط الولاء وآلية الاسترداد', objective: 'رفع رضا العملاء', initiative: 'برنامج ولاء العملاء', status: 'planning', progress: 0, start: '2026-03-01', end: '2026-06-30', manager: 'لم يحدد بعد', tasks: { total: 0, done: 0, inProgress: 0, todo: 0 }, team: [] },
-        ];
+        let projects = [];
+
+        async function init() {
+            await loadDropdowns();
+            await loadProjects();
+        }
+
+        async function loadDropdowns() {
+            try {
+                // Fetch initiatives
+                const initRes = await window.api.request('/api/strategic/initiatives');
+                const initiatives = await initRes.json();
+                const initSelect = document.getElementById('formInit');
+                initSelect.innerHTML = '<option value="">-- اختر المبادرة الأم --</option>' + (Array.isArray(initiatives) ? initiatives.map(i => `<option value="${i.title}">${i.title}</option>`).join('') : '');
+
+                // Fetch objectives
+                const objRes = await window.api.request('/api/strategic/objectives');
+                const objectives = await objRes.json();
+                const objSelect = document.getElementById('formObj');
+                objSelect.innerHTML = '<option value="">-- اختر الهدف الاستراتيجي --</option>' + (Array.isArray(objectives) ? objectives.map(o => `<option value="${o.title}">${o.title}</option>`).join('') : '');
+            } catch (e) {
+                console.error("Error loading dropdowns:", e);
+            }
+        }
+
+        async function loadProjects() {
+            try {
+                const res = await window.api.request('/api/projects');
+                projects = await res.json();
+
+                // Ensure task fields exist for the UI since they are simple integers in DB now
+                projects = projects.map(p => ({
+                    ...p,
+                    tasks: {
+                        total: p.tasksTotal || 0,
+                        done: p.tasksCompleted || 0,
+                        inProgress: p.tasksInProgress || 0,
+                        todo: (p.tasksTotal || 0) - (p.tasksCompleted || 0) - (p.tasksInProgress || 0)
+                    },
+                    team: p.manager ? [p.manager.charAt(0)] : []
+                }));
+
+                renderAll();
+            } catch (err) {
+                console.error(err);
+                showToast('خطأ في جلب المشاريع');
+            }
+        }
 
         function getProgressColor(p) { return p >= 70 ? 'var(--success)' : p >= 40 ? 'var(--warning)' : 'var(--danger)'; }
         const statusLabels = { planning: 'تخطيط', active: 'نشط', completed: 'مكتمل', on_hold: 'متوقف' };
@@ -886,11 +924,11 @@
               <div class="proj-title">${p.name}</div>
               <span class="proj-badge ${p.status}">${statusLabels[p.status]}</span>
             </div>
-            <div class="proj-desc">${p.desc}</div>
+            <div class="proj-desc">${p.description || 'لا يوجد وصف'}</div>
             <div class="proj-chain">
-              <span class="chain-item obj"><i class="bi bi-bullseye"></i> ${p.objective}</span>
+              <span class="chain-item obj"><i class="bi bi-bullseye"></i> ${p.objective || 'غير محدد'}</span>
               <span class="chain-sep">←</span>
-              <span class="chain-item init"><i class="bi bi-rocket-takeoff"></i> ${p.initiative}</span>
+              <span class="chain-item init"><i class="bi bi-rocket-takeoff"></i> ${p.initiative || 'غير محدد'}</span>
             </div>
             <div class="proj-progress">
               <div class="proj-progress-header">
@@ -900,21 +938,21 @@
               <div class="proj-progress-bar"><div class="proj-progress-fill" style="width:${p.progress}%;background:${getProgressColor(p.progress)}"></div></div>
             </div>
             <div class="proj-meta">
-              <div class="proj-meta-item"><i class="bi bi-person"></i> ${p.manager}</div>
-              <div class="proj-meta-item"><i class="bi bi-calendar3"></i> ${p.end}</div>
+              <div class="proj-meta-item"><i class="bi bi-person"></i> ${p.manager || 'لم يحدد'}</div>
+              <div class="proj-meta-item"><i class="bi bi-calendar3"></i> ${p.endDate ? new Date(p.endDate).toLocaleDateString('ar-EG') : 'بدون تاريخ'}</div>
             </div>
-            <div class="proj-tasks-summary">
+            <div class="proj-tasks-summary" style="display:none">
               <div class="pts-item" style="color:var(--success)"><i class="bi bi-check-circle"></i> ${p.tasks.done} مكتملة</div>
               <div class="pts-item" style="color:var(--info)"><i class="bi bi-arrow-repeat"></i> ${p.tasks.inProgress} جارية</div>
               <div class="pts-item" style="color:var(--text-muted)"><i class="bi bi-circle"></i> ${p.tasks.todo} متبقية</div>
             </div>
-            ${p.team.length > 0 ? `
+            ${p.team && p.team.length > 0 ? `
             <div class="proj-team">
               ${p.team.map((m, i) => `<div class="proj-avatar" style="background:${colors[i % colors.length]};color:white;z-index:${10 - i}">${m}</div>`).join('')}
               <span class="proj-team-count">${p.team.length} أعضاء</span>
             </div>` : ''}
             <div class="proj-actions">
-              <a href="/tasks.html" class="proj-btn tasks"><i class="bi bi-check2-square"></i> المهام (${p.tasks.total})</a>
+              <button class="proj-btn tasks" disabled><i class="bi bi-check2-square"></i> المهام (قريباً)</button>
               <button class="proj-btn edit" onclick="openEditModal('${p.id}')"><i class="bi bi-pencil"></i> تعديل</button>
               <button class="proj-btn del" onclick="deleteProject('${p.id}')"><i class="bi bi-trash3"></i> حذف</button>
             </div>
@@ -929,6 +967,8 @@
             document.getElementById('modalTitle').innerHTML = '<i class="bi bi-plus-circle"></i> مشروع جديد';
             document.getElementById('editId').value = '';
             ['formName', 'formDesc', 'formManager', 'formStart', 'formEnd'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('formInit').value = '';
+            document.getElementById('formObj').value = '';
             document.getElementById('formStatus').value = 'planning';
             document.getElementById('formProgress').value = 0;
             new bootstrap.Modal(document.getElementById('projModal')).show();
@@ -940,47 +980,62 @@
             document.getElementById('modalTitle').innerHTML = '<i class="bi bi-pencil-square"></i> تعديل المشروع';
             document.getElementById('editId').value = p.id;
             document.getElementById('formName').value = p.name;
-            document.getElementById('formDesc').value = p.desc;
-            document.getElementById('formInit').value = p.initiative;
-            document.getElementById('formObj').value = p.objective;
+            document.getElementById('formDesc').value = p.description || '';
+            document.getElementById('formInit').value = p.initiative || '';
+            document.getElementById('formObj').value = p.objective || '';
             document.getElementById('formStatus').value = p.status;
             document.getElementById('formProgress').value = p.progress;
-            document.getElementById('formStart').value = p.start;
-            document.getElementById('formEnd').value = p.end;
-            document.getElementById('formManager').value = p.manager;
+            document.getElementById('formStart').value = p.startDate ? p.startDate.split('T')[0] : '';
+            document.getElementById('formEnd').value = p.endDate ? p.endDate.split('T')[0] : '';
+            document.getElementById('formManager').value = p.manager || '';
             new bootstrap.Modal(document.getElementById('projModal')).show();
         }
 
-        function saveProject() {
+        async function saveProject() {
             const id = document.getElementById('editId').value;
             const data = {
                 name: document.getElementById('formName').value.trim(),
-                desc: document.getElementById('formDesc').value.trim(),
+                description: document.getElementById('formDesc').value.trim(),
                 initiative: document.getElementById('formInit').value,
                 objective: document.getElementById('formObj').value,
                 status: document.getElementById('formStatus').value,
                 progress: parseInt(document.getElementById('formProgress').value) || 0,
-                start: document.getElementById('formStart').value,
-                end: document.getElementById('formEnd').value,
+                startDate: document.getElementById('formStart').value || null,
+                endDate: document.getElementById('formEnd').value || null,
                 manager: document.getElementById('formManager').value.trim(),
             };
             if (!data.name) return;
-            if (id) {
-                const p = projects.find(x => x.id === id);
-                if (p) Object.assign(p, data);
-                showToast('تم تحديث المشروع ✓');
-            } else {
-                projects.unshift({ id: Date.now().toString(), ...data, tasks: { total: 0, done: 0, inProgress: 0, todo: 0 }, team: [] });
-                showToast('تم إنشاء المشروع ✓');
+
+            try {
+                const method = id ? 'PATCH' : 'POST';
+                const endpoint = id ? `/api/projects/${id}` : '/api/projects';
+
+                const res = await window.api.request(endpoint, {
+                    method,
+                    body: JSON.stringify(data)
+                });
+
+                if (!res.ok) throw new Error("Failed to save project");
+
+                showToast(`تم ${id ? 'تحديث' : 'إنشاء'} المشروع بنجاح ✓`);
+                bootstrap.Modal.getInstance(document.getElementById('projModal')).hide();
+                await loadProjects();
+            } catch (err) {
+                console.error(err);
+                alert("حدث خطأ أثناء حفظ المشروع.");
             }
-            bootstrap.Modal.getInstance(document.getElementById('projModal')).hide();
-            renderAll();
         }
 
-        function deleteProject(id) {
-            if (!confirm('حذف المشروع؟')) return;
-            projects = projects.filter(x => x.id !== id);
-            renderAll(); showToast('تم الحذف ✓');
+        async function deleteProject(id) {
+            if (!confirm('هل تأكد من حذف المشروع؟')) return;
+            try {
+                await window.api.request(`/api/projects/${id}`, { method: 'DELETE' });
+                showToast('تم الحذف ✓');
+                await loadProjects();
+            } catch (err) {
+                console.error(err);
+                alert("حدث خطأ أثناء حذف المشروع.");
+            }
         }
 
         function showToast(msg) {
@@ -991,7 +1046,7 @@
             setTimeout(() => t.remove(), 3000);
         }
 
-        renderAll();
+        init();
     </script>
 </body>
 

@@ -1,13 +1,12 @@
 const express = require('express');
 const multer = require('multer');
-const XLSX = require('xlsx');
+const ExcelJS = require('exceljs');
 const prisma = require('../lib/prisma');
 const { verifyToken } = require('../middleware/auth');
 const { checkDataEntryPermission, checkPermission } = require('../middleware/permission');
 
 const router = express.Router();
 
-// Multer for Excel upload
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 10 * 1024 * 1024 },
@@ -28,22 +27,33 @@ router.get('/datasets', verifyToken, async (req, res) => {
         if (category) where.category = category;
         if (year) where.year = parseInt(year);
         if (status) where.status = status; else where.status = 'ACTIVE';
+
+        // بناء شروط البحث
+        const andConditions = [];
+
         if (search) {
-            where.OR = [
-                { name: { contains: search } },
-                { nameAr: { contains: search } },
-                { description: { contains: search } },
-                { source: { contains: search } },
-            ];
+            andConditions.push({
+                OR: [
+                    { name: { contains: search } },
+                    { nameAr: { contains: search } },
+                    { description: { contains: search } },
+                    { source: { contains: search } },
+                ]
+            });
         }
 
-        // entity filtering
+        // صلاحية الكيان
         if (req.user.activeEntityId) {
-            where.OR = [
-                ...(where.OR || []),
-                { entityId: req.user.activeEntityId },
-                { entityId: null }, // shared datasets
-            ];
+            andConditions.push({
+                OR: [
+                    { entityId: req.user.activeEntityId },
+                    { entityId: null }
+                ]
+            });
+        }
+
+        if (andConditions.length > 0) {
+            where.AND = andConditions;
         }
 
         const datasets = await prisma.statisticalDataset.findMany({
@@ -137,23 +147,41 @@ router.post('/upload', verifyToken, checkDataEntryPermission('canEnterKPI'), upl
 
         const { category, source, year, datasetName } = req.body;
 
-        // Parse the file
-        const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        const rows = XLSX.utils.sheet_to_json(sheet, { defval: null });
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(req.file.buffer);
+        const worksheet = workbook.worksheets[0];
+        const sheetName = worksheet.name;
+
+        const rows = [];
+        let headers = [];
+
+        worksheet.eachRow((row, rowNumber) => {
+            if (rowNumber === 1) {
+                row.eachCell((cell, colNumber) => {
+                    headers[colNumber] = cell.value?.toString() || `Col_${colNumber}`;
+                });
+            } else {
+                const rowData = {};
+                let hasData = false;
+                row.eachCell((cell, colNumber) => {
+                    if (headers[colNumber]) {
+                        rowData[headers[colNumber]] = cell.value;
+                        hasData = true;
+                    }
+                });
+                if (hasData) rows.push(rowData);
+            }
+        });
 
         if (!rows.length) return res.status(400).json({ error: 'الملف فارغ' });
 
-        // Auto-detect columns
         const keys = Object.keys(rows[0]);
-        const nameCol = keys[0]; // first column = indicator name
+        const nameCol = keys[0];
         const valueCol = keys.find(k => {
             const first = rows[0][k];
             return typeof first === 'number' || (!isNaN(parseFloat(first)) && first !== null);
-        }) || keys[1]; // second column = value
+        }) || keys[1];
 
-        // Create dataset
         const dataset = await prisma.statisticalDataset.create({
             data: {
                 name: datasetName || `${sheetName || 'بيانات'} — ${req.file.originalname}`,
@@ -172,7 +200,6 @@ router.post('/upload', verifyToken, checkDataEntryPermission('canEnterKPI'), upl
                         const rawVal = row[valueCol];
                         const numVal = parseFloat(rawVal);
 
-                        // Collect all other columns as notes
                         const extraData = {};
                         keys.forEach(k => {
                             if (k !== nameCol && k !== valueCol && row[k] != null) {
@@ -207,7 +234,8 @@ router.post('/upload', verifyToken, checkDataEntryPermission('canEnterKPI'), upl
 
     } catch (error) {
         console.error('Stats upload error:', error);
-        res.status(500).json({ error: 'خطأ في رفع الملف: ' + error.message });
+        // ✅ لا نكشف تفاصيل الخطأ الداخلية
+        res.status(500).json({ error: 'خطأ في معالجة الملف — تأكد من صحة التنسيق' });
     }
 });
 
@@ -276,7 +304,6 @@ router.get('/summary', verifyToken, async (req, res) => {
             orderBy: { year: 'desc' }
         });
 
-        // Group by category
         const byCategory = {};
         datasets.forEach(ds => {
             if (!byCategory[ds.category]) byCategory[ds.category] = [];
@@ -350,21 +377,6 @@ router.delete('/datasets/:id', verifyToken, checkPermission('EDITOR'), async (re
 // ============================================
 // GET /api/stats/for-analysis — بيانات مرتبطة بنوع التحليل
 // ============================================
-// يُستخدم من أدوات التحليل (SWOT, PESTEL, Porter، التقييمات) لجلب البيانات المرتبطة تلقائياً
-//
-// الربط:
-// ┌──────────────────────┬──────────────────────────────────────────┐
-// │  نوع التحليل         │  تصنيفات البيانات المرتبطة               │
-// ├──────────────────────┼──────────────────────────────────────────┤
-// │  SWOT                │  الكل (MARKET + COMPETITIVE + ...)       │
-// │  PESTEL              │  MARKET, REGULATORY, DEMOGRAPHIC         │
-// │  PORTER              │  COMPETITIVE, INDUSTRY, MARKET           │
-// │  ASSESSMENT          │  OPERATIONAL, FINANCIAL, MARKET           │
-// │  FINANCIAL           │  FINANCIAL, MARKET                        │
-// │  BENCHMARKING        │  COMPETITIVE, INDUSTRY                    │
-// │  GAP_ANALYSIS        │  OPERATIONAL, FINANCIAL                   │
-// └──────────────────────┴──────────────────────────────────────────┘
-
 router.get('/for-analysis', verifyToken, async (req, res) => {
     try {
         const { tool, category: manualCategory } = req.query;
@@ -373,7 +385,6 @@ router.get('/for-analysis', verifyToken, async (req, res) => {
             return res.status(400).json({ error: 'حدد نوع التحليل (tool) أو التصنيف (category)' });
         }
 
-        // Mapping: tool type → relevant data categories
         const TOOL_CATEGORY_MAP = {
             'SWOT': ['MARKET', 'COMPETITIVE', 'FINANCIAL', 'OPERATIONAL', 'DEMOGRAPHIC', 'REGULATORY', 'INDUSTRY'],
             'PESTEL': ['MARKET', 'REGULATORY', 'DEMOGRAPHIC', 'COMPETITIVE'],
@@ -389,7 +400,6 @@ router.get('/for-analysis', verifyToken, async (req, res) => {
             'OGSM': ['FINANCIAL', 'OPERATIONAL', 'MARKET'],
         };
 
-        // Determine categories
         let categories;
         if (manualCategory) {
             categories = [manualCategory];
@@ -397,7 +407,6 @@ router.get('/for-analysis', verifyToken, async (req, res) => {
             categories = TOOL_CATEGORY_MAP[tool.toUpperCase()] || ['MARKET', 'FINANCIAL', 'OPERATIONAL'];
         }
 
-        // Build where clause
         const where = {
             status: 'ACTIVE',
             category: { in: categories },
@@ -415,15 +424,14 @@ router.get('/for-analysis', verifyToken, async (req, res) => {
             include: {
                 records: {
                     orderBy: { sortOrder: 'asc' },
-                    take: 50, // top 50 records per dataset
+                    take: 50,
                 },
                 _count: { select: { records: true } }
             },
             orderBy: [{ year: 'desc' }, { createdAt: 'desc' }],
-            take: 20, // limit datasets
+            take: 20,
         });
 
-        // Format for easy consumption by analysis tools
         const CATEGORY_AR = {
             MARKET: 'بيانات السوق',
             DEMOGRAPHIC: 'بيانات ديموغرافية',
@@ -435,7 +443,6 @@ router.get('/for-analysis', verifyToken, async (req, res) => {
             CUSTOM: 'بيانات أخرى',
         };
 
-        // Group by category for easy rendering
         const grouped = {};
         datasets.forEach(ds => {
             const cat = ds.category;
