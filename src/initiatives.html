@@ -1077,6 +1077,16 @@
             return h;
         }
 
+        function escapeHtml(str) {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
         // ── البيانات التجريبية (fallback إذا لا يوجد API) ──
         const DEMO_DATA = [
             { id: '1', name: 'إطلاق التطبيق الرقمي للعملاء', desc: 'تطوير تطبيق موبايل متكامل لخدمة العملاء والمدفوعات الرقمية', objective: 'رفع رضا العملاء', status: 'IN_PROGRESS', priority: 'HIGH', progress: 65, budget: '1,200,000', spent: '960,000', startDate: '2026-01-01', endDate: '2026-06-30' },
@@ -1276,9 +1286,9 @@
             </div>
             ${items.map(i => `
               <div class="init-card" onclick="openEditModal('${i.id}')">
-                <div class="init-title">${i.name}</div>
-                <div class="init-desc">${i.desc}</div>
-                <div class="init-objective"><i class="bi bi-bullseye"></i> ${i.objective}</div>
+                <div class="init-title">${escapeHtml(i.name)}</div>
+                <div class="init-desc">${escapeHtml(i.desc)}</div>
+                <div class="init-objective"><i class="bi bi-bullseye"></i> ${escapeHtml(i.objective)}</div>
                 <div class="init-progress">
                   <div class="init-progress-header">
                     <span style="color:var(--text-muted)">الإنجاز</span>
@@ -1290,7 +1300,7 @@
                   <span class="init-priority priority-${i.priority}">${{ HIGH: 'عالية', MEDIUM: 'متوسطة', LOW: 'منخفضة' }[i.priority]}</span>
                   <span class="init-date"><i class="bi bi-calendar3"></i> ${i.endDate}</span>
                 </div>
-                <div class="init-budget"><i class="bi bi-cash-stack"></i> ${i.budget} ريال</div>
+                <div class="init-budget"><i class="bi bi-cash-stack"></i> ${escapeHtml(i.budget)} ريال</div>
                 ${(() => {
                         const b = parseMoney(i.budget), sp = parseMoney(i.spent);
                         if (!b) return '';
@@ -1415,7 +1425,7 @@
         function showToast(msg) {
             const t = document.createElement('div');
             t.className = 'toast-msg';
-            t.innerHTML = `<i class="bi bi-check-circle"></i> ${msg}`;
+            t.innerHTML = `<i class="bi bi-check-circle"></i> <span>${escapeHtml(msg)}</span>`;
             document.getElementById('toastContainer').appendChild(t);
             setTimeout(() => t.remove(), 3000);
         }
@@ -1448,7 +1458,7 @@
                     <div style="font-size:2rem">🚀</div>
                     <div>
                         <div style="font-weight:700;font-size:1.05rem">تم إنشاء مبادرتك التلقائية!</div>
-                        <div style="opacity:.88;font-size:.9rem">بناءً على تحليل وضع شركتك، أنشأ النظام مبادرة <strong>${d.title}</strong> مع ${d.tasks?.length || 0} مهام و${d.kpis?.length || 0} مؤشرات أداء</div>
+                        <div style="opacity:.88;font-size:.9rem">بناءً على تحليل وضع شركتك، أنشأ النظام مبادرة <strong>${escapeHtml(d.title)}</strong> مع ${d.tasks?.length || 0} مهام و${d.kpis?.length || 0} مؤشرات أداء</div>
                     </div>
                     <button onclick="this.parentElement.remove()" style="margin-right:auto;background:rgba(255,255,255,.2);border:none;color:#fff;padding:6px 14px;border-radius:8px;cursor:pointer">✕</button>
                 `;
@@ -1530,7 +1540,7 @@
                 <span style="font-size:24px">📊</span>
                 <div style="flex:1">
                     <div style="font-size:14px;font-weight:800;color:#a78bfa">إنشاء مبادرة مرتبطة بمؤشر</div>
-                    <div style="font-size:12px;color:var(--text-muted)">المؤشر: <strong style="color:var(--text)">${decodeURIComponent(kpiName)}</strong></div>
+                    <div style="font-size:12px;color:var(--text-muted)">المؤشر: <strong style="color:var(--text)">${escapeHtml(decodeURIComponent(kpiName))}</strong></div>
                 </div>
                 <a href="/kpis.html" style="padding:6px 14px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--text-muted);font-size:11px;font-weight:700;text-decoration:none">← رجوع للمؤشرات</a>
             `;
