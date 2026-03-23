@@ -1005,11 +1005,11 @@
                 .replace(/'/g, '&#39;');
         }
 
-        // ✅ Fix: استخدام window.apiRequest بدلاً من fetch المباشر للاستفادة الكاملة من المعالجة المركزية
+        // استخدام fetch مباشر مع credentials بدلاً من window.apiRequest غير الموجودة
         async function cachedFetch(url) {
             const cached = cacheGet(url);
             if (cached) return cached;
-            const res = await window.apiRequest(url);
+            const res = await fetch(url, { credentials: 'include' });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
             cacheSet(url, data);
@@ -1102,9 +1102,9 @@
 
                 // 2. سحب البيانات المدمجة بثلاث طلبات باستخدام Fetch الآلي المخفي الهوية
                 const [dashResult, healthResult, alertResult] = await Promise.allSettled([
-                    window.apiRequest(`/api/dashboard/entity/${entityId}`).then(res => res.json()),
-                    window.apiRequest(`/api/dashboard/health/${entityId}`).then(res => res.json()),
-                    window.apiRequest(`/api/alert-engine/entity/${entityId}`).then(res => res.json()),
+                    fetch(`/api/dashboard/entity/${entityId}`, { credentials: 'include' }).then(res => res.json()),
+                    fetch(`/api/dashboard/health/${entityId}`, { credentials: 'include' }).then(res => res.json()),
+                    fetch(`/api/alert-engine/entity/${entityId}`, { credentials: 'include' }).then(res => res.ok ? res.json() : {}),
                 ]);
 
                 // استخراج البيانات مع fallback آمن
