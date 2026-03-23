@@ -382,9 +382,19 @@ router.post('/login', (req, res, next) => {
     // SUPER_ADMIN يحصل على OWNER تلقائياً لو ما عنده membership
     const isSA = user.systemRole === 'SUPER_ADMIN';
     const primaryRole = user.memberships[0]?.role || (isSA ? 'OWNER' : 'VIEWER');
-    let primaryUserType = user.memberships[0]?.userType || null;
-    // إذا ما عنده membership — نستنتج من userCategory
-    if (!primaryUserType) {
+    const primaryMembership = user.memberships[0] || null;
+
+    // 🛡️ تحديد userType بأولوية صحيحة:
+    // 1. OWNER/ADMIN → دائماً COMPANY_MANAGER (بغض النظر عن userCategory)
+    // 2. membership.userType موجود → استخدمه
+    // 3. استنتاج من userCategory كـ fallback فقط
+    let primaryUserType;
+    if (['OWNER', 'ADMIN'].includes(primaryRole) || isSA) {
+      // المالك والمسؤول لا يكونون مدراء إدارة أبداً
+      primaryUserType = 'COMPANY_MANAGER';
+    } else if (primaryMembership?.userType) {
+      primaryUserType = primaryMembership.userType;
+    } else {
       const cat = user.userCategory || '';
       if (cat.startsWith('DEPT_')) primaryUserType = 'DEPT_MANAGER';
       else if (cat.startsWith('INDIVIDUAL_') || cat === 'CONSULTANT_SOLO') primaryUserType = 'INDIVIDUAL';
@@ -392,7 +402,7 @@ router.post('/login', (req, res, next) => {
       else if (['COMPANY_MICRO', 'COMPANY_SMALL', 'COMPANY_MEDIUM', 'COMPANY_LARGE', 'COMPANY_ENTERPRISE', 'NEW_PROJECT', 'CEO'].includes(cat)) primaryUserType = 'COMPANY_MANAGER';
       else primaryUserType = 'EXPLORER';
     }
-    const primaryEntity = user.memberships[0]?.entity || null;
+    const primaryEntity = primaryMembership?.entity || null;
 
     // Generate JWT token
     const token = jwt.sign(
@@ -462,9 +472,15 @@ router.get('/profile', verifyToken, async (req, res) => {
 
     const isSA2 = user.systemRole === 'SUPER_ADMIN';
     const primaryRole = user.memberships[0]?.role || (isSA2 ? 'OWNER' : 'VIEWER');
+    const primaryMem = user.memberships[0] || null;
 
-    let primaryUserType = user.memberships[0]?.userType || null;
-    if (!primaryUserType) {
+    // 🛡️ نفس منطق تحديد userType المُعدَّل (OWNER/ADMIN → COMPANY_MANAGER دائماً)
+    let primaryUserType;
+    if (['OWNER', 'ADMIN'].includes(primaryRole) || isSA2) {
+      primaryUserType = 'COMPANY_MANAGER';
+    } else if (primaryMem?.userType) {
+      primaryUserType = primaryMem.userType;
+    } else {
       const cat = user.userCategory || '';
       if (cat.startsWith('DEPT_')) primaryUserType = 'DEPT_MANAGER';
       else if (cat.startsWith('INDIVIDUAL_') || cat === 'CONSULTANT_SOLO') primaryUserType = 'INDIVIDUAL';
@@ -472,7 +488,7 @@ router.get('/profile', verifyToken, async (req, res) => {
       else if (['COMPANY_MICRO', 'COMPANY_SMALL', 'COMPANY_MEDIUM', 'COMPANY_LARGE', 'COMPANY_ENTERPRISE', 'NEW_PROJECT', 'CEO'].includes(cat)) primaryUserType = 'COMPANY_MANAGER';
       else primaryUserType = 'EXPLORER';
     }
-    const primaryEntity = user.memberships[0]?.entity || null;
+    const primaryEntity = primaryMem?.entity || null;
 
     res.json({
       user: {
