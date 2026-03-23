@@ -505,14 +505,15 @@
             // 1. Load questionnaire template (with entityId for sector-specific)
             try {
                 const qUrl = `/api/dept-data/questionnaire/${role}${entityId ? '?entityId=' + entityId : ''}`;
-                const res = await window.apiRequest(qUrl, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                const res = await fetch(qUrl, {
+                    credentials: 'include',
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
                 });
                 if (!res.ok) throw new Error('Failed to load questionnaire');
                 questionnaire = await res.json();
             } catch (e) {
                 document.getElementById('qContainer').innerHTML = `
-                    <div style="text-align:center;padding:40px;color:var(--red)">خطأ في تحميل الاستبيان</div>
+                    <div style="text-align:center;padding:40px;color:var(--red)">خطأ في تحميل الاستبيان: ${e.message}</div>
                 `;
                 return;
             }
@@ -520,8 +521,9 @@
             // 2. Find department ID if needed
             if (!currentDeptId && entityId) {
                 try {
-                    const dRes = await window.apiRequest(`/api/departments/${entityId}`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
+                    const dRes = await fetch(`/api/departments/${entityId}`, {
+                        credentials: 'include',
+                        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
                     });
                     const depts = await dRes.json();
                     const code = deptCode?.toUpperCase() || Object.entries(CODE_TO_ROLE).find(([, r]) => r === role)?.[0];
@@ -534,8 +536,9 @@
             let savedData = {};
             if (currentDeptId) {
                 try {
-                    const dRes = await window.apiRequest(`/api/dept-data/${currentDeptId}`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
+                    const dRes = await fetch(`/api/dept-data/${currentDeptId}`, {
+                        credentials: 'include',
+                        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
                     });
                     if (dRes.ok) {
                         const d = await dRes.json();
@@ -732,11 +735,12 @@
 
             try {
                 const answers = collectAnswers();
-                const res = await window.apiRequest(`/api/dept-data/${currentDeptId}`, {
+                const res = await fetch(`/api/dept-data/${currentDeptId}`, {
                     method: 'POST',
+                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
+                        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
                     },
                     body: JSON.stringify({ answers })
                 });
@@ -769,11 +773,12 @@
 
             try {
                 const answers = collectAnswers();
-                await window.apiRequest(`/api/dept-data/${currentDeptId}`, {
+                await fetch(`/api/dept-data/${currentDeptId}`, {
                     method: 'POST',
+                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
+                        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
                     },
                     body: JSON.stringify({ answers })
                 });

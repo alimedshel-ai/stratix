@@ -782,30 +782,15 @@
                     const u = await window.api.getCurrentUser();
                     if (!u) { window.location.href = '/login.html'; return; }
 
-                    // حماية توجيه صارمة بناءً على الدور (Strict Routing)
+                    // ✅ توجيه ذكي — كل مستفيد لصفحته المخصصة
+                    // آمن: server.js يضمن OWNER → COMPANY_MANAGER (لا تعارض مع userCategory)
                     const isSuperAdmin = u.systemRole === 'SUPER_ADMIN';
-                    if (!isSuperAdmin && u.role !== 'OWNER' && u.role !== 'ADMIN') {
-
-                        if (u.role === 'CONSULTANT') {
-                            window.location.replace('/consultant-dashboard.html');
-                            return;
-                        }
-
-                        const isDept = u.userType === 'DEPT_MANAGER' || (u.userCategory && u.userCategory.startsWith('DEPT_'));
-                        if (isDept && u.role !== 'VIEWER' && u.role !== 'DATA_ENTRY') {
-                            window.location.replace('/dept-dashboard.html');
-                            return;
-                        }
-
-                        if (u.role === 'DATA_ENTRY' || u.role === 'VIEWER') {
-                            window.location.replace('/viewer-hub.html');
-                            return;
-                        }
-
-                        if (u.userType === 'BOARD_VIEWER') {
-                            window.location.replace('/board-dashboard.html');
-                            return;
-                        }
+                    if (!isSuperAdmin) {
+                        if (u.role === 'CONSULTANT') { window.location.replace('/consultant-dashboard.html'); return; }
+                        if (u.role === 'DATA_ENTRY' || u.role === 'VIEWER') { window.location.replace('/viewer-hub.html'); return; }
+                        if (u.userType === 'BOARD_VIEWER') { window.location.replace('/board-dashboard.html'); return; }
+                        if (u.userType === 'DEPT_MANAGER') { window.location.replace('/dept-dashboard.html'); return; }
+                        if (u.userType === 'COMPANY_MANAGER' || u.role === 'OWNER') { window.location.replace('/ceo-dashboard.html'); return; }
                     }
 
                     // تحديث واجهة المستخدم العلوية

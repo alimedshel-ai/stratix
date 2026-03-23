@@ -6,8 +6,57 @@ const { checkPermission } = require('../middleware/permission');
 
 const router = express.Router();
 
+// ──────────────────────────────────────────────────────────────
+// GET /api/users/search?q=  — بحث لميزة @ Mentions
+// يُرجع أعضاء نفس الكيان الذين يتطابق اسمهم مع q
+// ──────────────────────────────────────────────────────────────
+router.get('/search', verifyToken, async (req, res) => {
+  try {
+    const { q = '' } = req.query;
 
-// Get all users with pagination and search
+    // الكيان الأساسي للمستخدم الحالي
+    const currentMembership = await prisma.member.findFirst({
+      where: { userId: req.user.id },
+      select: { entityId: true }
+    });
+
+    const entityId = currentMembership?.entityId;
+
+    const users = await prisma.user.findMany({
+      where: {
+        name: { contains: q },
+        disabled: false,
+        ...(entityId && {
+          memberships: { some: { entityId } }
+        })
+      },
+      select: {
+        id: true,
+        name: true,
+        memberships: {
+          where: entityId ? { entityId } : {},
+          select: { role: true },
+          take: 1
+        }
+      },
+      take: 10,
+      orderBy: { name: 'asc' }
+    });
+
+    const result = users.map(u => ({
+      id: u.id,
+      name: u.name,
+      role: u.memberships[0]?.role || null
+    }));
+
+    res.json({ users: result });
+  } catch (error) {
+    console.error('Error in /users/search:', error);
+    res.status(500).json({ error: 'Failed to search users' });
+  }
+});
+
+
 router.get('/', verifyToken, async (req, res) => {
   try {
     const { page = 1, limit = 10, search, entityId, role } = req.query;

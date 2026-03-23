@@ -186,6 +186,7 @@ model User {
   auditLogs       AuditLog[]
   financialAudits FinancialAudit[]
   healthReports   CompanyHealthReport[] @relation("HealthReporter")
+  resourceAccess  ResourceAccess[]
 
   @@map("users")
 }
@@ -2334,4 +2335,28 @@ model WebhookLog {
   webhook    Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
 
   @@map("webhook_logs")
+}
+
+// ─────────────────────────────────────────────────────────────────
+// PERMISSION SERVICE — صلاحيات صريحة على مستوى المورد
+// يُستخدم للـ viewer-level access control
+// ─────────────────────────────────────────────────────────────────
+
+/// صلاحيات صريحة تربط المستخدم بمورد محدد (للـ viewers والحالات الخاصة)
+model ResourceAccess {
+  id           String    @id @default(cuid())
+  resourceType String    // 'objective', 'kpi', 'initiative', 'report', etc.
+  resourceId   String    // id المورد
+  userId       String    // المستخدم المُمنَح الصلاحية
+  permission   String    // 'read', 'write', 'admin'
+  grantedBy    String    // id من منح الصلاحية
+  grantedAt    DateTime  @default(now())
+  expiresAt    DateTime? // اختياري — للصلاحيات المؤقتة
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([resourceType, resourceId, userId, permission])
+  @@index([userId])
+  @@index([resourceType, resourceId])
+  @@map("resource_access")
 }

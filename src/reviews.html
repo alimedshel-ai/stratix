@@ -821,6 +821,7 @@
     <script src="/assets/js/api.js"></script>
 
     <script src="/assets/js/ai-advisor.js"></script>
+    <script src="/assets/js/mentions.js"></script>
     <script>
         if (window.StartixAPI?.showEntityBanner) {
             StartixAPI.showEntityBanner({ toolName: 'المراجعات الدورية' });
@@ -927,6 +928,11 @@
             document.getElementById('smartFillStatus').style.display = 'none';
             document.getElementById('modalTitle').textContent = '📝 مراجعة جديدة — ' + getQuarterYear();
             document.getElementById('reviewModal').classList.add('show');
+
+            // تفعيل نظام الإشارة (Mentions)
+            if (!window.revNotesMentions) {
+                window.revNotesMentions = new Mentions('revNotes');
+            }
         }
 
         function handleAdvisorRedirect() {
@@ -1078,6 +1084,11 @@
                 document.getElementById('smartFillSection').style.display = 'none';
                 document.getElementById('modalTitle').textContent = 'تعديل المراجعة';
                 document.getElementById('reviewModal').classList.add('show');
+
+                // تفعيل نظام الإشارة (Mentions)
+                if (!window.revNotesMentions) {
+                    window.revNotesMentions = new Mentions('revNotes');
+                }
             } catch (e) { alert('خطأ في التحميل'); }
         }
 
@@ -1092,10 +1103,14 @@
             const type = document.getElementById('revType').value;
             const versionId = document.getElementById('revVersion').value;
 
+            // جلب الـ IDs للأشخاص المذكورين
+            const mentions = window.revNotesMentions ? window.revNotesMentions.getMentionedIds() : [];
+
             if (!title) return alert('يرجى إدخال العنوان');
 
             const payload = {
-                title, reviewDate, notes, findings, decision, status, type, versionId
+                title, reviewDate, notes, findings, decision, status, type, versionId,
+                mentions: mentions.length ? mentions.join(',') : null
             };
 
             try {
@@ -1136,35 +1151,7 @@
 
         init();
     </script>
-</body>
-
-</html>
-if (!title) return alert('الرجاء إدخال العنوان');
-const body = {
-title, reviewDate: document.getElementById('revDate').value || null,
-notes: document.getElementById('revNotes').value.trim() || null,
-findings: document.getElementById('revFindings').value.trim() || null,
-decision: document.getElementById('revDecision').value || null,
-status: document.getElementById('revStatus').value, type: document.getElementById('revType').value,
-};
-// الإصدار: من النموذج أو من الفلتر
-const versionId = document.getElementById('revVersion').value || document.getElementById('versionFilter').value;
-if (!editId && versionId) body.versionId = versionId;
-try {
-const url = editId ? `/api/strategic/reviews/${editId}` : '/api/strategic/reviews';
-const res = await fetch(url, { method: editId ? 'PATCH' : 'POST', headers, body: JSON.stringify(body) });
-if (!res.ok) throw new Error('Failed');
-closeModal(); loadReviews();
-} catch (e) { alert('خطأ في الحفظ'); }
-}
-
-async function del(id) { if (!confirm('هل أنت متأكد من الحذف؟')) return; try { await
-fetch(`/api/strategic/reviews/${id}`, { method: 'DELETE', headers }); loadReviews(); } catch (e) { alert('خطأ'); } }
-function logout() { localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.href =
-'/login.html'; }
-init();
-</script>
-<script src="/assets/js/impersonation.js"></script>
+    <script src="/assets/js/impersonation.js"></script>
 </body>
 
 </html>

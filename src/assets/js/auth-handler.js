@@ -20,48 +20,40 @@ function getRoutingDestination(user) {
     const sysRole = user.systemRole || 'USER';
     const uType = user.userType || 'EXPLORER';
     const uCategory = user.userCategory || '';
-    const hasEntity = !!user.entity || !!user.companyId; // التأكد المطلق من الكيان
+    const hasEntity = !!user.entity || !!user.companyId;
     const onboardingDone = user.onboardingCompleted || false;
 
-    // 1. مدراء النظام
+    // 1. مدير النظام العام
     if (sysRole === 'SUPER_ADMIN' || sysRole === 'ADMIN' || role === 'ADMIN') {
         return '/admin-dashboard.html';
     }
 
     // 2. مستخدم جديد لم يكمل التأسيس
     if (!hasEntity || !onboardingDone) {
-        // إذا كان المستخدم جديداً ولكننا نعرف مساره مسبقاً (سجل عبر التشخيص)، نرسله لإكمال التأسيس بدلاً من إعادة اختياره للمسار
         if (uType === 'COMPANY_MANAGER' || uType === 'DEPT_MANAGER' || uType === 'BOARD_VIEWER' || (uCategory && uCategory !== 'EXPLORER')) {
             return '/onboarding.html';
         }
         return '/select-type.html';
     }
 
-    // 3. التوجيه الديناميكي للداشبورد المخصص
+    // 3. توجيه حسب نوع المستفيد
     if (uCategory.startsWith('INVESTOR')) return '/investor-dashboard.html';
     if (uType === 'CONSULTANT' || uCategory.startsWith('CONSULTANT')) return '/consultant-dashboard.html';
     if (uCategory.startsWith('BOARD_')) return '/board-dashboard.html';
-
-    // 🛡️ مدير الإدارة: يذهب لـ dept-dashboard فقط إذا كان غير OWNER/ADMIN
-    // OWNER/ADMIN قد يملكون userCategory='DEPT_*' لكنهم يجب أن يذهبوا للـ CEO dashboard
-    const isPrivilegedRole = role === 'OWNER' || role === 'ADMIN' || sysRole === 'SUPER_ADMIN';
-    if (!isPrivilegedRole && (uType === 'DEPT_MANAGER' || uCategory.startsWith('DEPT_') || user.department?.key)) {
-        return '/dept-dashboard.html';
-    }
-
-    if (['INDIVIDUAL', 'PERSONAL', 'CAREER'].includes(uCategory)) return '/individual-dashboard.html';
-
-    // الأفراد بدون إدارة محددة (على مستوى الشركة)
     if (role === 'VIEWER' || role === 'DATA_ENTRY') return '/viewer-hub.html';
 
-    // 4. الافتراضي الجذري (أصحاب الأعمال - CEOs)
-    const size = user.entity?.size?.toLowerCase() || '';
-    if (['large', 'enterprise', 'medium'].includes(size)) {
-        return '/ceo-dashboard.html';
-    }
+    // 4. مدير الإدارة (EDITOR + DEPT_MANAGER)
+    // 🛡️ آمن الآن: server.js يضمن OWNER/ADMIN → COMPANY_MANAGER (لا تعارض)
+    if (uType === 'DEPT_MANAGER') return '/dept-dashboard.html';
 
-    return '/ceo-dashboard.html';
+    // 5. مالك الشركة / مدير عام (OWNER + COMPANY_MANAGER)
+    if (uType === 'COMPANY_MANAGER' || role === 'OWNER') return '/ceo-dashboard.html';
+
+    // 6. الافتراضي: المركز الاستراتيجي العام
+    return '/dashboard.html';
 }
+
+
 
 /**
  * معالجة الاستجابة بعد نجاح تسجيل الدخول أو إنشاء حساب
