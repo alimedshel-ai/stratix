@@ -37,14 +37,20 @@ const SmartPings = (() => {
     async function scanAndGenerate() {
         _pings = [];
 
-        // 1. Scan Initiatives (Budget burn)
-        await scanInitiatives();
+        // جلب versionId النشط أولاً (مطلوب للمبادرات)
+        const versionData = await api('/api/versions?limit=1');
+        const versions = Array.isArray(versionData) ? versionData : (versionData?.versions || []);
+        const activeVersion = versions.find(v => v.isActive) || versions[0];
+        const versionId = activeVersion?.id;
 
-        // 2. Scan Tasks (Overdue)
-        await scanTasks();
+        // 1. Scan Initiatives (Budget burn)
+        await scanInitiatives(versionId);
+
+        // 2. Scan Tasks — endpoint غير موجود، تجاهل بصمت
+        // await scanTasks();
 
         // 3. Scan KPIs (Below target)
-        await scanKPIs();
+        await scanKPIs(versionId);
 
         // 4. Scan Company Health
         await scanHealth();
@@ -60,11 +66,14 @@ const SmartPings = (() => {
     }
 
     // ── 1. Initiative Budget Burn ──
-    async function scanInitiatives() {
-        const data = await api('/api/initiatives');
-        if (!data || !Array.isArray(data)) return;
+    async function scanInitiatives(versionId) {
+        if (!versionId) return; // بدون versionId لا يمكن جلب المبادرات
+        const data = await api('/api/initiatives?versionId=' + versionId);
+        // الـ API يرجع { initiatives: [], meta: {} }
+        const initiatives = Array.isArray(data) ? data : (data?.initiatives || []);
+        if (!initiatives.length) return;
 
-        data.forEach(init => {
+        initiatives.forEach(init => {
             const budget = parseFloat(init.budget) || 0;
             const spent = parseFloat(init.spent) || 0;
             const progress = parseFloat(init.progress) || 0;
@@ -156,14 +165,18 @@ const SmartPings = (() => {
     }
 
     // ── 3. KPIs Below Target ──
-    async function scanKPIs() {
-        const data = await api('/api/kpis');
-        if (!data || !Array.isArray(data)) return;
+    async function scanKPIs(versionId) {
+        // /api/kpis غير موجود — نستخدم kpi-entries كبديل
+        if (!versionId) return;
+        const data = await api('/api/kpi-entries?versionId=' + versionId + '&limit=50');
+        if (!data) return;
+        const entries = Array.isArray(data) ? data : (data.entries || data.kpiEntries || []);
+        if (!entries.length) return;
 
-        const belowTarget = data.filter(k => {
-            const actual = parseFloat(k.actualValue) || 0;
-            const target = parseFloat(k.targetValue) || 1;
-            return actual < target * 0.6; // below 60% of target
+        const belowTarget = entries.filter(k => {
+            const actual = parseFloat(k.actualValue ?? k.value) || 0;
+            const target = parseFloat(k.targetValue ?? k.target) || 1;
+            return target > 0 && actual < target * 0.6; // below 60% of target
         });
 
         if (belowTarget.length > 0) {
