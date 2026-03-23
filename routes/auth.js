@@ -495,20 +495,54 @@ router.get('/profile', verifyToken, async (req, res) => {
 // Update profile (user name)
 router.patch('/profile', verifyToken, async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, phone } = req.body;
     if (!name || !name.trim()) {
       return res.status(400).json({ error: 'الاسم مطلوب' });
     }
 
+    const updateData = { name: name.trim() };
+    if (phone !== undefined) updateData.phone = phone ? phone.replace(/\s+/g, '').replace(/[^\d+]/g, '') : null;
+
     const user = await prisma.user.update({
       where: { id: req.user.id },
-      data: { name: name.trim() },
-      select: { id: true, name: true, email: true },
+      data: updateData,
+      select: { id: true, name: true, email: true, phone: true },
     });
 
     res.json({ message: 'تم تحديث الاسم بنجاح', user });
   } catch (error) {
     res.status(500).json({ error: 'فشل تحديث الملف الشخصي' });
+  }
+});
+
+// Update password
+router.patch('/password', verifyToken, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'كلمة المرور الحالية والجديدة مطلوبة' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'كلمة المرور الجديدة يجب أن لا تقل عن 6 أحرف' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!user) return res.status(404).json({ error: 'المستخدم غير موجود' });
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) return res.status(401).json({ error: 'كلمة المرور الحالية غير صحيحة' });
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { password: hashedPassword },
+    });
+
+    res.json({ message: 'تم تغيير كلمة المرور بنجاح' });
+  } catch (error) {
+    res.status(500).json({ error: 'فشل تغيير كلمة المرور' });
   }
 });
 

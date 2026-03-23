@@ -241,6 +241,7 @@ model Entity {
   govPlatforms       GovPlatformStatus[] // ✨ المنصات الحكومية (فحص Gov)
   healthReports      CompanyHealthReport[] // ✨ تقارير صحة الشركة
   dimensions         CompanyDimension?     @relation("EntityDimensions") // ✨ الأبعاد الثلاثة (المالي، الإداري، التوطين)
+  webhooks           Webhook[]             @relation("EntityWebhooks") // ✨ إشعارات Slack/Teams/Zapier
 
   @@index([companyId])
   @@index([sectorId])
@@ -2283,4 +2284,54 @@ model CompanyDimension {
   entity Entity @relation("EntityDimensions", fields: [entityId], references: [id], onDelete: Cascade)
 
   @@map("company_dimensions")
+}
+
+// =========================================
+// WEBHOOKS & INTEGRATIONS
+// =========================================
+
+/// إعدادات الـ Webhook الخارجي (Slack, Teams, Zapier, ...)
+model Webhook {
+  id          String   @id @default(cuid())
+  entityId    String
+
+  name        String           // "إشعارات Slack"
+  url         String           // https://hooks.slack.com/...
+  platform    String           // slack | teams | zapier | custom
+  icon        String?          // emoji أو اسم
+  color       String?          // لون للعرض
+
+  events      String           // JSON array of event names
+  active      Boolean  @default(true)
+  secret      String?          // HMAC signing secret (اختياري)
+
+  calls       Int      @default(0)
+  successRate Float?   @default(100)
+  lastCalledAt DateTime?
+
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  entity      Entity   @relation("EntityWebhooks", fields: [entityId], references: [id], onDelete: Cascade)
+  logs        WebhookLog[]
+
+  @@map("webhooks")
+}
+
+/// سجل كل استدعاء للـ Webhook
+model WebhookLog {
+  id         String   @id @default(cuid())
+  webhookId  String
+  event      String           // kpi.threshold
+  statusCode Int              // 200, 500, ...
+  ok         Boolean
+  durationMs Int?             // مدة الاستجابة بالمللي ثانية
+  error      String?          // رسالة الخطأ إن وُجدت
+  payload    String?          // JSON المُرسل (لأغراض الـ debugging)
+  createdAt  DateTime @default(now())
+
+  webhook    Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@map("webhook_logs")
 }

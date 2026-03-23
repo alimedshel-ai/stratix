@@ -7,6 +7,7 @@
     <title>ستارتكس - المبادرات الاستراتيجية</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="/assets/js/dept-theme.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -893,11 +894,11 @@
                         </div>
                     </a>
                     <div style="font-size:12px;color:var(--text-muted)">←</div>
-                    <a href="/tasks.html"
+                    <a href="/reviews.html"
                         style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid var(--border);text-decoration:none;flex:1;min-width:100px">
-                        <span style="font-size:16px">✅</span>
+                        <span style="font-size:16px">🔄</span>
                         <div>
-                            <div style="font-size:11px;font-weight:600;color:var(--text-muted)">المهام →</div>
+                            <div style="font-size:11px;font-weight:600;color:var(--text-muted)">المراجعات →</div>
                         </div>
                     </a>
                 </div>
@@ -968,12 +969,13 @@
                             <span style="font-size:10px;color:var(--text-muted);font-weight:400">(اضغط لتعبئة
                                 تلقائية)</span>
                         </label>
-                        <div style="display:flex; gap:8px; flex-wrap: wrap;">
-                            <span class="init-tpl" onclick="fillInitTpl(0)">💻 تحول رقمي</span>
-                            <span class="init-tpl" onclick="fillInitTpl(1)">📢 حملة تسويقية</span>
-                            <span class="init-tpl" onclick="fillInitTpl(2)">👥 تطوير الفريق</span>
-                            <span class="init-tpl" onclick="fillInitTpl(3)">⭐ تجربة العميل</span>
-                            <span class="init-tpl" onclick="fillInitTpl(4)">✅ تطبيق الجودة</span>
+                        <!-- AI SWOT Generator Banner -->
+                        <div id="swotAIBanner"
+                            style="display:none;margin-bottom:12px;align-items:center;background:rgba(102, 126, 234, 0.08);border:1px solid rgba(102, 126, 234, 0.2);padding:8px 12px;border-radius:10px">
+                        </div>
+
+                        <div id="initTplContainer" style="display:flex; gap:8px; flex-wrap: wrap;">
+                            <!-- Mapped dynamically via JS -->
                         </div>
                     </div>
 
@@ -1106,6 +1108,14 @@
 
         // ── جلب المبادرات من API ──
         async function loadInitiatives() {
+            let myDept = '';
+            try {
+                const currentUser = await window.api.getCurrentUser();
+                if (currentUser && (currentUser.userType === 'DEPT_MANAGER' || (currentUser.userCategory && currentUser.userCategory.startsWith('DEPT_')))) {
+                    myDept = currentUser.department?.key || currentUser.userCategory.replace('DEPT_', '').toLowerCase();
+                }
+            } catch (e) { }
+
             if (!versionId) {
                 try {
                     const vRes = await window.apiRequest('/api/versions', { headers: apiHeaders() });
@@ -1125,7 +1135,16 @@
                 if (!res.ok) throw new Error('API error');
                 const data = await res.json();
                 if (data.initiatives && data.initiatives.length > 0) {
-                    initiatives = data.initiatives.map(i => ({
+                    let fetchedInits = data.initiatives;
+                    // عزل بيانات الإدارات بناءً على أولوية كل مدير
+                    if (myDept) {
+                        fetchedInits = fetchedInits.filter(i => {
+                            const cat = (i.category || i.owner || '').toLowerCase();
+                            const dKey = (i.departmentKey || '').toLowerCase();
+                            return cat.includes(myDept) || dKey === myDept;
+                        });
+                    }
+                    initiatives = fetchedInits.map(i => ({
                         id: i.id,
                         name: i.title,
                         desc: i.description || '',
@@ -1263,34 +1282,6 @@
                 const cfg = statusConfig[status];
                 const items = initiatives.filter(i => i.status === status);
 
-                // ── قوالب المبادرات السريعة ──
-                const initTemplates = [
-                    { name: 'برنامج التحول الرقمي والأتمتة', desc: 'أتمتة العمليات الورقية والتحول إلى بيئة عمل رقمية متكاملة', obj: 'التميز التشغيلي', priority: 'HIGH', budget: '250000' },
-                    { name: 'حملة تسويقية شاملة', desc: 'إطلاق حملة إعلانية لزيادة الوعي بالعلامة التجارية وجذب شرائح عملاء جدد', obj: 'زيادة الإيرادات', priority: 'MEDIUM', budget: '100000' },
-                    { name: 'برنامج تدريب وتطوير الكوادر', desc: 'رفع كفاءة الفريق من خلال دورات متخصصة وشهادات مهنية', obj: 'تطوير رأس المال البشري', priority: 'MEDIUM', budget: '50000' },
-                    { name: 'تحسين تجربة رحلة العميل', desc: 'إعادة تصميم نقاط التواصل مع العملاء لتسهيل الإجراءات وتسريع الخدمة', obj: 'رفع رضا العملاء', priority: 'HIGH', budget: '80000' },
-                    { name: 'تطبيق معايير الجودة الشاملة', desc: 'تأهيل المنظمة لتطبيق أفضل الممارسات واجتياز التدقيق لشهادات الجودة', obj: 'الامتثال والحوكمة', priority: 'HIGH', budget: '120000' }
-                ];
-
-                function fillInitTpl(idx) {
-                    const t = initTemplates[idx];
-                    if (!t) return;
-                    document.getElementById('formName').value = t.name;
-                    document.getElementById('formDesc').value = t.desc;
-                    document.getElementById('formObj').value = t.obj;
-                    document.getElementById('formPriority').value = t.priority;
-                    document.getElementById('formBudget').value = t.budget;
-
-                    // التأثير البصري للزر المختار
-                    document.querySelectorAll('.init-tpl').forEach((el, i) => {
-                        el.style.borderColor = i === idx ? 'var(--primary)' : 'var(--border)';
-                        el.style.color = i === idx ? 'var(--primary)' : 'var(--text)';
-                        el.style.background = i === idx ? 'rgba(102, 126, 234, 0.08)' : 'rgba(255, 255, 255, 0.04)';
-                    });
-
-                    if (typeof updateBurnPreview === 'function') updateBurnPreview();
-                }
-
                 return `
           <div class="kanban-col ${cfg.colClass}">
             <div class="kanban-col-header">
@@ -1349,6 +1340,96 @@
             }).join('');
         }
 
+        // ── قوالب المبادرات السريعة العامة والمخصصة ──
+        const GLOBAL_INIT_TEMPLATES = [
+            { id: 'it_t1', label: '💻 تحول رقمي', depts: ['it', 'operations'], name: 'برنامج التحول الرقمي والأتمتة', desc: 'أتمتة العمليات الورقية والتحول إلى بيئة عمل رقمية متكاملة', obj: 'التميز التشغيلي', priority: 'HIGH', budget: '250000' },
+            { id: 'mk_t1', label: '📢 حملة تسويقية', depts: ['marketing', 'sales'], name: 'حملة تسويقية شاملة', desc: 'إطلاق حملة إعلانية لزيادة الوعي بالعلامة التجارية وجذب شرائح عملاء جدد', obj: 'زيادة الإيرادات', priority: 'MEDIUM', budget: '100000' },
+            { id: 'hr_t1', label: '👥 تطوير الفريق', depts: ['hr', 'support'], name: 'برنامج تدريب وتطوير الكوادر', desc: 'رفع كفاءة الفريق من خلال دورات متخصصة وشهادات مهنية', obj: 'تطوير رأس المال البشري', priority: 'MEDIUM', budget: '50000' },
+            { id: 'hr_t2', label: '💼 تحسين بيئة العمل', depts: ['hr'], name: 'مبادرة تحسين جودة الحياة الوظيفية', desc: 'برامج لتعزيز ولاء ورضا الموظفين وتقليل التسرب الوظيفي', obj: 'تطوير رأس المال البشري', priority: 'HIGH', budget: '150000' },
+            { id: 'cs_t1', label: '⭐ تجربة العميل', depts: ['sales', 'marketing', 'cs', 'operations'], name: 'تحسين تجربة رحلة العميل', desc: 'إعادة تصميم نقاط التواصل مع العملاء لتسهيل الإجراءات وتسريع الخدمة', obj: 'رفع رضا العملاء', priority: 'HIGH', budget: '80000' },
+            { id: 'qa_t1', label: '✅ تطبيق الجودة', depts: ['compliance', 'quality', 'operations'], name: 'تطبيق معايير الجودة الشاملة', desc: 'تأهيل المنظمة لتطبيق أفضل الممارسات واجتياز التدقيق لشهادات الجودة', obj: 'الامتثال والحوكمة', priority: 'HIGH', budget: '120000' },
+            { id: 'fi_t1', label: '💰 تحسين مالي', depts: ['finance'], name: 'هيكلة وتقليل التكاليف التشغيلية', desc: 'دراسة وتحسين كفاءة الإنفاق في كل الإدارات والمشاريع', obj: 'زيادة الربحية وتحسين الهوامش', priority: 'HIGH', budget: '40000' },
+            { id: 'fi_t2', label: '📈 استثمار الأصول', depts: ['finance'], name: 'استثمار الأصول غير المستغلة', desc: 'تأجير أو بيع الأصول التي لا توفر عائد مربح للحصول على سيولة', obj: 'زيادة الإيرادات', priority: 'MEDIUM', budget: '25000' }
+        ];
+
+        window.fillInitTpl = function (tplId) {
+            const t = GLOBAL_INIT_TEMPLATES.find(x => x.id === tplId);
+            if (!t) return;
+            document.getElementById('formName').value = t.name;
+            document.getElementById('formDesc').value = t.desc;
+            document.getElementById('formObj').value = t.obj;
+            document.getElementById('formPriority').value = t.priority;
+            document.getElementById('formBudget').value = t.budget;
+
+            // التأثير البصري للزر المختار
+            document.querySelectorAll('.init-tpl').forEach(el => {
+                const isActive = el.getAttribute('data-id') === tplId;
+                el.style.borderColor = isActive ? 'var(--primary)' : 'var(--border)';
+                el.style.color = isActive ? 'var(--primary)' : 'var(--text)';
+                el.style.background = isActive ? 'rgba(102, 126, 234, 0.08)' : 'rgba(255, 255, 255, 0.04)';
+            });
+
+            if (typeof updateBurnPreview === 'function') updateBurnPreview();
+        };
+
+        window.generateAIInitiatives = function () {
+            const u = JSON.parse(localStorage.getItem('user') || '{}');
+            let myDeptKey = (u.department?.key || u.userCategory?.replace('DEPT_', '') || '').toLowerCase();
+
+            let swotStr = myDeptKey ? localStorage.getItem('stratix_' + myDeptKey + '_swot') : null;
+            if (!swotStr) swotStr = localStorage.getItem('stratix_swot_data');
+
+            if (!swotStr) return;
+
+            try {
+                const swot = JSON.parse(swotStr);
+                const painPoints = [...(swot.weaknesses || []), ...(swot.threats || [])];
+                const selectedPains = painPoints.slice(0, 3); // خذ أول 3 نقاط ألم
+
+                const tplContainer = document.getElementById('initTplContainer');
+
+                selectedPains.forEach(p => {
+                    const text = typeof p === 'string' ? p : p.text;
+                    const btn = document.createElement('span');
+                    btn.className = 'init-tpl ai-generated';
+                    btn.innerHTML = `🤖 تصحيح: ${text.substring(0, 20)}...`;
+                    btn.style.borderColor = 'rgba(102, 126, 234, 0.5)';
+                    btn.style.color = '#8b5cf6';
+                    btn.style.background = 'rgba(139, 92, 246, 0.1)';
+                    btn.style.fontWeight = '700';
+
+                    btn.onclick = () => {
+                        document.getElementById('formName').value = 'مبادرة معالجة: ' + (text.split(' ').slice(0, 4).join(' '));
+                        document.getElementById('formDesc').value = 'مبادرة استراتيجية تم ابتكارها آلياً لمعالجة نقطة الضعف/التهديد المكتشفة في تحليل الموقف: (' + text + '). تهدف المبادرة لإغلاق هذه الفجوة وتعزيز الكفاءة.';
+                        document.getElementById('formObj').value = 'معالجة فجوات استراتيجية وتقليل المخاطر';
+                        document.getElementById('formPriority').value = 'HIGH'; // لأنها نقاط ضعف/تهديدات
+                        document.getElementById('formBudget').value = '35000';
+
+                        document.querySelectorAll('.init-tpl').forEach(el => {
+                            if (el === btn) {
+                                el.style.background = '#8b5cf6';
+                                el.style.color = 'white';
+                                el.style.borderColor = '#8b5cf6';
+                            } else {
+                                el.style.background = 'rgba(255, 255, 255, 0.04)';
+                                el.style.color = 'var(--text)';
+                                el.style.borderColor = 'var(--border)';
+                            }
+                        });
+
+                        if (typeof updateBurnPreview === 'function') updateBurnPreview();
+                    };
+
+                    tplContainer.prepend(btn); // ضعها في أول القائمة
+                });
+
+                // إخفاء الزر بعد التوليد
+                const trigger = document.getElementById('swotAITrigger');
+                if (trigger) trigger.style.display = 'none';
+
+            } catch (e) { console.warn('Failed AI generation', e); }
+        };
+
         function openCreateModal() {
             document.getElementById('modalTitle').innerHTML = '<i class="bi bi-plus-circle"></i> مبادرة جديدة';
             document.getElementById('editId').value = '';
@@ -1357,13 +1438,66 @@
             document.getElementById('formPriority').value = 'MEDIUM';
             document.getElementById('formProgress').value = 0;
 
-            // إظهار القوالب السريعة وتصفير اختيارها
-            document.getElementById('initTplSection').style.display = 'block';
-            document.querySelectorAll('.init-tpl').forEach(el => {
-                el.style.borderColor = 'var(--border)';
-                el.style.color = 'var(--text)';
-                el.style.background = 'rgba(255, 255, 255, 0.04)';
+            // 🛡️ فلترة القوالب بناءً على إدارة المستخدم
+            const u = JSON.parse(localStorage.getItem('user') || '{}');
+            const isDeptManager = u.userType === 'DEPT_MANAGER' || (u.userCategory && u.userCategory.startsWith('DEPT_'));
+            let myDeptKey = (u.department?.key || u.userCategory?.replace('DEPT_', '') || '').toLowerCase();
+
+            // إذا لم يكن هناك قسم محدد للمدير، استخدم الكل كإفتراضي، أو إظهار حسب القسم
+            const tplContainer = document.getElementById('initTplContainer');
+            tplContainer.innerHTML = '';
+
+            let visibleTemplates = GLOBAL_INIT_TEMPLATES;
+            if (isDeptManager && myDeptKey) {
+                visibleTemplates = GLOBAL_INIT_TEMPLATES.filter(t => t.depts.includes(myDeptKey));
+            }
+
+            // إذا لم يكن للإدارة أي قالب (فارغة)، أظهر بعض القوالب العامة بديلة
+            if (visibleTemplates.length === 0) {
+                visibleTemplates = GLOBAL_INIT_TEMPLATES.slice(0, 3);
+            }
+
+            visibleTemplates.forEach(t => {
+                const btn = document.createElement('span');
+                btn.className = 'init-tpl';
+                btn.setAttribute('data-id', t.id);
+                btn.textContent = t.label;
+                btn.onclick = () => window.fillInitTpl(t.id);
+                // default styles
+                btn.style.borderColor = 'var(--border)';
+                btn.style.color = 'var(--text)';
+                btn.style.background = 'rgba(255, 255, 255, 0.04)';
+                tplContainer.appendChild(btn);
             });
+
+            // 🤖 Check for SWOT data to render AI Banner
+            let swotStr = myDeptKey ? localStorage.getItem('stratix_' + myDeptKey + '_swot') : null;
+            if (!swotStr) swotStr = localStorage.getItem('stratix_swot_data');
+
+            const swotBanner = document.getElementById('swotAIBanner');
+            if (swotStr && swotBanner) {
+                try {
+                    const swot = JSON.parse(swotStr);
+                    const painPoints = [...(swot.weaknesses || []), ...(swot.threats || [])];
+                    if (painPoints.length > 0) {
+                        swotBanner.style.display = 'flex';
+                        swotBanner.innerHTML = `
+                            <div style="flex:1;font-size:12px;color:rgba(139, 92, 246, 1);font-weight:700;">
+                                <i class="bi bi-robot"></i> الذكاء الاصطناعي رصد ${painPoints.length} فجوة في تحلیل الموقف 
+                            </div>
+                            <button type="button" id="swotAITrigger" onclick="window.generateAIInitiatives()" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(139,92,246,0.3)">
+                                💡 استنباط مبادرات علاجية
+                            </button>
+                        `;
+                    } else {
+                        swotBanner.style.display = 'none';
+                    }
+                } catch (e) { swotBanner.style.display = 'none'; }
+            } else if (swotBanner) {
+                swotBanner.style.display = 'none';
+            }
+
+            document.getElementById('initTplSection').style.display = 'block';
 
             new bootstrap.Modal(document.getElementById('initModal')).show();
         }

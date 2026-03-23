@@ -8,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="/assets/js/dept-theme.js"></script>
 
     <style>
         :root {
@@ -582,8 +583,12 @@
                     <h1
                         style="font-size:1.6rem;font-weight:900;margin:0;background:linear-gradient(135deg,#818cf8,#c4b5fd);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">
                         المراجعات الدورية</h1>
-                    <p style="color:#94a3b8;font-size:0.85rem;margin:4px 0 0;">راجع أداءك بشكل دوري — الاستراتيجيّة
-                        الناجحة تتطلّب فحصاً مستمراً 🎯</p>
+                    <div style="margin-top:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                        <p style="color:#94a3b8;font-size:0.85rem;margin:0">راجع أداءك بشكل دوري — الاستراتيجيّة الناجحة
+                            تتطلّب فحصاً مستمراً 🎯</p>
+                        <span id="deptBadge"
+                            style="display:none;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:700"></span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -845,7 +850,6 @@
         }
         function getQuarterYear() { return `${getCurrentQuarter()} ${new Date().getFullYear()}`; }
 
-        async function init() { await loadVersions(); await loadReviews(); }
 
         async function loadVersions() {
             try {
@@ -923,6 +927,21 @@
             document.getElementById('smartFillStatus').style.display = 'none';
             document.getElementById('modalTitle').textContent = '📝 مراجعة جديدة — ' + getQuarterYear();
             document.getElementById('reviewModal').classList.add('show');
+        }
+
+        function handleAdvisorRedirect() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('from_advisor') === '1') {
+                const title = params.get('title');
+                const notes = params.get('notes');
+                showModal();
+                if (title) document.getElementById('revTitle').value = title;
+                if (notes) {
+                    document.getElementById('revNotes').value = "بناءً على توصية الذكاء الاستراتيجي:\n\n" + notes;
+                    document.getElementById('revDecision').value = 'ADJUST'; // افتراضياً نطلب تعديل
+                }
+                window.history.replaceState(null, '', '/reviews.html'); // تنظيف الرابط بعد السحب
+            }
         }
 
         // ═══════════════════════════════════════

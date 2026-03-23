@@ -321,7 +321,7 @@
         }
 
         .vc-group-grid.support-grid {
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(5, 1fr);
         }
 
         /* Value Chain flow arrow between primary cards */
@@ -1307,6 +1307,7 @@
                         syncTool();
                         break;
                     case 'add-item':
+                    case 'add-pestel-item':
                         addPestelItem(key, color);
                         break;
                     case 'remove-item':
@@ -1353,7 +1354,7 @@
                     if (target.dataset.action === 'add-vc-item') {
                         e.preventDefault();
                         if (typeof addVcItem === 'function') addVcItem(target.dataset.key, target.value, target.dataset.color);
-                    } else if (target.dataset.action === 'add-pestel-item') {
+                    } else if (target.dataset.action === 'add-pestel-item' || target.dataset.action === 'add-item') {
                         e.preventDefault();
                         if (typeof addPestelItem === 'function') addPestelItem(target.dataset.key, target.dataset.color);
                     }
@@ -1607,7 +1608,8 @@
                     { key: 'infrastructure', nameAr: 'البنية التحتية', icon: 'bi-building', color: '#64748B', emoji: '🏢', group: 'support', order: 1 },
                     { key: 'hrManagement', nameAr: 'إدارة الموارد البشرية', icon: 'bi-people', color: '#7C3AED', emoji: '👥', group: 'support', order: 2 },
                     { key: 'techDevelopment', nameAr: 'التطوير التقني', icon: 'bi-cpu', color: '#2563EB', emoji: '💻', group: 'support', order: 3 },
-                    { key: 'procurement', nameAr: 'المشتريات', icon: 'bi-cart3', color: '#D97706', emoji: '🛒', group: 'support', order: 4 }
+                    { key: 'procurement', nameAr: 'المشتريات', icon: 'bi-cart3', color: '#D97706', emoji: '🛒', group: 'support', order: 4 },
+                    { key: 'innovation', nameAr: 'الابتكار والبحث', icon: 'bi-lightbulb', color: '#EC4899', emoji: '💡', group: 'support', order: 5 }
                 ]
             },
             CORE_COMPETENCY: {
@@ -2235,7 +2237,7 @@
                   `).join('')}
                 </div>
               ` : ''}
-              ${count > 0 ? renderItems(items, section.color, isEnhanced) : `
+              ${count > 0 ? renderItems(items, section.color, isEnhanced, section.key) : `
                 <div class="empty-section">
                   <i class="bi ${section.icon}"></i>
                   <p>${isEnhanced ? 'اضغط على سؤال أو مثال للبدء' : 'لا توجد بيانات بعد'}</p>
@@ -2339,6 +2341,13 @@
                             { text: 'إدارة المشتريات', priority: 'recommended', tip: 'طلب منظّم = لا نقص ولا تكدّس' },
                             { text: 'تقييم الموردين', priority: 'recommended', tip: 'يضمن استمرار الجودة والالتزام' },
                             { text: 'مقارنة الأسعار', priority: 'optional', tip: 'فرصة لتوفير بدون التنازل عن الجودة' }
+                        ],
+                        innovation: [
+                            { text: 'البحث وتطوير المنتجات', priority: 'essential', tip: 'الابتكار يبقيك في الصدارة' },
+                            { text: 'تحليل سلوكيات العملاء', priority: 'essential', tip: 'فهم احتياجاتهم المستقبلية' },
+                            { text: 'تطوير نماذج العمل', priority: 'recommended', tip: 'خلق طرق جديدة للربح' },
+                            { text: 'تسجيل براءات اختراع', priority: 'optional', tip: 'حماية أفكارك القيمة' },
+                            { text: 'الشراكات الاستراتيجية', priority: 'optional', tip: 'التعاون مع جهات بحثية' }
                         ]
                     };
 
@@ -2382,19 +2391,60 @@
                     </div>
 
                     <!-- Interactive Flow Diagram -->
-                    <div style="margin-bottom:16px">
+                    <div id="vcInteractiveDiagram" style="margin-bottom:16px">
+                    `;
+
+                    // Check Dept Manager Privileges for Value Chain
+                    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+                    const isDeptManager = currentUser.userType === 'DEPT_MANAGER' || (currentUser.userCategory && currentUser.userCategory.startsWith('DEPT_'));
+                    const pKey = currentUser.department?.key || (currentUser.userCategory ? currentUser.userCategory.replace('DEPT_', '').toLowerCase() : '');
+                    let allowedVcKeys = null;
+
+                    if (isDeptManager && pKey) {
+                        const VC_DEPT_MAPPING = {
+                            hr: ['hrManagement'],
+                            finance: ['infrastructure', 'procurement'],
+                            operations: ['inboundLogistics', 'operations', 'outboundLogistics', 'procurement'],
+                            marketing: ['marketingSales'],
+                            sales: ['marketingSales', 'service'],
+                            it: ['techDevelopment'],
+                            procurement: ['procurement'],
+                            cs: ['service'],
+                            quality: ['operations', 'service'],
+                            compliance: ['infrastructure'],
+                            projects: ['operations', 'techDevelopment', 'innovation'],
+                            support: ['infrastructure', 'hrManagement', 'procurement', 'techDevelopment']
+                        };
+                        const mapKey = { 'ops': 'operations', 'service': 'cs', 'legal': 'compliance', 'pmo': 'projects' }[pKey] || pKey;
+                        allowedVcKeys = VC_DEPT_MAPPING[mapKey] || null;
+                    }
+
+                    if (allowedVcKeys) {
+                        html += `
+                        <div style="background:linear-gradient(135deg,rgba(59,130,246,0.1),rgba(59,130,246,0.05));border:1px solid rgba(59,130,246,0.2);border-radius:12px;padding:16px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+                            <i class="bi bi-info-circle-fill" style="color:#3b82f6;font-size:24px"></i>
+                            <div>
+                                <div style="font-size:14px;font-weight:800;color:var(--text)">تم تخصيص العرض لإدارتك</div>
+                                <div style="font-size:12px;color:var(--text-muted)">تم إخفاء الأنشطة الأخرى للتركيز تلقائياً على الأقسام والعمليات المرتبطة بإدارتك المباشرة.</div>
+                            </div>
+                        </div>`;
+                    }
+
+                    // Render primary activities as clickable flow
+                    let primarySections = config.sections.filter(s => s.group === 'primary').sort((a, b) => a.order - b.order);
+                    if (allowedVcKeys) primarySections = primarySections.filter(s => allowedVcKeys.includes(s.key));
+
+                    if (primarySections.length > 0) {
+                        html += `
                         <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:6px">
                             ⚡ الأنشطة الأساسية — <span style="font-size:10px;color:#0891B2">اضغط لإضافة التفاصيل</span>
                         </div>
-                        <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-bottom:16px">
-                    `;
+                        <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-bottom:16px">`;
 
-                    // Render primary activities as clickable flow
-                    const primarySections = config.sections.filter(s => s.group === 'primary').sort((a, b) => a.order - b.order);
-                    primarySections.forEach((sec, i) => {
-                        const count = vcCounts[sec.key] || 0;
-                        const filled = count > 0;
-                        html += `
+                        primarySections.forEach((sec, i) => {
+                            const count = vcCounts[sec.key] || 0;
+                            const filled = count > 0;
+                            html += `
                             <div class="vc-click-step ${filled ? 'filled' : ''}" onclick="toggleVcActivity('${sec.key}')" id="vcStep_${sec.key}"
                                 style="flex:1;min-width:100px;cursor:pointer;padding:12px 8px;border-radius:12px;text-align:center;
                                 border:1.5px solid ${filled ? sec.color + '40' : 'var(--border)'};
@@ -2404,26 +2454,28 @@
                                 <div style="font-size:11px;font-weight:700;color:${filled ? sec.color : 'var(--text-muted)'}">${sec.nameAr}</div>
                                 ${count > 0 ? `<div style="margin-top:4px;font-size:10px;padding:2px 8px;border-radius:6px;background:${sec.color}15;color:${sec.color};display:inline-block">${count} عنصر</div>` : '<div style="margin-top:4px;font-size:10px;color:var(--text-muted)">اضغط للإضافة</div>'}
                             </div>`;
-                        if (i < primarySections.length - 1) {
-                            html += '<div style="font-size:14px;color:var(--text-muted)">←</div>';
-                        }
-                    });
-
-                    html += `
-                        </div>
-
-                        <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:6px">
-                            🔧 الأنشطة الداعمة — <span style="font-size:10px;color:#7C3AED">تدعم كل الأنشطة الأساسية</span>
-                        </div>
-                        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:16px">
-                    `;
+                            if (i < primarySections.length - 1) {
+                                html += '<div style="font-size:14px;color:var(--text-muted)">←</div>';
+                            }
+                        });
+                        html += `</div>`; // Close primary activities flex container
+                    } // end if primarySections.length > 0
 
                     // Render support activities
-                    const supportSections = config.sections.filter(s => s.group === 'support').sort((a, b) => a.order - b.order);
-                    supportSections.forEach(sec => {
-                        const count = vcCounts[sec.key] || 0;
-                        const filled = count > 0;
+                    let supportSections = config.sections.filter(s => s.group === 'support').sort((a, b) => a.order - b.order);
+                    if (allowedVcKeys) supportSections = supportSections.filter(s => allowedVcKeys.includes(s.key));
+
+                    if (supportSections.length > 0) {
                         html += `
+                        <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+                            🔧 الأنشطة الداعمة — <span style="font-size:10px;color:#7C3AED">تدعم الأنشطة الأساسية</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:16px">`;
+
+                        supportSections.forEach(sec => {
+                            const count = vcCounts[sec.key] || 0;
+                            const filled = count > 0;
+                            html += `
                             <div class="vc-click-step ${filled ? 'filled' : ''}" onclick="toggleVcActivity('${sec.key}')" id="vcStep_${sec.key}"
                                 style="flex:1;min-width:100px;cursor:pointer;padding:12px 8px;border-radius:12px;text-align:center;
                                 border:1.5px solid ${filled ? sec.color + '40' : 'var(--border)'};
@@ -2433,11 +2485,12 @@
                                 <div style="font-size:11px;font-weight:700;color:${filled ? sec.color : 'var(--text-muted)'}">${sec.nameAr}</div>
                                 ${count > 0 ? `<div style="margin-top:4px;font-size:10px;padding:2px 8px;border-radius:6px;background:${sec.color}15;color:${sec.color};display:inline-block">${count} عنصر</div>` : '<div style="margin-top:4px;font-size:10px;color:var(--text-muted)">اضغط</div>'}
                             </div>`;
-                    });
+                        });
+                        html += `</div>`; // Close support activities flex container
+                    } // end if supportSections.length > 0
 
+                    // Margin label and Expandable Activity Panel
                     html += `
-                        </div>
-
                         <!-- Margin label -->
                         <div style="text-align:center;padding:10px;background:linear-gradient(90deg,rgba(34,197,94,0.08),rgba(250,204,21,0.08));border-radius:10px;border:1px solid rgba(34,197,94,0.15)">
                             <span style="font-size:14px">💰</span>
@@ -2864,7 +2917,7 @@
                     const totalFactors = forceData.reduce((s, f) => s + extractItems(data, f.key).length, 0);
 
                     html += `
-                    <div class="porter-forces-viz">
+                        <div class="porter-forces-viz">
                         <div class="porter-viz-title">
                             <div class="viz-icon">⚔️</div>
                             <div>
@@ -2919,7 +2972,7 @@
                     }
 
                     html += `
-                    <div class="enhanced-health-banner fade-in" style="background:var(--bg-card);border:2px solid ${completionPct === 100 ? healthColor + '40' : 'var(--border)'};border-radius:18px;padding:24px;margin-bottom:24px;display:flex;flex-direction:column;gap:18px;box-shadow:0 8px 30px rgba(0,0,0,0.03)">
+                        <div class="enhanced-health-banner fade-in" style="background:var(--bg-card);border:2px solid ${completionPct === 100 ? healthColor + '40' : 'var(--border)'};border-radius:18px;padding:24px;margin-bottom:24px;display:flex;flex-direction:column;gap:18px;box-shadow:0 8px 30px rgba(0,0,0,0.03)">
                         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
                             <div style="display:flex;align-items:center;gap:16px">
                                 <div style="width:52px;height:52px;border-radius:14px;background:${healthColor}15;display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 4px 15px ${healthColor}20">${healthIcon}</div>
@@ -2937,7 +2990,7 @@
                             <div style="width:${completionPct}%;height:100%;background:linear-gradient(90deg, ${healthColor}AA, ${healthColor});border-radius:10px;transition:width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)"></div>
                         </div>
                     </div>
-                    `;
+                        `;
                 }
 
                 // Section cards grid
@@ -2963,8 +3016,7 @@
             if (progress >= 80) {
                 const nextSteps = generateSmartGuidance(tool.code, data, config);
                 html += `
-                        <div
-                    style="margin-top:20px;background:linear-gradient(135deg,rgba(102,126,234,0.08),rgba(118,75,162,0.06));border:1px solid rgba(102,126,234,0.2);border-radius:18px;padding:28px;position:relative;overflow:hidden">
+                        <div style="margin-top:20px;background:linear-gradient(135deg,rgba(102,126,234,0.08),rgba(118,75,162,0.06));border:1px solid rgba(102,126,234,0.2);border-radius:18px;padding:28px;position:relative;overflow:hidden">
         <div
             style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#667eea,#764ba2)">
         </div>
@@ -3044,14 +3096,14 @@
             }
 
             let navHtml = `
-            <div style="margin-top:40px;padding:28px 0;border-top:2px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">`;
+                <div style="margin-top:40px;padding:28px 0;border-top:2px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">`;
 
             // Previous button
             if (prev) {
                 navHtml += `
-                <a href="${getToolHref(prev)}" style="display:flex;align-items:center;gap:12px;padding:14px 22px;border-radius:14px;background:rgba(255,255,255,0.03);border:1.5px solid var(--border);text-decoration:none;transition:all .3s;min-width:200px;flex:1" 
-                   onmouseenter="this.style.background='rgba(255,255,255,0.06)';this.style.borderColor='${prev.color}40';this.style.transform='translateX(4px)'"
-                   onmouseleave="this.style.background='rgba(255,255,255,0.03)';this.style.borderColor='var(--border)';this.style.transform='none'">
+                    <a href="${getToolHref(prev)}" style="display:flex;align-items:center;gap:12px;padding:14px 22px;border-radius:14px;background:rgba(255,255,255,0.03);border:1.5px solid var(--border);text-decoration:none;transition:all .3s;min-width:200px;flex:1"
+            onmouseenter="this.style.background='rgba(255,255,255,0.06)';this.style.borderColor='${prev.color}40';this.style.transform='translateX(4px)'"
+            onmouseleave="this.style.background='rgba(255,255,255,0.03)';this.style.borderColor='var(--border)';this.style.transform='none'">
                     <i class="bi bi-arrow-right" style="font-size:18px;color:var(--text-muted)"></i>
                     <div style="flex:1;text-align:right">
                         <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">الأداة السابقة</div>
@@ -3064,9 +3116,9 @@
 
             // Center: return to path
             navHtml += `
-            <a href="/tools" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 20px;border-radius:12px;background:rgba(102,126,234,0.06);border:1px solid rgba(102,126,234,0.15);text-decoration:none;transition:all .3s;flex-shrink:0" 
-               onmouseenter="this.style.background='rgba(102,126,234,0.12)'"
-               onmouseleave="this.style.background='rgba(102,126,234,0.06)'">
+                <a href="/tools.html" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 20px;border-radius:12px;background:rgba(102,126,234,0.06);border:1px solid rgba(102,126,234,0.15);text-decoration:none;transition:all .3s;flex-shrink:0"
+            onmouseenter="this.style.background='rgba(102,126,234,0.12)'"
+            onmouseleave="this.style.background='rgba(102,126,234,0.06)'">
                 <i class="bi bi-grid-3x3-gap" style="font-size:16px;color:#667eea"></i>
                 <span style="font-size:11px;font-weight:600;color:#667eea">العودة للمسار</span>
             </a>`;
@@ -3074,9 +3126,9 @@
             // Next button
             if (next) {
                 navHtml += `
-                <a href="${getToolHref(next)}" id="nextToolBtn" style="display:flex;align-items:center;gap:12px;padding:14px 22px;border-radius:14px;background:linear-gradient(135deg,${next.color}12,${next.color}08);border:1.5px solid ${next.color}30;text-decoration:none;transition:all .3s;min-width:200px;flex:1;justify-content:flex-end" 
-                   onmouseenter="this.style.background='linear-gradient(135deg,${next.color}20,${next.color}12)';this.style.borderColor='${next.color}60';this.style.transform='translateX(-4px)'"
-                   onmouseleave="this.style.background='linear-gradient(135deg,${next.color}12,${next.color}08)';this.style.borderColor='${next.color}30';this.style.transform='none'">
+                <a href="${getToolHref(next)}" id="nextToolBtn" style="display:flex;align-items:center;gap:12px;padding:14px 22px;border-radius:14px;background:linear-gradient(135deg,${next.color}12,${next.color}08);border:1.5px solid ${next.color}30;text-decoration:none;transition:all .3s;min-width:200px;flex:1;justify-content:flex-end"
+            onmouseenter="this.style.background='linear-gradient(135deg,${next.color}20,${next.color}12)';this.style.borderColor='${next.color}60';this.style.transform='translateX(-4px)'"
+            onmouseleave="this.style.background='linear-gradient(135deg,${next.color}12,${next.color}08)';this.style.borderColor='${next.color}30';this.style.transform='none'">
                     <div style="flex:1;text-align:left">
                         <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">الأداة التالية</div>
                         <div style="font-size:14px;font-weight:700;color:${next.color}">${next.icon} ${next.name}</div>
@@ -3086,9 +3138,9 @@
             } else {
                 // Last tool — show planning CTA
                 navHtml += `
-                <a href="/directions.html" style="display:flex;align-items:center;gap:12px;padding:14px 22px;border-radius:14px;background:linear-gradient(135deg,rgba(124,58,237,0.15),rgba(124,58,237,0.08));border:1.5px solid rgba(124,58,237,0.3);text-decoration:none;transition:all .3s;min-width:200px;flex:1;justify-content:flex-end;animation:pulse-plan 2s ease-in-out infinite" 
-                   onmouseenter="this.style.transform='translateX(-4px)'"
-                   onmouseleave="this.style.transform='none'">
+                <a href="/directions.html" style="display:flex;align-items:center;gap:12px;padding:14px 22px;border-radius:14px;background:linear-gradient(135deg,rgba(124,58,237,0.15),rgba(124,58,237,0.08));border:1.5px solid rgba(124,58,237,0.3);text-decoration:none;transition:all .3s;min-width:200px;flex:1;justify-content:flex-end;animation:pulse-plan 2s ease-in-out infinite"
+            onmouseenter="this.style.transform='translateX(-4px)'"
+            onmouseleave="this.style.transform='none'">
                     <div style="flex:1;text-align:left">
                         <div style="font-size:11px;color:rgba(124,58,237,0.6);margin-bottom:2px">الخطوة التالية</div>
                         <div style="font-size:14px;font-weight:700;color:#7c3aed">🎯 التخطيط الاستراتيجي</div>
@@ -3159,7 +3211,7 @@
                 // مؤشر خطوات المنهجية
                 insights.push({
                     icon: '🧭', title: 'المسار: PESTEL → Porter → SWOT',
-                    desc: `أنت في الخطوة 1 من 3 — حللت ${totalFactors} عامل خارجي. الخطوة التالية: تحليل القوى التنافسية (Porter)`,
+                    desc: `أنت في الخطوة 1 من 3 — حللت ${totalFactors} عامل خارجي.الخطوة التالية: تحليل القوى التنافسية(Porter)`,
                 });
 
                 if (totalFactors >= 3) {
@@ -3184,7 +3236,7 @@
                 // مؤشر خطوات المنهجية
                 insights.push({
                     icon: '🧭', title: 'المسار: PESTEL ✅ → Porter → SWOT',
-                    desc: `أنت في الخطوة 2 من 3 — حللت ${totalFactors} قوة تنافسية. الخطوة التالية: تجميع كل شي في SWOT`,
+                    desc: `أنت في الخطوة 2 من 3 — حللت ${totalFactors} قوة تنافسية.الخطوة التالية: تجميع كل شي في SWOT`,
                 });
 
                 if (totalFactors >= 3) {
@@ -3356,7 +3408,7 @@
                 };
 
                 if (state.analysis?.id) {
-                    await api(`/api/company-analysis/${state.analysis.id}`, {
+                    await api(`/ api / company - analysis / ${state.analysis.id} `, {
                         method: 'PATCH',
                         body: JSON.stringify(payload)
                     });
@@ -3449,7 +3501,7 @@
                 }
 
                 html += `
-                        <li>
+                <li>
             <span class="item-icon" style="color:${color};">●</span>
             <div class="item-content">
                 <div class="item-title">${escapeHtml(title)}</div>
@@ -3457,8 +3509,9 @@
             </div>
             ${typeBadge}
             ${impact ? `<span class="item-impact impact-${impact}">${impact === 'HIGH' ? 'عالي' : impact === 'MEDIUM' ? 'متوسط' : 'منخفض'}</span>` : ''}
+            <button data-action="remove-item" data-key="${sectionKey}" data-idx="${i}" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:12px;padding:4px;margin-right:8px;transition:0.2s" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" title="حذف">✕</button>
         </li>
-                        `;
+                `;
             });
             html += '</ul>';
             return html;
@@ -3735,7 +3788,8 @@
                 data[sectionKey].push({ title: value, impact: impact, impactType: impactType });
             }
 
-            try {
+            // Helper to do the actual save
+            async function doSave() {
                 if (state.analysis?.id) {
                     const result = await api(`/api/company-analysis/${state.analysis.id}`, {
                         method: 'PATCH',
@@ -3754,16 +3808,47 @@
                     });
                     state.analysis = { ...result, parsedData: data };
                 }
-
-                const typeLabel = impactType === 'opportunity' ? '🌟 فرصة' : impactType === 'threat' ? '⚠️ تهديد' : '';
-                showToast(`✅ تمت الإضافة ${typeLabel} `);
-                renderHeader();
-                renderContent();
-            } catch (e) {
-                showToast('❌ فشلت الإضافة');
-                console.error(e);
             }
+
+            try {
+                await doSave();
+            } catch (e) {
+                // If we get a server error (stale versionId), try to recover by loading the latest valid version
+                if (e.message?.includes('500') || e.status === 500 || String(e).includes('500')) {
+                    try {
+                        const vData = await api('/api/versions');
+                        const versions = vData.versions || vData || [];
+                        if (Array.isArray(versions) && versions.length > 0) {
+                            state.versionId = versions[0].id;
+                            state.analysis = null; // reset so POST creates fresh
+                            localStorage.setItem('selectedVersionId', state.versionId);
+                            // Update URL without reload
+                            const url = new URL(window.location.href);
+                            url.searchParams.set('v', state.versionId);
+                            window.history.replaceState({}, '', url.toString());
+                            await doSave(); // retry with valid versionId
+                        } else {
+                            throw new Error('No versions available');
+                        }
+                    } catch (retryErr) {
+                        showToast('❌ فشلت الإضافة — لا توجد نسخة استراتيجية صالحة');
+                        console.error('Retry failed:', retryErr);
+                        return;
+                    }
+                } else {
+                    showToast('❌ فشلت الإضافة');
+                    console.error(e);
+                    return;
+                }
+            }
+
+            const typeLabel = impactType === 'opportunity' ? '🌟 فرصة' : impactType === 'threat' ? '⚠️ تهديد' : '';
+            showToast(`✅ تمت الإضافة ${typeLabel}`);
+            renderHeader();
+            renderContent();
         }
+
+
 
         // ===== ADD ITEM =====
         async function addItem(sectionKey, value, color) {
@@ -3982,17 +4067,67 @@
                 }
             }, 3000);
         })();
-    </script>
-</body>
 
-</html> message: tip.points[0],
-persistent: false
-});
-}
-}
-}, 3000);
-})();
-</script>
+        // ══════════════════════════════════════════════════════
+        // 🛡️ Smart Filter — عزل الأقسام (نموذج العمل)
+        // ══════════════════════════════════════════════════════
+        document.addEventListener('DOMContentLoaded', async function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+
+            // VALUE_CHAIN is handled natively in renderContent(), so we only apply this to BUSINESS_MODEL
+            if (code !== 'BUSINESS_MODEL') return;
+
+            let dept = urlParams.get('dept');
+            if (!dept && window.api && typeof window.api.getCurrentUser === 'function') {
+                try {
+                    const user = await window.api.getCurrentUser();
+                    if (user && (user.userType === 'DEPT_MANAGER' || (user.userCategory && user.userCategory.startsWith('DEPT_')))) {
+                        dept = user.department?.key || user.userCategory.replace('DEPT_', '').toLowerCase();
+                    }
+                } catch (e) { console.warn('Failed to fetch user for tool filtering'); }
+            }
+
+            if (!dept) return; // اعرض كل شيء للمالك/CEO أو المشرف
+
+            const toolName = 'نموذج العمل التجاري';
+            const allSections = ['customerSegments', 'valueProposition', 'channels', 'customerRelationships', 'revenueStreams', 'keyResources', 'keyActivities', 'keyPartners', 'costStructure'];
+
+            const BMC_MAPPING = {
+                'hr': ['keyResources', 'keyActivities'],
+                'finance': ['revenueStreams', 'costStructure'],
+                'marketing': ['customerSegments', 'valueProposition', 'channels', 'customerRelationships'],
+                'sales': ['customerSegments', 'channels', 'customerRelationships', 'revenueStreams'],
+                'operations': ['valueProposition', 'keyActivities', 'keyResources', 'keyPartners', 'costStructure'],
+                'projects': ['keyActivities', 'keyResources', 'keyPartners'],
+                'support': ['keyResources', 'keyPartners'],
+                'compliance': ['keyPartners', 'keyActivities']
+            };
+
+            const allowedSections = BMC_MAPPING[dept.toLowerCase()];
+            if (!allowedSections) return;
+
+            const sectionsToHide = allSections.filter(s => !allowedSections.includes(s));
+            let styleStr = '';
+            sectionsToHide.forEach(s => {
+                styleStr += `[data-section="${s}"], #section-${s}, .section-item[data-id="${s}"] { display: none !important; }\n`;
+            });
+
+            const styleEl = document.createElement('style');
+            styleEl.innerHTML = styleStr;
+            document.head.appendChild(styleEl);
+
+            setTimeout(() => {
+                const header = document.querySelector('.page-header') || document.querySelector('.tool-header') || document.querySelector('h1')?.parentElement;
+                if (header) {
+                    const banner = document.createElement('div');
+                    banner.style.cssText = "background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 12px 20px; border-radius: 12px; margin: 20px 0; color: #3b82f6; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 10px; animation: fadeIn 0.5s ease;";
+                    banner.innerHTML = `<i class="bi bi-shield-check" style="font-size: 18px;"></i> <div>تم تخصيص العرض في <b>${toolName}</b> لإدارتك <b>(${dept.toUpperCase()})</b> وتم إخفاء المربعات الأخرى.</div>`;
+                    header.insertAdjacentElement('afterend', banner);
+                }
+            }, 600);
+        });
+    </script>
 </body>
 
 </html>

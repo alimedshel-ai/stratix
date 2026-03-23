@@ -674,6 +674,9 @@
             <p>جاري تحميل بيانات إدارتك...</p>
         </div>
 
+        <!-- شريط التنبيه (يظهر ديناميكياً) -->
+        <div id="alertBannerContainer"></div>
+
         <!-- === Welcome Board (New Users) === -->
         <div id="welcomeBoard" style="display:none" class="welcome-board">
             <div class="welcome-hero">
@@ -691,13 +694,13 @@
                 <a class="roadmap-card fade-in stagger-1" id="step1Card" href="/internal-env.html"
                     style="--card-accent:#3b82f6">
                     <div class="roadmap-step">1</div>
-                    <div class="roadmap-icon">🏥</div>
-                    <div class="roadmap-card-title">حلّل بيئة إدارتك الداخلية</div>
+                    <div class="roadmap-icon">📋</div>
+                    <div class="roadmap-card-title">الاستبيان التشخيصي لإدارتك</div>
                     <div class="roadmap-card-desc">
-                        ابدأ بفهم الوضع الداخلي — الهيكل، العمليات، الموارد، والثقافة.<br>
-                        هذا الأساس لأي تحليل استراتيجي صحيح
+                        أجب على أسئلة مخصصة لإدارتك لتحديد مستوى النضج والفجوات الحالية.<br>
+                        خطوة سريعة ودقيقة لبناء خطتك التشغيلية.
                     </div>
-                    <div class="roadmap-cta"><i class="bi bi-heart-pulse"></i> ابدأ التحليل</div>
+                    <div class="roadmap-cta"><i class="bi bi-ui-checks"></i> ابدأ الاستبيان</div>
                 </a>
 
                 <!-- الخطوة 2: التحليل العميق -->
@@ -754,28 +757,56 @@
             </div>
         </div>
 
-        <!-- KPIs -->
-        <div class="card fade-in">
-            <div class="card-title">📊 المؤشرات</div>
-            <div id="kpiList"></div>
-        </div>
+        <div id="contentArea" style="display:none; flex-direction:column; gap:24px;">
+            <!-- Stats Row -->
+            <div id="statsRow" class="stats-row"
+                style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;"></div>
 
-        <!-- Initiatives / Tasks -->
-        <div class="card fade-in">
-            <div class="card-title">🚀 مبادرات ومهام</div>
-            <div id="taskList"></div>
-        </div>
+            <!-- Quick Actions -->
+            <div id="quickActions"
+                style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;"></div>
 
-        <!-- Alerts -->
-        <div class="card fade-in">
-            <div class="card-title">🔔 تنبيهات مهمة</div>
-            <div id="alertList"></div>
-        </div>
+            <!-- AI Strategic Advisor / Environmental Analysis -->
+            <div class="card fade-in"
+                style="background:linear-gradient(135deg,rgba(167,139,250,0.08),rgba(102,126,234,0.05));border-color:rgba(167,139,250,0.15)">
+                <div class="card-title"
+                    style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                    <span style="font-size:16px;font-weight:800"><i class="bi bi-robot" style="color:#a78bfa;"></i>
+                        تحليل وضع الإدارة والبيئة المحيطة</span>
+                    <a href="/swot.html"
+                        style="padding:6px 14px;font-size:12px;background:var(--primary);color:#fff;text-decoration:none;border-radius:8px;font-weight:700;"><i
+                            class="bi bi-arrows-fullscreen"></i> تشخيص الإدارة (SWOT)</a>
+                </div>
+                <div id="deptAiAnalysis">
+                    <div style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px">
+                        <i class="bi bi-hourglass-split"></i> جاري تحليل وضع إدارتك الحالي...
+                    </div>
+                </div>
+            </div>
 
-        <!-- Recent Activity -->
-        <div class="card fade-in">
-            <div class="card-title">📋 آخر النشاطات</div>
-            <div id="activityList"></div>
+            <!-- KPIs -->
+            <div class="card fade-in">
+                <div class="card-title">📊 المؤشرات</div>
+                <div id="kpiList"></div>
+            </div>
+
+            <!-- Initiatives / Tasks -->
+            <div class="card fade-in">
+                <div class="card-title">🚀 مبادرات ومهام</div>
+                <div id="taskList"></div>
+            </div>
+
+            <!-- Alerts -->
+            <div class="card fade-in">
+                <div class="card-title">🔔 تنبيهات مهمة</div>
+                <div id="alertList"></div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card fade-in">
+                <div class="card-title">📋 آخر النشاطات</div>
+                <div id="activityList"></div>
+            </div>
         </div>
     </main>
 
@@ -789,6 +820,154 @@
             'cs': 'خدمة العملاء', 'compliance': 'الامتثال والحوكمة', 'quality': 'الجودة',
             'projects': 'إدارة المشاريع', 'support': 'الخدمات المساندة'
         };
+
+        // تكوين مخصص لكل إدارة
+        const DEPT_CONFIG = {
+            hr: {
+                icon: '👥', color: '#3b82f6', deepLink: '/hr-deep.html',
+                tip: 'مدير الموارد البشرية المتميز يركز على 3 محاور: استقطاب الكفاءات → تطويرهم → الاحتفاظ بهم',
+                actions: [
+                    { icon: 'bi-people-fill', label: 'مؤشرات HR', href: '/kpis.html?dept=hr', color: '#3b82f6' },
+                    { icon: 'bi-person-plus-fill', label: 'التوظيف', href: '/dept-deep.html?dept=hr&section=recruitment', color: '#22c55e' },
+                    { icon: 'bi-cash-coin', label: 'الرواتب وWPS', href: '/dept-deep.html?dept=hr&section=wps', color: '#f59e0b' },
+                    { icon: 'bi-award-fill', label: 'التدريب', href: '/dept-deep.html?dept=hr&section=training', color: '#a78bfa' },
+                    { icon: 'bi-bar-chart-fill', label: 'تقييم الأداء', href: '/dept-deep.html?dept=hr&section=performance', color: '#ef4444' },
+                    { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html?dept=hr', color: '#64748b' },
+                ]
+            },
+            finance: {
+                icon: '💰', color: '#f59e0b', deepLink: '/finance-deep.html',
+                tip: 'الإدارة المالية تبدأ بزرع بيانات محاسبية دقيقة → تحليل + قرار',
+                actions: [
+                    { icon: 'bi-graph-up-arrow', label: 'مؤشرات مالية', href: '/kpis.html?dept=finance', color: '#f59e0b' },
+                    { icon: 'bi-wallet2', label: 'الميزانية', href: '/dept-deep.html?dept=finance&section=budget', color: '#22c55e' },
+                    { icon: 'bi-receipt', label: 'التدفقات النقدية', href: '/dept-deep.html?dept=finance&section=cashflow', color: '#3b82f6' },
+                    { icon: 'bi-shield-check', label: 'التدقيق ZATCA', href: '/dept-deep.html?dept=finance&section=audit', color: '#ef4444' },
+                    { icon: 'bi-bank', label: 'الذمم والتحصيل', href: '/dept-deep.html?dept=finance&section=receivables', color: '#a78bfa' },
+                    { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html?dept=finance', color: '#64748b' },
+                ]
+            },
+            sales: {
+                icon: '📈', color: '#10b981', deepLink: '/dept-deep.html?dept=sales&single=1',
+                tip: 'فريق مبيعات احترافي: يتابع pipeline + يحلل الخسائر + يدرب بانتظام',
+                actions: [
+                    { icon: 'bi-trophy-fill', label: 'مؤشرات المبيعات', href: '/kpis.html?dept=sales', color: '#10b981' },
+                    { icon: 'bi-funnel-fill', label: 'أهداف المبيعات', href: '/dept-deep.html?dept=sales&section=targets', color: '#22c55e' },
+                    { icon: 'bi-people', label: 'إدارة CRM', href: '/dept-deep.html?dept=sales&section=crm', color: '#3b82f6' },
+                    { icon: 'bi-percent', label: 'معدل التحويل', href: '/dept-deep.html?dept=sales&section=conversion', color: '#a78bfa' },
+                    { icon: 'bi-megaphone-fill', label: 'قنوات البيع', href: '/dept-deep.html?dept=sales&section=channels', color: '#f59e0b' },
+                    { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html?dept=sales', color: '#64748b' },
+                ]
+            },
+            marketing: {
+                icon: '📣', color: '#8b5cf6', deepLink: '/dept-deep.html?dept=marketing&single=1',
+                tip: 'التسويق الفعال = محتوى منتظم + بيانات دقيقة + ROI مقيس',
+                actions: [
+                    { icon: 'bi-bar-chart-fill', label: 'مؤشرات تسويق', href: '/kpis.html?dept=marketing', color: '#8b5cf6' },
+                    { icon: 'bi-camera-fill', label: 'خطة المحتوى', href: '/dept-deep.html?dept=marketing&section=content', color: '#22c55e' },
+                    { icon: 'bi-bullseye', label: 'الحملات', href: '/dept-deep.html?dept=marketing&section=campaigns', color: '#ef4444' },
+                    { icon: 'bi-globe2', label: 'الوجود الرقمي', href: '/dept-deep.html?dept=marketing&section=digital', color: '#3b82f6' },
+                    { icon: 'bi-graph-up', label: 'ROI الحملات', href: '/dept-deep.html?dept=marketing&section=roi', color: '#f59e0b' },
+                    { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html?dept=marketing', color: '#64748b' },
+                ]
+            },
+            operations: {
+                icon: '⚙️', color: '#6366f1', deepLink: '/dept-deep.html?dept=operations&single=1',
+                tip: 'العمليات المتميزة = توثيق SOPs + قياس كفاءة + تحسين مستمر',
+                actions: [
+                    { icon: 'bi-speedometer2', label: 'كفاءة العمليات', href: '/kpis.html?dept=operations', color: '#6366f1' },
+                    { icon: 'bi-file-earmark-text', label: 'توثيق SOPs', href: '/dept-deep.html?dept=operations&section=sops', color: '#22c55e' },
+                    { icon: 'bi-boxes', label: 'المخزون', href: '/dept-deep.html?dept=operations&section=inventory', color: '#f59e0b' },
+                    { icon: 'bi-truck', label: 'سلسلة التوريد', href: '/dept-deep.html?dept=operations&section=supply', color: '#3b82f6' },
+                    { icon: 'bi-clipboard-data', label: 'الجودة', href: '/dept-deep.html?dept=operations&section=quality', color: '#ef4444' },
+                    { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html?dept=operations', color: '#64748b' },
+                ]
+            },
+            compliance: {
+                icon: '⚖️', color: '#ef4444', deepLink: '/dept-deep.html?dept=compliance&single=1',
+                tip: 'الامتثال ليس خياراً — هو حماية الشركة من غرامات تصل لملايين',
+                actions: [
+                    { icon: 'bi-shield-fill-check', label: 'مؤشرات امتثال', href: '/kpis.html?dept=compliance', color: '#ef4444' },
+                    { icon: 'bi-file-earmark-check', label: 'نطاقات', href: '/dept-deep.html?dept=compliance&section=nitaqat', color: '#10b981' },
+                    { icon: 'bi-building', label: 'ZATCA', href: '/dept-deep.html?dept=compliance&section=zatca', color: '#f59e0b' },
+                    { icon: 'bi-person-badge', label: 'GOSI', href: '/dept-deep.html?dept=compliance&section=gosi', color: '#3b82f6' },
+                    { icon: 'bi-lock-fill', label: 'الأمن السيبراني', href: '/dept-deep.html?dept=compliance&section=cyber', color: '#a78bfa' },
+                    { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html?dept=compliance', color: '#64748b' },
+                ]
+            },
+            it: {
+                icon: '💻', color: '#06b6d4', deepLink: '/dept-deep.html?dept=it&single=1',
+                tip: 'التقنية الجيدة = أمن سيبراني قوي + أنظمة متكاملة + uptime عال',
+                actions: [
+                    { icon: 'bi-speedometer', label: 'مؤشرات IT', href: '/kpis.html?dept=it', color: '#06b6d4' },
+                    { icon: 'bi-shield-lock', label: 'الأمن السيبراني', href: '/dept-deep.html?dept=it&section=security', color: '#ef4444' },
+                    { icon: 'bi-hdd-network', label: 'البنية التحتية', href: '/dept-deep.html?dept=it&section=infrastructure', color: '#3b82f6' },
+                    { icon: 'bi-headset', label: 'Help Desk', href: '/dept-deep.html?dept=it&section=helpdesk', color: '#22c55e' },
+                    { icon: 'bi-cloud-arrow-up', label: 'السحابة', href: '/dept-deep.html?dept=it&section=cloud', color: '#a78bfa' },
+                    { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html?dept=it', color: '#64748b' },
+                ]
+            },
+            cs: {
+                icon: '🎟️', color: '#f97316', deepLink: '/dept-deep.html?dept=cs&single=1',
+                tip: 'عميل سعيد = فريق مدرب + استجابة سريعة + متابعة فعالة للشكاوى',
+                actions: [
+                    { icon: 'bi-star-fill', label: 'رضا العميل NPS', href: '/kpis.html?dept=cs', color: '#f97316' },
+                    { icon: 'bi-chat-dots-fill', label: 'الشكاوى', href: '/dept-deep.html?dept=cs&section=complaints', color: '#ef4444' },
+                    { icon: 'bi-clock-history', label: 'وقت الاستجابة', href: '/dept-deep.html?dept=cs&section=response', color: '#3b82f6' },
+                    { icon: 'bi-person-check', label: 'FCR الحل الفوري', href: '/dept-deep.html?dept=cs&section=fcr', color: '#22c55e' },
+                    { icon: 'bi-journal-check', label: 'قاعدة المعرفة', href: '/dept-deep.html?dept=cs&section=knowledge', color: '#a78bfa' },
+                    { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html?dept=cs', color: '#64748b' },
+                ]
+            },
+            quality: {
+                icon: '✅', color: '#22c55e', deepLink: '/dept-deep.html?dept=quality&single=1',
+                tip: 'الجودة أرخص من الإصلاح: الوقاية = 10% من تكلفة إصلاح ما بعد التسليم',
+                actions: [
+                    { icon: 'bi-patch-check-fill', label: 'مؤشرات جودة', href: '/kpis.html?dept=quality', color: '#22c55e' },
+                    { icon: 'bi-bug-fill', label: 'معدل العيوب', href: '/dept-deep.html?dept=quality&section=defects', color: '#ef4444' },
+                    { icon: 'bi-search', label: 'تحليل السبب الجذري RCA', href: '/dept-deep.html?dept=quality&section=rca', color: '#f59e0b' },
+                    { icon: 'bi-clipboard2-check', label: 'تدقيق داخلي', href: '/dept-deep.html?dept=quality&section=audit', color: '#3b82f6' },
+                    { icon: 'bi-arrow-repeat', label: 'CAPA', href: '/dept-deep.html?dept=quality&section=capa', color: '#a78bfa' },
+                    { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html?dept=quality', color: '#64748b' },
+                ]
+            },
+            projects: {
+                icon: '📊', color: '#a855f7', deepLink: '/dept-deep.html?dept=projects&single=1',
+                tip: 'PMO فعال = منهجية واضحة + إدارة مخاطر + تواصل منتظم مع أصحاب المصلحة',
+                actions: [
+                    { icon: 'bi-kanban-fill', label: 'مؤشرات المشاريع', href: '/kpis.html?dept=projects', color: '#a855f7' },
+                    { icon: 'bi-calendar-check', label: 'التسليم في الموعد', href: '/dept-deep.html?dept=projects&section=delivery', color: '#22c55e' },
+                    { icon: 'bi-exclamation-triangle', label: 'سجل المخاطر', href: '/dept-deep.html?dept=projects&section=risks', color: '#ef4444' },
+                    { icon: 'bi-people-fill', label: 'أصحاب المصلحة', href: '/dept-deep.html?dept=projects&section=stakeholders', color: '#3b82f6' },
+                    { icon: 'bi-book-fill', label: 'دروس مستفادة', href: '/dept-deep.html?dept=projects&section=lessons', color: '#f59e0b' },
+                    { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html?dept=projects', color: '#64748b' },
+                ]
+            },
+            support: {
+                icon: '🛠️', color: '#64748b', deepLink: '/dept-deep.html?dept=support&single=1',
+                tip: 'الخدمات المساندة = العمود الاات تُرى لكنها ضرورية لكل شيء',
+                actions: [
+                    { icon: 'bi-wrench-adjustable', label: 'مؤشرات', href: '/kpis.html?dept=support', color: '#64748b' },
+                    { icon: 'bi-box-seam', label: 'عقود الموردين', href: '/dept-deep.html?dept=support&section=vendors', color: '#f59e0b' },
+                    { icon: 'bi-tools', label: 'الصيانة', href: '/dept-deep.html?dept=support&section=maintenance', color: '#3b82f6' },
+                    { icon: 'bi-building-fill', label: 'إدارة الأصول', href: '/dept-deep.html?dept=support&section=assets', color: '#22c55e' },
+                    { icon: 'bi-cart4', label: 'المشتريات', href: '/dept-deep.html?dept=support&section=procurement', color: '#a78bfa' },
+                    { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html?dept=support', color: '#64748b' },
+                ]
+            },
+        };
+
+        // Helper: get config for current dept
+        function getDeptConfig(key) {
+            return DEPT_CONFIG[key] || {
+                icon: '🏢', color: '#6366f1', deepLink: `/dept-deep.html?dept=${key}&single=1`,
+                tip: 'حلل وضع إدارتك وابدأ برحلتك الاستراتيجية',
+                actions: [
+                    { icon: 'bi-graph-up', label: 'مؤشرات الأداء', href: `/kpis.html?dept=${key}`, color: '#6366f1' },
+                    { icon: 'bi-list-task', label: 'المبادرات', href: `/initiatives.html?dept=${key}`, color: '#22c55e' },
+                ]
+            };
+        }
 
         // ==========================================
         //  الكاش السريع 
@@ -858,8 +1037,9 @@
                 const isDeptManager = userData && (
                     userData.userType === 'DEPT_MANAGER' ||
                     (userData.userCategory && userData.userCategory.startsWith('DEPT_')) ||
-                    userData.userType === 'OWNER' ||
-                    userData.userType === 'ADMIN' ||
+                    userData.department?.key || // السماح لأي موظف ينتمي للإدارة بالدخول (مثل مدخل البيانات والمشاهد)
+                    userData.role === 'OWNER' ||
+                    userData.role === 'ADMIN' ||
                     userData.systemRole === 'SUPER_ADMIN'
                 );
                 if (!isDeptManager) {
@@ -883,6 +1063,23 @@
                     localStorage.setItem('stratix_v10_dept', deptKey);
                     localStorage.setItem('stratix_dept', deptKey);
                 }
+
+                // ═══ تطبيق هوية الإدارة على الصفحة ═══
+                const dCfg = getDeptConfig(deptKey);
+                document.documentElement.style.setProperty('--dept-color', dCfg.color);
+                document.documentElement.style.setProperty('--dept-color-15', dCfg.color + '26');
+                const pageH1 = document.querySelector('.page-header h1');
+                if (pageH1) {
+                    pageH1.innerHTML = `
+                        <span style="font-size:32px">${dCfg.icon}</span>
+                        <span>لوحة <span style="color:${dCfg.color}">${deptName}</span></span>`;
+                }
+                const welcomeMsg = document.getElementById('welcomeMsg');
+                if (welcomeMsg && userData.name) {
+                    welcomeMsg.textContent = `مرحباً ${userData.name} — إليك أداء ${deptName} اليوم`;
+                }
+                // تطبيق لون الإدارة على الـ stat cards border
+                document.documentElement.style.setProperty('--accent', dCfg.color);
 
                 // إذا ما عنده كيان → يروح يكمل الإعداد أولاً
                 if (!entityId) {
@@ -937,6 +1134,21 @@
                 const isNewUser = dashLoaded && (kpiCount === 0 && iniCount === 0);
                 const networkFailed = !dashLoaded;
 
+                // التحقق من إنهاء الاستبيان التشخيصي
+                const hasCompletedQuestionnaire = healthData && healthData.healthScore > 0;
+                if (dashLoaded && !hasCompletedQuestionnaire) {
+                    document.getElementById('alertBannerContainer').innerHTML = `
+                        <div style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:16px; padding:20px 24px; margin-bottom:24px; display:flex; align-items:center; flex-wrap:wrap; gap:16px; animation: fadeIn 0.5s ease;">
+                            <i class="bi bi-exclamation-triangle-fill" style="color:var(--red); font-size:32px;"></i>
+                            <div style="flex:1; min-width:250px;">
+                                <div style="font-size:16px; font-weight:800; color:var(--red); margin-bottom:4px;">تنبيه: لم تكمل الاستبيان التشخيصي لإدارتك</div>
+                                <div style="font-size:13px; color:var(--text-muted);">لضمان دقة التحليل واقتراح المؤشرات المناسبة، يرجى إنهاء الاستبيان أولاً.</div>
+                            </div>
+                            <a href="/dept-questionnaire.html?dept=${deptKey}" class="btn" style="background:linear-gradient(135deg, var(--red), #dc2626); color:white; border:none; padding:12px 24px; font-size:14px; font-weight:700;"><i class="bi bi-ui-checks"></i> ابدأ الاستبيان الآن</a>
+                        </div>
+                    `;
+                }
+
                 if (networkFailed) {
                     // فشل الشبكة
                     document.getElementById('contentArea').style.display = 'block';
@@ -959,17 +1171,25 @@
                     // تحديث الروابط والعناوين برمجياً لضمان عدم ضياع هوية الإدارة
                     document.getElementById('wbTitle').textContent = `أهلاً بك في لوحة ${deptName}!`;
 
+                    // تطبيق ألوان وأيقونات الإدارة على الـ Welcome Board
+                    const cfg = getDeptConfig(deptKey);
+                    const wbEmo = document.querySelector('.welcome-emoji');
+                    if (wbEmo) wbEmo.textContent = cfg.icon;
+                    const wbSub = document.getElementById('wbSubtitle');
+                    if (wbSub) wbSub.innerHTML = `<strong style="color:${cfg.color}">${deptName}</strong>: ${cfg.tip}<br><br>الخطوات التالية تحوّل هذا التشخيص إلى خطة عمل واضحة 👇`;
+
                     const s1 = document.getElementById('step1Card');
                     const s2 = document.getElementById('step2Card');
                     const s3 = document.getElementById('step3Card');
                     const s4 = document.getElementById('step4Card');
                     const s5 = document.getElementById('step5Card');
 
-                    if (s1) s1.href = `/internal-env.html?dept=${deptKey}`;
+                    // توجيه مدير الإدارة مباشرة للاستبيان الدقيق المخصص لإدارته
+                    if (s1) s1.href = `/dept-questionnaire.html?dept=${deptKey}`;
                     if (s2) {
                         let deepLink = `/dept-deep.html?dept=${deptKey}&single=1`;
-                        if (deptKey === 'hr') deepLink = '/hr-deep.html';
-                        if (deptKey === 'finance') deepLink = '/finance-deep.html';
+                        const customPages = ['hr', 'finance', 'marketing']; // إدارات لها صفحات مخصصة
+                        if (customPages.includes(deptKey)) deepLink = `/${deptKey}-deep.html`;
                         s2.href = deepLink;
 
                         const titleEl = s2.querySelector('.roadmap-card-title');
@@ -980,7 +1200,7 @@
                     if (s5) s5.href = `/kpis.html?dept=${deptKey}`;
 
                 } else {
-                    document.getElementById('contentArea').style.display = 'block';
+                    document.getElementById('contentArea').style.display = 'flex';
                     if (userData.name) {
                         document.getElementById('welcomeMsg').textContent = `مرحباً ${userData.name} — إليك أداء ${deptName} اليوم`;
                     }
@@ -992,6 +1212,7 @@
                     if (typeof renderTasks === 'function') renderTasks(dashData);
                     if (typeof renderAlerts === 'function') renderAlerts(alertData);
                     if (typeof renderActivity === 'function') renderActivity(dashData);
+                    generateDeptInsights(dashData.deptKpis || [], dashData);
                 }
 
             } catch (err) {
@@ -1045,20 +1266,17 @@
 
         function renderQuickActions() {
             const deptKey = window.currentDeptContext?.key || '';
-            const qParam = deptKey ? '?dept=' + deptKey : '';
-            const actions = [
-                { icon: 'bi-graph-up', label: 'تحديث KPIs', href: '/kpis.html' + qParam, color: '#3b82f6' },
-                { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html' + qParam, color: '#22c55e' },
-                { icon: 'bi-clipboard-check', label: 'مراجعة دورية', href: '/reviews.html', color: '#a78bfa' },
-                { icon: 'bi-shield-exclamation', label: 'المخاطر', href: '/risk-map.html', color: '#f59e0b' },
-                { icon: 'bi-bar-chart', label: 'التحليل', href: '/analytics-dashboard.html', color: '#ef4444' }
-            ];
-            document.getElementById('quickActions').innerHTML = actions.map(a => `
-                <a class="quick-action" href="${a.href}">
+            const cfg = getDeptConfig(deptKey);
+            document.getElementById('quickActions').innerHTML = cfg.actions.map(a => `
+                <a class="quick-action" href="${a.href}" style="border-color:${a.color}18">
                     <i class="bi ${a.icon}" style="color:${a.color}"></i>
                     <span>${a.label}</span>
                 </a>
             `).join('');
+
+            // inject dept tip if element exists
+            const tipEl = document.getElementById('deptTip');
+            if (tipEl) tipEl.textContent = cfg.tip;
         }
 
         async function renderKPIs(data) {
@@ -1156,16 +1374,18 @@
                 { name: 'متأخرة', count: ini.overdue || 0, color: 'var(--red)', icon: '🔴' },
             ].filter(s => s.count > 0);
 
-            list.innerHTML = statuses.map(s => `
-                <div class="task-item">
+            list.innerHTML = statuses.map(s => {
+                const isOverdue = s.name === 'متأخرة';
+                return `
+                <div class="task-item" style="${isOverdue ? 'background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.3);' : ''}">
                     <div class="task-status" style="background:${s.color}"></div>
                     <div class="task-info">
-                        <div class="task-name">${s.icon} ${s.name}</div>
-                        <div class="task-meta">${s.count} مبادرة</div>
+                        <div class="task-name" style="${isOverdue ? 'color:var(--red); font-weight:700;' : ''}">${s.icon} ${s.name}</div>
+                        <div class="task-meta" style="${isOverdue ? 'color:var(--red); opacity:0.8;' : ''}">${s.count} مشروع/مبادرة</div>
                     </div>
                     <span class="task-badge" style="background:${s.color}22;color:${s.color}">${s.count}</span>
                 </div>
-                        `).join('') + `
+                `}).join('') + `
                         <div style="text-align:center;margin-top:12px">
                             <a href="/initiatives.html?dept=${window.currentDeptContext?.key || ''}" class="btn" style="display:inline-flex;font-size:12px;padding:8px 16px">
                                 <i class="bi bi-list-task"></i> إدارة المبادرات
@@ -1200,9 +1420,9 @@
             }).join('');
         }
 
-        function renderActivity(data) {
+        function renderActivity(dash) {
             const list = document.getElementById('activityList');
-            const reviews = data.recentReviews || [];
+            const reviews = dash.recentReviews || [];
 
             if (!reviews.length) {
                 list.innerHTML = '<div class="empty-text">لا توجد مراجعات حديثة — <a href="/reviews.html" style="color:var(--accent)">ابدأ المراجعة</a></div>';
@@ -1231,6 +1451,72 @@
             if (score >= 40) return '#f59e0b';
             if (score >= 20) return '#ef4444';
             return '#8b8ba7';
+        }
+
+        function generateDeptInsights(kpis, dash) {
+            const insights = [];
+            const iniSum = dash.initiativeSummary || {};
+
+            if (kpis.length === 0 && iniSum.total === 0) {
+                document.getElementById('deptAiAnalysis').innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:12px">لا توجد بيانات (مؤشرات/مبادرات) في إدارتك لتحليلها. يُنصح بإضافة مؤشرات أداء للبدء بمراقبة الصحة الوظيفية.</div>';
+                return;
+            }
+
+            const atRisk = kpis.filter(k => {
+                const act = k.actual !== null ? k.actual : 0;
+                const tgt = k.target || 1;
+                const pct = (act / tgt) * 100;
+                return pct < (k.criticalThreshold || 50);
+            });
+            if (atRisk.length > 0) {
+                insights.push({
+                    icon: '🔴', title: 'تنبيه: مؤشراتك في نطاق الخطر', color: '#ef4444',
+                    desc: `توجد <strong>${atRisk.length}</strong> مؤشرات أدائها ضعيف جداً (أبرزها: <em>${atRisk[0].name}</em>). الوضع الحالي للإدارة يحتاج تدخلاً فورياً لمعالجة الفجوة (تحليل نقاط الضعف - Weaknesses).`,
+                    action: 'حلل الضعف في SWOT', link: '/swot.html'
+                });
+            } else if (kpis.length > 0) {
+                insights.push({
+                    icon: '✅', title: 'استقرار في مؤشرات الإدارة', color: '#22c55e',
+                    desc: 'أغلب مؤشرات إدارتك في النطاق السليم. ركز على استغلال (الفرص - Opportunities) المتاحة في السوق لدفع الإدارة للأمام وتجاوز المستهدفات.',
+                    action: 'حدث الفرص في SWOT', link: '/swot.html'
+                });
+            }
+
+            if (iniSum.overdue > 0) {
+                insights.push({
+                    icon: '⏳', title: 'تنبيه: تعثر ومبادرات متأخرة', color: '#f97316',
+                    desc: `هناك تراكم في مهام الإدارة، تحديداً <strong>${iniSum.overdue}</strong> مبادرة متأخرة عن وقتها المتوقع. التأخير التشغيلي غالباً ما يكون ناتجاً عن (تهديدات داخلية/خارجية - Threats).`,
+                    action: 'راجع التهديدات في SWOT', link: '/swot.html'
+                });
+            }
+
+            if (kpis.length < 3 && iniSum.total > 0) {
+                insights.push({
+                    icon: '💡', title: 'نصيحة هيكلية للإدارة', color: '#3b82f6',
+                    desc: 'إدارتك تفتقر لعدد كافٍ من الـ KPIs (أقل من 3 مؤشرات). هذا يشكل عائقاً أمام قياس الوضع الحالي الاستراتيجي للإدارة بدقة.',
+                    action: 'أضف المزيد من الـ KPIs', link: '/kpis.html'
+                });
+            }
+
+            if (insights.length === 0) {
+                insights.push({
+                    icon: '🌟', title: 'أداء الإدارة ممتاز', color: '#a78bfa',
+                    desc: 'الوضع الحالي لإدارتك لا تشوبه شائبة! لا توجد تنبيهات سلبية والمهام تمضي كما هو مخطط لها.',
+                    action: 'راجع توجهات TOWS', link: '/tows.html'
+                });
+            }
+
+            document.getElementById('deptAiAnalysis').innerHTML = `<div style="display:grid;gap:12px;padding:8px 12px">
+                ${insights.map(i => `
+                    <div style="border-radius:12px;background:var(--bg);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:flex-start;padding:16px;gap:16px;">
+                        <div style="font-size:28px;flex-shrink:0;background:rgba(255,255,255,0.02);border-radius:50%;width:48px;height:48px;display:flex;justify-content:center;align-items:center;">${i.icon}</div>
+                        <div style="flex:1">
+                            <div style="font-size:14px;font-weight:800;margin-bottom:6px;color:${i.color || 'var(--text)'}">${i.title}</div>
+                            <div style="font-size:12.5px;color:var(--text-muted);line-height:1.7;margin-bottom:12px;">${i.desc}</div>
+                            ${i.action ? `<a href="${i.link}" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:var(--text);text-decoration:none;font-size:11px;font-weight:700;transition:all 0.2s" onmouseover="this.style.background='var(--primary)';this.style.borderColor='var(--primary)'" onmouseout="this.style.background='rgba(255,255,255,0.04)';this.style.borderColor='rgba(255,255,255,0.08)'"><i class="bi bi-link-45deg"></i> ${i.action}</a>` : ''}
+                        </div>
+                    </div>
+                `).join('')}</div>`;
         }
     </script>
     <script src="/assets/js/ai-advisor.js"></script>

@@ -658,7 +658,21 @@
                 const data = await res.json();
 
                 // Delay a bit for dramatic effect
-                setTimeout(() => renderAnalysis(data), 800);
+                setTimeout(() => {
+                    try {
+                        renderAnalysis(data);
+                    } catch (err) {
+                        console.error('Render Error:', err);
+                        document.getElementById('mainContent').innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-icon">❌</div>
+                                <div class="empty-title">خطأ في عرض التحليل</div>
+                                <div class="empty-desc">تم جلب البيانات لكن حدث خطأ أثناء عرضها: ${err.message}</div>
+                                <br><button class="run-btn" onclick="runAnalysis()"><i class="bi bi-arrow-repeat"></i> أعد المحاولة</button>
+                            </div>
+                        `;
+                    }
+                }, 800);
             } catch (e) {
                 document.getElementById('mainContent').innerHTML = `
                     <div class="empty-state">
@@ -671,6 +685,8 @@
         }
 
         function renderAnalysis(data) {
+            if (!data) throw new Error('بيانات التحليل غير متوفرة');
+
             if (data.status === 'NO_DATA' || data.status === 'INSUFFICIENT_DATA') {
                 document.getElementById('mainContent').innerHTML = `
                     <div class="empty-state">
@@ -686,7 +702,14 @@
                 return;
             }
 
-            const rec = data.overallRecommendation;
+            const rec = data.overallRecommendation || {
+                color: '#667eea',
+                icon: '🧠',
+                label: 'اكتمل التحليل',
+                description: 'تم تقييم المعطيات بنجاح.'
+            };
+            const summary = data.summary || { totalInsights: 0, opportunities: 0, risks: 0, critical: 0 };
+            const dataQuality = data.dataQuality || { coverage: 0, completedDepartments: 0, totalDepartments: 0 };
             let html = '';
 
             // Decision Banner
@@ -699,13 +722,13 @@
                         <p>${rec.description}</p>
                     </div>
                     <div class="decision-badge" style="background:${rec.color}15;color:${rec.color}">
-                        ${data.summary.totalInsights} نتيجة
+                        ${summary.totalInsights} نتيجة
                     </div>
                 </div>
             `;
 
             // Data Quality
-            const coverage = parseInt(data.dataQuality.coverage) || 0;
+            const coverage = parseInt(dataQuality.coverage) || 0;
             html += `
                 <div class="quality-bar">
                     <span class="quality-label">📊 تغطية البيانات</span>
@@ -713,7 +736,7 @@
                         <div class="quality-fill" style="width:${coverage}%"></div>
                     </div>
                     <span class="quality-pct">${coverage}%</span>
-                    <span class="quality-label">(${data.dataQuality.completedDepartments}/${data.dataQuality.totalDepartments} أقسام)</span>
+                    <span class="quality-label">(${dataQuality.completedDepartments || 0}/${dataQuality.totalDepartments || 0} أقسام)</span>
                 </div>
             `;
 
@@ -721,46 +744,49 @@
             html += `
                 <div class="stats-row">
                     <div class="stat-card">
-                        <div class="stat-num" style="color:var(--primary)">${data.summary.totalInsights}</div>
+                        <div class="stat-num" style="color:var(--primary)">${summary.totalInsights}</div>
                         <div class="stat-label">نتيجة مكتشفة</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-num" style="color:var(--green)">${data.summary.opportunities}</div>
+                        <div class="stat-num" style="color:var(--green)">${summary.opportunities}</div>
                         <div class="stat-label">فرصة نمو</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-num" style="color:var(--yellow)">${data.summary.risks}</div>
+                        <div class="stat-num" style="color:var(--yellow)">${summary.risks}</div>
                         <div class="stat-label">مخاطر</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-num" style="color:var(--red)">${data.summary.critical}</div>
+                        <div class="stat-num" style="color:var(--red)">${summary.critical}</div>
                         <div class="stat-label">تحذير حرج</div>
                     </div>
                 </div>
             `;
 
             // Insights
-            if (data.insights.length > 0) {
+            const insightsList = data.insights || [];
+            if (insightsList.length > 0) {
                 html += `<div class="insights-section">`;
                 html += `<div class="section-title"><i class="bi bi-lightbulb-fill" style="color:var(--yellow)"></i> النتائج والتوصيات</div>`;
 
-                data.insights.forEach((insight, idx) => {
+                insightsList.forEach((insight, idx) => {
                     const sev = SEVERITY_STYLES[insight.severity] || SEVERITY_STYLES.MEDIUM;
                     const typ = TYPE_STYLES[insight.type] || TYPE_STYLES.RISK;
+                    const depts = Array.isArray(insight.departments) ? insight.departments : [];
+                    const evidenceList = Array.isArray(insight.evidence) ? insight.evidence : [];
 
                     html += `
                         <div class="insight-card">
                             <div class="insight-header" onclick="toggleInsight(${idx})">
                                 <div class="insight-icon" style="background:${typ.bg}">
-                                    <span style="font-size:28px">${insight.icon}</span>
+                                    <span style="font-size:28px">${insight.icon || '💡'}</span>
                                 </div>
                                 <div class="insight-main">
-                                    <div class="insight-title">${insight.title}</div>
-                                    <div class="insight-desc">${insight.description}</div>
+                                    <div class="insight-title">${insight.title || 'نتيجة تحليل'}</div>
+                                    <div class="insight-desc">${insight.description || ''}</div>
                                     <div class="insight-badges">
                                         <span class="insight-badge" style="background:${typ.bg};color:${typ.color}">${typ.label}</span>
                                         <span class="insight-badge" style="background:${sev.bg};color:${sev.color}">${sev.label}</span>
-                                        ${insight.departments.map(d =>
+                                        ${depts.map(d =>
                         `<span class="insight-badge" style="background:rgba(102,126,234,0.08);color:var(--primary)">${d}</span>`
                     ).join('')}
                                     </div>
@@ -773,12 +799,12 @@
                                     <!-- Evidence -->
                                     <div class="evidence-title">📌 الأدلة والمؤشرات</div>
                                     <div class="evidence-list">
-                                        ${(insight.evidence || []).map(ev => `
+                                        ${evidenceList.map(ev => `
                                             <div class="evidence-item">
                                                 <div class="evidence-dot" style="background:${STATUS_COLORS[ev.status] || '#7a8599'}"></div>
-                                                <div class="evidence-dept">${ev.dept}</div>
-                                                <div class="evidence-metric">${ev.metric}</div>
-                                                <div class="evidence-value" style="color:${STATUS_COLORS[ev.status] || 'var(--text)'}">${ev.value}</div>
+                                                <div class="evidence-dept">${ev.dept || ''}</div>
+                                                <div class="evidence-metric">${ev.metric || ''}</div>
+                                                <div class="evidence-value" style="color:${STATUS_COLORS[ev.status] || 'var(--text)'}">${ev.value || ''}</div>
                                             </div>
                                         `).join('')}
                                     </div>
@@ -786,23 +812,23 @@
                                     ${insight.suggestedOKR ? `
                                         <div class="okr-box">
                                             <div class="okr-title">🎯 OKR مقترح</div>
-                                            <div class="okr-objective">${insight.suggestedOKR.objective}</div>
-                                            ${insight.suggestedOKR.keyResults.map(kr => `
+                                            <div class="okr-objective">${insight.suggestedOKR.objective || ''}</div>
+                                            ${(Array.isArray(insight.suggestedOKR.keyResults) ? insight.suggestedOKR.keyResults : []).map(kr => `
                                                 <div class="okr-kr">
                                                     <i class="bi bi-check2-circle"></i>
                                                     <span>${kr}</span>
                                                 </div>
                                             `).join('')}
                                             <div class="okr-meta">
-                                                <span><i class="bi bi-clock"></i> ${insight.suggestedOKR.timeline}</span>
-                                                <span><i class="bi bi-person"></i> ${insight.suggestedOKR.owner}</span>
+                                                <span><i class="bi bi-clock"></i> ${insight.suggestedOKR.timeline || 'Q1'}</span>
+                                                <span><i class="bi bi-person"></i> ${insight.suggestedOKR.owner || 'مدير الإدارة'}</span>
                                             </div>
                                             <div class="okr-actions">
-                                                <button class="okr-btn approve" onclick="approveOKR('${insight.ruleId}')">
+                                                <button class="okr-btn approve" onclick="approveOKR('${insight.ruleId || ''}')">
                                                     <i class="bi bi-check-lg"></i> اعتماد كمبادرة
                                                 </button>
-                                                <button class="okr-btn discuss" onclick="showToast('تم حفظ الملاحظة للمناقشة')">
-                                                    <i class="bi bi-chat-dots"></i> مناقشة
+                                                <button class="okr-btn discuss" onclick="window.location.href='/reviews.html?from_advisor=1&title=${encodeURIComponent('مراجعة: ' + (insight.title || ''))}&notes=${encodeURIComponent(insight.description || '')}'">
+                                                    <i class="bi bi-journal-plus"></i> إنشاء مراجعة
                                                 </button>
                                                 <button class="okr-btn ignore" onclick="this.closest('.insight-card').style.opacity='0.4'">
                                                     <i class="bi bi-x-lg"></i> تجاهل
@@ -822,7 +848,7 @@
                     <div class="empty-state" style="padding:40px">
                         <div class="empty-icon">✅</div>
                         <div class="empty-title">لم يتم اكتشاف مخاطر أو فرص</div>
-                        <div class="empty-desc">المحرك حلل ${data.rulesEvaluated} قاعدة ولم يجد تقاطعات تحتاج انتباهك. واصل عملك!</div>
+                        <div class="empty-desc">المحرك حلل ${data.rulesEvaluated || 0} قاعدة ولم يجد تقاطعات تحتاج انتباهك. واصل عملك!</div>
                     </div>
                 `;
             }
@@ -834,7 +860,7 @@
                         <i class="bi bi-arrow-repeat"></i> إعادة التحليل
                     </button>
                     <div style="font-size:11px;color:var(--muted);margin-top:8px">
-                        آخر تحليل: ${new Date(data.analyzedAt).toLocaleString('ar-SA')} | ${data.rulesEvaluated} قاعدة
+                        آخر تحليل: ${data.analyzedAt ? new Date(data.analyzedAt).toLocaleString('ar-SA') : 'الآن'} | ${data.rulesEvaluated || 0} قاعدة
                     </div>
                 </div>
             `;

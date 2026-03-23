@@ -7,6 +7,7 @@
     <title>ستارتكس - الخيارات والمخاطر</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="/assets/js/dept-theme.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link href="/assets/css/sidebar.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -1472,6 +1473,37 @@
             document.getElementById('choiceRiskLevel').value = ''; document.getElementById('choiceIsSelected').checked = false;
             document.getElementById('choiceModalTitle').textContent = 'خيار استراتيجي جديد';
             document.getElementById('choiceTplSection').style.display = 'block';
+
+            // 🛡️ إجبار مدير الإدارة على أنواع الخيارات المتاحة لإدارته فقط (في الإضافة)
+            const u = JSON.parse(localStorage.getItem('user') || '{}');
+            const isDeptManager = u.userType === 'DEPT_MANAGER' || (u.userCategory && u.userCategory.startsWith('DEPT_'));
+            const deptKey = (u.department?.key || u.userCategory?.replace('DEPT_', '') || '').toLowerCase();
+            const deptChoiceMap = { 'marketing': ['MARKET_PENETRATION', 'MARKET_DEVELOPMENT', 'DIFFERENTIATION'], 'sales': ['MARKET_PENETRATION', 'MARKET_DEVELOPMENT'], 'operations': ['PRODUCT_DEVELOPMENT', 'COST_LEADERSHIP', 'FOCUS', 'BEST_COST'], 'finance': ['DIVERSIFICATION', 'COST_LEADERSHIP', 'BEST_COST'] };
+
+            const typeSelect = document.getElementById('choiceType');
+            Array.from(typeSelect.options).forEach(opt => { opt.disabled = false; opt.style.display = ''; });
+            typeSelect.style.pointerEvents = 'auto'; typeSelect.style.opacity = '1';
+
+            if (isDeptManager) {
+                const allowedTypes = deptChoiceMap[deptKey] || [];
+                Array.from(typeSelect.options).forEach(opt => {
+                    if (opt.value && !allowedTypes.includes(opt.value)) {
+                        opt.disabled = true; opt.style.display = 'none';
+                    }
+                });
+                if (allowedTypes.length > 0) { typeSelect.value = allowedTypes[0]; }
+                else { typeSelect.style.pointerEvents = 'none'; typeSelect.style.opacity = '0.6'; }
+
+                // إخفاء القوالب السريعة غير المطابقة لاختصاصه
+                document.querySelectorAll('.choice-tpl').forEach(tpl => {
+                    const tplType = tpl.getAttribute('onclick').match(/'([^']+)'\)$/)?.[1];
+                    if (tplType && !allowedTypes.includes(tplType) && tplType !== 'OTHER') tpl.style.display = 'none';
+                    else tpl.style.display = 'inline-block';
+                });
+            } else {
+                document.querySelectorAll('.choice-tpl').forEach(tpl => tpl.style.display = 'inline-block');
+            }
+
             document.getElementById('choiceModal').classList.add('show');
         }
 
@@ -1487,6 +1519,27 @@
                 document.getElementById('choiceCapabilities').value = c.requiredCapabilities || '';
                 document.getElementById('choiceModalTitle').textContent = 'تعديل الخيار';
                 document.getElementById('choiceTplSection').style.display = 'none';
+
+                // 🛡️ إجبار مدير الإدارة على أنواع الخيارات المتاحة لإدارته فقط (في التعديل أيضاً)
+                const u = JSON.parse(localStorage.getItem('user') || '{}');
+                const isDeptManager = u.userType === 'DEPT_MANAGER' || (u.userCategory && u.userCategory.startsWith('DEPT_'));
+                const deptKey = (u.department?.key || u.userCategory?.replace('DEPT_', '') || '').toLowerCase();
+                const deptChoiceMap = { 'marketing': ['MARKET_PENETRATION', 'MARKET_DEVELOPMENT', 'DIFFERENTIATION'], 'sales': ['MARKET_PENETRATION', 'MARKET_DEVELOPMENT'], 'operations': ['PRODUCT_DEVELOPMENT', 'COST_LEADERSHIP', 'FOCUS', 'BEST_COST'], 'finance': ['DIVERSIFICATION', 'COST_LEADERSHIP', 'BEST_COST'] };
+
+                const typeSelect = document.getElementById('choiceType');
+                Array.from(typeSelect.options).forEach(opt => { opt.disabled = false; opt.style.display = ''; });
+                typeSelect.style.pointerEvents = 'auto'; typeSelect.style.opacity = '1';
+
+                if (isDeptManager) {
+                    const allowedTypes = deptChoiceMap[deptKey] || [];
+                    Array.from(typeSelect.options).forEach(opt => {
+                        if (opt.value && !allowedTypes.includes(opt.value)) {
+                            opt.disabled = true; opt.style.display = 'none';
+                        }
+                    });
+                    if (allowedTypes.length === 0) { typeSelect.style.pointerEvents = 'none'; typeSelect.style.opacity = '0.6'; }
+                }
+
                 document.getElementById('choiceModal').classList.add('show');
             } catch (e) { alert('فشل تحميل البيانات'); }
         }
@@ -1544,8 +1597,34 @@
         function renderRisks(risks) {
             const tbody = document.getElementById('risksTable');
             if (!risks.length) { tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="emoji">🛡️</div><h4>لا توجد مخاطر</h4><p>اضغط "خطر جديد" للبدء</p></div></td></tr>'; return; }
+
+            // 🛡️ تحديد صلاحيات مدير الإدارة
+            const u = JSON.parse(localStorage.getItem('user') || '{}');
+            const isDeptManager = u.userType === 'DEPT_MANAGER' || (u.userCategory && u.userCategory.startsWith('DEPT_'));
+            const deptKey = (u.department?.key || u.userCategory?.replace('DEPT_', '') || '').toLowerCase();
+            const deptCategoryMap = {
+                'finance': 'FINANCIAL',
+                'operations': 'OPERATIONAL',
+                'compliance': 'COMPLIANCE',
+                'marketing': 'REPUTATIONAL',
+                'hr': 'OPERATIONAL' // يمكن ربط الموارد بالتشغيلي
+            };
+
             tbody.innerHTML = risks.map(r => {
                 const scoreColor = r.riskScore >= 15 ? 'var(--danger)' : r.riskScore >= 8 ? 'var(--warning)' : r.riskScore ? 'var(--success)' : 'var(--text-muted)';
+
+                // 🛡️ التحقق هل يحق للمستخدم التعديل
+                let canEdit = true;
+                if (isDeptManager && deptCategoryMap[deptKey]) {
+                    if (r.category && r.category !== deptCategoryMap[deptKey]) {
+                        canEdit = false;
+                    }
+                }
+
+                const actionsHtml = canEdit
+                    ? `<button class="btn-action" onclick="editRisk('${r.id}')" title="تعديل"><i class="bi bi-pencil"></i></button> <button class="btn-action danger" onclick="deleteRisk('${r.id}')" title="حذف"><i class="bi bi-trash"></i></button>`
+                    : `<span style="font-size:11px;color:var(--text-muted);background:rgba(255,255,255,0.05);padding:4px 8px;border-radius:6px;"><i class="bi bi-lock"></i> مقفل</span>`;
+
                 return `<tr>
                     <td><strong>${r.title}</strong>${r.description ? `<br><small style="color:var(--text-muted)">${r.description.substring(0, 50)}${r.description.length > 50 ? '...' : ''}</small>` : ''}</td>
                     <td>${r.category ? `<span class="badge-custom badge-type">${catLabel[r.category] || r.category}</span>` : '-'}</td>
@@ -1555,7 +1634,7 @@
                     <td>${r.riskScore ? `<strong style="color:${scoreColor}">${r.riskScore}/25</strong>` : '-'}</td>
                     <td><small>${r.owner || '-'}</small></td>
                     <td><span class="badge-custom badge-${r.status.toLowerCase()}">${riskStatusLabel[r.status] || r.status}</span></td>
-                    <td><button class="btn-action" onclick="editRisk('${r.id}')" title="تعديل"><i class="bi bi-pencil"></i></button> <button class="btn-action danger" onclick="deleteRisk('${r.id}')" title="حذف"><i class="bi bi-trash"></i></button></td>
+                    <td>${actionsHtml}</td>
                 </tr>`;
             }).join('');
         }
@@ -1576,6 +1655,20 @@
             document.getElementById('riskModalTitle').textContent = 'إضافة خطر جديد';
             document.getElementById('riskTplSection').style.display = 'block';
             loadChoicesForRisk(); document.getElementById('riskModal').classList.add('show');
+
+            // 🛡️ إجبار مدير الإدارة على تصنيف إدارته فقط (في الإضافة)
+            const u = JSON.parse(localStorage.getItem('user') || '{}');
+            const isDeptManager = u.userType === 'DEPT_MANAGER' || (u.userCategory && u.userCategory.startsWith('DEPT_'));
+            const deptKey = (u.department?.key || u.userCategory?.replace('DEPT_', '') || '').toLowerCase();
+            const deptCategoryMap = { 'finance': 'FINANCIAL', 'operations': 'OPERATIONAL', 'compliance': 'COMPLIANCE', 'marketing': 'REPUTATIONAL', 'hr': 'OPERATIONAL' };
+            if (isDeptManager && deptCategoryMap[deptKey]) {
+                document.getElementById('riskCategory').value = deptCategoryMap[deptKey];
+                document.getElementById('riskCategory').style.pointerEvents = 'none'; // قفل الحقل
+                document.getElementById('riskCategory').style.opacity = '0.6';
+            } else {
+                document.getElementById('riskCategory').style.pointerEvents = 'auto';
+                document.getElementById('riskCategory').style.opacity = '1';
+            }
         }
 
         async function loadChoicesForRisk() {
@@ -1601,6 +1694,19 @@
                 document.getElementById('riskModalTitle').textContent = 'تعديل الخطر';
                 document.getElementById('riskTplSection').style.display = 'none';
                 document.getElementById('riskModal').classList.add('show');
+
+                // 🛡️ إجبار مدير الإدارة على تصنيف إدارته فقط (في التعديل)
+                const u = JSON.parse(localStorage.getItem('user') || '{}');
+                const isDeptManager = u.userType === 'DEPT_MANAGER' || (u.userCategory && u.userCategory.startsWith('DEPT_'));
+                const deptKey = (u.department?.key || u.userCategory?.replace('DEPT_', '') || '').toLowerCase();
+                const deptCategoryMap = { 'finance': 'FINANCIAL', 'operations': 'OPERATIONAL', 'compliance': 'COMPLIANCE', 'marketing': 'REPUTATIONAL', 'hr': 'OPERATIONAL' };
+                if (isDeptManager && deptCategoryMap[deptKey]) {
+                    document.getElementById('riskCategory').style.pointerEvents = 'none';
+                    document.getElementById('riskCategory').style.opacity = '0.6';
+                } else {
+                    document.getElementById('riskCategory').style.pointerEvents = 'auto';
+                    document.getElementById('riskCategory').style.opacity = '1';
+                }
             } catch (e) { alert('فشل تحميل البيانات'); }
         }
 

@@ -43,6 +43,7 @@ const okrsRoutes = require('./routes/okrs');
 const entityTypesRoutes = require('./routes/entity-types');
 const priorityMatrixRoutes = require('./routes/priority-matrix');
 const inspectorRoutes = require('./routes/system-inspector');
+const webhooksRoutes = require('./routes/webhooks');
 const scenariosRoutes = require('./routes/scenarios');
 const commentsRoutes = require('./routes/comments');
 const activitiesRoutes = require('./routes/activities');
@@ -331,6 +332,9 @@ app.use('/api/financial', financialRoutes);
 // 🤖 محرك الذكاء — EDITOR وأعلى
 app.use('/api/alert-engine', alertEngineRoutes);
 app.use('/api/sync', syncRoutes);
+
+// 🔔 Webhooks & Integrations
+app.use('/api/webhooks', webhooksRoutes);
 
 // 📂 الاستيراد — DATA_ENTRY وأعلى  
 app.use('/api/import', importRoutes);

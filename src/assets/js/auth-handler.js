@@ -41,8 +41,13 @@ function getRoutingDestination(user) {
     if (uCategory.startsWith('INVESTOR')) return '/investor-dashboard.html';
     if (uType === 'CONSULTANT' || uCategory.startsWith('CONSULTANT')) return '/consultant-dashboard.html';
     if (uCategory.startsWith('BOARD_')) return '/board-dashboard.html';
-    if (uType === 'DEPT_MANAGER' || uCategory.startsWith('DEPT_')) return '/dept-dashboard.html';
+
+    // إذا كان المستخدم ينتمي لإدارة (سواء مدير أو مدخل بيانات)، يتم توجيهه للوحة الإدارة
+    if (uType === 'DEPT_MANAGER' || uCategory.startsWith('DEPT_') || user.department?.key) return '/dept-dashboard.html';
+
     if (['INDIVIDUAL', 'PERSONAL', 'CAREER'].includes(uCategory)) return '/individual-dashboard.html';
+
+    // الأفراد بدون إدارة محددة (على مستوى الشركة)
     if (role === 'VIEWER' || role === 'DATA_ENTRY') return '/viewer-hub.html';
 
     // 4. الافتراضي الجذري (أصحاب الأعمال - CEOs)

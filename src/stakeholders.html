@@ -512,6 +512,7 @@
                 lastContact: s.lastContactAt ? new Date(s.lastContactAt).toLocaleDateString('ar-SA') : '—',
                 riskCount: s._count?.stakeholderRisks || 0,
                 type: s.type || 'EXTERNAL',
+                departmentKey: s.departmentKey || ''
             };
         }
 
@@ -559,13 +560,28 @@
         }
 
         function renderList() {
-            document.getElementById('shList').innerHTML = [...stakeholders].sort((a, b) => (b.power * b.interest) - (a.power * a.interest)).map(s => `
-                <div class="sh-person" onclick="showShDetail('${s.id}')" style="cursor:pointer">
+            const u = JSON.parse(localStorage.getItem('user') || '{}');
+            const isDeptManager = u.userType === 'DEPT_MANAGER' || (u.userCategory && u.userCategory.startsWith('DEPT_'));
+            const deptKey = (u.department?.key || u.userCategory?.replace('DEPT_', '') || '').toLowerCase();
+
+            document.getElementById('shList').innerHTML = [...stakeholders].sort((a, b) => (b.power * b.interest) - (a.power * a.interest)).map(s => {
+                // 🛡️ حماية الصلاحيات: تحقق مما إذا كان يملك الحق في التعديل
+                let canEdit = true;
+                if (isDeptManager && s.departmentKey && s.departmentKey !== deptKey) {
+                    canEdit = false;
+                }
+
+                const actionsHtml = canEdit
+                    ? `<button onclick="event.stopPropagation(); editStakeholder('${s.id}')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px 8px;transition:.2s;" title="تعديل" onmouseover="this.style.color='var(--warning)'" onmouseout="this.style.color='var(--text-muted)'"><i class="bi bi-pencil"></i></button> <button onclick="event.stopPropagation(); deleteStakeholder('${s.id}')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px 8px;transition:.2s;" title="حذف" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'"><i class="bi bi-trash"></i></button>`
+                    : `<span style="font-size:10px;color:var(--text-muted);background:rgba(255,255,255,0.05);padding:2px 8px;border-radius:6px;margin-right:8px;"><i class="bi bi-lock"></i> مقفل</span>`;
+
+                return `<div class="sh-person" onclick="showShDetail('${s.id}')" style="cursor:pointer; position:relative;">
                     <div class="sh-person-avatar" style="background:${s.color}">${s.name.charAt(0)}</div>
                     <div class="sh-person-info"><div class="sh-person-name">${s.name}</div><div class="sh-person-role">${s.role}</div></div>
                     <div class="sh-person-tag" style="background:${strategyColors[s.strategy]}15;color:${strategyColors[s.strategy]}">${strategyLabels[s.strategy]}</div>
-                </div>
-            `).join('') || '<div style="text-align:center;color:var(--muted);padding:16px">لا يوجد أصحاب مصلحة</div>';
+                    <div style="display:flex; gap:4px; margin-right:auto; align-items:center;">${actionsHtml}</div>
+                </div>`;
+            }).join('') || '<div style="text-align:center;color:var(--muted);padding:16px">لا يوجد أصحاب مصلحة</div>';
         }
 
         function renderEngage() {
@@ -596,11 +612,29 @@
             alert(`${s.name}\nالدور: ${s.role}\nالقوة: ${s.power}/5 | الاهتمام: ${s.interest}/5\nالمشاركة: ${s.engagement}%\nالاستراتيجية: ${strategyLabels[s.strategy]}\nالمخاطر المرتبطة: ${s.riskCount}`);
         }
 
+        async function deleteStakeholder(id) {
+            if (!confirm('هل أنت متأكد من حذف صاحب المصلحة؟')) return;
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`/api/stakeholders/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.ok) { StartixAPI.showToast ? StartixAPI.showToast('✅ تم الحذف بنجاح') : alert('تم الحذف'); await loadStakeholders(); }
+            } catch (e) {
+                alert('فشل الحذف');
+            }
+        }
+
         function renderAll() { renderStats(); renderGrid(); renderList(); renderEngage(); }
 
         // ====== MODAL ======
         function openAddModal() {
             document.getElementById('shEditId').value = '';
+
+            // 🛡️ تحديد القسم للمدير ليتم حفظه
+            const u = JSON.parse(localStorage.getItem('user') || '{}');
+            const isDeptManager = u.userType === 'DEPT_MANAGER' || (u.userCategory && u.userCategory.startsWith('DEPT_'));
+            const deptKey = (u.department?.key || u.userCategory?.replace('DEPT_', '') || '').toLowerCase();
+            document.getElementById('shFormDeptKey').value = isDeptManager ? deptKey : '';
+
             document.getElementById('shFormName').value = '';
             document.getElementById('shFormRole').value = '';
             document.getElementById('shFormPower').value = '3';
@@ -620,6 +654,7 @@
             const s = stakeholders.find(x => x.id === id);
             if (!s) return;
             document.getElementById('shEditId').value = s.id;
+            document.getElementById('shFormDeptKey').value = s.departmentKey || '';
             document.getElementById('shFormName').value = s.name;
             document.getElementById('shFormRole').value = s.role;
             document.getElementById('shFormPower').value = s.power;
@@ -717,6 +752,7 @@
                 engagement: parseInt(document.getElementById('shFormEngagement').value) || 50,
                 position: sentimentToPosition[document.getElementById('shFormSentiment').value] || 'NEUTRAL',
                 strategy: document.getElementById('shFormStrategy').value,
+                departmentKey: document.getElementById('shFormDeptKey').value || null,
                 color: ['#ef4444', '#f97316', '#667eea', '#22c55e', '#8b5cf6', '#facc15', '#14b8a6', '#ec4899', '#64748b', '#38bdf8'][Math.floor(Math.random() * 10)],
             };
 
@@ -753,6 +789,7 @@
                 </div>
                 <div class="modal-body" style="padding:20px 24px">
                     <input type="hidden" id="shEditId">
+                    <input type="hidden" id="shFormDeptKey">
 
                     <!-- Templates -->
                     <div id="shTplSection" style="margin-bottom:16px">

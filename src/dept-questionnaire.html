@@ -401,7 +401,7 @@
         <div class="main-content">
 
             <div class="q-header">
-                <a href="/team.html" class="q-back">
+                <a href="/team.html" class="q-back" id="backLink">
                     <i class="bi bi-arrow-right"></i> العودة لإدارة الفريق
                 </a>
                 <div class="q-title-row">
@@ -456,10 +456,18 @@
     <script>
         const token = localStorage.getItem('token');
         const entityId = localStorage.getItem('entityId');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
 
         // Get params: ?dept=FINANCE or ?role=CFO or ?id=xxx
         const params = new URLSearchParams(location.search);
-        const deptCode = params.get('dept');
+        let deptCode = params.get('dept');
+
+        // التعرف التلقائي لمدير الإدارة لمنع تداخل الصفحات أو ضياع التوجيه
+        if (!deptCode && (user.userType === 'DEPT_MANAGER' || (user.userCategory && user.userCategory.startsWith('DEPT_')))) {
+            deptCode = user.department?.key || user.userCategory.replace('DEPT_', '');
+        }
+        if (deptCode) deptCode = deptCode.toUpperCase();
+
         const deptRole = params.get('role');
         const deptId = params.get('id');
 
@@ -534,6 +542,13 @@
                         savedData = d.data || {};
                     }
                 } catch (e) { }
+            }
+
+            // تخصيص زر العودة لمدير الإدارة لمنع طرده للداشبورد
+            const backLink = document.getElementById('backLink');
+            if (backLink && (user.userType === 'DEPT_MANAGER' || (user.userCategory && user.userCategory.startsWith('DEPT_')))) {
+                backLink.href = `/dept-dashboard.html?dept=${deptCode ? deptCode.toLowerCase() : ''}`;
+                backLink.innerHTML = '<i class="bi bi-arrow-right"></i> العودة للوحة الإدارة';
             }
 
             // 4. Render

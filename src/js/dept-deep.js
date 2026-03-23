@@ -12,6 +12,10 @@ const DEPTS = [
     { key: 'marketing', label: 'التسويق', icon: '📣', color: '#8b5cf6', glow: 'rgba(139,92,246,.12)', css: '--purple' },
     { key: 'operations', label: 'العمليات', icon: '⚙️', color: '#6366f1', glow: 'rgba(99,102,241,.12)', css: '--purple' },
     { key: 'support', label: 'الخدمات المساندة', icon: '🛠️', color: '#64748b', glow: 'rgba(100,116,139,.12)', css: '--text-muted' },
+    { key: 'it', label: 'تقنية المعلومات', icon: '💻', color: '#06b6d4', glow: 'rgba(6,182,212,.12)', css: '--cyan' },
+    { key: 'cs', label: 'خدمة العملاء', icon: '🎟️', color: '#f97316', glow: 'rgba(249,115,22,.12)', css: '--orange' },
+    { key: 'quality', label: 'الجودة', icon: '✅', color: '#22c55e', glow: 'rgba(34,197,94,.12)', css: '--green' },
+    { key: 'projects', label: 'المشاريع', icon: '📊', color: '#a855f7', glow: 'rgba(168,85,247,.12)', css: '--purple' },
 ];
 
 const SECTIONS = [
@@ -1085,7 +1089,135 @@ const QUESTIONS = {
             placeholder: 'مثال: خوادم متهالكة، غياب النسخ الاحتياطي، نقص التراخيص...'
         },
     ],
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // 💻 تقنية المعلومات (IT)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    it: [
+        { type: 'section', icon: '🏗️', title: 'الهيكل التنظيمي وإدارة IT', priority: 'حرج', desc: 'وضوح المسؤوليات وحجم الفريق هو أساس التخطيط التقني' },
+        { id: 'it_lead', label: 'هل لديك مدير IT أو مسؤول تقني متخصص؟', type: 'radio', opts: ['نعم — متفرغ داخلي', 'مشترك مع مهام أخرى', 'مستشار/شريك خارجي', 'لا يوجد'] },
+        { id: 'it_team_size', label: 'ما حجم فريق IT؟', type: 'radio', opts: ['أكثر من 5 موظفين', '2-5 موظفين', 'موظف واحد', 'لا يوجد فريق'] },
+        { id: 'it_budget', label: 'هل لديك ميزانية IT مستقلة ومحددة؟', type: 'radio', opts: ['نعم — سنوية مخططة', 'جزئياً', 'لا — حسب الحاجة'] },
+        { id: 'it_strategy', label: 'هل لديك استراتيجية تقنية مرتبطة بأهداف الشركة؟', type: 'radio', opts: ['نعم — موثقة ومعتمدة', 'جزئياً', 'لا'] },
+
+        { type: 'section', icon: '🛡️', title: 'الأمن السيبراني والبيانات', priority: 'حرج', desc: 'متوسط تكلفة اختراق البيانات في المنطقة 6.5 مليون دولار' },
+        { id: 'cybersec_policy', label: 'هل لديك سياسة أمن سيبراني مكتوبة؟', type: 'radio', opts: ['نعم — مُطبقة ومحدّثة', 'موجودة غير مفعّلة', 'لا'] },
+        { id: 'backup_system', label: 'هل لديك نظام نسخ احتياطي منتظم؟', type: 'radio', opts: ['نعم — يومي آلي + خارجي', 'أسبوعي', 'يدوي وغير منتظم', 'لا'] },
+        { id: 'access_control', label: 'هل تطبق مبدأ الحد الأدنى من الصلاحيات؟', type: 'radio', opts: ['نعم — صلاحيات محددة لكل دور', 'جزئياً', 'لا — صلاحيات واسعة'] },
+        { id: 'security_incidents', label: 'هل تعرضت لحوادث أمنية (اختراق/فيروس/تسريب) خلال سنة؟', type: 'radio', opts: ['لا', 'نعم — مع استجابة فورية', 'نعم — دون استجابة كافية'] },
+
+        { type: 'section', icon: '⚙️', title: 'الأنظمة والبنية التحتية', priority: 'مهم', desc: 'الأنظمة القديمة تكلف 3x في الصيانة مقارنة بالحديثة' },
+        { id: 'erp_system', label: 'هل لديك نظام ERP أو نظام مؤسسي متكامل؟', type: 'radio', opts: ['نعم — ERP كامل ومتكامل', 'برامج متخصصة منفصلة', 'Excel وأدوات يدوية', 'لا يوجد'] },
+        { id: 'cloud_adoption', label: 'ما مستوى استخدامك للحوسبة السحابية؟', type: 'radio', opts: ['Cloud-first (90%+)', 'هجين (50-90%)', 'محلي بشكل رئيسي', 'لا سحابة'] },
+        { id: 'system_uptime', label: 'ما معدل توفر الأنظمة الحيوية (Uptime)؟', type: 'radio', opts: ['99.9%+ (أقل من ساعة توقف/سنة)', '99% (حوالي 4 أيام/سنة)', 'أقل من 99%', 'لا نقيس'] },
+        { id: 'it_doc', label: 'هل الأنظمة والبنية التحتية موثقة؟', type: 'radio', opts: ['نعم — موثقة بالكامل', 'جزئياً', 'لا'] },
+
+        { type: 'section', icon: '📊', title: 'مستوى النضج التقني والمؤشرات', priority: 'مهم', desc: 'قياس الأداء التقني يحدد الأولويات الاستثمارية' },
+        { id: 'it_kpis', label: 'هل تتابع مؤشرات أداء IT (Uptime, MTTR, Tickets)?', type: 'radio', opts: ['نعم — Dashboard حي', 'تقارير دورية', 'لا نقيس'] },
+        { id: 'tech_debt', label: 'هل لديك دين تقني متراكم (أنظمة قديمة/ترقيات متأخرة)؟', type: 'radio', opts: ['لا — نظيف', 'متوسط — نخطط للمعالجة', 'مرتفع — مشكلة فعلية'] },
+        { id: 'digital_transform', label: 'هل تقود IT مبادرات التحول الرقمي في الشركة؟', type: 'radio', opts: ['نعم — بقيادة IT', 'بالشراكة مع أقسام أخرى', 'لا — IT دعم فقط'] },
+
+        { type: 'section', icon: '🤝', title: 'خدمة المستخدمين الداخليين', priority: 'موصى', desc: 'جودة دعم IT تؤثر على إنتاجية الشركة بأكملها' },
+        { id: 'helpdesk', label: 'هل لديك نظام Help Desk لطلبات الدعم؟', type: 'radio', opts: ['نعم — نظام تذاكر رسمي', 'إيميل/واتساب', 'شفهياً', 'لا'] },
+        { id: 'sla_it', label: 'هل لديك SLA محدد لوقت الاستجابة والحل؟', type: 'radio', opts: ['نعم — موثق ومُتتبّع', 'غير رسمي', 'لا'] },
+        { id: 'user_satisfaction_it', label: 'ما مستوى رضا المستخدمين الداخليين عن IT؟', type: 'radio', opts: ['ممتاز — نقيسه رسمياً', 'جيد بشكل عام', 'متذمرون', 'لا نقيس'] },
+
+        { type: 'section', icon: '✍️', title: 'التحقق والإغلاق', priority: 'موصى', desc: 'سؤال مفتوح لتوثيق الأولوية التقنية الأكثر إلحاحاً' },
+        { id: 'it_free', label: 'ما أكبر تحدٍّ تقني يعرقل نمو الشركة الآن؟', type: 'textarea', placeholder: 'مثال: غياب ERP، أمن ضعيف، بنية تحتية قديمة، كفاءات تقنية منخفضة...' },
+    ],
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // 🎟️ خدمة العملاء (CS)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    cs: [
+        { type: 'section', icon: '🏗️', title: 'هيكل فريق خدمة العملاء', priority: 'حرج', desc: 'الفريق المناسب هو الفرق بين عميل يبقى وعميل يذهب للمنافس' },
+        { id: 'cs_team_size', label: 'ما حجم فريق خدمة العملاء؟', type: 'radio', opts: ['أكثر من 10', '5-10', '2-4', 'موظف واحد', 'لا يوجد'] },
+        { id: 'cs_manager', label: 'هل لديك مدير أو مشرف خدمة عملاء مخصص؟', type: 'radio', opts: ['نعم — متفرغ', 'جزئياً', 'لا'] },
+        { id: 'cs_channels', label: 'ما قنوات التواصل المتاحة للعملاء؟', type: 'checkbox', opts: ['هاتف', 'واتساب', 'إيميل', 'دردشة مباشرة', 'وسائل تواصل اجتماعي', 'بوابة إلكترونية'] },
+        { id: 'cs_operating_hours', label: 'ما ساعات عمل خدمة العملاء؟', type: 'radio', opts: ['24/7', '12 ساعة (8ص-8م)', 'دوام رسمي فقط', 'غير محددة'] },
+
+        { type: 'section', icon: '⭐', title: 'جودة الخدمة ورضا العملاء', priority: 'حرج', desc: 'زيادة الاحتفاظ بالعميل 5% ترفع الأرباح 25-95%' },
+        { id: 'csat_score', label: 'هل تقيس رضا العملاء (CSAT/NPS)؟', type: 'radio', opts: ['نعم — بانتظام مع تقارير', 'أحياناً', 'لا'] },
+        { id: 'nps', label: 'ما مستوى NPS (احتمال التوصية) لديك؟', type: 'radio', opts: ['أكثر من 50 (ممتاز)', '20-50 (جيد)', '0-20 (متوسط)', 'سلبي (أقل من 0)', 'لا نقيس'] },
+        { id: 'complaint_resolution', label: 'ما معدل حل الشكاوى من أول تواصل (FCR)?', type: 'radio', opts: ['أكثر من 80%', '60-80%', 'أقل من 60%', 'لا نقيس'] },
+        { id: 'avg_response_time', label: 'ما متوسط وقت الاستجابة للعميل؟', type: 'radio', opts: ['أقل من ساعة', '1-4 ساعات', '4-24 ساعة', 'أكثر من يوم'] },
+
+        { type: 'section', icon: '🔧', title: 'الأنظمة وإدارة التذاكر', priority: 'مهم', desc: 'الشركات التي تستخدم CRM تحتفظ بـ 27% عملاء أكثر' },
+        { id: 'crm_cs', label: 'هل تستخدمون CRM لإدارة العملاء؟', type: 'radio', opts: ['نعم — متكامل وفاعل', 'جزئياً', 'Excel/يدوي', 'لا'] },
+        { id: 'ticketing_system', label: 'هل لديك نظام تذاكر (Ticketing) لتتبع الشكاوى؟', type: 'radio', opts: ['نعم — رسمي', 'غير رسمي', 'لا'] },
+        { id: 'cs_knowledge_base', label: 'هل لديك قاعدة معرفة للإجابات الشائعة (FAQ)?', type: 'radio', opts: ['نعم — محدّثة', 'جزئياً', 'لا'] },
+        { id: 'chatbot_ai', label: 'هل تستخدمون Chatbot أو AI لأتمتة الردود؟', type: 'radio', opts: ['نعم — فاعل', 'قيد التطوير', 'لا'] },
+
+        { type: 'section', icon: '📈', title: 'تطوير الفريق وإدارة الأداء', priority: 'مهم', desc: 'موظف خدمة عملاء سعيد = عميل سعيد' },
+        { id: 'cs_training', label: 'هل يتلقى فريق CS تدريباً منتظماً؟', type: 'radio', opts: ['نعم — برنامج ربع سنوي', 'عند التوظيف فقط', 'لا'] },
+        { id: 'cs_kpis', label: 'هل لدى الفريق أهداف ومؤشرات أداء واضحة؟', type: 'radio', opts: ['نعم — يومية وأسبوعية', 'شهرية فقط', 'لا'] },
+        { id: 'cs_turnover', label: 'ما معدل دوران موظفي خدمة العملاء سنوياً؟', type: 'radio', opts: ['أقل من 15%', '15-30%', 'أكثر من 30%', 'لا نتتبع'] },
+
+        { type: 'section', icon: '✍️', title: 'التحقق والإغلاق', priority: 'موصى', desc: 'ما الذي يُضعف تجربة العميل أكثر من أي شيء آخر؟' },
+        { id: 'cs_free', label: 'ما أكبر شكوى متكررة تصلك من العملاء؟', type: 'textarea', placeholder: 'مثال: بطء الرد، عدم متابعة الشكاوى، صعوبة الإلغاء، جودة الخدمة...' },
+    ],
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // ✅ الجودة (Quality)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    quality: [
+        { type: 'section', icon: '🏗️', title: 'هيكل إدارة الجودة', priority: 'حرج', desc: 'الجودة ليست قسماً — هي ثقافة. لكنها تبدأ بقيادة واضحة' },
+        { id: 'quality_manager', label: 'هل لديك مدير جودة أو مسؤول جودة متخصص؟', type: 'radio', opts: ['نعم — متفرغ', 'مشترك مع مهام', 'لا'] },
+        { id: 'quality_policy', label: 'هل لديك سياسة جودة موثقة ومعتمدة؟', type: 'radio', opts: ['نعم — محدّثة وموزعة', 'موجودة غير فاعلة', 'لا'] },
+        { id: 'iso_certification', label: 'هل حصلتم على شهادات جودة (ISO, etc.)?', type: 'checkbox', opts: ['ISO 9001', 'ISO 14001', 'ISO 45001', 'IATF / شهادة قطاعية', 'لا يوجد'] },
+        { id: 'quality_budget', label: 'هل لإدارة الجودة ميزانية مستقلة؟', type: 'radio', opts: ['نعم', 'جزئياً', 'لا'] },
+
+        { type: 'section', icon: '🔍', title: 'ضبط الجودة والفحص', priority: 'حرج', desc: 'تكلفة الوقاية = 10% من تكلفة الإصلاح بعد التسليم' },
+        { id: 'inspection_process', label: 'ما مستوى عملية الفحص وضبط الجودة؟', type: 'radio', opts: ['فحص آلي + يدوي في كل مرحلة', 'فحص نهائي فقط', 'فحص عشوائي', 'لا يوجد فحص رسمي'] },
+        { id: 'defect_rate', label: 'ما نسبة العيوب/الأخطاء في المنتجات/الخدمات؟', type: 'radio', opts: ['أقل من 1%', '1-3%', 'أكثر من 3%', 'لا نقيس'] },
+        { id: 'rework_cost', label: 'هل تتتبع تكلفة إعادة العمل (Rework Cost)?', type: 'radio', opts: ['نعم — مع هدف تخفيض', 'أحياناً', 'لا'] },
+        { id: 'supplier_quality', label: 'هل تقيّم جودة الموردين بشكل منتظم؟', type: 'radio', opts: ['نعم — تقييم دوري + شهادات', 'أحياناً', 'لا'] },
+
+        { type: 'section', icon: '📊', title: 'المؤشرات والتقارير', priority: 'مهم', desc: 'لا يمكن إدارة ما لا يُقاس' },
+        { id: 'quality_kpis', label: 'هل تتابع مؤشرات الجودة بانتظام؟', type: 'radio', opts: ['نعم — Dashboard يومي', 'تقارير أسبوعية', 'شهرية', 'لا'] },
+        { id: 'customer_returns', label: 'ما معدل مرتجعات العملاء/الشكاوى المتعلقة بالجودة؟', type: 'radio', opts: ['أقل من 2%', '2-5%', 'أكثر من 5%', 'لا نقيس'] },
+        { id: 'root_cause', label: 'هل تجري تحليل السبب الجذري للعيوب (RCA)?', type: 'radio', opts: ['نعم — لكل عيب رئيسي', 'للحوادث الكبيرة فقط', 'لا'] },
+
+        { type: 'section', icon: '🔄', title: 'التحسين المستمر', priority: 'مهم', desc: 'Kaizen: تحسينات صغيرة يومية = نتائج كبيرة سنوية' },
+        { id: 'continuous_improvement', label: 'هل لديك منهجية تحسين مستمر (Lean/Six Sigma/Kaizen)?', type: 'radio', opts: ['نعم — مطبقة رسمياً', 'جزئياً', 'لا'] },
+        { id: 'audit_internal', label: 'هل تجري مراجعات جودة داخلية دورية؟', type: 'radio', opts: ['ربع سنوية', 'سنوية', 'عند الحاجة', 'لا'] },
+        { id: 'corrective_actions', label: 'هل لديك نظام للإجراءات التصحيحية والوقائية (CAPA)?', type: 'radio', opts: ['نعم — رسمي ومتتبع', 'غير رسمي', 'لا'] },
+
+        { type: 'section', icon: '✍️', title: 'التحقق والإغلاق', priority: 'موصى', desc: 'ما هو أكبر مشكلة جودة تواجهها الآن؟' },
+        { id: 'quality_free', label: 'ما المشكلة التي تتكرر في الجودة وتصعب حلها؟', type: 'textarea', placeholder: 'مثال: أخطاء بشرية، موردون غير موثوقين، عدم اتباع الإجراءات...' },
+    ],
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // 📊 إدارة المشاريع (Projects / PMO)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    projects: [
+        { type: 'section', icon: '🏗️', title: 'هيكل إدارة المشاريع والـ PMO', priority: 'حرج', desc: '70% من المشاريع تفشل بسبب غياب منهجية إدارة واضحة' },
+        { id: 'pmo_exists', label: 'هل لديك مكتب إدارة مشاريع (PMO) رسمي؟', type: 'radio', opts: ['نعم — PMO كامل', 'جزئياً — بعض الوظائف', 'لا'] },
+        { id: 'pm_methodology', label: 'ما المنهجية المستخدمة في إدارة المشاريع؟', type: 'radio', opts: ['Agile/Scrum', 'Waterfall/PMBOK', 'هجين', 'لا منهجية محددة'] },
+        { id: 'pm_certified', label: 'هل مدراء المشاريع حاصلون على شهادات مهنية (PMP/Prince2)?', type: 'radio', opts: ['نعم — أغلبهم', 'بعضهم', 'لا'] },
+        { id: 'project_portfolio', label: 'هل تدير محفظة مشاريع (Portfolio) بشكل رسمي؟', type: 'radio', opts: ['نعم — مع أولويات واضحة', 'جزئياً', 'لا'] },
+
+        { type: 'section', icon: '📅', title: 'تخطيط وتنفيذ المشاريع', priority: 'حرج', desc: 'المشاريع التي تبدأ بمتطلبات واضحة تنجح بنسبة 2.5x أكبر' },
+        { id: 'project_charter', label: 'هل تُعد وثيقة مشروع (Project Charter) لكل مشروع؟', type: 'radio', opts: ['نعم — دائماً', 'للمشاريع الكبيرة فقط', 'لا'] },
+        { id: 'scope_management', label: 'كيف تتعامل مع تغييرات النطاق (Scope Creep)?', type: 'radio', opts: ['نظام تغيير رسمي (Change Control)', 'غير رسمي', 'لا يوجد آلية'] },
+        { id: 'on_time_delivery', label: 'ما نسبة المشاريع المسلّمة في الموعد؟', type: 'radio', opts: ['80%+ في الموعد', '50-80%', 'أقل من 50%', 'لا نقيس'] },
+        { id: 'on_budget', label: 'ما نسبة المشاريع المنتهية ضمن الميزانية المحددة؟', type: 'radio', opts: ['80%+ ضمن الميزانية', '50-80%', 'أقل من 50%', 'لا نقيس'] },
+
+        { type: 'section', icon: '🔧', title: 'الأدوات والأنظمة', priority: 'مهم', desc: 'الأدوات الصحيحة ترفع إنتاجية فريق المشاريع 30%' },
+        { id: 'pm_tools', label: 'ما أدوات إدارة المشاريع المستخدمة؟', type: 'checkbox', opts: ['Microsoft Project', 'Jira', 'Asana/Monday', 'Excel فقط', 'لا توجد أدوات'] },
+        { id: 'risk_register', label: 'هل تحتفظ بسجل مخاطر (Risk Register) لكل مشروع؟', type: 'radio', opts: ['نعم — محدّث بانتظام', 'للمشاريع الكبيرة', 'لا'] },
+        { id: 'lessons_learned_pm', label: 'هل توثق درس مستفادة (Lessons Learned) بعد كل مشروع؟', type: 'radio', opts: ['نعم — قاعدة معرفة', 'أحياناً', 'لا'] },
+
+        { type: 'section', icon: '👥', title: 'إدارة الموارد وأصحاب المصلحة', priority: 'مهم', desc: 'المشاريع تفشل بسبب الناس أكثر من التقنية' },
+        { id: 'resource_planning', label: 'هل تخطط الموارد البشرية للمشاريع مسبقاً؟', type: 'radio', opts: ['نعم — خطة موارد رسمية', 'جزئياً', 'لا — حسب الحاجة'] },
+        { id: 'stakeholder_engagement', label: 'كيف تدير توقعات وتواصل أصحاب المصلحة؟', type: 'radio', opts: ['تقارير دورية + اجتماعات منتظمة', 'عند الطلب فقط', 'لا يوجد آلية'] },
+        { id: 'project_status_reports', label: 'هل تُصدر تقارير حالة مشروع منتظمة؟', type: 'radio', opts: ['نعم — أسبوعية', 'شهرية', 'عند الطلب', 'لا'] },
+
+        { type: 'section', icon: '✍️', title: 'التحقق والإغلاق', priority: 'موصى', desc: 'ما التحدي الأكبر الذي يعرقل إنجاز مشاريعك؟' },
+        { id: 'projects_free', label: 'ما أكبر سبب لتأخر أو فشل المشاريع لديكم؟', type: 'textarea', placeholder: 'مثال: غياب نطاق واضح، موارد مشتركة، تغيير متطلبات متكرر، قرارات بطيئة...' },
+    ],
 };
+
 
 /* ── خرائط التحويل (S/W تلقائي) ── */
 const STRENGTH_RULES = {
@@ -1906,6 +2038,10 @@ const CHALLENGES = {
     marketing: ['غياب استراتيجية واضحة', 'ميزانية محدودة', 'عدم قياس ROI', 'محتوى غير منتظم'],
     operations: ['عمليات يدوية كثيرة', 'غياب SOPs', 'بطء في التسليم', 'مشاكل جودة'],
     support: ['بنية تقنية قديمة', 'عقود موردين غير محدّثة', 'غياب سياسة مشتريات', 'ضعف الصيانة الوقائية'],
+    it: ['اختراقات سيبرانية', 'دين تقني متراكم', 'غياب استراتيجية تقنية', 'ضعف النسخ الاحتياطي', 'تكامل محدود بين الأنظمة', 'غياب Help Desk', 'ضعف الرقابة على الصلاحيات', 'ميزانية IT غير كافية'],
+    cs: ['بطء الرد على العميل', 'غياب CRM', 'معدل FCR منخفض', 'دوران فريق CS', 'شكاوى غير محلولة', 'قنوات تواصل متفرقة', 'غياب قاعدة معرفة', 'ضعف تدريب الفريق'],
+    quality: ['الخطأ البشري المتكرر', 'غياب ISO', 'ديون جودة من الموردين', 'غياب RCA', 'متجاوزة معدل العيوب', 'ضعف ثقافة الجودة', 'الفحص النهائي فقط', 'غياب CAPA'],
+    projects: ['تأخير مستمر في المشاريع', 'تجاوز الميزانية', 'غياب PMO', 'ضعف إدارة المخاطر', 'غياب منهجية', 'شح النطاق (Scope Creep)', 'ضعف توثيق الدروس المستفادة', 'ضعف تواصل أصحاب المصلحة'],
 };
 
 /* ── أهداف كل إدارة (القسم 6) ── */
@@ -1917,6 +2053,10 @@ const GOALS = {
     marketing: ['بناء هوية رقمية', 'محتوى منتظم', 'قياس ROI', 'إطلاق حملة مستهدفة'],
     operations: ['توثيق العمليات SOPs', 'أتمتة عمليات أساسية', 'تقليل وقت التسليم', 'تطبيق نظام جودة'],
     support: ['ترقية البنية التقنية', 'تحديث عقود الموردين', 'سياسة مشتريات واضحة', 'نظام إدارة الأصول'],
+    it: ['خطة أمن سيبراني شاملة', 'استخدام ERP متكامل', 'تطبيق Cloud-first', 'بناء Help Desk رسمي', 'توثيق كامل للأنظمة', 'داشبورد IT حي', 'قيادة التحول الرقمي', 'تطبيق NCA كاملاً'],
+    cs: ['رفع NPS لأكثر من 50', 'تطبيق CRM متكامل', 'تقليل وقت الاستجابة < ساعة', 'قاعدة معرفة محدّثة', 'برنامج تدريب CS ربعي', 'نظام تذاكر رسمي', 'تطبيق Chatbot للأسئلة الشائعة', 'قياس CSAT بانتظام'],
+    quality: ['الحصول على ISO 9001', 'تفعيل CAPA', 'تطبيق Lean/Six Sigma', 'تقليل معدل العيوب < 1%', 'داشبورد جودة يومي', 'مراجعات داخلية ربعية', 'تقييم دوري للموردين', 'تأهيل فريق الجودة'],
+    projects: ['إنشاء PMO رسمي', 'رفع On-Time Delivery > 80%', 'تطبيق منهجية Agile', 'بناء Risk Register', 'نظام تغيير رسمي', 'استخدام أدوات إدارة مشاريع', 'توثيق دروس مستفادة', 'شهادة PMP للفريق'],
 };
 
 const OPERATING_MODELS = [
@@ -2534,41 +2674,70 @@ function renderStatus(dept, d) {
     }
 
     // ── بطاقة مدير الإدارة ──
-    const mgr = d.deptManagerInfo || { name: '', phone: '', email: '' };
-    const mgrCardHTML = `
-    <div style="background:linear-gradient(135deg,rgba(${dept.color ? dept.color.replace('#', '').match(/../g).map(h => parseInt(h, 16)).join(',') : '102,126,234'},.1),rgba(255,255,255,.02));border:1.5px solid rgba(${dept.color ? dept.color.replace('#', '').match(/../g).map(h => parseInt(h, 16)).join(',') : '102,126,234'},.25);border-radius:16px;padding:20px;margin-bottom:18px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-            <div style="width:40px;height:40px;border-radius:12px;background:${dept.color || '#667eea'};display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:800">${mgr.name ? mgr.name[0] : '<i class="bi bi-person-fill" style="font-size:16px"></i>'}</div>
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const isDeptManager = currentUser.userType === 'DEPT_MANAGER' || (currentUser.userCategory && currentUser.userCategory.startsWith('DEPT_'));
+
+    let mgr = d.deptManagerInfo || { name: '', phone: '', email: '' };
+
+    // إذا كان مسجل الدخول هو مدير الإدارة نفسه
+    if (isDeptManager) {
+        if (!mgr.name && currentUser.name) mgr.name = currentUser.name;
+        if (!mgr.email && currentUser.email) mgr.email = currentUser.email;
+        if (!mgr.phone && currentUser.phone) mgr.phone = currentUser.phone;
+        d.deptManagerInfo = mgr; // تأكيد حفظ بياناته
+    }
+
+    let mgrCardHTML = '';
+    if (isDeptManager) {
+        // إخفاء حقول الإدخال والاكتفاء بعرض صفته كمسؤول
+        mgrCardHTML = `
+        <div style="background:linear-gradient(135deg,rgba(${dept.color ? dept.color.replace('#', '').match(/../g).map(h => parseInt(h, 16)).join(',') : '102,126,234'},.1),rgba(255,255,255,.02));border:1.5px solid rgba(${dept.color ? dept.color.replace('#', '').match(/../g).map(h => parseInt(h, 16)).join(',') : '102,126,234'},.25);border-radius:16px;padding:16px;margin-bottom:18px;display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;border-radius:12px;background:${dept.color || '#667eea'};display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:800">${mgr.name ? mgr.name[0] : '<i class="bi bi-person-fill"></i>'}</div>
             <div>
-                <div style="font-size:14px;font-weight:800;color:var(--text)">${mgr.name || 'لم يتم تعيين مدير'}</div>
-                <div style="font-size:11px;color:var(--text-muted)">مدير إدارة ${dept.label}</div>
+                <div style="font-size:14px;font-weight:800;color:var(--text)">أهلاً بك، ${mgr.name || 'مدير الإدارة'}</div>
+                <div style="font-size:11px;color:var(--text-muted)">أنت تجري الآن تقييم الـ ${dept.label} الخاص بإدارتك.</div>
             </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-            <div style="display:flex;flex-direction:column;gap:4px">
-                <label style="font-size:11px;font-weight:700;color:var(--text-muted)"><i class="bi bi-person"></i> اسم المدير</label>
-                <input id="mgrInfoName" type="text" value="${mgr.name || ''}" placeholder="أدخل اسم المدير"
-                    style="background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.1);color:var(--text);padding:9px 12px;border-radius:10px;font-size:13px;font-family:Tajawal;width:100%;box-sizing:border-box"
-                    oninput="saveMgrInfo()" />
+            <div style="margin-right:auto;background:rgba(255,255,255,0.06);padding:6px 12px;border-radius:8px;font-size:11px;font-weight:700;color:var(--text-muted)"><i class="bi bi-check2-circle"></i> المسؤول المباشر</div>
+        </div>`;
+    } else {
+        // لمالك الشركة والمستشار: إظهار مربعات إدخال بيانات المدير
+        mgrCardHTML = `
+        <div style="background:linear-gradient(135deg,rgba(${dept.color ? dept.color.replace('#', '').match(/../g).map(h => parseInt(h, 16)).join(',') : '102,126,234'},.1),rgba(255,255,255,.02));border:1.5px solid rgba(${dept.color ? dept.color.replace('#', '').match(/../g).map(h => parseInt(h, 16)).join(',') : '102,126,234'},.25);border-radius:16px;padding:20px;margin-bottom:18px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+                <div style="width:40px;height:40px;border-radius:12px;background:${dept.color || '#667eea'};display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:800">${mgr.name ? mgr.name[0] : '<i class="bi bi-person-fill" style="font-size:16px"></i>'}</div>
+                <div>
+                    <div style="font-size:14px;font-weight:800;color:var(--text)">${mgr.name || 'لم يتم تعيين مدير'}</div>
+                    <div style="font-size:11px;color:var(--text-muted)">مدير إدارة ${dept.label}</div>
+                </div>
             </div>
-            <div style="display:flex;flex-direction:column;gap:4px">
-                <label style="font-size:11px;font-weight:700;color:var(--text-muted)"><i class="bi bi-telephone"></i> رقم الجوال</label>
-                <input id="mgrInfoPhone" type="tel" value="${mgr.phone || ''}" placeholder="05xxxxxxxx"
-                    style="background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.1);color:var(--text);padding:9px 12px;border-radius:10px;font-size:13px;font-family:Tajawal;width:100%;box-sizing:border-box;direction:ltr;text-align:left"
-                    oninput="saveMgrInfo()" />
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+                <div style="display:flex;flex-direction:column;gap:4px">
+                    <label style="font-size:11px;font-weight:700;color:var(--text-muted)"><i class="bi bi-person"></i> اسم المدير</label>
+                    <input id="mgrInfoName" type="text" value="${mgr.name || ''}" placeholder="أدخل اسم المدير"
+                        style="background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.1);color:var(--text);padding:9px 12px;border-radius:10px;font-size:13px;font-family:Tajawal;width:100%;box-sizing:border-box"
+                        oninput="saveMgrInfo()" />
+                </div>
+                <div style="display:flex;flex-direction:column;gap:4px">
+                    <label style="font-size:11px;font-weight:700;color:var(--text-muted)"><i class="bi bi-telephone"></i> رقم الجوال</label>
+                    <input id="mgrInfoPhone" type="tel" value="${mgr.phone || ''}" placeholder="05xxxxxxxx"
+                        style="background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.1);color:var(--text);padding:9px 12px;border-radius:10px;font-size:13px;font-family:Tajawal;width:100%;box-sizing:border-box;direction:ltr;text-align:left"
+                        oninput="saveMgrInfo()" />
+                </div>
+                <div style="display:flex;flex-direction:column;gap:4px">
+                    <label style="font-size:11px;font-weight:700;color:var(--text-muted)"><i class="bi bi-envelope"></i> البريد الإلكتروني</label>
+                    <input id="mgrInfoEmail" type="email" value="${mgr.email || ''}" placeholder="name@company.com"
+                        style="background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.1);color:var(--text);padding:9px 12px;border-radius:10px;font-size:13px;font-family:Tajawal;width:100%;box-sizing:border-box;direction:ltr;text-align:left"
+                        oninput="saveMgrInfo()" />
+                </div>
             </div>
-            <div style="display:flex;flex-direction:column;gap:4px">
-                <label style="font-size:11px;font-weight:700;color:var(--text-muted)"><i class="bi bi-envelope"></i> البريد الإلكتروني</label>
-                <input id="mgrInfoEmail" type="email" value="${mgr.email || ''}" placeholder="name@company.com"
-                    style="background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.1);color:var(--text);padding:9px 12px;border-radius:10px;font-size:13px;font-family:Tajawal;width:100%;box-sizing:border-box;direction:ltr;text-align:left"
-                    oninput="saveMgrInfo()" />
-            </div>
-        </div>
-    </div>`;
+        </div>`;
+    }
+
+    const cardSubDesc = isDeptManager ? 'مراجعة ملخص التشخيص المبدئي بناءً على الشركة:' : 'عيّن مدير الإدارة وراجع ملخص التشخيص قبل البدء:';
 
     return `<div class="card">
         <div class="card-title">${dept.icon} الوضع الحالي — إدارة ${dept.label}</div>
-        <div class="card-sub">عيّن مدير الإدارة وراجع ملخص التشخيص قبل البدء</div>
+        <div class="card-sub">${cardSubDesc}</div>
         ${mgrCardHTML}
         ${scoreHTML}
         ${insightsHTML}

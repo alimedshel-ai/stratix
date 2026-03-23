@@ -1249,6 +1249,12 @@
                 return { text: '🔴 حرج', cls: 'pending' };
             }
 
+            // 🛡️ دالة ذكية لتوجيه الإدارات ذات الصفحات المخصصة
+            function getDeptDeepLink(deptKey) {
+                const customPages = ['hr', 'finance', 'marketing']; // أضف أي إدارة مخصصة هنا مستقبلاً
+                return customPages.includes(deptKey) ? `/${deptKey}-deep.html` : `/dept-deep.html?dept=${deptKey}`;
+            }
+
             // ==================== عرض النظرة العامة (Overview) ====================
             function renderOverview() {
                 const deptsThisSize = SIZE_DEPTS[sizeCategory] || DEPTS.map(d => d.key);
@@ -1353,7 +1359,7 @@
                     tbody.innerHTML = allScored.map((d, i) => {
                         const rankCls = d.score == null ? '' : (i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-ok');
                         const statusColor = scoreColor(d.score);
-                        return `<tr onclick="location.href='/dept-deep.html?dept=${d.key}'" style="cursor:pointer">
+                        return `<tr onclick="location.href='${getDeptDeepLink(d.key)}'" style="cursor:pointer">
                             <td><span class="rank-num ${rankCls}">${i + 1}</span></td>
                             <td style="font-weight:700">${d.icon} ${d.label}</td>
                             <td style="color:${d.mgrName !== '—' ? 'var(--text)' : 'var(--text-muted)'}">${d.mgrName}</td>
@@ -1483,7 +1489,7 @@
                     if (d.model) metrics.push(d.model);
 
                     return `
-                    <div class="dept-card" data-action="dept-navigate" data-href="/dept-deep.html?dept=${dept.key}" style="--accent:${dept.color}${_deptParam ? ';grid-column:1/-1;max-width:600px;cursor:pointer;margin:0 auto' : ';cursor:pointer'}">
+                    <div class="dept-card" data-action="dept-navigate" data-href="${getDeptDeepLink(dept.key)}" style="--accent:${dept.color}${_deptParam ? ';grid-column:1/-1;max-width:600px;cursor:pointer;margin:0 auto' : ';cursor:pointer'}">
                         <div style="position:absolute;top:0;right:0;width:100%;height:3px;background:${dept.color};opacity:.6;border-radius:16px 16px 0 0"></div>
                         <div class="dept-card-header">
                             <div class="dept-icon-box" style="background:${dept.color}22">${dept.icon}</div>
@@ -1545,7 +1551,7 @@
                     const relevantDepts = DEPTS.filter(d => deptsThisSize.includes(d.key));
 
                     const deptLinks = relevantDepts.map(dept => `
-                        <a href="/dept-deep.html?dept=${dept.key}" class="deep-card" style="text-decoration:none">
+                        <a href="${getDeptDeepLink(dept.key)}" class="deep-card" style="text-decoration:none">
                             <div class="deep-card-header">
                                 <div class="deep-icon" style="background:${dept.color}22; color:${dept.color}">${dept.icon}</div>
                                 <div class="deep-title">تحليل ${dept.label}</div>
@@ -1574,7 +1580,7 @@
                     const score = deep.score || deptData.deepScore || getDeptScore(dept.key) || 0;
                     const status = scoreStatus(score);
                     return `
-                    <a href="/dept-deep.html?dept=${dept.key}" class="deep-card" style="text-decoration:none">
+                    <a href="${getDeptDeepLink(dept.key)}" class="deep-card" style="text-decoration:none">
                         <div class="deep-card-header">
                             <div class="deep-icon" style="background:${dept.color}22; color:${dept.color}">${dept.icon}</div>
                             <div class="deep-title">تحليل ${dept.label}</div>
@@ -1597,7 +1603,7 @@
                     deptsThisSize.includes(d.key) && !deptsWithDeep.find(dw => dw.key === d.key)
                 );
                 const unstartedHtml = unstarted.length > 0 ? unstarted.map(dept => `
-                    <a href="/dept-deep.html?dept=${dept.key}" class="deep-card" style="text-decoration:none;opacity:0.6">
+                    <a href="${getDeptDeepLink(dept.key)}" class="deep-card" style="text-decoration:none;opacity:0.6">
                         <div class="deep-card-header">
                             <div class="deep-icon" style="background:${dept.color}12; color:${dept.color}88">${dept.icon}</div>
                             <div class="deep-title" style="color:var(--text-muted)">تحليل ${dept.label}</div>

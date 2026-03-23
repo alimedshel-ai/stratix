@@ -269,11 +269,10 @@
 
         .wh-empty {
             text-align: center;
-            padding: 40px;
+            padding: 48px 24px;
             color: var(--muted)
         }
 
-        /* Event types guide */
         .wh-guide {
             background: var(--card);
             border: 1px solid var(--border);
@@ -315,6 +314,36 @@
             color: var(--muted)
         }
 
+        .platform-btns {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px
+        }
+
+        .platform-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            background: transparent;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s
+        }
+
+        .platform-btn.selected {
+            border-color: var(--primary);
+            background: rgba(102, 126, 234, 0.12)
+        }
+
+        .platform-btn:hover {
+            border-color: rgba(255, 255, 255, 0.2)
+        }
+
         @media(max-width:768px) {
             .main-content {
                 padding: 16px
@@ -325,7 +354,7 @@
 
 <body>
     <div class="page-wrapper">
-        <div id="sidebar-container"></div>
+        <aside id="sidebar-container"></aside>
         <div class="main-content">
             <div class="wh-header">
                 <div>
@@ -333,7 +362,7 @@
                     <div style="font-size:13px;color:var(--muted);margin-top:4px">الربط التلقائي مع الأنظمة الخارجية —
                         Slack، Teams، Zapier</div>
                 </div>
-                <button class="wh-add"><i class="bi bi-plus-lg"></i> إضافة Webhook</button>
+                <button class="wh-add" id="btnAddWebhook"><i class="bi bi-plus-lg"></i> إضافة Webhook</button>
             </div>
 
             <div class="wh-stats" id="whStats"></div>
@@ -347,45 +376,91 @@
         </div>
     </div>
 
+    <!-- ======= Modal: إضافة Webhook ======= -->
+    <div class="modal fade" id="addWebhookModal" tabindex="-1" dir="rtl">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content"
+                style="background:var(--card);border:1px solid rgba(255,255,255,0.1);color:var(--text);border-radius:20px">
+                <div class="modal-header" style="border-bottom:1px solid var(--border);padding:20px 24px">
+                    <h5 class="modal-title" style="font-weight:800;font-size:18px"><i class="bi bi-plug-fill"
+                            style="color:var(--primary);margin-left:8px"></i> إضافة Webhook جديد</h5>
+                    <button type="button" class="btn-close" style="filter:invert(1)" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" style="padding:24px">
+                    <!-- اختيار المنصة -->
+                    <div style="font-size:13px;color:var(--muted);margin-bottom:10px">اختر المنصة</div>
+                    <div class="platform-btns">
+                        <button class="platform-btn selected" data-platform="slack"
+                            onclick="selectPlatform('slack', this)">💬 Slack</button>
+                        <button class="platform-btn" data-platform="teams" onclick="selectPlatform('teams', this)">💼
+                            Teams</button>
+                        <button class="platform-btn" data-platform="zapier" onclick="selectPlatform('zapier', this)">⚡
+                            Zapier</button>
+                        <button class="platform-btn" data-platform="custom" onclick="selectPlatform('custom', this)">🔗
+                            Custom</button>
+                    </div>
+                    <input type="hidden" id="whFormPlatform" value="slack">
+
+                    <div class="mb-3">
+                        <label style="font-size:12px;color:var(--muted);margin-bottom:6px;display:block">اسم
+                            الربط</label>
+                        <input type="text" id="whFormName" class="form-control"
+                            style="background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text);border-radius:10px;font-family:inherit"
+                            placeholder="مثال: إشعارات فريق المبيعات">
+                    </div>
+                    <div class="mb-3">
+                        <label style="font-size:12px;color:var(--muted);margin-bottom:6px;display:block">رابط الـ
+                            Webhook <span style="color:var(--red)">*</span></label>
+                        <input type="url" id="whFormUrl" class="form-control"
+                            style="background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text);border-radius:10px;font-family:monospace;direction:ltr;text-align:left"
+                            placeholder="https://hooks.slack.com/services/...">
+                    </div>
+                    <div class="mb-3">
+                        <label style="font-size:12px;color:var(--muted);margin-bottom:8px;display:block">الأحداث
+                            المُفعَّلة</label>
+                        <div id="eventsCheckboxes"
+                            style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:180px;overflow-y:auto">
+                        </div>
+                        <div style="margin-top:8px;display:flex;gap:8px">
+                            <button onclick="selectAllEvents(true)"
+                                style="font-size:11px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.3);color:var(--primary);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:inherit">تحديد
+                                الكل</button>
+                            <button onclick="selectAllEvents(false)"
+                                style="font-size:11px;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:inherit">إلغاء
+                                الكل</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top:1px solid var(--border);padding:16px 24px;gap:8px">
+                    <button type="button" class="btn" data-bs-dismiss="modal"
+                        style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text);border-radius:10px;font-family:inherit">إلغاء</button>
+                    <button type="button" onclick="saveNewWebhook()"
+                        style="background:linear-gradient(135deg,var(--primary),var(--secondary));border:none;color:white;border-radius:10px;padding:8px 20px;font-family:inherit;font-weight:700;cursor:pointer">
+                        <i class="bi bi-check-lg"></i> حفظ وتفعيل
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/assets/js/api.js"></script>
     <script src="/assets/js/sidebar.js"></script>
-    <script src="/assets/js/ai-advisor.js"></script>
-    <script src="/assets/js/achievements.js"></script>
-    <script src="/assets/js/notifications.js"></script>
     <script>
-        const webhooks = [
-            {
-                id: 1, name: 'إشعارات Slack', url: 'https://hooks.slack.com/services/T.../B.../xxx', icon: '💬', color: '#4A154B', active: true, events: ['objective.updated', 'kpi.updated', 'comment.created'], created: '2025-12-01', lastCall: 'منذ 3 دقائق', successRate: 98, calls: 1247, logs: [
-                    { status: 200, event: 'kpi.updated', time: '12:45', ok: true },
-                    { status: 200, event: 'comment.created', time: '12:30', ok: true },
-                    { status: 200, event: 'objective.updated', time: '11:15', ok: true },
-                ]
-            },
-            {
-                id: 2, name: 'Microsoft Teams', url: 'https://outlook.office.com/webhook/xxx', icon: '💼', color: '#464EB8', active: true, events: ['initiative.completed', 'review.scheduled'], created: '2026-01-10', lastCall: 'منذ ساعة', successRate: 95, calls: 456, logs: [
-                    { status: 200, event: 'review.scheduled', time: '11:00', ok: true },
-                    { status: 408, event: 'initiative.completed', time: '10:30', ok: false },
-                ]
-            },
-            {
-                id: 3, name: 'Zapier Automation', url: 'https://hooks.zapier.com/hooks/catch/xxx', icon: '⚡', color: '#FF4A00', active: true, events: ['objective.created', 'initiative.created', 'kpi.threshold'], created: '2026-01-20', lastCall: 'منذ 15 دقيقة', successRate: 100, calls: 89, logs: [
-                    { status: 200, event: 'kpi.threshold', time: '12:40', ok: true },
-                ]
-            },
-            {
-                id: 4, name: 'نظام ERP داخلي', url: 'https://erp.company.sa/api/webhooks', icon: '🏢', color: '#059669', active: false, events: ['budget.approved', 'initiative.budget_changed'], created: '2026-02-01', lastCall: 'منذ أسبوع', successRate: 72, calls: 34, logs: [
-                    { status: 500, event: 'budget.approved', time: 'الأحد', ok: false },
-                    { status: 200, event: 'initiative.budget_changed', time: 'السبت', ok: true },
-                ]
-            },
-        ];
 
-        const eventTypes = [
+        // ─── ثوابت ───────────────────────────────────────────────
+        const EVENT_COLORS = {
+            objective: 'var(--primary)', kpi: 'var(--green)', initiative: 'var(--orange)',
+            comment: 'var(--blue)', review: 'var(--purple)', budget: 'var(--yellow)',
+            user: '#ec4899', test: 'var(--muted)'
+        };
+
+        const EVENT_TYPES = [
             { event: 'objective.created', desc: 'عند إنشاء هدف جديد' },
             { event: 'objective.updated', desc: 'عند تحديث هدف' },
             { event: 'objective.completed', desc: 'عند إكمال هدف' },
             { event: 'kpi.updated', desc: 'عند تحديث قيمة مؤشر' },
-            { event: 'kpi.threshold', desc: 'عند تجاوز المؤشر الحد' },
+            { event: 'kpi.threshold', desc: 'عند تجاوز المؤشر الحد الحرج' },
             { event: 'initiative.created', desc: 'عند إنشاء مبادرة' },
             { event: 'initiative.completed', desc: 'عند إكمال مبادرة' },
             { event: 'initiative.budget_changed', desc: 'تغيير ميزانية مبادرة' },
@@ -395,68 +470,286 @@
             { event: 'user.assigned', desc: 'تعيين مستخدم لمهمة' },
         ];
 
-        const eventColors = { 'objective': 'var(--primary)', 'kpi': 'var(--green)', 'initiative': 'var(--orange)', 'comment': 'var(--blue)', 'review': 'var(--purple)', 'budget': 'var(--yellow)', 'user': 'var(--pink,#ec4899)' };
+        const PLATFORM_PLACEHOLDERS = {
+            slack: 'https://hooks.slack.com/services/T.../B.../...',
+            teams: 'https://outlook.office.com/webhook/...',
+            zapier: 'https://hooks.zapier.com/hooks/catch/...',
+            custom: 'https://your-server.com/webhook'
+        };
 
-        function renderStats() {
-            const total = webhooks.length;
-            const active = webhooks.filter(w => w.active).length;
-            const totalCalls = webhooks.reduce((s, w) => s + w.calls, 0);
-            const avgSuccess = Math.round(webhooks.reduce((s, w) => s + w.successRate, 0) / total);
+        let webhooks = [];
+        let entityId = '';
+
+        // ─── تحميل البيانات من API ───────────────────────────────
+        async function loadWebhooks() {
+            try {
+                const user = await window.api.getCurrentUser();
+                entityId = user?.entity?.id || localStorage.getItem('entityId') || '';
+
+                if (!entityId) {
+                    document.getElementById('whList').innerHTML = `
+                        <div class="wh-empty">
+                            <i class="bi bi-building-x" style="font-size:48px;opacity:0.2;display:block;margin-bottom:12px"></i>
+                            <div style="font-size:14px;font-weight:700">لا يوجد كيان مرتبط بحسابك</div>
+                        </div>`;
+                    renderStats({});
+                    return;
+                }
+
+                const res = await window.apiRequest(`/api/webhooks/entity/${entityId}`);
+                const data = await res.json();
+                webhooks = data.webhooks || [];
+                renderStats(data.stats || {});
+                renderList();
+            } catch (err) {
+                console.warn('[Webhooks] load error:', err.message);
+                webhooks = [];
+                renderStats({ total: 0, active: 0, totalCalls: 0, avgSuccess: 0 });
+                renderList();
+            }
+        }
+
+        // ─── إحصاءات ─────────────────────────────────────────────
+        function renderStats(s) {
             document.getElementById('whStats').innerHTML = `
-        <div class="wh-stat"><div class="wh-stat-num">${total}</div><div class="wh-stat-label">إجمالي</div></div>
-        <div class="wh-stat"><div class="wh-stat-num" style="color:var(--green)">${active}</div><div class="wh-stat-label">نشط</div></div>
-        <div class="wh-stat"><div class="wh-stat-num" style="color:var(--primary)">${totalCalls}</div><div class="wh-stat-label">إجمالي الاستدعاءات</div></div>
-        <div class="wh-stat"><div class="wh-stat-num" style="color:${avgSuccess >= 90 ? 'var(--green)' : 'var(--yellow)'}">${avgSuccess}%</div><div class="wh-stat-label">معدل النجاح</div></div>
-      `;
+                <div class="wh-stat"><div class="wh-stat-num">${s.total ?? 0}</div><div class="wh-stat-label">إجمالي</div></div>
+                <div class="wh-stat"><div class="wh-stat-num" style="color:var(--green)">${s.active ?? 0}</div><div class="wh-stat-label">نشط</div></div>
+                <div class="wh-stat"><div class="wh-stat-num" style="color:var(--primary)">${s.totalCalls ?? 0}</div><div class="wh-stat-label">إجمالي الاستدعاءات</div></div>
+                <div class="wh-stat"><div class="wh-stat-num" style="color:${(s.avgSuccess ?? 100) >= 90 ? 'var(--green)' : 'var(--yellow)'}">${s.avgSuccess ?? 100}%</div><div class="wh-stat-label">معدل النجاح</div></div>`;
         }
 
+        // ─── قائمة الـ Webhooks ───────────────────────────────────
         function renderList() {
-            document.getElementById('whList').innerHTML = webhooks.map(w => `
-        <div class="wh-card">
-          <div class="wh-card-header">
-            <div class="wh-card-icon" style="background:${w.color}22;color:${w.color}">${w.icon}</div>
-            <div class="wh-card-info">
-              <div class="wh-card-name">${w.name}</div>
-              <div class="wh-card-url">${w.url.substring(0, 45)}...</div>
-            </div>
-            <div class="wh-toggle ${w.active ? 'active' : ''}" onclick="this.classList.toggle('active')"></div>
-          </div>
-          <div class="wh-events">
-            ${w.events.map(e => {
-                const group = e.split('.')[0];
-                const color = eventColors[group] || 'var(--muted)';
-                return `<span class="wh-event" style="background:${color}15;color:${color}">${e}</span>`;
-            }).join('')}
-          </div>
-          <div class="wh-card-meta">
-            <span><i class="bi bi-clock"></i> آخر استدعاء: ${w.lastCall}</span>
-            <span><i class="bi bi-arrow-repeat"></i> ${w.calls} استدعاء</span>
-            <span style="color:${w.successRate >= 90 ? 'var(--green)' : w.successRate >= 70 ? 'var(--yellow)' : 'var(--red)'}"><i class="bi bi-check-circle"></i> ${w.successRate}% نجاح</span>
-            <span><i class="bi bi-calendar"></i> أُنشئ: ${w.created}</span>
-          </div>
-          <div class="wh-card-logs">
-            ${w.logs.map(l => `
-              <div class="wh-log">
-                <div class="wh-log-status" style="background:${l.ok ? 'var(--green)' : 'var(--red)'}"></div>
-                <span class="wh-log-method">${l.event}</span>
-                <span class="wh-log-code" style="background:${l.ok ? 'rgba(34,197,94,0.1);color:var(--green)' : 'rgba(239,68,68,0.1);color:var(--red)'}">${l.status}</span>
-                <span class="wh-log-time">${l.time}</span>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `).join('');
-        }
+            const el = document.getElementById('whList');
+            if (!webhooks.length) {
+                el.innerHTML = `
+                    <div class="wh-empty">
+                        <i class="bi bi-link-45deg" style="font-size:56px;opacity:0.15;display:block;margin-bottom:14px"></i>
+                        <div style="font-size:16px;font-weight:800;margin-bottom:8px">لا توجد Webhooks بعد</div>
+                        <div style="font-size:13px;margin-bottom:20px;line-height:1.7">اربط ستارتكس بـ Slack أو Teams أو Zapier<br>واحصل على إشعارات فورية عند كل حدث مهم</div>
+                        <button class="wh-add" onclick="openModal()"><i class="bi bi-plus-lg"></i> أضف أول Webhook</button>
+                    </div>`;
+                return;
+            }
 
-        function renderGuide() {
-            document.getElementById('whGuide').innerHTML = eventTypes.map(e => {
-                const group = e.event.split('.')[0];
-                const color = eventColors[group] || 'var(--muted)';
-                return `<div class="wh-guide-item"><div class="wh-guide-event" style="color:${color}">${e.event}</div><div class="wh-guide-desc">${e.desc}</div></div>`;
+            el.innerHTML = webhooks.map(w => {
+                const events = safeParseJSON(w.events, []);
+                const logs = w.logs || [];
+                const sc = w.successRate >= 90 ? 'var(--green)' : w.successRate >= 70 ? 'var(--yellow)' : 'var(--red)';
+                const lastCall = w.lastCalledAt ? new Date(w.lastCalledAt).toLocaleString('ar-SA') : '—';
+
+                return `
+                <div class="wh-card" id="wh-${w.id}">
+                    <div class="wh-card-header">
+                        <div class="wh-card-icon" style="background:${w.color || '#667eea'}22;color:${w.color || '#667eea'}">${w.icon || '🔗'}</div>
+                        <div class="wh-card-info">
+                            <div class="wh-card-name">${esc(w.name)}</div>
+                            <div class="wh-card-url">${esc(w.url.length > 55 ? w.url.slice(0, 55) + '...' : w.url)}</div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+                            <button onclick="testWebhook('${w.id}', this)" id="test-${w.id}" title="اختبار الإرسال"
+                                style="background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.3);color:var(--primary);border-radius:8px;padding:6px 12px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:700">
+                                <i class="bi bi-send"></i> اختبار
+                            </button>
+                            <button onclick="deleteWebhook('${w.id}')" title="حذف"
+                                style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:var(--red);border-radius:8px;padding:6px 10px;cursor:pointer;font-family:inherit">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            <div class="wh-toggle ${w.active ? 'active' : ''}" id="toggle-${w.id}" onclick="toggleWebhook('${w.id}')"></div>
+                        </div>
+                    </div>
+                    <div class="wh-events">
+                        ${events.map(e => {
+                    const g = e.split('.')[0];
+                    const c = EVENT_COLORS[g] || 'var(--muted)';
+                    return `<span class="wh-event" style="background:${c}18;color:${c}">${esc(e)}</span>`;
+                }).join('')}
+                    </div>
+                    <div class="wh-card-meta">
+                        <span><i class="bi bi-clock"></i> آخر استدعاء: ${lastCall}</span>
+                        <span><i class="bi bi-arrow-repeat"></i> ${w.calls || 0} استدعاء</span>
+                        <span style="color:${sc}"><i class="bi bi-check-circle"></i> ${w.successRate ?? 100}% نجاح</span>
+                    </div>
+                    ${logs.length ? `
+                    <div class="wh-card-logs">
+                        ${logs.slice(0, 5).map(l => `
+                        <div class="wh-log">
+                            <div class="wh-log-status" style="background:${l.ok ? 'var(--green)' : 'var(--red)'}"></div>
+                            <span class="wh-log-method">${esc(l.event)}</span>
+                            <span class="wh-log-code" style="background:${l.ok ? 'rgba(34,197,94,0.1);color:var(--green)' : 'rgba(239,68,68,0.1);color:var(--red)'}">${l.statusCode}</span>
+                            ${l.durationMs ? `<span style="font-size:10px;color:var(--muted)">${l.durationMs}ms</span>` : ''}
+                            <span class="wh-log-time">${new Date(l.createdAt).toLocaleTimeString('ar-SA')}</span>
+                        </div>`).join('')}
+                    </div>` : ''}
+                </div>`;
             }).join('');
         }
 
-        renderStats(); renderList(); renderGuide();
+        // ─── دليل الأحداث ─────────────────────────────────────────
+        function renderGuide() {
+            document.getElementById('whGuide').innerHTML = EVENT_TYPES.map(e => {
+                const c = EVENT_COLORS[e.event.split('.')[0]] || 'var(--muted)';
+                return `<div class="wh-guide-item"><div class="wh-guide-event" style="color:${c}">${e.event}</div><div class="wh-guide-desc">${e.desc}</div></div>`;
+            }).join('');
+        }
+
+        // ─── تفعيل / إيقاف ───────────────────────────────────────
+        async function toggleWebhook(id) {
+            const wh = webhooks.find(w => w.id === id);
+            if (!wh) return;
+            const newActive = !wh.active;
+            const toggle = document.getElementById(`toggle-${id}`);
+            toggle.classList.toggle('active');
+            wh.active = newActive;
+            try {
+                await window.apiRequest(`/api/webhooks/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ active: newActive })
+                });
+                // تحديث عداد "نشط"
+                renderStats({
+                    total: webhooks.length,
+                    active: webhooks.filter(w => w.active).length,
+                    totalCalls: webhooks.reduce((s, w) => s + (w.calls || 0), 0),
+                    avgSuccess: avgSuccess()
+                });
+            } catch {
+                toggle.classList.toggle('active');
+                wh.active = !newActive;
+            }
+        }
+
+        // ─── اختبار Webhook ──────────────────────────────────────
+        async function testWebhook(id, btn) {
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> جاري...';
+            btn.disabled = true;
+            try {
+                const res = await window.apiRequest(`/api/webhooks/${id}/test`, { method: 'POST' });
+                const data = await res.json();
+                btn.innerHTML = data.ok
+                    ? '<i class="bi bi-check-lg" style="color:var(--green)"></i> نجح!'
+                    : '<i class="bi bi-x-lg" style="color:var(--red)"></i> فشل';
+                setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 2500);
+                setTimeout(loadWebhooks, 1200);
+            } catch {
+                btn.innerHTML = '<i class="bi bi-x-lg" style="color:var(--red)"></i> خطأ';
+                setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 2000);
+            }
+        }
+
+        // ─── حذف Webhook ─────────────────────────────────────────
+        async function deleteWebhook(id) {
+            if (!confirm('هل أنت متأكد من حذف هذا الـ Webhook؟')) return;
+            try {
+                await window.apiRequest(`/api/webhooks/${id}`, { method: 'DELETE' });
+                webhooks = webhooks.filter(w => w.id !== id);
+                document.getElementById(`wh-${id}`)?.remove();
+                renderStats({
+                    total: webhooks.length,
+                    active: webhooks.filter(w => w.active).length,
+                    totalCalls: webhooks.reduce((s, w) => s + (w.calls || 0), 0),
+                    avgSuccess: avgSuccess()
+                });
+                if (!webhooks.length) renderList();
+            } catch { alert('فشل الحذف — حاول مجدداً'); }
+        }
+
+        // ─── Modal: اختيار المنصة ─────────────────────────────────
+        function selectPlatform(platform, btn) {
+            document.querySelectorAll('.platform-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            document.getElementById('whFormPlatform').value = platform;
+            const url = document.getElementById('whFormUrl');
+            url.placeholder = PLATFORM_PLACEHOLDERS[platform] || 'https://...';
+            if (!document.getElementById('whFormName').value) {
+                const names = { slack: 'إشعارات Slack', teams: 'Microsoft Teams', zapier: 'Zapier Automation', custom: 'Webhook مخصص' };
+                document.getElementById('whFormName').value = names[platform] || '';
+            }
+        }
+
+        function buildEventsCheckboxes() {
+            document.getElementById('eventsCheckboxes').innerHTML = EVENT_TYPES.map(e => {
+                const g = e.event.split('.')[0];
+                const c = EVENT_COLORS[g] || 'var(--muted)';
+                return `
+                <label style="display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.02);cursor:pointer;font-size:12px">
+                    <input type="checkbox" value="${e.event}" checked style="accent-color:var(--primary)">
+                    <span style="color:${c};font-family:monospace;font-size:10px">${e.event}</span>
+                </label>`;
+            }).join('');
+        }
+
+        function selectAllEvents(checked) {
+            document.querySelectorAll('#eventsCheckboxes input[type=checkbox]').forEach(cb => cb.checked = checked);
+        }
+
+        function openModal() {
+            buildEventsCheckboxes();
+            document.getElementById('whFormName').value = 'إشعارات Slack';
+            document.getElementById('whFormUrl').value = '';
+            document.getElementById('whFormPlatform').value = 'slack';
+            document.querySelectorAll('.platform-btn').forEach((b, i) => b.classList.toggle('selected', i === 0));
+            new bootstrap.Modal(document.getElementById('addWebhookModal')).show();
+        }
+
+        // ─── حفظ Webhook جديد ────────────────────────────────────
+        async function saveNewWebhook() {
+            const name = document.getElementById('whFormName').value.trim();
+            const url = document.getElementById('whFormUrl').value.trim();
+            const platform = document.getElementById('whFormPlatform').value;
+            const events = [...document.querySelectorAll('#eventsCheckboxes input:checked')].map(cb => cb.value);
+
+            if (!name) return highlight('whFormName', 'الاسم مطلوب');
+            if (!url) return highlight('whFormUrl', 'الرابط مطلوب');
+            if (!url.startsWith('https://')) return highlight('whFormUrl', 'الرابط يجب أن يبدأ بـ https://');
+            if (!events.length) return alert('اختر حدثاً واحداً على الأقل');
+
+            const saveBtn = document.querySelector('#addWebhookModal [onclick="saveNewWebhook()"]');
+            const orig = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> جاري الحفظ...';
+            saveBtn.disabled = true;
+
+            try {
+                const res = await window.apiRequest('/api/webhooks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ entityId, name, url, platform, events })
+                });
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || 'فشل الحفظ');
+                }
+                bootstrap.Modal.getInstance(document.getElementById('addWebhookModal')).hide();
+                await loadWebhooks();
+            } catch (err) {
+                alert('❌ ' + err.message);
+            } finally {
+                saveBtn.innerHTML = orig;
+                saveBtn.disabled = false;
+            }
+        }
+
+        // ─── helpers ─────────────────────────────────────────────
+        function safeParseJSON(str, def) { try { return JSON.parse(str); } catch { return def; } }
+        function esc(str) { return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+        function avgSuccess() {
+            if (!webhooks.length) return 100;
+            return Math.round(webhooks.reduce((s, w) => s + (w.successRate ?? 100), 0) / webhooks.length);
+        }
+        function highlight(id, msg) {
+            const el = document.getElementById(id);
+            el.style.borderColor = 'var(--red)';
+            el.focus();
+            setTimeout(() => el.style.borderColor = '', 2000);
+            alert(msg);
+        }
+
+        // ─── Init ─────────────────────────────────────────────────
+        document.getElementById('btnAddWebhook').addEventListener('click', openModal);
+        renderGuide();
+        loadWebhooks();
     </script>
 </body>
 

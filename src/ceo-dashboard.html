@@ -895,8 +895,9 @@
                         <i class="bi bi-list"></i>
                     </button>
                     <div>
-                        <h1 class="ceo-title"><i class="bi bi-gem"></i> لوحة القيادة <span>التنفيذية</span></h1>
-                        <div class="ceo-subtitle">نبض المنظمة الاستراتيجي — كل ما تحتاجه في صفحة واحدة</div>
+                        <h1 class="ceo-title"><i class="bi bi-gem"></i> مركز التقييم <span>الاستراتيجي</span></h1>
+                        <div class="ceo-subtitle">التحليل، الفحص، التوصيات والمراجعات — تقييم الوضع الحالي في صفحة واحدة
+                        </div>
                     </div>
                 </div>
                 <div style="display:flex;align-items:center;gap:12px">
@@ -1091,15 +1092,15 @@
                     </div>
 
                     <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:all 0.2s"
-                        onclick="location.href='/tasks.html'" onmouseover="this.style.borderColor='var(--yellow)'"
+                        onclick="location.href='/reviews.html'" onmouseover="this.style.borderColor='var(--yellow)'"
                         onmouseout="this.style.borderColor='var(--border)'">
                         <div
                             style="width:48px;height:48px;border-radius:12px;background:rgba(250,204,21,0.1);color:var(--yellow);display:flex;align-items:center;justify-content:center;font-size:22px">
-                            <i class="bi bi-check2-square"></i>
+                            <i class="bi bi-journal-check"></i>
                         </div>
                         <div>
-                            <div style="font-size:12px;color:var(--muted)">مهام قيد التنفيذ</div>
-                            <div style="font-size:24px;font-weight:800;line-height:1" id="statTasks">0</div>
+                            <div style="font-size:12px;color:var(--muted)">مراجعات استراتيجية</div>
+                            <div style="font-size:24px;font-weight:800;line-height:1" id="statReviews">0</div>
                         </div>
                     </div>
                 </div>
@@ -1232,7 +1233,7 @@
                 animateNumber('statObjectives', data.objectives || data.totalObjectives || 12);
                 animateNumber('statKPIs', data.kpis || data.totalKPIs || 28);
                 animateNumber('statInitiatives', data.initiatives || data.totalInitiatives || 8);
-                animateNumber('statTasks', data.tasks || data.activeTasks || 45);
+                animateNumber('statReviews', data.reviews || data.activeReviews || 5);
             } catch (e) { setDemoData(); }
         }
 
@@ -1240,7 +1241,7 @@
             animateNumber('statObjectives', 12);
             animateNumber('statKPIs', 28);
             animateNumber('statInitiatives', 8);
-            animateNumber('statTasks', 45);
+            animateNumber('statReviews', 5);
         }
 
         // === Animate Number ===
@@ -1289,7 +1290,7 @@
             } else {
                 factors = [
                     { label: 'أداء المؤشرات', value: 72, color: 'var(--green)', icon: 'bi-graph-up', bg: 'rgba(34,197,94,0.1)' },
-                    { label: 'إنجاز المهام', value: 65, color: 'var(--blue)', icon: 'bi-check2-all', bg: 'rgba(56,189,248,0.1)' },
+                    { label: 'تقدم المبادرات', value: 65, color: 'var(--blue)', icon: 'bi-rocket-takeoff', bg: 'rgba(56,189,248,0.1)' },
                     { label: 'انتظام المراجعات', value: 80, color: 'var(--purple)', icon: 'bi-calendar-check', bg: 'rgba(167,139,250,0.1)' },
                     { label: 'التوافق الاستراتيجي', value: 58, color: 'var(--yellow)', icon: 'bi-arrows-angle-expand', bg: 'rgba(250,204,21,0.1)' },
                 ];
@@ -1367,10 +1368,10 @@
 
                     document.getElementById('insightsList').innerHTML = data.insights.slice(0, 3).map(ins => `
                         <div class="risk-item" style="cursor:pointer" onclick="location.href='/strategic-advisor.html'">
-                            <div style="font-size:22px;flex-shrink:0;width:36px;text-align:center">${ins.icon}</div>
+                            <div style="font-size:22px;flex-shrink:0;width:36px;text-align:center">${ins.icon || '💡'}</div>
                             <div class="risk-content">
-                                <div class="risk-title">${ins.title.substring(0, 60)}${ins.title.length > 60 ? '...' : ''}</div>
-                                <div class="risk-desc">${ins.departments.join(' + ')} — ${TYPE_LABELS[ins.type] || ins.type}</div>
+                                <div class="risk-title">${(ins.title || '').substring(0, 60)}${(ins.title || '').length > 60 ? '...' : ''}</div>
+                                <div class="risk-desc">${(ins.departments || []).join(' + ')} — ${TYPE_LABELS[ins.type] || ins.type || ''}</div>
                             </div>
                             <span class="risk-badge" style="background:${SEV_COLORS[ins.severity]}15;color:${SEV_COLORS[ins.severity]}">${ins.severity === 'CRITICAL' ? 'حرج' : ins.severity === 'HIGH' ? 'مرتفع' : 'متوسط'}</span>
                         </div>
@@ -1391,7 +1392,10 @@
                         </div>
                     `;
                 }
-            } catch (e) { renderInsightsFallback(); }
+            } catch (e) {
+                console.error('loadInsights Error:', e);
+                renderInsightsFallback();
+            }
         }
 
         function renderInsightsFallback() {
@@ -1695,20 +1699,39 @@
 
         // === Init ===
         async function initCeoDashboard() {
-            const user = await window.api.getCurrentUser();
-            if (!user) return;
-            window.entityId = user.entityId;
+            try {
+                let currentUser = null;
+                try {
+                    // جلب هوية المستخدم برمجياً بشكل آمن
+                    if (typeof window.apiRequest === 'function') {
+                        const res = await window.apiRequest('/api/user/me');
+                        if (res && res.ok) currentUser = await res.json();
+                    }
+                } catch (e) {
+                    console.warn("فشل جلب بيانات المستخدم من الخادم، سيتم استخدام التخزين المحلي");
+                }
 
-            attachEventHandlers();
+                currentUser = currentUser || JSON.parse(localStorage.getItem('user') || '{}');
+                window.entityId = currentUser.entity?.id || currentUser.entityId || localStorage.getItem('entityId');
 
-            loadDashboard();
-            loadDimensions();
-            loadInsights();
-            loadDeptCoverage();
-            loadActivities();
-            loadBreakEven();
-            loadAlerts();
-            renderChart();
+                if (typeof attachEventHandlers === 'function') attachEventHandlers();
+
+                // تشغيل جميع التحميلات بشكل متوازٍ ومحمي من إيقاف الصفحة بالكامل
+                Promise.allSettled([
+                    loadDashboard(),
+                    loadDimensions(),
+                    loadInsights(),
+                    loadDeptCoverage(),
+                    loadActivities(),
+                    loadBreakEven(),
+                    loadAlerts(),
+                    Promise.resolve().then(() => { if (typeof renderChart === 'function') renderChart(); })
+                ]);
+            } catch (err) {
+                console.error("خطأ حرج في تهيئة لوحة القيادة التنفيذية:", err);
+                // المحاولة كخيار أخير في حال فشل الكود الأساسي
+                loadDashboard(); loadDimensions(); loadInsights(); loadDeptCoverage(); loadActivities(); loadBreakEven(); loadAlerts();
+            }
         }
 
         function attachEventHandlers() {

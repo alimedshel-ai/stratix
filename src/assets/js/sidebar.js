@@ -38,19 +38,86 @@ const DEPT_LABELS = {
   support: 'الخدمات المساندة'
 };
 
+const DEPT_ICONS = {
+  hr: 'bi-people', finance: 'bi-cash-stack', marketing: 'bi-megaphone',
+  operations: 'bi-gear', sales: 'bi-graph-up-arrow', it: 'bi-pc-display',
+  cs: 'bi-headset', compliance: 'bi-shield-check', quality: 'bi-award',
+  projects: 'bi-kanban', support: 'bi-tools'
+};
+
+const DEPT_COLORS = {
+  hr: '#3b82f6', finance: '#f59e0b', marketing: '#8b5cf6',
+  operations: '#6366f1', sales: '#10b981', it: '#0ea5e9',
+  cs: '#ec4899', compliance: '#ef4444', quality: '#14b8a6',
+  projects: '#f97316', support: '#64748b'
+};
+
 function getUserRoleLabel(userData) {
   if (!userData) return '';
   if (userData.systemRole === 'SUPER_ADMIN') return ROLE_LABELS.SUPER_ADMIN;
 
-  // إعطاء الأولوية لدور مدخل البيانات والمشاهد حتى لو كان تابعاً لإدارة
-  if (userData.role === 'DATA_ENTRY') return ROLE_LABELS.DATA_ENTRY;
-  if (userData.role === 'VIEWER') return ROLE_LABELS.VIEWER;
+  let deptKey = userData.department?.key || '';
+  if (!deptKey && userData.userCategory && userData.userCategory.startsWith('DEPT_')) {
+    const catDept = userData.userCategory.replace('DEPT_', '').toLowerCase();
+    const MAP = { hr: 'hr', finance: 'finance', marketing: 'marketing', ops: 'operations', service: 'cs', sales: 'sales', it: 'it', legal: 'compliance', quality: 'quality', pmo: 'projects' };
+    deptKey = MAP[catDept] || catDept;
+  }
+  const deptName = userData.department?.name || DEPT_LABELS[deptKey] || '';
 
-  if (userData.userType === 'DEPT_MANAGER') {
-    const deptName = userData.department?.name || DEPT_LABELS[userData.department?.key] || '';
+  // عرض دور المشاهد أو مدخل البيانات متبوعاً باسم القسم التابع له
+  if (userData.role === 'DATA_ENTRY') return deptName ? `${ROLE_LABELS.DATA_ENTRY} — ${deptName}` : ROLE_LABELS.DATA_ENTRY;
+  if (userData.role === 'VIEWER') return deptName ? `${ROLE_LABELS.VIEWER} — ${deptName}` : ROLE_LABELS.VIEWER;
+
+  if (userData.userType === 'DEPT_MANAGER' || (userData.userCategory && userData.userCategory.startsWith('DEPT_'))) {
     return deptName ? `مدير ${deptName}` : ROLE_LABELS.DEPT_MANAGER;
   }
   return ROLE_LABELS[userData.userType] || ROLE_LABELS[userData.role] || userData.role || '';
+}
+
+function getUserRoleIcon(userData) {
+  if (!userData) return 'bi-person';
+
+  let deptKey = userData.department?.key || '';
+  if (!deptKey && userData.userCategory && userData.userCategory.startsWith('DEPT_')) {
+    const catDept = userData.userCategory.replace('DEPT_', '').toLowerCase();
+    const MAP = { hr: 'hr', finance: 'finance', marketing: 'marketing', ops: 'operations', service: 'cs', sales: 'sales', it: 'it', legal: 'compliance', quality: 'quality', pmo: 'projects' };
+    deptKey = MAP[catDept] || catDept;
+  }
+
+  const isViewerOrDataEntry = ['VIEWER', 'DATA_ENTRY'].includes(userData.role);
+  const isDeptManager = userData.userType === 'DEPT_MANAGER' || (userData.userCategory && userData.userCategory.startsWith('DEPT_'));
+
+  if ((isViewerOrDataEntry || isDeptManager) && deptKey && DEPT_ICONS[deptKey]) return DEPT_ICONS[deptKey];
+
+  if (userData.role === 'OWNER') return 'bi-crown';
+  if (userData.systemRole === 'SUPER_ADMIN' || userData.role === 'ADMIN') return 'bi-shield-check';
+  if (userData.role === 'EDITOR') return 'bi-pencil-square';
+  if (userData.role === 'VIEWER') return 'bi-eye';
+  if (userData.role === 'DATA_ENTRY') return 'bi-input-cursor-text';
+  return 'bi-person';
+}
+
+function getUserRoleColor(userData) {
+  if (!userData) return null;
+
+  let deptKey = userData.department?.key || '';
+  if (!deptKey && userData.userCategory && userData.userCategory.startsWith('DEPT_')) {
+    const catDept = userData.userCategory.replace('DEPT_', '').toLowerCase();
+    const MAP = { hr: 'hr', finance: 'finance', marketing: 'marketing', ops: 'operations', service: 'cs', sales: 'sales', it: 'it', legal: 'compliance', quality: 'quality', pmo: 'projects' };
+    deptKey = MAP[catDept] || catDept;
+  }
+
+  const isViewerOrDataEntry = ['VIEWER', 'DATA_ENTRY'].includes(userData.role);
+  const isDeptManager = userData.userType === 'DEPT_MANAGER' || (userData.userCategory && userData.userCategory.startsWith('DEPT_'));
+
+  if ((isViewerOrDataEntry || isDeptManager) && deptKey && DEPT_COLORS[deptKey]) return DEPT_COLORS[deptKey];
+
+  if (userData.role === 'OWNER') return '#f59e0b';
+  if (userData.systemRole === 'SUPER_ADMIN' || userData.role === 'ADMIN') return '#ef4444';
+  if (userData.role === 'EDITOR') return '#3b82f6';
+  if (userData.role === 'VIEWER') return '#10b981';
+  if (userData.role === 'DATA_ENTRY') return '#8b5cf6';
+  return null;
 }
 
 async function initSidebar() {
@@ -791,7 +858,7 @@ async function initSidebar() {
 
     const _wDept = _v10Dept || '';
     const workItems = [
-      { label: 'المهام', href: _wDept ? `/tasks.html?dept=${_wDept}` : '/tasks.html', icon: 'bi-check2-square', color: '#f59e0b' },
+      { label: 'المراجعات', href: '/reviews.html', icon: 'bi-journal-check', color: '#f59e0b' },
       { label: 'إدخال المؤشرات', href: _wDept ? `/kpi-entries.html?dept=${_wDept}` : '/kpi-entries.html', icon: 'bi-pencil-square', color: '#3b82f6' },
       { label: 'ذكاء إدارتي', href: _wDept ? `/intelligence.html?dept=${_wDept}` : '/intelligence.html', icon: 'bi-robot', color: '#667eea' },
       { label: 'تقرير إدارتي', href: '/auto-reports.html', icon: 'bi-file-earmark-bar-graph', color: '#22c55e' },
@@ -862,6 +929,10 @@ async function initSidebar() {
     { label: 'التسويق', href: '/dept-deep.html?dept=marketing', icon: 'bi-megaphone-fill', key: 'marketing' },
     { label: 'العمليات', href: '/dept-deep.html?dept=operations', icon: 'bi-gear-wide-connected', key: 'operations' },
     { label: 'الخدمات المساندة', href: '/dept-deep.html?dept=support', icon: 'bi-wrench-adjustable', key: 'support' },
+    { label: 'تقنية المعلومات', href: '/dept-deep.html?dept=it', icon: 'bi-laptop', key: 'it' },
+    { label: 'خدمة العملاء', href: '/dept-deep.html?dept=cs', icon: 'bi-headset', key: 'cs' },
+    { label: 'الجودة', href: '/dept-deep.html?dept=quality', icon: 'bi-patch-check-fill', key: 'quality' },
+    { label: 'المشاريع', href: '/dept-deep.html?dept=projects', icon: 'bi-kanban-fill', key: 'projects' },
   ];
 
   // === فلترة: مدير الإدارة يشوف إدارته فقط + مسار مخصص ===
@@ -944,7 +1015,7 @@ async function initSidebar() {
           color: '#ec4899',
           items: [
             { label: 'مؤشرات الأداء (KPIs)', href: `/kpis.html?dept=${_v10Dept}`, icon: 'bi-graph-up-arrow' },
-            { label: 'المهام', href: '/tasks.html', icon: 'bi-check2-square' },
+            { label: 'المراجعات الدورية', href: '/reviews.html', icon: 'bi-journal-check' },
           ]
         },
       ];
@@ -1115,9 +1186,9 @@ async function initSidebar() {
   // === 🛠️ أدوات مساندة (إعداد مساحة العمل + إدخال بيانات) ===
   const supportToolsItems = [
     { label: 'الأدوات الاستراتيجية', href: '/tools.html', icon: 'bi-tools', roles: [] },
-    { label: 'الكيانات', href: '/entities.html', icon: 'bi-building-fill', roles: [] },
-    { label: 'الفريق الاستراتيجي', href: '/team.html', icon: 'bi-person-lines-fill', roles: [] },
-    { label: 'القطاعات والأنشطة', href: '/sectors.html', icon: 'bi-grid-3x3-gap-fill', roles: [] },
+    { label: 'الكيانات', href: '/entities.html', icon: 'bi-building-fill', roles: [], hideFromDeptManager: true },
+    { label: 'الفريق الاستراتيجي', href: '/team.html', icon: 'bi-person-lines-fill', roles: [], hideFromDeptManager: true },
+    { label: 'القطاعات والأنشطة', href: '/sectors.html', icon: 'bi-grid-3x3-gap-fill', roles: [], hideFromDeptManager: true },
     { label: 'إدخال المؤشرات', href: '/kpi-entries.html', icon: 'bi-pencil-square', roles: [] },
     { label: 'معمل الاجتماعات', href: '/meeting-lab.html', icon: 'bi-people-fill', roles: [] },
     { label: 'المشاريع', href: '/projects.html', icon: 'bi-folder2-open', roles: [] },
@@ -1151,16 +1222,28 @@ async function initSidebar() {
 
     // استدعاء المسمى الوظيفي باستخدام الدالة النظيفة (حسب توجيه الـ 100/100)
     let userRoleLabel = getUserRoleLabel(userData);
+    let userRoleIcon = getUserRoleIcon(userData);
+    let userRoleColor = getUserRoleColor(userData);
 
     const initial = userName ? userName[0] : 'S';
     const orgLine = companyNameAr || entityLegalName;
+    const logoUrl = userData.entity?.logoUrl || userData.entity?.company?.logoUrl || null;
+
+    let roleStyle = userRoleColor ? `color: ${userRoleColor}; background: ${userRoleColor}1A;` : '';
+    let avatarStyle = userRoleColor && !logoUrl ? `background: linear-gradient(135deg, ${userRoleColor}, ${userRoleColor}CC);` : '';
+
+    if (logoUrl) avatarStyle += 'background: transparent; padding: 0; border: 1px solid rgba(255,255,255,0.1);';
+
+    const avatarContent = logoUrl
+      ? `<img src="${logoUrl}" alt="Logo" style="width:100%; height:100%; object-fit:contain; border-radius:10px;">`
+      : initial;
 
     html += `
       <div class="stx-user-card">
-        <div class="stx-user-avatar">${initial}</div>
+        <div class="stx-user-avatar" style="${avatarStyle}">${avatarContent}</div>
         <div class="stx-user-info">
           <div class="stx-user-name">${userName || 'المستخدم'}</div>
-          ${userRoleLabel ? `<span class="stx-user-role">${userRoleLabel}</span>` : ''}
+          ${userRoleLabel ? `<span class="stx-user-role" style="${roleStyle}"><i class="bi ${userRoleIcon}" style="margin-left: 3px;"></i>${userRoleLabel}</span>` : ''}
         </div>
       </div>
       ${(orgLine && !_sidebarIsIndividual) ? `
@@ -1341,7 +1424,7 @@ async function initSidebar() {
         { label: 'تحليل SWOT', href: `/swot.html${_v10Dept ? '?dept=' + _v10Dept : ''}`, icon: 'bi-grid-3x3-gap-fill' },
         { label: 'مؤشرات الأداء', href: `/kpis.html${_v10Dept ? '?dept=' + _v10Dept : ''}`, icon: 'bi-graph-up-arrow' },
         { label: 'إدخال المؤشرات', href: `/kpi-entries.html${_v10Dept ? '?dept=' + _v10Dept : ''}`, icon: 'bi-pencil-square' },
-        { label: 'المهام', href: '/tasks.html', icon: 'bi-check2-square' },
+        { label: 'المراجعات', href: '/reviews.html', icon: 'bi-journal-check' },
         { label: `تقرير ${_myDeptName}`, href: `/auto-reports.html${_v10Dept ? '?dept=' + _v10Dept : ''}`, icon: 'bi-file-earmark-bar-graph' },
       ];
       deptItems.forEach(item => {
@@ -1544,7 +1627,11 @@ async function initSidebar() {
     // ║  🛠️ أدوات مساندة                           ║
     // ╚═══════════════════════════════════════════╝
     if (!isViewerOrDE) {
-      const stFiltered = supportToolsItems.filter(item => hasAccess(item.roles));
+      const stFiltered = supportToolsItems.filter(item => {
+        if (!hasAccess(item.roles)) return false;
+        if (item.hideFromDeptManager && userType === 'DEPT_MANAGER') return false;
+        return true;
+      });
       const stHasActive = stFiltered.some(item => isActive(item.href));
 
       html += `
@@ -1743,7 +1830,7 @@ async function initSidebar() {
         const _deptPages = ['/kpis.html', '/kpis', '/swot.html', '/swot', '/directions.html', '/directions',
           '/objectives.html', '/objectives', '/initiatives.html', '/initiatives',
           '/internal-env.html', '/dept-deep.html', '/company-health.html',
-          '/intelligence.html', '/intelligence', '/kpi-entries.html', '/tasks.html',
+          '/intelligence.html', '/intelligence', '/kpi-entries.html', '/reviews.html',
           '/auto-reports.html', '/choices.html'];
         document.querySelectorAll('a').forEach(a => {
           if (!a.href || a.href.startsWith('javascript:')) return;
@@ -1755,6 +1842,14 @@ async function initSidebar() {
               return;
             }
             if (_deptPages.includes(url.pathname) && !url.searchParams.get('dept')) {
+              // 🛡️ توجيه الروابط للإدارات التي تملك صفحات مخصصة
+              if (url.pathname === '/dept-deep.html' || url.pathname === '/dept-deep') {
+                const customPages = ['hr', 'finance', 'marketing']; // إدارات الصفحات المستقلة
+                if (customPages.includes(_v10Dept)) {
+                  a.href = `/${_v10Dept}-deep.html`;
+                  return;
+                }
+              }
               url.searchParams.set('dept', _v10Dept);
               a.href = url.toString();
             }

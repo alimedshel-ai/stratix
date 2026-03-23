@@ -315,12 +315,63 @@
         }
 
         /* تجاوز قيود text-muted على الألوان الداخلية */
-        .c-danger { color: #ef4444 !important; }
-        .c-warning { color: #f59e0b !important; }
-        .c-success { color: #22c55e !important; }
-        .c-primary { color: #667eea !important; }
-        .c-purple  { color: #7c3aed !important; }
-        .c-green   { color: #059669 !important; }
+        .c-danger {
+            color: #ef4444 !important;
+        }
+
+        .c-warning {
+            color: #f59e0b !important;
+        }
+
+        .c-success {
+            color: #22c55e !important;
+        }
+
+        .c-primary {
+            color: #667eea !important;
+        }
+
+        .c-purple {
+            color: #7c3aed !important;
+        }
+
+        .c-green {
+            color: #059669 !important;
+        }
+
+        /* Toast System */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast-msg {
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.3);
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 
@@ -628,7 +679,8 @@
                             📊 <strong>مرتبط بـ:</strong> مؤشرات الأداء الاستراتيجية. اختر المؤشر الذي أداؤه ضعيف أو
                             يحتاج تحليل.<br>
                             💡 <strong>نصيحة:</strong> ركّز على المؤشرات ذات الحالة <span
-                                class="c-danger fw-bold">OFF_TRACK</span> أو <span class="c-warning fw-bold">AT_RISK</span>.
+                                class="c-danger fw-bold">OFF_TRACK</span> أو <span
+                                class="c-warning fw-bold">AT_RISK</span>.
                         </small>
                     </div>
 
@@ -745,6 +797,21 @@
                         </small>
                     </div>
 
+                    <!-- Linked Risk -->
+                    <div class="mb-3">
+                        <label class="form-label d-flex align-items-center gap-1">
+                            <i class="bi bi-shield-exclamation" style="color:#ef4444;"></i>
+                            <strong>الخطر المرتبط (لتخفيف الأثر)</strong>
+                        </label>
+                        <select id="corrRisk" class="form-select">
+                            <option value="">-- بدون ارتباط --</option>
+                        </select>
+                        <small class="text-muted d-block mt-1">
+                            🛡️ <strong>إدارة المخاطر:</strong> عند إكمال هذا الإجراء، سيساهم في تخفيض احتمالية أو أثر
+                            الخطر المرتبط في خريطة المخاطر.
+                        </small>
+                    </div>
+
                     <!-- Title -->
                     <div class="mb-3">
                         <label class="form-label d-flex align-items-center gap-1">
@@ -845,6 +912,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
 
     </main>
     </div> <!-- end page-layout -->
@@ -1067,6 +1137,7 @@
           <td>
             <strong>${c.title}</strong>
             ${c.description ? `<br><small class="text-muted">${c.description.substring(0, 60)}</small>` : ''}
+            ${c.riskId ? `<br><span class="badge mt-1" style="background:rgba(239,68,68,0.1);color:#ef4444;font-size:10px;"><i class="bi bi-shield-check"></i> مرتبط بخطر استراتيجي</span>` : ''}
           </td>
           <td><small>${kpiName}</small></td>
           <td><small>${c.assignee || '-'}</small></td>
@@ -1086,10 +1157,30 @@
             }).join('');
         }
 
+        async function loadRisksForSelect() {
+            try {
+                const res = await window.apiRequest('/api/risks?limit=100', { headers: { Authorization: `Bearer ${token}` } });
+                const data = await res.json();
+                const risks = data.risks || [];
+                const sel = document.getElementById('corrRisk');
+                sel.innerHTML = '<option value="">-- بدون ارتباط --</option>';
+                risks.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r.id;
+                    opt.textContent = `${r.title || r.name} (درجة الخطورة: ${r.riskScore || r.score || '-'})`;
+                    sel.appendChild(opt);
+                });
+            } catch (err) {
+                console.error('Error loading risks:', err);
+            }
+        }
+
         async function showCorrectionModal() {
             await loadDiagnosesForSelect();
+            await loadRisksForSelect();
             document.getElementById('corrId').value = '';
             document.getElementById('corrDiagnosis').value = '';
+            document.getElementById('corrRisk').value = '';
             document.getElementById('corrTitle').value = '';
             document.getElementById('corrDesc').value = '';
             document.getElementById('corrAssignee').value = '';
@@ -1102,6 +1193,7 @@
         async function editCorrection(id) {
             try {
                 await loadDiagnosesForSelect();
+                await loadRisksForSelect();
                 const res = await window.apiRequest('/api/corrections/corrections?limit=100', { headers: { Authorization: `Bearer ${token}` } });
                 const data = await res.json();
                 const c = (data.corrections || []).find(corr => corr.id === id);
@@ -1109,6 +1201,7 @@
 
                 document.getElementById('corrId').value = c.id;
                 document.getElementById('corrDiagnosis').value = c.diagnosisId;
+                document.getElementById('corrRisk').value = c.riskId || '';
                 document.getElementById('corrTitle').value = c.title;
                 document.getElementById('corrDesc').value = c.description || '';
                 document.getElementById('corrAssignee').value = c.assignee || '';
@@ -1124,6 +1217,7 @@
         async function saveCorrection() {
             const editId = document.getElementById('corrId').value;
             const diagnosisId = document.getElementById('corrDiagnosis').value;
+            const riskId = document.getElementById('corrRisk').value;
             const title = document.getElementById('corrTitle').value.trim();
             const description = document.getElementById('corrDesc').value.trim();
             const assignee = document.getElementById('corrAssignee').value.trim();
@@ -1137,6 +1231,7 @@
                 const method = editId ? 'PATCH' : 'POST';
                 const body = { title, description, assignee, dueDate: dueDate || null, status };
                 if (!editId) body.diagnosisId = diagnosisId;
+                if (riskId) body.riskId = riskId;
 
                 const res = await window.apiRequest(url, {
                     method,
@@ -1158,7 +1253,7 @@
         }
 
         async function completeCorrection(id) {
-            if (!confirm('هل تريد تحديد هذا الإجراء كمكتمل؟')) return;
+            if (!confirm('هل تريد تحديد هذا الإجراء كمكتمل؟ (إذا كان مرتبطاً بخطر، سيقوم النظام بتقليل درجته تلقائياً)')) return;
             try {
                 const res = await window.apiRequest(`/api/corrections/corrections/${id}`, {
                     method: 'PATCH',

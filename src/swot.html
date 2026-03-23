@@ -829,6 +829,9 @@
                 </button>
             </div>
 
+            <!-- Dept Insights Banner (Injected dynamically) -->
+            <div id="deptInsightsBannerWrapper"></div>
+
             <!-- Pre-fill banner -->
             <div id="prefillBanner" style="display:none"></div>
 
@@ -1597,9 +1600,32 @@
 
             // 2b. Phase 6B — فحص جسر التشخيص (dept-deep + diagnostic-center)
             await checkDiagnosticBridge();
+            await checkDeptInsights();
 
             // 2c. PESTEL → SWOT — فحص بيانات PESTEL المتاحة
-            if (!_isIndividual) await checkPestelData();
+            await checkPestelData();
+
+            // 2d. تأكيد حقن جميع البيانات التي تم تعبئتها آلياً (الألم والطموح وغيرها) في الواجهة لتظهر للمستخدم كخيارات محددة مسبقاً
+            if (state.prefilled) {
+                ['strengths', 'weaknesses', 'opportunities', 'threats'].forEach(sectionId => {
+                    const arr = state.prefilled[sectionId];
+                    if (!arr || !arr.length) return;
+
+                    const q0 = SWOT_SECTIONS.find(s => s.id === sectionId)?.questions[0];
+                    const key = sectionId + '_0'; // Inject into the first question of the section
+                    if (!state.answers[key]) state.answers[key] = [];
+
+                    arr.forEach(item => {
+                        const text = typeof item === 'string' ? item : item.text;
+                        if (q0 && q0.type === 'chips' && !q0.options.includes(text)) {
+                            q0.options.unshift(text); // أضفه كخيار
+                        }
+                        if (!state.answers[key].includes(text)) {
+                            state.answers[key].push(text); // حدده تلقائياً
+                        }
+                    });
+                });
+            }
 
             // 3. Show pre-fill banner if we have data
             showPrefillBanner();
@@ -1837,6 +1863,139 @@
             summary.textContent = 'تم استيراد وتحليل بيانات (' + parts.join(' و ') + ') بنجاح لتغذية مصفوفة SWOT الخاصة بك تلقائياً ✨';
         }
 
+        // ============================================================
+        //  💥 SMART DEPT INSIGHTS IMPORT
+        // ============================================================
+        async function checkDeptInsights() {
+            if (!_isDeptMgr || !_mgrDeptKey) return;
+
+            let foundItems = { S: [], W: [], O: [], T: [] };
+
+            // 1. من سلسلة القيمة (VALUE_CHAIN)
+            const vcData = safeParse('tool_VALUE_CHAIN', null);
+            if (vcData && vcData.data && vcData.data.activities) {
+                const VC_MAPPING = {
+                    'hr': ['hrManagement'], 'finance': ['infrastructure', 'procurement'], 'marketing': ['marketingSales'],
+                    'sales': ['marketingSales', 'service'], 'it': ['techDevelopment'], 'operations': ['inboundLogistics', 'operations', 'outboundLogistics', 'procurement'],
+                    'procurement': ['procurement']
+                };
+                const allowed = VC_MAPPING[_mgrDeptKey] || [];
+                allowed.forEach(sec => {
+                    const items = vcData.data.activities[sec] || [];
+                    items.forEach(it => {
+                        // تعتبر أنشطة سلسلة القيمة المفصلة قدرات تنافسية (Strengths) للإدارة
+                        foundItems.S.push({ text: it.text, confidence: 90, source: 'value_chain' });
+                    });
+                });
+            }
+
+            // 2. من نموذج العمل (BUSINESS_MODEL)
+            const bmcData = safeParse('tool_BUSINESS_MODEL', null);
+            if (bmcData && bmcData.data && bmcData.data.blocks) {
+                const BMC_MAPPING = {
+                    'hr': ['keyResources'], 'finance': ['revenueStreams', 'costStructure'],
+                    'marketing': ['customerSegments', 'valueProposition', 'channels', 'customerRelationships'],
+                    'sales': ['customerSegments', 'channels', 'customerRelationships', 'revenueStreams'],
+                    'operations': ['keyActivities', 'keyResources', 'costStructure']
+                };
+                const allowed = BMC_MAPPING[_mgrDeptKey] || [];
+                allowed.forEach(sec => {
+                    const items = bmcData.data.blocks[sec] || [];
+                    items.forEach(it => {
+                        // الاصول الأساسية توضع كنقاط قوة وفرص
+                        foundItems.S.push({ text: it.text, confidence: 85, source: 'business_model' });
+                        foundItems.O.push({ text: 'استثمار وتقوية: ' + it.text, confidence: 60, source: 'business_model' });
+                    });
+                });
+            }
+
+            // 3. من استبيان التشخيص التفصيلي الخاص بالإدارة (Dept Questionnaire / API later)
+            // نأخذ النقاط المحفوظة في department state
+            const strState = localStorage.getItem('dept_' + _mgrDeptKey + '_strengths');
+            const wkState = localStorage.getItem('dept_' + _mgrDeptKey + '_weaknesses');
+            if (strState) {
+                JSON.parse(strState).forEach(s => foundItems.S.push({ text: s, confidence: 95, source: 'dept_survey' }));
+            }
+            if (wkState) {
+                JSON.parse(wkState).forEach(w => foundItems.W.push({ text: w, confidence: 95, source: 'dept_survey' }));
+            }
+
+            // إزالة التكرارات
+            ['S', 'W', 'O', 'T'].forEach(k => {
+                foundItems[k] = foundItems[k].filter((v, i, a) => a.findIndex(t => (t.text === v.text)) === i);
+            });
+
+            const total = foundItems.S.length + foundItems.W.length + foundItems.O.length + foundItems.T.length;
+
+            if (total > 0) {
+                window._pendingDeptInsights = foundItems;
+                const wrapper = document.getElementById('deptInsightsBannerWrapper');
+                wrapper.innerHTML = `
+                <div id="deptInsightsBanner" style="margin-bottom:16px;padding:14px 18px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);border-radius:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+                    <div style="font-size:24px">🧠</div>
+                    <div style="flex:1">
+                        <div style="font-weight:800;font-size:14px;margin-bottom:3px">ذكاء استراتيجي متكامل</div>
+                        <div style="font-size:12px;color:var(--text-muted)">تم رصد <strong>(${total})</strong> نشاط وعنصر من (سلسلة القيمة، نموذج العمل، الاستبيانات) خاصة بإدارتك. يمكنك دمجها الآن لتقوية تحليل SWOT.</div>
+                    </div>
+                    <button onclick="importDeptInsights()" style="padding:9px 18px;border-radius:10px;border:none;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 4px 12px rgba(59,130,246,0.3)">
+                        📥 دمج التلقائي في SWOT
+                    </button>
+                </div>`;
+            }
+        }
+
+        function importDeptInsights() {
+            if (!window._pendingDeptInsights) return;
+            const items = window._pendingDeptInsights;
+
+            if (!state.prefilled) state.prefilled = { strengths: [], weaknesses: [], opportunities: [], threats: [] };
+
+            const injectNativeChips = (sectionId, newItems) => {
+                const arr = state.prefilled[sectionId];
+                const key = sectionId + '_0'; // Inject into Q1
+                if (!state.answers[key]) state.answers[key] = [];
+
+                const q0 = SWOT_SECTIONS.find(s => s.id === sectionId)?.questions[0];
+
+                newItems.forEach(item => {
+                    const text = typeof item === 'string' ? item : item.text;
+                    if (!arr.some(x => (typeof x === 'string' ? x : x.text) === text)) arr.push(item);
+
+                    if (q0 && q0.type === 'chips' && !q0.options.includes(text)) {
+                        q0.options.unshift(text); // ضف كخيار للضغط
+                    }
+                    if (!state.answers[key].includes(text)) {
+                        state.answers[key].push(text); // قم باختياره فوراً
+                    }
+                });
+            };
+
+            injectNativeChips('strengths', items.S);
+            injectNativeChips('weaknesses', items.W);
+            injectNativeChips('opportunities', items.O);
+            injectNativeChips('threats', items.T);
+
+            updateProgress();
+
+            // تحديث الواجهة والبانر
+            document.getElementById('deptInsightsBannerWrapper').innerHTML = `
+            <div style="margin-bottom:16px;padding:12px 18px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);border-radius:14px;color:var(--green);font-size:13px;font-weight:700;display:flex;align-items:center;gap:10px">
+                ✅ تم دمج نقاط إدارة ${_mgrDeptName} في المصفوفة بنجاح!
+            </div>`;
+
+            renderWizard();
+            renderResults();
+            saveState();
+
+            if (window.__aiAdvisor && window.__aiAdvisor.showToast) {
+                window.__aiAdvisor.showToast({
+                    icon: '🚀', title: 'تمت المزامنة!', message: 'الآن SWOT أصبح أذكى ومبني على أعمالك السابقة.', persistent: false
+                });
+            } else {
+                alert('تم الدمج بنجاح!');
+            }
+        }
+
         async function generateFromDiagnostic(isSilent = false) {
             const diag = safeParse('stratix_diagnostic_payload', null);
             // 📊 المرحلة 3: قراءة dept-deep من DB أولاً
@@ -1963,28 +2122,55 @@
         let _pestelItems = null; // cached PESTEL items
 
         async function checkPestelData() {
-            if (!state.versionId) return;
+            let data = null;
+
+            // 1. Try fetching from localStorage (because 'tool-detail.html?code=PESTEL' saves it there)
             try {
-                const pestel = await api(`/api/company-analysis/version/${state.versionId}/PESTEL`);
-                if (!pestel?.data) return;
+                const localPESTEL = safeParse('tool_PESTEL', null);
+                if (localPESTEL && localPESTEL.data) {
+                    data = { dimensions: localPESTEL.data };
+                }
+            } catch (e) { }
 
-                const data = typeof pestel.data === 'string' ? JSON.parse(pestel.data) : pestel.data;
+            // 2. Try fetching from Porter's Five Forces
+            try {
+                const localPORTER = safeParse('tool_PORTER', null);
+                if (localPORTER && localPORTER.data) {
+                    if (!data) data = { dimensions: {} };
+                    for (const [k, v] of Object.entries(localPORTER.data)) {
+                        data.dimensions['PORTER_' + k] = v;
+                    }
+                }
+            } catch (e) { }
 
-                // Extract threats & opportunities from PESTEL dimensions
+            // 3. Fallback to API if not found and versionId exists
+            if (!data && state.versionId) {
+                try {
+                    const pestel = await api(`/api/company-analysis/version/${state.versionId}/PESTEL`);
+                    if (pestel && pestel.data) {
+                        data = typeof pestel.data === 'string' ? JSON.parse(pestel.data) : pestel.data;
+                    }
+                } catch (e) { }
+            }
+
+            if (!data) return;
+
+            try {
                 const threats = [];
                 const opportunities = [];
                 const DIMENSION_LABELS = {
                     political: 'سياسي', economic: 'اقتصادي', social: 'اجتماعي',
                     technological: 'تقني', environmental: 'بيئي', legal: 'قانوني',
-                    P: 'سياسي', E: 'اقتصادي', S: 'اجتماعي',
-                    T: 'تقني', En: 'بيئي', L: 'قانوني'
+                    P: 'سياسي (P)', E: 'اقتصادي (E)', S: 'اجتماعي (S)',
+                    T: 'تقني (T)', En: 'بيئي (En)', L: 'قانوني (L)',
+                    PORTER_rivalry: 'المنافسة (Porter)', PORTER_buyers: 'العملاء (Porter)',
+                    PORTER_suppliers: 'الموردون (Porter)', PORTER_newEntrants: 'الداخلون الجدد (Porter)',
+                    PORTER_substitutes: 'البدائل (Porter)'
                 };
 
-                // Handle different data structures
                 const factors = data.factors || data.items || [];
-                const dimensions = data.dimensions || data.categories || {};
+                const dimensions = data.dimensions || data.categories || data || {};
 
-                // Structure 1: flat array of factors
                 if (factors.length > 0) {
                     factors.forEach(f => {
                         const dimLabel = DIMENSION_LABELS[f.dimension] || DIMENSION_LABELS[f.category] || f.dimension || '';
@@ -1999,45 +2185,68 @@
                     });
                 }
 
-                // Structure 2: grouped by dimension { political: { threats: [...], opportunities: [...] } }
                 if (Object.keys(dimensions).length > 0) {
                     for (const [dimKey, dimData] of Object.entries(dimensions)) {
                         const dimLabel = DIMENSION_LABELS[dimKey] || dimKey;
-                        if (dimData.threats) {
-                            dimData.threats.forEach(t => {
-                                const text = typeof t === 'string' ? t : (t.text || t.description || '');
-                                if (text) threats.push({ text: `[${dimLabel}] ${text}`, dimension: dimLabel });
-                            });
-                        }
-                        if (dimData.opportunities) {
-                            dimData.opportunities.forEach(o => {
-                                const text = typeof o === 'string' ? o : (o.text || o.description || '');
-                                if (text) opportunities.push({ text: `[${dimLabel}] ${text}`, dimension: dimLabel });
-                            });
-                        }
-                        // Also check items with impact field
-                        if (dimData.items) {
-                            dimData.items.forEach(item => {
+
+                        // Array direct? Like tool_PESTEL saves directly in array
+                        if (Array.isArray(dimData)) {
+                            dimData.forEach(item => {
                                 const text = typeof item === 'string' ? item : (item.text || item.description || '');
                                 if (!text) return;
-                                if (item.impact === 'negative') threats.push({ text: `[${dimLabel}] ${text}`, dimension: dimLabel });
-                                else if (item.impact === 'positive') opportunities.push({ text: `[${dimLabel}] ${text}`, dimension: dimLabel });
+                                if (item.impact === 'negative' || item.isThreat) threats.push({ text: `[${dimLabel}] ${text}`, dimension: dimLabel });
+                                else if (item.impact === 'positive' || item.isOpportunity) opportunities.push({ text: `[${dimLabel}] ${text}`, dimension: dimLabel });
+                                // Если تأثير غير محدد في Porter، افترض أن الأشياء فيه تهديدات لأنها 'قوى'
+                                else if (dimKey.startsWith('PORTER_')) threats.push({ text: `[${dimLabel}] ${text}`, dimension: dimLabel });
+                                else opportunities.push({ text: `[${dimLabel}] ${text}`, dimension: dimLabel }); // افتراضي فرص للبيئة
                             });
+                        } else {
+                            if (dimData.threats) {
+                                dimData.threats.forEach(t => {
+                                    const text = typeof t === 'string' ? t : (t.text || t.description || '');
+                                    if (text) threats.push({ text: `[${dimLabel}] ${text}`, dimension: dimLabel });
+                                });
+                            }
+                            if (dimData.opportunities) {
+                                dimData.opportunities.forEach(o => {
+                                    const text = typeof o === 'string' ? o : (o.text || o.description || '');
+                                    if (text) opportunities.push({ text: `[${dimLabel}] ${text}`, dimension: dimLabel });
+                                });
+                            }
+                            if (dimData.items) {
+                                dimData.items.forEach(item => {
+                                    const text = typeof item === 'string' ? item : (item.text || item.description || '');
+                                    if (!text) return;
+                                    if (item.impact === 'negative') threats.push({ text: `[${dimLabel}] ${text}`, dimension: dimLabel });
+                                    else if (item.impact === 'positive') opportunities.push({ text: `[${dimLabel}] ${text}`, dimension: dimLabel });
+                                });
+                            }
                         }
                     }
                 }
 
                 if (threats.length === 0 && opportunities.length === 0) return;
 
-                _pestelItems = { threats, opportunities };
+                // Auto-push directly to state.prefilled instead of waiting for a button click
+                if (!state.prefilled) state.prefilled = { strengths: [], weaknesses: [], opportunities: [], threats: [] };
 
-                // Show banner
+                opportunities.forEach(o => {
+                    if (!state.prefilled.opportunities.some(x => (typeof x === 'string' ? x : x.text) === o.text)) {
+                        state.prefilled.opportunities.push({ text: o.text, confidence: 85, source: 'pestel' });
+                    }
+                });
+
+                threats.forEach(t => {
+                    if (!state.prefilled.threats.some(x => (typeof x === 'string' ? x : x.text) === t.text)) {
+                        state.prefilled.threats.push({ text: t.text, confidence: 85, source: 'pestel' });
+                    }
+                });
+
+                // Hide old manual PESTEL banner because our global prefill injector handles it now
                 const banner = document.getElementById('pestelImportBanner');
-                banner.style.display = 'flex';
-                document.getElementById('pestelSummary').textContent =
-                    `${opportunities.length} فرصة + ${threats.length} تهديد من تحليل PESTEL — اختر ما تريد إضافته`;
+                if (banner) banner.style.display = 'none';
 
-                console.log('🌍 PESTEL data available:', { threats: threats.length, opportunities: opportunities.length });
+                console.log('🌍 PESTEL auto-imported directly to prefilled:', { threats: threats.length, opportunities: opportunities.length });
             } catch (e) {
                 console.warn('PESTEL check failed:', e);
             }
@@ -2177,7 +2386,7 @@
             banner.innerHTML = `
                 <div class="pf-icon">✅</div>
                 <div class="pf-text">
-                    <strong>تم دمج ${total} عنصر تلقائياً من بيانات الألم والطموح</strong> — هذه العناصر ستُضاف لنتائج SWOT عند الانتهاء.
+                    <strong>تم تجميع ${total} استنتاج آلياً من تحليلاتك السابقة (البيئة، التشخيص، الألم والطموح)</strong> — تم اختيارهم لك مسبقاً في النتيجة.
                     <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
                         ${pf.strengths?.length ? `<span class="prefill-tag" style="background:rgba(34,197,94,0.1);color:#22c55e">💪 ${pf.strengths.length} قوة</span>` : ''}
                         ${pf.weaknesses?.length ? `<span class="prefill-tag" style="background:rgba(239,68,68,0.1);color:#ef4444">⚠️ ${pf.weaknesses.length} ضعف</span>` : ''}
@@ -2281,13 +2490,20 @@
             const isFirst = globalIdx === 0;
             const isLast = state.currentSection === SWOT_SECTIONS.length - 1 && qi === 3;
 
+            const hasPrefilled = state.prefilled && Object.values(state.prefilled).some(arr => arr.length > 0);
             html += `
-                <div class="q-nav">
-                    <button class="btn-q back" onclick="prevQuestion()" ${isFirst ? 'style="visibility:hidden"' : ''}>
+                <div class="q-nav" style="display:flex; justify-content:space-between; align-items:center; width:100%; gap: 10px;">
+                    <button class="btn-q back" onclick="prevQuestion()" ${isFirst ? 'style="visibility:hidden"' : ''} style="flex:1; max-width:120px">
                         <i class="bi bi-arrow-right"></i> السابق
                     </button>
-                    <button class="btn-q next" onclick="${isLast ? 'showResults()' : 'nextQuestion()'}">
-                        ${isLast ? 'عرض النتائج 📊' : 'التالي'} <i class="bi bi-arrow-left"></i>
+                    
+                    ${hasPrefilled && !isLast ? `
+                    <button class="btn-q" style="background:transparent; color:var(--text-muted); border:1px solid rgba(0,0,0,0.1); font-size:12px; padding:6px 12px; flex:1" onclick="showResults()">
+                        ⏩ اكتفاء وعرض النتائج
+                    </button>` : '<div style="flex:1"></div>'}
+
+                    <button class="btn-q next" onclick="${isLast ? 'showResults()' : 'nextQuestion()'}" style="flex:1; max-width:150px">
+                        ${isLast ? 'عرض النتائج 📊' : (existing.length === 0 ? 'تخطي السؤال' : 'التالي')} <i class="bi bi-arrow-left"></i>
                     </button>
                 </div>
             `;

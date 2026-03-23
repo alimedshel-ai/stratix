@@ -2084,9 +2084,74 @@
         // ============================================================
         //  SCREEN 2: Questions
         // ============================================================
+        // ═══ حفظ/استعادة إجابات الإدارة من localStorage ═══
+        function getUserId() {
+            try {
+                const user = StratixData.getLocal('user', {});
+                return user.id || user.email || 'anon';
+            } catch (e) { return 'anon'; }
+        }
+
+        function getDeptSaveKey(deptId) {
+            return `internal_env_answers_${getUserId()}_${deptId}`;
+        }
+
+        function saveDeptAnswers() {
+            if (!state.selectedDepts.length) return;
+            const key = getDeptSaveKey(state.selectedDepts.join('_'));
+            localStorage.setItem(key, JSON.stringify({
+                answers: state.answers,
+                departments: state.selectedDepts,
+                savedAt: new Date().toISOString()
+            }));
+        }
+
+        function loadDeptAnswers() {
+            if (!state.selectedDepts.length) return false;
+            const key = getDeptSaveKey(state.selectedDepts.join('_'));
+            const raw = localStorage.getItem(key);
+            if (!raw) return false;
+            try {
+                const parsed = JSON.parse(raw);
+                // استعد الإجابات لو أقل من 90 يوم
+                const savedAt = new Date(parsed.savedAt);
+                const daysPassed = Math.floor((new Date() - savedAt) / (1000 * 60 * 60 * 24));
+                if (daysPassed > 90) { localStorage.removeItem(key); return false; }
+                if (parsed.answers && Object.keys(parsed.answers).length > 0) {
+                    state.answers = parsed.answers;
+                    return true;
+                }
+            } catch (e) { }
+            return false;
+        }
+
+        function clearDeptAnswers() {
+            if (!state.selectedDepts.length) return;
+            const key = getDeptSaveKey(state.selectedDepts.join('_'));
+            localStorage.removeItem(key);
+        }
+
         function startQuestions() {
             state.currentQuestion = 0;
             state.answers = {};
+
+            // ═══ هل فيه إجابات محفوظة لهذه الإدارة؟ ═══
+            const hasAnswers = loadDeptAnswers();
+            if (hasAnswers) {
+                // تحقق أن كل الأسئلة تم الإجابة عليها
+                const questions = [];
+                state.selectedDepts.forEach(deptId => {
+                    const dept = DEPARTMENTS.find(d => d.id === deptId);
+                    if (dept) dept.questions.forEach((q, i) => questions.push(`${deptId}_q${i}`));
+                });
+                const allAnswered = questions.every(k => typeof state.answers[k] === 'number');
+                if (allAnswered) {
+                    // عرض النتائج مباشرة مع زر لإعادة التحليل
+                    showResults(true);
+                    return;
+                }
+            }
+
             switchScreen(2);
             renderQuestion();
         }
@@ -2155,6 +2220,7 @@
 
         function selectAnswer(deptId, qIdx, value) {
             state.answers[`${deptId}_q${qIdx}`] = value;
+            saveDeptAnswers(); // حفظ فوري
             renderQuestion();
         }
 
@@ -2203,7 +2269,7 @@
             return { label: '🔴 مبتدئ — يحتاج بناء أساسي', color: '#ef4444', bg: 'rgba(239,68,68,0.06)', border: 'rgba(239,68,68,0.15)' };
         }
 
-        function showResults() {
+        function showResults(fromCache) {
             switchScreen(3);
             const scores = calculateScores();
             // Mark completion for dashboard tracking
@@ -2542,6 +2608,22 @@
 
             document.getElementById('resultsArea').innerHTML = html;
 
+            // ═══ بانر النتائج المحفوظة ═══
+            if (fromCache) {
+                const savedAt = (() => { try { const k = getDeptSaveKey(state.selectedDepts.join('_')); const p = JSON.parse(localStorage.getItem(k) || '{}'); return p.savedAt ? new Date(p.savedAt).toLocaleDateString('ar-SA') : ''; } catch (e) { return ''; } })();
+                const cacheBanner = document.createElement('div');
+                cacheBanner.style.cssText = 'display:flex;align-items:center;gap:14px;padding:14px 20px;border-radius:14px;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);margin-bottom:20px';
+                cacheBanner.innerHTML = `
+                    <span style="font-size:22px">💾</span>
+                    <div style="flex:1">
+                        <div style="font-size:14px;font-weight:700;color:#818cf8">تحليلك المحفوظ — ${savedAt}</div>
+                        <div style="font-size:12px;color:var(--text-muted)">استعدنا آخر إجاباتك تلقائياً. هل تريد إعادة التحليل؟</div>
+                    </div>
+                    <button onclick="reDoAnalysis()" style="background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);color:#818cf8;padding:8px 16px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🔄 أعد التحليل</button>
+                `;
+                document.getElementById('resultsArea').prepend(cacheBanner);
+            }
+
             // Animate bars
             setTimeout(() => {
                 document.querySelectorAll('.result-bar-fill').forEach(el => {
@@ -2549,8 +2631,16 @@
                 });
             }, 100);
 
-            // Save to backend
-            saveAnalysis(scores);
+            // Save to backend only for new analyses
+            if (!fromCache) saveAnalysis(scores);
+        }
+
+        function reDoAnalysis() {
+            clearDeptAnswers();
+            state.currentQuestion = 0;
+            state.answers = {};
+            switchScreen(2);
+            renderQuestion();
         }
 
         // ============================================================
@@ -2858,8 +2948,8 @@
             // No previous comparison for viewing old results
             state.previousScores = null;
 
-            // Show results directly
-            showResults();
+            // Show results directly (from backend cache — no re-save needed)
+            showResults(true);
         }
 
         // ============================================================
@@ -2868,26 +2958,48 @@
         async function init() {
             renderDepartments();
 
-            // Check for existing general assessment
+            // ═══ فحص الكاش المحلي أولاً — هل يوجد فحص عام + إجابات إدارة محفوظة؟ ═══
             const savedGeneral = localStorage.getItem('generalAssessment');
+            let generalParsed = null;
+            let generalValid = false;
             if (savedGeneral) {
                 try {
-                    const parsed = JSON.parse(savedGeneral);
-                    // If completed less than 90 days ago, show results summary
-                    const completedAt = new Date(parsed.completedAt);
+                    generalParsed = JSON.parse(savedGeneral);
+                    const completedAt = new Date(generalParsed.completedAt);
                     const daysPassed = Math.floor((new Date() - completedAt) / (1000 * 60 * 60 * 24));
-                    if (daysPassed < 90 && parsed.results) {
-                        state.generalAnswers = parsed.answers || {};
-                        state.generalResults = parsed.results;
-                        state.generalCompleted = true;
-                        // Show results banner on screen 0 (don't skip!)
-                        showGeneralResultsBanner();
-                    } else {
-                        renderGeneralAssessment();
-                    }
-                } catch (e) {
-                    renderGeneralAssessment();
+                    generalValid = daysPassed < 90 && !!generalParsed.results;
+                } catch (e) { }
+            }
+
+            if (generalValid) {
+                // ابحث في مفاتيح الكاش الخاصة بهذا المستخدم فقط
+                const userId = getUserId();
+                const deptCacheKeys = Object.keys(localStorage).filter(k => k.startsWith(`internal_env_answers_${userId}_`));
+                let foundParsed = null;
+                for (const key of deptCacheKeys) {
+                    try {
+                        const p = JSON.parse(localStorage.getItem(key));
+                        if (p && p.departments && p.answers && Object.keys(p.answers).length > 0) {
+                            const age = Math.floor((new Date() - new Date(p.savedAt)) / (1000 * 60 * 60 * 24));
+                            if (age < 90) { foundParsed = p; break; }
+                        }
+                    } catch (e) { }
                 }
+                if (foundParsed) {
+                    // استعد كل الحالة وانقل مباشرة للنتائج
+                    state.generalAnswers = generalParsed.answers || {};
+                    state.generalResults = generalParsed.results;
+                    state.generalCompleted = true;
+                    state.selectedDepts = foundParsed.departments;
+                    state.answers = foundParsed.answers;
+                    showResults(true);
+                    return; // ← تجاوز بقية init — لا حاجة لإعادة الفحص
+                }
+                // لا يوجد كاش إدارة → عرض نتائج الفحص العام فقط
+                state.generalAnswers = generalParsed.answers || {};
+                state.generalResults = generalParsed.results;
+                state.generalCompleted = true;
+                showGeneralResultsBanner();
             } else {
                 renderGeneralAssessment();
             }
@@ -2939,8 +3051,9 @@
             if (!urlDept) {
 
                 // ═══ ١) كشف الإدارة من كل المصادر المتاحة ═══
-                const savedDept = localStorage.getItem('stratix_dept') || '';
-                const diagDept = diagPayload.department || diagComplete.department || '';
+                const savedDept = localStorage.getItem('stratix_v10_dept') || localStorage.getItem('stratix_dept') || '';
+                const userDeptKey = user.department?.key || '';
+                const diagDept = diagPayload.department || diagComplete.department || userDeptKey || '';
                 const userCat = user.userCategory || '';
                 const diagRole = diagPayload.role || '';
 
@@ -2971,8 +3084,8 @@
 
                     // ═══ ٣) محاولة الكشف بالترتيب: stratix_dept → diagnostic → userCategory ═══
                     let mappedDept = null;
-                    if (savedDept && DEPT_MAP[savedDept]) {
-                        mappedDept = DEPT_MAP[savedDept];
+                    if (savedDept && (DEPT_MAP[savedDept] || V10_DEPT_MAP[savedDept.toLowerCase()])) {
+                        mappedDept = DEPT_MAP[savedDept] || V10_DEPT_MAP[savedDept.toLowerCase()];
                     } else if (diagDept && V10_DEPT_MAP[diagDept.toLowerCase()]) {
                         mappedDept = V10_DEPT_MAP[diagDept.toLowerCase()];
                         // حفظ للمرة القادمة
