@@ -2819,6 +2819,18 @@
 
                 if (allowedCjKeys) {
                     html += '<div style="background:linear-gradient(135deg,rgba(236,72,153,0.1),rgba(139,92,246,0.05));border:1px solid rgba(236,72,153,0.2);border-radius:12px;padding:16px;margin-bottom:20px;display:flex;align-items:center;gap:12px"><i class="bi bi-info-circle-fill" style="color:#ec4899;font-size:24px"></i><div><div style="font-size:14px;font-weight:800;color:var(--text)">تم تخصيص رحلة العميل لإدارتك</div><div style="font-size:12px;color:var(--text-muted)">تم إخفاء نقاط التواصل الأخرى للتركيز على المراحل التي تقع تحت تأثير إدارتك المباشر.</div></div></div>';
+                } else {
+                    html += `<div style="background:linear-gradient(135deg,rgba(102,126,234,0.1),rgba(34,197,94,0.05));border:1px solid rgba(102,126,234,0.2);border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:flex-start;gap:14px">
+                        <div style="width:40px;height:40px;border-radius:10px;background:rgba(102,126,234,0.15);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">👑</div>
+                        <div style="flex:1">
+                            <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:4px">النظرة الشمولية للقيادة العليا</div>
+                            <div style="font-size:12px;color:var(--text-muted);line-height:1.6">أنت تشاهد الآن <strong>النسخة المجمّعة</strong> لخريطة رحلة العميل. هذه البيانات هي حصيلة إدخالات جميع الإدارات معاً.</div>
+                            <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+                                <span style="font-size:11px;padding:4px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:var(--text-muted)">المراحل المكتملة: <strong style="color:var(--primary)">${filledStages}/6</strong></span>
+                                <span style="font-size:11px;padding:4px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:var(--text-muted)">إجمالي نقاط التواصل: <strong style="color:var(--green)">${totalItems} نقطة</strong></span>
+                            </div>
+                        </div>
+                    </div>`;
                 }
 
                 // Journey flow visualization — horizontal pipeline
@@ -2853,6 +2865,8 @@
                 html += '</div>';
 
                 // Per-stage expandable cards
+                var ownerMap = { awareness: 'التسويق', consideration: 'التسويق والمبيعات', purchase: 'المبيعات', delivery: 'العمليات', postPurchase: 'خدمة العملاء', loyalty: 'التسويق وخدمة العملاء' };
+
                 displaySections.forEach(function (s) {
                     var stageItems = extractItems(data, s.key);
                     var stageCount = stageItems.length;
@@ -2865,7 +2879,9 @@
                     html += '<div style="display:flex;align-items:center;gap:10px">';
                     html += '<span style="font-size:22px">' + s.emoji + '</span>';
                     html += '<div><div style="font-size:14px;font-weight:700;color:var(--text)">' + s.nameAr + '</div>';
-                    html += '<div style="font-size:10px;color:var(--text-muted)">' + s.desc + '</div></div></div>';
+                    html += '<div style="font-size:10px;color:var(--text-muted)">' + s.desc;
+                    if (!allowedCjKeys) html += ' <span style="color:' + s.color + ';margin-right:6px;background:' + s.color + '15;padding:2px 6px;border-radius:4px;font-weight:600">مسؤولية: ' + ownerMap[s.key] + '</span>';
+                    html += '</div></div></div>';
                     html += '<div style="display:flex;align-items:center;gap:8px">';
                     if (stageCount > 0) {
                         html += '<span style="background:' + s.color + '15;color:' + s.color + ';padding:2px 10px;border-radius:8px;font-size:11px;font-weight:700">' + stageCount + '</span>';
