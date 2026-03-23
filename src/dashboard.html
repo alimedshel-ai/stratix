@@ -784,10 +784,16 @@
 
                     let u = null;
                     try {
-                        u = await window.api.getCurrentUser();
+                        // Promise.race: لو getCurrentUser تجمّد (بسبب 401 في الـ interceptor)
+                        // نتجاوزها بعد 5 ثوان ونروح للـ login
+                        u = await Promise.race([
+                            window.api.getCurrentUser(),
+                            new Promise((_, reject) =>
+                                setTimeout(() => reject(new Error('timeout')), 5000)
+                            )
+                        ]);
                     } catch (e) {
-                        // الـ fetch interceptor قد يُرسل للـ login تلقائياً
-                        console.warn('[Dashboard] getCurrentUser failed:', e.message);
+                        console.warn('[Dashboard] getCurrentUser failed or timed out:', e.message);
                         window.location.href = '/login.html';
                         return;
                     }

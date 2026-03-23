@@ -40,7 +40,7 @@ async function getCurrentUser() {
                 const err = await res.json().catch(() => ({}));
                 if (res.status === 403 && err.reason) {
                     window.location.href = `/suspended.html?reason=${encodeURIComponent(err.reason)}`;
-                    return new Promise(() => { }); // تجميد التنفيذ فوراً
+                    return Promise.reject(new Error('SUSPENDED'));
                 }
                 return null;
             }
@@ -82,7 +82,7 @@ async function api(url, options = {}) {
         const err = await response.json();
         if (err.reason) {
             window.location.href = `/suspended.html?reason=${encodeURIComponent(err.reason)}`;
-            return new Promise(() => { }); // تجميد التنفيذ فوراً
+            return Promise.reject(new Error('SUSPENDED')); // يوقف التنفيذ بشكل نظيف
         }
     }
 
