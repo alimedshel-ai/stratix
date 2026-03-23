@@ -241,9 +241,18 @@ app.get('/api/user/me', verifyToken, async (req, res) => {
     // بناء الـ response بنفس الشكل المعتاد
     const primaryMembership = user.memberships[0] || null;
     const isSA = user.systemRole === 'SUPER_ADMIN';
+    const primaryRole = primaryMembership?.role || (isSA ? 'OWNER' : 'VIEWER');
 
-    let uType = primaryMembership?.userType || null;
-    if (!uType) {
+    // 🛡️ تحديد userType بأولوية صحيحة (نفس المنطق في auth.js):
+    // 1. OWNER/ADMIN/SUPER_ADMIN → دائماً COMPANY_MANAGER (بغض النظر عن userCategory)
+    // 2. membership.userType موجود → استخدمه
+    // 3. استنتاج من userCategory كـ fallback فقط لغير OWNER/ADMIN
+    let uType;
+    if (['OWNER', 'ADMIN'].includes(primaryRole) || isSA) {
+      uType = 'COMPANY_MANAGER';
+    } else if (primaryMembership?.userType) {
+      uType = primaryMembership.userType;
+    } else {
       const cat = user.userCategory || '';
       if (cat.startsWith('DEPT_')) uType = 'DEPT_MANAGER';
       else if (cat.startsWith('INDIVIDUAL_') || cat === 'CONSULTANT_SOLO') uType = 'INDIVIDUAL';
