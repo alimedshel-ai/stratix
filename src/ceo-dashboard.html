@@ -1760,18 +1760,16 @@
         async function initCeoDashboard() {
             try {
                 let currentUser = null;
-                try {
-                    // جلب هوية المستخدم برمجياً بشكل آمن
-                    if (typeof window.apiRequest === 'function') {
-                        const res = await window.apiRequest('/api/user/me');
-                        if (res && res.ok) currentUser = await res.json();
-                    }
-                } catch (e) {
-                    console.warn("فشل جلب بيانات المستخدم من الخادم، سيتم استخدام التخزين المحلي");
+                if (window.api && typeof window.api.getCurrentUser === 'function') {
+                    currentUser = await window.api.getCurrentUser();
                 }
 
-                currentUser = currentUser || JSON.parse(localStorage.getItem('user') || '{}');
-                window.entityId = currentUser.entity?.id || currentUser.entityId || localStorage.getItem('entityId');
+                if (!currentUser) {
+                    console.warn("المستخدم غير مسجل دخول، جاري التوجيه تلقائياً...");
+                    return; // 🛑 إيقاف استكمال الكود لمنع التعليق
+                }
+
+                window.entityId = currentUser.entity?.id || currentUser.entityId;
 
                 if (typeof attachEventHandlers === 'function') attachEventHandlers();
 

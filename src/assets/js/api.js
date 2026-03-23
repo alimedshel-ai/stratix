@@ -34,19 +34,6 @@ async function getCurrentUser() {
         try {
             const res = await fetch('/api/user/me', { credentials: 'include' });
             if (!res.ok) {
-                if (res.status === 401) {
-                    // 🛑 الجلسة انتهت فعلاً — أعِد للدخول
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                    _cachedUser = null;
-                    if (!window.location.pathname.includes('/login.html')) {
-                        // تأخير صغير لمنع race condition بين الصفحات
-                        setTimeout(() => {
-                            window.location.href = '/login.html?session_expired=true';
-                        }, 300);
-                    }
-                    throw new Error('Unauthorized');
-                }
                 const err = await res.json();
                 if (res.status === 403 && err.reason) {
                     window.location.href = `/suspended.html?reason=${encodeURIComponent(err.reason)}`;
@@ -58,7 +45,7 @@ async function getCurrentUser() {
             return _cachedUser;
         } catch (err) {
             console.error('getCurrentUser failed', err);
-            if (err.message === 'Account suspended' || err.message === 'Unauthorized') throw err;
+            if (err.message === 'Account suspended') throw err;
             return null;
         } finally {
             _userFetchPromise = null;
@@ -85,8 +72,6 @@ async function api(url, options = {}) {
     });
 
     if (response.status === 401) {
-        // لا نُعيد للـ login هنا — getCurrentUser هي المسؤولة عن ذلك
-        // طلبات البيانات العادية قد تُرجع 401 لأسباب مؤقتة
         throw new Error('Unauthorized');
     }
 
@@ -268,5 +253,14 @@ window.fetch = async function () {
         }
     }
 
-    return originalFetch.call(this, resource, config);
+    const response = await originalFetch.call(this, resource, config);
+
+    // 🛑 الحل الجذري المركزي: أي طلب داخلي يرجع 401 يطرد المستخدم فوراً دون تعارض
+    if (isInternal && response.status === 401 && !window.location.pathname.includes('/login.html')) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login.html?session_expired=true';
+    }
+
+    return response;
 };

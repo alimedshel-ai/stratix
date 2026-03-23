@@ -14,12 +14,10 @@
 
   // === إعدادات ===
   const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 دقائق
-  let token = '';
   let entityId = '';
   let currentPage = window.location.pathname + window.location.search;
 
   try {
-    token = localStorage.getItem('token') || '';
     const stored = localStorage.getItem('user');
     if (stored) {
       const u = JSON.parse(stored);
@@ -31,11 +29,11 @@
     }
   } catch (e) { /* ignore */ }
 
-  console.log('[AI-Advisor] Init:', { currentPage, entityId: entityId || 'NONE', hasToken: !!token });
+  console.log('[AI-Advisor] Init:', { currentPage, entityId: entityId || 'NONE' });
 
   // لا تُظهر المستشار في صفحات لا تحتاجه
   const excludedPages = ['/login.html', '/signup.html', '/landing.html', '/'];
-  if (excludedPages.includes(window.location.pathname) || !token) return;
+  if (excludedPages.includes(window.location.pathname)) return;
 
   // === حالة المكون ===
   let suggestions = [];
@@ -822,8 +820,6 @@
 
   // === Fetch Suggestions ===
   async function fetchContext() {
-    if (!token) return;
-
     // إذا ما فيه entityId → نعطي نصائح محلية من الفرونتند
     if (!entityId) {
       const localSuggestions = getLocalSuggestions(currentPage);
@@ -846,9 +842,7 @@
 
     try {
       const url = `/api/ai-advisor/context?page=${encodeURIComponent(currentPage)}&entityId=${encodeURIComponent(entityId)}`;
-      const res = await fetch(url, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await fetch(url, { credentials: 'include' });
       if (!res.ok) return;
 
       const data = await res.json();
