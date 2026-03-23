@@ -42,8 +42,12 @@ function getRoutingDestination(user) {
     if (uType === 'CONSULTANT' || uCategory.startsWith('CONSULTANT')) return '/consultant-dashboard.html';
     if (uCategory.startsWith('BOARD_')) return '/board-dashboard.html';
 
-    // إذا كان المستخدم ينتمي لإدارة (سواء مدير أو مدخل بيانات)، يتم توجيهه للوحة الإدارة
-    if (uType === 'DEPT_MANAGER' || uCategory.startsWith('DEPT_') || user.department?.key) return '/dept-dashboard.html';
+    // 🛡️ مدير الإدارة: يذهب لـ dept-dashboard فقط إذا كان غير OWNER/ADMIN
+    // OWNER/ADMIN قد يملكون userCategory='DEPT_*' لكنهم يجب أن يذهبوا للـ CEO dashboard
+    const isPrivilegedRole = role === 'OWNER' || role === 'ADMIN' || sysRole === 'SUPER_ADMIN';
+    if (!isPrivilegedRole && (uType === 'DEPT_MANAGER' || uCategory.startsWith('DEPT_') || user.department?.key)) {
+        return '/dept-dashboard.html';
+    }
 
     if (['INDIVIDUAL', 'PERSONAL', 'CAREER'].includes(uCategory)) return '/individual-dashboard.html';
 

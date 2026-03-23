@@ -56,8 +56,11 @@ function getUserRoleLabel(userData) {
   if (!userData) return '';
   if (userData.systemRole === 'SUPER_ADMIN') return ROLE_LABELS.SUPER_ADMIN;
 
+  // 🛡️ OWNER/ADMIN: لا يعرضون مسمى إدارة حتى لو userCategory يبدأ بـ DEPT_
+  const isPrivileged = userData.role === 'OWNER' || userData.role === 'ADMIN';
+
   let deptKey = userData.department?.key || '';
-  if (!deptKey && userData.userCategory && userData.userCategory.startsWith('DEPT_')) {
+  if (!isPrivileged && !deptKey && userData.userCategory && userData.userCategory.startsWith('DEPT_')) {
     const catDept = userData.userCategory.replace('DEPT_', '').toLowerCase();
     const MAP = { hr: 'hr', finance: 'finance', marketing: 'marketing', ops: 'operations', service: 'cs', sales: 'sales', it: 'it', legal: 'compliance', quality: 'quality', pmo: 'projects' };
     deptKey = MAP[catDept] || catDept;
@@ -68,7 +71,8 @@ function getUserRoleLabel(userData) {
   if (userData.role === 'DATA_ENTRY') return deptName ? `${ROLE_LABELS.DATA_ENTRY} — ${deptName}` : ROLE_LABELS.DATA_ENTRY;
   if (userData.role === 'VIEWER') return deptName ? `${ROLE_LABELS.VIEWER} — ${deptName}` : ROLE_LABELS.VIEWER;
 
-  if (userData.userType === 'DEPT_MANAGER' || (userData.userCategory && userData.userCategory.startsWith('DEPT_'))) {
+  // مدير الإدارة: فقط إذا لم يكن OWNER/ADMIN
+  if (!isPrivileged && (userData.userType === 'DEPT_MANAGER' || (userData.userCategory && userData.userCategory.startsWith('DEPT_')))) {
     return deptName ? `مدير ${deptName}` : ROLE_LABELS.DEPT_MANAGER;
   }
   return ROLE_LABELS[userData.userType] || ROLE_LABELS[userData.role] || userData.role || '';
@@ -77,15 +81,17 @@ function getUserRoleLabel(userData) {
 function getUserRoleIcon(userData) {
   if (!userData) return 'bi-person';
 
+  const isPrivileged = userData.role === 'OWNER' || userData.role === 'ADMIN';
+
   let deptKey = userData.department?.key || '';
-  if (!deptKey && userData.userCategory && userData.userCategory.startsWith('DEPT_')) {
+  if (!isPrivileged && !deptKey && userData.userCategory && userData.userCategory.startsWith('DEPT_')) {
     const catDept = userData.userCategory.replace('DEPT_', '').toLowerCase();
     const MAP = { hr: 'hr', finance: 'finance', marketing: 'marketing', ops: 'operations', service: 'cs', sales: 'sales', it: 'it', legal: 'compliance', quality: 'quality', pmo: 'projects' };
     deptKey = MAP[catDept] || catDept;
   }
 
   const isViewerOrDataEntry = ['VIEWER', 'DATA_ENTRY'].includes(userData.role);
-  const isDeptManager = userData.userType === 'DEPT_MANAGER' || (userData.userCategory && userData.userCategory.startsWith('DEPT_'));
+  const isDeptManager = !isPrivileged && (userData.userType === 'DEPT_MANAGER' || (userData.userCategory && userData.userCategory.startsWith('DEPT_')));
 
   if ((isViewerOrDataEntry || isDeptManager) && deptKey && DEPT_ICONS[deptKey]) return DEPT_ICONS[deptKey];
 
@@ -100,15 +106,17 @@ function getUserRoleIcon(userData) {
 function getUserRoleColor(userData) {
   if (!userData) return null;
 
+  const isPrivileged = userData.role === 'OWNER' || userData.role === 'ADMIN';
+
   let deptKey = userData.department?.key || '';
-  if (!deptKey && userData.userCategory && userData.userCategory.startsWith('DEPT_')) {
+  if (!isPrivileged && !deptKey && userData.userCategory && userData.userCategory.startsWith('DEPT_')) {
     const catDept = userData.userCategory.replace('DEPT_', '').toLowerCase();
     const MAP = { hr: 'hr', finance: 'finance', marketing: 'marketing', ops: 'operations', service: 'cs', sales: 'sales', it: 'it', legal: 'compliance', quality: 'quality', pmo: 'projects' };
     deptKey = MAP[catDept] || catDept;
   }
 
   const isViewerOrDataEntry = ['VIEWER', 'DATA_ENTRY'].includes(userData.role);
-  const isDeptManager = userData.userType === 'DEPT_MANAGER' || (userData.userCategory && userData.userCategory.startsWith('DEPT_'));
+  const isDeptManager = !isPrivileged && (userData.userType === 'DEPT_MANAGER' || (userData.userCategory && userData.userCategory.startsWith('DEPT_')));
 
   if ((isViewerOrDataEntry || isDeptManager) && deptKey && DEPT_COLORS[deptKey]) return DEPT_COLORS[deptKey];
 
