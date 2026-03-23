@@ -1031,7 +1031,7 @@
         (async function initDashboard() {
             try {
                 // 1. استدعاء آمن ومحكم بهوية السيرفر
-                const userData = await window.api.getCurrentUser();
+                const userData = await getCurrentUser();
 
                 // التوجيه مع رسالة الطرد بدلاً من الاستثناء
                 const isDeptManager = userData && (
@@ -1291,9 +1291,8 @@
             // ═══ محاولة جلب المؤشرات الفردية ═══
             let individualKPIs = null;
             try {
-                // استخدام الـ Fetch المعقم (مع credentials: include من الدالة نفسها)
-                const entityId = (await window.api.getCurrentUser()).entity?.id;
-                const kpiRes = await window.apiRequest(`/api/kpis/entity/${entityId}`);
+                const entityId = (await getCurrentUser()).entity?.id;
+                const kpiRes = await fetch(`/api/kpis/entity/${entityId}`, { credentials: 'include' });
                 const kpiData = await kpiRes.json();
                 if (kpiData.kpis?.length) individualKPIs = kpiData.kpis;
             } catch (e) { /* fallback to summary */ }
