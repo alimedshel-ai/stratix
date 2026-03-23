@@ -4,7 +4,27 @@ const { verifyToken } = require('../middleware/auth');
 
 const router = express.Router();
 
+// ── helpers ──────────────────────────────────────────────────────────────────
+
+/** استخرج كود الإدارة من الـ JWT (يدعم عدة صيغ) */
+function resolveDeptKey(user) {
+    if (!user) return null;
+    if (user.dept) return user.dept.toLowerCase();
+    if (user.departmentRole) return user.departmentRole.toLowerCase();
+    if (user.userCategory?.startsWith('DEPT_'))
+        return user.userCategory.replace('DEPT_', '').toLowerCase();
+    return null;
+}
+
+/** JSON.parse آمن مع قيمة افتراضية */
+function safeParseJSON(str, def) {
+    if (!str) return def;
+    if (typeof str === 'object') return str;
+    try { return JSON.parse(str); } catch { return def; }
+}
+
 // ============ COMPANY ANALYSIS ============
+
 
 // Get all analyses for a version (with progress)
 router.get('/version/:versionId', verifyToken, async (req, res) => {
@@ -207,28 +227,98 @@ router.post('/', verifyToken, async (req, res) => {
     }
 });
 
-// Update analysis
+// Update analysis — with dept-scoped field protection for DEPT_MANAGER
 router.patch('/:id', verifyToken, async (req, res) => {
     try {
-        const { data, summary, status, progress, score } = req.body;
+        let { data, summary, status, progress, score } = req.body;
 
         const existing = await prisma.companyAnalysis.findUnique({ where: { id: req.params.id } });
         if (!existing) {
             return res.status(404).json({ error: 'Analysis not found' });
         }
 
+        // ── 🛡️ فلترة قسرية لمدير الإدارة: يعدّل حقوله فقط ──────────────────
+        if (req.user?.userType === 'DEPT_MANAGER' && data !== undefined) {
+            const deptKey = resolveDeptKey(req.user);
+
+            if (deptKey) {
+                const incomingData = safeParseJSON(data, {});
+                const currentData = safeParseJSON(existing.data, {});
+
+                // تعريف الأقسام المسموحة لكل إدارة في أداة VALUE_CHAIN
+                const VC_DEPT_MAPPING = {
+                    hr: ['hrManagement'],
+                    finance: ['infrastructure', 'procurement'],
+                    operations: ['inboundLogistics', 'operations', 'outboundLogistics', 'procurement'],
+                    marketing: ['marketingSales'],
+                    sales: ['marketingSales', 'service'],
+                    it: ['techDevelopment'],
+                    procurement: ['procurement'],
+                    cs: ['service'],
+                    quality: ['operations', 'service'],
+                    compliance: ['infrastructure'],
+                    projects: ['operations', 'techDevelopment'],
+                    support: ['infrastructure', 'hrManagement', 'procurement', 'techDevelopment'],
+                    legal: ['infrastructure'],
+                };
+
+                // تعريف الأقسام المسموحة لكل إدارة في أداة BUSINESS_MODEL
+                const BMC_DEPT_MAPPING = {
+                    hr: ['keyResources', 'keyActivities'],
+                    finance: ['revenueStreams', 'costStructure'],
+                    marketing: ['customerSegments', 'valueProposition', 'channels', 'customerRelationships'],
+                    sales: ['customerSegments', 'channels', 'customerRelationships', 'revenueStreams'],
+                    operations: ['valueProposition', 'keyActivities', 'keyResources', 'keyPartners', 'costStructure'],
+                    projects: ['keyActivities', 'keyResources', 'keyPartners'],
+                    support: ['keyResources', 'keyPartners'],
+                    compliance: ['keyPartners', 'keyActivities'],
+                    it: ['keyResources', 'keyActivities', 'keyPartners'],
+                    legal: ['keyPartners', 'keyActivities'],
+                };
+
+                const TOOL_MAPPING = {
+                    'VALUE_CHAIN': VC_DEPT_MAPPING,
+                    'BUSINESS_MODEL': BMC_DEPT_MAPPING,
+                };
+
+                const mapping = TOOL_MAPPING[existing.toolCode];
+                if (mapping) {
+                    const allowedKeys = mapping[deptKey] || [];
+                    // 🔒 الحقول غير المسموحة تُستعاد من قاعدة البيانات
+                    Object.keys(currentData).forEach(key => {
+                        if (!allowedKeys.includes(key)) {
+                            incomingData[key] = currentData[key];
+                        }
+                    });
+                    console.debug(`[Analysis PATCH] DEPT_MANAGER ${deptKey} allowed: [${allowedKeys.join(', ')}] on ${existing.toolCode}`);
+                }
+
+                data = JSON.stringify(incomingData);
+            }
+        }
+        // ── OWNER / ADMIN: تحويل الكائن لنص فقط ─────────────────────────────
+        else if (data !== undefined && typeof data === 'object') {
+            data = JSON.stringify(data);
+        }
+
+        // ── بناء حقول التحديث ────────────────────────────────────────────────
         const updateData = {};
+
         if (data !== undefined) {
-            updateData.data = typeof data === 'object' ? JSON.stringify(data) : data;
-            // Auto-calculate progress if not explicitly provided
+            updateData.data = data;
+            // حساب التقدم تلقائياً ما لم يُرسَل صراحة
             if (progress === undefined) {
                 try {
-                    const parsed = typeof data === 'object' ? data : JSON.parse(data);
-                    updateData.progress = calculateProgress(existing.toolCode, parsed);
+                    const parsed = safeParseJSON(data, null);
+                    if (parsed) updateData.progress = calculateProgress(existing.toolCode, parsed);
                 } catch (e) { /* ignore */ }
             }
         }
+
         if (summary !== undefined) updateData.summary = summary;
+        if (progress !== undefined) updateData.progress = progress;
+        if (score !== undefined) updateData.score = score ? parseFloat(score) : null;
+
         if (status !== undefined) {
             updateData.status = status;
             if (status === 'COMPLETED' && !existing.completedAt) {
@@ -236,8 +326,7 @@ router.patch('/:id', verifyToken, async (req, res) => {
                 updateData.progress = 100;
             }
         }
-        if (progress !== undefined) updateData.progress = progress;
-        if (score !== undefined) updateData.score = score ? parseFloat(score) : null;
+
         updateData.updatedBy = req.user?.id || null;
 
         const analysis = await prisma.companyAnalysis.update({
@@ -255,6 +344,7 @@ router.patch('/:id', verifyToken, async (req, res) => {
         res.status(500).json({ error: 'Failed to update analysis' });
     }
 });
+
 
 // Delete analysis
 router.delete('/:id', verifyToken, async (req, res) => {
