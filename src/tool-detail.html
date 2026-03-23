@@ -2777,7 +2777,32 @@
                 // Count filled stages
                 var filledStages = 0;
                 var totalItems = 0;
-                CJ_SECTIONS.forEach(function (s) {
+
+                // 🛡️ عزل الأقسام (Smart Filter) لرحلة العميل
+                const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+                const isDeptManager = currentUser.userType === 'DEPT_MANAGER' || (currentUser.userCategory && currentUser.userCategory.startsWith('DEPT_'));
+                const pKey = currentUser.department?.key || (currentUser.userCategory ? currentUser.userCategory.replace('DEPT_', '').toLowerCase() : '');
+
+                let allowedCjKeys = null;
+                if (isDeptManager && pKey) {
+                    const CJ_MAPPING = {
+                        marketing: ['awareness', 'consideration', 'loyalty'],
+                        sales: ['consideration', 'purchase'],
+                        operations: ['delivery'],
+                        cs: ['postPurchase', 'loyalty'],
+                        quality: ['postPurchase'],
+                        it: ['awareness', 'purchase', 'postPurchase']
+                    };
+                    const mapKey = { 'ops': 'operations', 'service': 'cs' }[pKey] || pKey;
+                    allowedCjKeys = CJ_MAPPING[mapKey] || null;
+                }
+
+                let displaySections = CJ_SECTIONS;
+                if (allowedCjKeys) {
+                    displaySections = CJ_SECTIONS.filter(s => allowedCjKeys.includes(s.key));
+                }
+
+                displaySections.forEach(function (s) {
                     var items = extractItems(data, s.key);
                     if (items.length > 0) filledStages++;
                     totalItems += items.length;
@@ -2792,9 +2817,13 @@
                 html += '<div><div style="font-size:18px;font-weight:800;color:var(--text)">ارسم رحلة عميلك خطوة بخطوة</div>';
                 html += '<div style="font-size:12px;color:var(--text-muted)">من لحظة ما يعرفك → لما يصير عميل دائم يوصي فيك</div></div></div>';
 
+                if (allowedCjKeys) {
+                    html += '<div style="background:linear-gradient(135deg,rgba(236,72,153,0.1),rgba(139,92,246,0.05));border:1px solid rgba(236,72,153,0.2);border-radius:12px;padding:16px;margin-bottom:20px;display:flex;align-items:center;gap:12px"><i class="bi bi-info-circle-fill" style="color:#ec4899;font-size:24px"></i><div><div style="font-size:14px;font-weight:800;color:var(--text)">تم تخصيص رحلة العميل لإدارتك</div><div style="font-size:12px;color:var(--text-muted)">تم إخفاء نقاط التواصل الأخرى للتركيز على المراحل التي تقع تحت تأثير إدارتك المباشر.</div></div></div>';
+                }
+
                 // Journey flow visualization — horizontal pipeline
                 html += '<div style="display:flex;align-items:center;gap:0;margin-bottom:18px;overflow-x:auto;padding:4px 0">';
-                CJ_SECTIONS.forEach(function (s, idx) {
+                displaySections.forEach(function (s, idx) {
                     var stageItems = extractItems(data, s.key);
                     var isFilled = stageItems.length > 0;
                     var bgColor = isFilled ? s.color + '18' : 'rgba(255,255,255,0.03)';
@@ -2807,7 +2836,7 @@
                         html += '<div style="font-size:8px;color:' + s.color + ';margin-top:2px">' + stageItems.length + ' نقطة</div>';
                     }
                     html += '</div>';
-                    if (idx < CJ_SECTIONS.length - 1) {
+                    if (idx < displaySections.length - 1) {
                         html += '<div style="font-size:12px;color:var(--text-muted);padding:0 2px;flex-shrink:0">→</div>';
                     }
                 });
@@ -2815,16 +2844,16 @@
 
                 // Progress summary
                 html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding:8px 14px;border-radius:10px;background:rgba(139,92,246,0.04);border:1px dashed rgba(139,92,246,0.15)">';
-                html += '<div style="font-size:11px;color:var(--text-muted)"><strong style="color:#8B5CF6">📊 التقدم:</strong> ' + filledStages + '/6 مراحل مُعبّأة (' + totalItems + ' نقطة تواصل)</div>';
-                if (filledStages < 3) {
-                    html += '<div style="font-size:10px;color:#f59e0b">💡 حاول تعبّي 3 مراحل على الأقل</div>';
+                html += '<div style="font-size:11px;color:var(--text-muted)"><strong style="color:#8B5CF6">📊 التقدم:</strong> ' + filledStages + '/' + displaySections.length + ' مراحل مُعبّأة (' + totalItems + ' نقطة تواصل)</div>';
+                if (filledStages < Math.min(3, displaySections.length)) {
+                    html += '<div style="font-size:10px;color:#f59e0b">💡 حاول تعبّي ' + Math.min(3, displaySections.length) + ' مراحل على الأقل</div>';
                 } else {
                     html += '<div style="font-size:10px;color:#22c55e">✅ شغل ممتاز!</div>';
                 }
                 html += '</div>';
 
                 // Per-stage expandable cards
-                CJ_SECTIONS.forEach(function (s) {
+                displaySections.forEach(function (s) {
                     var stageItems = extractItems(data, s.key);
                     var stageCount = stageItems.length;
                     var suggestions = CJ_SUGGESTIONS[s.key] || [];

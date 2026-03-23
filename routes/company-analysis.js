@@ -25,7 +25,6 @@ function safeParseJSON(str, def) {
 
 // ============ COMPANY ANALYSIS ============
 
-
 // Get all analyses for a version (with progress)
 router.get('/version/:versionId', verifyToken, async (req, res) => {
     try {
@@ -89,6 +88,8 @@ router.get('/version/:versionId', verifyToken, async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch analyses' });
     }
 });
+
+
 
 // Get single analysis by version + toolCode
 router.get('/version/:versionId/:toolCode', verifyToken, async (req, res) => {
@@ -276,9 +277,20 @@ router.patch('/:id', verifyToken, async (req, res) => {
                     legal: ['keyPartners', 'keyActivities'],
                 };
 
+                // تعريف الأقسام المسموحة لرحلة العميل CUSTOMER_JOURNEY
+                const CJ_DEPT_MAPPING = {
+                    marketing: ['awareness', 'consideration', 'loyalty'],
+                    sales: ['consideration', 'purchase'],
+                    operations: ['delivery'],
+                    cs: ['postPurchase', 'loyalty'],
+                    quality: ['postPurchase'],
+                    it: ['awareness', 'purchase', 'postPurchase']
+                };
+
                 const TOOL_MAPPING = {
                     'VALUE_CHAIN': VC_DEPT_MAPPING,
                     'BUSINESS_MODEL': BMC_DEPT_MAPPING,
+                    'CUSTOMER_JOURNEY': CJ_DEPT_MAPPING,
                 };
 
                 const mapping = TOOL_MAPPING[existing.toolCode];
