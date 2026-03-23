@@ -2,6 +2,7 @@ const express = require('express');
 const prisma = require('../lib/prisma');
 const { verifyToken } = require('../middleware/auth');
 const { checkDataEntryPermission, checkPermission } = require('../middleware/permission');
+const { checkOwnership } = require('../middleware/ownership');
 
 const router = express.Router();
 
@@ -96,7 +97,7 @@ router.get('/', verifyToken, async (req, res) => {
 });
 
 // Get entries for a specific KPI with stats
-router.get('/stats/:kpiId', verifyToken, async (req, res) => {
+router.get('/stats/:kpiId', verifyToken, checkOwnership('kPI', 'kpiId'), async (req, res) => {
     try {
         const entries = await prisma.kPIEntry.findMany({
             where: { kpiId: req.params.kpiId, status: 'CONFIRMED' },
@@ -131,7 +132,7 @@ router.get('/stats/:kpiId', verifyToken, async (req, res) => {
 });
 
 // Get single entry
-router.get('/:id', verifyToken, async (req, res) => {
+router.get('/:id', verifyToken, checkOwnership('kPIEntry'), async (req, res) => {
     try {
         const entry = await prisma.kPIEntry.findUnique({
             where: { id: req.params.id },
@@ -162,10 +163,18 @@ router.post('/', verifyToken, checkDataEntryPermission('canEnterKPI'), async (re
             return res.status(400).json({ error: 'kpiId, value, periodStart, and periodEnd are required' });
         }
 
-        // Verify KPI exists
-        const kpi = await prisma.kPI.findUnique({ where: { id: kpiId } });
+        // Verify KPI exists and belongs to user's entity
+        const kpi = await prisma.kPI.findUnique({
+            where: { id: kpiId },
+            include: { version: { select: { entityId: true } } }
+        });
         if (!kpi) {
             return res.status(404).json({ error: 'KPI not found' });
+        }
+
+        const userEntityId = req.user?.activeEntityId || req.user?.entityId;
+        if (kpi.version?.entityId !== userEntityId && req.user?.systemRole !== 'SUPER_ADMIN') {
+            return res.status(403).json({ error: 'غير مصرح لك إضافة بيانات في هذا المؤشر' });
         }
 
         const entry = await prisma.kPIEntry.create({
@@ -202,10 +211,19 @@ router.post('/bulk', verifyToken, checkDataEntryPermission('canEnterKPI'), async
             return res.status(400).json({ error: 'entries array is required' });
         }
 
+        const userEntityId = req.user?.activeEntityId || req.user?.entityId;
+        const isSuperAdmin = req.user?.systemRole === 'SUPER_ADMIN';
+
         const created = [];
         for (const entry of entries) {
             const { kpiId, value, periodStart, periodEnd, enteredBy, status, notes } = entry;
             if (!kpiId || value === undefined || !periodStart || !periodEnd) continue;
+
+            const kpi = await prisma.kPI.findUnique({
+                where: { id: kpiId },
+                include: { version: { select: { entityId: true } } }
+            });
+            if (!kpi || (!isSuperAdmin && kpi.version?.entityId !== userEntityId)) continue;
 
             const result = await prisma.kPIEntry.create({
                 data: {
@@ -229,7 +247,7 @@ router.post('/bulk', verifyToken, checkDataEntryPermission('canEnterKPI'), async
 });
 
 // Update entry (DATA_ENTRY with canEnterKPI)
-router.patch('/:id', verifyToken, checkDataEntryPermission('canEnterKPI'), async (req, res) => {
+router.patch('/:id', verifyToken, checkDataEntryPermission('canEnterKPI'), checkOwnership('kPIEntry'), async (req, res) => {
     try {
         const { value, periodStart, periodEnd, status, notes } = req.body;
 
@@ -264,7 +282,7 @@ router.patch('/:id', verifyToken, checkDataEntryPermission('canEnterKPI'), async
 });
 
 // Delete entry
-router.delete('/:id', verifyToken, checkPermission('EDITOR'), async (req, res) => {
+router.delete('/:id', verifyToken, checkPermission('EDITOR'), checkOwnership('kPIEntry'), async (req, res) => {
     try {
         const entry = await prisma.kPIEntry.findUnique({ where: { id: req.params.id } });
         if (!entry) {

@@ -1040,18 +1040,18 @@ async function initSidebar() {
     ? window.StratixJourney.phases
     : [
       {
-        id: 'DIAGNOSIS_EXTERNAL', nameAr: 'تشخيص — الخارج', icon: 'bi-globe2', emoji: '🔍', color: '#ef4444',
-        items: [
-          { label: 'PESTEL (بيئة كلية)', href: '/analysis.html', icon: 'bi-binoculars-fill' },
-          { label: 'قوى بورتر', href: '/tool-detail.html?code=PORTER', icon: 'bi-shield-exclamation' },
-        ]
-      },
-      {
         id: 'DIAGNOSIS_INTERNAL', nameAr: 'تشخيص — الداخل', icon: 'bi-building-gear', emoji: '🏢', color: '#0d9488',
         items: [
           { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-building-fill-check' },
           { label: 'سلسلة القيمة', href: '/tool-detail.html?code=VALUE_CHAIN', icon: 'bi-link-45deg' },
           { label: 'استكشاف الإدارات', href: '/dept-deep.html', icon: 'bi-diagram-3-fill' },
+        ]
+      },
+      {
+        id: 'DIAGNOSIS_EXTERNAL', nameAr: 'تشخيص — الخارج', icon: 'bi-globe2', emoji: '🔍', color: '#ef4444',
+        items: [
+          { label: 'PESTEL (بيئة كلية)', href: '/tool-detail.html?code=PESTEL', icon: 'bi-binoculars-fill' },
+          { label: 'قوى بورتر', href: '/tool-detail.html?code=PORTER', icon: 'bi-shield-exclamation' },
         ]
       },
       {
@@ -1104,7 +1104,7 @@ async function initSidebar() {
     // ═══ CEO / مالك ═══
     var ceoItems = [
       { type: 'header', label: '🔴 المدخلات الاستراتيجية' },
-      { label: 'مركز القيادة', href: '/command-center.html', icon: 'bi-shield-check', roles: ['OWNER', 'ADMIN'] },
+      { label: 'مركز القيادة', href: '/ceo-dashboard.html', icon: 'bi-shield-check', roles: ['OWNER', 'ADMIN'] },
       { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-building-fill-check', roles: [] },
       { label: 'الذكاء الاستراتيجي', href: '/intelligence.html', icon: 'bi-bell-fill', roles: [] },
       { type: 'header', label: '🧭 التخطيط والتوجه' },
@@ -1157,7 +1157,7 @@ async function initSidebar() {
     // ═══ مستشار ═══
     var consultantItems = [
       { type: 'header', label: '🔴 المدخلات الاستراتيجية' },
-      { label: 'مركز القيادة', href: '/command-center.html', icon: 'bi-shield-check', roles: [] },
+      { label: 'مركز القيادة', href: '/ceo-dashboard.html', icon: 'bi-shield-check', roles: [] },
       { label: 'الكيانات', href: '/entities.html', icon: 'bi-building-fill', roles: [] },
       { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-building-fill-check', roles: [] },
       { type: 'header', label: '🔍 التحليل والتعمق' },

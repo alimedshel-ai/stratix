@@ -234,6 +234,15 @@ router.post('/', verifyToken, async (req, res) => {
             return res.status(404).json({ error: `Tool '${toolCode}' not found` });
         }
 
+        // ── 🛡️ المنع القطعي لمدير الإدارة من إنشاء أدوات مركزية ──────────────────
+        if (req.user?.userType === 'DEPT_MANAGER') {
+            const mapping = TOOL_DEPT_MAPPING[toolCode.toUpperCase()];
+            // إذا الأداة غير مقسمة إدارياً (مثل PESTEL أو SWOT العام) نرفض الإنشاء
+            if (!mapping) {
+                return res.status(403).json({ error: 'صلاحيات إدارتك لا تسمح بإنشاء هذه الأداة المركزية.' });
+            }
+        }
+
         // Check if already exists
         const existing = await prisma.companyAnalysis.findUnique({
             where: { versionId_toolCode: { versionId, toolCode: toolCode.toUpperCase() } }
@@ -307,6 +316,9 @@ router.patch('/:id', verifyToken, async (req, res) => {
                         }
                     });
                     console.debug(`[Analysis PATCH] DEPT_MANAGER ${deptKey} allowed: [${allowedKeys.join(', ')}] on ${existing.toolCode}`);
+                } else {
+                    // 🚫 المنع القطعي: الأداة غير مصرحة للإدارات
+                    return res.status(403).json({ error: 'صلاحيات الإدارة لا تسمح بتعديل هذه الأداة المركزية.' });
                 }
 
                 data = JSON.stringify(incomingData);

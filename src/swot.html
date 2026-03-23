@@ -2720,11 +2720,11 @@
                 <div style="background:linear-gradient(135deg,rgba(167,139,250,0.08),rgba(102,126,234,0.05));border:1px solid rgba(167,139,250,0.2);border-radius:18px;padding:24px;margin-top:24px">
                     <div style="font-size:15px;font-weight:900;margin-bottom:14px;text-align:center;color:var(--text)">🗺️ رحلتك التشخيصية — أكملت الخطوة ٦ من ٧</div>
                     <div style="display:flex;gap:6px;text-align:center;justify-content:center;margin-bottom:16px;flex-wrap:wrap">
-                        <span style="font-size:10px;color:#22c55e;font-weight:700">✅ PESTEL</span>
-                        <span style="font-size:10px;color:#22c55e;font-weight:700">✅ بورتر</span>
                         <span style="font-size:10px;color:#22c55e;font-weight:700">✅ البيئة الداخلية</span>
                         <span style="font-size:10px;color:#22c55e;font-weight:700">✅ سلسلة القيمة</span>
                         <span style="font-size:10px;color:#22c55e;font-weight:700">✅ الإدارات</span>
+                        <span style="font-size:10px;color:#22c55e;font-weight:700">✅ PESTEL</span>
+                        <span style="font-size:10px;color:#22c55e;font-weight:700">✅ بورتر</span>
                         <span style="font-size:10px;color:#22c55e;font-weight:700">✅ SWOT</span>
                         <span style="font-size:10px;color:#8b5cf6;font-weight:700">👈 TOWS</span>
                     </div>
@@ -2875,6 +2875,25 @@
                 }
             });
 
+            // ═══ 🛡️ مسار معزول لمدير الإدارة (يمنع مسح بيانات الشركة) ═══
+            if (_isDeptMgr && _mgrDeptKey) {
+                // حفظ التحليل محلياً للإدارة فقط ليتم سحبه من قبل الإدارة العليا
+                localStorage.setItem('stratix_' + _mgrDeptKey + '_swot', JSON.stringify(swotData));
+
+                _draftSaved = true;
+                localStorage.removeItem(DRAFT_KEY);
+                if (window._deptSwotDraftKey) localStorage.removeItem(window._deptSwotDraftKey);
+
+                if (typeof updateCompletedSteps === 'function') updateCompletedSteps(2);
+
+                showToast('✅ تم حفظ تحليل SWOT الخاص بإدارتك', 'success');
+                setTimeout(() => {
+                    window.location.href = '/directions.html?dept=' + _mgrDeptKey;
+                }, 1500);
+                return; // 🛑 خروج — لا تُرسل البيانات للـ API المركزي الخاص بالمالك!
+            }
+
+            // ═══ 🏢 مسار المالك / CEO (يتم الإرسال للـ API المركزي) ═══
             const payload = {
                 versionId: state.versionId,
                 toolCode: 'SWOT',
@@ -2908,25 +2927,6 @@
                     localStorage.removeItem(DRAFT_KEY);
                     if (window._deptSwotDraftKey) localStorage.removeItem(window._deptSwotDraftKey);
                     _draftSaved = true;
-
-                    // ═══ Dept-specific: حفظ SWOT + انتقال للتوجهات ═══
-                    const _dp = new URLSearchParams(window.location.search).get('dept');
-                    if (_dp) {
-                        // حفظ dual-write
-                        localStorage.setItem('stratix_' + _dp + '_swot', JSON.stringify(swotData));
-
-                        // تسجيل إكمال الخطوة 2
-                        if (typeof updateCompletedSteps === 'function') updateCompletedSteps(2);
-
-                        // إشعار + انتقال
-                        if (typeof showToast === 'function') {
-                            showToast('تم حفظ تحليل SWOT — جاري الانتقال للتوجهات', 'success');
-                        }
-                        setTimeout(() => {
-                            window.location.href = '/directions.html?dept=' + _dp;
-                        }, 1500);
-                        return;
-                    }
                 }
             } catch (e) {
                 console.warn('Save failed:', e);

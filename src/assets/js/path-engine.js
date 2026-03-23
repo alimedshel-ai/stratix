@@ -269,7 +269,7 @@
       estimatedTime: '4-6 ساعات',
       steps: [
         { label: '🏗️ بنيتنا', href: '/onboarding.html', icon: 'bi-building-gear', phase: 'FOUNDATION' },
-        { label: '🔍 تشخيصي', href: '/analysis.html', icon: 'bi-search-heart', phase: 'DIAGNOSIS' },
+        { label: '🔍 تشخيصي', href: '/tool-detail.html?code=PESTEL', icon: 'bi-search-heart', phase: 'DIAGNOSIS' },
         { label: '🎯 خياراتي', href: '/tows.html', icon: 'bi-signpost-split', phase: 'PLANNING' },
         { label: '🚀 تنفيذي', href: '/initiatives.html', icon: 'bi-rocket-takeoff', phase: 'EXECUTION' },
         { label: '📊 متابعتي', href: '/reviews.html', icon: 'bi-bar-chart-line', phase: 'ADAPTATION' },

@@ -54,6 +54,9 @@ const financialEngineRoutes = require('./routes/financial-engine');
 const execDashboardApiRoutes = require('./routes/exec-dashboard-api');
 const companyHealthRoutes = require('./routes/company-health');
 const dimensionsRoutes = require('./routes/dimensions');
+const deptDataRoutes = require('./routes/dept-data');  // ✅ استبيان الإدارات
+const departmentsRoutes = require('./routes/departments'); // ✅ بيانات الأقسام
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -293,6 +296,9 @@ app.use('/api/dashboard', dashboardApiRoutes);
 // 🏥 صحة الشركة — لوحة أم تستقبل بيانات الإدارات
 app.use('/api/company-health', companyHealthRoutes);
 app.use('/api/dimensions', dimensionsRoutes); // ✨ الأبعاد الثلاثة
+app.use('/api/dept-data', deptDataRoutes);    // ✅ استبيان الإدارات ومؤشراتها
+app.use('/api/departments', departmentsRoutes); // ✅ بيانات الأقسام
+
 
 // 🎯 Executive Dashboard API v1 — BSC-Driven
 app.use('/api/v1', execDashboardApiRoutes);
@@ -394,17 +400,13 @@ const planLimitsRoutes = require('./routes/plan-limits');
 app.use('/api/plan-limits', planLimitsRoutes);
 
 // 🏢 الفريق الاستراتيجي — Phase 0
-const departmentsRoutes = require('./routes/departments');
 const invitationsRoutes = require('./routes/invitations');
-const deptDataRoutes = require('./routes/dept-data');
 const deptDeepRoutes = require('./routes/dept-deep'); // 📊 المرحلة 3: نقل localStorage → DB
 const rulesEngineRoutes = require('./routes/rules-engine');
 const sectorConfigsRoutes = require('./routes/sector-configs');
 const breakEvenRoutes = require('./routes/break-even');
 const cfoAuditRoutes = require('./routes/cfo-audit');
-app.use('/api/departments', departmentsRoutes);
 app.use('/api/invitations', invitationsRoutes);
-app.use('/api/dept-data', deptDataRoutes);
 app.use('/api/dept-deep', deptDeepRoutes); // 📊 المرحلة 3
 app.use('/api/rules-engine', rulesEngineRoutes);
 app.use('/api/sector-configs', sectorConfigsRoutes);

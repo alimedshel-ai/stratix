@@ -401,8 +401,8 @@
         <div class="main-content">
 
             <div class="q-header">
-                <a href="/team.html" class="q-back" id="backLink">
-                    <i class="bi bi-arrow-right"></i> العودة لإدارة الفريق
+                <a href="/dept-dashboard.html" class="q-back" id="backLink">
+                    <i class="bi bi-arrow-right"></i> العودة للوحة الإدارة
                 </a>
                 <div class="q-title-row">
                     <div class="q-icon" id="qIcon" style="background:rgba(102,126,234,0.1);color:var(--primary)">📊
@@ -454,20 +454,14 @@
     <script src="/assets/js/api.js"></script>
     <script src="/assets/js/sidebar.js"></script>
     <script>
-        const token = localStorage.getItem('token');
-        const entityId = localStorage.getItem('entityId');
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        // ✅ جلب بيانات المستخدم من الـ API مباشرة (لا localStorage)
+        let token = localStorage.getItem('token'); // للـ headers فقط
+        let entityId = null; // سيُجلب من الـ API
+        let user = {};       // سيُجلب من الـ API
 
-        // Get params: ?dept=FINANCE or ?role=CFO or ?id=xxx
+        // Get params: ?dept=HR or ?role=CHRO or ?id=xxx
         const params = new URLSearchParams(location.search);
         let deptCode = params.get('dept');
-
-        // التعرف التلقائي لمدير الإدارة لمنع تداخل الصفحات أو ضياع التوجيه
-        if (!deptCode && (user.userType === 'DEPT_MANAGER' || (user.userCategory && user.userCategory.startsWith('DEPT_')))) {
-            deptCode = user.department?.key || user.userCategory.replace('DEPT_', '');
-        }
-        if (deptCode) deptCode = deptCode.toUpperCase();
-
         const deptRole = params.get('role');
         const deptId = params.get('id');
 
@@ -477,26 +471,46 @@
 
         const CODE_TO_ROLE = {
             FINANCE: 'CFO', MARKETING: 'CMO', OPERATIONS: 'COO',
-            HR: 'CHRO', TECH: 'CTO', SALES: 'CSO',
-            SUPPORT: 'CCO', LEGAL: 'CLO'
+            HR: 'CHRO', TECH: 'CTO', SALES: 'CSO', IT: 'CTO',
+            CS: 'CCO', SUPPORT: 'CCO', LEGAL: 'CLO', COMPLIANCE: 'CLO',
+            QUALITY: 'COO', PROJECTS: 'COO', SALES: 'CSO'
         };
 
         const DEPT_COLORS = {
             FINANCE: '#f59e0b', MARKETING: '#8b5cf6', OPERATIONS: '#3b82f6',
-            HR: '#10b981', TECH: '#06b6d4', SALES: '#ef4444',
-            SUPPORT: '#ec4899', LEGAL: '#6366f1'
+            HR: '#10b981', TECH: '#06b6d4', IT: '#06b6d4', SALES: '#ef4444',
+            CS: '#ec4899', SUPPORT: '#ec4899', LEGAL: '#6366f1', COMPLIANCE: '#6366f1'
         };
 
         // ========== Initialize ==========
         async function init() {
-            const role = deptRole || CODE_TO_ROLE[deptCode?.toUpperCase()];
+            // entityId من localStorage فقط كتلميح (الاستبيان يعمل بدونه)
+            user = JSON.parse(localStorage.getItem('user') || '{}');
+            entityId = user.entity?.id || user.entityId || localStorage.getItem('entityId') || null;
+
+            // تحديد القسم تلقائياً إذا كان مدير إدارة ولم يُحدد في الـ URL
+            if (!deptCode) {
+                const dKey = user.department?.key || '';
+                const uCat = user.userCategory || '';
+                if (dKey) {
+                    deptCode = dKey.toUpperCase();
+                } else if (uCat && uCat.startsWith('DEPT_')) {
+                    deptCode = uCat.replace('DEPT_', '').toUpperCase();
+                    const catMap = { OPS: 'OPERATIONS', SERVICE: 'CS', PMO: 'PROJECTS' };
+                    deptCode = catMap[deptCode] || deptCode;
+                }
+            }
+            if (deptCode) deptCode = deptCode.toUpperCase();
+
+            const role = deptRole || CODE_TO_ROLE[deptCode];
 
             if (!role) {
                 document.getElementById('qContainer').innerHTML = `
                     <div style="text-align:center;padding:40px;color:var(--muted)">
                         <i class="bi bi-exclamation-triangle" style="font-size:48px;display:block;margin-bottom:12px;color:var(--yellow)"></i>
                         <h3 style="margin-bottom:8px">لم يتم تحديد القسم</h3>
-                        <a href="/team.html" style="color:var(--primary)">العودة لإدارة الفريق</a>
+                        <p style="margin-bottom:16px;font-size:13px">أضف <code>?dept=HR</code> أو <code>?dept=FINANCE</code> للرابط</p>
+                        <a href="/dept-dashboard.html" style="color:var(--primary)">العودة للوحة الإدارة</a>
                     </div>
                 `;
                 return;
@@ -803,8 +817,8 @@
             setTimeout(() => t.style.display = 'none', 3500);
         }
 
-        // ========== Init ==========
-        init();
+        // تشغيل init بعد انتهاء قائمة المهام الحالية (مستقل عن sidebar.js)
+        setTimeout(() => init(), 0);
     </script>
 </body>
 

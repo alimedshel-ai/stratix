@@ -3,6 +3,7 @@ const prisma = require('../lib/prisma');
 const { verifyToken } = require('../middleware/auth');
 const { checkPermission, checkDataEntryPermission } = require('../middleware/permission');
 const enforceLimit = require('../middleware/enforce-limits');
+const { checkOwnership } = require('../middleware/ownership');
 
 const router = express.Router();
 
@@ -363,7 +364,7 @@ router.get('/objectives', verifyToken, async (req, res) => {
 });
 
 // Get single objective
-router.get('/objectives/:id', verifyToken, async (req, res) => {
+router.get('/objectives/:id', verifyToken, checkOwnership('strategicObjective'), async (req, res) => {
   try {
     const objective = await prisma.strategicObjective.findUnique({
       where: { id: req.params.id },
@@ -395,7 +396,7 @@ router.get('/objectives/:id', verifyToken, async (req, res) => {
 });
 
 // Create objective
-router.post('/objectives', verifyToken, checkPermission('EDITOR'), enforceLimit('maxObjectives'), async (req, res) => {
+router.post('/objectives', verifyToken, checkPermission('EDITOR'), checkOwnership('strategicObjective'), enforceLimit('maxObjectives'), async (req, res) => {
   try {
     const { title, description, versionId, status, parentId, perspective, weight, baselineValue, targetValue, deadline, ownerId } = req.body;
 
@@ -445,7 +446,7 @@ router.post('/objectives', verifyToken, checkPermission('EDITOR'), enforceLimit(
 });
 
 // Update objective
-router.patch('/objectives/:id', verifyToken, checkPermission('EDITOR'), async (req, res) => {
+router.patch('/objectives/:id', verifyToken, checkPermission('EDITOR'), checkOwnership('strategicObjective'), async (req, res) => {
   try {
     const { title, description, status, parentId, perspective, weight, baselineValue, targetValue, deadline, ownerId } = req.body;
 
@@ -484,7 +485,7 @@ router.patch('/objectives/:id', verifyToken, checkPermission('EDITOR'), async (r
 });
 
 // Delete objective
-router.delete('/objectives/:id', verifyToken, checkPermission('EDITOR'), async (req, res) => {
+router.delete('/objectives/:id', verifyToken, checkPermission('EDITOR'), checkOwnership('strategicObjective'), async (req, res) => {
   try {
     const objective = await prisma.strategicObjective.findUnique({ where: { id: req.params.id } });
     if (!objective) {
@@ -586,7 +587,7 @@ router.get('/kpis', verifyToken, async (req, res) => {
 });
 
 // Get single KPI
-router.get('/kpis/:id', verifyToken, async (req, res) => {
+router.get('/kpis/:id', verifyToken, checkOwnership('kPI'), async (req, res) => {
   try {
     const kpi = await prisma.kPI.findUnique({
       where: { id: req.params.id },
@@ -614,7 +615,7 @@ router.get('/kpis/:id', verifyToken, async (req, res) => {
 });
 
 // Create KPI
-router.post('/kpis', verifyToken, checkPermission('EDITOR'), enforceLimit('maxKpis'), async (req, res) => {
+router.post('/kpis', verifyToken, checkPermission('EDITOR'), checkOwnership('kPI'), enforceLimit('maxKpis'), async (req, res) => {
   try {
     const { name, nameAr, description, target, unit, versionId, objectiveId, status,
       formula, dataSource, frequency, warningThreshold, criticalThreshold, kpiType, bscPerspective } = req.body;
@@ -662,7 +663,7 @@ router.post('/kpis', verifyToken, checkPermission('EDITOR'), enforceLimit('maxKp
 });
 
 // Update KPI
-router.patch('/kpis/:id', verifyToken, checkPermission('EDITOR'), async (req, res) => {
+router.patch('/kpis/:id', verifyToken, checkPermission('EDITOR'), checkOwnership('kPI'), async (req, res) => {
   try {
     const { name, nameAr, description, target, actual, unit, status, objectiveId,
       formula, dataSource, frequency, warningThreshold, criticalThreshold, kpiType, bscPerspective } = req.body;
@@ -706,7 +707,7 @@ router.patch('/kpis/:id', verifyToken, checkPermission('EDITOR'), async (req, re
 });
 
 // Delete KPI
-router.delete('/kpis/:id', verifyToken, checkPermission('EDITOR'), async (req, res) => {
+router.delete('/kpis/:id', verifyToken, checkPermission('EDITOR'), checkOwnership('kPI'), async (req, res) => {
   try {
     const kpi = await prisma.kPI.findUnique({ where: { id: req.params.id } });
     if (!kpi) {
@@ -785,7 +786,7 @@ router.get('/initiatives', verifyToken, async (req, res) => {
 });
 
 // Create initiative
-router.post('/initiatives', verifyToken, checkPermission('EDITOR'), enforceLimit('maxInitiatives'), async (req, res) => {
+router.post('/initiatives', verifyToken, checkPermission('EDITOR'), checkOwnership('strategicInitiative'), enforceLimit('maxInitiatives'), async (req, res) => {
   try {
     const { title, description, versionId, owner, status, startDate, endDate, progress, budget, priority, kpiId } = req.body;
 
@@ -820,7 +821,7 @@ router.post('/initiatives', verifyToken, checkPermission('EDITOR'), enforceLimit
 });
 
 // Update initiative progress (DATA_ENTRY can update progress only)
-router.patch('/initiatives/:id/progress', verifyToken, checkDataEntryPermission('canEnterKPI'), async (req, res) => {
+router.patch('/initiatives/:id/progress', verifyToken, checkDataEntryPermission('canEnterKPI'), checkOwnership('strategicInitiative'), async (req, res) => {
   try {
     const { progress, status, notes } = req.body;
 
@@ -848,7 +849,7 @@ router.patch('/initiatives/:id/progress', verifyToken, checkDataEntryPermission(
 });
 
 // Update initiative (EDITOR+)
-router.patch('/initiatives/:id', verifyToken, checkPermission('EDITOR'), async (req, res) => {
+router.patch('/initiatives/:id', verifyToken, checkPermission('EDITOR'), checkOwnership('strategicInitiative'), async (req, res) => {
   try {
     const { title, description, status, owner, startDate, endDate, progress, budget, priority, kpiId } = req.body;
 
@@ -885,7 +886,7 @@ router.patch('/initiatives/:id', verifyToken, checkPermission('EDITOR'), async (
 });
 
 // Delete initiative
-router.delete('/initiatives/:id', verifyToken, checkPermission('EDITOR'), async (req, res) => {
+router.delete('/initiatives/:id', verifyToken, checkPermission('EDITOR'), checkOwnership('strategicInitiative'), async (req, res) => {
   try {
     const initiative = await prisma.strategicInitiative.findUnique({ where: { id: req.params.id } });
     if (!initiative) {
@@ -928,7 +929,7 @@ router.get('/scenarios', verifyToken, async (req, res) => {
 });
 
 // GET single scenario
-router.get('/scenarios/:id', verifyToken, async (req, res) => {
+router.get('/scenarios/:id', verifyToken, checkOwnership('scenario'), async (req, res) => {
   try {
     const scenario = await prisma.scenario.findUnique({
       where: { id: req.params.id },
@@ -942,7 +943,7 @@ router.get('/scenarios/:id', verifyToken, async (req, res) => {
 });
 
 // POST create scenario
-router.post('/scenarios', verifyToken, checkPermission('EDITOR'), async (req, res) => {
+router.post('/scenarios', verifyToken, checkPermission('EDITOR'), checkOwnership('scenario'), async (req, res) => {
   try {
     const { name, versionId, type, description, probability, impact, status, notes } = req.body;
     if (!name || !versionId) return res.status(400).json({ error: 'name and versionId are required' });
@@ -972,7 +973,7 @@ router.post('/scenarios', verifyToken, checkPermission('EDITOR'), async (req, re
 });
 
 // PATCH update scenario
-router.patch('/scenarios/:id', verifyToken, checkPermission('EDITOR'), async (req, res) => {
+router.patch('/scenarios/:id', verifyToken, checkPermission('EDITOR'), checkOwnership('scenario'), async (req, res) => {
   try {
     const existing = await prisma.scenario.findUnique({ where: { id: req.params.id } });
     if (!existing) return res.status(404).json({ error: 'Scenario not found' });
@@ -995,7 +996,7 @@ router.patch('/scenarios/:id', verifyToken, checkPermission('EDITOR'), async (re
 });
 
 // DELETE scenario
-router.delete('/scenarios/:id', verifyToken, checkPermission('EDITOR'), async (req, res) => {
+router.delete('/scenarios/:id', verifyToken, checkPermission('EDITOR'), checkOwnership('scenario'), async (req, res) => {
   try {
     const existing = await prisma.scenario.findUnique({ where: { id: req.params.id } });
     if (!existing) return res.status(404).json({ error: 'Scenario not found' });

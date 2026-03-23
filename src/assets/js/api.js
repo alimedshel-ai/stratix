@@ -34,6 +34,15 @@ async function getCurrentUser() {
         try {
             const res = await fetch('/api/user/me', { credentials: 'include' });
             if (!res.ok) {
+                if (res.status === 401) {
+                    // 🛑 مسح البيانات وإرجاع المستخدم لصفحة الدخول لمنع تعليق الصفحة
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    if (!window.location.pathname.includes('/login.html')) {
+                        window.location.href = '/login.html?session_expired=true';
+                    }
+                    throw new Error('Unauthorized');
+                }
                 const err = await res.json();
                 if (res.status === 403 && err.reason) {
                     window.location.href = `/suspended.html?reason=${encodeURIComponent(err.reason)}`;
@@ -45,7 +54,7 @@ async function getCurrentUser() {
             return _cachedUser;
         } catch (err) {
             console.error('getCurrentUser failed', err);
-            if (err.message === 'Account suspended') throw err;
+            if (err.message === 'Account suspended' || err.message === 'Unauthorized') throw err;
             return null;
         } finally {
             _userFetchPromise = null;
@@ -72,7 +81,9 @@ async function api(url, options = {}) {
     });
 
     if (response.status === 401) {
-        window.location.href = '/login?session_expired=true';
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login.html?session_expired=true';
         throw new Error('Unauthorized');
     }
 
