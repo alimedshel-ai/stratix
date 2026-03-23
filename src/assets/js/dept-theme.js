@@ -26,7 +26,21 @@
     window.DEPT_CONFIG = DEPT_CONFIG;
 
     const urlParams = new URLSearchParams(window.location.search);
-    const dept = urlParams.get('dept') || localStorage.getItem('stratix_v10_dept') || localStorage.getItem('stratix_dept');
+    let dept = urlParams.get('dept')
+        || localStorage.getItem('stratix_v10_dept')
+        || localStorage.getItem('stratix_dept');
+
+    // ── fallback: بيانات المستخدم المخزّنة (لمديري الإدارات بلا URL param) ──
+    if (!dept) {
+        try {
+            const u = JSON.parse(localStorage.getItem('user') || '{}');
+            if (u.userType === 'DEPT_MANAGER' || (u.userCategory && u.userCategory.startsWith('DEPT_'))) {
+                dept = u.department?.key
+                    || (u.userCategory && u.userCategory.replace('DEPT_', '').toLowerCase())
+                    || null;
+            }
+        } catch (e) { /* JSON parse error — ignore */ }
+    }
 
     if (!dept || !DEPT_CONFIG[dept]) return;
 
