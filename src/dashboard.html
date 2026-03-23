@@ -776,12 +776,25 @@
                     }
 
                     // حماية التوجيه
-                    if (!window.api) return;
-                    const u = await window.api.getCurrentUser();
+                    if (!window.api) {
+                        // إعادة المحاولة بعد تحميل api.js
+                        setTimeout(initHub, 100);
+                        return;
+                    }
+
+                    let u = null;
+                    try {
+                        u = await window.api.getCurrentUser();
+                    } catch (e) {
+                        // الـ fetch interceptor قد يُرسل للـ login تلقائياً
+                        console.warn('[Dashboard] getCurrentUser failed:', e.message);
+                        window.location.href = '/login.html';
+                        return;
+                    }
+
                     if (!u) { window.location.href = '/login.html'; return; }
 
                     // ✅ توجيه ذكي — كل مستفيد لصفحته المخصصة
-                    // آمن: server.js يضمن OWNER → COMPANY_MANAGER (لا تعارض مع userCategory)
                     const isSuperAdmin = u.systemRole === 'SUPER_ADMIN';
                     if (!isSuperAdmin) {
                         if (u.role === 'CONSULTANT') { window.location.replace('/consultant-dashboard.html'); return; }
@@ -799,7 +812,6 @@
 
                         const roleLabels = { OWNER: 'مالك', ADMIN: 'مدير', EDITOR: 'محرر', VIEWER: 'مشاهد', DATA_ENTRY: 'مُدخل بيانات' };
 
-                        // جلب اسم القسم لدمجه مع المسمى الوظيفي
                         const DEPT_LABELS = { hr: 'الموارد البشرية', finance: 'المالية', marketing: 'التسويق', operations: 'العمليات', sales: 'المبيعات', it: 'تقنية المعلومات', cs: 'خدمة العملاء', compliance: 'الامتثال', quality: 'الجودة', projects: 'المشاريع', support: 'الخدمات المساندة' };
                         const DEPT_ICONS = { hr: 'bi-people', finance: 'bi-cash-stack', marketing: 'bi-megaphone', operations: 'bi-gear', sales: 'bi-graph-up-arrow', it: 'bi-pc-display', cs: 'bi-headset', compliance: 'bi-shield-check', quality: 'bi-award', projects: 'bi-kanban', support: 'bi-tools' };
                         let deptKey = u.department?.key || '';

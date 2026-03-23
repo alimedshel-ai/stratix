@@ -34,10 +34,13 @@ async function getCurrentUser() {
         try {
             const res = await fetch('/api/user/me', { credentials: 'include' });
             if (!res.ok) {
-                const err = await res.json();
+                if (res.status === 401) {
+                    throw new Error('Unauthorized');
+                }
+                const err = await res.json().catch(() => ({}));
                 if (res.status === 403 && err.reason) {
                     window.location.href = `/suspended.html?reason=${encodeURIComponent(err.reason)}`;
-                    throw new Error('Account suspended');
+                    return new Promise(() => { }); // تجميد التنفيذ فوراً
                 }
                 return null;
             }
@@ -45,7 +48,7 @@ async function getCurrentUser() {
             return _cachedUser;
         } catch (err) {
             console.error('getCurrentUser failed', err);
-            if (err.message === 'Account suspended') throw err;
+            if (err.message === 'Account suspended' || err.message === 'Unauthorized') throw err;
             return null;
         } finally {
             _userFetchPromise = null;
@@ -79,7 +82,7 @@ async function api(url, options = {}) {
         const err = await response.json();
         if (err.reason) {
             window.location.href = `/suspended.html?reason=${encodeURIComponent(err.reason)}`;
-            throw new Error('Account suspended');
+            return new Promise(() => { }); // تجميد التنفيذ فوراً
         }
     }
 
@@ -256,10 +259,12 @@ window.fetch = async function () {
     const response = await originalFetch.call(this, resource, config);
 
     // 🛑 الحل الجذري المركزي: أي طلب داخلي يرجع 401 يطرد المستخدم فوراً دون تعارض
-    if (isInternal && response.status === 401 && !window.location.pathname.includes('/login.html')) {
+    if (isInternal && response.status === 401 && !window.location.pathname.includes('/login')) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/login.html?session_expired=true';
+        // reject عشان الـ catch يمسكه بدل تجميد كل شي
+        return Promise.reject(new Error('SESSION_EXPIRED'));
     }
 
     return response;

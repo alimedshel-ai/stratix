@@ -136,7 +136,12 @@ async function initSidebar() {
   }
 
   // 2. الجلب الموثوق لبيانات المستخدم من الكاش الآمن للسيرفر 
-  const userData = await window.api.getCurrentUser();
+  let userData = null;
+  try {
+    userData = await window.api.getCurrentUser();
+  } catch (err) {
+    console.error('⚠️ [Sidebar] خطأ أثناء جلب بيانات المستخدم:', err);
+  }
   if (!userData) {
     console.warn('⚠️ المستخدم غير مسجل دخول. السايدبار لن يُستكمل بناؤه لحين معالجة التوجيه.');
     return;
@@ -1931,6 +1936,10 @@ if (!window.StratixJourney) {
   _jScript.src = '/assets/js/journey-steps.js?v=3';
   _jScript.async = true; // استخدام async مع onload لضمان التحميل
   _jScript.onload = () => initSidebar();
+  _jScript.onerror = () => {
+    console.warn('[Sidebar] ⚠️ فشل تحميل journey-steps.js, سيتم إكمال بناء الصفحة.');
+    initSidebar();
+  };
   document.head.appendChild(_jScript);
 } else {
   initSidebar();
