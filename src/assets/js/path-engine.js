@@ -718,8 +718,8 @@
   // 4. Dept-Deep Gating — قفل SWOT حتى تكتمل 3 إدارات
   // ═══════════════════════════════════════════════
 
-  /** الحد الأدنى من الإدارات المكتملة لفتح البوابة */
-  const DEPT_GATE_MIN = 3;
+  /** الحد الأدنى من الإدارات المكتملة لفتح البوابة (تم تعديله لـ 1 ليتناسب مع الشركات ذات الإدارة الواحدة) */
+  const DEPT_GATE_MIN = 1;
 
   /** الصفحات المقفلة خلف بوابة الإدارات */
   const GATED_PAGES = ['/swot.html', '/analysis.html', '/tows.html'];
@@ -747,7 +747,7 @@
   }
 
   /**
-   * هل بوابة الإدارات مفتوحة؟ (3 إدارات مكتملة على الأقل)
+   * هل بوابة الإدارات مفتوحة؟ (إدارة واحدة مكتملة على الأقل)
    */
   function isDeptDeepGateOpen() {
     return getDeptDeepStatus().completed.length >= DEPT_GATE_MIN;
@@ -788,7 +788,7 @@
         mainEl.innerHTML = '<div style="text-align:center;padding:80px 20px;max-width:500px;margin:0 auto;">'
           + '<div style="font-size:64px;margin-bottom:20px;">🔒</div>'
           + '<h2 style="font-size:20px;font-weight:800;color:var(--text,#e2e8f0);margin:0 0 12px;">هذه الخطوة مقفلة</h2>'
-          + '<p style="font-size:14px;color:var(--text-muted,#94a3b8);line-height:1.8;margin:0 0 8px;">أكمل فحص <strong style="color:#f59e0b">' + DEPT_GATE_MIN + ' إدارات</strong> على الأقل في التحليل العميق قبل فتح هذه الأداة.</p>'
+          + '<p style="font-size:14px;color:var(--text-muted,#94a3b8);line-height:1.8;margin:0 0 8px;">أكمل فحص <strong style="color:#f59e0b">إدارة واحدة</strong> على الأقل في التحليل العميق قبل فتح هذه الأداة.</p>'
           + '<p style="font-size:13px;color:var(--text-muted,#94a3b8);margin:0 0 24px;">حالياً: <strong style="color:#22c55e">' + deptStatus.completed.length + '</strong> مكتملة من أصل ' + deptStatus.total + '</p>'
           + '<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">'
           + '<a href="/dept-deep.html" style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#f59e0b,#ea580c);color:white;padding:12px 24px;border-radius:12px;text-decoration:none;font-size:14px;font-weight:700;box-shadow:0 4px 12px rgba(245,158,11,0.3);"><i class="bi bi-building-fill-gear"></i> استكشاف الإدارات</a>'

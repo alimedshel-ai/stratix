@@ -1069,7 +1069,7 @@
     <script>
         // ── API Config ──
         const token = localStorage.getItem('token') || '';
-        const versionId = localStorage.getItem('selectedVersionId') || '';
+        let versionId = localStorage.getItem('selectedVersionId') || '';
         const API_BASE = '/api/initiatives';
         function apiHeaders() {
             const h = { 'Content-Type': 'application/json', 'X-Version-Id': versionId };
@@ -1106,6 +1106,19 @@
 
         // ── جلب المبادرات من API ──
         async function loadInitiatives() {
+            if (!versionId) {
+                try {
+                    const vRes = await window.apiRequest('/api/versions', { headers: apiHeaders() });
+                    if (vRes.ok) {
+                        const vData = await vRes.json();
+                        const activeV = (vData.versions || []).find(v => v.isActive) || (vData.versions || [])[0];
+                        if (activeV) {
+                            versionId = activeV.id;
+                            localStorage.setItem('selectedVersionId', versionId);
+                        }
+                    }
+                } catch (e) { }
+            }
             if (!versionId) { renderAll(); return; }
             try {
                 const res = await fetch(API_BASE + '?versionId=' + versionId, { headers: apiHeaders(), credentials: 'same-origin' });

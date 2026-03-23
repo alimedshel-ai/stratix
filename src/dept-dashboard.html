@@ -830,7 +830,9 @@
         async function cachedFetch(url) {
             const cached = cacheGet(url);
             if (cached) return cached;
-            const data = await window.apiRequest(url);
+            const res = await window.apiRequest(url);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
             cacheSet(url, data);
             return data;
         }
@@ -853,7 +855,13 @@
                 const userData = await window.api.getCurrentUser();
 
                 // التوجيه مع رسالة الطرد بدلاً من الاستثناء
-                const isDeptManager = userData && (userData.userType === 'DEPT_MANAGER' || (userData.userCategory && userData.userCategory.startsWith('DEPT_')));
+                const isDeptManager = userData && (
+                    userData.userType === 'DEPT_MANAGER' ||
+                    (userData.userCategory && userData.userCategory.startsWith('DEPT_')) ||
+                    userData.userType === 'OWNER' ||
+                    userData.userType === 'ADMIN' ||
+                    userData.systemRole === 'SUPER_ADMIN'
+                );
                 if (!isDeptManager) {
                     window.location.href = '/dashboard.html?reason=unauthorized';
                     return;
@@ -897,9 +905,9 @@
 
                 // 2. سحب البيانات المدمجة بثلاث طلبات باستخدام Fetch الآلي المخفي الهوية
                 const [dashResult, healthResult, alertResult] = await Promise.allSettled([
-                    cachedFetch(`/api/dashboard/entity/${entityId}`),
-                    cachedFetch(`/api/dashboard/health/${entityId}`),
-                    cachedFetch(`/api/alert-engine/entity/${entityId}`),
+                    window.apiRequest(`/api/dashboard/entity/${entityId}`).then(res => res.json()),
+                    window.apiRequest(`/api/dashboard/health/${entityId}`).then(res => res.json()),
+                    window.apiRequest(`/api/alert-engine/entity/${entityId}`).then(res => res.json()),
                 ]);
 
                 // استخراج البيانات مع fallback آمن
@@ -1028,11 +1036,11 @@
                 { value: ini.overdue || 0, label: '⏰ متأخرة', color: '#f97316', glow: 'rgba(249,115,22,0.08)' },
             ];
             document.getElementById('statsRow').innerHTML = stats.map(s => `
-                        < div class="stat-card" style = "--card-glow:${s.glow}" >
+                <div class="stat-card" style="--card-glow:${s.glow}">
                     <div class="stat-value" style="color:${s.color}">${s.value}</div>
                     <div class="stat-label">${s.label}</div>
-                </div >
-                        `).join('');
+                </div>
+            `).join('');
         }
 
         function renderQuickActions() {
@@ -1046,18 +1054,19 @@
                 { icon: 'bi-bar-chart', label: 'التحليل', href: '/analytics-dashboard.html', color: '#ef4444' }
             ];
             document.getElementById('quickActions').innerHTML = actions.map(a => `
-                        < a class="quick-action" href = "${a.href}" >
+                <a class="quick-action" href="${a.href}">
                     <i class="bi ${a.icon}" style="color:${a.color}"></i>
                     <span>${a.label}</span>
-                </a >
-                        `).join('');
+                </a>
+            `).join('');
         }
 
         async function renderKPIs(data) {
             const list = document.getElementById('kpiList');
             const dept = window.currentDeptContext?.key || '';
+            const kpi = data.kpiSummary || {};
             if (kpi.total === 0) {
-                list.innerHTML = `< div class="empty-text" > لا توجد مؤشرات بعد — <a href="/kpis.html" style="color:var(--accent)">ابدأ بإضافة KPIs</a></div > `;
+                list.innerHTML = `<div class="empty-text">لا توجد مؤشرات بعد — <a href="/kpis.html" style="color:var(--accent)">ابدأ بإضافة KPIs</a></div>`;
                 return;
             }
 
@@ -1066,7 +1075,8 @@
             try {
                 // استخدام الـ Fetch المعقم (مع credentials: include من الدالة نفسها)
                 const entityId = (await window.api.getCurrentUser()).entity?.id;
-                const kpiData = await cachedFetch(`/api/kpis/entity/${entityId}`);
+                const kpiRes = await window.apiRequest(`/api/kpis/entity/${entityId}`);
+                const kpiData = await kpiRes.json();
                 if (kpiData.kpis?.length) individualKPIs = kpiData.kpis;
             } catch (e) { /* fallback to summary */ }
 
@@ -1085,23 +1095,23 @@
                     };
                     const s = statusMap[status] || statusMap.NO_DATA;
                     return `
-                        < div class="kpi-item" >
+                    <div class="kpi-item">
                         <div class="kpi-info">
                             <div class="kpi-name">${sanitize(k.name || k.title || 'مؤشر')}</div>
                             <div class="kpi-sub">${actual != null ? actual : '—'} / ${target} ${sanitize(k.unit || '')}</div>
                         </div>
                         <div class="kpi-progress"><div class="kpi-progress-fill" style="width:${pct}%;background:${s.color}"></div></div>
                         <div class="kpi-value" style="color:${s.color}" title="${s.label}">${s.icon} ${pct}%</div>
-                    </div > `;
+                    </div>`;
                 }).join('') + (individualKPIs.length > 6 ? `
-                        < div style = "text-align:center;color:var(--text-muted);font-size:12px;margin-top:8px" >
+                        <div style="text-align:center;color:var(--text-muted);font-size:12px;margin-top:8px">
                             +${individualKPIs.length - 6} مؤشرات أخرى
-                    </div > ` : '') + `
-                        < div style = "text-align:center;margin-top:12px" >
+                        </div>` : '') + `
+                        <div style="text-align:center;margin-top:12px">
                             <a href="/kpis.html?dept=${dept}" class="btn" style="display:inline-flex;font-size:12px;padding:8px 16px">
                                 <i class="bi bi-pencil-square"></i> عرض كل المؤشرات
                             </a>
-                    </div > `;
+                        </div>`;
             } else {
                 // ═══ Fallback: ملخص KPIs ═══
                 const items = [];
