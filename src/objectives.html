@@ -745,8 +745,7 @@
         <a href="/dashboard.html" class="brand"><i class="bi bi-gem"></i> ستارتكس</a>
         <div class="user-area">
             <div class="user-avatar">م</div>
-            <button class="btn-logout" onclick="localStorage.clear(); location.href='/login.html'"><i
-                    class="bi bi-box-arrow-right"></i> خروج</button>
+            <button class="btn-logout" onclick="logout()"><i class="bi bi-box-arrow-right"></i> خروج</button>
         </div>
     </nav>
 
@@ -1542,8 +1541,13 @@
             const name = document.getElementById('formName').value.trim();
             const desc = document.getElementById('formDesc').value.trim();
             const perspective = document.getElementById('formPerspective').value;
-            const weight = parseInt(document.getElementById('formWeight').value) || 25;
+            let weight = parseInt(document.getElementById('formWeight').value, 10);
+
             if (!name) { showToast('يرجى إدخال اسم الهدف', 'error'); return; }
+            if (isNaN(weight) || weight < 1 || weight > 100) {
+                showToast('يرجى إدخال وزن صحيح بين 1 و 100', 'error');
+                return;
+            }
 
             if (id) {
                 const o = objectives.find(x => x.id === id);
@@ -1571,6 +1575,14 @@
             t.innerHTML = `<i class="bi bi-check-circle"></i> <span>${escapeHtml(msg)}</span>`;
             c.appendChild(t);
             setTimeout(() => t.remove(), 3000);
+        }
+
+        function logout() {
+            if (window.globalLogout) {
+                window.globalLogout();
+            } else {
+                localStorage.clear(); sessionStorage.clear(); window.location.href = '/login.html';
+            }
         }
 
         renderAll();

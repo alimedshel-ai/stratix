@@ -853,17 +853,28 @@
                 const userData = await window.api.getCurrentUser();
 
                 // التوجيه مع رسالة الطرد بدلاً من الاستثناء
-                if (!userData || userData.userType !== 'DEPT_MANAGER') {
+                const isDeptManager = userData && (userData.userType === 'DEPT_MANAGER' || (userData.userCategory && userData.userCategory.startsWith('DEPT_')));
+                if (!isDeptManager) {
                     window.location.href = '/dashboard.html?reason=unauthorized';
                     return;
                 }
 
-                const entityId = userData.entity?.id;
-                const deptKey = userData.department?.key || '';
+                const entityId = userData.entity?.id || localStorage.getItem('entityId');
+                let deptKey = userData.department?.key || '';
+                if (!deptKey && userData.userCategory && userData.userCategory.startsWith('DEPT_')) {
+                    const catDept = userData.userCategory.replace('DEPT_', '').toLowerCase();
+                    const MAP = { hr: 'hr', finance: 'finance', marketing: 'marketing', ops: 'operations', service: 'cs', sales: 'sales', it: 'it', legal: 'compliance', quality: 'quality', pmo: 'projects' };
+                    deptKey = MAP[catDept] || catDept;
+                }
+                deptKey = deptKey.toLowerCase();
                 const deptName = userData.department?.name || DEPT_NAMES[deptKey] || 'إدارتك';
 
                 // تخزين الأسماء للاستخدام المجرد الداخلي في سياق العرض
                 window.currentDeptContext = { key: deptKey, name: deptName };
+                if (deptKey) {
+                    localStorage.setItem('stratix_v10_dept', deptKey);
+                    localStorage.setItem('stratix_dept', deptKey);
+                }
 
                 // إذا ما عنده كيان → يروح يكمل الإعداد أولاً
                 if (!entityId) {
@@ -936,9 +947,30 @@
                     document.getElementById('contentArea').prepend(retryBanner);
                 } else if (isNewUser) {
                     document.getElementById('welcomeBoard').style.display = 'block';
-                    if (typeof updateWelcomeBoard === 'function') {
-                        updateWelcomeBoard(userData, deptName);
+
+                    // تحديث الروابط والعناوين برمجياً لضمان عدم ضياع هوية الإدارة
+                    document.getElementById('wbTitle').textContent = `أهلاً بك في لوحة ${deptName}!`;
+
+                    const s1 = document.getElementById('step1Card');
+                    const s2 = document.getElementById('step2Card');
+                    const s3 = document.getElementById('step3Card');
+                    const s4 = document.getElementById('step4Card');
+                    const s5 = document.getElementById('step5Card');
+
+                    if (s1) s1.href = `/internal-env.html?dept=${deptKey}`;
+                    if (s2) {
+                        let deepLink = `/dept-deep.html?dept=${deptKey}&single=1`;
+                        if (deptKey === 'hr') deepLink = '/hr-deep.html';
+                        if (deptKey === 'finance') deepLink = '/finance-deep.html';
+                        s2.href = deepLink;
+
+                        const titleEl = s2.querySelector('.roadmap-card-title');
+                        if (titleEl) titleEl.textContent = `تحليل أعمق — ${deptName}`;
                     }
+                    if (s3) s3.href = `/swot.html?dept=${deptKey}`;
+                    if (s4) s4.href = `/directions.html?dept=${deptKey}`;
+                    if (s5) s5.href = `/kpis.html?dept=${deptKey}`;
+
                 } else {
                     document.getElementById('contentArea').style.display = 'block';
                     if (userData.name) {
@@ -1004,10 +1036,11 @@
         }
 
         function renderQuickActions() {
-            // أزلنا الاعتماد على ?dept= لأن الصفحات أصبحت محمية وموجهة بالـ userData
+            const deptKey = window.currentDeptContext?.key || '';
+            const qParam = deptKey ? '?dept=' + deptKey : '';
             const actions = [
-                { icon: 'bi-graph-up', label: 'تحديث KPIs', href: '/kpis.html', color: '#3b82f6' },
-                { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html', color: '#22c55e' },
+                { icon: 'bi-graph-up', label: 'تحديث KPIs', href: '/kpis.html' + qParam, color: '#3b82f6' },
+                { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html' + qParam, color: '#22c55e' },
                 { icon: 'bi-clipboard-check', label: 'مراجعة دورية', href: '/reviews.html', color: '#a78bfa' },
                 { icon: 'bi-shield-exclamation', label: 'المخاطر', href: '/risk-map.html', color: '#f59e0b' },
                 { icon: 'bi-bar-chart', label: 'التحليل', href: '/analytics-dashboard.html', color: '#ef4444' }
@@ -1065,7 +1098,7 @@
                             +${individualKPIs.length - 6} مؤشرات أخرى
                     </div > ` : '') + `
                         < div style = "text-align:center;margin-top:12px" >
-                            <a href="/kpis.html" class="btn" style="display:inline-flex;font-size:12px;padding:8px 16px">
+                            <a href="/kpis.html?dept=${dept}" class="btn" style="display:inline-flex;font-size:12px;padding:8px 16px">
                                 <i class="bi bi-pencil-square"></i> عرض كل المؤشرات
                             </a>
                     </div > `;
@@ -1089,7 +1122,7 @@
                     </div>
                 `).join('') + `
                     <div style="text-align:center;margin-top:12px">
-                        <a href="/kpis.html" class="btn" style="display:inline-flex;font-size:12px;padding:8px 16px">
+                        <a href="/kpis.html?dept=${dept}" class="btn" style="display:inline-flex;font-size:12px;padding:8px 16px">
                             <i class="bi bi-pencil-square"></i> تحديث المؤشرات
                         </a>
                     </div>
@@ -1114,20 +1147,20 @@
             ].filter(s => s.count > 0);
 
             list.innerHTML = statuses.map(s => `
-                        < div class="task-item" >
+                <div class="task-item">
                     <div class="task-status" style="background:${s.color}"></div>
                     <div class="task-info">
                         <div class="task-name">${s.icon} ${s.name}</div>
                         <div class="task-meta">${s.count} مبادرة</div>
                     </div>
                     <span class="task-badge" style="background:${s.color}22;color:${s.color}">${s.count}</span>
-                </div >
+                </div>
                         `).join('') + `
-                        < div style = "text-align:center;margin-top:12px" >
-                            <a href="/initiatives.html" class="btn" style="display:inline-flex;font-size:12px;padding:8px 16px">
+                        <div style="text-align:center;margin-top:12px">
+                            <a href="/initiatives.html?dept=${window.currentDeptContext?.key || ''}" class="btn" style="display:inline-flex;font-size:12px;padding:8px 16px">
                                 <i class="bi bi-list-task"></i> إدارة المبادرات
                             </a>
-                </div >
+                        </div>
                         `;
         }
 
@@ -1145,14 +1178,14 @@
                 const color = severityColors[a.severity] || 'var(--yellow)';
                 const icons = { HIGH: '🔴', MEDIUM: '⚠️', LOW: 'ℹ️' };
                 return `
-                        < div class="alert-item" style = "--alert-color:${color}" >
+                <div class="alert-item" style="--alert-color:${color}">
                     <span class="alert-icon">${icons[a.severity] || '⚠️'}</span>
                     <div>
                         <div class="alert-title">${sanitize(a.title || a.type || 'تنبيه')}</div>
                         <div class="alert-desc">${sanitize(a.description || '')}</div>
                         <div class="alert-time">${a.createdAt ? new Date(a.createdAt).toLocaleDateString('ar-SA') : ''}</div>
                     </div>
-                </div >
+                </div>
                         `;
             }).join('');
         }
@@ -1170,14 +1203,14 @@
                 const decisionIcons = { CONTINUE: '✅', ADJUST: '🔄', PIVOT: '🔀', NONE: '⬜' };
                 const decisionLabels = { CONTINUE: 'استمرار', ADJUST: 'تعديل', PIVOT: 'تحول', NONE: 'بدون' };
                 return `
-                        < div class="task-item" >
+                <div class="task-item">
                     <span style="font-size:18px">${decisionIcons[r.decision] || '📋'}</span>
                     <div class="task-info">
                         <div class="task-name">${sanitize(r.title || 'مراجعة')}</div>
                         <div class="task-meta">${r.createdAt ? new Date(r.createdAt).toLocaleDateString('ar-SA') : ''} • ${sanitize(r.status || '')}</div>
                     </div>
                     <span class="task-badge" style="background:rgba(167,139,250,0.15);color:var(--purple)">${decisionLabels[r.decision] || sanitize(r.decision) || '—'}</span>
-                </div >
+                </div>
                 `;
             }).join('');
         }

@@ -1245,7 +1245,7 @@
     <script>
         // ===== STATE =====
         const state = {
-            toolCode: new URLSearchParams(window.location.search).get('code') || '',
+            toolCode: (new URLSearchParams(window.location.search).get('code') || '').trim().toUpperCase(),
             versionId: new URLSearchParams(window.location.search).get('v') || localStorage.getItem('selectedVersionId') || '',
             tool: null,
             analysis: null
@@ -1767,10 +1767,55 @@
         async function init() {
             if (!state.toolCode) { window.location.href = '/tools'; return; }
 
+            // طبقة حماية احتياطية للأدوات لضمان عمل الصفحة حتى لو فشل الخادم أو كان الملف قديماً
+            const LOCAL_TOOLS_FALLBACK = {
+                "VALUE_CHAIN": { "name": "سلسلة القيمة", "icon": "🔗", "color": "#0891B2", "phase": "diagnosis", "action": "حلل سلسلة القيمة", "desc": "حلل أنشطتك الأساسية والمساندة لتحديد أين تخلق القيمة وأين يوجد هدر." },
+                "PESTEL": { "name": "تحليل PESTEL", "icon": "🌍", "color": "#0891b2", "phase": "diagnosis", "action": "ابدأ التحليل", "desc": "حلل البيئة الخارجية من 6 أبعاد: سياسي، اقتصادي، اجتماعي، تقني، بيئي، قانوني." },
+                "PORTER": { "name": "قوى Porter الخمس", "icon": "⚔️", "color": "#f59e0b", "phase": "diagnosis", "action": "ابدأ التحليل", "desc": "افهم ديناميكيات المنافسة في قطاعك." },
+                "CORE_COMPETENCY": { "name": "القدرات الجوهرية", "icon": "🏆", "color": "#D97706", "phase": "diagnosis", "action": "حدد قدراتك", "desc": "حدد القدرات التي تميزك فعلاً." },
+                "BUSINESS_MODEL": { "name": "نموذج الأعمال Canvas", "icon": "📋", "color": "#0369A1", "phase": "direction", "action": "ارسم نموذج الأعمال", "desc": "ارسم نموذج عملك الكامل في صفحة واحدة." },
+                "CUSTOMER_JOURNEY": { "name": "خريطة رحلة العميل", "icon": "🚶", "color": "#DB2777", "phase": "diagnosis", "action": "ارسم رحلة العميل", "desc": "ارسم رحلة العميل الكاملة من الوعي للولاء." },
+                "EISENHOWER": { "name": "مصفوفة أيزنهاور", "icon": "🔥", "color": "#9333EA", "phase": "initiatives", "action": "صنّف المهام", "desc": "صنّف مهامك ومبادراتك في 4 مربعات." },
+                "PARETO": { "name": "تحليل باريتو 80/20", "icon": "📊", "color": "#059669", "phase": "execute", "action": "حلل باريتو", "desc": "حدد الـ20% من العوامل التي تأثر على 80% من النتائج." }
+            };
+
             try {
                 // Load tool definition
-                const toolData = await api(`/api/tools/${state.toolCode}`);
-                state.tool = toolData.tool || toolData;
+                let toolData;
+                let apiFailed = false;
+                try {
+                    toolData = await api(`/api/tools/${state.toolCode}`);
+                } catch (apiErr) {
+                    console.warn('API fetch failed, trying local fallback:', apiErr);
+                    apiFailed = true;
+                }
+
+                // Fallback to fetch directly from static file if API is blocked/404 or missing tool
+                if (apiFailed || !toolData) {
+                    try {
+                        const res = await fetch('/tools-data.json');
+                        if (res.ok) {
+                            const allData = await res.json();
+                            toolData = allData.tools[state.toolCode];
+                            if (toolData) toolData.code = state.toolCode;
+                        }
+                    } catch (staticErr) {
+                        console.warn('Static JSON fetch failed');
+                    }
+                }
+
+                // Ultimate fallback: Use hardcoded definitions
+                if (!toolData && LOCAL_TOOLS_FALLBACK[state.toolCode]) {
+                    console.info('Using hardcoded fallback for tool:', state.toolCode);
+                    toolData = LOCAL_TOOLS_FALLBACK[state.toolCode];
+                    toolData.code = state.toolCode;
+                }
+
+                if (!toolData) {
+                    throw new Error(`Tool ${state.toolCode} not found in API, JSON, or Fallbacks.`);
+                }
+
+                state.tool = toolData?.tool || toolData;
 
                 if (!state.tool || !state.tool.code) {
                     window.location.href = '/tools';
@@ -3607,10 +3652,18 @@
             if (!state.analysis) {
                 state.analysis = { data: '{}', parsedData: {}, status: 'IN_PROGRESS', progress: 0 };
             }
-            let data = state.analysis.parsedData || {};
+
+            // FIX: قراءة البيانات الموجودة مسبقاً لتجنب مسح الأقسام الأخرى
+            let data = {};
+            if (state.analysis.parsedData) {
+                data = state.analysis.parsedData;
+            } else if (state.analysis.data) {
+                try { data = typeof state.analysis.data === 'string' ? JSON.parse(state.analysis.data) : state.analysis.data; } catch (e) { }
+            }
+
             if (!data[sectionKey]) data[sectionKey] = [];
             // Avoid duplicates
-            const existing = data[sectionKey].map(i => typeof i === 'string' ? i : i.text);
+            const existing = data[sectionKey].map(i => typeof i === 'string' ? i : (i.title || i.text));
             if (existing.includes(text)) return;
 
             data[sectionKey].push({
@@ -3930,6 +3983,16 @@
             }, 3000);
         })();
     </script>
+</body>
+
+</html> message: tip.points[0],
+persistent: false
+});
+}
+}
+}, 3000);
+})();
+</script>
 </body>
 
 </html>

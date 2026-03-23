@@ -44,12 +44,13 @@ const { verifyToken } = require('../middleware/auth');
 // GET /:code (مسجلة في server.js كـ /api/tools)
 router.get('/:code', verifyToken, async (req, res) => {
     const { code } = req.params;
-    const tool = toolsData.tools[code];
+    const cleanCode = (code || '').trim().toUpperCase();
+    const tool = toolsData.tools[cleanCode];
     if (!tool) {
         return res.status(404).json({ error: 'Tool not found' });
     }
     // إرجاع البيانات مع مفتاح الكود الذي يعتمد عليه الـ Frontend للعمل
-    res.json({ ...tool, code });
+    res.json({ ...tool, code: cleanCode });
 });
 
 module.exports = { router, loadToolsData };

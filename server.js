@@ -52,6 +52,7 @@ const adminRoutes = require('./routes/admin');
 const financialEngineRoutes = require('./routes/financial-engine');
 const execDashboardApiRoutes = require('./routes/exec-dashboard-api');
 const companyHealthRoutes = require('./routes/company-health');
+const dimensionsRoutes = require('./routes/dimensions');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -240,6 +241,16 @@ app.get('/api/user/me', verifyToken, async (req, res) => {
     const primaryMembership = user.memberships[0] || null;
     const isSA = user.systemRole === 'SUPER_ADMIN';
 
+    let uType = primaryMembership?.userType || null;
+    if (!uType) {
+      const cat = user.userCategory || '';
+      if (cat.startsWith('DEPT_')) uType = 'DEPT_MANAGER';
+      else if (cat.startsWith('INDIVIDUAL_') || cat === 'CONSULTANT_SOLO') uType = 'INDIVIDUAL';
+      else if (cat === 'CONSULTANT_AGENCY') uType = 'CONSULTANT';
+      else if (['COMPANY_MICRO', 'COMPANY_SMALL', 'COMPANY_MEDIUM', 'COMPANY_LARGE', 'COMPANY_ENTERPRISE', 'NEW_PROJECT', 'CEO'].includes(cat)) uType = 'COMPANY_MANAGER';
+      else uType = 'EXPLORER';
+    }
+
     res.json({
       id: user.id,
       email: user.email,
@@ -247,7 +258,7 @@ app.get('/api/user/me', verifyToken, async (req, res) => {
       phone: user.phone,
       systemRole: user.systemRole || 'USER',
       role: primaryMembership?.role || (isSA ? 'OWNER' : 'VIEWER'),
-      userType: primaryMembership?.userType || 'EXPLORER',
+      userType: uType,
       userCategory: user.userCategory || null,
       onboardingCompleted: user.onboardingCompleted || false,
       entity: primaryMembership?.entity || null,
@@ -271,6 +282,7 @@ app.use('/api/dashboard', dashboardApiRoutes);
 
 // 🏥 صحة الشركة — لوحة أم تستقبل بيانات الإدارات
 app.use('/api/company-health', companyHealthRoutes);
+app.use('/api/dimensions', dimensionsRoutes); // ✨ الأبعاد الثلاثة
 
 // 🎯 Executive Dashboard API v1 — BSC-Driven
 app.use('/api/v1', execDashboardApiRoutes);
@@ -300,6 +312,7 @@ const objectivesSyncRoutes = require('./routes/objectives-sync');
 app.use('/api/strategic/objectives', objectivesSyncRoutes);
 app.use('/api/versions', versionsRoutes);
 app.use('/api/choices', choicesRoutes);
+const projectsRoutes = require('./routes/projects');
 app.use('/api/projects', projectsRoutes);
 app.use('/api/corrections', correctionsRoutes);
 app.use('/api/analysis', analysisRoutes);

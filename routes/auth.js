@@ -462,7 +462,16 @@ router.get('/profile', verifyToken, async (req, res) => {
 
     const isSA2 = user.systemRole === 'SUPER_ADMIN';
     const primaryRole = user.memberships[0]?.role || (isSA2 ? 'OWNER' : 'VIEWER');
-    const primaryUserType = user.memberships[0]?.userType || 'EXPLORER';
+
+    let primaryUserType = user.memberships[0]?.userType || null;
+    if (!primaryUserType) {
+      const cat = user.userCategory || '';
+      if (cat.startsWith('DEPT_')) primaryUserType = 'DEPT_MANAGER';
+      else if (cat.startsWith('INDIVIDUAL_') || cat === 'CONSULTANT_SOLO') primaryUserType = 'INDIVIDUAL';
+      else if (cat === 'CONSULTANT_AGENCY') primaryUserType = 'CONSULTANT';
+      else if (['COMPANY_MICRO', 'COMPANY_SMALL', 'COMPANY_MEDIUM', 'COMPANY_LARGE', 'COMPANY_ENTERPRISE', 'NEW_PROJECT', 'CEO'].includes(cat)) primaryUserType = 'COMPANY_MANAGER';
+      else primaryUserType = 'EXPLORER';
+    }
     const primaryEntity = user.memberships[0]?.entity || null;
 
     res.json({

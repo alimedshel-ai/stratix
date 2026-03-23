@@ -25,6 +25,7 @@
             --red: #ef4444;
             --purple: #8b5cf6;
             --pink: #ec4899;
+            --warning: #facc15;
         }
 
         body {
@@ -344,6 +345,44 @@
             line-height: 1.6;
         }
 
+        /* TOAST */
+        .toast-container {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast-msg {
+            padding: 12px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
         @media (max-width: 992px) {
             .map-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -398,6 +437,10 @@
             <a href="/dashboard.html" class="brand"><i class="bi bi-gem"></i> ستارتكس</a>
         </div>
         <div class="user-area" style="display:flex;align-items:center;gap:12px">
+            <div class="user-info" style="text-align:left;color:white;display:none" id="userInfoBox">
+                <div class="name" id="navUserName" style="font-weight:600;font-size:13px">—</div>
+                <div class="role" id="navUserRole" style="font-size:11px;opacity:0.75">—</div>
+            </div>
             <div id="userInit"
                 style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">
                 م</div>
@@ -659,6 +702,9 @@
         </div>
     </div>
 
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/jwt-decode/build/jwt-decode.min.js"></script>
     <script src="/assets/js/api.js?v=3"></script>
@@ -671,20 +717,75 @@
             if (sidebar) sidebar.classList.toggle('stx-fixed');
         }
 
+        function showToast(msg, type = 'warning') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast-msg';
+            const colors = { warning: 'var(--warning)', error: 'var(--red)', success: 'var(--green)', info: 'var(--blue)' };
+            toast.style.borderRight = `4px solid ${colors[type] || colors.info}`;
+            toast.innerHTML = `<i class="bi bi-info-circle-fill" style="color:${colors[type] || colors.info}"></i> <span>${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        async function logoutUser() {
+            if (window.apiRequest) {
+                try { await window.apiRequest('/api/auth/logout', { method: 'POST' }); } catch (e) { }
+            }
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            sessionStorage.clear();
+            window.location.href = '/login.html';
+        }
+
         async function initHub() {
+            // معالجة رسائل الخطأ من الروابط
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('reason') === 'unauthorized') {
+                showToast('عذراً، ليس لديك صلاحية للوصول لتلك الصفحة', 'error');
+                window.history.replaceState(null, '', '/dashboard.html');
+            }
+
             // حماية التوجيه
             if (!window.api) return;
             const u = await window.api.getCurrentUser();
             if (!u) { window.location.href = '/login.html'; return; }
 
-            // إذا كان مدير إدارة نقلله للوحة الإدارة التي لا يستطيع مغادرتها
-            if (u.userType === 'DEPT_MANAGER') {
-                window.location.replace('/dept-dashboard.html');
-                return;
+            // حماية توجيه صارمة بناءً على الدور (Strict Routing)
+            const isSuperAdmin = u.systemRole === 'SUPER_ADMIN';
+            if (!isSuperAdmin && u.role !== 'OWNER' && u.role !== 'ADMIN') {
+
+                if (u.role === 'CONSULTANT') {
+                    window.location.replace('/consultant-dashboard.html');
+                    return;
+                }
+
+                const isDept = u.userType === 'DEPT_MANAGER' || (u.userCategory && u.userCategory.startsWith('DEPT_'));
+                if (isDept && u.role !== 'VIEWER' && u.role !== 'DATA_ENTRY') {
+                    window.location.replace('/dept-dashboard.html');
+                    return;
+                }
+
+                if (u.role === 'DATA_ENTRY' || u.role === 'VIEWER') {
+                    window.location.replace('/viewer-hub.html');
+                    return;
+                }
+
+                if (u.userType === 'BOARD_VIEWER') {
+                    window.location.replace('/board-dashboard.html');
+                    return;
+                }
             }
 
-            // الشريط الجانبي سيعمل تلقائياً ولا نحتاج استدعائه مرتين
-            if (u.name) document.getElementById('userInit').textContent = u.name.charAt(0);
+            // تحديث واجهة المستخدم العلوية
+            if (u.name) {
+                document.getElementById('userInit').textContent = u.name.charAt(0);
+                document.getElementById('navUserName').textContent = u.name;
+                document.getElementById('userInfoBox').style.display = 'block';
+
+                const roleLabels = { OWNER: 'مالك', ADMIN: 'مدير', EDITOR: 'محرر', VIEWER: 'مشاهد', DATA_ENTRY: 'مُدخل بيانات' };
+                document.getElementById('navUserRole').textContent = roleLabels[u.role] || u.role || 'مستخدم';
+            }
         }
         initHub();
     </script>

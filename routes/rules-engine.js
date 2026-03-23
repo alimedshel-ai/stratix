@@ -684,6 +684,133 @@ const CROSS_FUNCTIONAL_RULES = [
             return { triggered: false };
         }
     },
+
+    // ═══════════════════════════════════════════
+    // 🌍 COMPANY DIMENSIONS RULES (16-18) — Phase 2
+    // ═══════════════════════════════════════════
+
+    {
+        id: 'RULE_16_SAUDIZATION_RISK',
+        name: 'خطر نطاقات والتوطين',
+        type: 'RISK',
+        severity: 'CRITICAL',
+        departments: ['CHRO', 'CEO'],
+        deptCodes: ['HR', 'DIMENSIONS'],
+        icon: '🇸🇦',
+        evaluate: (data) => {
+            const dim = data.DIMENSIONS || {};
+            const hr = data.HR?.data || {};
+
+            const isRed = dim.nitaqatLevel === 'RED' || dim.nitaqatLevel === 'GREEN_LOW';
+            const highTurnover = hr.turnover_rate && parseFloat(hr.turnover_rate) > 15;
+
+            if (isRed && highTurnover) {
+                return {
+                    triggered: true,
+                    title: '🚨 خطر أزمة توطين وتجديد رخص',
+                    description: `كيان الشركة في النطاق ${dim.nitaqatLevel === 'RED' ? 'الأحمر' : 'الأخضر المنخفض'}، مع تقييم تسرب وظيفي بنسبة ${hr.turnover_rate}%. هذا يشكل تهديداً كبيراً على تجديد الرخص والإقامات وجلب العمالة.`,
+                    evidence: [
+                        `نطاقات: ${dim.nitaqatLevel === 'RED' ? 'أحمر' : 'أخضر منخفض'}`,
+                        `نسبة التوطين الحالية: ${dim.saudizationRate || 0}%`,
+                        `معدل دوران الموظفين: ${hr.turnover_rate}%`
+                    ],
+                    suggestedOKR: {
+                        objective: 'الارتقاء لنطاق التوطين الآمن للحفاظ على مكتسبات الشركة',
+                        keyResults: [
+                            `رفع نسبة التوطين من ${dim.saudizationRate || 0}% إلى ${Math.max((dim.saudizationRate || 0) + 5, 20)}%`,
+                            'استقطاب 3 كوادر محلية بامتيازات تنافسية',
+                            `خفض معدل دوران الموظفين من ${hr.turnover_rate}% إلى 10%`
+                        ],
+                        timeline: '6 أسابيع',
+                        owner: 'CHRO + CEO'
+                    }
+                };
+            }
+            return { triggered: false };
+        }
+    },
+    {
+        id: 'RULE_17_ADMINISTRATIVE_BLOAT',
+        name: 'ترهل إداري يضرب الكفاءة',
+        type: 'RISK',
+        severity: 'HIGH',
+        departments: ['COO', 'CEO'],
+        deptCodes: ['OPERATIONS', 'DIMENSIONS'],
+        icon: '🏢',
+        evaluate: (data) => {
+            const dim = data.DIMENSIONS || {};
+            const ops = data.OPERATIONS?.data || {};
+
+            const lowAdmin = dim.adminScore && parseFloat(dim.adminScore) < 60;
+            const lowEfficiency = ops.operational_efficiency && parseFloat(ops.operational_efficiency) < 70;
+
+            if (lowAdmin && lowEfficiency) {
+                return {
+                    triggered: true,
+                    title: 'ترهل إداري يؤدي لضعف الكفاءة التشغيلية',
+                    description: `التقييم الإداري متدنٍ (${dim.adminScore}%) مما أدى إلى كفاءة تشغيلية منخفضة للغاية (${ops.operational_efficiency}%). البيروقراطية أو ضعف الحوكمة يبطئ من إنجاز المهام.`,
+                    evidence: [
+                        `الدرجة الإدارية الأساسية: ${dim.adminScore}% (تحتاج تحسين)`,
+                        `تفاصيل كفاءة العمليات الإدارية: ${dim.processEffciency || '—'}`,
+                        `الكفاءة التشغيلية الميدانية: ${ops.operational_efficiency}%`
+                    ],
+                    suggestedOKR: {
+                        objective: 'إعادة هندسة العمليات الإدارية لدعم الميدان',
+                        keyResults: [
+                            'حذف خطوة اعتماد إدارية واحدة من الروتين اليومي',
+                            `رفع الدرجة الإدارية من ${dim.adminScore}% إلى 75%`,
+                            `رفع الكفاءة التشغيلية من ${ops.operational_efficiency}% إلى 85%`
+                        ],
+                        timeline: '3 أشهر',
+                        owner: 'COO + CEO'
+                    }
+                };
+            }
+            return { triggered: false };
+        }
+    },
+    {
+        id: 'RULE_18_FINANCIAL_DIMENSION_MISMATCH',
+        name: 'هشاشة الهيكل المالي',
+        type: 'CROSS_DEPT',
+        severity: 'HIGH',
+        departments: ['CFO', 'CEO'],
+        deptCodes: ['FINANCE', 'DIMENSIONS'],
+        icon: '📉',
+        evaluate: (data) => {
+            const dim = data.DIMENSIONS || {};
+            const finDept = data.FINANCE;
+            if (!finDept) return { triggered: false };
+
+            const beResult = finDept.data?._breakEvenResult?.results;
+            const lowFinScore = dim.financialScore && parseFloat(dim.financialScore) < 50;
+
+            // IF financial evaluation MVP is bad, AND actual department safety margin is low
+            if (lowFinScore && beResult && beResult.safetyMargin !== null && beResult.safetyMargin < 15) {
+                return {
+                    triggered: true,
+                    title: 'هشاشة مالية — أداء ضعيف مع الخطورة التشغيلية',
+                    description: `التقييم المالي الأساسي للنشاط ضعيف (${dim.financialScore}%)، وهامش أمان المبيعات الفعلي ${beResult.safetyMargin.toFixed(1)}% فقط. الشركة تواجه ضغطاً شديداً على السيولة والنمو المستقبلي.`,
+                    evidence: [
+                        `التقييم المالي (MVP): ${dim.financialScore}%`,
+                        `تفاصيل الهيكل (MVP): ${dim.costStructure || '—'}`,
+                        `هامش الأمان البيعي: ${beResult.safetyMargin.toFixed(1)}%`,
+                    ],
+                    suggestedOKR: {
+                        objective: 'بناء وسادة أمان مالي وإعادة هيكلة التكاليف',
+                        keyResults: [
+                            'مراجعة شروط الموردين لخفض التكاليف المستمرة 5%',
+                            `رفع تقييم الصحة المالية الأساسي إلى 70%`,
+                            `توسيع هامش الأمان للمبيعات إلى 25%`
+                        ],
+                        timeline: 'شهرين',
+                        owner: 'CFO + CEO'
+                    }
+                };
+            }
+            return { triggered: false };
+        }
+    }
 ];
 
 // ========== API: Run Analysis ==========
@@ -732,6 +859,13 @@ router.post('/analyze/:entityId', verifyToken, async (req, res) => {
             if (dept.dataStatus === 'COMPLETED') completedCount++;
             totalAnswers += Object.keys(answers).length;
         }
+
+        // Fetch Company Dimensions (Phase 1 Data)
+        const dimensionsData = await prisma.companyDimension.findUnique({
+            where: { entityId }
+        });
+
+        deptData.DIMENSIONS = dimensionsData || {};
 
         // 2. Check minimum data
         if (completedCount < 2 && totalAnswers < 6) {

@@ -1026,59 +1026,29 @@
 
       // ═══ Dept-specific: ?dept=hr (BEFORE render) ═══
       try {
-        const _deptParam = new URLSearchParams(window.location.search).get('dept');
+        const _deptParam = new URLSearchParams(window.location.search).get('dept') || localStorage.getItem('stratix_v10_dept');
         if (_deptParam) {
-          const deptNames = { hr: 'الموارد البشرية', finance: 'المالية', operations: 'العمليات', marketing: 'التسويق', sales: 'المبيعات', compliance: 'الامتثال', it: 'تقنية المعلومات', cs: 'خدمة العملاء', quality: 'الجودة' };
-          const deptDisplayNames = { hr: 'الموارد البشرية', finance: 'المالية', operations: 'العمليات' };
-          const deptName = deptNames[_deptParam] || _deptParam;
-
-          // تخصيص العنوان
-          document.title = 'ستارتكس — مؤشرات ' + deptName;
-          const h1 = document.querySelector('.page-header h1');
-          if (h1) h1.innerHTML = '<i class="bi bi-speedometer2"></i> مؤشرات ' + deptName;
-
-          // إخفاء فلتر الإدارات ومسار التخطيط
-          const deptFilterSec = document.getElementById('deptFilterSection');
-          if (deptFilterSec) deptFilterSec.style.display = 'none';
-          const planningPath = document.getElementById('planningPathBar');
-          if (planningPath) planningPath.style.display = 'none';
-
-          // فلتر المؤشرات للإدارة المحددة
-          const deptFilterName = deptDisplayNames[_deptParam] || deptName;
-          if (typeof filterByDept === 'function') {
-            currentDept = deptFilterName;
-          }
-
-          // تعيين الإدارة تلقائياً في مودال إنشاء مؤشر
           const formDeptSel = document.getElementById('formDept');
+          const deptDisplayNames = { hr: 'الموارد البشرية', finance: 'المالية', operations: 'العمليات', marketing: 'التسويق والعملاء', sales: 'المبيعات', compliance: 'الامتثال والحوكمة', it: 'التقنية', cs: 'التسويق والعملاء', quality: 'الجودة' };
+          const deptFormValue = deptDisplayNames[_deptParam] || deptName;
           if (formDeptSel) {
-            const deptFormValue = deptDisplayNames[_deptParam] || deptName;
             for (const opt of formDeptSel.options) {
-              if (opt.value === deptFormValue || opt.textContent.includes(deptFormValue)) {
+              if (opt.value === deptName || opt.textContent.includes(deptName)) {
                 formDeptSel.value = opt.value;
                 break;
               }
             }
-            formDeptSel.closest('.form-group').style.display = 'none';
+            const group = formDeptSel.closest('.form-group');
+            if (group) group.style.display = 'none';
           }
-
-          // عرض اقتراحات KPI
-          setTimeout(() => {
-            if (_deptParam === 'hr' && typeof getSuggestedKPIs === 'function') {
-              _showDeptKPISuggestions('hr', deptName, getSuggestedKPIs, 'الموارد البشرية');
-            }
-            if (_deptParam === 'finance' && typeof getSuggestedFinanceKPIs === 'function') {
-              _showDeptKPISuggestions('finance', deptName, getSuggestedFinanceKPIs, 'المالية');
-            }
-          }, 500);
         }
       } catch (deptErr) { console.warn('[KPIs] dept detection error:', deptErr); }
 
-      try { renderAll(); } catch (re) { console.warn('[KPIs] renderAll error:', re); }
-      // إذا بيانات تجريبية، أظهر تنبيه
-      if (!isApiMode) {
-        setTimeout(() => { try { showDemoBanner(); } catch (e) { } }, 300);
-      }
+    try { renderAll(); } catch (re) { console.warn('[KPIs] renderAll error:', re); }
+    // إذا بيانات تجريبية، أظهر تنبيه
+    if (!isApiMode) {
+      setTimeout(() => { try { showDemoBanner(); } catch (e) { } }, 300);
+    }
     }
 
     // ═══ بانر KPI مشترَك ═══
@@ -1892,170 +1862,144 @@
   <!-- ═══ DEPT DETECTION — مستقل تماماً عن async API ═══ -->
   <script>
     (function () {
-      const _dp = new URLSearchParams(window.location.search).get('dept');
+      const _dp = new URLSearchParams(window.location.search).get('dept') || localStorage.getItem('stratix_v10_dept');
       if (!_dp) return;
-      const _dn = { hr: 'الموارد البشرية', finance: 'المالية', operations: 'العمليات', marketing: 'التسويق', sales: 'المبيعات', compliance: 'الامتثال', it: 'تقنية المعلومات', cs: 'خدمة العملاء', quality: 'الجودة' }[_dp] || _dp;
 
-      // التحقق من صلاحية المستخدم
-      let isDeptManager = false;
-      try {
-        const u = JSON.parse(localStorage.getItem('user') || '{}');
-        isDeptManager = (u.userType === 'DEPT_MANAGER');
-      } catch (e) { }
+      const _deptNames = { hr: 'الموارد البشرية', finance: 'المالية', operations: 'العمليات', marketing: 'التسويق', sales: 'المبيعات', compliance: 'الامتثال والحوكمة', it: 'تقنية المعلومات', cs: 'خدمة العملاء', quality: 'الجودة', projects: 'إدارة المشاريع', support: 'الخدمات المساندة' };
+      const _dn = _deptNames[_dp] || _dp;
 
       // 1. تحديث العنوان
       document.title = 'ستارتكس — مؤشرات ' + _dn;
-      const _h1 = document.querySelector('.page-header h1');
-      if (_h1) _h1.innerHTML = '<i class="bi bi-speedometer2"></i> مؤشرات ' + _dn;
+      const h1 = document.querySelector('.page-header h1');
+      if (h1) h1.innerHTML = '<i class="bi bi-speedometer2"></i> مؤشرات أداء ' + _dn;
 
-      // 🚨 تطبيق الحظر وتعديل الروابط فقط لمدير الإدارة الفعلي
-      if (isDeptManager) {
-        // 1.5 تعديل رابط شعار ستارتكس ليرجع للوحة الإدارة بدل dashboard
-        const _brandLink = document.querySelector('a.brand');
-        if (_brandLink) _brandLink.href = '/dept-dashboard.html?dept=' + _dp;
+      const subtitle = document.querySelector('.page-subtitle');
+      if (subtitle) subtitle.textContent = 'مراقبة وقياس الأداء الخاص بـ ' + _dn;
 
-        // 2. إخفاء مسار التخطيط وفلتر الإدارات
-        const _pp = document.getElementById('planningPathBar');
-        if (_pp) _pp.style.display = 'none';
-        const _df = document.getElementById('deptFilterSection');
-        if (_df) _df.style.display = 'none';
-      }
+      // 2. إخفاء Planning Path Bar لمدير الإدارة
+      const pathBar = document.getElementById('planningPathBar');
+      if (pathBar) pathBar.style.display = 'none';
 
-      // إزالة حالة "الكل" لتجنب أي التباس في الواجهة أو الفحص الآلي
-      const activeDeptChip = document.querySelector('#deptFilterBar .filter-chip.active');
-      if (activeDeptChip) activeDeptChip.classList.remove('active');
+      // 3. إخفاء Department Filter
+      const deptFilter = document.getElementById('deptFilterSection');
+      if (deptFilter) deptFilter.style.display = 'none';
 
-      const targetChip = Array.from(document.querySelectorAll('#deptFilterBar .filter-chip'))
-        .find(c => c.textContent.includes(_dn));
-      if (targetChip) targetChip.classList.add('active');
+      const isDeptManager = true;
 
-      // 3. تعيين الإدارة في مودال الإنشاء
-      const _fs = document.getElementById('formDept');
-      if (_fs) {
-        for (const opt of _fs.options) {
-          if (opt.textContent.includes(_dn)) { _fs.value = opt.value; break; }
-        }
-        const fg = _fs.closest('.form-group');
-        if (fg) fg.style.display = 'none';
-      }
+      // 4. تعيين الإدارة
+    if (typeof currentDept !== 'undefined') currentDept = _dn;
 
-      // 4. فلتر تلقائي حسب الإدارة — فوراً + بعد تحميل البيانات
-      if (typeof currentDept !== 'undefined') currentDept = _dn;
-
-      // 5. إخفاء بار الكيان (entity banner) — مدير الإدارة ما يحتاجه
-      setTimeout(function () {
-        if (isDeptManager) {
-          const eb = document.querySelector('.stx-entity-banner');
-          if (eb) eb.style.display = 'none';
-        }
+    // 5. إخفاء بار الكيان (entity banner) — مدير الإدارة ما يحتاجه
+    setTimeout(function () {
+        const eb = document.querySelector('.stx-entity-banner');
+        if (eb) eb.style.display = 'none';
       }, 200);
 
-      // 6. إعادة الفلتر بعد ما البيانات تتحمل من API (async)
-      function _refilterForDept() {
-        if (typeof currentDept !== 'undefined') currentDept = _dn;
-        if (typeof renderAll === 'function') {
-          try { renderAll(); } catch (e) { }
-        }
-        // إعادة إخفاء بار الكيان بعد كل re-render
-        if (isDeptManager) {
-          const eb2 = document.querySelector('.stx-entity-banner');
-          if (eb2) eb2.style.display = 'none';
-        }
+    // 6. إعادة الفلتر بعد ما البيانات تتحمل من API (async)
+    function _refilterForDept() {
+      if (typeof currentDept !== 'undefined') currentDept = _dn;
+      if (typeof renderAll === 'function') {
+        try { renderAll(); } catch (e) { }
       }
-      // تشغيل بعد 800ms و 2s عشان نضمن البيانات تكون محمّلة
+        const eb2 = document.querySelector('.stx-entity-banner');
+        if (eb2) eb2.style.display = 'none';
+      }
       setTimeout(_refilterForDept, 800);
       setTimeout(_refilterForDept, 2000);
 
-      // 7. تخصيص قوالب المودال حسب الإدارة
-      const _deptTemplates = {
-        hr: [
-          { name: 'نسبة التوطين', icon: 'bi-flag-fill', color: '#22c55e', objective: 'رفع نسبة التوطين للحد النظامي', actual: '20%', target: '25%', trend: 'up', percent: 80 },
-          { name: 'معدل الدوران السنوي', icon: 'bi-arrow-repeat', color: '#ef4444', objective: 'خفض نسبة ترك الموظفين', actual: '18%', target: '15%', trend: 'down', percent: 60 },
-          { name: 'نسبة الامتثال النظامي', icon: 'bi-shield-check', color: '#8b5cf6', objective: 'الالتزام بأنظمة العمل والتأمينات', actual: '85%', target: '100%', trend: 'up', percent: 85 },
-          { name: 'ساعات التدريب لكل موظف', icon: 'bi-mortarboard', color: '#3b82f6', objective: 'تطوير مهارات الموظفين', actual: '30', target: '40 ساعة', trend: 'up', percent: 75 },
-          { name: 'نسبة الرضا الوظيفي', icon: 'bi-emoji-smile', color: '#f59e0b', objective: 'رفع مستوى رضا الموظفين', actual: '68%', target: '75%', trend: 'up', percent: 90 },
-          { name: 'متوسط وقت التوظيف', icon: 'bi-clock-history', color: '#06b6d4', objective: 'تسريع عملية الاستقطاب', actual: '45 يوم', target: '30 يوم', trend: 'flat', percent: 67 },
-        ],
-        finance: [
-          { name: 'نمو الإيرادات', icon: 'bi-graph-up-arrow', color: '#22c55e', objective: 'زيادة الإيرادات السنوية', actual: '18%', target: '20%', trend: 'up', percent: 90 },
-          { name: 'هامش الربح الصافي', icon: 'bi-cash-stack', color: '#10b981', objective: 'تحسين الربحية التشغيلية', actual: '12%', target: '15%', trend: 'up', percent: 80 },
-          { name: 'نسبة السيولة', icon: 'bi-droplet', color: '#3b82f6', objective: 'الحفاظ على سيولة كافية', actual: '1.8', target: '2.0', trend: 'flat', percent: 90 },
-          { name: 'معدل تحصيل الذمم', icon: 'bi-receipt', color: '#f59e0b', objective: 'تسريع التحصيل', actual: '60 يوم', target: '45 يوم', trend: 'up', percent: 75 },
-          { name: 'نسبة الانحراف عن الميزانية', icon: 'bi-bar-chart', color: '#ef4444', objective: 'ضبط الإنفاق ضمن الميزانية', actual: '8%', target: '5%', trend: 'down', percent: 62 },
-          { name: 'العائد على الاستثمار ROI', icon: 'bi-arrow-up-circle', color: '#8b5cf6', objective: 'تعظيم العائد على الاستثمارات', actual: '15%', target: '20%', trend: 'up', percent: 75 },
-        ],
-        operations: [
-          { name: 'كفاءة العمليات', icon: 'bi-gear-wide-connected', color: '#22c55e', objective: 'تحسين كفاءة العمليات التشغيلية', actual: '82%', target: '90%', trend: 'up', percent: 91 },
-          { name: 'نسبة الأتمتة', icon: 'bi-robot', color: '#8b5cf6', objective: 'أتمتة العمليات اليدوية', actual: '60%', target: '80%', trend: 'up', percent: 75 },
-          { name: 'وقت التنفيذ', icon: 'bi-stopwatch', color: '#f59e0b', objective: 'تقليل وقت تنفيذ العمليات', actual: '4 أيام', target: '2 يوم', trend: 'flat', percent: 50 },
-          { name: 'نسبة الأخطاء التشغيلية', icon: 'bi-exclamation-triangle', color: '#ef4444', objective: 'تقليل الأخطاء', actual: '5%', target: '2%', trend: 'down', percent: 60 },
-          { name: 'رضا العملاء الداخليين', icon: 'bi-emoji-smile', color: '#3b82f6', objective: 'رفع رضا الأقسام المستفيدة', actual: '75%', target: '85%', trend: 'up', percent: 88 },
-          { name: 'تكلفة الوحدة التشغيلية', icon: 'bi-cash', color: '#06b6d4', objective: 'خفض التكلفة التشغيلية', actual: '120 ر.س', target: '100 ر.س', trend: 'flat', percent: 83 },
-        ],
-      };
-      // القوالب الافتراضية للإدارات الأخرى
-      const _defaultTemplates = [
-        { name: 'مؤشر أداء رئيسي', icon: 'bi-speedometer2', color: '#667eea', objective: 'تحقيق الهدف الاستراتيجي', actual: '0%', target: '100%', trend: 'up', percent: 0 },
-        { name: 'نسبة الإنجاز', icon: 'bi-check2-all', color: '#22c55e', objective: 'إنجاز المشاريع في الوقت المحدد', actual: '60%', target: '90%', trend: 'up', percent: 67 },
-        { name: 'رضا المستفيدين', icon: 'bi-emoji-smile', color: '#f59e0b', objective: 'رفع رضا المستفيدين', actual: '70%', target: '85%', trend: 'up', percent: 82 },
-      ];
+    // 7. تخصيص قوالب المودال حسب الإدارة
+    const _deptTemplates = {
+      hr: [
+        { name: 'نسبة التوطين', icon: 'bi-flag-fill', color: '#22c55e', objective: 'رفع نسبة التوطين للحد النظامي', actual: '20%', target: '25%', trend: 'up', percent: 80 },
+        { name: 'معدل الدوران السنوي', icon: 'bi-arrow-repeat', color: '#ef4444', objective: 'خفض نسبة ترك الموظفين', actual: '18%', target: '15%', trend: 'down', percent: 60 },
+        { name: 'نسبة الامتثال النظامي', icon: 'bi-shield-check', color: '#8b5cf6', objective: 'الالتزام بأنظمة العمل والتأمينات', actual: '85%', target: '100%', trend: 'up', percent: 85 },
+        { name: 'ساعات التدريب لكل موظف', icon: 'bi-mortarboard', color: '#3b82f6', objective: 'تطوير مهارات الموظفين', actual: '30', target: '40 ساعة', trend: 'up', percent: 75 },
+        { name: 'نسبة الرضا الوظيفي', icon: 'bi-emoji-smile', color: '#f59e0b', objective: 'رفع مستوى رضا الموظفين', actual: '68%', target: '75%', trend: 'up', percent: 90 },
+        { name: 'متوسط وقت التوظيف', icon: 'bi-clock-history', color: '#06b6d4', objective: 'تسريع عملية الاستقطاب', actual: '45 يوم', target: '30 يوم', trend: 'flat', percent: 67 },
+      ],
+      finance: [
+        { name: 'نمو الإيرادات', icon: 'bi-graph-up-arrow', color: '#22c55e', objective: 'زيادة الإيرادات السنوية', actual: '18%', target: '20%', trend: 'up', percent: 90 },
+        { name: 'هامش الربح الصافي', icon: 'bi-cash-stack', color: '#10b981', objective: 'تحسين الربحية التشغيلية', actual: '12%', target: '15%', trend: 'up', percent: 80 },
+        { name: 'نسبة السيولة', icon: 'bi-droplet', color: '#3b82f6', objective: 'الحفاظ على سيولة كافية', actual: '1.8', target: '2.0', trend: 'flat', percent: 90 },
+        { name: 'معدل تحصيل الذمم', icon: 'bi-receipt', color: '#f59e0b', objective: 'تسريع التحصيل', actual: '60 يوم', target: '45 يوم', trend: 'up', percent: 75 },
+        { name: 'نسبة الانحراف عن الميزانية', icon: 'bi-bar-chart', color: '#ef4444', objective: 'ضبط الإنفاق ضمن الميزانية', actual: '8%', target: '5%', trend: 'down', percent: 62 },
+        { name: 'العائد على الاستثمار ROI', icon: 'bi-arrow-up-circle', color: '#8b5cf6', objective: 'تعظيم العائد على الاستثمارات', actual: '15%', target: '20%', trend: 'up', percent: 75 },
+      ],
+      operations: [
+        { name: 'كفاءة العمليات', icon: 'bi-gear-wide-connected', color: '#22c55e', objective: 'تحسين كفاءة العمليات التشغيلية', actual: '82%', target: '90%', trend: 'up', percent: 91 },
+        { name: 'نسبة الأتمتة', icon: 'bi-robot', color: '#8b5cf6', objective: 'أتمتة العمليات اليدوية', actual: '60%', target: '80%', trend: 'up', percent: 75 },
+        { name: 'وقت التنفيذ', icon: 'bi-stopwatch', color: '#f59e0b', objective: 'تقليل وقت تنفيذ العمليات', actual: '4 أيام', target: '2 يوم', trend: 'flat', percent: 50 },
+        { name: 'نسبة الأخطاء التشغيلية', icon: 'bi-exclamation-triangle', color: '#ef4444', objective: 'تقليل الأخطاء', actual: '5%', target: '2%', trend: 'down', percent: 60 },
+        { name: 'رضا العملاء الداخليين', icon: 'bi-emoji-smile', color: '#3b82f6', objective: 'رفع رضا الأقسام المستفيدة', actual: '75%', target: '85%', trend: 'up', percent: 88 },
+        { name: 'تكلفة الوحدة التشغيلية', icon: 'bi-cash', color: '#06b6d4', objective: 'خفض التكلفة التشغيلية', actual: '120 ر.س', target: '100 ر.س', trend: 'flat', percent: 83 },
+      ],
+    };
+    // القوالب الافتراضية للإدارات الأخرى
+    const _defaultTemplates = [
+      { name: 'مؤشر أداء رئيسي', icon: 'bi-speedometer2', color: '#667eea', objective: 'تحقيق الهدف الاستراتيجي', actual: '0%', target: '100%', trend: 'up', percent: 0 },
+      { name: 'نسبة الإنجاز', icon: 'bi-check2-all', color: '#22c55e', objective: 'إنجاز المشاريع في الوقت المحدد', actual: '60%', target: '90%', trend: 'up', percent: 67 },
+      { name: 'رضا المستفيدين', icon: 'bi-emoji-smile', color: '#f59e0b', objective: 'رفع رضا المستفيدين', actual: '70%', target: '85%', trend: 'up', percent: 82 },
+    ];
 
-      const _myTemplates = _deptTemplates[_dp] || _defaultTemplates;
+    const _myTemplates = _deptTemplates[_dp] || _defaultTemplates;
 
-      // استبدال kpiTemplates
-      if (typeof kpiTemplates !== 'undefined') {
-        kpiTemplates.length = 0;
-        _myTemplates.forEach(t => kpiTemplates.push(t));
-      }
+    // استبدال kpiTemplates
+    if (typeof kpiTemplates !== 'undefined') {
+      kpiTemplates.length = 0;
+      _myTemplates.forEach(t => kpiTemplates.push(t));
+    }
 
-      // استبدال HTML القوالب في المودال
-      const _tplContainer = document.querySelector('#kpiTplSection > div');
-      if (_tplContainer) {
-        let tplHtml = '';
-        _myTemplates.forEach((t, i) => {
-          tplHtml += `<div class="kpi-tpl" onclick="fillKpiTpl(${i})"
+    // استبدال HTML القوالب في المودال
+    const _tplContainer = document.querySelector('#kpiTplSection > div');
+    if (_tplContainer) {
+      let tplHtml = '';
+      _myTemplates.forEach((t, i) => {
+        tplHtml += `<div class="kpi-tpl" onclick="fillKpiTpl(${i})"
             style="background:${t.color}0a;border:1px solid ${t.color}25;border-radius:8px;padding:8px;cursor:pointer;text-align:center;transition:all 0.2s;font-size:10px"
             onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform=''">
             <i class="bi ${t.icon}" style="font-size:16px;color:${t.color};display:block;margin-bottom:2px"></i>
             <div style="font-weight:700">${t.name}</div>
           </div>`;
-        });
-        _tplContainer.style.gridTemplateColumns = 'repeat(3,1fr)';
-        _tplContainer.innerHTML = tplHtml;
-      }
+      });
+      _tplContainer.style.gridTemplateColumns = 'repeat(3,1fr)';
+      _tplContainer.innerHTML = tplHtml;
+    }
 
-      // استبدال اقتراحات الأسماء
-      const _nameInput = document.getElementById('formName');
-      if (_nameInput) {
-        const _sugContainer = _nameInput.parentElement.querySelector('div[style*="flex-wrap"]');
-        if (_sugContainer) {
-          _sugContainer.innerHTML = _myTemplates.slice(0, 3).map(t =>
-            `<span onclick="document.getElementById('formName').value=this.textContent;updateKpiPreview()"
+    // استبدال اقتراحات الأسماء
+    const _nameInput = document.getElementById('formName');
+    if (_nameInput) {
+      const _sugContainer = _nameInput.parentElement.querySelector('div[style*="flex-wrap"]');
+      if (_sugContainer) {
+        _sugContainer.innerHTML = _myTemplates.slice(0, 3).map(t =>
+          `<span onclick="document.getElementById('formName').value=this.textContent;updateKpiPreview()"
               style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(102,126,234,0.08);color:var(--primary);cursor:pointer;border:1px solid rgba(102,126,234,0.15)">${t.name}</span>`
-          ).join('');
-        }
+        ).join('');
       }
+    }
 
-      // تعديل openCreateModal ليعيّن الإدارة تلقائياً
-      const _origOpen = typeof openCreateModal === 'function' ? openCreateModal : null;
-      window.openCreateModal = function () {
-        if (_origOpen) _origOpen();
-        else {
-          document.getElementById('modalTitle').innerHTML = '<i class="bi bi-plus-circle"></i> مؤشر جديد';
-          document.getElementById('editId').value = '';
-          ['formName', 'formObj', 'formActual', 'formTarget'].forEach(id => document.getElementById(id).value = '');
-          document.getElementById('formTrend').value = 'up';
-          document.getElementById('formPercent').value = 0;
-          document.getElementById('kpiTplSection').style.display = '';
-          document.querySelectorAll('.kpi-tpl').forEach(el => { el.style.boxShadow = ''; });
-          if (typeof updateKpiPreview === 'function') updateKpiPreview();
-          new bootstrap.Modal(document.getElementById('kpiModal')).show();
+    // تعديل openCreateModal ليعيّن الإدارة تلقائياً
+    const _origOpen = typeof openCreateModal === 'function' ? openCreateModal : null;
+    window.openCreateModal = function () {
+      if (_origOpen) _origOpen();
+      else {
+        document.getElementById('modalTitle').innerHTML = '<i class="bi bi-plus-circle"></i> مؤشر جديد';
+        document.getElementById('editId').value = '';
+        ['formName', 'formObj', 'formActual', 'formTarget'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('formTrend').value = 'up';
+        document.getElementById('formPercent').value = 0;
+        document.getElementById('kpiTplSection').style.display = '';
+        document.querySelectorAll('.kpi-tpl').forEach(el => { el.style.boxShadow = ''; });
+        if (typeof updateKpiPreview === 'function') updateKpiPreview();
+          const modalEl = document.getElementById('kpiModal');
+          if (typeof bootstrap !== 'undefined') {
+              new bootstrap.Modal(modalEl).show();
+          } else {
+              modalEl.classList.add('show');
+              modalEl.style.display = 'block';
+          }
         }
-        // تعيين الإدارة تلقائياً وإخفاء الحقل
         const _fd = document.getElementById('formDept');
         if (_fd) {
-          _fd.value = _dn;
-          // لو القيمة مش موجودة، أضفها
           let found = false;
           for (const opt of _fd.options) {
             if (opt.value === _dn) { found = true; break; }
@@ -2065,14 +2009,14 @@
             newOpt.value = _dn;
             newOpt.textContent = _dn;
             _fd.appendChild(newOpt);
-            _fd.value = _dn;
           }
+          _fd.value = _dn;
           const fg = _fd.closest('.form-group');
           if (fg) fg.style.display = 'none';
         }
       };
 
-      console.log('[KPIs] ✅ dept detection applied:', _dn);
+    console.log('[KPIs] ✅ dept detection applied:', _dn);
     })();
   </script>
   <script src="/assets/js/path-tracker.js"></script>

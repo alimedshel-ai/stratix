@@ -848,13 +848,23 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script src="/assets/js/sidebar.js"></script>
+  <script src="/assets/js/ai-advisor.js"></script>
   <script>
     const token = localStorage.getItem('token');
     const user = localStorage.getItem('user');
     if (!token || !user) { sessionStorage.setItem('stratix_return_url', location.pathname + location.search); location.href = '/login?from=restore'; }
-    const userData = JSON.parse(user);
-    document.getElementById('navUserName').textContent = userData.name;
-    document.getElementById('navUserRole').textContent = userData.role;
+
+    let userData = {};
+    try {
+      userData = JSON.parse(user);
+    } catch (e) {
+      console.error('Failed to parse user data:', e);
+    }
+
+    document.getElementById('navUserName').textContent = userData.name || '—';
+    document.getElementById('navUserRole').textContent = userData.role || '—';
     document.getElementById('navUserInitial').textContent = (userData.name || 'U').charAt(0).toUpperCase();
 
     let currentPage = 1, editingId = null, modalInstance, entities = [];
@@ -875,7 +885,7 @@
         const d = await r.json();
         entities = d.entities || [];
         const sel = document.getElementById('uEntity');
-        sel.innerHTML = '<option value="">بدون كيان</option>' + entities.map(e => `<option value="${e.id}">${e.legalName || e.displayName}</option>`).join('');
+        sel.innerHTML = '<option value="">بدون كيان</option>' + entities.map(e => `<option value="${e.id}">${escapeHtml(e.legalName || e.displayName)}</option>`).join('');
       } catch (e) { console.error(e); }
     }
 
@@ -926,7 +936,7 @@
           <div class="accent-bar ${accentClass}"></div>
           <div class="uc-header">
             <div class="uc-avatar" style="background:${roleBgs[topRole]};color:${roleColors[topRole]}">${initial}</div>
-            <div class="uc-info"><h3>${u.name}</h3><div class="uc-email">${u.email}</div></div>
+              <div class="uc-info"><h3>${escapeHtml(u.name)}</h3><div class="uc-email">${escapeHtml(u.email)}</div></div>
           </div>
 
           <div class="uc-details">
@@ -937,19 +947,32 @@
           ${u.memberships?.length ? `<div class="uc-memberships">${u.memberships.map(m => `
             <div class="uc-membership">
               <i class="bi bi-building"></i>
-              <span style="flex:1">${m.entity?.legalName || m.entity?.displayName || '—'}</span>
+              <span style="flex:1">${escapeHtml(m.entity?.legalName || m.entity?.displayName || '—')}</span>
               <span class="role-badge role-${m.role}">${roleLabels[m.role] || m.role}</span>
             </div>`).join('')}</div>` : ''}
 
           <div class="uc-actions">
-            <button class="btn-action btn-edit" onclick="editUser('${u.id}','${esc(u.name)}','${esc(u.email)}')"><i class="bi bi-pencil"></i> تعديل</button>
-            <button class="btn-action btn-delete" onclick="deleteUser('${u.id}','${esc(u.name)}')"><i class="bi bi-trash"></i> حذف</button>
+              <button class="btn-action btn-edit" onclick="editUser('${u.id}','${escapeJs(u.name)}','${escapeJs(u.email)}')"><i class="bi bi-pencil"></i> تعديل</button>
+              <button class="btn-action btn-delete" onclick="deleteUser('${u.id}','${escapeJs(u.name)}')"><i class="bi bi-trash"></i> حذف</button>
           </div>
         </div>`;
       }).join('')}</div>`;
     }
 
-    function esc(s) { return (s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+    function escapeHtml(s) {
+      if (s == null) return '';
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function escapeJs(s) {
+      if (s == null) return '';
+      return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+    }
 
     function renderPagination(totalPages, current, total) {
       const p = document.getElementById('pagination');
@@ -1020,7 +1043,23 @@
     document.getElementById('addBtn').addEventListener('click', openCreate);
     document.getElementById('saveBtn').addEventListener('click', saveUser);
     document.getElementById('roleFilter').addEventListener('change', () => loadUsers(1));
-    let st; document.getElementById('searchInput').addEventListener('input', () => { clearTimeout(st); st = setTimeout(() => loadUsers(1), 300); });
+
+    // دالة Debounce لتخفيف الضغط على الخادم عند البحث المستمر
+    function debounce(func, delay) {
+      let timeoutId;
+      return function (...args) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          func.apply(this, args);
+        }, delay);
+      };
+    }
+
+    const handleSearch = debounce(() => {
+      loadUsers(1);
+    }, 500); // 500ms تعتبر مثالية لانتظار توقف المستخدم عن الكتابة قبل إرسال الطلب
+
+    document.getElementById('searchInput').addEventListener('input', handleSearch);
 
     document.addEventListener('DOMContentLoaded', () => {
       modalInstance = new bootstrap.Modal(document.getElementById('userModal'));
@@ -1028,9 +1067,6 @@
       loadUsers();
     });
   </script>
-  <script src="/assets/js/api.js"></script>
-    <script src="/assets/js/sidebar.js"></script>
-    <script src="/assets/js/ai-advisor.js"></script>
 </body>
 
 </html>

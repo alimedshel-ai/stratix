@@ -240,6 +240,7 @@ model Entity {
   housingUnits       HousingUnit[] // ✨ السكن (فحص HR)
   govPlatforms       GovPlatformStatus[] // ✨ المنصات الحكومية (فحص Gov)
   healthReports      CompanyHealthReport[] // ✨ تقارير صحة الشركة
+  dimensions         CompanyDimension?     @relation("EntityDimensions") // ✨ الأبعاد الثلاثة (المالي، الإداري، التوطين)
 
   @@index([companyId])
   @@index([sectorId])
@@ -2240,4 +2241,46 @@ model CompanyHealthReport {
   @@index([entityId, dimension])
   @@index([department])
   @@map("company_health_reports")
+}
+
+// =========================================
+// 31. COMPANY DIMENSIONS (PHASE 1 MVP) ✨
+// الأبعاد الثلاثة للبيانات الفعلية للشركات التجريبية
+// =========================================
+
+/// أبعاد التقييم (المالي، الإداري، التوطين)
+model CompanyDimension {
+  id       String @id @default(cuid())
+  entityId String @unique
+
+  // 1. البعد المالي (Financial)
+  financialScore   Float?  // المجموع (0-100)
+  revenueStreams   String? // هيكل الإيرادات
+  costStructure    String? // هيكل التكاليف
+  profitMargins    String? // الهوامش الربحية
+  financialNotes   String? // تفاصيل أخرى
+
+  // 2. البعد الإداري (Administrative)
+  adminScore       Float?  // المجموع (0-100)
+  orgStructure     String? // الهيكل التنظيمي
+  governance       String? // الحوكمة
+  processEffciency String? // كفاءة العمليات
+  adminNotes       String? // تفاصيل أخرى
+
+  // 3. بعد التوطين والامتثال (Localization)
+  localizationScore Float?  // المجموع (0-100)
+  nitaqatLevel      String? // أحمر، أخضر، بلاتيني، إلخ
+  saudizationRate   Float?  // نسبة الكوادر السعودية
+  laborCompliance   String? // التوافق مع وزارة الموارد
+  localNotes        String? // تفاصيل أخرى
+
+  evaluatedBy String?   // مقيم الحالة (المستشار)
+  evaluatedAt DateTime? // تاريخ التقييم الأخير
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  entity Entity @relation("EntityDimensions", fields: [entityId], references: [id], onDelete: Cascade)
+
+  @@map("company_dimensions")
 }

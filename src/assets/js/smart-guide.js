@@ -33,6 +33,12 @@ window.SmartGuide = (function () {
             const pa = JSON.parse(localStorage.getItem('painAmbition') || '{}');
             patternKey = pa.patternKey || '';
             hasDiagnostic = !!patternKey;
+
+            // التأكد من جلب الأبعاد في حال عدم مرور المستخدم بصفحة الألم والطموح
+            const dp = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || sessionStorage.getItem('diagnosticResult') || localStorage.getItem('diagnosticData') || '{}');
+            if (!hasDiagnostic && (dp.dimensions || dp.radarData || dp.answers)) {
+                hasDiagnostic = true;
+            }
         } catch (e) { }
 
         try {
@@ -49,7 +55,11 @@ window.SmartGuide = (function () {
             const sw = JSON.parse(localStorage.getItem('swotData') || localStorage.getItem('swot') || '{}');
             hasSWOT = !!(sw.strengths && sw.strengths.length > 0);
         } catch (e) { }
-        try { hasDirections = JSON.parse(localStorage.getItem('directions') || '[]').length > 0; } catch (e) { }
+        try {
+            let dirs = JSON.parse(localStorage.getItem('directions') || '[]');
+            let identity = JSON.parse(localStorage.getItem('stratix_identity_payload') || 'null');
+            hasDirections = dirs.length > 0 || !!identity;
+        } catch (e) { }
         try { hasInitiatives = JSON.parse(localStorage.getItem('initiatives') || '[]').length > 0; } catch (e) { }
         try {
             const ie = localStorage.getItem('internalEnvData') || localStorage.getItem('internal_env');
@@ -113,6 +123,10 @@ window.SmartGuide = (function () {
             } else if (hasObjectives && hasKPIs && hasInitiatives) {
                 guideHTML = _buildComplete();
             }
+        }
+        // ═══ مدراء الإدارات (Department Managers) ═══
+        else if (dashboardType === 'dept') {
+            guideHTML = _buildDeptDashboardGuide();
         }
         // ═══ Owner / Default ═══
         else {
@@ -364,6 +378,19 @@ window.SmartGuide = (function () {
             + '</div>'
             + '<a href="/ai-presentation.html" style="display:inline-flex;align-items:center;gap:6px;background:#22c55e;color:white;padding:8px 16px;border-radius:10px;text-decoration:none;font-size:12px;font-weight:700;"><i class="bi bi-easel3-fill"></i> العرض التقديمي</a>'
             + '</div></div>';
+    }
+
+    function _buildDeptDashboardGuide() {
+        return '<div style="background:linear-gradient(135deg, #3b82f615, #2563eb15); border:1px solid #3b82f630; border-radius:20px; padding:28px 24px;">'
+            + '<div style="display:flex; gap:20px; align-items:flex-start;">'
+            + '<div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#3b82f6,#2563eb);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;box-shadow:0 4px 15px rgba(59,130,246,0.3);">📋</div>'
+            + '<div style="flex:1;">'
+            + '<h3 style="font-size:16px;font-weight:800;color:#1e293b;margin:0 0 4px;">مرحباً بك في لوحة إدارتك</h3>'
+            + '<p style="font-size:13px;color:#64748b;margin:0 0 16px;line-height:1.7;">يرجى إكمال التقييم الخاص بإدارتك وتحديث مؤشرات الأداء (KPIs) لرفعها إلى الإدارة العليا تلقائياً.</p>'
+            + '<div style="display:flex;gap:10px;flex-wrap:wrap;">'
+            + '<a href="/dept-deep.html" style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;padding:10px 20px;border-radius:12px;text-decoration:none;font-size:13px;font-weight:700;"><i class="bi bi-ui-checks"></i> إكمال التقييم</a>'
+            + '<a href="/kpis.html" style="display:inline-flex;align-items:center;gap:6px;background:#f1f5f9;color:#64748b;padding:10px 20px;border-radius:12px;text-decoration:none;font-size:13px;font-weight:600;"><i class="bi bi-graph-up-arrow"></i> تحديث المؤشرات</a>'
+            + '</div></div></div></div>';
     }
 
     return { render: render };

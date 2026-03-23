@@ -822,7 +822,8 @@
         }
     </script>
     <script>
-        /* Legacy token redirect removed */
+        const token = localStorage.getItem('token');
+        if (!token) { sessionStorage.setItem('stratix_return_url', location.pathname + location.search); location.href = '/login?from=restore'; }
         const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         document.getElementById('userName').textContent = user.name || 'مستخدم';
@@ -848,7 +849,7 @@
 
         async function loadVersions() {
             try {
-                const res = await window.apiRequest('/api/versions', { headers }); const data = await res.json();
+                const res = await fetch('/api/versions', { headers }); const data = await res.json();
                 allVersions = data.versions || [];
                 const sel = document.getElementById('versionFilter');
                 const selModal = document.getElementById('revVersion');
@@ -868,7 +869,7 @@
                 const stat = document.getElementById('statusFilter').value;
                 const dec = document.getElementById('decisionFilter').value;
                 if (vId) url += `versionId=${vId}&`; if (stat) url += `status=${stat}&`; if (dec) url += `decision=${dec}&`;
-                const res = await window.apiRequest(url, { headers }); const data = await res.json();
+                const res = await fetch(url, { headers }); const data = await res.json();
                 allReviews = data.reviews || data || [];
                 updateStats();
                 if (!allReviews.length) { container.innerHTML = '<div class="empty-state"><div class="emoji">📋</div><h4>لا توجد مراجعات</h4><p>اضغط "مراجعة جديدة" للبدء</p></div>'; return; }
@@ -943,7 +944,7 @@
 
             try {
                 // 1. سحب KPIs
-                const kpiRes = await window.apiRequest('/api/kpis', { headers }).catch(() => null);
+                const kpiRes = await fetch('/api/kpis', { headers }).catch(() => null);
                 if (kpiRes && kpiRes.ok) {
                     const kpis = await kpiRes.json();
                     const kpiArr = Array.isArray(kpis) ? kpis : (kpis.kpis || []);
@@ -958,7 +959,7 @@
                 }
 
                 // 2. سحب المبادرات
-                const initRes = await window.apiRequest('/api/initiatives', { headers }).catch(() => null);
+                const initRes = await fetch('/api/initiatives', { headers }).catch(() => null);
                 if (initRes && initRes.ok) {
                     const inits = await initRes.json();
                     const initArr = Array.isArray(inits) ? inits : (inits.initiatives || []);
@@ -974,7 +975,7 @@
                 }
 
                 // 3. سحب المهام
-                const taskRes = await window.apiRequest('/api/tasks', { headers }).catch(() => null);
+                const taskRes = await fetch('/api/tasks', { headers }).catch(() => null);
                 if (taskRes && taskRes.ok) {
                     const tasks = await taskRes.json();
                     const taskArr = Array.isArray(tasks) ? tasks : (tasks.tasks || []);
@@ -987,7 +988,7 @@
                 }
 
                 // 4. سحب صحة الشركة
-                const healthRes = await window.apiRequest('/api/company-health/summary', { headers }).catch(() => null);
+                const healthRes = await fetch('/api/company-health/summary', { headers }).catch(() => null);
                 if (healthRes && healthRes.ok) {
                     const health = await healthRes.json();
                     if (health.dimensions && health.dimensions.length) {
@@ -1047,7 +1048,7 @@
 
         async function edit(id) {
             try {
-                const res = await window.apiRequest(`/api/strategic/reviews/${id}`, { headers }); const r = await res.json();
+                const res = await fetch(`/api/strategic/reviews/${id}`, { headers }); const r = await res.json();
                 document.getElementById('editId').value = r.id; document.getElementById('revTitle').value = r.title;
                 document.getElementById('revDate').value = r.reviewDate ? r.reviewDate.split('T')[0] : '';
                 document.getElementById('revNotes').value = r.notes || ''; document.getElementById('revFindings').value = r.findings || '';
@@ -1064,30 +1065,87 @@
         async function save() {
             const editId = document.getElementById('editId').value;
             const title = document.getElementById('revTitle').value.trim();
-            if (!title) return alert('الرجاء إدخال العنوان');
-            const body = {
-                title, reviewDate: document.getElementById('revDate').value || null,
-                notes: document.getElementById('revNotes').value.trim() || null,
-                findings: document.getElementById('revFindings').value.trim() || null,
-                decision: document.getElementById('revDecision').value || null,
-                status: document.getElementById('revStatus').value, type: document.getElementById('revType').value,
+            const reviewDate = document.getElementById('revDate').value || new Date().toISOString();
+            const notes = document.getElementById('revNotes').value.trim();
+            const findings = document.getElementById('revFindings').value.trim();
+            const decision = document.getElementById('revDecision').value;
+            const status = document.getElementById('revStatus').value;
+            const type = document.getElementById('revType').value;
+            const versionId = document.getElementById('revVersion').value;
+
+            if (!title) return alert('يرجى إدخال العنوان');
+
+            const payload = {
+                title, reviewDate, notes, findings, decision, status, type, versionId
             };
-            // الإصدار: من النموذج أو من الفلتر
-            const versionId = document.getElementById('revVersion').value || document.getElementById('versionFilter').value;
-            if (!editId && versionId) body.versionId = versionId;
+
             try {
-                const url = editId ? `/api/strategic/reviews/${editId}` : '/api/strategic/reviews';
-                const res = await window.apiRequest(url, { method: editId ? 'PATCH' : 'POST', headers, body: JSON.stringify(body) });
-                if (!res.ok) throw new Error('Failed');
-                closeModal(); loadReviews();
-            } catch (e) { alert('خطأ في الحفظ'); }
+                if (editId) {
+                    await fetch(`/api/strategic/reviews/${editId}`, {
+                        method: 'PATCH',
+                        headers,
+                        body: JSON.stringify(payload)
+                    });
+                } else {
+                    await fetch('/api/strategic/reviews', {
+                        method: 'POST',
+                        headers,
+                        body: JSON.stringify(payload)
+                    });
+                }
+                closeModal();
+                loadReviews();
+            } catch (e) {
+                alert('حدث خطأ في الحفظ');
+            }
         }
 
-        async function del(id) { if (!confirm('هل أنت متأكد من الحذف؟')) return; try { await window.apiRequest(`/api/strategic/reviews/${id}`, { method: 'DELETE', headers }); loadReviews(); } catch (e) { alert('خطأ'); } }
-        function logout() { localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.href = '/login.html'; }
+        async function del(id) {
+            if (!confirm('هل أنت متأكد من الحذف؟')) return;
+            try {
+                await fetch(`/api/strategic/reviews/${id}`, { method: 'DELETE', headers });
+                loadReviews();
+            } catch (e) {
+                alert('حدث خطأ في الحذف');
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/login.html';
+        }
+
         init();
     </script>
-    <script src="/assets/js/impersonation.js"></script>
+</body>
+
+</html>
+if (!title) return alert('الرجاء إدخال العنوان');
+const body = {
+title, reviewDate: document.getElementById('revDate').value || null,
+notes: document.getElementById('revNotes').value.trim() || null,
+findings: document.getElementById('revFindings').value.trim() || null,
+decision: document.getElementById('revDecision').value || null,
+status: document.getElementById('revStatus').value, type: document.getElementById('revType').value,
+};
+// الإصدار: من النموذج أو من الفلتر
+const versionId = document.getElementById('revVersion').value || document.getElementById('versionFilter').value;
+if (!editId && versionId) body.versionId = versionId;
+try {
+const url = editId ? `/api/strategic/reviews/${editId}` : '/api/strategic/reviews';
+const res = await fetch(url, { method: editId ? 'PATCH' : 'POST', headers, body: JSON.stringify(body) });
+if (!res.ok) throw new Error('Failed');
+closeModal(); loadReviews();
+} catch (e) { alert('خطأ في الحفظ'); }
+}
+
+async function del(id) { if (!confirm('هل أنت متأكد من الحذف؟')) return; try { await
+fetch(`/api/strategic/reviews/${id}`, { method: 'DELETE', headers }); loadReviews(); } catch (e) { alert('خطأ'); } }
+function logout() { localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.href =
+'/login.html'; }
+init();
+</script>
+<script src="/assets/js/impersonation.js"></script>
 </body>
 
 </html>

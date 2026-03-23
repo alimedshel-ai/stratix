@@ -19,7 +19,9 @@ const ROLE_LABELS = {
   COMPANY_MANAGER: 'مالك',
   BOARD_VIEWER: 'عضو مجلس / مستثمر',
   SUPER_ADMIN: 'مدير النظام',
-  OWNER: 'مالك' // إضافة OWNER للتوافق مع القيم القديمة
+  OWNER: 'مالك', // إضافة OWNER للتوافق مع القيم القديمة
+  DATA_ENTRY: 'مُدخل بيانات',
+  VIEWER: 'مشاهد'
 };
 
 const DEPT_LABELS = {
@@ -39,6 +41,11 @@ const DEPT_LABELS = {
 function getUserRoleLabel(userData) {
   if (!userData) return '';
   if (userData.systemRole === 'SUPER_ADMIN') return ROLE_LABELS.SUPER_ADMIN;
+
+  // إعطاء الأولوية لدور مدخل البيانات والمشاهد حتى لو كان تابعاً لإدارة
+  if (userData.role === 'DATA_ENTRY') return ROLE_LABELS.DATA_ENTRY;
+  if (userData.role === 'VIEWER') return ROLE_LABELS.VIEWER;
+
   if (userData.userType === 'DEPT_MANAGER') {
     const deptName = userData.department?.name || DEPT_LABELS[userData.department?.key] || '';
     return deptName ? `مدير ${deptName}` : ROLE_LABELS.DEPT_MANAGER;
@@ -66,7 +73,7 @@ async function initSidebar() {
 
   const token = localStorage.getItem('token') || '';
   const _urlDeptParam = new URLSearchParams(currentSearch).get('dept') || '';
-  const _v10Dept = userData.department?.key || _urlDeptParam || '';
+  let _v10Dept = userData.department?.key || _urlDeptParam || localStorage.getItem('stratix_v10_dept') || '';
 
   // === قراءة الدور من السيرفر مباشرة ===
   let userRole = userData.role || 'VIEWER';
@@ -74,6 +81,16 @@ async function initSidebar() {
   let userType = userData.userType || 'COMPANY_MANAGER';
   let entityId = userData.entity?.id || '';
   let isSuperAdmin = systemRole === 'SUPER_ADMIN';
+
+  if (!_v10Dept && userData.userCategory && userData.userCategory.startsWith('DEPT_')) {
+    const catDept = userData.userCategory.replace('DEPT_', '').toLowerCase();
+    const MAP = { hr: 'hr', finance: 'finance', marketing: 'marketing', ops: 'operations', service: 'cs', sales: 'sales', it: 'it', legal: 'compliance', quality: 'quality', pmo: 'projects' };
+    _v10Dept = MAP[catDept] || catDept;
+  }
+  if (_v10Dept) {
+    _v10Dept = _v10Dept.toLowerCase();
+    localStorage.setItem('stratix_v10_dept', _v10Dept);
+  }
 
   // تحديد الصلاحيات والمسار الرئيسي (تم رفعه ليصبح متاحاً على مستوى الملف بالكامل)
   const isViewerOrDE = ['VIEWER', 'DATA_ENTRY'].includes(userRole) && systemRole !== 'SUPER_ADMIN';
@@ -86,38 +103,6 @@ async function initSidebar() {
       : userType === 'BOARD_VIEWER' ? '/board-dashboard.html'
         : userType === 'DEPT_MANAGER' ? '/dept-dashboard.html'
           : '/dashboard.html';
-
-  // 🔗 تعديل كل روابط النافيقيشن لمدير الإدارة (الاعتماد على userData فقط)
-  const activeDeptKey = userData.department?.key || '';
-  if (activeDeptKey && userType === 'DEPT_MANAGER') {
-    // TODO: [Tech Debt] صفحة dept-dashboard.html تحتاج تعديل لتقرأ userData.department.key مباشرة من API بدلاً من الـ URL
-    // تأخير التنفيذ (setTimeout 0) هنا يُعتبر ضرورة هيكلية لضمان اكتمال حقن روابط السايدبار في الدوم من قبل أداة البناء اللاحقة
-    setTimeout(() => {
-      // 1) البراند → لوحة الإدارة (بدون بارامترات)
-      const _bl = document.querySelector('a.brand, .navbar-brand');
-      if (_bl) _bl.href = '/dept-dashboard'; // مسار نظيف، الصفحة تعتمد على userData.department.key
-
-      // 2) كل الروابط في top-nav → تعديل المسارات (بدون ?dept=)
-      document.querySelectorAll('.nav-links a, .top-nav a').forEach(a => {
-        if (!a.href || a.classList.contains('brand') || a.classList.contains('navbar-brand')) return;
-        const url = new URL(a.href, location.origin);
-        const path = url.pathname;
-        if (path === '/dashboard' || path === '/dashboard.html') {
-          a.href = '/dept-dashboard'; // مسار نظيف
-          return;
-        }
-        const deptPages = [
-          '/dept-dashboard', '/internal-env', '/dept-deep', '/dept-diagnostic',
-          '/dept-questionnaire', '/hr-deep', '/hr-audit', '/finance-deep',
-          '/swot', '/directions'
-        ];
-        // إذا كان المسار ضمن قائمة صفحات الإدارة، نحوله إلى مسار نظيف
-        if (deptPages.some(p => path.startsWith(p))) {
-          a.href = path; // يحافظ على المسار الأصلي بدون بارامترات
-        }
-      });
-    }, 0);
-  }
 
   // === قواعد الرؤية حسب نوع المستخدم ===
   // EXPLORER:        المسار ١ — رحلة مبسطة (مالية + AI بسيط)
@@ -704,9 +689,14 @@ async function initSidebar() {
     const _mgrDept = _v10Dept || 'compliance';
     const _mgrDeptName = _deptNames[_mgrDept] || 'إدارتك';
 
+    // Fix for custom deep links
+    let deepLink = `/dept-deep.html?dept=${_mgrDept}&single=1`;
+    if (_mgrDept === 'hr') deepLink = '/hr-deep.html';
+    if (_mgrDept === 'finance') deepLink = '/finance-deep.html';
+
     const journeySteps = [
       { num: 1, label: `بيئة ${_mgrDeptName}`, href: `/internal-env.html?dept=${_mgrDept}`, icon: 'bi-heart-pulse' },
-      { num: 2, label: `تحليل ${_mgrDeptName} العميق`, href: `/dept-deep.html?dept=${_mgrDept}&single=1`, icon: 'bi-search-heart' },
+      { num: 2, label: `تحليل ${_mgrDeptName} العميق`, href: deepLink, icon: 'bi-search-heart' },
       { num: 3, label: 'تحليل SWOT', href: `/swot.html?dept=${_mgrDept}`, icon: 'bi-grid-3x3-gap-fill' },
       { num: 4, label: 'التوجهات', href: `/directions.html?dept=${_mgrDept}`, icon: 'bi-compass-fill' },
       { num: 5, label: 'مؤشرات الأداء', href: `/kpis.html?dept=${_mgrDept}`, icon: 'bi-graph-up-arrow' },
@@ -866,9 +856,9 @@ async function initSidebar() {
   // === كل الإدارات المتاحة ===
   const ALL_DEPT_ITEMS = [
     { label: 'الامتثال والحوكمة', href: '/dept-deep.html?dept=compliance', icon: 'bi-shield-fill-check', key: 'compliance' },
-    { label: 'المالية', href: '/dept-deep.html?dept=finance', icon: 'bi-cash-coin', key: 'finance' },
+    { label: 'المالية', href: '/finance-deep.html', icon: 'bi-cash-coin', key: 'finance' },
     { label: 'المبيعات', href: '/dept-deep.html?dept=sales', icon: 'bi-graph-up-arrow', key: 'sales' },
-    { label: 'الموارد البشرية', href: '/dept-deep.html?dept=hr', icon: 'bi-people-fill', key: 'hr' },
+    { label: 'الموارد البشرية', href: '/hr-deep.html', icon: 'bi-people-fill', key: 'hr' },
     { label: 'التسويق', href: '/dept-deep.html?dept=marketing', icon: 'bi-megaphone-fill', key: 'marketing' },
     { label: 'العمليات', href: '/dept-deep.html?dept=operations', icon: 'bi-gear-wide-connected', key: 'operations' },
     { label: 'الخدمات المساندة', href: '/dept-deep.html?dept=support', icon: 'bi-wrench-adjustable', key: 'support' },
@@ -884,10 +874,14 @@ async function initSidebar() {
     const dName = deptNames[_v10Dept] || _v10Dept;
 
     if (deptItem) {
+      let customDeepLink = `/dept-deep.html?dept=${_v10Dept}&single=1`;
+      if (_v10Dept === 'hr') customDeepLink = '/hr-deep.html';
+      if (_v10Dept === 'finance') customDeepLink = '/finance-deep.html';
+
       // أدوات التحليل الوظيفي لإدارته
       filteredDeptItems = [
         { label: 'تشخيص سريع', href: `/dept-diagnostic.html?dept=${_v10Dept}`, icon: 'bi-lightning-charge-fill' },
-        { label: 'تشخيص عميق', href: `/dept-deep.html?dept=${_v10Dept}&single=1`, icon: 'bi-search-heart' },
+        { label: 'تشخيص عميق', href: customDeepLink, icon: 'bi-search-heart' },
       ];
 
       // === أدوات مخصصة لكل إدارة ===
@@ -1744,29 +1738,29 @@ async function initSidebar() {
     });
 
     // 🔧 إصلاح شامل: بعد بناء الـ sidebar، أضف ?dept= لكل الروابط اللي ما فيها
-    if (_urlDeptParam && userType === 'DEPT_MANAGER') {
+    if (_v10Dept && userType === 'DEPT_MANAGER') {
       setTimeout(() => {
         const _deptPages = ['/kpis.html', '/kpis', '/swot.html', '/swot', '/directions.html', '/directions',
           '/objectives.html', '/objectives', '/initiatives.html', '/initiatives',
           '/internal-env.html', '/dept-deep.html', '/company-health.html',
           '/intelligence.html', '/intelligence', '/kpi-entries.html', '/tasks.html',
           '/auto-reports.html', '/choices.html'];
-        document.querySelectorAll('.stx-sidebar a, aside a').forEach(a => {
-          if (!a.href) return;
+        document.querySelectorAll('a').forEach(a => {
+          if (!a.href || a.href.startsWith('javascript:')) return;
           try {
             const url = new URL(a.href, location.origin);
             // dashboard → dept-dashboard
             if (url.pathname === '/dashboard.html' || url.pathname === '/dashboard') {
-              a.href = '/dept-dashboard.html?dept=' + _urlDeptParam;
+              a.href = '/dept-dashboard.html?dept=' + _v10Dept;
               return;
             }
             if (_deptPages.includes(url.pathname) && !url.searchParams.get('dept')) {
-              url.searchParams.set('dept', _urlDeptParam);
+              url.searchParams.set('dept', _v10Dept);
               a.href = url.toString();
             }
           } catch (e) { }
         });
-        console.log('[Sidebar] ✅ sidebar links patched with dept:', _urlDeptParam);
+        console.log('[Sidebar] ✅ sidebar links patched with dept:', _v10Dept);
       }, 500);
     }
 

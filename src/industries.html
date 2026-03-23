@@ -900,20 +900,29 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script src="/assets/js/sidebar.js"></script>
+  <script src="/assets/js/ai-advisor.js"></script>
   <script>
     const token = localStorage.getItem('token');
     const user = localStorage.getItem('user');
     if (!token || !user) { sessionStorage.setItem('stratix_return_url', location.pathname + location.search); location.href = '/login?from=restore'; }
-    const userData = JSON.parse(user);
-    document.getElementById('userName').textContent = userData.name;
-    document.getElementById('userRole').textContent = userData.role;
+
+    let userData = {};
+    try {
+      userData = JSON.parse(user);
+    } catch (e) {
+      console.error('Failed to parse user data:', e);
+    }
+    document.getElementById('userName').textContent = userData.name || '—';
+    document.getElementById('userRole').textContent = userData.role || '—';
     document.getElementById('userInitial').textContent = (userData.name || 'U').charAt(0).toUpperCase();
 
     let currentPage = 1, editingId = null, formModalInstance, detailsModalInstance;
     let allSectors = [];
 
     async function api(url, opts = {}) {
-      const r = await window.apiRequest(url, { ...opts, headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...(opts.headers || {}) } });
+      const r = await fetch(url, { ...opts, headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...(opts.headers || {}) } });
       if (r.status === 401) { logout(); return null; }
       return r.json();
     }
@@ -960,7 +969,20 @@
       renderPagination(data.totalPages || 1, page, data.total || 0);
     }
 
-    function esc(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+    function escapeHtml(s) {
+      if (s == null) return '';
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function escapeJs(s) {
+      if (s == null) return '';
+      return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+    }
 
     function renderItems(items) {
       const c = document.getElementById('container');
@@ -972,17 +994,17 @@
         const cnt = s._count?.entities || 0;
         const sectorChips = (s.sectors || []).map(sec => {
           const cls = sec.code === 'PVT' ? 'pvt' : sec.code === 'GOV' ? 'gov' : sec.code === 'NPO' ? 'npo' : '';
-          return `<span class="sector-chip ${cls}">${sec.nameAr}</span>`;
+          return `<span class="sector-chip ${cls}">${escapeHtml(sec.nameAr)}</span>`;
         }).join('');
         return `<div class="item-card"><div class="accent-bar"></div>
-          <div class="ic-header"><div class="ic-icon"><i class="bi bi-grid"></i></div><div class="ic-title"><h3>${s.nameAr || s.nameEn}</h3><div class="ic-subtitle">${s.nameEn}</div></div></div>
+          <div class="ic-header"><div class="ic-icon"><i class="bi bi-grid"></i></div><div class="ic-title"><h3>${escapeHtml(s.nameAr || s.nameEn)}</h3><div class="ic-subtitle">${escapeHtml(s.nameEn)}</div></div></div>
           ${sectorChips ? `<div class="sector-chips">${sectorChips}</div>` : ''}
-          <div class="ic-details"><div class="ic-detail"><div class="ic-detail-label">الرمز</div><div class="ic-detail-value" style="color:var(--info)">${s.code || '—'}</div></div><div class="ic-detail"><div class="ic-detail-label">عدد الكيانات</div><div class="ic-detail-value" style="color:var(--success)">${cnt}</div></div></div>
-          <div class="ic-badges"><span class="ic-badge badge-code"><i class="bi bi-hash"></i> ${s.code || '—'}</span><span class="ic-badge badge-entities"><i class="bi bi-building"></i> ${cnt} كيان</span></div>
+          <div class="ic-details"><div class="ic-detail"><div class="ic-detail-label">الرمز</div><div class="ic-detail-value" style="color:var(--info)">${escapeHtml(s.code || '—')}</div></div><div class="ic-detail"><div class="ic-detail-label">عدد الكيانات</div><div class="ic-detail-value" style="color:var(--success)">${cnt}</div></div></div>
+          <div class="ic-badges"><span class="ic-badge badge-code"><i class="bi bi-hash"></i> ${escapeHtml(s.code || '—')}</span><span class="ic-badge badge-entities"><i class="bi bi-building"></i> ${cnt} كيان</span></div>
           <div class="ic-actions">
             <button class="btn-action btn-view" onclick="viewItem('${s.id}')"><i class="bi bi-eye"></i> عرض</button>
             <button class="btn-action btn-edit" onclick="editItem('${s.id}')"><i class="bi bi-pencil"></i> تعديل</button>
-            <button class="btn-action btn-delete" onclick="deleteItem('${s.id}','${esc(s.nameAr || s.nameEn)}')"><i class="bi bi-trash"></i> حذف</button>
+            <button class="btn-action btn-delete" onclick="deleteItem('${s.id}','${escapeJs(s.nameAr || s.nameEn)}')"><i class="bi bi-trash"></i> حذف</button>
           </div></div>`;
       }).join('')}</div>`;
     }
@@ -1024,7 +1046,7 @@
       if (!nameEn || !nameAr || !code) { err.textContent = 'جميع الحقول مطلوبة'; err.style.display = 'block'; return; }
       const url = editingId ? `/api/industries/${editingId}` : '/api/industries';
       try {
-        const r = await window.apiRequest(url, { method: editingId ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ nameEn, nameAr, code, sectorIds }) });
+        const r = await fetch(url, { method: editingId ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ nameEn, nameAr, code, sectorIds }) });
         const d = await r.json();
         if (!r.ok) throw new Error(d.message || 'خطأ');
         formModalInstance.hide(); loadData(currentPage);
@@ -1033,26 +1055,26 @@
 
     async function deleteItem(id, name) {
       if (!confirm(`هل تريد حذف النشاط "${name}"؟`)) return;
-      try { const r = await window.apiRequest(`/api/industries/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } }); const d = await r.json(); if (!r.ok) { alert(d.message || 'خطأ'); return; } loadData(currentPage); } catch (e) { alert('خطأ: ' + e.message); }
+      try { const r = await fetch(`/api/industries/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } }); const d = await r.json(); if (!r.ok) { alert(d.message || 'خطأ'); return; } loadData(currentPage); } catch (e) { alert('خطأ: ' + e.message); }
     }
 
     async function viewItem(id) {
       const d = await api(`/api/industries/${id}`);
       if (!d?.industry) return;
       const s = d.industry;
-      document.getElementById('detailsTitle').textContent = s.nameAr || s.nameEn;
-      let h = `<div class="details-panel"><div class="ic-details" style="margin-bottom:0"><div class="ic-detail"><div class="ic-detail-label">الاسم بالإنجليزية</div><div class="ic-detail-value">${s.nameEn}</div></div><div class="ic-detail"><div class="ic-detail-label">الاسم بالعربية</div><div class="ic-detail-value">${s.nameAr || '—'}</div></div><div class="ic-detail"><div class="ic-detail-label">الرمز</div><div class="ic-detail-value" style="color:var(--info)">${s.code || '—'}</div></div><div class="ic-detail"><div class="ic-detail-label">عدد الكيانات</div><div class="ic-detail-value" style="color:var(--success)">${s.entities?.length || 0}</div></div></div></div>`;
+      document.getElementById('detailsTitle').textContent = escapeHtml(s.nameAr || s.nameEn);
+      let h = `<div class="details-panel"><div class="ic-details" style="margin-bottom:0"><div class="ic-detail"><div class="ic-detail-label">الاسم بالإنجليزية</div><div class="ic-detail-value">${escapeHtml(s.nameEn)}</div></div><div class="ic-detail"><div class="ic-detail-label">الاسم بالعربية</div><div class="ic-detail-value">${escapeHtml(s.nameAr || '—')}</div></div><div class="ic-detail"><div class="ic-detail-label">الرمز</div><div class="ic-detail-value" style="color:var(--info)">${escapeHtml(s.code || '—')}</div></div><div class="ic-detail"><div class="ic-detail-label">عدد الكيانات</div><div class="ic-detail-value" style="color:var(--success)">${s.entities?.length || 0}</div></div></div></div>`;
 
       // Sectors
       if (s.sectors?.length) {
         h += `<h4 style="font-size:15px;font-weight:700;margin-bottom:12px"><i class="bi bi-diagram-3" style="color:var(--secondary)"></i> القطاعات المرتبطة</h4><div class="sector-chips" style="margin-bottom:16px">${s.sectors.map(sec => {
           const cls = sec.code === 'PVT' ? 'pvt' : sec.code === 'GOV' ? 'gov' : sec.code === 'NPO' ? 'npo' : '';
-          return `<span class="sector-chip ${cls}" style="font-size:12px;padding:4px 14px">${sec.nameAr}</span>`;
+          return `<span class="sector-chip ${cls}" style="font-size:12px;padding:4px 14px">${escapeHtml(sec.nameAr)}</span>`;
         }).join('')}</div>`;
       }
 
       // Entities
-      if (s.entities?.length) { h += `<h4 style="font-size:15px;font-weight:700;margin-bottom:12px"><i class="bi bi-building" style="color:var(--primary)"></i> الكيانات المرتبطة</h4><ul class="entity-list">${s.entities.map(e => `<li><i class="bi bi-building"></i><span>${e.legalName || e.displayName}</span></li>`).join('')}</ul>`; }
+      if (s.entities?.length) { h += `<h4 style="font-size:15px;font-weight:700;margin-bottom:12px"><i class="bi bi-building" style="color:var(--primary)"></i> الكيانات المرتبطة</h4><ul class="entity-list">${s.entities.map(e => `<li><i class="bi bi-building"></i><span>${escapeHtml(e.legalName || e.displayName)}</span></li>`).join('')}</ul>`; }
       else { h += `<div style="text-align:center;padding:20px;color:var(--text-muted)"><i class="bi bi-building" style="font-size:24px;display:block;margin-bottom:6px"></i>لا توجد كيانات مرتبطة</div>`; }
       document.getElementById('detailsBody').innerHTML = h;
       detailsModalInstance.show();
@@ -1063,7 +1085,20 @@
     document.getElementById('logoutBtn').addEventListener('click', logout);
     document.getElementById('addBtn').addEventListener('click', openCreate);
     document.getElementById('saveBtn').addEventListener('click', save);
-    let st; document.getElementById('searchInput').addEventListener('input', () => { clearTimeout(st); st = setTimeout(() => loadData(1), 300); });
+
+    // دالة Debounce لتخفيف الضغط على الخادم عند البحث المستمر
+    function debounce(func, delay) {
+      let timeoutId;
+      return function (...args) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          func.apply(this, args);
+        }, delay);
+      };
+    }
+
+    const handleSearch = debounce(() => { loadData(1); }, 500);
+    document.getElementById('searchInput').addEventListener('input', handleSearch);
 
     document.addEventListener('DOMContentLoaded', async () => {
       formModalInstance = new bootstrap.Modal(document.getElementById('formModal'));
@@ -1072,9 +1107,6 @@
       loadData();
     });
   </script>
-  <script src="/assets/js/api.js"></script>
-    <script src="/assets/js/sidebar.js"></script>
-    <script src="/assets/js/ai-advisor.js"></script>
 </body>
 
 </html>

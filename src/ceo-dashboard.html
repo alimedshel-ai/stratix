@@ -917,24 +917,65 @@
             <div style="max-width:1200px;margin:0 auto;padding:0 20px;">
                 <div id="smartContextWelcome" style="margin-top:16px;"></div>
             </div>
-            <script src="/assets/js/smart-context.js"></script>
+            <script src="/assets/js/smart-context.js?v=3"></script>
             <script>SmartContext.renderWelcome('smartContextWelcome');</script>
 
             <!-- ⚡ الإشارة الذكية — Smart Pings (Phase 13A) -->
             <div style="max-width:1200px;margin:0 auto;padding:0 20px;">
                 <div id="smartPingsContainer" style="display:none; margin-bottom:16px;"></div>
             </div>
-            <script src="/assets/js/smart-pings.js"></script>
+            <script src="/assets/js/smart-pings.js?v=3"></script>
             <script>SmartPings.render('smartPingsContainer');</script>
 
             <!-- 🧭 بطاقة الإرشاد الذكي -->
             <div style="max-width:1200px;margin:0 auto;padding:0 20px;">
                 <div id="smartGuideCard" style="display:none; margin-bottom:0;"></div>
             </div>
-            <script src="/assets/js/smart-guide.js"></script>
+            <script src="/assets/js/smart-guide.js?v=3"></script>
             <script>SmartGuide.render('smartGuideCard', 'ceo');</script>
 
             <div class="ceo-grid">
+
+                <!-- 🌟 الأبعاد الثلاثة للشركة (Phase 1 MVP) -->
+                <div class="pulse-card ceo-grid-full" id="dimensionsSection" style="cursor:pointer;"
+                    onclick="location.href='/company-dimensions.html'">
+                    <div
+                        style="position:absolute;top:0;right:0;left:0;height:4px;background:linear-gradient(90deg, #10b981, #3b82f6, #f59e0b);border-radius:16px 16px 0 0">
+                    </div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
+                        <div style="display:flex;align-items:center;gap:14px">
+                            <div
+                                style="width:52px;height:52px;border-radius:14px;background:rgba(59,130,246,0.1);display:flex;align-items:center;justify-content:center;font-size:26px">
+                                🎯</div>
+                            <div>
+                                <div style="font-size:12px;color:var(--muted)">أبعاد التقييم المرجعي (MVP)</div>
+                                <div style="font-size:22px;font-weight:900">الأبعاد الأساسية </div>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:30px;flex-wrap:wrap">
+                            <div style="text-align:center">
+                                <div style="font-size:11px;color:var(--muted)">المالي</div>
+                                <div style="font-size:20px;font-weight:800;color:var(--green)" id="dimFin">—</div>
+                            </div>
+                            <div style="text-align:center">
+                                <div style="font-size:11px;color:var(--muted)">الإداري</div>
+                                <div style="font-size:20px;font-weight:800;color:var(--blue)" id="dimAdm">—</div>
+                            </div>
+                            <div style="text-align:center">
+                                <div style="font-size:11px;color:var(--muted)">التوطين</div>
+                                <div style="font-size:20px;font-weight:800;color:var(--yellow)" id="dimLoc">—</div>
+                            </div>
+                            <div style="text-align:center; padding-right: 15px; border-right: 1px solid var(--border);">
+                                <div style="font-size:11px;color:var(--muted)">نطاقات</div>
+                                <div style="font-size:14px;font-weight:700; margin-top:4px;" id="dimNitaqat">—</div>
+                            </div>
+                        </div>
+                        <a href="/company-dimensions.html"
+                            style="padding:8px 18px;background:rgba(102,126,234,0.1);color:var(--primary);border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:6px">
+                            <i class="bi bi-pencil-square"></i> إدارة التقييم
+                        </a>
+                    </div>
+                </div>
 
                 <!-- 📊 Break-Even Card (new) -->
                 <div class="pulse-card ceo-grid-full" id="breakEvenSection" style="display:none;cursor:pointer"
@@ -1263,6 +1304,38 @@
           </div>
         </div>
       `).join('');
+        }
+
+        // === LIVE: Dimensions MVP (Phase 1) ===
+        async function loadDimensions() {
+            if (!window.entityId) return;
+            try {
+                const res = await window.apiRequest(`/api/dimensions/${window.entityId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.dimensions) {
+                        document.getElementById('dimensionsSection').style.display = 'block';
+                        document.getElementById('dimFin').textContent = data.dimensions.financialScore ? data.dimensions.financialScore + '%' : '—';
+                        document.getElementById('dimAdm').textContent = data.dimensions.adminScore ? data.dimensions.adminScore + '%' : '—';
+                        document.getElementById('dimLoc').textContent = data.dimensions.localizationScore ? data.dimensions.localizationScore + '%' : '—';
+
+                        const nitaqatMap = {
+                            'PLATINUM': 'بلاتيني 💎',
+                            'GREEN_HIGH': 'أخضر مرتفع 🟢',
+                            'GREEN_MED': 'أخضر متوسط 🍏',
+                            'GREEN_LOW': 'أخضر منخفض 🥬',
+                            'RED': 'أحمر 🔴'
+                        };
+                        const n = data.dimensions.nitaqatLevel;
+                        document.getElementById('dimNitaqat').textContent = nitaqatMap[n] || n || '—';
+                    } else {
+                        // Show default empty card
+                        document.getElementById('dimensionsSection').style.display = 'block';
+                    }
+                }
+            } catch (e) {
+                console.error('Error loadDimensions:', e);
+            }
         }
 
         // === LIVE: Rules Engine Insights ===
@@ -1629,6 +1702,7 @@
             attachEventHandlers();
 
             loadDashboard();
+            loadDimensions();
             loadInsights();
             loadDeptCoverage();
             loadActivities();

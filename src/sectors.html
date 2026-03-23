@@ -823,15 +823,19 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script src="/assets/js/sidebar.js"></script>
+  <script src="/assets/js/ai-advisor.js"></script>
   <script>
     // ===== AUTH =====
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-    if (!token || !user) { sessionStorage.setItem('stratix_return_url', location.pathname + location.search); location.href = '/login?from=restore'; }
+    /* Legacy token redirect removed */
+    let userData = {};
+    try {
+      userData = JSON.parse(localStorage.getItem('user') || '{}');
+    } catch (e) { }
 
-    const userData = JSON.parse(user);
-    document.getElementById('userName').textContent = userData.name;
-    document.getElementById('userRole').textContent = userData.role;
+    document.getElementById('userName').textContent = userData.name || '—';
+    document.getElementById('userRole').textContent = userData.role || '—';
     document.getElementById('userInitial').textContent = (userData.name || 'U').charAt(0).toUpperCase();
 
     let currentPage = 1;
@@ -842,7 +846,7 @@
     async function api(url, options = {}) {
       const res = await window.apiRequest(url, {
         ...options,
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...(options.headers || {}) }
+        headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }
       });
       if (res.status === 401) { logout(); return null; }
       return res.json();
@@ -906,15 +910,15 @@
                 <i class="bi bi-diagram-3"></i>
               </div>
               <div class="sc-title">
-                <h3>${s.nameAr || s.nameEn}</h3>
-                <div class="sc-subtitle">${s.nameEn}</div>
+                <h3>${escapeHtml(s.nameAr || s.nameEn)}</h3>
+                <div class="sc-subtitle">${escapeHtml(s.nameEn)}</div>
               </div>
             </div>
 
             <div class="sc-details">
               <div class="sc-detail">
                 <div class="sc-detail-label">الرمز</div>
-                <div class="sc-detail-value" style="color:var(--primary);">${s.code || '—'}</div>
+                <div class="sc-detail-value" style="color:var(--primary);">${escapeHtml(s.code || '—')}</div>
               </div>
               <div class="sc-detail">
                 <div class="sc-detail-label">عدد الكيانات</div>
@@ -923,7 +927,7 @@
             </div>
 
             <div class="sc-badges">
-              <span class="sc-badge badge-code"><i class="bi bi-hash"></i> ${s.code || '—'}</span>
+              <span class="sc-badge badge-code"><i class="bi bi-hash"></i> ${escapeHtml(s.code || '—')}</span>
               <span class="sc-badge badge-entities"><i class="bi bi-building"></i> ${entityCount} كيان</span>
             </div>
 
@@ -931,10 +935,10 @@
               <button class="btn-action btn-view" onclick="viewSector('${s.id}')">
                 <i class="bi bi-eye"></i> عرض
               </button>
-              <button class="btn-action btn-edit" onclick="editSector('${s.id}', '${escapeAttr(s.nameEn)}', '${escapeAttr(s.nameAr || '')}', '${escapeAttr(s.code || '')}')">
+              <button class="btn-action btn-edit" onclick="editSector('${s.id}', '${escapeJs(s.nameEn)}', '${escapeJs(s.nameAr || '')}', '${escapeJs(s.code || '')}')">
                 <i class="bi bi-pencil"></i> تعديل
               </button>
-              <button class="btn-action btn-delete" onclick="deleteSector('${s.id}', '${escapeAttr(s.nameAr || s.nameEn)}')">
+              <button class="btn-action btn-delete" onclick="deleteSector('${s.id}', '${escapeJs(s.nameAr || s.nameEn)}')">
                 <i class="bi bi-trash"></i> حذف
               </button>
             </div>
@@ -942,8 +946,19 @@
       }).join('')}</div>`;
     }
 
-    function escapeAttr(str) {
-      return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    function escapeHtml(s) {
+      if (s == null) return '';
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function escapeJs(s) {
+      if (s == null) return '';
+      return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
     }
 
     // ===== PAGINATION =====
@@ -1005,7 +1020,7 @@
       try {
         const res = await window.apiRequest(url, {
           method,
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ nameEn, nameAr, code })
         });
 
@@ -1025,8 +1040,7 @@
       if (!confirm(`هل تريد حذف القطاع "${name}"؟`)) return;
       try {
         const res = await window.apiRequest(`/api/sectors/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
+          method: 'DELETE'
         });
         const data = await res.json();
         if (!res.ok) {
@@ -1107,11 +1121,19 @@
     document.getElementById('addSectorBtn').addEventListener('click', openCreateModal);
     document.getElementById('saveSectorBtn').addEventListener('click', saveSector);
 
-    let searchTimer;
-    document.getElementById('searchInput').addEventListener('input', () => {
-      clearTimeout(searchTimer);
-      searchTimer = setTimeout(() => loadSectors(1), 300);
-    });
+    // دالة Debounce لتخفيف الضغط على الخادم عند البحث المستمر
+    function debounce(func, delay) {
+      let timeoutId;
+      return function (...args) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          func.apply(this, args);
+        }, delay);
+      };
+    }
+
+    const handleSearch = debounce(() => { loadSectors(1); }, 500);
+    document.getElementById('searchInput').addEventListener('input', handleSearch);
 
     // ===== INIT =====
     document.addEventListener('DOMContentLoaded', () => {
@@ -1120,9 +1142,6 @@
       loadSectors();
     });
   </script>
-  <script src="/assets/js/api.js"></script>
-    <script src="/assets/js/sidebar.js"></script>
-    <script src="/assets/js/ai-advisor.js"></script>
 </body>
 
 </html>

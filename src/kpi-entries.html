@@ -861,13 +861,13 @@
                     const unit = k.unit || '';
                     const desc = k.description || '';
                     return `
-                    <div class="kpi-item ${currentKpiId === k.id ? 'selected' : ''}" onclick="selectKPI('${k.id}','${displayName.replace(/'/g, "\\'")}')">
-                        <div class="name">${displayName}</div>
-                        ${subName ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;opacity:0.7">${subName}</div>` : ''}
-                        ${desc ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;line-height:1.5">${desc.length > 60 ? desc.slice(0, 60) + '...' : desc}</div>` : ''}
+                    <div class="kpi-item ${currentKpiId === k.id ? 'selected' : ''}" onclick="selectKPI('${k.id}','${escapeHtml(displayName).replace(/'/g, "\\'")}')">
+                        <div class="name">${escapeHtml(displayName)}</div>
+                        ${subName ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;opacity:0.7">${escapeHtml(subName)}</div>` : ''}
+                        ${desc ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;line-height:1.5">${escapeHtml(desc.length > 60 ? desc.slice(0, 60) + '...' : desc)}</div>` : ''}
                         <div class="meta">
                             <span style="display:inline-flex;align-items:center;gap:3px"><i class="bi bi-clock" style="font-size:10px"></i> ${freq}</span> ·
-                            <span>🎯 ${target} ${unit}</span>
+                            <span>🎯 ${escapeHtml(target)} ${escapeHtml(unit)}</span>
                             <span class="entry-count">${k._count?.entries || 0} إدخال</span>
                         </div>
                     </div>
@@ -902,13 +902,13 @@
 
                 let html = `
                     <div class="entries-panel-header">
-                        <h3><i class="bi bi-graph-up"></i> ${kpiName || 'المؤشر'}</h3>
+                        <h3><i class="bi bi-graph-up"></i> ${escapeHtml(kpiName || 'المؤشر')}</h3>
                         <button class="btn-add" onclick="showEntryModal()"><i class="bi bi-plus-lg"></i> إدخال قيمة</button>
                     </div>
                     <div class="stats-row">
-                        <div class="mini-stat"><div class="num">${stats.latest != null ? stats.latest : '-'}</div><div class="lbl">آخر قيمة</div></div>
-                        <div class="mini-stat"><div class="num">${stats.average != null ? Number(stats.average).toFixed(1) : '-'}</div><div class="lbl">المتوسط</div></div>
-                        <div class="mini-stat"><div class="num">${stats.max != null ? stats.max : '-'} / ${stats.min != null ? stats.min : '-'}</div><div class="lbl">أعلى / أدنى</div></div>
+                        <div class="mini-stat"><div class="num">${stats.latest != null ? escapeHtml(stats.latest) : '-'}</div><div class="lbl">آخر قيمة</div></div>
+                        <div class="mini-stat"><div class="num">${stats.average != null ? escapeHtml(Number(stats.average).toFixed(1)) : '-'}</div><div class="lbl">المتوسط</div></div>
+                        <div class="mini-stat"><div class="num">${stats.max != null ? escapeHtml(stats.max) : '-'} / ${stats.min != null ? escapeHtml(stats.min) : '-'}</div><div class="lbl">أعلى / أدنى</div></div>
                         <div class="mini-stat"><div class="num">${trendIcon} ${stats.count || 0}</div><div class="lbl">الاتجاه · عدد</div></div>
                     </div>`;
 
@@ -920,11 +920,11 @@
                     </tr></thead><tbody>`;
                     entries.forEach(e => {
                         html += `<tr>
-                            <td><strong>${e.value}</strong></td>
+                            <td><strong>${escapeHtml(e.value)}</strong></td>
                             <td><small>${fmt(e.periodStart)}</small></td>
                             <td><small>${fmt(e.periodEnd)}</small></td>
                             <td><span class="badge-${e.status.toLowerCase()}">${e.status === 'DRAFT' ? 'مسودة' : 'مؤكد'}</span></td>
-                            <td><small style="color:var(--text-muted)">${e.notes || '-'}</small></td>
+                            <td><small style="color:var(--text-muted)">${escapeHtml(e.notes) || '-'}</small></td>
                             <td><button class="btn-action" onclick="editEntry('${e.id}')"><i class="bi bi-pencil"></i></button> <button class="btn-action danger" onclick="delEntry('${e.id}')"><i class="bi bi-trash"></i></button></td>
                         </tr>`;
                     });
@@ -992,7 +992,7 @@
             el.innerHTML = `
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
                     <div style="width:36px;height:36px;border-radius:10px;background:rgba(102,126,234,0.1);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:16px"><i class="bi bi-graph-up"></i></div>
-                    <div style="flex:1"><span style="font-weight:800;font-size:18px;color:var(--text)">${Number(val).toLocaleString('ar-SA')}</span> <span style="font-size:10px;color:var(--text-muted)">${currentKpiName || 'المؤشر'}</span></div>
+                    <div style="flex:1"><span style="font-weight:800;font-size:18px;color:var(--text)">${escapeHtml(Number(val).toLocaleString('ar-SA'))}</span> <span style="font-size:10px;color:var(--text-muted)">${escapeHtml(currentKpiName || 'المؤشر')}</span></div>
                     <span style="font-size:9px;padding:2px 8px;border-radius:6px;background:${statusColor}12;color:${statusColor}"><i class="bi ${statusIcon}"></i> ${statusLabel}</span>
                 </div>
                 <div style="display:flex;gap:8px;font-size:10px;margin-bottom:4px">
@@ -1000,7 +1000,7 @@
                     <span style="color:var(--text-muted)">→</span>
                     <span style="color:var(--text-muted)"><i class="bi bi-calendar-check" style="color:var(--danger)"></i> ${fmtD(endD)}</span>
                 </div>
-                ${notes ? `<div style="font-size:10px;padding:4px 8px;background:rgba(255,255,255,0.03);border-radius:6px;color:var(--text-muted);margin-top:4px"><i class="bi bi-chat-left-text" style="color:var(--info)"></i> ${notes}</div>` : ''}`;
+                ${notes ? `<div style="font-size:10px;padding:4px 8px;background:rgba(255,255,255,0.03);border-radius:6px;color:var(--text-muted);margin-top:4px"><i class="bi bi-chat-left-text" style="color:var(--info)"></i> ${escapeHtml(notes)}</div>` : ''}`;
         }
 
         function showEntryModal() {
@@ -1032,6 +1032,7 @@
             const editId = document.getElementById('editId').value;
             const value = document.getElementById('entryValue').value;
             if (!value) return alert('الرجاء إدخال القيمة');
+            if (isNaN(parseFloat(value))) return alert('الرجاء إدخال رقم صحيح');
             const body = {
                 value: parseFloat(value),
                 periodStart: document.getElementById('entryStart').value || new Date().toISOString(),
@@ -1049,7 +1050,13 @@
         }
 
         async function delEntry(id) { if (!confirm('حذف هذا الإدخال؟')) return; try { await window.apiRequest(`/api/kpi-entries/${id}`, { method: 'DELETE', headers, credentials: 'same-origin' }); selectKPI(currentKpiId, currentKpiName); loadKPIs(); } catch (e) { alert('خطأ'); } }
-        function logout() { localStorage.removeItem('token'); localStorage.removeItem('user'); window.apiRequest('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).finally(() => location.href = '/login.html'); }
+        function logout() {
+            if (window.globalLogout) {
+                window.globalLogout();
+            } else {
+                localStorage.removeItem('token'); localStorage.removeItem('user'); window.apiRequest('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).finally(() => location.href = '/login.html');
+            }
+        }
         init();
     </script>
     <script src="/assets/js/impersonation.js"></script>

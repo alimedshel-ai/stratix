@@ -1197,7 +1197,7 @@
 
             // ═══ Dept-specific: تخصيص العنوان + عرض اقتراحات من الفحص ═══
             // ⚠️ لازم يكون قبل loadVersions عشان لو فشلت ما يتأثر العنوان
-            const _deptParam = new URLSearchParams(window.location.search).get('dept');
+            const _deptParam = new URLSearchParams(window.location.search).get('dept') || localStorage.getItem('stratix_v10_dept');
             if (_deptParam) {
                 const deptNames = { hr: 'الموارد البشرية', finance: 'المالية', operations: 'العمليات', marketing: 'التسويق', sales: 'المبيعات', compliance: 'الامتثال', it: 'تقنية المعلومات', cs: 'خدمة العملاء', quality: 'الجودة', projects: 'المشاريع', support: 'الخدمات المساندة' };
                 const deptName = deptNames[_deptParam] || _deptParam;
@@ -1869,7 +1869,7 @@
     <!-- 🔧 إصلاح مستقل: تحديث العنوان حسب الإدارة — script منفصل عشان ما يتأثر بأخطاء ثانية -->
     <script>
         (function _patchDeptTitle() {
-            var dp = new URLSearchParams(window.location.search).get('dept');
+            var dp = new URLSearchParams(window.location.search).get('dept') || localStorage.getItem('stratix_v10_dept');
             if (!dp) return;
             var nm = { hr: 'الموارد البشرية', finance: 'المالية', operations: 'العمليات', marketing: 'التسويق', sales: 'المبيعات', compliance: 'الامتثال', it: 'تقنية المعلومات', cs: 'خدمة العملاء', quality: 'الجودة', projects: 'المشاريع', support: 'الخدمات المساندة' };
             var dn = nm[dp] || dp;
@@ -2364,8 +2364,12 @@
             let selectedAdv = null;
 
             function init() {
-                if (!new URLSearchParams(location.search).has('mode') ||
-                    new URLSearchParams(location.search).get('mode') !== 'wizard') return;
+                const saved = StratixData.getLocal(WIZARD_KEY, null);
+                const isWizardMode = new URLSearchParams(location.search).get('mode') === 'wizard';
+                const hasCompleted = saved && saved.vision && saved.mission && saved.completedAt;
+
+                // Show wizard if explicitly requested OR if identity profile is not completed
+                if (hasCompleted && !isWizardMode) return;
 
                 document.getElementById('wizardOverlay').style.display = 'block';
                 document.body.style.overflow = 'hidden';
