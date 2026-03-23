@@ -35,11 +35,15 @@ async function getCurrentUser() {
             const res = await fetch('/api/user/me', { credentials: 'include' });
             if (!res.ok) {
                 if (res.status === 401) {
-                    // 🛑 مسح البيانات وإرجاع المستخدم لصفحة الدخول لمنع تعليق الصفحة
+                    // 🛑 الجلسة انتهت فعلاً — أعِد للدخول
                     localStorage.removeItem('token');
                     localStorage.removeItem('user');
+                    _cachedUser = null;
                     if (!window.location.pathname.includes('/login.html')) {
-                        window.location.href = '/login.html?session_expired=true';
+                        // تأخير صغير لمنع race condition بين الصفحات
+                        setTimeout(() => {
+                            window.location.href = '/login.html?session_expired=true';
+                        }, 300);
                     }
                     throw new Error('Unauthorized');
                 }
@@ -81,9 +85,8 @@ async function api(url, options = {}) {
     });
 
     if (response.status === 401) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.href = '/login.html?session_expired=true';
+        // لا نُعيد للـ login هنا — getCurrentUser هي المسؤولة عن ذلك
+        // طلبات البيانات العادية قد تُرجع 401 لأسباب مؤقتة
         throw new Error('Unauthorized');
     }
 
