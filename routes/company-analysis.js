@@ -23,6 +23,57 @@ function safeParseJSON(str, def) {
     try { return JSON.parse(str); } catch { return def; }
 }
 
+// ── خرائط الأقسام المسموحة لكل إدارة (module-level constants) ────────────────
+
+/** VALUE_CHAIN: الأنشطة المرتبطة بكل إدارة */
+const VC_DEPT_MAPPING = {
+    hr: ['hrManagement'],
+    finance: ['infrastructure', 'procurement'],
+    operations: ['inboundLogistics', 'operations', 'outboundLogistics', 'procurement'],
+    marketing: ['marketingSales'],
+    sales: ['marketingSales', 'service'],
+    it: ['techDevelopment'],
+    procurement: ['procurement'],
+    cs: ['service'],
+    quality: ['operations', 'service'],
+    compliance: ['infrastructure'],
+    projects: ['operations', 'techDevelopment'],
+    support: ['infrastructure', 'hrManagement', 'procurement', 'techDevelopment'],
+    legal: ['infrastructure'],
+};
+
+/** BUSINESS_MODEL: مكونات نموذج الأعمال لكل إدارة */
+const BMC_DEPT_MAPPING = {
+    hr: ['keyResources', 'keyActivities'],
+    finance: ['revenueStreams', 'costStructure'],
+    marketing: ['customerSegments', 'valueProposition', 'channels', 'customerRelationships'],
+    sales: ['customerSegments', 'channels', 'customerRelationships', 'revenueStreams'],
+    operations: ['valueProposition', 'keyActivities', 'keyResources', 'keyPartners', 'costStructure'],
+    projects: ['keyActivities', 'keyResources', 'keyPartners'],
+    support: ['keyResources', 'keyPartners'],
+    compliance: ['keyPartners', 'keyActivities'],
+    it: ['keyResources', 'keyActivities', 'keyPartners'],
+    legal: ['keyPartners', 'keyActivities'],
+};
+
+/** CUSTOMER_JOURNEY: مراحل رحلة العميل لكل إدارة */
+const CJ_DEPT_MAPPING = {
+    marketing: ['awareness', 'consideration', 'loyalty'],
+    sales: ['consideration', 'purchase'],
+    operations: ['delivery'],
+    cs: ['postPurchase', 'loyalty'],
+    quality: ['postPurchase'],
+    it: ['awareness', 'purchase', 'postPurchase'],
+    support: ['postPurchase', 'loyalty'],
+};
+
+/** خريطة الأدوات → خريطة الإدارات */
+const TOOL_DEPT_MAPPING = {
+    'VALUE_CHAIN': VC_DEPT_MAPPING,
+    'BUSINESS_MODEL': BMC_DEPT_MAPPING,
+    'CUSTOMER_JOURNEY': CJ_DEPT_MAPPING,
+};
+
 // ============ COMPANY ANALYSIS ============
 
 // Get all analyses for a version (with progress)
@@ -246,54 +297,7 @@ router.patch('/:id', verifyToken, async (req, res) => {
                 const incomingData = safeParseJSON(data, {});
                 const currentData = safeParseJSON(existing.data, {});
 
-                // تعريف الأقسام المسموحة لكل إدارة في أداة VALUE_CHAIN
-                const VC_DEPT_MAPPING = {
-                    hr: ['hrManagement'],
-                    finance: ['infrastructure', 'procurement'],
-                    operations: ['inboundLogistics', 'operations', 'outboundLogistics', 'procurement'],
-                    marketing: ['marketingSales'],
-                    sales: ['marketingSales', 'service'],
-                    it: ['techDevelopment'],
-                    procurement: ['procurement'],
-                    cs: ['service'],
-                    quality: ['operations', 'service'],
-                    compliance: ['infrastructure'],
-                    projects: ['operations', 'techDevelopment'],
-                    support: ['infrastructure', 'hrManagement', 'procurement', 'techDevelopment'],
-                    legal: ['infrastructure'],
-                };
-
-                // تعريف الأقسام المسموحة لكل إدارة في أداة BUSINESS_MODEL
-                const BMC_DEPT_MAPPING = {
-                    hr: ['keyResources', 'keyActivities'],
-                    finance: ['revenueStreams', 'costStructure'],
-                    marketing: ['customerSegments', 'valueProposition', 'channels', 'customerRelationships'],
-                    sales: ['customerSegments', 'channels', 'customerRelationships', 'revenueStreams'],
-                    operations: ['valueProposition', 'keyActivities', 'keyResources', 'keyPartners', 'costStructure'],
-                    projects: ['keyActivities', 'keyResources', 'keyPartners'],
-                    support: ['keyResources', 'keyPartners'],
-                    compliance: ['keyPartners', 'keyActivities'],
-                    it: ['keyResources', 'keyActivities', 'keyPartners'],
-                    legal: ['keyPartners', 'keyActivities'],
-                };
-
-                // تعريف الأقسام المسموحة لرحلة العميل CUSTOMER_JOURNEY
-                const CJ_DEPT_MAPPING = {
-                    marketing: ['awareness', 'consideration', 'loyalty'],
-                    sales: ['consideration', 'purchase'],
-                    operations: ['delivery'],
-                    cs: ['postPurchase', 'loyalty'],
-                    quality: ['postPurchase'],
-                    it: ['awareness', 'purchase', 'postPurchase']
-                };
-
-                const TOOL_MAPPING = {
-                    'VALUE_CHAIN': VC_DEPT_MAPPING,
-                    'BUSINESS_MODEL': BMC_DEPT_MAPPING,
-                    'CUSTOMER_JOURNEY': CJ_DEPT_MAPPING,
-                };
-
-                const mapping = TOOL_MAPPING[existing.toolCode];
+                const mapping = TOOL_DEPT_MAPPING[existing.toolCode];
                 if (mapping) {
                     const allowedKeys = mapping[deptKey] || [];
                     // 🔒 الحقول غير المسموحة تُستعاد من قاعدة البيانات
