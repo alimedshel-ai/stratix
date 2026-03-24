@@ -151,7 +151,9 @@ async function initSidebar() {
   const fullPath = currentPath + window.location.search;
   const currentSearch = window.location.search;
 
-  const token = localStorage.getItem('token') || '';
+  // ✅ النظام يعتمد على HttpOnly Cookie — نعرف أن المستخدم موثّق إذا رجع userData
+  const token = localStorage.getItem('token') || ''; // backward compat فقط
+  const isAuthenticated = !!userData; // المصدر الحقيقي: نتيجة API
   const _urlDeptParam = new URLSearchParams(currentSearch).get('dept') || '';
   let _v10Dept = userData.department?.key || _urlDeptParam || localStorage.getItem('stratix_v10_dept') || '';
 
@@ -175,7 +177,8 @@ async function initSidebar() {
   // تحديد الصلاحيات والمسار الرئيسي (تم رفعه ليصبح متاحاً على مستوى الملف بالكامل)
   const isViewerOrDE = ['VIEWER', 'DATA_ENTRY'].includes(userRole) && systemRole !== 'SUPER_ADMIN';
   const _diagRole = (() => { try { return JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || '{}').role || ''; } catch (e) { return ''; } })();
-  const _uCat = (() => { try { return JSON.parse(localStorage.getItem('user') || '{}').userCategory || ''; } catch (e) { return ''; } })();
+  // ⚠️ الأولوية: نقرأ userCategory من userData (API) — لا من localStorage
+  const _uCat = (() => { try { return userData?.userCategory || JSON.parse(localStorage.getItem('user') || '{}').userCategory || ''; } catch (e) { return ''; } })();
   const isInvestorUser = _diagRole === 'investor' || _uCat === 'INVESTOR' || _uCat.startsWith('INVESTOR_');
 
   const homeHref = isViewerOrDE ? '/viewer-hub.html'
@@ -248,14 +251,10 @@ async function initSidebar() {
       else if (['51-200', 'medium', '51_200'].includes(size)) _sidebarCompanyLevel = 'MEDIUM';
       else if (['200+', '201-500', '500+', 'large', 'enterprise', '201_500'].includes(size)) _sidebarCompanyLevel = 'LARGE';
     }
-    // 4. من بيانات اليوزر المحفوظة من السيرفر
-    if (!_sidebarIsIndividual) {
-      const stored = localStorage.getItem('user');
-      if (stored) {
-        const u = JSON.parse(stored);
-        const uCat = u.userCategory || u.category || '';
-        if (uCat) _detectLevelFromCategory(uCat);
-      }
+    // 4. من userData المُجلَب من السيرفر (المصدر الموثوق)
+    if (!_sidebarIsIndividual && userData) {
+      const uCat = userData.userCategory || userData.category || '';
+      if (uCat) _detectLevelFromCategory(uCat);
     }
   } catch (e) { /* ignore */ }
 
@@ -352,6 +351,70 @@ async function initSidebar() {
         text-overflow: ellipsis;
       }
       .stx-org-badge i { font-size: 12px; flex-shrink: 0; }
+      
+      /* ── Context Switcher ─────────────────────────── */
+      .stx-ctx-wrap {
+        position: relative;
+        margin: 4px 14px 8px;
+      }
+      .stx-ctx-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        width: 100%;
+        padding: 6px 10px;
+        border-radius: 8px;
+        background: ${isDark ? 'rgba(249,115,22,0.08)' : 'rgba(249,115,22,0.06)'};
+        border: 1px solid ${isDark ? 'rgba(249,115,22,0.15)' : 'rgba(249,115,22,0.12)'};
+        font-size: 11px;
+        font-weight: 600;
+        color: ${isDark ? '#f97316' : '#ea580c'};
+        cursor: pointer;
+        text-align: right;
+        transition: background 0.2s;
+      }
+      .stx-ctx-btn:hover { background: ${isDark ? 'rgba(249,115,22,0.15)' : 'rgba(249,115,22,0.1)'}; }
+      .stx-ctx-btn .stx-ctx-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .stx-ctx-btn .stx-ctx-chevron { font-size: 10px; transition: transform 0.2s; flex-shrink: 0; }
+      .stx-ctx-btn.open .stx-ctx-chevron { transform: rotate(180deg); }
+      .stx-ctx-dropdown {
+        display: none;
+        position: absolute;
+        top: calc(100% + 4px);
+        right: 0; left: 0;
+        background: ${isDark ? '#1e2135' : '#fff'};
+        border: 1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'};
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        z-index: 9999;
+        overflow: hidden;
+        max-height: 260px;
+        overflow-y: auto;
+      }
+      .stx-ctx-dropdown.open { display: block; }
+      .stx-ctx-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        cursor: pointer;
+        font-size: 12px;
+        color: ${isDark ? '#e2e8f0' : '#1e293b'};
+        border-bottom: 1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'};
+        transition: background 0.15s;
+      }
+      .stx-ctx-item:last-child { border-bottom: none; }
+      .stx-ctx-item:hover { background: ${isDark ? 'rgba(102,126,234,0.12)' : 'rgba(102,126,234,0.08)'}; }
+      .stx-ctx-item.current { background: ${isDark ? 'rgba(249,115,22,0.1)' : 'rgba(249,115,22,0.07)'}; }
+      .stx-ctx-item .ctx-dot {
+        width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+        background: ${isDark ? '#334155' : '#cbd5e1'};
+      }
+      .stx-ctx-item.current .ctx-dot { background: #f97316; }
+      .stx-ctx-item .ctx-info { flex: 1; overflow: hidden; }
+      .stx-ctx-item .ctx-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .stx-ctx-item .ctx-role { font-size: 10px; color: ${isDark ? '#94a3b8' : '#64748b'}; margin-top: 1px; }
+      .stx-ctx-loading { padding: 12px; text-align: center; color: ${isDark ? '#94a3b8' : '#64748b'}; font-size: 11px; }
       
       .stx-home-btn {
         margin: 4px 10px 8px !important;
@@ -737,7 +800,7 @@ async function initSidebar() {
     // --- تسجيل الخروج ---
     html += `<div class="stx-divider"></div>`;
     html += `
-      <a href="#" class="stx-item stx-logout" onclick="event.preventDefault(); localStorage.clear(); fetch('/api/auth/logout', {method:'POST', credentials:'same-origin'}).finally(()=>location.href='/login.html');" style="color:#ef4444;margin-top:4px">
+      <a href="#" class="stx-item stx-logout" onclick="event.preventDefault(); ['token','user','stratix_v10_dept','stratix_smart_guide','stratix_category','onboarding_data','stratix_diagnostic_payload','stratix_return_url'].forEach(k=>localStorage.removeItem(k)); fetch('/api/auth/logout', {method:'POST', credentials:'include'}).finally(()=>location.href='/login.html');" style="color:#ef4444;margin-top:4px">
         <i class="bi bi-box-arrow-right" style="color:#ef4444"></i>
         <span>تسجيل الخروج</span>
       </a>
@@ -900,7 +963,7 @@ async function initSidebar() {
     // --- تسجيل الخروج ---
     html += `<div class="stx-divider"></div>`;
     html += `
-      <a href="#" class="stx-item stx-logout" onclick="event.preventDefault(); localStorage.clear(); fetch('/api/auth/logout', {method:'POST', credentials:'same-origin'}).finally(()=>location.href='/login.html');" style="color:#ef4444;margin-top:4px">
+      <a href="#" class="stx-item stx-logout" onclick="event.preventDefault(); ['token','user','stratix_v10_dept','stratix_smart_guide','stratix_category','onboarding_data','stratix_diagnostic_payload','stratix_return_url'].forEach(k=>localStorage.removeItem(k)); fetch('/api/auth/logout', {method:'POST', credentials:'include'}).finally(()=>location.href='/login.html');" style="color:#ef4444;margin-top:4px">
         <i class="bi bi-box-arrow-right" style="color:#ef4444"></i>
         <span>تسجيل الخروج</span>
       </a>
@@ -1260,9 +1323,15 @@ async function initSidebar() {
         </div>
       </div>
       ${(orgLine && !_sidebarIsIndividual) ? `
-      <div class="stx-org-badge">
-        <i class="bi bi-building"></i>
-        <span>${orgLine}</span>
+      <div class="stx-ctx-wrap" id="stxCtxWrap">
+        <button class="stx-ctx-btn" id="stxCtxBtn" onclick="window._stxCtxToggle(event)">
+          <i class="bi bi-building" style="flex-shrink:0"></i>
+          <span class="stx-ctx-name" id="stxCtxName">${orgLine}</span>
+          <i class="bi bi-chevron-down stx-ctx-chevron" id="stxCtxChevron"></i>
+        </button>
+        <div class="stx-ctx-dropdown" id="stxCtxDropdown">
+          <div class="stx-ctx-loading">⏳ جاري التحميل...</div>
+        </div>
       </div>
       ` : ''}
     `;
@@ -1275,7 +1344,7 @@ async function initSidebar() {
     // ╚═══════════════════════════════════════════╝
     // تحديد هل مستثمر أو عضو مجلس
     const _diagRole = (() => { try { return JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || '{}').role || ''; } catch (e) { return ''; } })();
-    const _uCat = (() => { try { return JSON.parse(localStorage.getItem('user') || '{}').userCategory || ''; } catch (e) { return ''; } })();
+    const _uCat = (() => { try { return userData?.userCategory || JSON.parse(localStorage.getItem('user') || '{}').userCategory || ''; } catch (e) { return ''; } })();
     const isInvestorUser = _diagRole === 'investor' || _uCat === 'INVESTOR' || _uCat.startsWith('INVESTOR_');
 
     const homeHref = isViewerOrDE ? '/viewer-hub.html'
@@ -1694,7 +1763,7 @@ async function initSidebar() {
 
     // --- تسجيل الخروج ---
     html += `
-        <a href="#" class="stx-item stx-logout" onclick="event.preventDefault(); localStorage.clear(); fetch('/api/auth/logout', {method:'POST', credentials:'same-origin'}).finally(()=>location.href='/login.html');" style="color:#ef4444;margin-top:4px">
+        <a href="#" class="stx-item stx-logout" onclick="event.preventDefault(); ['token','user','stratix_v10_dept','stratix_smart_guide','stratix_category','onboarding_data','stratix_diagnostic_payload','stratix_return_url'].forEach(k=>localStorage.removeItem(k)); fetch('/api/auth/logout', {method:'POST', credentials:'include'}).finally(()=>location.href='/login.html');" style="color:#ef4444;margin-top:4px">
         <i class="bi bi-box-arrow-right" style="color:#ef4444"></i>
         <span>تسجيل الخروج</span>
       </a>
@@ -1824,7 +1893,7 @@ async function initSidebar() {
         // Fallback: direct API call if ProgressEngine failed to load
         try {
           const res = await fetch(`/api/user-progress/entity/${entityId}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            credentials: 'include' // ← Cookie-based auth فقط
           });
           const data = res.ok ? await res.json() : null;
           newSidebar.innerHTML = buildSidebar(data);
@@ -1925,7 +1994,146 @@ async function initSidebar() {
       aiScript.defer = true;
       document.body.appendChild(aiScript);
     }
+
+    // ═══════════════════════════════════════════════════════
+    // Context Switcher Logic — تبديل السياق بين الكيانات
+    // ═══════════════════════════════════════════════════════
+    let _ctxEntities = null;       // cache للكيانات
+    let _ctxLoaded = false;
+    let _ctxOpen = false;
+
+    // الترجمة العربية للدور
+    function _ctxRoleLabel(role, userType) {
+      if (role === 'OWNER') return 'مالك';
+      if (role === 'ADMIN') return 'مسؤول';
+      if (role === 'EDITOR') return 'محرر';
+      if (userType === 'DEPT_MANAGER') return 'مدير إدارة';
+      if (userType === 'CONSULTANT') return 'استشاري';
+      return role || 'عضو';
+    }
+
+    // فتح/إغلاق القائمة
+    window._stxCtxToggle = async function (e) {
+      if (e) e.stopPropagation();
+      const btn = document.getElementById('stxCtxBtn');
+      const dropdown = document.getElementById('stxCtxDropdown');
+      if (!btn || !dropdown) return;
+
+      _ctxOpen = !_ctxOpen;
+      btn.classList.toggle('open', _ctxOpen);
+      dropdown.classList.toggle('open', _ctxOpen);
+
+      // جلب الكيانات مرة واحدة فقط
+      if (_ctxOpen && !_ctxLoaded) {
+        await _stxCtxLoad();
+      }
+    };
+
+    // إغلاق عند الضغط خارج القائمة
+    document.addEventListener('click', function (e) {
+      const wrap = document.getElementById('stxCtxWrap');
+      if (wrap && !wrap.contains(e.target) && _ctxOpen) {
+        _ctxOpen = false;
+        document.getElementById('stxCtxBtn')?.classList.remove('open');
+        document.getElementById('stxCtxDropdown')?.classList.remove('open');
+      }
+    });
+
+    // جلب قائمة الكيانات من API
+    async function _stxCtxLoad() {
+      const dropdown = document.getElementById('stxCtxDropdown');
+      if (!dropdown) return;
+
+      try {
+        const res = await fetch('/api/auth/my-entities', { credentials: 'include' });
+        if (!res.ok) throw new Error('فشل جلب الكيانات');
+
+        const data = await res.json();
+        _ctxEntities = data.entities || [];
+        _ctxLoaded = true;
+
+        // لو كيان واحد فقط — أخفِ الـ chevron وأغلق القائمة وامنع الفتح
+        if (_ctxEntities.length <= 1) {
+          document.getElementById('stxCtxChevron')?.style.setProperty('display', 'none');
+          document.getElementById('stxCtxDropdown')?.classList.remove('open');
+          document.getElementById('stxCtxBtn')?.classList.remove('open');
+          _ctxOpen = false;
+          dropdown.innerHTML = '';
+          return;
+        }
+
+        // بناء قائمة الكيانات — data-attributes بدلاً من onclick inline (XSS-safe)
+        dropdown.innerHTML = _ctxEntities.map(e => `
+          <div class="stx-ctx-item ${e.isCurrent ? 'current' : ''}"
+               data-entity-id="${e.entityId}"
+               data-entity-name="${(e.entityName || '').replace(/"/g, '&quot;')}"
+               title="${(e.entityName || '').replace(/"/g, '&quot;')}">
+            <span class="ctx-dot"></span>
+            <div class="ctx-info">
+              <div class="ctx-name">${e.entityName || e.entityId}</div>
+              <div class="ctx-role">${_ctxRoleLabel(e.role, e.userType)}${e.companyName ? ' — ' + e.companyName : ''}</div>
+            </div>
+            ${e.isCurrent ? '<i class="bi bi-check2" style="color:#f97316;font-size:13px;flex-shrink:0"></i>' : ''}
+          </div>
+        `).join('');
+
+        // Event delegation — آمن، لا inline onclick
+        dropdown.querySelectorAll('.stx-ctx-item[data-entity-id]').forEach(el => {
+          el.addEventListener('click', () => {
+            window._stxCtxSwitch(el.dataset.entityId, el.dataset.entityName || '');
+          });
+        });
+
+      } catch (err) {
+        console.warn('[CtxSwitcher] فشل جلب الكيانات:', err);
+        dropdown.innerHTML = '<div class="stx-ctx-loading">⚠️ فشل التحميل</div>';
+      }
+    }
+
+    // التبديل إلى كيان جديد
+    window._stxCtxSwitch = async function (entityId, entityName) {
+      if (!entityId) return;
+
+      // إغلاق القائمة فوراً
+      _ctxOpen = false;
+      document.getElementById('stxCtxBtn')?.classList.remove('open');
+      document.getElementById('stxCtxDropdown')?.classList.remove('open');
+
+      // تحديث اسم الزر فوراً (optimistic UI)
+      const nameEl = document.getElementById('stxCtxName');
+      if (nameEl) nameEl.textContent = entityName;
+
+      try {
+        const res = await fetch('/api/auth/switch-entity', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ entityId })
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          console.error('[CtxSwitcher] فشل التبديل:', err);
+          window.showLockToast(err.error || 'فشل تبديل الكيان');
+          return;
+        }
+
+        const data = await res.json();
+
+        // ✅ الـ Cookie تم تحديثها بالفعل من السيرفر (HttpOnly)
+        // لا نكتب في localStorage — النظام يعتمد على Cookie حصراً
+
+        // إعادة توجيه لـ dashboard (يُعيد التوجيه حسب الدور الجديد)
+        window.location.href = '/dashboard.html';
+
+      } catch (err) {
+        console.error('[CtxSwitcher] خطأ شبكة:', err);
+        window.showLockToast('خطأ في الاتصال — حاول مرة أخرى');
+      }
+    };
+
   }); // end loadPathEngine().then()
+
 
 }
 

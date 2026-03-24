@@ -968,47 +968,87 @@
             let scoreCount = 0;
 
             try {
-                // 1. سحب KPIs
-                const kpiRes = await fetch('/api/kpis', { headers }).catch(() => null);
-                if (kpiRes && kpiRes.ok) {
-                    const kpis = await kpiRes.json();
-                    const kpiArr = Array.isArray(kpis) ? kpis : (kpis.kpis || []);
-                    if (kpiArr.length) {
-                        const achieved = kpiArr.filter(k => k.actualValue && k.targetValue && k.actualValue >= k.targetValue);
-                        const below = kpiArr.filter(k => k.actualValue && k.targetValue && (k.actualValue / k.targetValue) < 0.6);
-                        const avgAch = kpiArr.filter(k => k.actualValue && k.targetValue).reduce((s, k) => s + (k.actualValue / k.targetValue) * 100, 0) / (kpiArr.filter(k => k.actualValue && k.targetValue).length || 1);
-                        findings.push(`📊 المؤشرات: ${kpiArr.length} مؤشر — ${achieved.length} محقق — ${below.length} أقل من 60%`);
-                        if (below.length) findings.push(`⚠️ مؤشرات متعثرة: ${below.slice(0, 3).map(k => k.name || k.title).join('، ')}`);
+                // ─── جلب versionId النشط أولاً (مطلوب لـ kpis و tasks) ───
+                let activeVersionId = null;
+                const vSelVal = document.getElementById('versionFilter')?.value;
+                if (vSelVal) {
+                    activeVersionId = vSelVal;
+                } else if (allVersions.length) {
+                    activeVersionId = (allVersions.find(v => v.isActive) || allVersions[0])?.id;
+                } else {
+                    const vRes = await fetch('/api/versions?limit=1', { headers }).catch(() => null);
+                    if (vRes && vRes.ok) {
+                        const vData = await vRes.json();
+                        const vArr = Array.isArray(vData) ? vData : (vData.versions || []);
+                        activeVersionId = (vArr.find(v => v.isActive) || vArr[0])?.id || null;
+                    }
+                }
+
+                // 1. سحب KPIs — يحتاج versionId (fallback: kpi-entries)
+                if (activeVersionId) {
+                    const kpiRes = await fetch(`/api/kpis?versionId=${activeVersionId}`, { headers }).catch(() => null);
+                    const kpiData = kpiRes && kpiRes.ok ? await kpiRes.json() : null;
+                    const kpiArr = kpiData ? (Array.isArray(kpiData) ? kpiData : (kpiData.kpis || [])) : [];
+
+                    // fallback: kpi-entries لو kpis فارغ
+                    const fallbackArr = kpiArr.length ? kpiArr : await (async () => {
+                        const fr = await fetch(`/api/kpi-entries?versionId=${activeVersionId}&limit=50`, { headers }).catch(() => null);
+                        if (!fr || !fr.ok) return [];
+                        const fd = await fr.json();
+                        return Array.isArray(fd) ? fd : (fd.entries || fd.kpiEntries || []);
+                    })();
+
+                    if (fallbackArr.length) {
+                        // normalize: KPI يستخدم actual/target — KPIEntry يستخدم actualValue/targetValue أو value
+                        const normalize = k => ({
+                            name: k.name || k.kpi?.name || k.title || '—',
+                            actual: parseFloat(k.actual ?? k.actualValue ?? k.value ?? 0),
+                            target: parseFloat(k.target ?? k.targetValue ?? k.kpi?.target ?? 1),
+                        });
+                        const normed = fallbackArr.map(normalize);
+                        const achieved = normed.filter(k => k.target > 0 && k.actual >= k.target);
+                        const below = normed.filter(k => k.target > 0 && (k.actual / k.target) < 0.6);
+                        const avgAch = normed.filter(k => k.target > 0).reduce((s, k) => s + (k.actual / k.target) * 100, 0) / (normed.filter(k => k.target > 0).length || 1);
+                        findings.push(`📊 المؤشرات: ${normed.length} مؤشر — ${achieved.length} محقق — ${below.length} أقل من 60%`);
+                        if (below.length) findings.push(`⚠️ مؤشرات متعثرة: ${below.slice(0, 3).map(k => k.name).join('، ')}`);
                         overallScore += avgAch; scoreCount++;
                     }
                 }
 
-                // 2. سحب المبادرات
-                const initRes = await fetch('/api/initiatives', { headers }).catch(() => null);
-                if (initRes && initRes.ok) {
-                    const inits = await initRes.json();
-                    const initArr = Array.isArray(inits) ? inits : (inits.initiatives || []);
-                    if (initArr.length) {
-                        const active = initArr.filter(i => i.status !== 'COMPLETED' && i.status !== 'CANCELLED');
-                        const completed = initArr.filter(i => i.status === 'COMPLETED');
-                        const overBudget = initArr.filter(i => i.budgetSpent && i.budgetTotal && i.budgetSpent > i.budgetTotal);
-                        findings.push(`🚀 المبادرات: ${initArr.length} — ${completed.length} مكتملة — ${active.length} نشطة`);
-                        if (overBudget.length) findings.push(`💸 تجاوز ميزانية: ${overBudget.map(i => i.title).join('، ')}`);
-                        const initProgress = initArr.reduce((s, i) => s + (i.progress || 0), 0) / (initArr.length || 1);
-                        overallScore += initProgress; scoreCount++;
+                // 2. سحب المبادرات — يحتاج versionId
+                if (activeVersionId) {
+                    const initRes = await fetch(`/api/initiatives?versionId=${activeVersionId}`, { headers }).catch(() => null);
+                    if (initRes && initRes.ok) {
+                        const inits = await initRes.json();
+                        const initArr = Array.isArray(inits) ? inits : (inits.initiatives || []);
+                        if (initArr.length) {
+                            const active = initArr.filter(i => i.status !== 'COMPLETED' && i.status !== 'CANCELLED');
+                            const completed = initArr.filter(i => i.status === 'COMPLETED');
+                            const overBudget = initArr.filter(i => {
+                                const spent = parseFloat(i.spent || i.budgetSpent || 0);
+                                const total = parseFloat(i.budget || i.budgetTotal || 0);
+                                return total > 0 && spent > total;
+                            });
+                            findings.push(`🚀 المبادرات: ${initArr.length} — ${completed.length} مكتملة — ${active.length} نشطة`);
+                            if (overBudget.length) findings.push(`💸 تجاوز ميزانية: ${overBudget.map(i => esc(i.title)).join('، ')}`);
+                            const initProgress = initArr.reduce((s, i) => s + (parseFloat(i.progress) || 0), 0) / (initArr.length || 1);
+                            overallScore += initProgress; scoreCount++;
+                        }
                     }
                 }
 
-                // 3. سحب المهام
-                const taskRes = await fetch('/api/tasks', { headers }).catch(() => null);
-                if (taskRes && taskRes.ok) {
-                    const tasks = await taskRes.json();
-                    const taskArr = Array.isArray(tasks) ? tasks : (tasks.tasks || []);
-                    if (taskArr.length) {
-                        const done = taskArr.filter(t => t.status === 'DONE' || t.status === 'COMPLETED');
-                        const overdue = taskArr.filter(t => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'DONE');
-                        findings.push(`✅ المهام: ${taskArr.length} — ${done.length} منجزة — ${overdue.length} متأخرة`);
-                        if (overdue.length) findings.push(`🔴 مهام متأخرة: ${overdue.slice(0, 3).map(t => t.title || t.name).join('، ')}`);
+                // 3. سحب المهام — يحتاج versionId
+                if (activeVersionId) {
+                    const taskRes = await fetch(`/api/tasks?versionId=${activeVersionId}`, { headers }).catch(() => null);
+                    if (taskRes && taskRes.ok) {
+                        const tasks = await taskRes.json();
+                        const taskArr = Array.isArray(tasks) ? tasks : (tasks.tasks || []);
+                        if (taskArr.length) {
+                            const done = taskArr.filter(t => t.status === 'COMPLETED');
+                            const overdue = taskArr.filter(t => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'COMPLETED');
+                            findings.push(`✅ المهام: ${taskArr.length} — ${done.length} منجزة — ${overdue.length} متأخرة`);
+                            if (overdue.length) findings.push(`🔴 مهام متأخرة: ${overdue.slice(0, 3).map(t => esc(t.title)).join('، ')}`);
+                        }
                     }
                 }
 

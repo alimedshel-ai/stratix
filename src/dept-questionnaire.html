@@ -484,9 +484,20 @@
 
         // ========== Initialize ==========
         async function init() {
-            // entityId من localStorage فقط كتلميح (الاستبيان يعمل بدونه)
-            user = JSON.parse(localStorage.getItem('user') || '{}');
-            entityId = user.entity?.id || user.entityId || localStorage.getItem('entityId') || null;
+            // ✅ جلب user من API مباشرة — لا localStorage
+            try {
+                const meRes = await fetch('/api/auth/me', { credentials: 'include' });
+                if (meRes.ok) {
+                    user = await meRes.json();
+                    entityId = user.entityId || null;
+                } else {
+                    window.location.href = '/login.html';
+                    return;
+                }
+            } catch (e) {
+                window.location.href = '/login.html';
+                return;
+            }
 
             // تحديد القسم تلقائياً إذا كان مدير إدارة ولم يُحدد في الـ URL
             if (!deptCode) {

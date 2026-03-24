@@ -369,6 +369,14 @@ app.use('/api/okrs', okrsRoutes);
 const initiativesRoutes = require('./routes/initiatives');
 app.use('/api/initiatives', initiativesRoutes);
 
+// 📊 مؤشرات الأداء الرئيسية (KPIs) — CRUD كامل
+const kpisRoutes = require('./routes/kpis');
+app.use('/api/kpis', kpisRoutes);
+
+// ✅ مهام المبادرات (Tasks)
+const tasksRoutes = require('./routes/tasks');
+app.use('/api/tasks', tasksRoutes);
+
 // 🎯 مصفوفة الأولويات — MCDA
 app.use('/api/priority-matrix', priorityMatrixRoutes);
 app.use('/api/inspector', inspectorRoutes);

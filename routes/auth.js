@@ -845,6 +845,24 @@ router.post('/complete-onboarding', verifyToken, async (req, res) => {
   }
 });
 
+// ═══════════════════════════════════════════════════════
+// GET /api/auth/me — بيانات المستخدم من الـ Cookie (بلا localStorage)
+// بديل آمن عن localStorage.getItem('user')
+// ═══════════════════════════════════════════════════════
+router.get('/me', verifyToken, (req, res) => {
+  res.json({
+    id: req.user.id,
+    email: req.user.email,
+    name: req.user.name,
+    systemRole: req.user.systemRole || 'USER',
+    role: req.user.role,
+    userType: req.user.userType,
+    entityId: req.user.entityId || null,
+    companyId: req.user.companyId || null,
+    isSuperAdmin: req.user.isSuperAdmin || false,
+  });
+});
+
 // ═══ تسجيل الخروج (مسح الكوكي من المتصفح) ═══
 router.post('/logout', (req, res) => {
   res.clearCookie('token', {
@@ -854,6 +872,152 @@ router.post('/logout', (req, res) => {
     sameSite: 'strict'
   });
   res.json({ message: 'تم تسجيل الخروج بنجاح' });
+});
+
+// ═══════════════════════════════════════════════════════
+// POST /api/auth/switch-entity  — تبديل السياق (Context Switch)
+// يتيح للمستخدم الانتقال بين الشركات/الكيانات
+// مثال: أحمد يتنقل من "النماء" إلى "الإتقان"
+// ═══════════════════════════════════════════════════════
+router.post('/switch-entity', verifyToken, async (req, res) => {
+  try {
+    const { entityId } = req.body;
+    if (!entityId) {
+      return res.status(400).json({ error: 'entityId مطلوب' });
+    }
+
+    // التحقق أن المستخدم لديه membership في هذا الـ entity
+    const membership = await prisma.member.findFirst({
+      where: {
+        userId: req.user.id,
+        entityId,
+      },
+      include: {
+        entity: {
+          include: { company: { select: { id: true, nameAr: true, status: true } } }
+        }
+      }
+    });
+
+    if (!membership && req.user.systemRole !== 'SUPER_ADMIN') {
+      return res.status(403).json({ error: 'ليس لديك صلاحية للوصول لهذا الكيان' });
+    }
+
+    // تحديد الـ entity (للـ SUPER_ADMIN يقبل أي entity)
+    const targetEntity = membership?.entity || await prisma.entity.findUnique({
+      where: { id: entityId },
+      include: { company: { select: { id: true, nameAr: true, status: true } } }
+    });
+
+    if (!targetEntity) {
+      return res.status(404).json({ error: 'الكيان غير موجود' });
+    }
+
+    // فحص تعليق الشركة
+    if (targetEntity.company?.status === 'SUSPENDED') {
+      return res.status(403).json({ error: 'هذا الكيان معلق حالياً', suspended: true });
+    }
+
+    // تحديد الدور والـ userType في الـ entity الجديد
+    const newRole = membership?.role || (req.user.systemRole === 'SUPER_ADMIN' ? 'OWNER' : 'VIEWER');
+    const isSA = req.user.systemRole === 'SUPER_ADMIN';
+    let newUserType = membership?.userType || 'EXPLORER';
+
+    // قاعدة ذهبية: OWNER/ADMIN → COMPANY_MANAGER دائماً
+    if (['OWNER', 'ADMIN'].includes(newRole) || isSA) {
+      newUserType = 'COMPANY_MANAGER';
+    }
+
+    // توليد JWT جديد بالـ entity الجديد
+    const newToken = jwt.sign(
+      {
+        id: req.user.id,
+        email: req.user.email,
+        name: req.user.name,
+        systemRole: req.user.systemRole || 'USER',
+        role: newRole,
+        userType: newUserType,
+        entityId: targetEntity.id,
+        companyId: targetEntity.company?.id || targetEntity.companyId || null,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    // تحديث الكوكي
+    res.cookie('token', newToken, {
+      path: '/',
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000 // 24 ساعة
+    });
+
+    res.json({
+      message: 'تم تبديل السياق بنجاح',
+      token: newToken,
+      entity: {
+        id: targetEntity.id,
+        legalName: targetEntity.legalName,
+        displayName: targetEntity.displayName,
+      },
+      user: {
+        id: req.user.id,
+        role: newRole,
+        userType: newUserType,
+        entityId: targetEntity.id,
+      }
+    });
+
+  } catch (error) {
+    console.error('[switch-entity] Error:', error);
+    res.status(500).json({ error: 'فشل تبديل السياق' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════
+// GET /api/auth/my-entities  — قائمة كل الكيانات للمستخدم
+// لعرض Context Switcher في الـ UI (قائمة الشركات)
+// ═══════════════════════════════════════════════════════
+router.get('/my-entities', verifyToken, async (req, res) => {
+  try {
+    const memberships = await prisma.member.findMany({
+      where: { userId: req.user.id },
+      include: {
+        entity: {
+          select: {
+            id: true,
+            legalName: true,
+            displayName: true,
+            logoUrl: true,
+            size: true,
+            isActive: true,
+            company: { select: { id: true, nameAr: true, status: true } }
+          }
+        }
+      },
+      orderBy: { joinedAt: 'asc' }
+    });
+
+    const entities = memberships.map(m => ({
+      entityId: m.entity.id,
+      entityName: m.entity.displayName || m.entity.legalName,
+      logoUrl: m.entity.logoUrl,
+      size: m.entity.size,
+      role: m.role,
+      userType: m.userType,
+      isActive: m.entity.isActive,
+      isCurrent: m.entity.id === (req.user.activeEntityId || req.user.entityId),
+      companyName: m.entity.company?.nameAr,
+      companyStatus: m.entity.company?.status,
+    }));
+
+    res.json({ entities, total: entities.length });
+
+  } catch (error) {
+    console.error('[my-entities] Error:', error);
+    res.status(500).json({ error: 'فشل جلب الكيانات' });
+  }
 });
 
 module.exports = router;

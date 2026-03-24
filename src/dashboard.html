@@ -761,8 +761,10 @@
 
                 async function logoutUser() {
                     try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } catch (e) { }
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
+                    // ✅ نمسح فقط مفاتيح Stratix المحددة — لا clear() كامل
+                    ['token', 'user', 'stratix_v10_dept', 'stratix_smart_guide', 'stratix_category',
+                        'onboarding_data', 'stratix_diagnostic_payload', 'stratix_return_url'
+                    ].forEach(k => localStorage.removeItem(k));
                     sessionStorage.clear();
                     window.location.href = '/login.html';
                 }
@@ -800,9 +802,28 @@
 
                     if (!u) { window.location.href = '/login.html'; return; }
 
-                    // ✅ توجيه ذكي — كل مستفيد لصفحته المخصصة
+                    // ── Multi-Entity Check ───────────────────────────────
+                    // فحص عدد الكيانات قبل التوجيه — فقط لغير SUPER_ADMIN
                     const isSuperAdmin = u.systemRole === 'SUPER_ADMIN';
                     if (!isSuperAdmin) {
+                        try {
+                            const entRes = await fetch('/api/auth/my-entities', { credentials: 'include' });
+                            if (entRes.ok) {
+                                const entData = await entRes.json();
+                                const entities = entData.entities || [];
+                                if (entities.length === 0) {
+                                    window.location.replace('/onboarding.html'); return;
+                                }
+                                if (entities.length > 1) {
+                                    window.location.replace('/context-select.html'); return;
+                                }
+                                // كيان واحد — اكمل التوجيه العادي
+                            }
+                        } catch (e) {
+                            console.warn('[Dashboard] my-entities check failed, continuing:', e.message);
+                        }
+
+                        // ✅ توجيه ذكي — كل مستفيد لصفحته المخصصة
                         if (u.role === 'CONSULTANT') { window.location.replace('/consultant-dashboard.html'); return; }
                         if (u.role === 'DATA_ENTRY' || u.role === 'VIEWER') { window.location.replace('/viewer-hub.html'); return; }
                         if (u.userType === 'BOARD_VIEWER') { window.location.replace('/board-dashboard.html'); return; }
