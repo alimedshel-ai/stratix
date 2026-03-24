@@ -857,8 +857,10 @@ router.get('/me', verifyToken, (req, res) => {
     systemRole: req.user.systemRole || 'USER',
     role: req.user.role,
     userType: req.user.userType,
-    entityId: req.user.entityId || null,
-    companyId: req.user.companyId || null,
+    userCategory: req.user.userCategory || null,
+    // ✅ activeEntityId هو المصدر الصحيح (يُعيّنه verifyToken من decoded.entityId)
+    entityId: req.user.activeEntityId || req.user.entityId || null,
+    companyId: req.user.activeCompanyId || req.user.companyId || null,
     isSuperAdmin: req.user.isSuperAdmin || false,
   });
 });

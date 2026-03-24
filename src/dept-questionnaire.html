@@ -484,17 +484,32 @@
 
         // ========== Initialize ==========
         async function init() {
-            // ✅ جلب user من API مباشرة — لا localStorage
+            console.log('[Q] ▶ init() started');  // ← أول سطر للتأكد
+            // ✅ استخدام window.api.getCurrentUser() لإدارة الـ cache بشكل صحيح
             try {
-                const meRes = await fetch('/api/auth/me', { credentials: 'include' });
-                if (meRes.ok) {
-                    user = await meRes.json();
-                    entityId = user.entityId || null;
-                } else {
+                // انتظر حتى يتوفر window.api (يُحمَّل من api.js)
+                let attempts = 0;
+                while (!window.api && attempts < 30) {
+                    await new Promise(r => setTimeout(r, 100));
+                    attempts++;
+                }
+
+                if (!window.api) {
+                    console.error('[Q] window.api not available');
                     window.location.href = '/login.html';
                     return;
                 }
+
+                user = await window.api.getCurrentUser();
+                if (!user || !user.id) {
+                    console.warn('[Q] no user returned');
+                    window.location.href = '/login.html';
+                    return;
+                }
+                entityId = user.entity?.id || user.entityId || null;
+                console.log('[Q] user loaded:', user.name, '| entityId:', entityId, '| role:', user.role);
             } catch (e) {
+                console.warn('[Q] getCurrentUser error:', e.message);
                 window.location.href = '/login.html';
                 return;
             }
@@ -514,6 +529,7 @@
             if (deptCode) deptCode = deptCode.toUpperCase();
 
             const role = deptRole || CODE_TO_ROLE[deptCode];
+            console.log('[Q] role:', role, '| deptCode:', deptCode, '| entityId:', entityId, '| user.role:', user?.role);
 
             if (!role) {
                 document.getElementById('qContainer').innerHTML = `
@@ -530,10 +546,7 @@
             // 1. Load questionnaire template (with entityId for sector-specific)
             try {
                 const qUrl = `/api/dept-data/questionnaire/${role}${entityId ? '?entityId=' + entityId : ''}`;
-                const res = await fetch(qUrl, {
-                    credentials: 'include',
-                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-                });
+                const res = await fetch(qUrl, { credentials: 'include' });
                 if (!res.ok) throw new Error('Failed to load questionnaire');
                 questionnaire = await res.json();
             } catch (e) {
@@ -546,25 +559,25 @@
             // 2. Find department ID if needed
             if (!currentDeptId && entityId) {
                 try {
-                    const dRes = await fetch(`/api/departments/${entityId}`, {
-                        credentials: 'include',
-                        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-                    });
-                    const depts = await dRes.json();
-                    const code = deptCode?.toUpperCase() || Object.entries(CODE_TO_ROLE).find(([, r]) => r === role)?.[0];
-                    const found = depts.find(d => d.code === code);
-                    if (found) currentDeptId = found.id;
-                } catch (e) { }
+                    const dRes = await fetch(`/api/departments/${entityId}`, { credentials: 'include' });
+                    if (dRes.ok) {
+                        const depts = await dRes.json();
+                        if (Array.isArray(depts)) {
+                            const code = deptCode?.toUpperCase() || Object.entries(CODE_TO_ROLE).find(([, r]) => r === role)?.[0];
+                            const found = depts.find(d => d.code === code);
+                            if (found) currentDeptId = found.id;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('[Questionnaire] departments lookup failed:', e.message);
+                }
             }
 
             // 3. Load existing data
             let savedData = {};
             if (currentDeptId) {
                 try {
-                    const dRes = await fetch(`/api/dept-data/${currentDeptId}`, {
-                        credentials: 'include',
-                        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-                    });
+                    const dRes = await fetch(`/api/dept-data/${currentDeptId}`, { credentials: 'include' });
                     if (dRes.ok) {
                         const d = await dRes.json();
                         savedData = d.data || {};
@@ -763,10 +776,7 @@
                 const res = await fetch(`/api/dept-data/${currentDeptId}`, {
                     method: 'POST',
                     credentials: 'include',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ answers })
                 });
 
@@ -794,17 +804,14 @@
         }
 
         async function saveDraft(isAuto = false) {
-            if (!currentDeptId || !token) return;
+            if (!currentDeptId) return; // لا نحتاج token — Cookie تكفي
 
             try {
                 const answers = collectAnswers();
                 await fetch(`/api/dept-data/${currentDeptId}`, {
                     method: 'POST',
                     credentials: 'include',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ answers })
                 });
 
@@ -828,8 +835,9 @@
             setTimeout(() => t.style.display = 'none', 3500);
         }
 
-        // تشغيل init بعد انتهاء قائمة المهام الحالية (مستقل عن sidebar.js)
-        setTimeout(() => init(), 0);
+        // ✅ تشغيل init بعد تحميل DOM — بدون تبعية على sidebar.js
+        document.addEventListener('DOMContentLoaded', () => init());
+        if (document.readyState !== 'loading') init(); // fallback إذا DOM جاهز
     </script>
 </body>
 
