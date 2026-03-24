@@ -32,26 +32,31 @@ async function getCurrentUser() {
 
     _userFetchPromise = (async () => {
         try {
-            const res = await fetch('/api/user/me', { credentials: 'include' });
+            const res = await fetch('/api/user/me', {
+                credentials: 'include',
+                headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }  // ✅ يمنع 304 بدون body
+            });
             if (!res.ok) {
-                if (res.status === 401) {
-                    throw new Error('Unauthorized');
-                }
+                if (res.status === 401) throw new Error('Unauthorized');
                 const err = await res.json().catch(() => ({}));
                 if (res.status === 403 && err.reason) {
                     window.location.href = `/suspended.html?reason=${encodeURIComponent(err.reason)}`;
                     return Promise.reject(new Error('SUSPENDED'));
                 }
+                _userFetchPromise = null;  // reset عند الفشل فقط
                 return null;
             }
-            _cachedUser = await res.json();
+            const data = await res.json().catch(() => null);
+            if (!data) { _userFetchPromise = null; return null; }
+            _cachedUser = data;
+            // ✅ لا نُصفّر _userFetchPromise عند النجاح —
+            //    _cachedUser يكفي لـ short-circuit المكالمات القادمة
             return _cachedUser;
         } catch (err) {
+            _userFetchPromise = null;  // reset عند الفشل فقط
             console.error('getCurrentUser failed', err);
             if (err.message === 'Account suspended' || err.message === 'Unauthorized') throw err;
             return null;
-        } finally {
-            _userFetchPromise = null;
         }
     })();
     return _userFetchPromise;
