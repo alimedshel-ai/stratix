@@ -4,1149 +4,468 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مصفوفة TOWS - Startix</title>
-    <meta name="description" content="مصفوفة TOWS لتوليد الاستراتيجيات من تقاطع SWOT">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap"
+    <title>ستارتكس | مصفوفة TOWS الاستراتيجية</title>
+    <!-- Frameworks -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
         rel="stylesheet">
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="/css/shared.css">
+    <link rel="stylesheet" href="/css/dept-pages.css">
+
     <style>
         :root {
-            --bg-primary: #0f0e17;
-            --bg-card: #1a1a2e;
-            --bg-elevated: #16213e;
-            --text-primary: #e8e8f0;
-            --text-muted: #8b8ba7;
-            --accent-so: #22c55e;
-            --accent-st: #3b82f6;
-            --accent-wo: #f59e0b;
-            --accent-wt: #ef4444;
-            --accent-purple: #a78bfa;
-            --glass: rgba(255, 255, 255, 0.05);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            --stx-bg: #0b0d12;
+            --stx-card: rgba(22, 27, 34, 0.7);
+            --stx-border: rgba(255, 255, 255, 0.08);
+            --stx-primary: #818cf8;
+            --stx-so: #10b981;
+            --stx-st: #3b82f6;
+            --stx-wo: #f59e0b;
+            --stx-wt: #ef4444;
         }
 
         body {
+            background-color: var(--stx-bg);
+            color: #f8fafc;
             font-family: 'Tajawal', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            min-height: 100vh;
-        }
-
-        /* ===== NAVBAR ===== */
-        .top-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 24px;
-            background: rgba(15, 14, 23, 0.95);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .top-nav .brand {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--accent-purple);
-            text-decoration: none;
-        }
-
-        .nav-links a {
-            color: var(--text-muted);
-            text-decoration: none;
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            transition: all 0.2s;
-        }
-
-        .nav-links a:hover,
-        .nav-links a.active {
-            color: var(--text-primary);
-            background: var(--glass);
-        }
-
-        .nav-links a.active {
-            color: var(--accent-purple);
-        }
-
-        /* ===== HEADER ===== */
-        .page-header {
-            padding: 32px 32px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-
-        .page-header h1 {
-            font-size: 1.8rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--accent-so), var(--accent-st));
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .page-header .subtitle {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        /* ===== STATS BAR ===== */
-        .stats-bar {
-            display: flex;
-            gap: 16px;
-            padding: 0 32px 24px;
-            flex-wrap: wrap;
-        }
-
-        .stat-chip {
-            background: var(--glass);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex: 1;
-            min-width: 140px;
-        }
-
-        .stat-chip .number {
-            font-size: 1.4rem;
-            font-weight: 700;
-        }
-
-        .stat-chip .label {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        /* ===== ASSESSMENT SELECT ===== */
-        .control-bar {
-            padding: 0 32px 24px;
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .control-bar select,
-        .control-bar button {
-            background: var(--bg-card);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--text-primary);
-            padding: 10px 16px;
-            border-radius: 10px;
-            font-family: 'Tajawal', sans-serif;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .control-bar select:focus {
-            outline: none;
-            border-color: var(--accent-purple);
-        }
-
-        .btn-generate {
-            background: linear-gradient(135deg, var(--accent-purple), #7c3aed) !important;
-            border: none !important;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-generate:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(167, 139, 250, 0.3);
-        }
-
-        .btn-add {
-            background: linear-gradient(135deg, var(--accent-so), #16a34a) !important;
-            border: none !important;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* ===== TOWS MATRIX ===== */
-        .matrix-container {
-            padding: 0 32px 32px;
-        }
-
-        .matrix-grid {
-            display: grid;
-            grid-template-columns: 80px 1fr 1fr;
-            grid-template-rows: 80px auto auto;
-            gap: 2px;
-            border-radius: 16px;
             overflow: hidden;
         }
 
-        .matrix-corner {
-            background: var(--bg-card);
+        .stx-wrapper {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 0.8rem;
-            color: var(--accent-purple);
+            height: 100vh;
+            overflow: hidden;
         }
 
-        .matrix-col-header {
-            background: var(--bg-card);
-            padding: 16px;
-            text-align: center;
-            font-weight: 700;
-            font-size: 0.95rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
+        .stx-sidebar-container {
+            width: 260px;
+            flex-shrink: 0;
+            border-left: 1px solid var(--stx-border);
         }
 
-        .matrix-col-header small {
-            font-weight: 400;
-            font-size: 0.7rem;
-            color: var(--text-muted);
+        .stx-main-content {
+            flex: 1;
+            overflow-y: auto;
+            height: 100vh;
         }
 
-        .matrix-row-header {
-            background: var(--bg-card);
-            writing-mode: vertical-rl;
-            text-orientation: mixed;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 0.9rem;
-            padding: 16px 8px;
-            transform: rotate(180deg);
-        }
-
-        .quadrant {
-            background: var(--bg-elevated);
-            padding: 16px;
-            min-height: 200px;
-            position: relative;
-            transition: all 0.3s;
-        }
-
-        .quadrant:hover {
-            background: rgba(22, 33, 62, 0.9);
-        }
-
-        .quadrant-header {
+        /* Header */
+        .stx-header {
+            background: rgba(11, 13, 18, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--stx-border);
+            padding: 16px 32px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         }
 
-        .quadrant-title {
+        /* Matrix Grid */
+        .tows-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 28px;
+            padding: 32px;
+            max-width: 1300px;
+            margin: 0 auto 120px;
+        }
+
+        .tows-card {
+            background: var(--stx-card);
+            border: 1px solid var(--stx-border);
+            border-radius: 28px;
+            padding: 32px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .tows-card:hover {
+            transform: translateY(-6px);
+            background: rgba(255, 255, 255, 0.03);
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-header-stx {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        /* Variant Colors */
+        .tows-so {
+            border-top: 4px solid var(--stx-so);
+        }
+
+        .tows-so .card-icon {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--stx-so);
+        }
+
+        .tows-so .card-title {
+            color: var(--stx-so);
+        }
+
+        .tows-st {
+            border-top: 4px solid var(--stx-st);
+        }
+
+        .tows-st .card-icon {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--stx-st);
+        }
+
+        .tows-st .card-title {
+            color: var(--stx-st);
+        }
+
+        .tows-wo {
+            border-top: 4px solid var(--stx-wo);
+        }
+
+        .tows-wo .card-icon {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--stx-wo);
+        }
+
+        .tows-wo .card-title {
+            color: var(--stx-wo);
+        }
+
+        .tows-wt {
+            border-top: 4px solid var(--stx-wt);
+        }
+
+        .tows-wt .card-icon {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--stx-wt);
+        }
+
+        .tows-wt .card-title {
+            color: var(--stx-wt);
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -0.01em;
+        }
+
+        .tows-desc {
+            font-size: 0.88rem;
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+
+        .tows-textarea {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--stx-border);
+            border-radius: 18px;
+            padding: 16px 20px;
+            color: #f1f5f9;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            min-height: 140px;
+            width: 100%;
+            resize: none;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .tows-textarea:focus {
+            border-color: var(--stx-primary);
+            background: rgba(0, 0, 0, 0.35);
+            box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.1);
+        }
+
+        .sync-btn {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: var(--stx-so);
+            padding: 12px 24px;
+            border-radius: 14px;
             font-weight: 700;
-            font-size: 0.85rem;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 10px;
+            transition: all 0.3s;
         }
 
-        .quadrant-badge {
-            font-size: 0.65rem;
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-weight: 600;
+        .sync-btn:hover {
+            background: var(--stx-so);
+            color: white;
+            transform: translateY(-2px);
         }
 
-        .q-so .quadrant-title {
-            color: var(--accent-so);
-        }
-
-        .q-so .quadrant-badge {
-            background: rgba(34, 197, 94, 0.15);
-            color: var(--accent-so);
-        }
-
-        .q-st .quadrant-title {
-            color: var(--accent-st);
-        }
-
-        .q-st .quadrant-badge {
-            background: rgba(59, 130, 246, 0.15);
-            color: var(--accent-st);
-        }
-
-        .q-wo .quadrant-title {
-            color: var(--accent-wo);
-        }
-
-        .q-wo .quadrant-badge {
-            background: rgba(245, 158, 11, 0.15);
-            color: var(--accent-wo);
-        }
-
-        .q-wt .quadrant-title {
-            color: var(--accent-wt);
-        }
-
-        .q-wt .quadrant-badge {
-            background: rgba(239, 68, 68, 0.15);
-            color: var(--accent-wt);
-        }
-
-        /* ===== STRATEGY CARDS ===== */
-        .strategy-card {
-            background: var(--glass);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 8px;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-
-        .strategy-card:hover {
-            border-color: rgba(255, 255, 255, 0.15);
-            transform: translateY(-1px);
-        }
-
-        .strategy-card .strategy-text {
-            font-size: 0.82rem;
-            line-height: 1.5;
-            margin-bottom: 8px;
-        }
-
-        .strategy-card .strategy-meta {
+        /* Footer Action Bar */
+        .action-bar {
+            position: fixed;
+            bottom: 0;
+            right: 260px;
+            left: 0;
+            background: rgba(11, 13, 18, 0.9);
+            backdrop-filter: blur(15px);
+            border-top: 1px solid var(--stx-border);
+            padding: 20px 48px;
             display: flex;
-            gap: 6px;
+            justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
+            z-index: 1100;
         }
 
-        .strategy-card .point-tag {
-            font-size: 0.65rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: monospace;
-            font-weight: 600;
-        }
-
-        .tag-strength {
-            background: rgba(34, 197, 94, 0.15);
-            color: #4ade80;
-        }
-
-        .tag-weakness {
-            background: rgba(239, 68, 68, 0.15);
-            color: #f87171;
-        }
-
-        .tag-opportunity {
-            background: rgba(59, 130, 246, 0.15);
-            color: #60a5fa;
-        }
-
-        .tag-threat {
-            background: rgba(245, 158, 11, 0.15);
-            color: #fbbf24;
-        }
-
-        .priority-badge {
-            font-size: 0.6rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: 600;
-        }
-
-        .priority-HIGH {
-            background: rgba(239, 68, 68, 0.15);
-            color: #f87171;
-        }
-
-        .priority-MEDIUM {
-            background: rgba(245, 158, 11, 0.15);
-            color: #fbbf24;
-        }
-
-        .priority-LOW {
-            background: rgba(107, 114, 128, 0.15);
-            color: #9ca3af;
-        }
-
-        .status-badge {
-            font-size: 0.6rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: 600;
-        }
-
-        .status-PROPOSED {
-            background: rgba(167, 139, 250, 0.15);
-            color: #a78bfa;
-        }
-
-        .status-APPROVED {
-            background: rgba(34, 197, 94, 0.15);
-            color: #4ade80;
-        }
-
-        .status-IN_PROGRESS {
-            background: rgba(59, 130, 246, 0.15);
-            color: #60a5fa;
-        }
-
-        .status-COMPLETED {
-            background: rgba(107, 114, 128, 0.15);
-            color: #9ca3af;
-        }
-
-        .strategy-actions {
-            display: flex;
-            gap: 4px;
-            margin-right: auto;
-        }
-
-        .strategy-actions button {
-            background: none;
+        .btn-stx-primary {
+            background: var(--stx-primary);
+            color: white;
             border: none;
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            cursor: pointer;
-            padding: 2px 4px;
-            border-radius: 4px;
-            transition: all 0.2s;
-        }
-
-        .strategy-actions button:hover {
-            color: var(--text-primary);
-            background: var(--glass);
-        }
-
-        .empty-quadrant {
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            text-align: center;
-            padding: 40px 16px;
-            opacity: 0.6;
-        }
-
-        /* ===== MODAL ===== */
-        .modal-content {
-            background: var(--bg-card);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 14px 36px;
             border-radius: 16px;
-            color: var(--text-primary);
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s;
+            box-shadow: 0 8px 16px rgba(129, 140, 248, 0.25);
         }
 
-        .modal-header {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        .btn-stx-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(129, 140, 248, 0.4);
+            filter: brightness(1.1);
         }
 
-        .modal-footer {
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        .step-hub-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--stx-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.1rem;
+            box-shadow: 0 0 15px rgba(129, 140, 248, 0.4);
         }
 
-        .form-control,
-        .form-select {
-            background: var(--bg-elevated) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            color: var(--text-primary) !important;
-            font-family: 'Tajawal', sans-serif;
-        }
-
-        .form-control:focus,
-        .form-select:focus {
-            border-color: var(--accent-purple) !important;
-            box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.15) !important;
-        }
-
-        .form-label {
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: var(--text-muted);
-        }
-
-        .btn-close {
-            filter: invert(1);
-        }
-
-        /* ===== LOADING ===== */
-        .loading {
-            text-align: center;
-            padding: 60px;
-            color: var(--text-muted);
-        }
-
-        .loading i {
-            font-size: 2rem;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 768px) {
-            .matrix-grid {
+        @media (max-width: 992px) {
+            .tows-grid {
                 grid-template-columns: 1fr;
-                grid-template-rows: auto;
             }
 
-            .matrix-corner,
-            .matrix-col-header,
-            .matrix-row-header {
-                display: none;
-            }
-
-            .quadrant {
-                min-height: 120px;
-            }
-
-            .page-header {
-                padding: 16px;
-            }
-
-            .stats-bar,
-            .control-bar,
-            .matrix-container {
-                padding-left: 16px;
-                padding-right: 16px;
+            .action-bar {
+                right: 0;
             }
         }
     </style>
 </head>
 
 <body>
-    <!-- ===== NAVBAR ===== -->
-    <nav class="top-nav">
-        <a href="/dashboard" class="brand"><i class="bi bi-graph-up-arrow"></i> ستارتكس</a>
-        <div class="nav-links">
-            <a href="/dashboard"><i class="bi bi-house"></i> الرئيسية</a>
-            <a href="/kpis"><i class="bi bi-graph-up"></i> المؤشرات</a>
-            <a href="/intelligence"><i class="bi bi-bell"></i> التنبيهات</a>
-        </div>
-        <button class="btn btn-sm" style="background:rgba(255,255,255,0.06);color:var(--text-muted);border:none;"
-            onclick="logout()">
-            <i class="bi bi-box-arrow-left"></i> خروج
-        </button>
-    </nav>
+    <div class="stx-wrapper">
+        <aside class="stx-sidebar-container"></aside>
 
-    <!-- ===== HEADER ===== -->
-    <div class="page-header">
-        <div>
-            <h1><i class="bi bi-grid-3x3-gap-fill"></i> مصفوفة TOWS</h1>
-            <div class="subtitle">تقاطع نقاط القوة والضعف مع الفرص والتهديدات → استراتيجيات تطبيقية</div>
-        </div>
-    </div>
-
-    <!-- ===== STATS ===== -->
-    <div class="stats-bar" id="statsBar">
-        <div class="stat-chip">
-            <div>
-                <div class="number" id="statTotal">-</div>
-                <div class="label">إجمالي الاستراتيجيات</div>
-            </div>
-        </div>
-        <div class="stat-chip" style="border-color:rgba(34,197,94,0.2);">
-            <div>
-                <div class="number" id="statSO" style="color:var(--accent-so);">-</div>
-                <div class="label">SO هجومية</div>
-            </div>
-        </div>
-        <div class="stat-chip" style="border-color:rgba(59,130,246,0.2);">
-            <div>
-                <div class="number" id="statST" style="color:var(--accent-st);">-</div>
-                <div class="label">ST دفاعية</div>
-            </div>
-        </div>
-        <div class="stat-chip" style="border-color:rgba(245,158,11,0.2);">
-            <div>
-                <div class="number" id="statWO" style="color:var(--accent-wo);">-</div>
-                <div class="label">WO علاجية</div>
-            </div>
-        </div>
-        <div class="stat-chip" style="border-color:rgba(239,68,68,0.2);">
-            <div>
-                <div class="number" id="statWT" style="color:var(--accent-wt);">-</div>
-                <div class="label">WT تجنبية</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Phase 6B: Bridge Banner -->
-    <div id="towsBridgeBanner" style="display:none;margin-bottom:16px;padding:14px 18px;
-        background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25);
-        border-radius:12px;align-items:center;gap:14px;flex-wrap:wrap">
-        <div style="font-size:22px">🔗</div>
-        <div style="flex:1;font-size:13px">
-            <strong>بيانات التشخيص متاحة</strong>
-            <div id="towsBridgeSummary" style="color:#8b8ba7;font-size:12px;margin-top:2px"></div>
-        </div>
-        <button onclick="injectTowsFromBridge()" style="padding:8px 16px;border-radius:9px;border:none;
-            background:linear-gradient(135deg,#6366f1,#a78bfa);color:#fff;
-            font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer">
-            ⚡ دمج في TOWS
-        </button>
-    </div>
-
-    <!-- ===== CONTROLS ===== -->
-    <div class="control-bar">
-        <select id="assessmentSelect" onchange="loadMatrix()">
-            <option value="">-- اختر تقييم --</option>
-        </select>
-        <button class="btn-generate" onclick="autoGenerate()"><i class="bi bi-magic"></i> توليد تلقائي</button>
-        <button class="btn-add" onclick="openAddModal()"><i class="bi bi-plus-lg"></i> إضافة استراتيجية</button>
-    </div>
-
-    <!-- ===== MATRIX ===== -->
-    <div class="matrix-container">
-        <div id="matrixArea">
-            <div class="loading"><i class="bi bi-arrow-repeat"></i><br>اختر تقييم لعرض المصفوفة</div>
-        </div>
-    </div>
-
-    <!-- ===== ADD/EDIT MODAL ===== -->
-    <div class="modal fade" id="strategyModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitle">إضافة استراتيجية TOWS</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="editId">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">النقطة الداخلية (قوة / ضعف)</label>
-                            <select class="form-select" id="internalPointSelect"></select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">النقطة الخارجية (فرصة / تهديد)</label>
-                            <select class="form-select" id="externalPointSelect"></select>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">نص الاستراتيجية</label>
-                            <textarea class="form-control" id="strategyText" rows="3"
-                                placeholder="صف الاستراتيجية المقترحة..."></textarea>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">الأولوية</label>
-                            <select class="form-select" id="prioritySelect">
-                                <option value="HIGH">عالية</option>
-                                <option value="MEDIUM" selected>متوسطة</option>
-                                <option value="LOW">منخفضة</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">الحالة</label>
-                            <select class="form-select" id="statusSelect">
-                                <option value="PROPOSED">مقترحة</option>
-                                <option value="APPROVED">معتمدة</option>
-                                <option value="IN_PROGRESS">قيد التنفيذ</option>
-                                <option value="COMPLETED">مكتملة</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">الربع (تلقائي)</label>
-                            <input class="form-control" id="quadrantPreview" readonly disabled>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">ملاحظات</label>
-                            <textarea class="form-control" id="notesText" rows="2"
-                                placeholder="ملاحظات إضافية..."></textarea>
-                        </div>
+        <main class="stx-main-content">
+            <!-- Glass Header -->
+            <header class="stx-header">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="step-hub-icon"><i class="bi bi-grid-1x2"></i></div>
+                    <div>
+                        <h1 class="h5 fw-bold m-0" id="main-title">مصفوفة الربط الاستراتيجي (TOWS)</h1>
+                        <p class="small text-muted m-0" id="dept-context">جاري التحميل...</p>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="button" class="btn" style="background:var(--accent-purple);color:white;"
-                        onclick="saveStrategy()">
-                        <i class="bi bi-check-lg"></i> حفظ
+                <div>
+                    <button class="sync-btn" onclick="autoSyncSwot()">
+                        <i class="bi bi-magic"></i> توليد استراتيجيات ذكية من SWOT
+                    </button>
+                </div>
+            </header>
+
+            <div class="tows-grid">
+                <!-- SO Strategies -->
+                <div class="tows-card tows-so">
+                    <div class="card-header-stx">
+                        <div class="card-icon"><i class="bi bi-shield-check"></i></div>
+                        <h3 class="card-title">استراتيجيات SO (استغلال القوة)</h3>
+                    </div>
+                    <p class="tows-desc">كيف يمكن توظيف نقاط القوة الداخلية لاغتنام الفرص الخارجية المتاحة؟ (النمو
+                        السريع)</p>
+                    <textarea id="so_strategies" class="tows-textarea"
+                        placeholder="مثال: استخدام فريق الموارد البشرية المحترف لإدارة خطة التوسع السريعة المعلن عنها..."></textarea>
+                </div>
+
+                <!-- ST Strategies -->
+                <div class="tows-card tows-st">
+                    <div class="card-header-stx">
+                        <div class="card-icon"><i class="bi bi-shield-shaded"></i></div>
+                        <h3 class="card-title">استراتيجيات ST (تحصين القوة)</h3>
+                    </div>
+                    <p class="tows-desc">كيف يمكن استخدام نقاط القوة الداخلية لمواجهة ومنع التهديدات الخارجية؟ (الدفاع
+                        الاستراتيجي)</p>
+                    <textarea id="st_strategies" class="tows-textarea"
+                        placeholder="مثال: الاستفادة من ولاء الموظفين العالي لمواجهة محاولات الاستقطاب من المنافسين الجدد..."></textarea>
+                </div>
+
+                <!-- WO Strategies -->
+                <div class="tows-card tows-wo">
+                    <div class="card-header-stx">
+                        <div class="card-icon"><i class="bi bi-tools"></i></div>
+                        <h3 class="card-title">استراتيجيات WO (تصحيح المسار)</h3>
+                    </div>
+                    <p class="tows-desc">كيف يمكن معالجة نقاط الضعف الداخلية من أجل الاستفادة الكبرى من الفرص؟ (التطوير
+                        الموجه)</p>
+                    <textarea id="wo_strategies" class="tows-textarea"
+                        placeholder="مثال: أتمتة نظام الحضور (ضعف) لاغتنام فرصة تطبيق سياسات العمل المرن الجديدة..."></textarea>
+                </div>
+
+                <!-- WT Strategies -->
+                <div class="tows-card tows-wt">
+                    <div class="card-header-stx">
+                        <div class="card-icon"><i class="bi bi-exclamation-octagon"></i></div>
+                        <h3 class="card-title">استراتيجيات WT (تجنب المخاطر)</h3>
+                    </div>
+                    <p class="tows-desc">كيف يمكن تقليل نقاط الضعف الداخلية لتجنب أو تقليل أثر التهديدات الخارجية؟
+                        (الانكماش أو البقاء)</p>
+                    <textarea id="wt_strategies" class="tows-textarea"
+                        placeholder="مثال: تدريب الموظفين على المهارات الرقمية لتقليل ضعف الخبرة التقنية في ظل تحول السوق للرقمنة..."></textarea>
+                </div>
+            </div>
+
+            <!-- Footer Action Bar -->
+            <div class="action-bar">
+                <button type="button" onclick="history.back()"
+                    class="btn btn-link text-muted text-decoration-none fw-bold">
+                    <i class="bi bi-arrow-right me-2"></i> العودة لتحليل SWOT
+                </button>
+                <div class="d-flex align-items-center gap-4">
+                    <div class="text-end d-none d-lg-block">
+                        <div class="small text-muted">المحطة التالية</div>
+                        <div class="fw-bold text-info">صياغة السيناريوهات <i class="bi bi-arrow-left"></i></div>
+                    </div>
+                    <button type="button" onclick="saveTows()" id="btnSave" class="btn-stx-primary">
+                        حفظ وبدء صياغة السيناريوهات <i class="bi bi-arrow-left"></i>
                     </button>
                 </div>
             </div>
-        </div>
+        </main>
     </div>
 
-    <script src="/assets/js/path-engine.js"></script>
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/js/data-layer.js"></script>
-    <script src="/assets/js/api.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/context-manager.js"></script>
+    <script src="/js/dept-page.js"></script>
+    <script src="/js/steps-config.js"></script>
+    <script src="/js/sidebar.js"></script>
+
     <script>
-        const token = localStorage.getItem('token');
-        if (!token) { sessionStorage.setItem('stratix_return_url', location.pathname + location.search); location.href = '/login?from=restore'; }
+        const urlParams = new URLSearchParams(window.location.search);
+        const dept = urlParams.get('dept') || (typeof Context !== 'undefined' ? Context.getDept() : null) || 'hr';
+        const DEPT_LABELS = { hr: 'الموارد البشرية', finance: 'المالية', marketing: 'التسويق', operations: 'العمليات' };
 
-        let currentData = null;
+        async function initTows() {
+            document.getElementById('dept-context').textContent = `${DEPT_LABELS[dept] || dept} | المحطة 2: التخطيط المستقبلي`;
 
-        const statusLabel = { PROPOSED: 'مقترحة', APPROVED: 'معتمدة', IN_PROGRESS: 'قيد التنفيذ', COMPLETED: 'مكتملة' };
-        const priorityLabel = { HIGH: 'عالية', MEDIUM: 'متوسطة', LOW: 'منخفضة' };
+            // Load saved tows
+            const apiType = `TOWS_${dept.toUpperCase()}`;
+            const savedFromAPI = await DeptPage.loadFromAPI(apiType).catch(() => null);
+            const savedLocal = JSON.parse(localStorage.getItem(`stratix_${dept}_tows`) || '{}');
+            const saved = savedFromAPI || savedLocal;
 
-        // ===== INIT =====
-        // ── Phase 6B: TOWS Bridge from Diagnostic ──
-        async function checkTowsBridge() {
-            const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
-            // 📊 المرحلة 3: DB أولاً
-            let dept = null;
-            try {
-                const result = await StratixData.getDeptDeep();
-                if (!result._error) dept = result;
-            } catch (e) { }
-            if (!dept) dept = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
-            if (!diag && !dept) return;
-            const banner = document.getElementById('towsBridgeBanner');
-            const summary = document.getElementById('towsBridgeSummary');
-            banner.style.display = 'flex';
-            const parts = [];
-            if (diag) parts.push(`نضج ${diag.results?.maturity ?? '?'}%`);
-            if (dept) {
-                const n = Object.values(dept).filter(v => v?.completed).length;
-                if (n) parts.push(`${n} إدارات`);
-            }
-            summary.textContent = parts.join(' · ');
-        }
-
-        async function injectTowsFromBridge() {
-            const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
-            // 📊 المرحلة 3: DB أولاً
-            let dept = null;
-            try {
-                const result = await StratixData.getDeptDeep();
-                if (!result._error) dept = result;
-            } catch (e) { }
-            if (!dept) dept = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
-            const STRENGTH_RULES_T = {
-                compliance_officer: { strength: ['نعم — موظف متفرغ', 'مستشار خارجي'], weakness: ['لا — أنا أتولى ذلك'], sL: 'مسؤول امتثال متخصص', wL: 'لا يوجد مسؤول امتثال' },
-                profit_margin: { strength: ['نعم بدقة'], weakness: ['لا'], sL: 'وعي مالي دقيق', wL: 'جهل بهامش الربح' },
-                crm: { strength: ['نعم متكامل'], weakness: ['لا'], sL: 'نظام CRM متكامل', wL: 'لا يوجد CRM' },
-                repeat_clients: { strength: ['أكثر من 60%'], weakness: ['أقل من 30%'], sL: 'قاعدة عملاء متكررة', wL: 'ضعف الاحتفاظ بالعملاء' },
-                salary_structure: { strength: ['نعم موثق'], weakness: ['لا'], sL: 'هيكل رواتب واضح', wL: 'غياب هيكل تعويضات' },
-                performance_eval: { strength: ['نعم — دوري'], weakness: ['لا'], sL: 'تقييم أداء منتظم', wL: 'لا يوجد تقييم أداء' },
-                brand_identity: { strength: ['نعم — احترافية'], weakness: ['لا'], sL: 'هوية بصرية احترافية', wL: 'لا توجد هوية بصرية' },
-                sops: { strength: ['نعم كاملة'], weakness: ['في الأذهان فقط'], sL: 'إجراءات موثقة', wL: 'عمليات غير موثقة' },
-                infra_growth: { strength: ['نعم'], weakness: ['ضعيفة'], sL: 'بنية تحتية قابلة للنمو', wL: 'بنية تحتية ضعيفة' },
-            };
-            const S = [], W = [], O = [], T = [];
-            // من التشخيص
-            if (diag?.radar?.axisScores) {
-                const LABELS = { 'مالي': 'الأداء المالي', 'عمالة': 'الموارد البشرية', 'إداري': 'الكفاءة التشغيلية', 'تنظيمي': 'الامتثال', 'قطاعي': 'الأداء القطاعي' };
-                for (const [k, v] of Object.entries(diag.radar.axisScores)) {
-                    const l = LABELS[k] || k;
-                    if (v >= 70) S.push(`أداء قوي: ${l}`);
-                    else if (v <= 40) W.push(`فجوة: ${l} (${v}%)`);
-                }
-            }
-            if (diag?.company?.sector) O.push(`فرص نمو في قطاع ${diag.company.sector}`);
-            if (diag?.results?.complianceGap > 50) T.push('مخاطر امتثال — تراخيص معلقة');
-            // من الإدارات
-            if (dept) {
-                for (const deptData of Object.values(dept)) {
-                    if (!deptData?.answers) continue;
-                    for (const [qId, val] of Object.entries(deptData.answers)) {
-                        const rule = STRENGTH_RULES_T[qId]; if (!rule) continue;
-                        const vals = Array.isArray(val) ? val : [val];
-                        if (vals.some(v => rule.strength.includes(v))) { if (!S.includes(rule.sL)) S.push(rule.sL); }
-                        else if (vals.some(v => rule.weakness.includes(v))) { if (!W.includes(rule.wL)) W.push(rule.wL); }
-                    }
-                    (deptData.challenges || []).forEach(c => { if (!T.includes(c)) T.push(c); });
-                }
-            }
-            // عرض نتيجة
-            const html = `<div style="padding:16px;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:12px;font-size:13px;">
-                <strong style="color:#a78bfa">✅ تم استخراج ${S.length + W.length + O.length + T.length} عنصر من التشخيص</strong>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
-                    <div><div style="color:#22c55e;font-weight:700;margin-bottom:6px">💪 القوى (${S.length})</div>${S.map(x => `<div style="font-size:12px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)">${x}</div>`).join('') || '—'}</div>
-                    <div><div style="color:#ef4444;font-weight:700;margin-bottom:6px">⚠️ الضعف (${W.length})</div>${W.map(x => `<div style="font-size:12px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)">${x}</div>`).join('') || '—'}</div>
-                    <div><div style="color:#3b82f6;font-weight:700;margin-bottom:6px">🚀 الفرص (${O.length})</div>${O.map(x => `<div style="font-size:12px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)">${x}</div>`).join('') || '—'}</div>
-                    <div><div style="color:#f59e0b;font-weight:700;margin-bottom:6px">🔴 التهديدات (${T.length})</div>${T.map(x => `<div style="font-size:12px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)">${x}</div>`).join('') || '—'}</div>
-                </div>
-                <div style="margin-top:12px;font-size:11px;color:#8b8ba7">← هذه النقاط جاهزة للاستخدام في بناء استراتيجيات TOWS أعلاه</div>
-            </div>`;
-            document.getElementById('matrixArea').innerHTML = html;
-            document.getElementById('towsBridgeBanner').style.display = 'none';
-        }
-
-        async function init() {
-            await loadAssessments();
-            // Show SWOT → TOWS connection banner
-            showSwotConnectionBanner();
-            // Phase 6B: check diagnostic bridge
-            await checkTowsBridge();
-        }
-
-        async function loadAssessments() {
-            try {
-                const res = await window.apiRequest('/api/assessments', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await res.json();
-                const assessments = data.assessments || data || [];
-                const sel = document.getElementById('assessmentSelect');
-                assessments.forEach(a => {
-                    sel.innerHTML += `<option value="${a.id}">${a.title || a.name || 'تقييم'} (${a.entity?.legalName || ''})</option>`;
-                });
-                // Auto-select if only one
-                if (assessments.length === 1) {
-                    sel.value = assessments[0].id;
-                    loadMatrix();
-                }
-                // Auto-select based on selected entity
-                else if (assessments.length > 0) {
-                    const user = JSON.parse(localStorage.getItem('user') || '{}');
-                    const entityId = user?.entity?.id || localStorage.getItem('entityId');
-                    if (entityId) {
-                        const match = assessments.find(a => a.entityId === entityId || a.entity?.id === entityId);
-                        if (match) {
-                            sel.value = match.id;
-                            loadMatrix();
-                        }
-                    }
-                }
-            } catch (e) {
-                console.error('Error loading assessments:', e);
+            if (saved) {
+                document.getElementById('so_strategies').value = saved.so || '';
+                document.getElementById('st_strategies').value = saved.st || '';
+                document.getElementById('wo_strategies').value = saved.wo || '';
+                document.getElementById('wt_strategies').value = saved.wt || '';
             }
         }
 
-        // Show a banner when SWOT data exists, indicating automatic connection
-        function showSwotConnectionBanner() {
-            try {
-                const user = JSON.parse(localStorage.getItem('user') || '{}');
-                const entityId = user?.entity?.id || localStorage.getItem('entityId');
-                const versionId = localStorage.getItem('selectedVersionId');
-                if (!versionId || !entityId) return;
+        async function autoSyncSwot() {
+            DeptPage.showMessage('🔄 جاري تحليل مخرجات SWOT وتوليد التوصيات...');
 
-                // Check if SWOT analysis exists for this version
-                window.apiRequest(`/api/company-analysis/version/${versionId}/SWOT`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                }).then(r => r.json()).then(swotData => {
-                    if (!swotData?.id) return;
+            const apiType = `SWOT_${dept.toUpperCase()}`;
+            const swotData = await DeptPage.loadFromAPI(apiType).catch(() => null) || {};
 
-                    // Get data summary
-                    let data = {};
-                    try { data = typeof swotData.data === 'string' ? JSON.parse(swotData.data) : (swotData.data || {}); } catch (e) { }
-                    const sCount = (data.strengths || []).length;
-                    const wCount = (data.weaknesses || []).length;
-                    const oCount = (data.opportunities || []).length;
-                    const tCount = (data.threats || []).length;
-                    const total = sCount + wCount + oCount + tCount;
+            const strengths = swotData.strengths || [];
+            const weaknesses = swotData.weaknesses || [];
+            const opportunities = swotData.opportunities || [];
+            const threats = swotData.threats || [];
 
-                    if (total === 0) return;
+            const getText = (item) => typeof item === 'string' ? item : item.text || '';
 
-                    // Insert banner before matrix
-                    const container = document.querySelector('.matrix-container');
-                    if (!container) return;
-
-                    const banner = document.createElement('div');
-                    banner.style.cssText = 'background:linear-gradient(135deg,rgba(167,139,250,0.08),rgba(99,102,241,0.04));border:1px solid rgba(167,139,250,0.2);border-radius:14px;padding:16px 20px;margin:0 32px 16px;display:flex;align-items:center;gap:14px;animation:fadeIn 0.5s ease';
-                    banner.innerHTML = `
-                        <div style="font-size:28px">🔄</div>
-                        <div style="flex:1">
-                            <div style="font-weight:700;font-size:14px;color:var(--text-primary);margin-bottom:4px">TOWS يبني على تحليل SWOT الخاص بك</div>
-                            <div style="font-size:12px;color:var(--text-muted)">
-                                لديك ${total} نقطة SWOT جاهزة:
-                                <span style="color:#22c55e;font-weight:600">${sCount} قوة</span> · 
-                                <span style="color:#ef4444;font-weight:600">${wCount} ضعف</span> · 
-                                <span style="color:#3b82f6;font-weight:600">${oCount} فرص</span> · 
-                                <span style="color:#f59e0b;font-weight:600">${tCount} تهديدات</span>
-                                — اختر تقييماً ثم اضغط "توليد تلقائي" لإنشاء الاستراتيجيات
-                            </div>
-                        </div>
-                        <a href="/swot.html" style="font-size:11px;color:#a78bfa;text-decoration:none;padding:6px 12px;border-radius:8px;border:1px solid rgba(167,139,250,0.3);white-space:nowrap">عرض SWOT ←</a>
-                    `;
-                    container.insertBefore(banner, container.firstChild);
-                }).catch(e => console.warn('SWOT check skipped:', e));
-            } catch (e) { /* silent */ }
-        }
-
-        async function loadMatrix() {
-            const assessmentId = document.getElementById('assessmentSelect').value;
-            if (!assessmentId) return;
-
-            document.getElementById('matrixArea').innerHTML = '<div class="loading"><i class="bi bi-arrow-repeat"></i><br>جاري التحميل...</div>';
-
-            try {
-                const res = await window.apiRequest(`/api/tows?assessmentId=${assessmentId}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                currentData = await res.json();
-                renderMatrix(currentData);
-                updateStats(currentData.stats);
-            } catch (e) {
-                console.error('Error loading matrix:', e);
-                document.getElementById('matrixArea').innerHTML = '<div class="loading" style="color:#ef4444;">خطأ في تحميل المصفوفة</div>';
-            }
-        }
-
-        function renderMatrix(data) {
-            const { matrix, swotPoints } = data;
-            const s = swotPoints.strengths, w = swotPoints.weaknesses;
-            const o = swotPoints.opportunities, t = swotPoints.threats;
-
-            const sLabel = s.map(p => p.code || 'S').join(' / ') || 'لا توجد';
-            const wLabel = w.map(p => p.code || 'W').join(' / ') || 'لا توجد';
-            const oLabel = o.map(p => p.code || 'O').join(' / ') || 'لا توجد';
-            const tLabel = t.map(p => p.code || 'T').join(' / ') || 'لا توجد';
-
-            document.getElementById('matrixArea').innerHTML = `
-        <div class="matrix-grid">
-          <!-- Row 0: Headers -->
-          <div class="matrix-corner">TOWS</div>
-          <div class="matrix-col-header" style="border-bottom:3px solid var(--accent-so);">
-            <span>✨ الفرص (Opportunities)</span>
-            <small>${oLabel}</small>
-          </div>
-          <div class="matrix-col-header" style="border-bottom:3px solid var(--accent-wt);">
-            <span>⚡ التهديدات (Threats)</span>
-            <small>${tLabel}</small>
-          </div>
-
-          <!-- Row 1: Strengths -->
-          <div class="matrix-row-header" style="border-left:3px solid var(--accent-so);">
-            💪 القوة (${sLabel})
-          </div>
-          <div class="quadrant q-so" id="quadrant-SO">
-            <div class="quadrant-header">
-              <div class="quadrant-title"><i class="bi bi-rocket-takeoff"></i> SO — هجومية</div>
-              <span class="quadrant-badge">${matrix.SO.strategies.length}</span>
-            </div>
-            ${renderStrategies(matrix.SO.strategies)}
-          </div>
-          <div class="quadrant q-st" id="quadrant-ST">
-            <div class="quadrant-header">
-              <div class="quadrant-title"><i class="bi bi-shield-check"></i> ST — دفاعية</div>
-              <span class="quadrant-badge">${matrix.ST.strategies.length}</span>
-            </div>
-            ${renderStrategies(matrix.ST.strategies)}
-          </div>
-
-          <!-- Row 2: Weaknesses -->
-          <div class="matrix-row-header" style="border-left:3px solid var(--accent-wt);">
-            ⚠️ الضعف (${wLabel})
-          </div>
-          <div class="quadrant q-wo" id="quadrant-WO">
-            <div class="quadrant-header">
-              <div class="quadrant-title"><i class="bi bi-bandaid"></i> WO — علاجية</div>
-              <span class="quadrant-badge">${matrix.WO.strategies.length}</span>
-            </div>
-            ${renderStrategies(matrix.WO.strategies)}
-          </div>
-          <div class="quadrant q-wt" id="quadrant-WT">
-            <div class="quadrant-header">
-              <div class="quadrant-title"><i class="bi bi-escape"></i> WT — تجنبية</div>
-              <span class="quadrant-badge">${matrix.WT.strategies.length}</span>
-            </div>
-            ${renderStrategies(matrix.WT.strategies)}
-          </div>
-        </div>
-      `;
-        }
-
-        function renderStrategies(strategies) {
-            if (strategies.length === 0) {
-                return '<div class="empty-quadrant"><i class="bi bi-plus-circle"></i><br>لا توجد استراتيجيات بعد</div>';
+            // Smart generation logic (Placeholder for now, improved with swot data if available)
+            const soEl = document.getElementById('so_strategies');
+            if (strengths.length > 0 && opportunities.length > 0) {
+                soEl.value = `استغلال نقطة القوة في [${getText(strengths[0])}] لتعظيم الاستفادة من فرصة [${getText(opportunities[0])}] وضمان الريادة السوقية.`;
             }
 
-            return strategies.map(s => `
-        <div class="strategy-card" onclick="editStrategy('${s.id}')">
-          <div class="strategy-text">${s.strategy}</div>
-          <div class="strategy-meta">
-            <span class="point-tag tag-${s.internalPoint.type.toLowerCase()}">${s.internalPoint.code || s.internalPoint.type[0]}</span>
-            <span style="color:var(--text-muted);font-size:0.7rem;">×</span>
-            <span class="point-tag tag-${s.externalPoint.type.toLowerCase()}">${s.externalPoint.code || s.externalPoint.type[0]}</span>
-            <span class="priority-badge priority-${s.priority}">${priorityLabel[s.priority]}</span>
-            <span class="status-badge status-${s.status}">${statusLabel[s.status]}</span>
-            <div class="strategy-actions">
-              <button onclick="event.stopPropagation();deleteStrategy('${s.id}')" title="حذف"><i class="bi bi-trash"></i></button>
-            </div>
-          </div>
-        </div>
-      `).join('');
+            const stEl = document.getElementById('st_strategies');
+            if (strengths.length > 0 && threats.length > 0) {
+                stEl.value = `توظيف التميز في [${getText(strengths[0])}] كدرع دفاعي لمواجهة مخاطر [${getText(threats[0])}] والحد من آثارها السلبية.`;
+            }
+
+            const woEl = document.getElementById('wo_strategies');
+            if (weaknesses.length > 0 && opportunities.length > 0) {
+                woEl.value = `العمل على سد الفجوة في [${getText(weaknesses[0])}] كأولوية قصوى لتمكين القسم من ملاحقة فرصة [${getText(opportunities[0])}].`;
+            }
+
+            const wtEl = document.getElementById('wt_strategies');
+            if (weaknesses.length > 0 && threats.length > 0) {
+                wtEl.value = `وضع خطة طوارئ عاجلة لمعالجة [${getText(weaknesses[0])}] لتقليل احتمالية تفاقم الأزمة عند حدوث [${getText(threats[0])}].`;
+            }
+
+            DeptPage.showMessage('✨ تم توليد الاستراتيجيات المبدئية بنجاح!');
         }
 
-        function updateStats(stats) {
-            if (!stats) return;
-            document.getElementById('statTotal').textContent = stats.totalStrategies;
-            document.getElementById('statSO').textContent = stats.byQuadrant.SO;
-            document.getElementById('statST').textContent = stats.byQuadrant.ST;
-            document.getElementById('statWO').textContent = stats.byQuadrant.WO;
-            document.getElementById('statWT').textContent = stats.byQuadrant.WT;
-        }
+        async function saveTows() {
+            const btn = document.getElementById('btnSave');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري الحفظ...';
 
-        // ===== MODAL =====
-        function openAddModal() {
-            if (!currentData) return alert('اختر تقييم أولاً');
-            document.getElementById('editId').value = '';
-            document.getElementById('strategyText').value = '';
-            document.getElementById('notesText').value = '';
-            document.getElementById('prioritySelect').value = 'MEDIUM';
-            document.getElementById('statusSelect').value = 'PROPOSED';
-            document.getElementById('quadrantPreview').value = '';
-            document.getElementById('modalTitle').textContent = 'إضافة استراتيجية TOWS';
-
-            populatePointSelects();
-            new bootstrap.Modal(document.getElementById('strategyModal')).show();
-        }
-
-        function populatePointSelects() {
-            const { swotPoints } = currentData;
-            const internalSel = document.getElementById('internalPointSelect');
-            const externalSel = document.getElementById('externalPointSelect');
-
-            internalSel.innerHTML = '<option value="">-- اختر نقطة داخلية --</option>';
-            externalSel.innerHTML = '<option value="">-- اختر نقطة خارجية --</option>';
-
-            // Strengths + Weaknesses for internal
-            [...swotPoints.strengths, ...swotPoints.weaknesses].forEach(p => {
-                const prefix = p.type === 'STRENGTH' ? '💪' : '⚠️';
-                internalSel.innerHTML += `<option value="${p.id}">${prefix} ${p.code || p.type[0]} — ${p.title}</option>`;
-            });
-
-            // Opportunities + Threats for external
-            [...swotPoints.opportunities, ...swotPoints.threats].forEach(p => {
-                const prefix = p.type === 'OPPORTUNITY' ? '✨' : '⚡';
-                externalSel.innerHTML += `<option value="${p.id}">${prefix} ${p.code || p.type[0]} — ${p.title}</option>`;
-            });
-
-            // Auto-detect quadrant
-            const updateQuadrant = () => {
-                const intId = internalSel.value;
-                const extId = externalSel.value;
-                if (!intId || !extId) { document.getElementById('quadrantPreview').value = ''; return; }
-
-                const allPoints = [...swotPoints.strengths, ...swotPoints.weaknesses, ...swotPoints.opportunities, ...swotPoints.threats];
-                const intPoint = allPoints.find(p => p.id === intId);
-                const extPoint = allPoints.find(p => p.id === extId);
-                if (!intPoint || !extPoint) return;
-
-                const map = { STRENGTH_OPPORTUNITY: 'SO', STRENGTH_THREAT: 'ST', WEAKNESS_OPPORTUNITY: 'WO', WEAKNESS_THREAT: 'WT' };
-                const q = map[`${intPoint.type}_${extPoint.type}`] || '?';
-                const names = { SO: 'هجومية', ST: 'دفاعية', WO: 'علاجية', WT: 'تجنبية' };
-                document.getElementById('quadrantPreview').value = `${q} — ${names[q] || ''}`;
+            const data = {
+                so: document.getElementById('so_strategies').value,
+                st: document.getElementById('st_strategies').value,
+                wo: document.getElementById('wo_strategies').value,
+                wt: document.getElementById('wt_strategies').value
             };
 
-            internalSel.onchange = updateQuadrant;
-            externalSel.onchange = updateQuadrant;
-        }
+            const apiType = `TOWS_${dept.toUpperCase()}`;
+            const success = await DeptPage.saveToAPI(apiType, data);
 
-        function editStrategy(id) {
-            if (!currentData) return;
-            const allStrategies = [
-                ...currentData.matrix.SO.strategies,
-                ...currentData.matrix.ST.strategies,
-                ...currentData.matrix.WO.strategies,
-                ...currentData.matrix.WT.strategies
-            ];
-            const s = allStrategies.find(st => st.id === id);
-            if (!s) return;
+            if (success) {
+                localStorage.setItem(`stratix_${dept}_tows`, JSON.stringify(data));
+                if (window.Context && Context.markStepCompleted) await Context.markStepCompleted('tows');
 
-            document.getElementById('editId').value = s.id;
-            document.getElementById('strategyText').value = s.strategy;
-            document.getElementById('notesText').value = s.notes || '';
-            document.getElementById('prioritySelect').value = s.priority;
-            document.getElementById('statusSelect').value = s.status;
-            document.getElementById('modalTitle').textContent = 'تعديل استراتيجية TOWS';
-
-            populatePointSelects();
-            document.getElementById('internalPointSelect').value = s.internalPointId;
-            document.getElementById('externalPointSelect').value = s.externalPointId;
-            document.getElementById('internalPointSelect').onchange();
-
-            new bootstrap.Modal(document.getElementById('strategyModal')).show();
-        }
-
-        async function saveStrategy() {
-            const assessmentId = document.getElementById('assessmentSelect').value;
-            const editId = document.getElementById('editId').value;
-            const body = {
-                assessmentId,
-                internalPointId: document.getElementById('internalPointSelect').value,
-                externalPointId: document.getElementById('externalPointSelect').value,
-                strategy: document.getElementById('strategyText').value,
-                priority: document.getElementById('prioritySelect').value,
-                status: document.getElementById('statusSelect').value,
-                notes: document.getElementById('notesText').value || null
-            };
-
-            if (!body.strategy) return alert('نص الاستراتيجية مطلوب');
-
-            try {
-                const url = editId ? `/api/tows/${editId}` : '/api/tows';
-                const method = editId ? 'PUT' : 'POST';
-                const res = await window.apiRequest(url, {
-                    method,
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify(body)
-                });
-
-                if (res.ok) {
-                    bootstrap.Modal.getInstance(document.getElementById('strategyModal'))?.hide();
-                    loadMatrix();
-                } else {
-                    const err = await res.json();
-                    alert(err.error || 'حدث خطأ');
-                }
-            } catch (e) {
-                alert('خطأ في الحفظ: ' + e.message);
+                DeptPage.showMessage('✅ تم حفظ مصفوفة TOWS وتثبيت الاستراتيجيات.');
+                setTimeout(() => window.location.href = `/scenarios.html?dept=${dept}&t=${Date.now()}`, 1500);
+            } else {
+                DeptPage.showMessage('❌ فشل الحفظ على السيرفر، تم الحفظ محلياً.', true);
+                btn.disabled = false;
+                btn.innerHTML = 'حفظ وبدء صياغة السيناريوهات <i class="bi bi-arrow-left"></i>';
             }
         }
 
-        async function deleteStrategy(id) {
-            if (!confirm('هل تريد حذف هذه الاستراتيجية؟')) return;
-            try {
-                await window.apiRequest(`/api/tows/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                loadMatrix();
-            } catch (e) {
-                alert('خطأ في الحذف');
-            }
-        }
-
-        async function autoGenerate() {
-            const assessmentId = document.getElementById('assessmentSelect').value;
-            if (!assessmentId) return alert('اختر تقييم أولاً');
-            if (!confirm('سيتم توليد استراتيجيات لجميع التقاطعات الممكنة. متابعة؟')) return;
-
-            try {
-                const res = await window.apiRequest('/api/tows/auto-generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ assessmentId })
-                });
-                const data = await res.json();
-                alert(data.message || `تم التوليد: ${data.generated} استراتيجية`);
-                loadMatrix();
-            } catch (e) {
-                alert('خطأ في التوليد التلقائي');
-            }
-        }
-
-        function logout() {
-            if (window.globalLogout) window.globalLogout();
-        }
-
-        init();
+        document.addEventListener('DOMContentLoaded', initTows);
     </script>
-    <script src="/assets/js/ai-advisor.js"></script>
 </body>
 
 </html>

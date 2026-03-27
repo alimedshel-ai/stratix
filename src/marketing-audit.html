@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <title>ستارتكس | التقييم الوصفي - التسويق</title>
+    <link rel="stylesheet" href="/css/dept-pages.css">
+    <script src="/js/context-manager.js"></script>
+    <script src="/js/dept-page.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>📋 التقييم الوصفي – التسويق</h1>
+        <div class="sub">أجب عن الأسئلة التالية لتحديد نقاط القوة والضعف في قسم التسويق</div>
+        <div id="deepSummary" class="deep-summary-box"></div>
+        <form id="auditForm">
+            <div class="question">
+                <label>مدى فعالية الحملات التسويقية</label>
+                <select name="campaign_effectiveness" required>
+                    <option value="">اختر</option>
+                    <option value="ضعيفة">ضعيفة</option>
+                    <option value="متوسطة">متوسطة</option>
+                    <option value="عالية">عالية</option>
+                </select>
+            </div>
+            <div class="question">
+                <label>جودة المحتوى التسويقي</label>
+                <select name="content_quality" required>
+                    <option value="">اختر</option>
+                    <option value="ضعيف">ضعيف</option>
+                    <option value="متوسط">متوسط</option>
+                    <option value="متميز">متميز</option>
+                </select>
+            </div>
+            <div class="question">
+                <label>أبرز التحديات التسويقية الحالية</label>
+                <textarea name="marketing_challenges" rows="3" placeholder="مثال: ضعف الانتشار الرقمي..."></textarea>
+            </div>
+            <div class="question">
+                <label>ما هي نقاط القوة في قسم التسويق؟</label>
+                <textarea name="strengths_comment" rows="3" placeholder="افصل بين النقاط بفاصلة أو سطر جديد"></textarea>
+            </div>
+            <div class="question">
+                <label>ما هي نقاط الضعف التي تحتاج تحسيناً؟</label>
+                <textarea name="weaknesses_comment" rows="3"
+                    placeholder="افصل بين النقاط بفاصلة أو سطر جديد"></textarea>
+            </div>
+            <button type="submit">حفظ التحليل والمتابعة إلى SWOT</button>
+        </form>
+    </div>
+    <script>
+        const dept = 'marketing';
+        function extractStrengthsWeaknesses(a) {
+            const s = [], w = [];
+            if (a.campaign_effectiveness === 'عالية') s.push('حملات تسويقية عالية الفعالية والعائد');
+            else if (a.campaign_effectiveness === 'ضعيفة') w.push('ضعف فعالية الحملات التسويقية');
+            if (a.content_quality === 'متميز') s.push('محتوى تسويقي متميز وجذاب');
+            else if (a.content_quality === 'ضعيف') w.push('ضعف جودة المحتوى التسويقي');
+            if (a.strengths_comment) a.strengths_comment.split(/[،,\n]/).forEach(l => { if (l.trim()) s.push(l.trim()); });
+            if (a.weaknesses_comment) a.weaknesses_comment.split(/[،,\n]/).forEach(l => { if (l.trim()) w.push(l.trim()); });
+            return { strengths: s, weaknesses: w };
+        }
+        document.addEventListener('DOMContentLoaded', async () => {
+            const ok = await DeptPage.init(dept);
+            if (!ok) return;
+            await DeptPage.loadDeepSummary('deepSummary');
+            let saved = await DeptPage.loadFromAPI('AUDIT') || Context.getTemp('audit_data') || DeptPage.migrateFromLocalStorage(`stratix_${dept}_audit`);
+            DeptPage.fillForm(saved);
+            document.getElementById('auditForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const answers = Object.fromEntries(new FormData(e.target));
+                let missing = false;
+                document.querySelectorAll('[required]').forEach(f => {
+                    if (!answers[f.name]) { missing = true; f.style.borderColor = '#ef4444'; }
+                    else f.style.borderColor = '';
+                });
+                if (missing) { DeptPage.showMessage('يرجى الإجابة على جميع الأسئلة المطلوبة', true); return; }
+                Context.setTemp('audit_data', answers);
+                Context.setTemp('audit_completed', true);
+                const { strengths, weaknesses } = extractStrengthsWeaknesses(answers);
+                Context.setItem(`${dept}_strengths`, strengths);
+                Context.setItem(`${dept}_weaknesses`, weaknesses);
+                const saved = await DeptPage.saveToAPI('AUDIT', answers);
+                DeptPage.showMessage(saved ? 'تم حفظ التقييم الوصفي بنجاح' : 'فشل الحفظ في الخادم، لكن البيانات محفوظة محلياً', !saved);
+                setTimeout(() => window.location.href = `/swot.html?dept=${dept}`, 1500);
+            });
+        });
+    </script>
+</body>
+
+</html>

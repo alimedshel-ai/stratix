@@ -7,6 +7,19 @@
  * المراحل والأدوات تُقرأ من journey-steps.js (مصدر مركزي واحد)
  */
 
+// ─────────────────────────────────────────────────────────────
+// دالة مساعدة لتنصيف النصوص (أمان)
+// ─────────────────────────────────────────────────────────────
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[&<>]/g, function (m) {
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
+    return m;
+  });
+}
+
 
 // TODO: الانتقال إلى ES modules بعد توحيد جميع صفحات المشروع
 // المرحلة المستهدفة: بعد الانتهاء من sidebar.js وregister.html
@@ -62,10 +75,10 @@ function getUserRoleLabel(userData) {
   let deptKey = userData.department?.key || '';
   if (!isPrivileged && !deptKey && userData.userCategory && userData.userCategory.startsWith('DEPT_')) {
     const catDept = userData.userCategory.replace('DEPT_', '').toLowerCase();
-    const MAP = { hr: 'hr', finance: 'finance', marketing: 'marketing', ops: 'operations', service: 'cs', sales: 'sales', it: 'it', legal: 'compliance', quality: 'quality', pmo: 'projects' };
+    const MAP = { hr: 'hr', finance: 'finance', marketing: 'marketing', ops: 'operations', service: 'cs', sales: 'sales', it: 'it', legal: 'compliance', quality: 'quality', pmo: 'projects', support: 'support' };
     deptKey = MAP[catDept] || catDept;
   }
-  const deptName = userData.department?.name || DEPT_LABELS[deptKey] || '';
+  const deptName = userData.department?.name || DEPT_LABELS[deptKey] || (typeof getDeptName !== 'undefined' ? getDeptName(deptKey) : '');
 
   // عرض دور المشاهد أو مدخل البيانات متبوعاً باسم القسم التابع له
   if (userData.role === 'DATA_ENTRY') return deptName ? `${ROLE_LABELS.DATA_ENTRY} — ${deptName}` : ROLE_LABELS.DATA_ENTRY;
@@ -78,6 +91,50 @@ function getUserRoleLabel(userData) {
   return ROLE_LABELS[userData.userType] || ROLE_LABELS[userData.role] || userData.role || '';
 }
 
+function isDeptStepDone(labelOrId, deptKey) {
+  if (!labelOrId) return false;
+  const upperDept = (deptKey || 'hr').toUpperCase();
+  const lowerLabel = labelOrId.toLowerCase();
+
+  // 1. الفحص بناءً على معرف الأداة (New Engine)
+  const storageMap = {
+    'hr-audit': `AUDIT_${upperDept}`,
+    'finance-audit': `AUDIT_${upperDept}`,
+    'pestel': `PESTEL_${upperDept}`,
+    'dept-health': `HEALTH_${upperDept}`,
+    'swot': `SWOT_${upperDept}`,
+    'tows': `TOWS_${upperDept}`,
+    'scenarios': `SCENARIOS_${upperDept}`,
+    'directions': `DIRECTIONS_${upperDept}`,
+    'objectives': `OBJECTIVES_${upperDept}`,
+    'okrs': `OKRS_${upperDept}`,
+    'kpis': `KPIS_${upperDept}`
+  };
+
+  const key = storageMap[labelOrId];
+  if (key) {
+    const data = localStorage.getItem(key);
+    if (data && data !== '[]' && data !== '{}') return true;
+  }
+
+  // 2. الفحص بناءً على التسمية النصية (Legacy Support)
+  if (labelOrId.includes('بيئة')) {
+    try {
+      const health = JSON.parse(localStorage.getItem('stratix_company_health') || '{}');
+      if (health.departments && health.departments[deptKey] && health.departments[deptKey].completed) return true;
+      return localStorage.getItem('internal_env_completed') === 'true';
+    } catch (e) { return false; }
+  }
+  if (labelOrId.includes('التحليل العميق')) {
+    try {
+      const deep = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || '{}');
+      if (deep[deptKey] && deep[deptKey].completed) return true;
+      if (deptKey === 'hr' && localStorage.getItem('stratix_hr_deep_results')) return true;
+      if (deptKey === 'finance' && localStorage.getItem('stratix_finance_deep_results')) return true;
+    } catch (e) { return false; }
+  }
+  return false;
+}
 function getUserRoleIcon(userData) {
   if (!userData) return 'bi-person';
 
@@ -151,6 +208,9 @@ async function initSidebar() {
   const fullPath = currentPath + window.location.search;
   const currentSearch = window.location.search;
 
+  // 🧱 العثور على حاوية السايدبار مبكراً
+  const sidebarContainer = document.querySelector('.stx-sidebar-container, .stx-sidebar, .sidebar, .list-group.bg-white, #sidebar');
+
   // ✅ النظام يعتمد على HttpOnly Cookie — نعرف أن المستخدم موثّق إذا رجع userData
   const token = localStorage.getItem('token') || ''; // backward compat فقط
   const isAuthenticated = !!userData; // المصدر الحقيقي: نتيجة API
@@ -200,6 +260,27 @@ async function initSidebar() {
     CONSULTANT: { showJourney: true, showVision: true, showAdvanced: true, limitedDiagnosis: false, limitedJourney: false },
   };
   const currentRules = typeRules[userType] || typeRules.COMPANY_MANAGER;
+  // === دمج السايدبار النهائي لمدير الإدارة (Async) ===
+  if (userType === 'DEPT_MANAGER' && !isViewerOrDE) {
+    const dept = _v10Dept || 'hr';
+
+    // 🎨 حقن التنسيقات فوراً لضمان المظهر الصحيح
+    if (!document.getElementById('stx-sidebar-styles')) {
+      const style = document.createElement('style');
+      style.id = 'stx-sidebar-styles';
+      style.innerHTML = getSidebarCSS(true); // استخدام الوضع الداكن افتراضياً لمدير الإدارة
+      document.head.appendChild(style);
+    }
+
+    const sidebarHtml = await buildDeptManagerSidebar(dept);
+    if (sidebarContainer) {
+      sidebarContainer.innerHTML = sidebarHtml;
+      // إضافة كلاس لتمييز الحاوية
+      sidebarContainer.classList.add('stx-sidebar');
+      return;
+    }
+  }
+
   // SUPER_ADMIN و OWNER يشوفون كل شي (لأننا ألغينا الفوضى القديمة Storage Storage)
   if (isSuperAdmin || (userRole === 'OWNER' && userType !== 'DEPT_MANAGER')) {
     currentRules.showJourney = true;
@@ -374,8 +455,16 @@ async function initSidebar() {
         transition: background 0.2s;
       }
       .stx-ctx-btn:hover { background: ${isDark ? 'rgba(249,115,22,0.15)' : 'rgba(249,115,22,0.1)'}; }
+      .stx-ctx-btn--dept {
+        background: ${isDark ? 'rgba(16,185,129,0.1)' : 'rgba(16,185,129,0.08)'} !important;
+        border-color: ${isDark ? 'rgba(16,185,129,0.3)' : 'rgba(16,185,129,0.25)'} !important;
+        color: #10b981 !important;
+        padding: 8px 10px !important;
+        align-items: flex-start !important;
+      }
+      .stx-ctx-btn--dept:hover { background: ${isDark ? 'rgba(16,185,129,0.18)' : 'rgba(16,185,129,0.14)'} !important; }
       .stx-ctx-btn .stx-ctx-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .stx-ctx-btn .stx-ctx-chevron { font-size: 10px; transition: transform 0.2s; flex-shrink: 0; }
+      .stx-ctx-btn .stx-ctx-chevron { font-size: 10px; transition: transform 0.2s; flex-shrink: 0; margin-top: 2px; }
       .stx-ctx-btn.open .stx-ctx-chevron { transform: rotate(180deg); }
       .stx-ctx-dropdown {
         display: none;
@@ -415,6 +504,21 @@ async function initSidebar() {
       .stx-ctx-item .ctx-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .stx-ctx-item .ctx-role { font-size: 10px; color: ${isDark ? '#94a3b8' : '#64748b'}; margin-top: 1px; }
       .stx-ctx-loading { padding: 12px; text-align: center; color: ${isDark ? '#94a3b8' : '#64748b'}; font-size: 11px; }
+      .stx-ctx-add {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 14px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 700;
+        color: #10b981;
+        border-top: 1px solid ${isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.12)'};
+        background: ${isDark ? 'rgba(16,185,129,0.05)' : 'rgba(16,185,129,0.04)'};
+        transition: background 0.15s;
+      }
+      .stx-ctx-add:hover { background: ${isDark ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.09)'}; }
+      .stx-ctx-add i { font-size: 13px; }
       
       .stx-home-btn {
         margin: 4px 10px 8px !important;
@@ -810,187 +914,125 @@ async function initSidebar() {
     return html;
   }
 
-  // === استخراج: سايدبار مدير الإدارة ===
-  function buildDeptManagerSidebar() {
-    let html = '';
-    // === قراءة تقدم الرحلة من localStorage ===
-    let mgrJourney = { steps: [false, false, false, false, false] };
-    try {
-      const saved = localStorage.getItem('stratix_mgr_journey');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        // ترقية تلقائية: لو كانت 4 خطوات → وسّعها لـ 5
-        if (parsed.steps && parsed.steps.length === 4) {
-          parsed.steps.splice(1, 0, false); // أضف خطوة التحليل العميق كـ false
+  // ─────────────────────────────────────────────────────────────
+  // بناء السايدبار لمدير الإدارة (15 أداة من steps-config.js)
+  // ─────────────────────────────────────────────────────────────
+  function buildDeptManagerSidebar(dept) {
+    if (!dept) return '<div class="sidebar-error">لم يتم تحديد الإدارة</div>';
+
+    // تحقق من المحرك — إذا غير متوفر استخدم الاحتياطي
+    if (typeof window.getToolsByCategory !== 'function') {
+      return buildDeptManagerSidebarFallback(dept);
+    }
+
+    const categories = window.getToolsByCategory();
+    if (!categories) return buildDeptManagerSidebarFallback(dept);
+
+    const safeDept = encodeURIComponent(dept);
+    let stepsHtml = '';
+
+    for (const [catKey, cat] of Object.entries(categories)) {
+      stepsHtml += '<div class="stx-section-label">' + escapeHtml(cat.title) + '</div>';
+
+      for (const tool of cat.tools) {
+        const link = window.getToolLink
+          ? window.getToolLink(tool, dept)
+          : (tool.link + '?dept=' + safeDept);
+        const disabled = tool.available === false;
+        // علامة الصح تبدأ فارغة ثم يتم تحديثها بشكل async لاحقاً
+        const statusIcon = disabled
+          ? '<i class="bi bi-hourglass" style="color:#94a3b8;margin-left:8px"></i>'
+          : '<i class="bi bi-circle stx-step-status" data-tool-id="' + escapeHtml(tool.id) + '" style="color:#cbd5e1;margin-left:8px"></i>';
+
+        if (disabled) {
+          stepsHtml += '<div class="stx-item" style="opacity:0.5; cursor:not-allowed; padding:8px 14px">'
+            + statusIcon + ' <span class="stx-item-label" style="font-size:12.5px">' + escapeHtml(tool.name) + '</span></div>';
+        } else {
+          var isToolActive = window.location.pathname.includes(tool.id) ? ' active' : '';
+          stepsHtml += '<a href="' + link + '" class="stx-item' + isToolActive + '" data-page="' + escapeHtml(tool.id) + '" style="padding:8px 14px">'
+            + statusIcon + ' <span class="stx-item-label" style="font-size:12.5px">' + escapeHtml(tool.name) + '</span></a>';
         }
-        mgrJourney = parsed;
       }
-    } catch (e) { /* ignore */ }
+    }
 
-    // أسماء الإدارات للعرض
-    const _deptNames = { hr: 'الموارد البشرية', finance: 'المالية', marketing: 'التسويق', operations: 'العمليات', sales: 'المبيعات', it: 'تقنية المعلومات', cs: 'خدمة العملاء', compliance: 'الامتثال', quality: 'الجودة', projects: 'المشاريع', support: 'الخدمات المساندة' };
-    const _mgrDept = _v10Dept || 'compliance';
-    const _mgrDeptName = _deptNames[_mgrDept] || 'إدارتك';
-
-    // Fix for custom deep links
-    let deepLink = `/dept-deep.html?dept=${_mgrDept}&single=1`;
-    if (_mgrDept === 'hr') deepLink = '/hr-deep.html';
-    if (_mgrDept === 'finance') deepLink = '/finance-deep.html';
-
-    const journeySteps = [
-      { num: 1, label: `بيئة ${_mgrDeptName}`, href: `/internal-env.html?dept=${_mgrDept}`, icon: 'bi-heart-pulse' },
-      { num: 2, label: `تحليل ${_mgrDeptName} العميق`, href: deepLink, icon: 'bi-search-heart' },
-      { num: 3, label: 'تحليل SWOT', href: `/swot.html?dept=${_mgrDept}`, icon: 'bi-grid-3x3-gap-fill' },
-      { num: 4, label: 'التوجهات', href: `/directions.html?dept=${_mgrDept}`, icon: 'bi-compass-fill' },
-      { num: 5, label: 'مؤشرات الأداء', href: `/kpis.html?dept=${_mgrDept}`, icon: 'bi-graph-up-arrow' },
+    // القسم "عملي" (ثابت)
+    var practicalTools = [
+      { name: 'المراجعات الدورية', link: '/reviews.html?dept=' + safeDept, icon: 'bi-journal-check' },
+      { name: 'إدخال المؤشرات', link: '/kpi-entries.html?dept=' + safeDept, icon: 'bi-pencil-square' },
+      { name: 'ذكاء إدارتي', link: '/intelligence.html?dept=' + safeDept, icon: 'bi-robot' },
+      { name: 'تقرير إدارتي', link: '/auto-reports.html?dept=' + safeDept, icon: 'bi-file-earmark-bar-graph' },
     ];
 
-    // حساب التقدم
-    const completedCount = mgrJourney.steps.filter(Boolean).length;
-    const journeyPercent = Math.round((completedCount / 5) * 100);
+    stepsHtml += '<div class="stx-divider"></div><div class="stx-section-label"><i class="bi bi-activity" style="color:#22c55e;margin-left:4px"></i> عملي</div>';
+    for (var i = 0; i < practicalTools.length; i++) {
+      var pt = practicalTools[i];
+      var ptActive = window.location.pathname.includes(pt.link.split('?')[0]) ? ' active' : '';
+      stepsHtml += '<a href="' + pt.link + '" class="stx-item' + ptActive + '" style="padding:8px 14px">'
+        + '<i class="bi ' + pt.icon + '" style="color:#22c55e"></i>'
+        + ' <span class="stx-item-label" style="font-size:12.5px">' + escapeHtml(pt.name) + '</span></a>';
+    }
 
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // القسم ١: 🏠 لوحتي
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    html += `<div class="stx-section-label"><i class="bi bi-house-heart-fill" style="color:#667eea;margin-left:4px"></i> لوحتي</div>`;
-    const isDeptDashActive = isActive('/dept-dashboard.html');
-    html += `
-      <a href="/dept-dashboard.html" class="stx-item ${isDeptDashActive ? 'active' : ''}">
-        <i class="bi bi-speedometer2" style="color:#f59e0b"></i>
-        <span>لوحة الإدارة</span>
-      </a>
-    `;
+    var rawDeptName = DEPT_LABELS[dept] || dept;
+    var safeDeptName = escapeHtml(rawDeptName);
+    var safeDeptForBadge = escapeHtml(dept.toUpperCase());
 
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // القسم ٢: ⚡ رحلتي (4 خطوات)
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    html += `<div class="stx-divider"></div>`;
-    html += `<div class="stx-section-label"><i class="bi bi-lightning-charge-fill" style="color:#f59e0b;margin-left:4px"></i> رحلتي</div>`;
+    // بعد بناء الـ HTML، نُطلق تحديث علامات الصح بشكل async
+    setTimeout(function () { updateDeptStepStatuses(); }, 100);
 
-    journeySteps.forEach((step, idx) => {
-      const isDone = mgrJourney.steps[idx];
-      const prevDone = idx === 0 ? true : mgrJourney.steps[idx - 1];
-      const isCurrent = isActive(step.href);
-      // استثناء: لو المستخدم سبق وزار الصفحة — ما نقفلها
-      const hasVisited = mgrJourney.steps[idx] || isCurrent;
-      const isLocked = !prevDone && !hasVisited && !isSuperAdmin && userRole !== 'OWNER';
+    return '<div class="stx-user-card" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); margin-bottom:15px; border-radius:12px; padding:12px;">'
+      + '<div style="font-size:11px; color:#94a3b8; margin-bottom:4px;">إدارة</div>'
+      + '<div style="font-weight:700; color:#fff; display:flex; align-items:center; gap:8px;">'
+      + '<i class="bi ' + (DEPT_ICONS[dept] || 'bi-building') + '" style="color:' + (DEPT_COLORS[dept] || '#fff') + '"></i>'
+      + safeDeptName
+      + '<span style="font-size:10px; background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px; margin-right:auto;">' + safeDeptForBadge + '</span>'
+      + '</div></div>'
+      + '<div class="stx-journey-container">' + stepsHtml + '</div>'
+      + '<div style="padding:15px; margin-top:auto;">'
+      + '<button onclick="localStorage.removeItem(\'stratix_v10_dept\'); window.location.href=\'/select-dept.html\';" style="width:100%; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:transparent; color:#94a3b8; font-size:13px; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:8px;">'
+      + '<i class="bi bi-arrow-left-right"></i> تغيير الإدارة</button></div>';
+  }
 
-      let statusIcon, statusClass, stepColor;
-      if (isDone) {
-        statusIcon = '✅';
-        statusClass = 'mgr-done';
-        stepColor = '#22c55e';
-      } else if (isCurrent) {
-        statusIcon = '🔵';
-        statusClass = 'mgr-current';
-        stepColor = '#3b82f6';
-      } else if (isLocked) {
-        statusIcon = '🔒';
-        statusClass = 'mgr-locked';
-        stepColor = '#64748b';
-      } else {
-        statusIcon = '⬜';
-        statusClass = 'mgr-pending';
-        stepColor = '#94a3b8';
-      }
-
-      if (isLocked) {
-        html += `
-          <div class="stx-item stx-mgr-step ${statusClass}" style="opacity:0.45;cursor:not-allowed;padding:10px 14px" title="أكمل الخطوة السابقة أولاً">
-            <span style="font-size:14px;min-width:22px">${statusIcon}</span>
-            <span class="stx-item-label" style="color:${stepColor}">${step.num}. ${step.label}</span>
-          </div>
-        `;
-      } else {
-        html += `
-          <a href="${step.href}" class="stx-item stx-mgr-step ${statusClass} ${isCurrent ? 'active' : ''}" style="padding:10px 14px">
-            <span style="font-size:14px;min-width:22px">${statusIcon}</span>
-            <span class="stx-item-label" style="color:${isCurrent ? '#fff' : stepColor};font-weight:${isCurrent ? '700' : '500'}">${step.num}. ${step.label}</span>
-            ${isCurrent ? '<span style="font-size:10px;color:#93c5fd;margin-right:auto">← أنت هنا</span>' : ''}
-          </a>
-        `;
-      }
-    });
-
-    // شريط تقدم الرحلة
-    const progressColor = journeyPercent === 100 ? '#22c55e' : journeyPercent > 0 ? '#3b82f6' : '#64748b';
-    html += `
-      <div style="margin:8px 14px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <span style="font-size:11px;color:var(--text-muted,#94a3b8)">📊 تقدم الرحلة</span>
-          <span style="font-size:12px;font-weight:700;color:${progressColor}">${journeyPercent}%</span>
-        </div>
-        <div style="height:4px;border-radius:4px;background:rgba(255,255,255,0.08)">
-          <div style="height:100%;width:${journeyPercent}%;border-radius:4px;background:${progressColor};transition:width 0.5s ease"></div>
-        </div>
-      </div>
-    `;
-
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // القسم ٣: 📊 عملي
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    html += `<div class="stx-divider"></div>`;
-    html += `<div class="stx-section-label"><i class="bi bi-clipboard2-check-fill" style="color:#22c55e;margin-left:4px"></i> عملي</div>`;
-
-    const _wDept = _v10Dept || '';
-    const workItems = [
-      { label: 'المراجعات', href: '/reviews.html', icon: 'bi-journal-check', color: '#f59e0b' },
-      { label: 'إدخال المؤشرات', href: _wDept ? `/kpi-entries.html?dept=${_wDept}` : '/kpi-entries.html', icon: 'bi-pencil-square', color: '#3b82f6' },
-      { label: 'ذكاء إدارتي', href: _wDept ? `/intelligence.html?dept=${_wDept}` : '/intelligence.html', icon: 'bi-robot', color: '#667eea' },
-      { label: 'تقرير إدارتي', href: '/auto-reports.html', icon: 'bi-file-earmark-bar-graph', color: '#22c55e' },
-    ];
-    workItems.forEach(item => {
-      html += `
-        <a href="${item.href}" class="stx-item ${isActive(item.href) ? 'active' : ''}">
-          <i class="bi ${item.icon}" style="color:${item.color}"></i>
-          <span class="stx-item-label">${item.label}</span>
-        </a>
-      `;
-    });
-
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // ⚙️ الإعدادات
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    html += `<div class="stx-divider"></div>`;
-    const isSettingsActive = isActive('/settings.html');
-    html += `
-      <a href="/settings.html" class="stx-item ${isSettingsActive ? 'active' : ''}" style="opacity:0.7">
-        <i class="bi bi-gear-fill" style="color:#64748b"></i>
-        <span class="stx-item-label">الإعدادات</span>
-      </a>
-    `;
-
-    // --- تسجيل الخروج ---
-    html += `<div class="stx-divider"></div>`;
-    html += `
-      <a href="#" class="stx-item stx-logout" onclick="event.preventDefault(); ['token','user','stratix_v10_dept','stratix_smart_guide','stratix_category','onboarding_data','stratix_diagnostic_payload','stratix_return_url'].forEach(k=>localStorage.removeItem(k)); fetch('/api/auth/logout', {method:'POST', credentials:'include'}).finally(()=>location.href='/login.html');" style="color:#ef4444;margin-top:4px">
-        <i class="bi bi-box-arrow-right" style="color:#ef4444"></i>
-        <span>تسجيل الخروج</span>
-      </a>
-      <div style="height:20px"></div>
-    `;
-
-    // تعريض دالة إكمال الخطوة للصفحات
-    window.stratixMgrComplete = function (stepNum) {
+  // تحديث علامات الصح بعد تحميل السايدبار (async)
+  function updateDeptStepStatuses() {
+    var icons = document.querySelectorAll('.stx-step-status[data-tool-id]');
+    if (!icons.length || typeof window.Context === 'undefined') return;
+    icons.forEach(function (icon) {
+      var toolId = icon.getAttribute('data-tool-id');
+      if (!toolId) return;
       try {
-        let j = { steps: [false, false, false, false, false] };
-        const s = localStorage.getItem('stratix_mgr_journey');
-        if (s) {
-          j = JSON.parse(s);
-          // ترقية تلقائية: لو كانت 4 خطوات → وسّعها لـ 5
-          if (j.steps && j.steps.length === 4) {
-            j.steps.splice(1, 0, false);
-          }
+        var result = Context.isStepCompleted(toolId);
+        if (result && typeof result.then === 'function') {
+          result.then(function (done) {
+            if (done) {
+              icon.className = 'bi bi-check-circle-fill stx-step-status';
+              icon.style.color = '#22c55e';
+            }
+          }).catch(function () { });
+        } else if (result) {
+          icon.className = 'bi bi-check-circle-fill stx-step-status';
+          icon.style.color = '#22c55e';
         }
-        if (stepNum >= 1 && stepNum <= 5) {
-          j.steps[stepNum - 1] = true;
-        }
-        localStorage.setItem('stratix_mgr_journey', JSON.stringify(j));
-        console.log('[Sidebar] ✅ Manager journey step ' + stepNum + ' completed');
-      } catch (e) { /* ignore */ }
-    };
+      } catch (e) { }
+    });
+  }
 
-    return html;
+  // ─────────────────────────────────────────────────────────────
+  // الدالة الاحتياطية (Fallback) في حال عدم تحميل steps-config.js
+  // ─────────────────────────────────────────────────────────────
+  function buildDeptManagerSidebarFallback(dept) {
+    const safeDept = encodeURIComponent(dept);
+    const rawDeptName = DEPT_LABELS[dept] || dept;
+    const safeDeptName = escapeHtml(rawDeptName);
+    const safeDeptForBadge = escapeHtml(dept.toUpperCase());
+
+    return `
+        <div class="stx-section-label">🏢 ${safeDeptName} (${safeDeptForBadge})</div>
+        <a href="/company-health.html?dept=${safeDept}" class="stx-item">🏢 بيئة الإدارة</a>
+        <a href="/${dept}-deep.html?dept=${safeDept}" class="stx-item">🔍 التحليل العميق</a>
+        <a href="/swot.html?dept=${safeDept}" class="stx-item">📊 تحليل SWOT</a>
+        <a href="/directions.html?dept=${safeDept}" class="stx-item">🧭 التوجهات الاستراتيجية</a>
+        <a href="/objectives.html?dept=${safeDept}" class="stx-item">🎯 الأهداف الاستراتيجية</a>
+    `;
   }
 
   // === محرك المسارات الذكية (يُقرأ ديناميكياً داخل buildSidebar) ===
@@ -1016,147 +1058,86 @@ async function initSidebar() {
   let _deptJourneyOverride = null; // مراحل مخصصة لمدير الإدارة
 
   if (userType === 'DEPT_MANAGER' && _v10Dept) {
-    const deptItem = ALL_DEPT_ITEMS.find(d => d.key === _v10Dept);
-    const deptNames = { hr: 'الموارد البشرية', finance: 'المالية', operations: 'العمليات', marketing: 'التسويق', sales: 'المبيعات', compliance: 'الامتثال والحوكمة', support: 'الخدمات المساندة' };
-    const dName = deptNames[_v10Dept] || _v10Dept;
+    const currentDept = _v10Dept;
 
-    if (deptItem) {
-      let customDeepLink = `/dept-deep.html?dept=${_v10Dept}&single=1`;
-      if (_v10Dept === 'hr') customDeepLink = '/hr-deep.html';
-      if (_v10Dept === 'finance') customDeepLink = '/finance-deep.html';
+    // 🛡️ المنهجية الجديدة 2.0: بناء مراحل مخصصة لمدير الإدارة بناءً على 15 أداة
+    _deptJourneyOverride = STEPS_CONFIG.PHASE_ORDER.map(phaseId => {
+      const phaseTools = STEPS_CONFIG.DEPARTMENT_TOOLS.filter(t => t.phase === phaseId);
+      const phaseNames = { diagnostic: 'التشخيص الاستراتيجي', planning: 'التخطيط الاستراتيجي', execution: 'التنفيذ والمتابعة' };
+      const phaseIcons = { diagnostic: 'bi-search-heart', planning: 'bi-compass-fill', execution: 'bi-rocket-takeoff-fill' };
 
-      // أدوات التحليل الوظيفي لإدارته
-      filteredDeptItems = [
-        { label: 'تشخيص سريع', href: `/dept-diagnostic.html?dept=${_v10Dept}`, icon: 'bi-lightning-charge-fill' },
-        { label: 'تشخيص عميق', href: customDeepLink, icon: 'bi-search-heart' },
-      ];
-
-      // === أدوات مخصصة لكل إدارة ===
-      const deptSpecificTools = {
-        hr: [
-          { label: 'فحص HR التفاعلي', href: '/internal-env.html?dept=hr', icon: 'bi-fingerprint' },
-          { label: 'تحليل HR العميق', href: '/hr-deep.html', icon: 'bi-people-fill' },
-          { label: 'فحص الامتثال HR', href: '/hr-audit.html', icon: 'bi-shield-check' },
-        ],
-        finance: [
-          { label: 'التحليل المالي العميق', href: '/finance-deep.html', icon: 'bi-cash-coin' },
-          { label: 'لوحة التحليلات التنبؤية', href: '/analytics-dashboard.html', icon: 'bi-graph-up-arrow' },
-        ],
-        operations: [
-          { label: 'تحليل العمليات', href: '/dept-deep.html?dept=operations&single=1', icon: 'bi-gear-wide-connected' },
-        ],
-        marketing: [
-          { label: 'تحليل التسويق', href: '/dept-deep.html?dept=marketing&single=1', icon: 'bi-megaphone-fill' },
-        ],
-        sales: [
-          { label: 'تحليل المبيعات', href: '/dept-deep.html?dept=sales&single=1', icon: 'bi-graph-up-arrow' },
-        ],
-        compliance: [
-          { label: 'تحليل الامتثال', href: '/dept-deep.html?dept=compliance&single=1', icon: 'bi-shield-fill-check' },
-        ],
-        support: [
-          { label: 'الخدمات المساندة', href: '/dept-deep.html?dept=support&single=1', icon: 'bi-wrench-adjustable' },
-        ],
+      return {
+        id: phaseId.toUpperCase(),
+        nameAr: phaseNames[phaseId] || phaseId,
+        icon: phaseIcons[phaseId] || 'bi-grid-fill',
+        items: phaseTools.map(t => ({
+          label: t.name,
+          href: `${t.path}${t.path.includes('?') ? '&' : '?'}dept=${currentDept}&v=${Date.now()}`,
+          icon: t.icon,
+          id: t.id,
+          done: isDeptStepDone(t.id, currentDept)
+        }))
       };
-
-      // بناء مراحل مخصصة لمدير الإدارة
-      _deptJourneyOverride = [
-        {
-          id: 'INTERNAL_DEEP',
-          nameAr: `تحليل ${dName}`,
-          icon: deptItem.icon || 'bi-building-fill-gear',
-          emoji: '📂',
-          color: '#3b82f6',
-          items: [
-            ...filteredDeptItems,
-            ...(deptSpecificTools[_v10Dept] || []),
-          ]
-        },
-        {
-          id: 'UNIFIED_SWOT',
-          nameAr: `تحليل SWOT — ${dName}`,
-          icon: 'bi-grid-fill',
-          emoji: '🧩',
-          color: '#10b981',
-          items: [
-            { label: 'تحليل SWOT', href: `/swot.html?dept=${_v10Dept}`, icon: 'bi-grid-3x3-gap-fill' },
-            { label: 'التوجهات الاستراتيجية', href: `/directions.html?dept=${_v10Dept}`, icon: 'bi-compass-fill' },
-          ]
-        },
-        {
-          id: 'FORMULATION',
-          nameAr: `مؤشرات ${dName}`,
-          icon: 'bi-graph-up-arrow',
-          emoji: '📊',
-          color: '#ec4899',
-          items: [
-            { label: 'مؤشرات الأداء (KPIs)', href: `/kpis.html?dept=${_v10Dept}`, icon: 'bi-graph-up-arrow' },
-            { label: 'المراجعات الدورية', href: '/reviews.html', icon: 'bi-journal-check' },
-          ]
-        },
-      ];
-    } else {
-      filteredDeptItems = ALL_DEPT_ITEMS;
-    }
-  } else {
-    filteredDeptItems = ALL_DEPT_ITEMS;
+    });
   }
 
-  // ═══ المراحل — تُقرأ من الملف المركزي journey-steps.js ═══
-  // خارجي أولاً → داخلي → تركيب → اختيار → بناء → تنفيذ → متابعة
-  const journeyPhases = (window.StratixJourney && window.StratixJourney.phases)
-    ? window.StratixJourney.phases
-    : [
-      {
-        id: 'DIAGNOSIS_INTERNAL', nameAr: 'تشخيص — الداخل', icon: 'bi-building-gear', emoji: '🏢', color: '#0d9488',
-        items: [
-          { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-building-fill-check' },
-          { label: 'سلسلة القيمة', href: '/tool-detail.html?code=VALUE_CHAIN', icon: 'bi-link-45deg' },
-          { label: 'استكشاف الإدارات', href: '/dept-deep.html', icon: 'bi-diagram-3-fill' },
-        ]
-      },
-      {
-        id: 'DIAGNOSIS_EXTERNAL', nameAr: 'تشخيص — الخارج', icon: 'bi-globe2', emoji: '🔍', color: '#ef4444',
-        items: [
-          { label: 'PESTEL (بيئة كلية)', href: '/tool-detail.html?code=PESTEL', icon: 'bi-binoculars-fill' },
-          { label: 'قوى بورتر', href: '/tool-detail.html?code=PORTER', icon: 'bi-shield-exclamation' },
-        ]
-      },
-      {
-        id: 'SYNTHESIS', nameAr: 'التركيب', icon: 'bi-grid-3x3-gap-fill', emoji: '🎯', color: '#22c55e',
-        items: [
-          { label: 'تحليل SWOT', href: '/swot.html', icon: 'bi-grid-3x3-gap-fill' },
-          { label: 'خريطة المخاطر', href: '/risk-map.html', icon: 'bi-exclamation-triangle-fill' },
-        ]
-      },
-      {
-        id: 'DIRECTION_CHOICES', nameAr: 'الاختيار', icon: 'bi-compass-fill', emoji: '📌', color: '#8b5cf6',
-        items: [
-          { label: 'التوجهات', href: '/directions.html', icon: 'bi-compass' },
-        ]
-      },
-      {
-        id: 'PLANNING', nameAr: 'البناء', icon: 'bi-bullseye', emoji: '🏆', color: '#38bdf8',
-        items: [
-          { label: 'الأهداف (BSC)', href: '/objectives.html', icon: 'bi-bullseye' },
-          { label: 'مؤشرات الأداء (KPIs)', href: '/kpis.html', icon: 'bi-speedometer2' },
-        ]
-      },
-      {
-        id: 'EXECUTION', nameAr: 'التنفيذ', icon: 'bi-rocket-takeoff-fill', emoji: '🚀', color: '#f59e0b',
-        items: [
-          { label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban-fill' },
-          { label: 'القرارات المالية', href: '/finance-audit.html', icon: 'bi-clipboard2-pulse-fill' },
-        ]
-      },
-      {
-        id: 'MONITORING', nameAr: 'المتابعة', icon: 'bi-bar-chart-line-fill', emoji: '📊', color: '#10b981',
-        items: [
-          { label: 'المراجعات', href: '/reviews.html', icon: 'bi-journal-check' },
-          { label: 'التصحيحات', href: '/corrections.html', icon: 'bi-arrow-repeat' },
-        ]
-      },
-    ];
+  // ═══ المراحل — تُقرأ من الملف المركزي ═══
+  const journeyPhases = (userType === 'DEPT_MANAGER' && _deptJourneyOverride)
+    ? _deptJourneyOverride
+    : (window.StratixJourney && window.StratixJourney.phases)
+      ? window.StratixJourney.phases
+      : [
+        {
+          id: 'DIAGNOSIS_INTERNAL', nameAr: 'تشخيص — الداخل', icon: 'bi-building-gear', emoji: '🏢', color: '#0d9488',
+          items: [
+            { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-building-fill-check' },
+            { label: 'سلسلة القيمة', href: '/tool-detail.html?code=VALUE_CHAIN', icon: 'bi-link-45deg' },
+            { label: 'استكشاف الإدارات', href: '/dept-deep.html', icon: 'bi-diagram-3-fill' },
+          ]
+        },
+        {
+          id: 'DIAGNOSIS_EXTERNAL', nameAr: 'تشخيص — الخارج', icon: 'bi-globe2', emoji: '🔍', color: '#ef4444',
+          items: [
+            { label: 'PESTEL (بيئة كلية)', href: '/tool-detail.html?code=PESTEL', icon: 'bi-binoculars-fill' },
+            { label: 'قوى بورتر', href: '/tool-detail.html?code=PORTER', icon: 'bi-shield-exclamation' },
+          ]
+        },
+        {
+          id: 'SYNTHESIS', nameAr: 'التركيب', icon: 'bi-grid-3x3-gap-fill', emoji: '🎯', color: '#22c55e',
+          items: [
+            { label: 'تحليل SWOT', href: '/swot.html', icon: 'bi-grid-3x3-gap-fill' },
+            { label: 'مصفوفة TOWS', href: '/tows.html', icon: 'bi-arrows-fullscreen' },
+            { label: 'خريطة المخاطر', href: '/risk-map.html', icon: 'bi-exclamation-triangle-fill' },
+          ]
+        },
+        {
+          id: 'DIRECTION_CHOICES', nameAr: 'الاختيار', icon: 'bi-compass-fill', emoji: '📌', color: '#8b5cf6',
+          items: [
+            { label: 'التوجهات', href: '/directions.html', icon: 'bi-compass' },
+          ]
+        },
+        {
+          id: 'PLANNING', nameAr: 'البناء', icon: 'bi-bullseye', emoji: '🏆', color: '#38bdf8',
+          items: [
+            { label: 'الأهداف (BSC)', href: '/objectives.html', icon: 'bi-bullseye' },
+            { label: 'مؤشرات الأداء (KPIs)', href: '/kpis.html', icon: 'bi-speedometer2' },
+          ]
+        },
+        {
+          id: 'EXECUTION', nameAr: 'التنفيذ', icon: 'bi-rocket-takeoff-fill', emoji: '🚀', color: '#f59e0b',
+          items: [
+            { label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban-fill' },
+            { label: 'القرارات المالية', href: '/finance-audit.html', icon: 'bi-clipboard2-pulse-fill' },
+          ]
+        },
+        {
+          id: 'MONITORING', nameAr: 'المتابعة', icon: 'bi-bar-chart-line-fill', emoji: '📊', color: '#10b981',
+          items: [
+            { label: 'المراجعات', href: '/reviews.html', icon: 'bi-journal-check' },
+            { label: 'التصحيحات', href: '/corrections.html', icon: 'bi-arrow-repeat' },
+          ]
+        },
+      ];
 
   // === ⚡ مركز القيادة — مخصص حسب الدور ===
   // كل دور يشوف الأدوات الأهم له أولاً
@@ -1215,6 +1196,7 @@ async function initSidebar() {
       { type: 'header', label: '🏢 ' + deptLabel },
       { label: 'لوحة ' + deptLabel, href: '/dept-dashboard.html' + deptParam, icon: 'bi-speedometer2', roles: [] },
       { label: 'تحليل SWOT', href: '/swot.html' + deptParam, icon: 'bi-grid-3x3-gap-fill', roles: [] },
+      { label: 'مصفوفة TOWS', href: '/tows.html' + deptParam, icon: 'bi-arrows-fullscreen', roles: [] },
       { label: 'مؤشرات الأداء', href: '/kpis.html' + deptParam, icon: 'bi-speedometer2', roles: [] },
       { type: 'header', label: '📋 تنفيذ' },
       { label: 'إدخال المؤشرات', href: '/kpi-entries.html' + deptParam, icon: 'bi-pencil-square', roles: [] },
@@ -1324,9 +1306,12 @@ async function initSidebar() {
       </div>
       ${(orgLine && !_sidebarIsIndividual) ? `
       <div class="stx-ctx-wrap" id="stxCtxWrap">
-        <button class="stx-ctx-btn" id="stxCtxBtn" onclick="window._stxCtxToggle(event)">
-          <i class="bi bi-building" style="flex-shrink:0"></i>
-          <span class="stx-ctx-name" id="stxCtxName">${orgLine}</span>
+        <button class="stx-ctx-btn ${userType === 'DEPT_MANAGER' ? 'stx-ctx-btn--dept' : ''}" id="stxCtxBtn" onclick="window._stxCtxToggle(event)">
+          <i class="bi bi-building${userType === 'DEPT_MANAGER' ? '-fill' : ''}" style="flex-shrink:0;${userType === 'DEPT_MANAGER' ? 'color:#10b981' : ''}"></i>
+          <div style="flex:1;min-width:0;text-align:right">
+            <div class="stx-ctx-name" id="stxCtxName" style="font-weight:${userType === 'DEPT_MANAGER' ? '700' : '500'}">${orgLine}</div>
+            ${userType === 'DEPT_MANAGER' ? `<div style="font-size:10px;color:${userRoleColor || '#10b981'};opacity:0.85;line-height:1.2;margin-top:1px">${userRoleLabel || 'مدير الإدارة'}</div>` : ''}
+          </div>
           <i class="bi bi-chevron-down stx-ctx-chevron" id="stxCtxChevron"></i>
         </button>
         <div class="stx-ctx-dropdown" id="stxCtxDropdown">
@@ -1350,15 +1335,19 @@ async function initSidebar() {
     const homeHref = isViewerOrDE ? '/viewer-hub.html'
       : (userType === 'BOARD_VIEWER' && isInvestorUser) ? '/investor-dashboard.html'
         : userType === 'BOARD_VIEWER' ? '/board-dashboard.html'
-          : userType === 'DEPT_MANAGER' ? '/dept-dashboard.html'
+          : userType === 'DEPT_MANAGER' ? `/dept-dashboard.html${_v10Dept ? '?dept=' + _v10Dept : ''}`
             : '/dashboard.html';
     const isHomeActive = isActive('/dashboard.html') || isActive('/ceo-dashboard.html') || isActive('/viewer-hub.html') || isActive('/board-dashboard.html') || isActive('/dept-dashboard.html') || isActive('/investor-dashboard.html');
-    html += `
-      <a href="${homeHref}" class="stx-item stx-home-btn ${isHomeActive ? 'active' : ''}">
-        <i class="bi bi-house-door-fill" style="color:#667eea;font-size:16px"></i>
-        <span>الرئيسية</span>
-      </a>
-    `;
+    // لا تُظهر "الرئيسية" لمدير الإدارة وهو على نفس الصفحة (dept-dashboard)
+    const isDeptMgrOnDash = userType === 'DEPT_MANAGER' && isActive('/dept-dashboard.html');
+    if (!isDeptMgrOnDash) {
+      html += `
+        <a href="${homeHref}" class="stx-item stx-home-btn ${isHomeActive ? 'active' : ''}">
+          <i class="bi bi-house-door-fill" style="color:#667eea;font-size:16px"></i>
+          <span>الرئيسية</span>
+        </a>
+      `;
+    }
 
     // ╔═══════════════════════════════════════════════════════════╗
     // ║  🎯 مسار مدير الإدارة — سايدبار نظيف (٣ أقسام فقط)      ║
@@ -1504,6 +1493,7 @@ async function initSidebar() {
       const deptItems = [
         { label: `لوحة ${_myDeptName}`, href: `/dept-dashboard.html${_v10Dept ? '?dept=' + _v10Dept : ''}`, icon: 'bi-speedometer2' },
         { label: 'تحليل SWOT', href: `/swot.html${_v10Dept ? '?dept=' + _v10Dept : ''}`, icon: 'bi-grid-3x3-gap-fill' },
+        { label: 'مصفوفة TOWS', href: `/tows.html${_v10Dept ? '?dept=' + _v10Dept : ''}`, icon: 'bi-arrows-fullscreen' },
         { label: 'مؤشرات الأداء', href: `/kpis.html${_v10Dept ? '?dept=' + _v10Dept : ''}`, icon: 'bi-graph-up-arrow' },
         { label: 'إدخال المؤشرات', href: `/kpi-entries.html${_v10Dept ? '?dept=' + _v10Dept : ''}`, icon: 'bi-pencil-square' },
         { label: 'المراجعات', href: '/reviews.html', icon: 'bi-journal-check' },
@@ -1618,24 +1608,54 @@ async function initSidebar() {
 
     } // end if (!isViewerOrDE)
 
-    // --- عرض مبسّط للمشاهد/مدخل البيانات ---
+    // --- عرض مشاهد/مدخل البيانات: روابط حسب الإدارة ---
     if (isViewerOrDE) {
-      html += '<div class="stx-divider"></div>';
-      if (userRole === 'DATA_ENTRY') {
+      const _vDept = _v10Dept || '';
+      if (_vDept && DEPT_LABELS[_vDept]) {
+        html += '<div class="stx-divider"></div>';
+        html += `<div class="stx-section-label"><i class="bi bi-eye-fill" style="color:#a78bfa;margin-left:4px"></i> إدارة ${DEPT_LABELS[_vDept]}</div>`;
         html += `
-        <a href="/kpi-entries.html" class="stx-item ${isActive('/kpi-entries.html') ? 'active' : ''}">
-            <i class="bi bi-input-cursor-text" style="color:#22c55e"></i>
-            <span>إدخال المؤشرات</span>
+          <a href="/dept-dashboard.html?dept=${_vDept}" class="stx-item ${isActive('/dept-dashboard.html') ? 'active' : ''}">
+            <i class="bi bi-speedometer2" style="color:#f59e0b"></i><span>لوحة الإدارة</span>
+          </a>
+          <a href="/swot.html?dept=${_vDept}" class="stx-item ${isActive('/swot.html') ? 'active' : ''}">
+            <i class="bi bi-grid-3x3-gap-fill" style="color:#667eea"></i><span>تحليل SWOT</span>
+          </a>
+          <a href="/kpis.html?dept=${_vDept}" class="stx-item ${isActive('/kpis.html') ? 'active' : ''}">
+            <i class="bi bi-graph-up-arrow" style="color:#22c55e"></i><span>مؤشرات الأداء</span>
+          </a>
+          <a href="/okrs.html?dept=${_vDept}" class="stx-item ${isActive('/okrs.html') ? 'active' : ''}">
+            <i class="bi bi-bullseye" style="color:#3b82f6"></i><span>الأهداف (OKRs)</span>
+          </a>
+          <a href="/intelligence.html?dept=${_vDept}" class="stx-item ${isActive('/intelligence.html') ? 'active' : ''}">
+            <i class="bi bi-robot" style="color:#8b5cf6"></i><span>الذكاء الاستراتيجي</span>
+          </a>
+        `;
+      }
+      html += '<div class="stx-divider"></div>';
+      html += `<div class="stx-section-label"><i class="bi bi-file-earmark-bar-graph" style="color:#f59e0b;margin-left:4px"></i> التقارير</div>`;
+      html += `
+        <a href="/auto-reports.html" class="stx-item ${isActive('/auto-reports.html') ? 'active' : ''}">
+          <i class="bi bi-file-earmark-bar-graph" style="color:#22c55e"></i><span>التقارير الذكية</span>
+        </a>
+        <a href="/company-health.html" class="stx-item ${isActive('/company-health.html') ? 'active' : ''}">
+          <i class="bi bi-heart-pulse-fill" style="color:#ef4444"></i><span>صحة الشركة</span>
+        </a>
+      `;
+      if (userRole === 'DATA_ENTRY') {
+        html += '<div class="stx-divider"></div>';
+        html += `<div class="stx-section-label"><i class="bi bi-pencil-square" style="color:#22c55e;margin-left:4px"></i> الإدخال</div>`;
+        html += `
+          <a href="/kpi-entries.html" class="stx-item ${isActive('/kpi-entries.html') ? 'active' : ''}">
+            <i class="bi bi-input-cursor-text" style="color:#22c55e"></i><span>إدخال المؤشرات</span>
           </a>
           <a href="/data-forms.html" class="stx-item ${isActive('/data-forms.html') ? 'active' : ''}">
-            <i class="bi bi-clipboard2-data" style="color:#38bdf8"></i>
-            <span>نماذج الأقسام</span>
+            <i class="bi bi-clipboard2-data" style="color:#38bdf8"></i><span>نماذج الأقسام</span>
           </a>
           <a href="/statistical-data.html" class="stx-item ${isActive('/statistical-data.html') ? 'active' : ''}">
-            <i class="bi bi-bar-chart-steps" style="color:#a78bfa"></i>
-            <span>البيانات الإحصائية</span>
+            <i class="bi bi-bar-chart-steps" style="color:#a78bfa"></i><span>البيانات الإحصائية</span>
           </a>
-      `;
+        `;
       }
     }
 
@@ -1807,7 +1827,7 @@ async function initSidebar() {
     return new Promise((resolve) => {
       if (window.PathEngine) { resolve(); return; }
       const script = document.createElement('script');
-      script.src = '/assets/js/path-engine.js?v=3';
+      script.src = '/assets/js/path-engine.js?v=6';
       script.onload = () => resolve();
       script.onerror = () => resolve(); // fail silently
       document.head.appendChild(script);
@@ -1819,7 +1839,7 @@ async function initSidebar() {
     return new Promise((resolve) => {
       if (window.SuggestedTools) { resolve(); return; }
       const script = document.createElement('script');
-      script.src = '/assets/js/suggested-tools.js?v=3';
+      script.src = '/assets/js/suggested-tools.js?v=6';
       script.onload = () => {
         if (window.SuggestedTools) window.SuggestedTools.injectCSS();
         resolve();
@@ -1834,321 +1854,43 @@ async function initSidebar() {
     return new Promise((resolve) => {
       if (window.StratixProgress) { resolve(); return; }
       const script = document.createElement('script');
-      script.src = '/assets/js/progress-engine.js?v=3';
+      script.src = '/assets/js/progress-engine.js?v=6';
       script.onload = () => resolve();
       script.onerror = () => resolve(); // fail silently
       document.head.appendChild(script);
     });
   }
 
-  // === تحميل PathEngine أولاً ثم بناء Sidebar ===
-  loadPathEngine().then(() => {
-    // إعادة تعيين PE بعد التحميل
-    const PE_loaded = window.PathEngine || null;
-    const isSmartPath_loaded = PE_loaded ? PE_loaded.isPathMode() : false;
+  // ═══════════════════════════════════════════════
+  // attachSidebarBehaviors — تفتح الأقسام النشطة بعد كل innerHTML
+  // ═══════════════════════════════════════════════
+  function attachSidebarBehaviors(sidebarEl) {
+    const el = sidebarEl || document.querySelector('.stx-sidebar');
+    if (!el) return;
 
-    // === بناء Sidebar أولي (بدون progress data) ===
-    const newSidebar = document.createElement('nav');
-    newSidebar.className = 'stx-sidebar sidebar';
-    newSidebar.innerHTML = buildSidebar(null);
-
-    if (replaceMode === 'replace') {
-      const oldStyles = window.getComputedStyle(oldSidebar);
-      if (oldStyles.position === 'fixed') newSidebar.classList.add('stx-fixed');
-      oldSidebar.replaceWith(newSidebar);
-    } else {
-      const container = oldSidebar.parentElement;
-      if (!container) return;
-      container.innerHTML = '';
-      container.appendChild(newSidebar);
-    }
-
-    // === تحميل SuggestedTools + ProgressEngine + بيانات التقدم ← إعادة بناء ===
-    Promise.all([loadSuggestedTools(), loadProgressEngine()]).then(async () => {
-      if (token && entityId && window.StratixProgress) {
-        try {
-          const progressResult = await window.StratixProgress.fetch();
-          // Transform to API-compatible shape for buildSidebar
-          const apiShape = progressResult ? {
-            entityId: progressResult.entityId,
-            versionId: progressResult.versionId,
-            versionNumber: progressResult.versionNumber,
-            overall: progressResult.overall,
-            stages: window.StratixProgress.STAGE_IDS.map(id => ({
-              id: id,
-              nameAr: progressResult.phases[id]?.nameAr || '',
-              percent: progressResult.phases[id]?.percent || 0,
-              completed: progressResult.phases[id]?.completed || false,
-              locked: progressResult.phases[id]?.locked || false,
-              unlockAt: progressResult.phases[id]?.unlockAt || 0,
-              unlockMsg: progressResult.phases[id]?.unlockMsg || ''
-            }))
-          } : null;
-          newSidebar.innerHTML = buildSidebar(apiShape);
-        } catch (err) {
-          console.warn('[Sidebar] ProgressEngine error:', err);
-          newSidebar.innerHTML = buildSidebar(null);
-        }
-      } else if (token && entityId) {
-        // Fallback: direct API call if ProgressEngine failed to load
-        try {
-          const res = await fetch(`/api/user-progress/entity/${entityId}`, {
-            credentials: 'include' // ← Cookie-based auth فقط
-          });
-          const data = res.ok ? await res.json() : null;
-          newSidebar.innerHTML = buildSidebar(data);
-        } catch {
-          newSidebar.innerHTML = buildSidebar(null);
-        }
-      } else {
-        // No token/entity — rebuild with SuggestedTools anyway
-        newSidebar.innerHTML = buildSidebar(null);
+    // فتح كل مرحلة / قسم يحتوي رابطاً نشطاً (class="active")
+    el.querySelectorAll('.stx-item.active').forEach(function (activeLink) {
+      // stx-phase
+      const phase = activeLink.closest('.stx-phase');
+      if (phase && !phase.classList.contains('phase-locked')) {
+        phase.classList.add('open');
+        const phaseItems = phase.querySelector('.stx-phase-items');
+        if (phaseItems) phaseItems.style.maxHeight = '500px';
+      }
+      // stx-section
+      const section = activeLink.closest('.stx-section');
+      if (section) {
+        section.classList.add('open');
+        const sectionItems = section.querySelector('.stx-section-items');
+        if (sectionItems) sectionItems.style.maxHeight = '800px';
       }
     });
-
-    // 🔧 إصلاح شامل: بعد بناء الـ sidebar، أضف ?dept= لكل الروابط اللي ما فيها
-    if (_v10Dept && userType === 'DEPT_MANAGER') {
-      setTimeout(() => {
-        const _deptPages = ['/kpis.html', '/kpis', '/swot.html', '/swot', '/directions.html', '/directions',
-          '/objectives.html', '/objectives', '/initiatives.html', '/initiatives',
-          '/internal-env.html', '/dept-deep.html', '/company-health.html',
-          '/intelligence.html', '/intelligence', '/kpi-entries.html', '/reviews.html',
-          '/auto-reports.html', '/choices.html'];
-        document.querySelectorAll('a').forEach(a => {
-          if (!a.href || a.href.startsWith('javascript:')) return;
-          try {
-            const url = new URL(a.href, location.origin);
-            // dashboard → dept-dashboard
-            if (url.pathname === '/dashboard.html' || url.pathname === '/dashboard') {
-              a.href = '/dept-dashboard.html?dept=' + _v10Dept;
-              return;
-            }
-            if (_deptPages.includes(url.pathname) && !url.searchParams.get('dept')) {
-              // 🛡️ توجيه الروابط للإدارات التي تملك صفحات مخصصة
-              if (url.pathname === '/dept-deep.html' || url.pathname === '/dept-deep') {
-                const customPages = ['hr', 'finance', 'marketing']; // إدارات الصفحات المستقلة
-                if (customPages.includes(_v10Dept)) {
-                  a.href = `/${_v10Dept}-deep.html`;
-                  return;
-                }
-              }
-              url.searchParams.set('dept', _v10Dept);
-              a.href = url.toString();
-            }
-          } catch (e) { }
-        });
-        console.log('[Sidebar] ✅ sidebar links patched with dept:', _v10Dept);
-      }, 500);
-    }
-
-    // === CSS ===
-    const style = document.createElement('style');
-    style.textContent = getSidebarCSS(isDark);
-    document.head.appendChild(style);
-
-    // === Toggle Functions ===
-    window.togglePhase = function (idx) {
-      const phase = document.querySelector(`.stx-phase[data-phase="${idx}"]`);
-      if (phase) phase.classList.toggle('open');
-    };
-
-    window.toggleSection = function (name) {
-      const section = document.querySelector(`.stx-section[data-section="${name}"]`);
-      if (section) section.classList.toggle('open');
-    };
-
-    // === Lock Toast ===
-    window.showLockToast = function (msg) {
-      const old = document.getElementById('stx-lock-toast');
-      if (old) old.remove();
-
-      const toast = document.createElement('div');
-      toast.id = 'stx-lock-toast';
-      toast.innerHTML = `<i class="bi bi-lock-fill"></i> ${msg}`;
-      toast.style.cssText = `
-        position: fixed; bottom: 24px; left: 24px; z-index: 99999;
-        background: rgba(239, 68, 68, 0.92); color: #fff;
-        padding: 14px 22px; border-radius: 14px;
-        font-family: 'Tajawal', sans-serif; font-size: 14px; font-weight: 600;
-        display: flex; align-items: center; gap: 8px;
-        backdrop-filter: blur(10px);
-        animation: toastSlide 0.4s ease;
-        box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
-      `;
-
-      if (!document.getElementById('stx-toast-anim')) {
-        const animStyle = document.createElement('style');
-        animStyle.id = 'stx-toast-anim';
-        animStyle.textContent = '@keyframes toastSlide { from { transform:translateY(30px); opacity:0; } to { transform:translateY(0); opacity:1; } }';
-        document.head.appendChild(animStyle);
-      }
-
-      document.body.appendChild(toast);
-      setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3000);
-    };
-
-    // === تحميل المستشار الذكي تلقائياً ===
-    if (!document.querySelector('script[src*="ai-advisor"]')) {
-      const aiScript = document.createElement('script');
-      aiScript.src = '/assets/js/ai-advisor.js?v=3';
-      aiScript.defer = true;
-      document.body.appendChild(aiScript);
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // Context Switcher Logic — تبديل السياق بين الكيانات
-    // ═══════════════════════════════════════════════════════
-    let _ctxEntities = null;       // cache للكيانات
-    let _ctxLoaded = false;
-    let _ctxOpen = false;
-
-    // الترجمة العربية للدور
-    function _ctxRoleLabel(role, userType) {
-      if (role === 'OWNER') return 'مالك';
-      if (role === 'ADMIN') return 'مسؤول';
-      if (role === 'EDITOR') return 'محرر';
-      if (userType === 'DEPT_MANAGER') return 'مدير إدارة';
-      if (userType === 'CONSULTANT') return 'استشاري';
-      return role || 'عضو';
-    }
-
-    // فتح/إغلاق القائمة
-    window._stxCtxToggle = async function (e) {
-      if (e) e.stopPropagation();
-      const btn = document.getElementById('stxCtxBtn');
-      const dropdown = document.getElementById('stxCtxDropdown');
-      if (!btn || !dropdown) return;
-
-      _ctxOpen = !_ctxOpen;
-      btn.classList.toggle('open', _ctxOpen);
-      dropdown.classList.toggle('open', _ctxOpen);
-
-      // جلب الكيانات مرة واحدة فقط
-      if (_ctxOpen && !_ctxLoaded) {
-        await _stxCtxLoad();
-      }
-    };
-
-    // إغلاق عند الضغط خارج القائمة
-    document.addEventListener('click', function (e) {
-      const wrap = document.getElementById('stxCtxWrap');
-      if (wrap && !wrap.contains(e.target) && _ctxOpen) {
-        _ctxOpen = false;
-        document.getElementById('stxCtxBtn')?.classList.remove('open');
-        document.getElementById('stxCtxDropdown')?.classList.remove('open');
-      }
-    });
-
-    // جلب قائمة الكيانات من API
-    async function _stxCtxLoad() {
-      const dropdown = document.getElementById('stxCtxDropdown');
-      if (!dropdown) return;
-
-      try {
-        const res = await fetch('/api/auth/my-entities', { credentials: 'include' });
-        if (!res.ok) throw new Error('فشل جلب الكيانات');
-
-        const data = await res.json();
-        _ctxEntities = data.entities || [];
-        _ctxLoaded = true;
-
-        // لو كيان واحد فقط — أخفِ الـ chevron وأغلق القائمة وامنع الفتح
-        if (_ctxEntities.length <= 1) {
-          document.getElementById('stxCtxChevron')?.style.setProperty('display', 'none');
-          document.getElementById('stxCtxDropdown')?.classList.remove('open');
-          document.getElementById('stxCtxBtn')?.classList.remove('open');
-          _ctxOpen = false;
-          dropdown.innerHTML = '';
-          return;
-        }
-
-        // بناء قائمة الكيانات — data-attributes بدلاً من onclick inline (XSS-safe)
-        dropdown.innerHTML = _ctxEntities.map(e => `
-          <div class="stx-ctx-item ${e.isCurrent ? 'current' : ''}"
-               data-entity-id="${e.entityId}"
-               data-entity-name="${(e.entityName || '').replace(/"/g, '&quot;')}"
-               title="${(e.entityName || '').replace(/"/g, '&quot;')}">
-            <span class="ctx-dot"></span>
-            <div class="ctx-info">
-              <div class="ctx-name">${e.entityName || e.entityId}</div>
-              <div class="ctx-role">${_ctxRoleLabel(e.role, e.userType)}${e.companyName ? ' — ' + e.companyName : ''}</div>
-            </div>
-            ${e.isCurrent ? '<i class="bi bi-check2" style="color:#f97316;font-size:13px;flex-shrink:0"></i>' : ''}
-          </div>
-        `).join('');
-
-        // Event delegation — آمن، لا inline onclick
-        dropdown.querySelectorAll('.stx-ctx-item[data-entity-id]').forEach(el => {
-          el.addEventListener('click', () => {
-            window._stxCtxSwitch(el.dataset.entityId, el.dataset.entityName || '');
-          });
-        });
-
-      } catch (err) {
-        console.warn('[CtxSwitcher] فشل جلب الكيانات:', err);
-        dropdown.innerHTML = '<div class="stx-ctx-loading">⚠️ فشل التحميل</div>';
-      }
-    }
-
-    // التبديل إلى كيان جديد
-    window._stxCtxSwitch = async function (entityId, entityName) {
-      if (!entityId) return;
-
-      // إغلاق القائمة فوراً
-      _ctxOpen = false;
-      document.getElementById('stxCtxBtn')?.classList.remove('open');
-      document.getElementById('stxCtxDropdown')?.classList.remove('open');
-
-      // تحديث اسم الزر فوراً (optimistic UI)
-      const nameEl = document.getElementById('stxCtxName');
-      if (nameEl) nameEl.textContent = entityName;
-
-      try {
-        const res = await fetch('/api/auth/switch-entity', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ entityId })
-        });
-
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          console.error('[CtxSwitcher] فشل التبديل:', err);
-          window.showLockToast(err.error || 'فشل تبديل الكيان');
-          return;
-        }
-
-        const data = await res.json();
-
-        // ✅ الـ Cookie تم تحديثها بالفعل من السيرفر (HttpOnly)
-        // لا نكتب في localStorage — النظام يعتمد على Cookie حصراً
-
-        // إعادة توجيه لـ dashboard (يُعيد التوجيه حسب الدور الجديد)
-        window.location.href = '/dashboard.html';
-
-      } catch (err) {
-        console.error('[CtxSwitcher] خطأ شبكة:', err);
-        window.showLockToast('خطأ في الاتصال — حاول مرة أخرى');
-      }
-    };
-
-  }); // end loadPathEngine().then()
-
-
+  }
 }
 
 // ════════ الـ Bootstrapper (التشغيل النهائي للسايدبار) ════════
-// تم تأجيل استدعائه لأسفل الملف لمنع الرفع (Hoisting) وتطبيق أفضل الممارسات
-if (!window.StratixJourney) {
-  var _jScript = document.createElement('script');
-  _jScript.src = '/assets/js/journey-steps.js?v=3';
-  _jScript.async = true; // استخدام async مع onload لضمان التحميل
-  _jScript.onload = () => initSidebar();
-  _jScript.onerror = () => {
-    console.warn('[Sidebar] ⚠️ فشل تحميل journey-steps.js, سيتم إكمال بناء الصفحة.');
-    initSidebar();
-  };
-  document.head.appendChild(_jScript);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initSidebar);
 } else {
   initSidebar();
 }

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <title>ستارتكس | التحليل الرقمي - خدمة العملاء</title>
+    <link rel="stylesheet" href="/css/dept-pages.css">
+    <script src="/js/context-manager.js"></script>
+    <script src="/js/dept-page.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>📊 التحليل الرقمي – خدمة العملاء</h1>
+        <div class="sub">أدخل الأرقام والمؤشرات الرئيسية لقسم خدمة العملاء</div>
+        <form id="deepForm">
+            <div class="question"><label>حجم التذاكر والطلبات شهرياً</label><input type="number" name="tickets_volume"
+                    placeholder="مثال: 1000" required></div>
+            <div class="question"><label>متوسط وقت الحل (ساعات)</label><input type="number" name="resolution_time"
+                    placeholder="مثال: 24" required></div>
+            <div class="question"><label>نسبة رضا العملاء CSAT (%)</label><input type="number" name="csat_score"
+                    placeholder="مثال: 88" required></div>
+            <div class="question"><label>معدل الاحتفاظ بالعملاء (%)</label><input type="number" name="retention_rate"
+                    placeholder="مثال: 92" required></div>
+            <div class="question"><label>نسبة الحل من أول اتصال FCR (%)</label><input type="number"
+                    name="first_contact_resolution" placeholder="مثال: 75" required></div>
+            <button type="submit">حفظ ومتابعة للتقييم الوصفي</button>
+        </form>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const ok = await DeptPage.init('cs');
+            if (!ok) return;
+            let saved = await DeptPage.loadFromAPI('DEEP') || Context.getTemp('deep_results') || DeptPage.migrateFromLocalStorage('stratix_cs_deep_results');
+            DeptPage.fillForm(saved);
+            document.getElementById('deepForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const results = Object.fromEntries(new FormData(e.target));
+                Context.setTemp('deep_results', results);
+                const ok = await DeptPage.saveToAPI('DEEP', results);
+                DeptPage.showMessage(ok ? 'تم حفظ التحليل الرقمي بنجاح' : 'تم حفظ التحليل محلياً', !ok);
+                setTimeout(() => window.location.href = `/cs-audit.html?dept=cs`, 1500);
+            });
+        });
+    </script>
+</body>
+
+</html>

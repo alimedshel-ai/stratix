@@ -129,12 +129,18 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // 5. تحديد userType من المرسل أو من userCategory
-    let detectedUserType = reqUserType || 'EXPLORER';
-    if (!reqUserType && userCategory) {
+    let detectedUserType = (reqUserType || 'EXPLORER').toUpperCase();
+    if ((!reqUserType || reqUserType.toUpperCase() === 'EXPLORER') && userCategory) {
       if (userCategory.startsWith('DEPT_')) detectedUserType = 'DEPT_MANAGER';
       else if (userCategory.startsWith('INDIVIDUAL_') || userCategory === 'CONSULTANT_SOLO') detectedUserType = 'INDIVIDUAL';
       else if (userCategory === 'CONSULTANT_AGENCY') detectedUserType = 'CONSULTANT';
       else if (['COMPANY_MICRO', 'COMPANY_SMALL', 'COMPANY_MEDIUM', 'COMPANY_LARGE', 'COMPANY_ENTERPRISE', 'NEW_PROJECT', 'CEO'].includes(userCategory)) detectedUserType = 'COMPANY_MANAGER';
+    }
+
+    let deptCode = null;
+    if (detectedUserType === 'DEPT_MANAGER' && userCategory) {
+      const catMap = { 'DEPT_OPS': 'operations', 'DEPT_SERVICE': 'cs', 'DEPT_PMO': 'projects' };
+      deptCode = catMap[userCategory] || userCategory.replace('DEPT_', '').toLowerCase();
     }
 
     // 6. إنشاء المستخدم فقط (بدون شركة/كيان)
@@ -160,6 +166,7 @@ router.post('/register', async (req, res) => {
         systemRole: 'USER',
         role: 'OWNER', // سيصبح OWNER عند إنشاء الكيان
         userType: detectedUserType,
+        deptCode,
       },
       process.env.JWT_SECRET,
       { expiresIn: '30d' }
@@ -185,6 +192,7 @@ router.post('/register', async (req, res) => {
         systemRole: 'USER',
         role: 'OWNER',
         userType: detectedUserType,
+        deptCode,
         userCategory: user.userCategory,
         onboardingCompleted: false,
         entity: null,
@@ -404,6 +412,18 @@ router.post('/login', (req, res, next) => {
     }
     const primaryEntity = primaryMembership?.entity || null;
 
+    // استخراج كود الإدارة لإرفاقه مع التوكن والرد
+    let deptCode = null;
+    if (primaryUserType === 'DEPT_MANAGER') {
+      const roleToCode = { CHRO: 'hr', CFO: 'finance', CMO: 'marketing', COO: 'operations', CTO: 'tech', CSO: 'sales', CCO: 'cs', CLO: 'legal' };
+      if (primaryMembership?.departmentRole && roleToCode[primaryMembership.departmentRole]) {
+        deptCode = roleToCode[primaryMembership.departmentRole];
+      } else if (user.userCategory && user.userCategory.startsWith('DEPT_')) {
+        const catMap = { 'DEPT_OPS': 'operations', 'DEPT_SERVICE': 'cs', 'DEPT_PMO': 'projects' };
+        deptCode = catMap[user.userCategory] || user.userCategory.replace('DEPT_', '').toLowerCase();
+      }
+    }
+
     // Generate JWT token
     const token = jwt.sign(
       {
@@ -415,6 +435,7 @@ router.post('/login', (req, res, next) => {
         userType: primaryUserType,
         entityId: primaryEntity?.id || null,
         companyId: primaryEntity?.company?.id || primaryEntity?.companyId || null,
+        deptCode,
       },
       process.env.JWT_SECRET,
       { expiresIn: '30d' }
@@ -438,9 +459,11 @@ router.post('/login', (req, res, next) => {
         systemRole: user.systemRole || 'USER',
         role: primaryRole,
         userType: primaryUserType,
+        deptCode,
         userCategory: user.userCategory || null,
         onboardingCompleted: user.onboardingCompleted || false,
         entity: primaryEntity,
+        diagnosticData: user.diagnosticData ? JSON.parse(user.diagnosticData) : null,
         memberships: user.memberships,
       },
     });
@@ -490,6 +513,17 @@ router.get('/profile', verifyToken, async (req, res) => {
     }
     const primaryEntity = primaryMem?.entity || null;
 
+    let deptCode = null;
+    if (primaryUserType === 'DEPT_MANAGER') {
+      const roleToCode = { CHRO: 'hr', CFO: 'finance', CMO: 'marketing', COO: 'operations', CTO: 'tech', CSO: 'sales', CCO: 'cs', CLO: 'legal' };
+      if (primaryMem?.departmentRole && roleToCode[primaryMem.departmentRole]) {
+        deptCode = roleToCode[primaryMem.departmentRole];
+      } else if (user.userCategory && user.userCategory.startsWith('DEPT_')) {
+        const catMap = { 'DEPT_OPS': 'operations', 'DEPT_SERVICE': 'cs', 'DEPT_PMO': 'projects' };
+        deptCode = catMap[user.userCategory] || user.userCategory.replace('DEPT_', '').toLowerCase();
+      }
+    }
+
     res.json({
       user: {
         id: user.id,
@@ -498,8 +532,10 @@ router.get('/profile', verifyToken, async (req, res) => {
         systemRole: user.systemRole || 'USER',
         role: primaryRole,
         userType: primaryUserType,
+        deptCode,
         onboardingCompleted: user.onboardingCompleted || false,
         entity: primaryEntity,
+        diagnosticData: user.diagnosticData ? JSON.parse(user.diagnosticData) : null,
         memberships: user.memberships,
       },
     });
@@ -730,6 +766,12 @@ router.post('/complete-onboarding', verifyToken, async (req, res) => {
     if (cat.startsWith('DEPT_')) actualUserType = 'DEPT_MANAGER';
     else if (cat === 'CONSULTANT_AGENCY') actualUserType = 'CONSULTANT';
 
+    let deptCode = null;
+    if (actualUserType === 'DEPT_MANAGER') {
+      const catMap = { 'DEPT_OPS': 'operations', 'DEPT_SERVICE': 'cs', 'DEPT_PMO': 'projects' };
+      deptCode = catMap[cat] || cat.replace('DEPT_', '').toLowerCase();
+    }
+
     const result = await prisma.$transaction(async (tx) => {
       // 1. إنشاء الشركة
       const company = await tx.company.create({
@@ -815,6 +857,7 @@ router.post('/complete-onboarding', verifyToken, async (req, res) => {
         userType: actualUserType,
         entityId: result.entity.id,
         companyId: result.company.id,
+        deptCode,
       },
       process.env.JWT_SECRET,
       { expiresIn: '30d' }
@@ -835,6 +878,7 @@ router.post('/complete-onboarding', verifyToken, async (req, res) => {
       entity: result.entity,
       entityId: result.entity.id,
       companyId: result.company.id,
+      user: { userType: actualUserType, deptCode },
     });
   } catch (error) {
     console.error('Error completing onboarding:', error);
@@ -842,6 +886,147 @@ router.post('/complete-onboarding', verifyToken, async (req, res) => {
       return res.status(400).json({ error: 'رقم السجل التجاري مستخدم بالفعل' });
     }
     res.status(500).json({ error: 'فشل إكمال التأسيس' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════
+// POST /api/auth/add-entity — إضافة منشأة جديدة لمستخدم موجود
+// يستخدمها مدير الإدارة لإضافة شركة ثانية تحت حسابه
+// ═══════════════════════════════════════════════════════
+router.post('/add-entity', verifyToken, async (req, res) => {
+  try {
+    const { companyName, sector, orgSize, commercialRegNo, departmentRole, diagnosticData } = req.body;
+    const userId = req.user.id;
+
+    if (!companyName || !companyName.trim()) {
+      return res.status(400).json({ error: 'اسم الشركة مطلوب' });
+    }
+
+    // التحقق من عدم تكرار رقم السجل
+    if (commercialRegNo) {
+      const existing = await prisma.entity.findFirst({ where: { commercialRegNo } });
+      if (existing) {
+        return res.status(400).json({ error: 'رقم السجل التجاري مسجل مسبقاً' });
+      }
+    }
+
+    // تحديد userType من userCategory
+    const currentUser = await prisma.user.findUnique({ where: { id: userId }, select: { userCategory: true } });
+    const cat = currentUser?.userCategory || '';
+    let actualUserType = 'COMPANY_MANAGER';
+    if (cat.startsWith('DEPT_')) actualUserType = 'DEPT_MANAGER';
+    else if (cat === 'CONSULTANT_AGENCY') actualUserType = 'CONSULTANT';
+
+    // استنتاج departmentRole من userCategory إذا لم يُرسل
+    const deptRoleMap = { 'DEPT_HR': 'CHRO', 'DEPT_FINANCE': 'CFO', 'DEPT_MARKETING': 'CMO', 'DEPT_OPERATIONS': 'COO', 'DEPT_TECH': 'CTO', 'DEPT_SALES': 'CSO', 'DEPT_CS': 'CCO', 'DEPT_LEGAL': 'CLO' };
+    const finalDeptRole = departmentRole || deptRoleMap[cat] || null;
+
+    // استنتاج deptCode للـ redirect
+    const roleToCode = { CHRO: 'hr', CFO: 'finance', CMO: 'marketing', COO: 'operations', CTO: 'tech', CSO: 'sales', CCO: 'cs', CLO: 'legal' };
+    const deptCode = finalDeptRole ? roleToCode[finalDeptRole] : null;
+
+    const entityName = companyName.trim();
+
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. إنشاء شركة جديدة
+      const company = await tx.company.create({
+        data: { nameAr: entityName, nameEn: entityName, status: 'ACTIVE' },
+      });
+
+      // 2. إنشاء الكيان
+      const entity = await tx.entity.create({
+        data: {
+          legalName: entityName,
+          displayName: entityName,
+          companyId: company.id,
+          size: orgSize || null,
+          commercialRegNo: commercialRegNo || null,
+          metadata: diagnosticData ? JSON.stringify(diagnosticData) : null,
+          isActive: true,
+        },
+      });
+
+      // 3. ربط المستخدم بالكيان الجديد بدوره الحالي
+      await tx.member.create({
+        data: {
+          userId,
+          entityId: entity.id,
+          role: 'OWNER',
+          userType: actualUserType,
+          departmentRole: finalDeptRole,
+        },
+      });
+
+      // 4. إنشاء نسخة استراتيجية تلقائية
+      await tx.strategyVersion.create({
+        data: {
+          entityId: entity.id,
+          versionNumber: 1,
+          name: 'الخطة الاستراتيجية الأولى',
+          description: 'تم إنشاؤها تلقائياً',
+          status: 'ACTIVE',
+          isActive: true,
+          createdBy: userId,
+          activatedAt: new Date(),
+        },
+      });
+
+      // 5. إنشاء أقسام تلقائية
+      const DEFAULT_DEPARTMENTS = [
+        { code: 'FINANCE', name: 'المالية', icon: 'bi-cash-coin', color: '#f59e0b' },
+        { code: 'MARKETING', name: 'التسويق', icon: 'bi-megaphone', color: '#8b5cf6' },
+        { code: 'OPERATIONS', name: 'العمليات', icon: 'bi-gear', color: '#3b82f6' },
+        { code: 'HR', name: 'الموارد البشرية', icon: 'bi-people', color: '#10b981' },
+        { code: 'TECH', name: 'التقنية', icon: 'bi-cpu', color: '#06b6d4' },
+        { code: 'SALES', name: 'المبيعات', icon: 'bi-cart3', color: '#ef4444' },
+        { code: 'SUPPORT', name: 'خدمة العملاء', icon: 'bi-headset', color: '#ec4899' },
+        { code: 'LEGAL', name: 'الشؤون القانونية', icon: 'bi-shield-check', color: '#6366f1' },
+      ];
+      for (const dept of DEFAULT_DEPARTMENTS) {
+        await tx.department.create({ data: { entityId: entity.id, ...dept } });
+      }
+
+      return { company, entity };
+    });
+
+    // توليد JWT جديد للكيان الجديد
+    const newToken = jwt.sign(
+      {
+        id: userId,
+        email: req.user.email,
+        name: req.user.name,
+        systemRole: req.user.systemRole || 'USER',
+        role: 'OWNER',
+        userType: actualUserType,
+        userCategory: cat || null,
+        entityId: result.entity.id,
+        companyId: result.company.id,
+        deptCode,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    res.cookie('token', newToken, {
+      path: '/',
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000
+    });
+
+    res.json({
+      message: 'تم إضافة المنشأة بنجاح 🎉',
+      entity: { id: result.entity.id, name: entityName },
+      user: { userType: actualUserType, deptCode },
+    });
+
+  } catch (error) {
+    console.error('[add-entity] Error:', error);
+    if (error.code === 'P2002') {
+      return res.status(400).json({ error: 'رقم السجل التجاري مستخدم بالفعل' });
+    }
+    res.status(500).json({ error: 'فشل إضافة المنشأة' });
   }
 });
 
@@ -857,6 +1042,7 @@ router.get('/me', verifyToken, (req, res) => {
     systemRole: req.user.systemRole || 'USER',
     role: req.user.role,
     userType: req.user.userType,
+    deptCode: req.user.deptCode || null,
     userCategory: req.user.userCategory || null,
     // ✅ activeEntityId هو المصدر الصحيح (يُعيّنه verifyToken من decoded.entityId)
     entityId: req.user.activeEntityId || req.user.entityId || null,
@@ -897,7 +1083,8 @@ router.post('/switch-entity', verifyToken, async (req, res) => {
       include: {
         entity: {
           include: { company: { select: { id: true, nameAr: true, status: true } } }
-        }
+        },
+        user: { select: { userCategory: true } }
       }
     });
 
@@ -924,10 +1111,26 @@ router.post('/switch-entity', verifyToken, async (req, res) => {
     const newRole = membership?.role || (req.user.systemRole === 'SUPER_ADMIN' ? 'OWNER' : 'VIEWER');
     const isSA = req.user.systemRole === 'SUPER_ADMIN';
     let newUserType = membership?.userType || 'EXPLORER';
+    // userCategory من User model (ليس من Member)
+    const newUserCategory = membership?.user?.userCategory || req.user.userCategory || null;
 
     // قاعدة ذهبية: OWNER/ADMIN → COMPANY_MANAGER دائماً
     if (['OWNER', 'ADMIN'].includes(newRole) || isSA) {
       newUserType = 'COMPANY_MANAGER';
+    }
+
+    // استخراج dept code من departmentRole أو userCategory لـ DEPT_MANAGER
+    let deptCode = null;
+    if (newUserType === 'DEPT_MANAGER') {
+      // departmentRole: CHRO → hr, CFO → finance, CMO → marketing...
+      const roleToCode = { CHRO: 'hr', CFO: 'finance', CMO: 'marketing', COO: 'operations', CTO: 'tech', CSO: 'sales', CCO: 'cs', CLO: 'legal' };
+      if (membership?.departmentRole && roleToCode[membership.departmentRole]) {
+        deptCode = roleToCode[membership.departmentRole];
+      } else if (newUserCategory?.startsWith('DEPT_')) {
+        const catMap = { 'DEPT_OPS': 'operations', 'DEPT_SERVICE': 'cs', 'DEPT_PMO': 'projects' };
+        const raw = newUserCategory.replace('DEPT_', '').toLowerCase();
+        deptCode = catMap[newUserCategory] || raw;
+      }
     }
 
     // توليد JWT جديد بالـ entity الجديد
@@ -939,8 +1142,10 @@ router.post('/switch-entity', verifyToken, async (req, res) => {
         systemRole: req.user.systemRole || 'USER',
         role: newRole,
         userType: newUserType,
+        userCategory: newUserCategory,
         entityId: targetEntity.id,
         companyId: targetEntity.company?.id || targetEntity.companyId || null,
+        deptCode,
       },
       process.env.JWT_SECRET,
       { expiresIn: '30d' }
@@ -967,6 +1172,8 @@ router.post('/switch-entity', verifyToken, async (req, res) => {
         id: req.user.id,
         role: newRole,
         userType: newUserType,
+        userCategory: newUserCategory,
+        deptCode,
         entityId: targetEntity.id,
       }
     });

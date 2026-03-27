@@ -119,7 +119,10 @@
 
 <body>
     <!-- بوابة: الدخول فقط من صفحة الهبوط -->
-    <script src="/assets/js/api.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/diagnostic-engine.js"></script>
+    <script src="/js/context-manager.js"></script>
+    <script src="/js/auth-handler.js"></script>
     <script>
         (function () {
             if (localStorage.getItem('token')) return;
@@ -241,35 +244,38 @@
             const phone = document.getElementById('phone').value.trim();
             const password = document.getElementById('password').value;
 
+            // استرجاع بيانات التشخيص
+            const diagnosticData = window.Context ? Context.getTemp('diagnostic_payload') : JSON.parse(sessionStorage.getItem('stratix_diagnostic_payload'));
+            let selectedRole = window.Context ? Context.getTemp('role') : sessionStorage.getItem('stratix_role');
+            let userCategory = window.Context ? Context.getTemp('user_category') : sessionStorage.getItem('stratix_user_category');
+
+            if (selectedRole === 'dept_manager' && (!userCategory && diagnosticData && diagnosticData.department)) {
+                userCategory = 'DEPT_' + diagnosticData.department.toUpperCase();
+            }
+
+            const payload = {
+                name, email, companyName, phone, password,
+                diagnosticData,
+                userType: selectedRole,
+                userCategory: userCategory
+            };
+
             try {
                 const res = await window.apiRequest('/api/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, companyName, phone, password }),
-                    credentials: 'include' // 🔒 إرسال واستقبال HttpOnly Cookie
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
+
                 });
                 const data = await res.json();
 
                 if (res.ok && (data.token || data.user)) {
-                    // 🔒 الكوكي HttpOnly أُضبط تلقائياً من السيرفر
-                    localStorage.setItem('token', 'httponly-managed');
-                    localStorage.setItem('user', JSON.stringify(data.user));
-
-                    // === Smart Redirect بعد التسجيل ===
-                    const diagPath = localStorage.getItem('diagnosticPath');
-                    const hasDiagData = localStorage.getItem('stratix_smart_guide');
-                    const category = localStorage.getItem('stratix_category') || '';
-
-                    if (hasDiagData) {
-                        // عنده نتيجة تشخيص → يكمل Onboarding أولاً
-                        window.location.href = '/onboarding.html';
-                    } else if (diagPath) {
-                        // عنده مسار تشخيص محفوظ → يكمله
-                        localStorage.removeItem('diagnosticPath');
-                        window.location.href = diagPath;
+                    // الاعتماد على الموجه المركزي للتطبيقات المتقدمة
+                    if (window.handleAuthResponse) {
+                        handleAuthResponse(data);
                     } else {
-                        // ما عنده شي → Onboarding
-                        window.location.href = '/onboarding.html';
+                        window.location.href = '/dashboard.html';
                     }
                 } else {
                     // عرض رسالة الخطأ التفصيلية من الـ validation

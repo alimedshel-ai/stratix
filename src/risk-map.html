@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
         rel="stylesheet">
+    <link rel="stylesheet" href="/css/shared.css">
     <style>
         :root {
             --bg: #0a0b10;
@@ -719,9 +720,10 @@
                 <select class="risk-filter-select" id="filterOwner" onchange="applyFilters()">
                     <option value="">👤 كل المسؤولين</option>
                 </select>
-                <button class="btn-add-risk" onclick="openAddRisk()">
+                <button class="btn-add-risk" id="btnAddRisk" onclick="openAddRisk()">
                     <i class="bi bi-plus-circle"></i> إضافة خطر جديد
                 </button>
+                <span id="riskMaxWarning" class="max-warning" style="display:none">⚠️ وصلت للحد الأقصى (20 خطر)</span>
             </div>
 
             <!-- Main Layout -->
@@ -832,11 +834,12 @@
         </div>
     </div>
 
-    <script src="/assets/js/api.js"></script>
-    <script src="/assets/js/sidebar.js"></script>
-    <script src="/assets/js/ai-advisor.js"></script>
-    <script src="/assets/js/achievements.js"></script>
-    <script src="/assets/js/notifications.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/steps-config.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script src="/js/ai-advisor.js"></script>
+    <script src="/js/achievements.js"></script>
+    <script src="/js/notifications.js"></script>
     <script>
         // ============================================================
         // === خريطة المخاطر — مربوطة بالـ API (/api/risks) ===
@@ -1118,7 +1121,15 @@
         }
 
         // === إضافة خطر (حفظ في الـ API) ===
+        const MAX_RISKS = 20;
+
         window.openAddRisk = function () {
+            if (risks.length >= MAX_RISKS) {
+                const warn = document.getElementById('riskMaxWarning');
+                if (warn) { warn.style.display = 'inline'; }
+                StartixAPI.showToast(`الحد الأقصى هو ${MAX_RISKS} خطراً — يرجى حذف أو أرشفة مخاطر أولاً ⚠️`);
+                return;
+            }
             document.getElementById('addRiskOverlay').classList.add('open');
         };
         window.closeAddRisk = function () {
@@ -1175,6 +1186,9 @@
             renderHeatmap();
             renderTopRisks();
             renderCategories();
+            // تحديث حالة زر الإضافة
+            const warn = document.getElementById('riskMaxWarning');
+            if (warn) warn.style.display = risks.length >= MAX_RISKS ? 'inline' : 'none';
         }
 
         // === تشغيل ===

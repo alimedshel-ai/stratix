@@ -496,9 +496,20 @@
         </div>
     </div>
 
-    <script src="/assets/js/api.js"></script>
-    <script src="/assets/js/sidebar.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/steps-config.js"></script>
+    <script src="/js/sidebar.js"></script>
     <script>
+        function escapeHtml(str) {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
         /* Legacy token redirect removed */
 
         const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
@@ -549,12 +560,12 @@
 
                     return `<tr>
                         <td>
-                            <div class="company-name">${c.nameAr || '—'}</div>
-                            <div class="company-name-en">${c.nameEn || ''}</div>
+                            <div class="company-name">${escapeHtml(c.nameAr || '—')}</div>
+                            <div class="company-name-en">${escapeHtml(c.nameEn || '')}</div>
                         </td>
-                        <td style="font-family:monospace;color:var(--text-muted)">${c.code || '—'}</td>
+                        <td style="font-family:monospace;color:var(--text-muted)">${escapeHtml(c.code || '—')}</td>
                         <td>${statusBadge}</td>
-                        <td><span class="badge-plan ${planClass}">${plan}</span></td>
+                        <td><span class="badge-plan ${planClass}">${escapeHtml(plan)}</span></td>
                         <td style="text-align:center">${entityCount}</td>
                         <td style="color:var(--text-muted);font-size:12px">${created}</td>
                         <td>
@@ -563,7 +574,7 @@
                                 <button class="action-btn" onclick="toggleStatus('${c.id}','${c.status}')" title="${c.status === 'ACTIVE' ? 'تعليق' : 'تفعيل'}">
                                     <i class="bi bi-${c.status === 'ACTIVE' ? 'pause-circle' : 'play-circle'}"></i>
                                 </button>
-                                <button class="action-btn danger" onclick="deleteCompany('${c.id}','${c.nameAr}')" title="حذف"><i class="bi bi-trash3"></i></button>
+                                <button class="action-btn danger" data-name="${escapeHtml(c.nameAr || '')}" onclick="deleteCompany('${c.id}', this.dataset.name)" title="حذف"><i class="bi bi-trash3"></i></button>
                             </div>
                         </td>
                     </tr>`;

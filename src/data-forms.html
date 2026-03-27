@@ -870,12 +870,23 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/assets/js/api.js"></script>
-    <script src="/assets/js/sidebar.js"></script>
-    <script src="/assets/js/ai-advisor.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/steps-config.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script src="/js/ai-advisor.js"></script>
     <script>
         /* Legacy token redirect removed */
         const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+        function escapeHtml(str) {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
 
         // Set current month
         const now = new Date();
@@ -1037,10 +1048,10 @@
                             <i class="bi ${icon}"></i>
                         </div>
                         <div class="row-info">
-                            <div class="row-name">${kpi.nameAr || kpi.name}</div>
-                            <div class="row-desc">${kpi.description || ''}</div>
+                            <div class="row-name">${escapeHtml(kpi.nameAr || kpi.name)}</div>
+                            <div class="row-desc">${escapeHtml(kpi.description || '')}</div>
                             <div class="row-target">
-                                🎯 المستهدف: ${kpi.target} ${kpi.unit || ''}
+                                🎯 المستهدف: ${escapeHtml(kpi.target)} ${escapeHtml(kpi.unit || '')}
                                 ${isLower ? '  <span style="color:var(--orange)">↓ الأقل أفضل</span>' : ''}
                             </div>
                         </div>
@@ -1048,7 +1059,7 @@
                             <input type="number" placeholder="القيمة" step="any"
                                    oninput="onValueChange(this)"
                                    data-kpi-id="${kpi.id}">
-                            <div class="row-unit">${kpi.unit || ''}</div>
+                            <div class="row-unit">${escapeHtml(kpi.unit || '')}</div>
                         </div>
                     </div>
                 `;
@@ -1242,8 +1253,8 @@
 
             let html = `
                 <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">
-                    <i class="bi bi-file-earmark"></i> ${data.fileName} · ${data.totalRows} صف
-                    ${data.columns ? ` · الأعمدة: ${data.columns.join(' | ')}` : ''}
+                    <i class="bi bi-file-earmark"></i> ${escapeHtml(data.fileName)} · ${data.totalRows} صف
+                    ${data.columns ? ` · الأعمدة: ${escapeHtml(data.columns.join(' | '))}` : ''}
                 </div>
 
                 <div class="preview-summary">
@@ -1287,8 +1298,8 @@
                     const periodStr = `${monthNames[pd.getMonth()]} ${pd.getFullYear()}`;
                     html += `
                         <tr>
-                            <td><strong>${e.kpiName}</strong></td>
-                            <td style="font-weight:700;color:var(--cyan)">${e.value}</td>
+                            <td><strong>${escapeHtml(e.kpiName)}</strong></td>
+                            <td style="font-weight:700;color:var(--cyan)">${escapeHtml(e.value)}</td>
                             <td>${periodStr}</td>
                             <td><span class="badge-match">متطابق</span></td>
                         </tr>
@@ -1312,7 +1323,7 @@
                     html += `
                         <div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;display:flex;align-items:center;gap:8px">
                             <span class="badge-unmatch">صف ${u.row}</span>
-                            "${u.name}"
+                            "${escapeHtml(u.name)}"
                         </div>
                     `;
                 });
@@ -1329,7 +1340,7 @@
                     html += `
                         <div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;display:flex;align-items:center;gap:8px">
                             <span class="badge-error">صف ${e.row}</span>
-                            ${e.name ? `"${e.name}" — ` : ''}${e.reason}
+                            ${e.name ? `"${escapeHtml(e.name)}" — ` : ''}${escapeHtml(e.reason)}
                         </div>
                     `;
                 });

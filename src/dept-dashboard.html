@@ -4,1552 +4,422 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ستارتكس — لوحة مدير الإدارة</title>
-    <meta name="description" content="لوحة تحكم مدير الإدارة لمتابعة مؤشرات القسم والمهام">
+    <title>ستارتكس | لوحة الإدارة الذكية</title>
+    <!-- Frameworks -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-    <script src="/assets/js/api.js"></script>
-    <script src="/assets/js/sidebar.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="/css/shared.css">
+    <link rel="stylesheet" href="/css/dept-pages.css">
+
     <style>
         :root {
-            --bg: #0f1219;
-            --bg-2: #161b26;
-            --bg-card: #1a1f2e;
-            --bg-card-hover: #1f2538;
-            --text: #e2e8f0;
-            --text-muted: #8b8ba7;
-            --border: rgba(255, 255, 255, 0.06);
-            --accent: #f59e0b;
-            --accent-glow: rgba(245, 158, 11, 0.1);
-            --green: #22c55e;
-            --yellow: #f59e0b;
-            --red: #ef4444;
-            --blue: #3b82f6;
-            --purple: #a78bfa;
-            --sidebar-w: 280px;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            --stx-bg: #0b0d12;
+            --stx-card: rgba(22, 27, 34, 0.7);
+            --stx-border: rgba(255, 255, 255, 0.08);
+            --stx-primary: #6366f1;
+            --stx-success: #10b981;
+            --stx-warn: #f59e0b;
         }
 
         body {
+            background-color: var(--stx-bg);
+            color: #f8fafc;
             font-family: 'Tajawal', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        .layout {
-            display: flex;
-            min-height: calc(100vh - 60px);
-        }
-
-        .main-content {
-            flex: 1;
-            padding: 30px;
-            max-width: calc(100% - 240px);
-            /* 240px is sidebar width */
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                margin-right: 0;
-                padding: 16px;
-                max-width: 100%;
-            }
-        }
-
-        /* Header */
-        .page-header {
+        /* Dashboard Specific Layout */
+        .dashboard-header {
+            padding: 30px 40px;
+            background: linear-gradient(180deg, rgba(99, 102, 241, 0.05) 0%, rgba(11, 13, 18, 0) 100%);
+            border-bottom: 1px solid var(--stx-border);
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 28px;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-
-        .page-header h1 {
-            font-size: 26px;
-            font-weight: 800;
-            display: flex;
             align-items: center;
-            gap: 10px;
-        }
-
-        .page-header h1 span {
-            background: linear-gradient(135deg, #f59e0b, #ef4444);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .subtitle {
-            color: var(--text-muted);
-            font-size: 14px;
-            margin-top: 4px;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-            color: var(--text);
-            font-family: 'Tajawal', sans-serif;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn:hover {
-            background: var(--bg-card-hover);
-            border-color: var(--accent);
-        }
-
-        /* Stats Row */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 14px;
-            margin-bottom: 28px;
         }
 
         .stat-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 20px;
-            text-align: center;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at 50% 0%, var(--card-glow, transparent), transparent 70%);
-            pointer-events: none;
+            background: var(--stx-card);
+            border: 1px solid var(--stx-border);
+            border-radius: 24px;
+            padding: 24px;
+            backdrop-filter: blur(12px);
+            transition: transform 0.3s ease, border-color 0.3s;
         }
 
         .stat-card:hover {
-            transform: translateY(-2px);
-            border-color: var(--accent);
+            border-color: var(--stx-primary);
+            transform: translateY(-5px);
         }
 
-        .stat-value {
-            font-size: 32px;
-            font-weight: 800;
-            line-height: 1;
-            margin-bottom: 6px;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        /* Grid Layout */
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        @media (max-width: 900px) {
-            .grid-2 {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 24px;
-        }
-
-        .card-title {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 16px;
+        /* Circular Progress */
+        .progress-circle {
+            width: 120px;
+            height: 120px;
+            position: relative;
             display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* KPI List */
-        .kpi-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.02);
-            margin-bottom: 8px;
-            transition: background 0.2s;
-        }
-
-        .kpi-item:hover {
-            background: rgba(255, 255, 255, 0.04);
-        }
-
-        .kpi-info {
-            flex: 1;
-        }
-
-        .kpi-name {
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .kpi-sub {
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-
-        .kpi-progress {
-            width: 80px;
-            height: 6px;
-            background: var(--border);
-            border-radius: 3px;
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-
-        .kpi-progress-fill {
-            height: 100%;
-            border-radius: 3px;
-            transition: width 1s ease;
-        }
-
-        .kpi-value {
-            font-size: 14px;
-            font-weight: 700;
-            min-width: 48px;
-            text-align: center;
-        }
-
-        /* Tasks */
-        .task-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.02);
-            margin-bottom: 8px;
-            transition: all 0.2s;
-        }
-
-        .task-item:hover {
-            background: rgba(255, 255, 255, 0.04);
-        }
-
-        .task-status {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .task-info {
-            flex: 1;
-        }
-
-        .task-name {
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .task-meta {
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-
-        .task-badge {
-            padding: 3px 10px;
-            border-radius: 8px;
-            font-size: 10px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        /* Alerts Section */
-        .alert-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            padding: 12px;
-            border-radius: 10px;
-            margin-bottom: 8px;
-            border-right: 3px solid var(--alert-color, var(--yellow));
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        .alert-icon {
-            flex-shrink: 0;
-            font-size: 18px;
-        }
-
-        .alert-title {
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .alert-desc {
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-
-        .alert-time {
-            font-size: 10px;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-
-        /* Quick Actions */
-        .quick-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 24px;
-        }
-
-        .quick-action {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px 14px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-decoration: none;
-            color: var(--text);
-        }
-
-        .quick-action:hover {
-            transform: translateY(-2px);
-            border-color: var(--accent);
-            background: var(--bg-card-hover);
-        }
-
-        .quick-action i {
-            font-size: 22px;
-            display: block;
-            margin-bottom: 6px;
-        }
-
-        .quick-action span {
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        /* Full-width card */
-        .full-card {
-            grid-column: 1 / -1;
-        }
-
-        /* Health indicator */
-        .health-meter {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            background: rgba(255, 255, 255, 0.02);
-            padding: 16px 20px;
-            border-radius: 12px;
-            margin-bottom: 16px;
-        }
-
-        .health-score {
-            font-size: 36px;
-            font-weight: 800;
-            flex-shrink: 0;
-        }
-
-        .health-bar {
-            flex: 1;
-            height: 8px;
-            background: var(--border);
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .health-bar-fill {
-            height: 100%;
-            border-radius: 4px;
-            transition: width 1.2s ease;
-        }
-
-        .health-label {
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .health-sub {
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-
-        /* Loading */
-        .loading-state {
-            display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 80px 24px;
-            color: var(--text-muted);
         }
 
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-bottom: 16px;
+        .progress-circle svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
         }
 
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
+        .progress-circle .bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.05);
+            stroke-width: 8;
         }
 
-        .fade-in {
-            animation: fadeIn 0.5s ease both;
+        .progress-circle .meter {
+            fill: none;
+            stroke: var(--stx-primary);
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-dasharray: 283;
+            stroke-dashoffset: 283;
+            transition: stroke-dashoffset 1s ease-out;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .progress-val {
+            position: absolute;
+            font-size: 1.5rem;
+            font-weight: 800;
         }
 
-        .empty-text {
-            text-align: center;
-            padding: 24px;
-            color: var(--text-muted);
-            font-size: 13px;
-        }
-
-        /* === Welcome Board (New User) === */
-        .welcome-board {
-            animation: fadeIn 0.6s ease both;
-        }
-
-        .welcome-hero {
-            text-align: center;
-            padding: 40px 24px 32px;
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(239, 68, 68, 0.06));
-            border: 1px solid rgba(245, 158, 11, 0.15);
-            border-radius: 20px;
-            margin-bottom: 28px;
+        /* AI Recommendation Card */
+        .ai-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.1) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.2);
             position: relative;
             overflow: hidden;
         }
 
-        .welcome-hero::before {
-            content: '';
+        .ai-card::after {
+            content: 'AI';
             position: absolute;
-            top: -60px;
-            right: -60px;
-            width: 200px;
-            height: 200px;
-            background: radial-gradient(circle, rgba(245, 158, 11, 0.12), transparent 70%);
+            top: -10px;
+            left: -10px;
+            font-size: 5rem;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.03);
             pointer-events: none;
         }
 
-        .welcome-emoji {
-            font-size: 56px;
-            margin-bottom: 12px;
-            animation: bounceIn 0.8s ease;
+        /* Strategic Journey List */
+        .phase-group {
+            margin-bottom: 40px;
         }
 
-        @keyframes bounceIn {
+        .phase-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-right: 10px;
+        }
+
+        .phase-header h2 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            margin: 0;
+            color: #94a3b8;
+        }
+
+        .step-pill {
+            background: var(--stx-card);
+            border: 1px solid var(--stx-border);
+            border-radius: 16px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .step-pill:hover:not(.locked) {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--stx-primary);
+            transform: translateX(-5px);
+        }
+
+        .step-pill.completed {
+            border-color: rgba(16, 185, 129, 0.3);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .step-pill.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(1);
+        }
+
+        .step-pill i {
+            font-size: 1.25rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: auto;
+        }
+
+        .dot-completed {
+            background: var(--stx-success);
+            box-shadow: 0 0 10px var(--stx-success);
+        }
+
+        .dot-locked {
+            background: #64748b;
+        }
+
+        .dot-pending {
+            background: var(--stx-primary);
+            box-shadow: 0 0 10px var(--stx-primary);
+        }
+
+        /* Animated Pulse for AI */
+        .pulse-icon {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
             0% {
-                transform: scale(0);
+                transform: scale(1);
+                opacity: 1;
             }
 
             50% {
-                transform: scale(1.2);
+                transform: scale(1.1);
+                opacity: 0.7;
             }
 
             100% {
                 transform: scale(1);
+                opacity: 1;
             }
         }
 
-        .welcome-title {
-            font-size: 24px;
-            font-weight: 800;
-            margin-bottom: 8px;
-            background: linear-gradient(135deg, #f59e0b, #ef4444);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .welcome-subtitle {
-            color: var(--text-muted);
-            font-size: 15px;
-            line-height: 1.8;
-            max-width: 500px;
-            margin: 0 auto;
-        }
-
-        .roadmap-title {
-            font-size: 18px;
-            font-weight: 800;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .roadmap-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 16px;
-            margin-bottom: 28px;
-        }
-
-        .roadmap-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            padding: 28px 24px;
-            position: relative;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            text-decoration: none;
-            color: var(--text);
-            display: block;
-            overflow: hidden;
-        }
-
-        .roadmap-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 4px;
-            height: 100%;
-            background: var(--card-accent, var(--accent));
-            border-radius: 0 4px 4px 0;
-        }
-
-        .roadmap-card:hover {
-            transform: translateY(-4px);
-            border-color: var(--card-accent, var(--accent));
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-
-        .roadmap-step {
-            position: absolute;
-            top: 14px;
-            left: 14px;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: var(--card-accent, var(--accent));
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            font-weight: 800;
-        }
-
-        .roadmap-icon {
-            font-size: 36px;
-            margin-bottom: 14px;
-        }
-
-        .roadmap-card-title {
-            font-size: 17px;
-            font-weight: 800;
-            margin-bottom: 6px;
-        }
-
-        .roadmap-card-desc {
-            font-size: 13px;
-            color: var(--text-muted);
-            line-height: 1.7;
-            margin-bottom: 14px;
-        }
-
-        .roadmap-cta {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 18px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.06);
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--card-accent, var(--accent));
-            transition: all 0.2s;
-        }
-
-        .roadmap-card:hover .roadmap-cta {
-            background: var(--card-accent, var(--accent));
-            color: #fff;
-        }
-
-        .roadmap-card.done {
-            opacity: 0.6;
-        }
-
-        .roadmap-card.done .roadmap-step {
-            background: var(--green);
-        }
-
-        .roadmap-card.done .roadmap-step::after {
-            content: '✓';
-        }
-
-        .tip-banner {
-            background: var(--bg-card);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            border-radius: 14px;
-            padding: 20px 24px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .tip-icon {
-            font-size: 28px;
-            flex-shrink: 0;
-        }
-
-        .tip-text {
-            font-size: 13px;
-            color: var(--text-muted);
-            line-height: 1.7;
-        }
-
-        .tip-text strong {
-            color: var(--text);
-        }
-
-        .stagger-1 {
-            animation-delay: 0.1s;
-        }
-
-        .stagger-2 {
-            animation-delay: 0.2s;
-        }
-
-        .stagger-3 {
-            animation-delay: 0.3s;
-        }
-
-        .stagger-4 {
-            animation-delay: 0.4s;
+        .main-scroll {
+            height: calc(100vh - 100px);
+            overflow-y: auto;
+            padding: 30px 40px;
         }
     </style>
 </head>
 
 <body>
+    <div class="stx-wrapper">
+        <!-- Sidebar placeholder -->
+        <aside class="stx-sidebar-container"></aside>
 
-    <!-- Top Nav Placeholder (Optional, usually handled globally but good to have padding) -->
+        <main class="stx-main-content">
+            <!-- Smart Header -->
+            <header class="dashboard-header">
+                <div>
+                    <h1 id="dept-title" style="font-size: 1.8rem; font-weight: 900; margin: 0;">لوحة إدارة الاستراتيجية
+                    </h1>
+                    <p class="text-muted mb-0" id="welcome-msg">مرحباً بك، جار تحميل البيانات الذكية...</p>
+                </div>
+                <div class="d-flex align-items-center gap-4">
+                    <div class="text-end d-none d-md-block">
+                        <div class="small text-muted mb-1">تزامن البيانات</div>
+                        <div
+                            class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">
+                            <i class="bi bi-cloud-check-fill me-1"></i> متصل ومحدث
+                        </div>
+                    </div>
+                </div>
+            </header>
 
-    <div class="layout">
-        <aside class="sidebar" id="sidebarContainer"></aside>
-        <main class="main-content" id="mainContent">
-            <div class="loading-state" id="loadingState">
-                <div class="spinner"></div>
-                <p>جاري تحميل بيانات إدارتك...</p>
-            </div>
+            <div class="main-scroll">
+                <!-- Smart Insights Row -->
+                <div class="row g-4 mb-5">
+                    <!-- Overall Health -->
+                    <div class="col-lg-4">
+                        <div class="stat-card d-flex align-items-center justify-content-between h-100">
+                            <div>
+                                <h3 class="small text-muted fw-bold text-uppercase mb-3" style="letter-spacing:1px">نبض
+                                    الاستراتيجية</h3>
+                                <div class="h2 fw-black mb-1" id="overall-percent">0%</div>
+                                <p class="small text-muted mb-0">اكتمال الرحلة الاستراتيجية</p>
+                            </div>
+                            <div class="progress-circle">
+                                <svg viewbox="0 0 100 100">
+                                    <circle class="bg" cx="50" cy="50" r="45"></circle>
+                                    <circle id="progress-meter" class="meter" cx="50" cy="50" r="45"></circle>
+                                </svg>
+                                <span class="progress-val" id="progress-text">0%</span>
+                            </div>
+                        </div>
+                    </div>
 
-            <!-- شريط التنبيه (يظهر ديناميكياً) -->
-            <div id="alertBannerContainer"></div>
-
-            <!-- === Welcome Board (New Users) === -->
-            <div id="welcomeBoard" style="display:none" class="welcome-board">
-                <div class="welcome-hero">
-                    <div class="welcome-emoji">🎉</div>
-                    <div class="welcome-title" id="wbTitle">أهلاً بك في لوحة إدارتك!</div>
-                    <div class="welcome-subtitle" id="wbSubtitle">
-                        التشخيص كشف لك نقاط القوة والضعف في إدارتك 👇<br>
-                        الخطوات التالية تساعدك تحوّل هذا التشخيص إلى خطة عمل واضحة
+                    <!-- AI Smart Recommendation -->
+                    <div class="col-lg-8">
+                        <div class="stat-card ai-card h-100 d-flex flex-column justify-content-center p-4">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="pulse-icon bg-white text-dark rounded-circle d-flex align-items-center justify-content-center"
+                                    style="width:40px; height:40px">
+                                    <i class="bi bi-stars"></i>
+                                </div>
+                                <h3 class="h5 fw-bold m-0" style="color: #fff">توصية ستارتكس الذكية</h3>
+                            </div>
+                            <p class="mb-4 text-white-50 fs-6" id="ai-recom-text">بناءً على تقدمك الحالي، نقترح البدء بـ
+                                <span class="text-white fw-bold">التحليل العميق</span> لفهم الفجوات التشغيلية في قسمك
+                                قبل الانتقال للتخطيط.</p>
+                            <div id="ai-action-btn">
+                                <button class="btn btn-white btn-sm rounded-pill px-4 fw-bold" disabled>جاري
+                                    التحليل...</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="roadmap-title">🗺️ رحلتك الاستراتيجية — 5 خطوات</div>
-
-                <div class="roadmap-grid" id="roadmapGrid">
-                    <a class="roadmap-card fade-in stagger-1" id="step1Card" href="/internal-env.html"
-                        style="--card-accent:#3b82f6">
-                        <div class="roadmap-step">1</div>
-                        <div class="roadmap-icon">📋</div>
-                        <div class="roadmap-card-title">الاستبيان التشخيصي لإدارتك</div>
-                        <div class="roadmap-card-desc">
-                            أجب على أسئلة مخصصة لإدارتك لتحديد مستوى النضج والفجوات الحالية.<br>
-                            خطوة سريعة ودقيقة لبناء خطتك التشغيلية.
-                        </div>
-                        <div class="roadmap-cta"><i class="bi bi-ui-checks"></i> ابدأ الاستبيان</div>
-                    </a>
-
-                    <!-- الخطوة 2: التحليل العميق -->
-                    <a class="roadmap-card fade-in stagger-2" id="step2Card" href="/dept-deep.html?single=1"
-                        style="--card-accent:#8b5cf6">
-                        <div class="roadmap-step">2</div>
-                        <div class="roadmap-icon">🔬</div>
-                        <div class="roadmap-card-title">تحليل أعمق لإدارتك</div>
-                        <div class="roadmap-card-desc">
-                            6 محاور تفصيلية — تشخيص متقدم + اكتشاف نقاط القوة والضعف تلقائياً.<br>
-                            يبني على نتائج البيئة الداخلية ويعطيك صورة أدق
-                        </div>
-                        <div class="roadmap-cta"><i class="bi bi-search-heart"></i> ابدأ التحليل العميق</div>
-                    </a>
-
-                    <!-- الخطوة 3: SWOT -->
-                    <a class="roadmap-card fade-in stagger-3" id="step3Card" href="/swot.html"
-                        style="--card-accent:#f59e0b">
-                        <div class="roadmap-step">3</div>
-                        <div class="roadmap-icon">🔍</div>
-                        <div class="roadmap-card-title">تحليل SWOT</div>
-                        <div class="roadmap-card-desc">
-                            بناءً على فهمك للبيئة والتحليل العميق — حدد نقاط القوة والضعف والفرص والتهديدات.<br>
-                            التشخيص اللي سويته يساعدك تعبّيها بسهولة
-                        </div>
-                        <div class="roadmap-cta"><i class="bi bi-grid-1x2-fill"></i> ابدأ SWOT</div>
-                    </a>
-
-                    <!-- الخطوة 4: التوجهات الاستراتيجية -->
-                    <a class="roadmap-card fade-in stagger-4" id="step4Card" href="/directions.html"
-                        style="--card-accent:#a78bfa">
-                        <div class="roadmap-step">4</div>
-                        <div class="roadmap-icon">🎯</div>
-                        <div class="roadmap-card-title">حدد أهدافك الاستراتيجية</div>
-                        <div class="roadmap-card-desc">
-                            بناءً على التحليل — حدد التوجهات اللي تبي إدارتك تمشي عليها.<br>
-                            مثال: تحسين الكفاءة التشغيلية، رفع جودة الخدمة
-                        </div>
-                        <div class="roadmap-cta"><i class="bi bi-compass"></i> حدد التوجهات</div>
-                    </a>
-
-                    <!-- الخطوة 5: مؤشرات الأداء + المبادرات -->
-                    <a class="roadmap-card fade-in stagger-4" id="step5Card" href="/kpis.html"
-                        style="--card-accent:#22c55e">
-                        <div class="roadmap-step">5</div>
-                        <div class="roadmap-icon">📊</div>
-                        <div class="roadmap-card-title">أضف مؤشرات وأنشئ مبادرات</div>
-                        <div class="roadmap-card-desc">
-                            حط مؤشرات أداء (KPIs) تقيس تقدّمك، وأنشئ مبادرات تحسينية.<br>
-                            هنا تبدأ رحلة التنفيذ الحقيقية 🚀
-                        </div>
-                        <div class="roadmap-cta"><i class="bi bi-plus-circle"></i> ابدأ البناء</div>
-                    </a>
+                <!-- Strategic Roadmap -->
+                <div id="strategic-roadmap">
+                    <!-- Phases will be injected here -->
+                    <div class="text-center py-5 opactiy-50">
+                        <div class="spinner-border text-primary mb-3"></div>
+                        <p>جاري بناء خارطة الطريق الذكية...</p>
+                    </div>
                 </div>
-            </div>
-
-            <div id="contentArea" style="display:none; flex-direction:column; gap:24px;">
-                <!-- Stats Row -->
-                <div id="statsRow" class="stats-row"
-                    style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;"></div>
-
-                <!-- Two Column Dashboard Layout -->
-                <div style="display:grid;grid-template-columns: 2fr 1fr;gap:24px;align-items:start" class="dash-grid">
-
-                    <!-- Left Column (Wider): Main Operational Data -->
-                    <div style="display:flex;flex-direction:column;gap:24px;">
-                        <!-- AI Strategic Advisor / Environmental Analysis -->
-                        <div class="card fade-in"
-                            style="background:linear-gradient(135deg,rgba(167,139,250,0.08),rgba(102,126,234,0.05));border-color:rgba(167,139,250,0.15)">
-                            <div class="card-title"
-                                style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                                <span style="font-size:16px;font-weight:800"><i class="bi bi-robot"
-                                        style="color:#a78bfa;"></i> تحليل وضع الإدارة والبيئة المحيطة</span>
-                                <a href="/swot.html"
-                                    style="padding:6px 14px;font-size:12px;background:var(--primary);color:#fff;text-decoration:none;border-radius:8px;font-weight:700;"><i
-                                        class="bi bi-arrows-fullscreen"></i> تشخيص الإدارة</a>
-                            </div>
-                            <div id="deptAiAnalysis">
-                                <div style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px"><i
-                                        class="bi bi-hourglass-split"></i> جاري التحليل...</div>
-                            </div>
-                        </div>
-
-                        <!-- KPIs -->
-                        <div class="card fade-in">
-                            <div class="card-title">📊 المؤشرات</div>
-                            <div id="kpiList"></div>
-                        </div>
-
-                        <!-- Initiatives / Tasks -->
-                        <div class="card fade-in">
-                            <div class="card-title">🚀 مبادرات ومهام</div>
-                            <div id="taskList"></div>
-                        </div>
-                    </div>
-
-                    <!-- Right Column (Narrower): Quick Actions & Feeds -->
-                    <div style="display:flex;flex-direction:column;gap:24px;">
-                        <!-- Quick Actions -->
-                        <div class="card fade-in" style="background:transparent; border:none; padding:0;">
-                            <div class="card-title" style="margin-bottom:12px; font-size:14px; color:var(--text-muted)">
-                                <i class="bi bi-lightning-charge-fill" style="color:var(--accent)"></i> إجراءات سريعة
-                            </div>
-                            <div id="quickActions" class="quick-actions"></div>
-                        </div>
-
-                        <!-- Alerts -->
-                        <div class="card fade-in">
-                            <div class="card-title">🔔 تنبيهات مهمة</div>
-                            <div id="alertList"></div>
-                        </div>
-
-                        <!-- Recent Activity -->
-                        <div class="card fade-in">
-                            <div class="card-title">📋 آخر النشاطات</div>
-                            <div id="activityList"></div>
-                        </div>
-                    </div>
-
-                </div> <!-- End Dash Grid -->
             </div>
         </main>
-    </div> <!-- End Layout -->
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/context-manager.js"></script>
+    <script src="/js/steps-config.js"></script>
+    <script src="/js/sidebar.js"></script>
 
     <script>
-        // ✅ النسخة النظيفة: إزالة الاستعلامات الكارثية من الـ URL والـ localStorage القديمة
-        // ✅ الاعتماد الكلي على بيانات الـ userData الموثوقة 100%
+        (async function () {
+            // 1. Fetch User and Dept
+            const user = await window.api.getCurrentUser();
+            if (!user) {
+                window.location.href = '/login.html';
+                return;
+            }
 
-        const DEPT_NAMES = {
-            'hr': 'الموارد البشرية', 'finance': 'المالية', 'marketing': 'التسويق',
-            'operations': 'العمليات', 'sales': 'المبيعات', 'it': 'تقنية المعلومات',
-            'cs': 'خدمة العملاء', 'compliance': 'الامتثال والحوكمة', 'quality': 'الجودة',
-            'projects': 'إدارة المشاريع', 'support': 'الخدمات المساندة'
-        };
+            const dept = Context.getDept() || new URLSearchParams(window.location.search).get('dept');
+            if (!dept) {
+                window.location.href = '/dashboard.html';
+                return;
+            }
 
-        // Mobile responsiveness for grid
-        const styleEl = document.createElement('style');
-        styleEl.innerHTML = `@media(max-width: 992px) { .dash-grid { grid-template-columns: 1fr !important; } }`;
-        document.head.appendChild(styleEl);
+            document.getElementById('dept-title').textContent = `إدارة ${getDeptName(dept)}`;
+            document.getElementById('welcome-msg').textContent = `مرحباً ${user.name || 'بك'}، إليك ملخص الحالة الاستراتيجية لقسمك.`;
 
-        // تكوين مخصص لكل إدارة
-        const DEPT_CONFIG = {
-            hr: {
-                icon: '👥', color: '#3b82f6', deepLink: '/hr-deep.html',
-                tip: 'مدير الموارد البشرية المتميز يركز على 3 محاور: استقطاب الكفاءات → تطويرهم → الاحتفاظ بهم',
-                actions: [
-                    { icon: 'bi-people-fill', label: 'مؤشرات HR', href: '/kpis.html?dept=hr', color: '#3b82f6' },
-                    { icon: 'bi-person-plus-fill', label: 'التوظيف', href: '/dept-deep.html?dept=hr&section=recruitment', color: '#22c55e' },
-                    { icon: 'bi-cash-coin', label: 'الرواتب وWPS', href: '/dept-deep.html?dept=hr&section=wps', color: '#f59e0b' },
-                    { icon: 'bi-award-fill', label: 'التدريب', href: '/dept-deep.html?dept=hr&section=training', color: '#a78bfa' },
-                    { icon: 'bi-bar-chart-fill', label: 'تقييم الأداء', href: '/dept-deep.html?dept=hr&section=performance', color: '#ef4444' },
-                    { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html?dept=hr', color: '#64748b' },
-                ]
-            },
-            finance: {
-                icon: '💰', color: '#f59e0b', deepLink: '/finance-deep.html',
-                tip: 'الإدارة المالية تبدأ بزرع بيانات محاسبية دقيقة → تحليل + قرار',
-                actions: [
-                    { icon: 'bi-graph-up-arrow', label: 'مؤشرات مالية', href: '/kpis.html?dept=finance', color: '#f59e0b' },
-                    { icon: 'bi-wallet2', label: 'الميزانية', href: '/dept-deep.html?dept=finance&section=budget', color: '#22c55e' },
-                    { icon: 'bi-receipt', label: 'التدفقات النقدية', href: '/dept-deep.html?dept=finance&section=cashflow', color: '#3b82f6' },
-                    { icon: 'bi-shield-check', label: 'التدقيق ZATCA', href: '/dept-deep.html?dept=finance&section=audit', color: '#ef4444' },
-                    { icon: 'bi-bank', label: 'الذمم والتحصيل', href: '/dept-deep.html?dept=finance&section=receivables', color: '#a78bfa' },
-                    { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html?dept=finance', color: '#64748b' },
-                ]
-            },
-            sales: {
-                icon: '📈', color: '#10b981', deepLink: '/dept-deep.html?dept=sales&single=1',
-                tip: 'فريق مبيعات احترافي: يتابع pipeline + يحلل الخسائر + يدرب بانتظام',
-                actions: [
-                    { icon: 'bi-trophy-fill', label: 'مؤشرات المبيعات', href: '/kpis.html?dept=sales', color: '#10b981' },
-                    { icon: 'bi-funnel-fill', label: 'أهداف المبيعات', href: '/dept-deep.html?dept=sales&section=targets', color: '#22c55e' },
-                    { icon: 'bi-people', label: 'إدارة CRM', href: '/dept-deep.html?dept=sales&section=crm', color: '#3b82f6' },
-                    { icon: 'bi-percent', label: 'معدل التحويل', href: '/dept-deep.html?dept=sales&section=conversion', color: '#a78bfa' },
-                    { icon: 'bi-megaphone-fill', label: 'قنوات البيع', href: '/dept-deep.html?dept=sales&section=channels', color: '#f59e0b' },
-                    { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html?dept=sales', color: '#64748b' },
-                ]
-            },
-            marketing: {
-                icon: '📣', color: '#8b5cf6', deepLink: '/dept-deep.html?dept=marketing&single=1',
-                tip: 'التسويق الفعال = محتوى منتظم + بيانات دقيقة + ROI مقيس',
-                actions: [
-                    { icon: 'bi-bar-chart-fill', label: 'مؤشرات تسويق', href: '/kpis.html?dept=marketing', color: '#8b5cf6' },
-                    { icon: 'bi-camera-fill', label: 'خطة المحتوى', href: '/dept-deep.html?dept=marketing&section=content', color: '#22c55e' },
-                    { icon: 'bi-bullseye', label: 'الحملات', href: '/dept-deep.html?dept=marketing&section=campaigns', color: '#ef4444' },
-                    { icon: 'bi-globe2', label: 'الوجود الرقمي', href: '/dept-deep.html?dept=marketing&section=digital', color: '#3b82f6' },
-                    { icon: 'bi-graph-up', label: 'ROI الحملات', href: '/dept-deep.html?dept=marketing&section=roi', color: '#f59e0b' },
-                    { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html?dept=marketing', color: '#64748b' },
-                ]
-            },
-            operations: {
-                icon: '⚙️', color: '#6366f1', deepLink: '/dept-deep.html?dept=operations&single=1',
-                tip: 'العمليات المتميزة = توثيق SOPs + قياس كفاءة + تحسين مستمر',
-                actions: [
-                    { icon: 'bi-speedometer2', label: 'كفاءة العمليات', href: '/kpis.html?dept=operations', color: '#6366f1' },
-                    { icon: 'bi-file-earmark-text', label: 'توثيق SOPs', href: '/dept-deep.html?dept=operations&section=sops', color: '#22c55e' },
-                    { icon: 'bi-boxes', label: 'المخزون', href: '/dept-deep.html?dept=operations&section=inventory', color: '#f59e0b' },
-                    { icon: 'bi-truck', label: 'سلسلة التوريد', href: '/dept-deep.html?dept=operations&section=supply', color: '#3b82f6' },
-                    { icon: 'bi-clipboard-data', label: 'الجودة', href: '/dept-deep.html?dept=operations&section=quality', color: '#ef4444' },
-                    { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html?dept=operations', color: '#64748b' },
-                ]
-            },
-            compliance: {
-                icon: '⚖️', color: '#ef4444', deepLink: '/dept-deep.html?dept=compliance&single=1',
-                tip: 'الامتثال ليس خياراً — هو حماية الشركة من غرامات تصل لملايين',
-                actions: [
-                    { icon: 'bi-shield-fill-check', label: 'مؤشرات امتثال', href: '/kpis.html?dept=compliance', color: '#ef4444' },
-                    { icon: 'bi-file-earmark-check', label: 'نطاقات', href: '/dept-deep.html?dept=compliance&section=nitaqat', color: '#10b981' },
-                    { icon: 'bi-building', label: 'ZATCA', href: '/dept-deep.html?dept=compliance&section=zatca', color: '#f59e0b' },
-                    { icon: 'bi-person-badge', label: 'GOSI', href: '/dept-deep.html?dept=compliance&section=gosi', color: '#3b82f6' },
-                    { icon: 'bi-lock-fill', label: 'الأمن السيبراني', href: '/dept-deep.html?dept=compliance&section=cyber', color: '#a78bfa' },
-                    { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html?dept=compliance', color: '#64748b' },
-                ]
-            },
-            it: {
-                icon: '💻', color: '#06b6d4', deepLink: '/dept-deep.html?dept=it&single=1',
-                tip: 'التقنية الجيدة = أمن سيبراني قوي + أنظمة متكاملة + uptime عال',
-                actions: [
-                    { icon: 'bi-speedometer', label: 'مؤشرات IT', href: '/kpis.html?dept=it', color: '#06b6d4' },
-                    { icon: 'bi-shield-lock', label: 'الأمن السيبراني', href: '/dept-deep.html?dept=it&section=security', color: '#ef4444' },
-                    { icon: 'bi-hdd-network', label: 'البنية التحتية', href: '/dept-deep.html?dept=it&section=infrastructure', color: '#3b82f6' },
-                    { icon: 'bi-headset', label: 'Help Desk', href: '/dept-deep.html?dept=it&section=helpdesk', color: '#22c55e' },
-                    { icon: 'bi-cloud-arrow-up', label: 'السحابة', href: '/dept-deep.html?dept=it&section=cloud', color: '#a78bfa' },
-                    { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html?dept=it', color: '#64748b' },
-                ]
-            },
-            cs: {
-                icon: '🎟️', color: '#f97316', deepLink: '/dept-deep.html?dept=cs&single=1',
-                tip: 'عميل سعيد = فريق مدرب + استجابة سريعة + متابعة فعالة للشكاوى',
-                actions: [
-                    { icon: 'bi-star-fill', label: 'رضا العميل NPS', href: '/kpis.html?dept=cs', color: '#f97316' },
-                    { icon: 'bi-chat-dots-fill', label: 'الشكاوى', href: '/dept-deep.html?dept=cs&section=complaints', color: '#ef4444' },
-                    { icon: 'bi-clock-history', label: 'وقت الاستجابة', href: '/dept-deep.html?dept=cs&section=response', color: '#3b82f6' },
-                    { icon: 'bi-person-check', label: 'FCR الحل الفوري', href: '/dept-deep.html?dept=cs&section=fcr', color: '#22c55e' },
-                    { icon: 'bi-journal-check', label: 'قاعدة المعرفة', href: '/dept-deep.html?dept=cs&section=knowledge', color: '#a78bfa' },
-                    { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html?dept=cs', color: '#64748b' },
-                ]
-            },
-            quality: {
-                icon: '✅', color: '#22c55e', deepLink: '/dept-deep.html?dept=quality&single=1',
-                tip: 'الجودة أرخص من الإصلاح: الوقاية = 10% من تكلفة إصلاح ما بعد التسليم',
-                actions: [
-                    { icon: 'bi-patch-check-fill', label: 'مؤشرات جودة', href: '/kpis.html?dept=quality', color: '#22c55e' },
-                    { icon: 'bi-bug-fill', label: 'معدل العيوب', href: '/dept-deep.html?dept=quality&section=defects', color: '#ef4444' },
-                    { icon: 'bi-search', label: 'تحليل السبب الجذري RCA', href: '/dept-deep.html?dept=quality&section=rca', color: '#f59e0b' },
-                    { icon: 'bi-clipboard2-check', label: 'تدقيق داخلي', href: '/dept-deep.html?dept=quality&section=audit', color: '#3b82f6' },
-                    { icon: 'bi-arrow-repeat', label: 'CAPA', href: '/dept-deep.html?dept=quality&section=capa', color: '#a78bfa' },
-                    { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html?dept=quality', color: '#64748b' },
-                ]
-            },
-            projects: {
-                icon: '📊', color: '#a855f7', deepLink: '/dept-deep.html?dept=projects&single=1',
-                tip: 'PMO فعال = منهجية واضحة + إدارة مخاطر + تواصل منتظم مع أصحاب المصلحة',
-                actions: [
-                    { icon: 'bi-kanban-fill', label: 'مؤشرات المشاريع', href: '/kpis.html?dept=projects', color: '#a855f7' },
-                    { icon: 'bi-calendar-check', label: 'التسليم في الموعد', href: '/dept-deep.html?dept=projects&section=delivery', color: '#22c55e' },
-                    { icon: 'bi-exclamation-triangle', label: 'سجل المخاطر', href: '/dept-deep.html?dept=projects&section=risks', color: '#ef4444' },
-                    { icon: 'bi-people-fill', label: 'أصحاب المصلحة', href: '/dept-deep.html?dept=projects&section=stakeholders', color: '#3b82f6' },
-                    { icon: 'bi-book-fill', label: 'دروس مستفادة', href: '/dept-deep.html?dept=projects&section=lessons', color: '#f59e0b' },
-                    { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html?dept=projects', color: '#64748b' },
-                ]
-            },
-            support: {
-                icon: '🛠️', color: '#64748b', deepLink: '/dept-deep.html?dept=support&single=1',
-                tip: 'الخدمات المساندة = العمود الاات تُرى لكنها ضرورية لكل شيء',
-                actions: [
-                    { icon: 'bi-wrench-adjustable', label: 'مؤشرات', href: '/kpis.html?dept=support', color: '#64748b' },
-                    { icon: 'bi-box-seam', label: 'عقود الموردين', href: '/dept-deep.html?dept=support&section=vendors', color: '#f59e0b' },
-                    { icon: 'bi-tools', label: 'الصيانة', href: '/dept-deep.html?dept=support&section=maintenance', color: '#3b82f6' },
-                    { icon: 'bi-building-fill', label: 'إدارة الأصول', href: '/dept-deep.html?dept=support&section=assets', color: '#22c55e' },
-                    { icon: 'bi-cart4', label: 'المشتريات', href: '/dept-deep.html?dept=support&section=procurement', color: '#a78bfa' },
-                    { icon: 'bi-list-task', label: 'المبادرات', href: '/initiatives.html?dept=support', color: '#64748b' },
-                ]
-            },
-        };
+            // 2. Fetch Tools Status
+            const allTools = STEPS_CONFIG.DEPARTMENT_TOOLS;
+            const statuses = await Promise.all(
+                allTools.map(tool => Context.isStepCompleted(tool.id).catch(() => false))
+            );
+            const completedIds = allTools.filter((_, i) => statuses[i]).map(t => t.id);
 
-        // Helper: get config for current dept
-        function getDeptConfig(key) {
-            return DEPT_CONFIG[key] || {
-                icon: '🏢', color: '#6366f1', deepLink: `/dept-deep.html?dept=${key}&single=1`,
-                tip: 'حلل وضع إدارتك وابدأ برحلتك الاستراتيجية',
-                actions: [
-                    { icon: 'bi-graph-up', label: 'مؤشرات الأداء', href: `/kpis.html?dept=${key}`, color: '#6366f1' },
-                    { icon: 'bi-list-task', label: 'المبادرات', href: `/initiatives.html?dept=${key}`, color: '#22c55e' },
-                ]
+            // 3. Update Progress UI
+            const completedCount = statuses.filter(Boolean).length;
+            const totalCount = allTools.length;
+            const percent = Math.round((completedCount / totalCount) * 100);
+
+            document.getElementById('overall-percent').textContent = `${percent}%`;
+            document.getElementById('progress-text').textContent = `${percent}%`;
+            const meter = document.getElementById('progress-meter');
+            const offset = 283 - (283 * percent / 100);
+            setTimeout(() => {
+                meter.style.strokeDashoffset = offset;
+            }, 500);
+
+            // 4. Build Smart Roadmap
+            const roadmapContainer = document.getElementById('strategic-roadmap');
+            roadmapContainer.innerHTML = '';
+
+            const categories = window.getToolsByCategory();
+
+            for (const [catKey, catData] of Object.entries(categories)) {
+                const group = document.createElement('div');
+                group.className = 'phase-group';
+
+                const header = document.createElement('div');
+                header.className = 'phase-header';
+                const catColor = catData.color || '#6366f1';
+                header.innerHTML = `
+                    <div style="width:12px; height:12px; border-radius:50%; background:${catColor}; box-shadow:0 0 10px ${catColor}"></div>
+                    <h2>${catData.title}</h2>
+                    <span class="ms-auto badge rounded-pill" style="background:${catColor}22; color:${catColor}; border:1px solid ${catColor}44">
+                        ${catData.tools.filter(t => completedIds.includes(t.id)).length} / ${catData.tools.length}
+                    </span>
+                `;
+                group.appendChild(header);
+
+                const row = document.createElement('div');
+                row.className = 'row g-3';
+
+                catData.tools.forEach(tool => {
+                    const isCompleted = completedIds.includes(tool.id);
+                    const isLocked = window.isToolLocked(tool, completedIds);
+                    const link = window.getToolLink(tool, dept);
+
+                    const col = document.createElement('div');
+                    col.className = 'col-md-6 col-lg-4 col-xl-3';
+
+                    const step = document.createElement('a');
+                    step.href = isLocked ? '#' : link;
+                    step.className = `step-pill ${isCompleted ? 'completed' : ''} ${isLocked ? 'locked' : ''}`;
+
+                    step.innerHTML = `
+                        <i class="bi ${tool.icon}" style="color: ${isCompleted ? '#10b981' : isLocked ? '#64748b' : catColor}"></i>
+                        <span style="font-weight:600; font-size:0.95rem">${tool.name}</span>
+                        <div class="status-dot ${isCompleted ? 'dot-completed' : isLocked ? 'dot-locked' : 'dot-pending'}"></div>
+                    `;
+
+                    col.appendChild(step);
+                    row.appendChild(col);
+                });
+
+                group.appendChild(row);
+                roadmapContainer.appendChild(group);
+            }
+
+            // 5. Update AI Recommendation
+            const AI_MESSAGES = {
+                diagnostic: "أكمل أدوات التشخيص (خصوصاً SWOT) قبل أن تنتقل لمرحلة التخطيط لضمان دقة الأهداف.",
+                planning: "رائع! أنهيت التشخيص. الآن ركز على صياغة أهداف ذكية (OKRs) مرتبطة بنتائج تحليلك.",
+                execution: "أنت في مرحلة التنفيذ. راقب المبادرات والمشاريع بدقة لضمان بقائها ضمن الميزانية والجدول الزمني.",
+                monitoring: "شارفت على الانتهاء. راجع مصفوفة المخاطر للتأكد من استقرار العمليات في قسمك.",
+                completed: "تهانينا! لقد أكملت الدورة الاستراتيجية بالكامل. يمكنك مراجعة التقارير وبدء دورة جديدة."
             };
-        }
 
-        // ==========================================
-        //  الكاش السريع 
-        // ==========================================
-        const CACHE_TTL = 5 * 60 * 1000;
-        function cacheSet(key, data) {
-            try {
-                sessionStorage.setItem('_cache_' + key, JSON.stringify({
-                    ts: Date.now(),
-                    data: data
-                }));
-            } catch (e) { /* full storage */ }
-        }
+            const nextTool = allTools.find(t => !completedIds.includes(t.id) && !window.isToolLocked(t, completedIds));
+            const aiRecomText = document.getElementById('ai-recom-text');
+            const aiActionBtn = document.getElementById('ai-action-btn');
 
-        function cacheGet(key) {
-            const raw = sessionStorage.getItem('_cache_' + key);
-            if (!raw) return null;
-            try {
-                const { ts, data } = JSON.parse(raw);
-                if (Date.now() - ts > CACHE_TTL) {
-                    sessionStorage.removeItem('_cache_' + key);
-                    return null;
-                }
-                return data;
-            } catch (e) { return null; }
-        }
-
-        function sanitize(str) {
-            if (str == null) return '';
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
-        }
-
-        // استخدام fetch مباشر مع credentials بدلاً من window.apiRequest غير الموجودة
-        async function cachedFetch(url) {
-            const cached = cacheGet(url);
-            if (cached) return cached;
-            const res = await fetch(url, { credentials: 'include' });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-            cacheSet(url, data);
-            return data;
-        }
-
-        // معالجة الأحداث المباشرة من أزرار إعادة التحميل أو التوجيه (data-action)
-        document.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-action]');
-            if (!btn) return;
-            const action = btn.dataset.action;
-            if (action === 'reload') window.location.reload();
-            if (action === 'onboarding') window.location.href = '/onboarding.html?mode=dept';
-        });
-
-        // ===================================
-        // الدالة الرئيسية: الـ Bootstrapper 
-        // ===================================
-        (async function initDashboard() {
-            try {
-                // 1. استدعاء آمن ومحكم بهوية السيرفر
-                const userData = await getCurrentUser();
-
-                // التوجيه مع رسالة الطرد بدلاً من الاستثناء
-                const isDeptManager = userData && (
-                    userData.userType === 'DEPT_MANAGER' ||
-                    (userData.userCategory && userData.userCategory.startsWith('DEPT_')) ||
-                    userData.department?.key || // السماح لأي موظف ينتمي للإدارة بالدخول (مثل مدخل البيانات والمشاهد)
-                    userData.role === 'OWNER' ||
-                    userData.role === 'ADMIN' ||
-                    userData.systemRole === 'SUPER_ADMIN'
-                );
-                if (!isDeptManager) {
-                    window.location.href = '/dashboard.html?reason=unauthorized';
-                    return;
-                }
-
-                const entityId = userData.entity?.id || localStorage.getItem('entityId');
-                let deptKey = userData.department?.key || '';
-                if (!deptKey && userData.userCategory && userData.userCategory.startsWith('DEPT_')) {
-                    const catDept = userData.userCategory.replace('DEPT_', '').toLowerCase();
-                    const MAP = { hr: 'hr', finance: 'finance', marketing: 'marketing', ops: 'operations', service: 'cs', sales: 'sales', it: 'it', legal: 'compliance', quality: 'quality', pmo: 'projects' };
-                    deptKey = MAP[catDept] || catDept;
-                }
-                deptKey = deptKey.toLowerCase();
-                const deptName = userData.department?.name || DEPT_NAMES[deptKey] || 'إدارتك';
-
-                // تخزين الأسماء للاستخدام المجرد الداخلي في سياق العرض
-                window.currentDeptContext = { key: deptKey, name: deptName };
-                if (deptKey) {
-                    localStorage.setItem('stratix_v10_dept', deptKey);
-                    localStorage.setItem('stratix_dept', deptKey);
-                }
-
-                // ═══ تطبيق هوية الإدارة على الصفحة ═══
-                const dCfg = getDeptConfig(deptKey);
-                document.documentElement.style.setProperty('--dept-color', dCfg.color);
-                document.documentElement.style.setProperty('--dept-color-15', dCfg.color + '26');
-                const pageH1 = document.querySelector('.page-header h1');
-                if (pageH1) {
-                    pageH1.innerHTML = `
-                        <span style="font-size:32px">${dCfg.icon}</span>
-                        <span>لوحة <span style="color:${dCfg.color}">${deptName}</span></span>`;
-                }
-                const welcomeMsg = document.getElementById('welcomeMsg');
-                if (welcomeMsg && userData.name) {
-                    welcomeMsg.textContent = `مرحباً ${userData.name} — إليك أداء ${deptName} اليوم`;
-                }
-                // تطبيق لون الإدارة على الـ stat cards border
-                document.documentElement.style.setProperty('--accent', dCfg.color);
-
-                // إذا ما عنده كيان → يروح يكمل الإعداد أولاً
-                if (!entityId) {
-                    const loadingSt = document.getElementById('loadingState');
-                    loadingSt.innerHTML = `
-                        <div style="text-align:center;">
-                            <div style="font-size:56px;margin-bottom:16px">🏗️</div>
-                            <p style="font-size:16px;font-weight:700;margin-bottom:8px">إعداد ${deptName} لم يكتمل بعد</p>
-                            <p style="font-size:13px;color:var(--text-muted);margin-bottom:20px">أكمل خطوات الإعداد عشان نجهز لك الداشبورد</p>
-                        </div>
-                    `;
-                    const btn = document.createElement('button');
-                    btn.className = 'btn';
-                    btn.innerHTML = '<i class="bi bi-gear" style="margin-left:8px"></i> أكمل الإعداد';
-                    btn.style.cssText = 'display:inline-flex;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;border:none;padding:14px 28px;font-size:15px;font-weight:700;border-radius:14px;cursor:pointer';
-                    btn.addEventListener('click', () => { window.location.href = '/onboarding.html?mode=dept'; });
-                    loadingSt.querySelector('div').appendChild(btn);
-                    return;
-                }
-
-                // 2. سحب البيانات المدمجة بثلاث طلبات باستخدام Fetch الآلي المخفي الهوية
-                const [dashResult, healthResult, alertResult] = await Promise.allSettled([
-                    fetch(`/api/dashboard/entity/${entityId}`, { credentials: 'include' }).then(res => res.json()),
-                    fetch(`/api/dashboard/health/${entityId}`, { credentials: 'include' }).then(res => res.json()),
-                    fetch(`/api/alert-engine/entity/${entityId}`, { credentials: 'include' }).then(res => res.ok ? res.json() : {}),
-                ]);
-
-                // استخراج البيانات مع fallback آمن
-                const dashData = dashResult.status === 'fulfilled' ? dashResult.value : {};
-                const healthData = healthResult.status === 'fulfilled' ? healthResult.value : {};
-                const alertData = alertResult.status === 'fulfilled' ? alertResult.value : {};
-
-                // إشعار المستخدم إذا فشل أي طلب
-                const failedRequests = [dashResult, healthResult, alertResult].filter(r => r.status === 'rejected');
-                if (failedRequests.length > 0 && failedRequests.length < 3) {
-                    console.warn('بعض البيانات لم تُحمَّل:', failedRequests.map(r => r.reason?.message));
-                    const banner = document.createElement('div');
-                    banner.style.cssText = 'background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:10px 16px;margin:0 0 16px;font-size:13px;color:#f59e0b;text-align:center;';
-                    banner.innerHTML = `<i class="bi bi-exclamation-triangle"></i> بعض البيانات لم تُحمَّل بالكامل — <a href="#" onclick="location.reload();return false" style="color:#f59e0b;text-decoration:underline;">أعد المحاولة</a>`;
-                    const contentArea = document.getElementById('contentArea');
-                    if (contentArea) contentArea.prepend(banner);
-                } else if (failedRequests.length === 3) {
-                    throw new Error('فشل شامل في تحميل البيانات الأساسية للوحة التحكم');
-                }
-
-                document.getElementById('loadingState').style.display = 'none';
-
-                // التمييز بين "مستخدم جديد حقيقي" و "فشل الشبكة"
-                const dashLoaded = dashResult.status === 'fulfilled';
-                const kpiCount = dashData.kpiSummary?.total || 0;
-                const iniCount = dashData.initiativeSummary?.total || 0;
-                const isNewUser = dashLoaded && (kpiCount === 0 && iniCount === 0);
-                const networkFailed = !dashLoaded;
-
-                // التحقق من إنهاء الاستبيان التشخيصي
-                const hasCompletedQuestionnaire = healthData && healthData.healthScore > 0;
-                if (dashLoaded && !hasCompletedQuestionnaire) {
-                    document.getElementById('alertBannerContainer').innerHTML = `
-                        <div style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:16px; padding:20px 24px; margin-bottom:24px; display:flex; align-items:center; flex-wrap:wrap; gap:16px; animation: fadeIn 0.5s ease;">
-                            <i class="bi bi-exclamation-triangle-fill" style="color:var(--red); font-size:32px;"></i>
-                            <div style="flex:1; min-width:250px;">
-                                <div style="font-size:16px; font-weight:800; color:var(--red); margin-bottom:4px;">تنبيه: لم تكمل الاستبيان التشخيصي لإدارتك</div>
-                                <div style="font-size:13px; color:var(--text-muted);">لضمان دقة التحليل واقتراح المؤشرات المناسبة، يرجى إنهاء الاستبيان أولاً.</div>
-                            </div>
-                            <a href="/dept-questionnaire.html?dept=${deptKey}" class="btn" style="background:linear-gradient(135deg, var(--red), #dc2626); color:white; border:none; padding:12px 24px; font-size:14px; font-weight:700;"><i class="bi bi-ui-checks"></i> ابدأ الاستبيان الآن</a>
-                        </div>
-                    `;
-                }
-
-                if (networkFailed) {
-                    // فشل الشبكة
-                    document.getElementById('contentArea').style.display = 'block';
-                    const retryBanner = document.createElement('div');
-                    retryBanner.style.cssText = 'background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:14px;padding:24px;text-align:center;margin:20px 0;';
-                    retryBanner.innerHTML = `
-                        <div style="font-size:32px;margin-bottom:12px">⚠️</div>
-                        <div style="font-size:16px;font-weight:700;color:#ef4444;margin-bottom:8px">تعذر الاتصال بالخادم</div>
-                        <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">لم نتمكن من تحميل بياناتك — تأكد من الاتصال بالإنترنت</div>
-                    `;
-                    const rtyBtn = document.createElement('button');
-                    rtyBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> إعادة المحاولة';
-                    rtyBtn.style.cssText = 'padding:10px 28px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--secondary));color:white;border:none;font-weight:700;font-size:14px;cursor:pointer';
-                    rtyBtn.addEventListener('click', () => { window.location.reload(); });
-                    retryBanner.appendChild(rtyBtn);
-                    document.getElementById('contentArea').prepend(retryBanner);
-                } else if (isNewUser) {
-                    document.getElementById('welcomeBoard').style.display = 'block';
-
-                    // تحديث الروابط والعناوين برمجياً لضمان عدم ضياع هوية الإدارة
-                    document.getElementById('wbTitle').textContent = `أهلاً بك في لوحة ${deptName}!`;
-
-                    // تطبيق ألوان وأيقونات الإدارة على الـ Welcome Board
-                    const cfg = getDeptConfig(deptKey);
-                    const wbEmo = document.querySelector('.welcome-emoji');
-                    if (wbEmo) wbEmo.textContent = cfg.icon;
-                    const wbSub = document.getElementById('wbSubtitle');
-                    if (wbSub) wbSub.innerHTML = `<strong style="color:${cfg.color}">${deptName}</strong>: ${cfg.tip}<br><br>الخطوات التالية تحوّل هذا التشخيص إلى خطة عمل واضحة 👇`;
-
-                    const s1 = document.getElementById('step1Card');
-                    const s2 = document.getElementById('step2Card');
-                    const s3 = document.getElementById('step3Card');
-                    const s4 = document.getElementById('step4Card');
-                    const s5 = document.getElementById('step5Card');
-
-                    // توجيه مدير الإدارة مباشرة للاستبيان الدقيق المخصص لإدارته
-                    if (s1) s1.href = `/dept-questionnaire.html?dept=${deptKey}`;
-                    if (s2) {
-                        let deepLink = `/dept-deep.html?dept=${deptKey}&single=1`;
-                        const customPages = ['hr', 'finance', 'marketing']; // إدارات لها صفحات مخصصة
-                        if (customPages.includes(deptKey)) deepLink = `/${deptKey}-deep.html`;
-                        s2.href = deepLink;
-
-                        const titleEl = s2.querySelector('.roadmap-card-title');
-                        if (titleEl) titleEl.textContent = `تحليل أعمق — ${deptName}`;
-                    }
-                    if (s3) s3.href = `/swot.html?dept=${deptKey}`;
-                    if (s4) s4.href = `/directions.html?dept=${deptKey}`;
-                    if (s5) s5.href = `/kpis.html?dept=${deptKey}`;
-
-                } else {
-                    document.getElementById('contentArea').style.display = 'flex';
-                    if (userData.name) {
-                        document.getElementById('welcomeMsg').textContent = `مرحباً ${userData.name} — إليك أداء ${deptName} اليوم`;
-                    }
-
-                    renderHealth(healthData);
-                    renderStats(dashData, healthData);
-                    renderQuickActions();
-                    if (typeof renderKPIs === 'function') await renderKPIs(dashData);
-                    if (typeof renderTasks === 'function') renderTasks(dashData);
-                    if (typeof renderAlerts === 'function') renderAlerts(alertData);
-                    if (typeof renderActivity === 'function') renderActivity(dashData);
-                    generateDeptInsights(dashData.deptKpis || [], dashData);
-                }
-
-            } catch (err) {
-                console.error('Error loading dept dashboard:', err);
-                const loadingSt = document.getElementById('loadingState');
-                loadingSt.innerHTML = `
-                    <div style="text-align:center; padding: 20px;">
-                        <i class="bi bi-exclamation-triangle" style="font-size:48px;color:var(--red);margin-bottom:16px;display:block"></i>
-                        <div class="error-message" style="color:var(--red);font-weight:bold;margin-bottom:16px">حدث خطأ في تحميل البيانات. يرجى المحاولة لاحقاً.</div>
-                        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px">${sanitize(err.message)}</p>
-                    </div>
-                `;
-                const errBtn = document.createElement('button');
-                errBtn.className = 'btn';
-                errBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> إعادة المحاولة';
-                errBtn.style.margin = 'auto';
-                errBtn.addEventListener('click', () => { window.location.reload(); });
-                loadingSt.querySelector('div').appendChild(errBtn);
-                loadingSt.style.display = 'block';
-            }
-        })();
-
-        function renderHealth(data) {
-            const score = data.healthScore || 0;
-            const color = getHealthColor(score);
-            document.getElementById('healthScore').textContent = score;
-            document.getElementById('healthScore').style.color = color;
-            document.getElementById('healthFill').style.width = score + '%';
-            document.getElementById('healthFill').style.background = color;
-            document.getElementById('healthMsg').textContent = data.message || '';
-        }
-
-        function renderStats(dash, health) {
-            const kpi = dash.kpiSummary || {};
-            const ini = dash.initiativeSummary || {};
-            const stats = [
-                { value: kpi.total || 0, label: '📊 مؤشرات', color: '#3b82f6', glow: 'rgba(59,130,246,0.08)' },
-                { value: kpi.onTrack || 0, label: '✅ على المسار', color: '#22c55e', glow: 'rgba(34,197,94,0.08)' },
-                { value: kpi.warning || 0, label: '⚠️ تحذير', color: '#f59e0b', glow: 'rgba(245,158,11,0.08)' },
-                { value: kpi.critical || 0, label: '🔴 حرج', color: '#ef4444', glow: 'rgba(239,68,68,0.08)' },
-                { value: ini.total || 0, label: '🚀 مبادرات', color: '#a78bfa', glow: 'rgba(167,139,250,0.08)' },
-                { value: ini.overdue || 0, label: '⏰ متأخرة', color: '#f97316', glow: 'rgba(249,115,22,0.08)' },
-            ];
-            document.getElementById('statsRow').innerHTML = stats.map(s => `
-                <div class="stat-card" style="--card-glow:${s.glow}">
-                    <div class="stat-value" style="color:${s.color}">${s.value}</div>
-                    <div class="stat-label">${s.label}</div>
-                </div>
-            `).join('');
-        }
-
-        function renderQuickActions() {
-            const deptKey = window.currentDeptContext?.key || '';
-            const cfg = getDeptConfig(deptKey);
-            document.getElementById('quickActions').innerHTML = cfg.actions.map(a => `
-                <a class="quick-action" href="${a.href}" style="border-color:${a.color}18">
-                    <i class="bi ${a.icon}" style="color:${a.color}"></i>
-                    <span>${a.label}</span>
-                </a>
-            `).join('');
-
-            // inject dept tip if element exists
-            const tipEl = document.getElementById('deptTip');
-            if (tipEl) tipEl.textContent = cfg.tip;
-        }
-
-        async function renderKPIs(data) {
-            const list = document.getElementById('kpiList');
-            const dept = window.currentDeptContext?.key || '';
-            const kpi = data.kpiSummary || {};
-            if (kpi.total === 0) {
-                list.innerHTML = `<div class="empty-text">لا توجد مؤشرات بعد — <a href="/kpis.html" style="color:var(--accent)">ابدأ بإضافة KPIs</a></div>`;
-                return;
-            }
-
-            // ═══ محاولة جلب المؤشرات الفردية ═══
-            let individualKPIs = null;
-            try {
-                const entityId = (await getCurrentUser()).entity?.id;
-                const kpiRes = await fetch(`/api/kpis/entity/${entityId}`, { credentials: 'include' });
-                const kpiData = await kpiRes.json();
-                if (kpiData.kpis?.length) individualKPIs = kpiData.kpis;
-            } catch (e) { /* fallback to summary */ }
-
-            if (individualKPIs && individualKPIs.length > 0) {
-                // ═══ عرض المؤشرات الفردية ═══
-                list.innerHTML = individualKPIs.slice(0, 6).map(k => {
-                    const actual = k.actualValue ?? k.actual ?? null;
-                    const target = k.targetValue ?? k.target ?? 0;
-                    const pct = target > 0 && actual != null ? Math.min(100, Math.round((actual / target) * 100)) : 0;
-                    const status = k.status || (pct >= 80 ? 'ON_TRACK' : pct >= 50 ? 'WARNING' : 'CRITICAL');
-                    const statusMap = {
-                        ON_TRACK: { color: 'var(--green)', icon: '✅', label: 'على المسار' },
-                        WARNING: { color: 'var(--yellow)', icon: '⚠️', label: 'تحذير' },
-                        CRITICAL: { color: 'var(--red)', icon: '🔴', label: 'حرج' },
-                        NO_DATA: { color: 'var(--text-muted)', icon: '⬜', label: 'بدون بيانات' }
-                    };
-                    const s = statusMap[status] || statusMap.NO_DATA;
-                    return `
-                    <div class="kpi-item">
-                        <div class="kpi-info">
-                            <div class="kpi-name">${sanitize(k.name || k.title || 'مؤشر')}</div>
-                            <div class="kpi-sub">${actual != null ? actual : '—'} / ${target} ${sanitize(k.unit || '')}</div>
-                        </div>
-                        <div class="kpi-progress"><div class="kpi-progress-fill" style="width:${pct}%;background:${s.color}"></div></div>
-                        <div class="kpi-value" style="color:${s.color}" title="${s.label}">${s.icon} ${pct}%</div>
-                    </div>`;
-                }).join('') + (individualKPIs.length > 6 ? `
-                        <div style="text-align:center;color:var(--text-muted);font-size:12px;margin-top:8px">
-                            +${individualKPIs.length - 6} مؤشرات أخرى
-                        </div>` : '') + `
-                        <div style="text-align:center;margin-top:12px">
-                            <a href="/kpis.html?dept=${dept}" class="btn" style="display:inline-flex;font-size:12px;padding:8px 16px">
-                                <i class="bi bi-pencil-square"></i> عرض كل المؤشرات
-                            </a>
-                        </div>`;
+            if (nextTool) {
+                aiRecomText.innerHTML = `بناءً على تقدمك، الخطوة الذكية التالية هي <span class="text-white fw-bold">${nextTool.name}</span>. <br><small class="text-white-50">${AI_MESSAGES[nextTool.phase]}</small>`;
+                aiActionBtn.innerHTML = `<button onclick="window.location.href='${window.getToolLink(nextTool, dept)}'" class="btn btn-light btn-sm rounded-pill px-4 fw-bold shadow-lg">ابدأ الآن <i class="bi bi-arrow-left ms-1"></i></button>`;
+            } else if (percent === 100) {
+                aiRecomText.innerHTML = `تم إكمال الدورة الاستراتيجية بنجاح! <br><small class="text-white-50">${AI_MESSAGES.completed}</small>`;
+                aiActionBtn.innerHTML = `<button onclick="window.location.href='/reports.html?dept=${dept}'" class="btn btn-success btn-sm rounded-pill px-4 fw-bold">عرض التقرير الختامي <i class="bi bi-file-earmark-bar-graph ms-1"></i></button>`;
             } else {
-                // ═══ Fallback: ملخص KPIs ═══
-                const items = [];
-                if (kpi.onTrack > 0) items.push({ name: 'مؤشرات على المسار', value: kpi.onTrack, pct: (kpi.onTrack / kpi.total) * 100, color: 'var(--green)', icon: '✅' });
-                if (kpi.warning > 0) items.push({ name: 'مؤشرات تحذيرية', value: kpi.warning, pct: (kpi.warning / kpi.total) * 100, color: 'var(--yellow)', icon: '⚠️' });
-                if (kpi.critical > 0) items.push({ name: 'مؤشرات حرجة', value: kpi.critical, pct: (kpi.critical / kpi.total) * 100, color: 'var(--red)', icon: '🔴' });
-                const noData = kpi.total - (kpi.onTrack + kpi.warning + kpi.critical);
-                if (noData > 0) items.push({ name: 'بدون بيانات', value: noData, pct: (noData / kpi.total) * 100, color: 'var(--text-muted)', icon: '⬜' });
-
-                list.innerHTML = items.map(k => `
-                    <div class="kpi-item">
-                        <div class="kpi-info">
-                            <div class="kpi-name">${k.icon} ${k.name}</div>
-                            <div class="kpi-sub">${k.value} من ${kpi.total} مؤشر</div>
-                        </div>
-                        <div class="kpi-progress"><div class="kpi-progress-fill" style="width:${k.pct}%;background:${k.color}"></div></div>
-                        <div class="kpi-value" style="color:${k.color}">${Math.round(k.pct)}%</div>
-                    </div>
-                `).join('') + `
-                    <div style="text-align:center;margin-top:12px">
-                        <a href="/kpis.html?dept=${dept}" class="btn" style="display:inline-flex;font-size:12px;padding:8px 16px">
-                            <i class="bi bi-pencil-square"></i> تحديث المؤشرات
-                        </a>
-                    </div>
-                `;
-            }
-        }
-
-        function renderTasks(data) {
-            const list = document.getElementById('taskList');
-            const ini = data.initiativeSummary || {};
-
-            if (ini.total === 0) {
-                list.innerHTML = '<div class="empty-text">لا توجد مبادرات بعد — <a href="/initiatives.html" style="color:var(--accent)">ابدأ بإضافة مبادرات</a></div>';
-                return;
+                aiRecomText.textContent = "يجب إكمال الأدوات المتبقية في هذه المرحلة لفتح المراحل التالية.";
+                aiActionBtn.innerHTML = `<button class="btn btn-secondary btn-sm rounded-pill px-4 fw-bold" disabled>يوجد مهام عالقة</button>`;
             }
 
-            const statuses = [
-                { name: 'مكتملة', count: ini.completed || 0, color: 'var(--green)', icon: '✅' },
-                { name: 'قيد التنفيذ', count: ini.inProgress || 0, color: 'var(--blue)', icon: '🔵' },
-                { name: 'مخططة', count: ini.planned || 0, color: 'var(--text-muted)', icon: '⬜' },
-                { name: 'متأخرة', count: ini.overdue || 0, color: 'var(--red)', icon: '🔴' },
-            ].filter(s => s.count > 0);
-
-            list.innerHTML = statuses.map(s => {
-                const isOverdue = s.name === 'متأخرة';
-                return `
-                <div class="task-item" style="${isOverdue ? 'background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.3);' : ''}">
-                    <div class="task-status" style="background:${s.color}"></div>
-                    <div class="task-info">
-                        <div class="task-name" style="${isOverdue ? 'color:var(--red); font-weight:700;' : ''}">${s.icon} ${s.name}</div>
-                        <div class="task-meta" style="${isOverdue ? 'color:var(--red); opacity:0.8;' : ''}">${s.count} مشروع/مبادرة</div>
-                    </div>
-                    <span class="task-badge" style="background:${s.color}22;color:${s.color}">${s.count}</span>
-                </div>
-                `}).join('') + `
-                        <div style="text-align:center;margin-top:12px">
-                            <a href="/initiatives.html?dept=${window.currentDeptContext?.key || ''}" class="btn" style="display:inline-flex;font-size:12px;padding:8px 16px">
-                                <i class="bi bi-list-task"></i> إدارة المبادرات
-                            </a>
-                        </div>
-                        `;
-        }
-
-        function renderAlerts(data) {
-            const list = document.getElementById('alertList');
-            const alerts = data.alerts || data.recentAlerts || [];
-
-            if (!alerts.length) {
-                list.innerHTML = '<div class="empty-text">🎉 لا توجد تنبيهات — ممتاز!</div>';
-                return;
-            }
-
-            list.innerHTML = alerts.slice(0, 5).map(a => {
-                const severityColors = { HIGH: 'var(--red)', MEDIUM: 'var(--yellow)', LOW: 'var(--blue)' };
-                const color = severityColors[a.severity] || 'var(--yellow)';
-                const icons = { HIGH: '🔴', MEDIUM: '⚠️', LOW: 'ℹ️' };
-                return `
-                <div class="alert-item" style="--alert-color:${color}">
-                    <span class="alert-icon">${icons[a.severity] || '⚠️'}</span>
-                    <div>
-                        <div class="alert-title">${sanitize(a.title || a.type || 'تنبيه')}</div>
-                        <div class="alert-desc">${sanitize(a.description || '')}</div>
-                        <div class="alert-time">${a.createdAt ? new Date(a.createdAt).toLocaleDateString('ar-SA') : ''}</div>
-                    </div>
-                </div>
-                        `;
-            }).join('');
-        }
-
-        function renderActivity(dash) {
-            const list = document.getElementById('activityList');
-            const reviews = dash.recentReviews || [];
-
-            if (!reviews.length) {
-                list.innerHTML = '<div class="empty-text">لا توجد مراجعات حديثة — <a href="/reviews.html" style="color:var(--accent)">ابدأ المراجعة</a></div>';
-                return;
-            }
-
-            list.innerHTML = reviews.map(r => {
-                const decisionIcons = { CONTINUE: '✅', ADJUST: '🔄', PIVOT: '🔀', NONE: '⬜' };
-                const decisionLabels = { CONTINUE: 'استمرار', ADJUST: 'تعديل', PIVOT: 'تحول', NONE: 'بدون' };
-                return `
-                <div class="task-item">
-                    <span style="font-size:18px">${decisionIcons[r.decision] || '📋'}</span>
-                    <div class="task-info">
-                        <div class="task-name">${sanitize(r.title || 'مراجعة')}</div>
-                        <div class="task-meta">${r.createdAt ? new Date(r.createdAt).toLocaleDateString('ar-SA') : ''} • ${sanitize(r.status || '')}</div>
-                    </div>
-                    <span class="task-badge" style="background:rgba(167,139,250,0.15);color:var(--purple)">${decisionLabels[r.decision] || sanitize(r.decision) || '—'}</span>
-                </div>
-                `;
-            }).join('');
-        }
-
-        function getHealthColor(score) {
-            if (score >= 80) return '#22c55e';
-            if (score >= 60) return '#3b82f6';
-            if (score >= 40) return '#f59e0b';
-            if (score >= 20) return '#ef4444';
-            return '#8b8ba7';
-        }
-
-        function generateDeptInsights(kpis, dash) {
-            const insights = [];
-            const iniSum = dash.initiativeSummary || {};
-
-            if (kpis.length === 0 && iniSum.total === 0) {
-                document.getElementById('deptAiAnalysis').innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:12px">لا توجد بيانات (مؤشرات/مبادرات) في إدارتك لتحليلها. يُنصح بإضافة مؤشرات أداء للبدء بمراقبة الصحة الوظيفية.</div>';
-                return;
-            }
-
-            const atRisk = kpis.filter(k => {
-                const act = k.actual !== null ? k.actual : 0;
-                const tgt = k.target || 1;
-                const pct = (act / tgt) * 100;
-                return pct < (k.criticalThreshold || 50);
-            });
-            if (atRisk.length > 0) {
-                insights.push({
-                    icon: '🔴', title: 'تنبيه: مؤشراتك في نطاق الخطر', color: '#ef4444',
-                    desc: `توجد <strong>${atRisk.length}</strong> مؤشرات أدائها ضعيف جداً (أبرزها: <em>${atRisk[0].name}</em>). الوضع الحالي للإدارة يحتاج تدخلاً فورياً لمعالجة الفجوة (تحليل نقاط الضعف - Weaknesses).`,
-                    action: 'حلل الضعف في SWOT', link: '/swot.html'
-                });
-            } else if (kpis.length > 0) {
-                insights.push({
-                    icon: '✅', title: 'استقرار في مؤشرات الإدارة', color: '#22c55e',
-                    desc: 'أغلب مؤشرات إدارتك في النطاق السليم. ركز على استغلال (الفرص - Opportunities) المتاحة في السوق لدفع الإدارة للأمام وتجاوز المستهدفات.',
-                    action: 'حدث الفرص في SWOT', link: '/swot.html'
-                });
-            }
-
-            if (iniSum.overdue > 0) {
-                insights.push({
-                    icon: '⏳', title: 'تنبيه: تعثر ومبادرات متأخرة', color: '#f97316',
-                    desc: `هناك تراكم في مهام الإدارة، تحديداً <strong>${iniSum.overdue}</strong> مبادرة متأخرة عن وقتها المتوقع. التأخير التشغيلي غالباً ما يكون ناتجاً عن (تهديدات داخلية/خارجية - Threats).`,
-                    action: 'راجع التهديدات في SWOT', link: '/swot.html'
-                });
-            }
-
-            if (kpis.length < 3 && iniSum.total > 0) {
-                insights.push({
-                    icon: '💡', title: 'نصيحة هيكلية للإدارة', color: '#3b82f6',
-                    desc: 'إدارتك تفتقر لعدد كافٍ من الـ KPIs (أقل من 3 مؤشرات). هذا يشكل عائقاً أمام قياس الوضع الحالي الاستراتيجي للإدارة بدقة.',
-                    action: 'أضف المزيد من الـ KPIs', link: '/kpis.html'
-                });
-            }
-
-            if (insights.length === 0) {
-                insights.push({
-                    icon: '🌟', title: 'أداء الإدارة ممتاز', color: '#a78bfa',
-                    desc: 'الوضع الحالي لإدارتك لا تشوبه شائبة! لا توجد تنبيهات سلبية والمهام تمضي كما هو مخطط لها.',
-                    action: 'راجع توجهات TOWS', link: '/tows.html'
-                });
-            }
-
-            document.getElementById('deptAiAnalysis').innerHTML = `<div style="display:grid;gap:12px;padding:8px 12px">
-                ${insights.map(i => `
-                    <div style="border-radius:12px;background:var(--bg);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:flex-start;padding:16px;gap:16px;">
-                        <div style="font-size:28px;flex-shrink:0;background:rgba(255,255,255,0.02);border-radius:50%;width:48px;height:48px;display:flex;justify-content:center;align-items:center;">${i.icon}</div>
-                        <div style="flex:1">
-                            <div style="font-size:14px;font-weight:800;margin-bottom:6px;color:${i.color || 'var(--text)'}">${i.title}</div>
-                            <div style="font-size:12.5px;color:var(--text-muted);line-height:1.7;margin-bottom:12px;">${i.desc}</div>
-                            ${i.action ? `<a href="${i.link}" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:var(--text);text-decoration:none;font-size:11px;font-weight:700;transition:all 0.2s" onmouseover="this.style.background='var(--primary)';this.style.borderColor='var(--primary)'" onmouseout="this.style.background='rgba(255,255,255,0.04)';this.style.borderColor='rgba(255,255,255,0.08)'"><i class="bi bi-link-45deg"></i> ${i.action}</a>` : ''}
-                        </div>
-                    </div>
-                `).join('')}</div>`;
-        }
+        })();
     </script>
-    <script src="/assets/js/ai-advisor.js"></script>
-    <script src="/assets/js/path-tracker.js"></script>
-    <script src="/assets/js/dashboard-filter.js"></script>
 </body>
 
 </html>

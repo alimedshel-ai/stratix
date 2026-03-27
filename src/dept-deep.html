@@ -4,51 +4,466 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ستارتكس — استكشاف الإدارات العميق</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <title>التقييم العميق للإدارة | Stratix</title>
+
+    <script>
+        // توجيه تلقائي للإدارات التي تملك صفحات تقييم مستقلة (مثل الموارد البشرية)
+        const params = new URLSearchParams(window.location.search);
+        const dept = params.get('dept');
+
+        const customPages = ['hr', 'finance', 'sales']; // الإدارات المنفصلة
+        if (dept && customPages.includes(dept)) {
+            window.location.replace(`/${dept}-deep.html`);
+        }
+    </script>
+
+    <!-- خطوط وأيقونات -->
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="css/dept-deep.css">
-    <script>
-        // 🛡️ توجيه ذكي: إذا كان القسم HR أو المالية، يتم التوجيه لصفحاتهم المخصصة
-        (function () {
-            const customPages = ['hr', 'finance', 'marketing']; // أضف أي إدارة مخصصة هنا مستقبلاً
-            const params = new URLSearchParams(window.location.search);
-            const dept = params.get('dept');
-            if (customPages.includes(dept)) {
-                window.location.replace(`/${dept}-deep.html`);
-            }
-        })();
-    </script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --primary: #3b82f6;
+            --green: #22c55e;
+            --red: #ef4444;
+            --yellow: #f59e0b;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.12);
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .company-label {
+            font-size: 14px;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        /* ═══ Tabs ═══ */
+        .dept-tabs {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .dept-tabs::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .dept-tabs::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        .dept-tab {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 10px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-family: inherit;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .dept-tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .dept-tab.done {
+            border-color: rgba(34, 197, 94, 0.4);
+            color: var(--green);
+        }
+
+        /* ═══ Stepper ═══ */
+        .stepper {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            opacity: 0.6;
+            transition: all 0.2s;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .step.active {
+            opacity: 1;
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        .step.done {
+            opacity: 1;
+            color: var(--green);
+        }
+
+        .step-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+        }
+
+        .step.active .step-num {
+            background: var(--accent);
+            color: white;
+        }
+
+        .step.done .step-num {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--green);
+        }
+
+        /* ═══ Cards & Layout ═══ */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-sub {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .info-box {
+            display: flex;
+            gap: 12px;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            line-height: 1.6;
+            font-weight: 600;
+        }
+
+        .info-box.info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        .info-box.warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        /* ═══ Diagnosis Accordion & Inputs ═══ */
+        .acc-group {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .acc-header {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s;
+        }
+
+        .acc-header:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .acc-icon {
+            font-size: 24px;
+        }
+
+        .acc-info {
+            flex: 1;
+        }
+
+        .acc-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .acc-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .acc-priority {
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 6px;
+            border: 1px solid;
+        }
+
+        .acc-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .acc-count {
+            font-size: 12px;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+
+        .acc-count.all-done {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--green);
+        }
+
+        .acc-body {
+            display: none;
+            padding: 20px;
+            border-top: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .acc-group.acc-open .acc-body {
+            display: block;
+        }
+
+        .acc-group.acc-open .acc-header {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .question-block {
+            margin-bottom: 24px;
+        }
+
+        .question-label {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+
+        .radio-option,
+        .check-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .radio-option:hover,
+        .check-option:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .radio-option.selected,
+        .check-option.selected {
+            background: var(--accent-glow);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* ═══ Buttons & Navigation ═══ */
+        .nav-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding-bottom: 50px;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 12px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border-color: transparent;
+            color: var(--text-muted);
+        }
+
+        .btn-ghost:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+        }
+    </style>
 </head>
 
 <body>
-    <div class="container">
 
-        <!-- Header -->
-        <div class="page-header">
-            <div class="logo-text">Startix ✦</div>
-            <div class="page-title">استكشاف الإدارات العميق</div>
-            <div id="deptBadge" class="dept-badge"></div>
-            <div style="font-size:12px;color:var(--text-muted);margin-top:6px;" id="companyLabel"></div>
+    <div class="container">
+        <div class="header">
+            <h1 class="page-title">
+                <span id="deptBadge"
+                    style="padding:6px 16px; border-radius:12px; border:1px solid transparent; font-size:18px;">🏢
+                    استكشاف الإدارات</span>
+            </h1>
+            <div class="company-label" id="companyLabel">مساحة التقييم</div>
         </div>
 
-        <!-- Dept Tabs -->
+        <!-- حاوية المُرشد الذكي لمدراء الإدارات -->
+        <div id="smartGuideCard" style="margin-bottom: 20px; display: none;"></div>
+
+        <!-- تبويبات الإدارات (تختفي تلقائياً لمدراء الإدارات عبر الـ JS) -->
         <div class="dept-tabs" id="deptTabs"></div>
 
-        <!-- Stepper -->
+        <!-- شريط تقدم المراحل الستة (الوضع الحالي -> التشخيص -> ق/ض -> المخرجات...) -->
         <div class="stepper" id="stepperEl"></div>
 
-        <!-- Main Content -->
-        <div id="mainContent"></div>
+        <!-- المحتوى الرئيسي المُدار بواسطة dept-deep.js -->
+        <div id="mainContent">
+            <div style="text-align:center; padding:60px 20px; color:var(--text-muted);">
+                <div class="spinner-border text-primary" role="status"
+                    style="width: 3rem; height: 3rem; margin-bottom: 15px;"></div>
+                <div style="font-weight: bold; font-size: 16px;">جاري تحميل مساحة العمل...</div>
+            </div>
+        </div>
 
-        <!-- Nav -->
+        <!-- أزرار التنقل السفلية (السابق - حفظ - التالي) -->
         <div class="nav-bar" id="navBar"></div>
-
     </div>
 
-    <script src="/js/data-layer.js"></script>
-    <script src="js/dept-deep.js"></script>
+    <!-- 🔒 سكربت حماية مسار مدير الإدارة (Single Mode Enforcement) -->
+    <script>
+        (function enforceDeptManagerAccess() {
+            const user = JSON.parse(localStorage.getItem('user') || '{}') || {};
+            const isDeptManager = user.userType === 'DEPT_MANAGER' || (user.userCategory && user.userCategory.startsWith('DEPT_'));
+
+            if (isDeptManager) {
+                const myDeptKey = user.department?.key || (user.userCategory || '').replace('DEPT_', '').toLowerCase();
+                const urlParams = new URLSearchParams(window.location.search);
+                const currentDeptInUrl = urlParams.get('dept');
+
+                // إذا لم يكن الرابط مخصصاً لإدارته تحديداً، وجهه إجبارياً لإدارته مع تفعيل وضع (single) لمنع التنقل
+                if (myDeptKey && currentDeptInUrl !== myDeptKey) {
+                    window.location.replace('/dept-deep.html?dept=' + myDeptKey + '&single=1');
+                }
+            }
+        })();
+    </script>
+
+    <!-- استدعاء السكربتات الأساسية -->
+    <script src="/js/smart-guide.js"></script>
+    <script src="/js/dept-deep.js"></script>
+
+    <!-- تهيئة المُرشد الذكي بعد تحميل الصفحة -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof window.SmartGuide !== 'undefined') {
+                const user = JSON.parse(localStorage.getItem('user') || '{}') || {};
+                const isDeptManager = user.userType === 'DEPT_MANAGER' || (user.userCategory && user.userCategory.startsWith('DEPT_'));
+
+                // نعرض مُرشد مخصص للمدير (dept) أو الافتراضي (owner)
+                SmartGuide.render('smartGuideCard', isDeptManager ? 'dept' : 'owner');
+            }
+        });
+    </script>
+
 </body>
 
 </html>

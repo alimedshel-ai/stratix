@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ستارتكس — إضافة منشأة جديدة</title>
+    <meta name="description" content="أضف منشأة ثانية إلى حسابك وابدأ تشخيصها فوراً" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap"
+        rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: #0f1117;
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* خلفية متحركة */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 20% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 80% 80%, rgba(102, 126, 234, 0.07) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .page-wrap {
+            width: 100%;
+            max-width: 540px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* الخطوات — progress bar */
+        .steps-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            margin-bottom: 32px;
+        }
+
+        .step-dot {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: #64748b;
+            transition: all 0.35s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-dot.active {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-color: #10b981;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .step-dot.done {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.5);
+            color: #10b981;
+        }
+
+        .step-line {
+            width: 60px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.08);
+            transition: background 0.35s ease;
+        }
+
+        .step-line.done {
+            background: rgba(16, 185, 129, 0.4);
+        }
+
+        /* البطاقة الرئيسية */
+        .card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 40px;
+            backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #10b981, transparent);
+        }
+
+        /* الخطوات */
+        .step-view {
+            display: none;
+        }
+
+        .step-view.visible {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* العنوان */
+        .step-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .step-title {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 6px;
+            color: #f1f5f9;
+        }
+
+        .step-sub {
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 28px;
+        }
+
+        /* الحقول */
+        .field {
+            margin-bottom: 18px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #94a3b8;
+            margin-bottom: 7px;
+        }
+
+        .field label span {
+            color: #ef4444;
+            margin-right: 2px;
+        }
+
+        .field input,
+        .field select {
+            width: 100%;
+            padding: 13px 16px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f1f5f9;
+            font-size: 15px;
+            font-family: 'Tajawal', sans-serif;
+            font-weight: 500;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+
+        .field input:focus,
+        .field select:focus {
+            border-color: rgba(16, 185, 129, 0.5);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .field input::placeholder {
+            color: #475569;
+        }
+
+        .field select option {
+            background: #1e2235;
+        }
+
+        /* hint */
+        .field-hint {
+            font-size: 11.5px;
+            color: #475569;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* الأزرار */
+        .btn-primary {
+            width: 100%;
+            padding: 15px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: 'Tajawal', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 13px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Tajawal', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #e2e8f0;
+        }
+
+        /* error */
+        .error-msg {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: #fca5a5;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .error-msg.visible {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* success screen */
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.05));
+            border: 2px solid rgba(16, 185, 129, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin: 0 auto 24px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.3)
+            }
+
+            50% {
+                box-shadow: 0 0 0 16px rgba(16, 185, 129, 0)
+            }
+        }
+
+        .success-title {
+            font-size: 24px;
+            font-weight: 800;
+            text-align: center;
+            color: #f1f5f9;
+            margin-bottom: 8px;
+        }
+
+        .success-sub {
+            font-size: 14px;
+            color: #64748b;
+            text-align: center;
+            margin-bottom: 32px;
+            line-height: 1.7;
+        }
+
+        .entity-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+        }
+
+        .entity-badge i {
+            font-size: 22px;
+            color: #10b981;
+        }
+
+        .entity-badge-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #f1f5f9;
+        }
+
+        .entity-badge-role {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        /* back link */
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: #64748b;
+            font-size: 13px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: color 0.2s;
+        }
+
+        .back-link a:hover {
+            color: #94a3b8;
+        }
+
+        /* spinner */
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .name-warning {
+            display: none;
+            align-items: flex-start;
+            gap: 8px;
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-top: 8px;
+            font-size: 12.5px;
+            color: #fca5a5;
+            line-height: 1.6;
+        }
+
+        .name-warning.visible {
+            display: flex;
+        }
+
+        .name-warning i {
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .name-ok {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            margin-top: 7px;
+            font-size: 12px;
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .name-ok.visible {
+            display: flex;
+        }
+
+        .field input.input-error {
+            border-color: rgba(239, 68, 68, 0.5) !important;
+        }
+
+        .field input.input-ok {
+            border-color: rgba(16, 185, 129, 0.5) !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrap">
+
+        <!-- شريط الخطوات -->
+        <div class="steps-bar" id="stepsBar">
+            <div class="step-dot active" id="dot1">1</div>
+            <div class="step-line" id="line1"></div>
+            <div class="step-dot" id="dot2">2</div>
+            <div class="step-line" id="line2"></div>
+            <div class="step-dot" id="dot3"><i class="bi bi-check2"></i></div>
+        </div>
+
+        <div class="card">
+
+            <!-- رسالة الخطأ العامة -->
+            <div class="error-msg" id="errorMsg">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span id="errorText"></span>
+            </div>
+
+            <!-- ═══ الخطوة ١: معلومات المنشأة ═══ -->
+            <div class="step-view visible" id="step1">
+                <div class="step-icon">🏢</div>
+                <div class="step-title">أضف منشأتك الجديدة</div>
+                <div class="step-sub">أدخل الاسم التجاري للشركة وستُضاف تلقائياً إلى حسابك — يمكنك التنقل بينها في أي
+                    وقت</div>
+
+                <div class="field">
+                    <label>الاسم التجاري للمنشأة <span>*</span></label>
+                    <input type="text" id="companyName"
+                        placeholder="مثال: شركة الفجر للخدمات، مجموعة النور، مؤسسة الأمل" autocomplete="off"
+                        maxlength="100" oninput="validateCompanyName(this)" />
+
+                    <div class="name-warning" id="nameWarning">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <div>
+                            <strong>يبدو هذا اسم شخص وليس منشأة.</strong><br />
+                            أدخل الاسم التجاري الرسمي للشركة أو المؤسسة،
+                            مثل: <em>"شركة الفجر للخدمات"</em> أو <em>"مجموعة السلام"</em>
+                        </div>
+                    </div>
+
+                    <div class="name-ok" id="nameOk">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>اسم تجاري صحيح ✓</span>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label>القطاع <span>*</span></label>
+                    <select id="sector">
+                        <option value="">— اختر القطاع —</option>
+                        <option value="services">الخدمات</option>
+                        <option value="manufacturing">التصنيع والإنتاج</option>
+                        <option value="retail">التجزئة والتجارة</option>
+                        <option value="technology">التقنية والبرمجيات</option>
+                        <option value="healthcare">الرعاية الصحية</option>
+                        <option value="education">التعليم والتدريب</option>
+                        <option value="construction">المقاولات والعقارات</option>
+                        <option value="finance">المالية والتأمين</option>
+                        <option value="logistics">اللوجستيات والنقل</option>
+                        <option value="government">حكومي وشبه حكومي</option>
+                        <option value="other">أخرى</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>حجم المنشأة</label>
+                    <select id="orgSize">
+                        <option value="">— اختياري —</option>
+                        <option value="MICRO">1–9 موظفين (صغيرة جداً)</option>
+                        <option value="SMALL">10–49 موظف (صغيرة)</option>
+                        <option value="MEDIUM">50–249 موظف (متوسطة)</option>
+                        <option value="LARGE">250+ موظف (كبيرة)</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>رقم السجل التجاري</label>
+                    <input type="text" id="commercialReg" placeholder="اختياري" maxlength="20" />
+                    <div class="field-hint"><i class="bi bi-info-circle"></i> يُستخدم للتحقق من التسجيل المسبق</div>
+                </div>
+
+                <button class="btn-primary" id="btnStep1" onclick="goStep2()">
+                    <span>التالي</span>
+                    <i class="bi bi-arrow-left"></i>
+                </button>
+                <button class="btn-secondary" onclick="goBack()">
+                    <i class="bi bi-arrow-right" style="margin-left:6px"></i> العودة للوحة الإدارة
+                </button>
+            </div>
+
+            <!-- ═══ الخطوة ٢: مراجعة وتأكيد ═══ -->
+            <div class="step-view" id="step2">
+                <div class="step-icon">✅</div>
+                <div class="step-title">راجع البيانات وأكّد</div>
+                <div class="step-sub">تأكد من صحة البيانات قبل الإضافة — يمكنك تعديلها لاحقاً من الإعدادات</div>
+
+                <div
+                    style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:20px;margin-bottom:24px">
+                    <div
+                        style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06)">
+                        <span style="color:#64748b;font-size:13px">اسم المنشأة</span>
+                        <span id="review_name" style="font-weight:700;font-size:14px"></span>
+                    </div>
+                    <div
+                        style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06)">
+                        <span style="color:#64748b;font-size:13px">القطاع</span>
+                        <span id="review_sector" style="font-weight:600;font-size:14px"></span>
+                    </div>
+                    <div
+                        style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06)">
+                        <span style="color:#64748b;font-size:13px">حجم المنشأة</span>
+                        <span id="review_size" style="font-weight:600;font-size:14px"></span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:10px 0">
+                        <span style="color:#64748b;font-size:13px">السجل التجاري</span>
+                        <span id="review_reg" style="font-weight:600;font-size:14px"></span>
+                    </div>
+                </div>
+
+                <div
+                    style="background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.15);border-radius:12px;padding:14px 16px;margin-bottom:24px;font-size:13px;color:#6ee7b7;line-height:1.6">
+                    <i class="bi bi-info-circle" style="margin-left:6px"></i>
+                    سيتم توجيهك الآن للتشخيص الاستراتيجي السريع لبناء المسار الملائم لشركتك الجديدة.
+                </div>
+
+                <button class="btn-primary" id="btnConfirm" onclick="submitEntity()">
+                    <span>متابعة التشخيص</span>
+                    <i class="bi bi-activity"></i>
+                </button>
+                <button class="btn-secondary" onclick="goStep1()">
+                    <i class="bi bi-arrow-right" style="margin-left:6px"></i> تعديل البيانات
+                </button>
+            </div>
+
+            <!-- ═══ الخطوة ٣: نجاح ═══ -->
+            <div class="step-view" id="step3">
+                <div class="success-icon">🎉</div>
+                <div class="success-title">تمت الإضافة بنجاح!</div>
+                <div class="success-sub">
+                    تم إنشاء المنشأة الجديدة وربطها بحسابك.<br />
+                    سيتم تحويلك إليها الآن.
+                </div>
+
+                <div class="entity-badge" id="successBadge">
+                    <i class="bi bi-building-fill"></i>
+                    <div>
+                        <div class="entity-badge-name" id="successName"></div>
+                        <div class="entity-badge-role">مدير الإدارة — تم إعداد 8 أقسام تلقائياً ✓</div>
+                    </div>
+                </div>
+
+                <button class="btn-primary" id="btnGo" onclick="goToDashboard()">
+                    <span id="btnGoText">الذهاب للوحة الإدارة</span>
+                    <i class="bi bi-arrow-left"></i>
+                </button>
+            </div>
+
+        </div><!-- end .card -->
+
+        <div class="back-link">
+            <a href="javascript:goBack()">
+                <i class="bi bi-arrow-right"></i>
+                العودة بدون إضافة
+            </a>
+        </div>
+
+    </div><!-- end .page-wrap -->
+
+    <script>
+        // ══════════════════════════════════════
+        // State
+        // ══════════════════════════════════════
+        let _step = 1;
+        let _deptCode = null;
+        let _entityName = '';
+
+        // ══════════════════════════════════════
+        // التنقل بين الخطوات
+        // ══════════════════════════════════════
+        function goStep1() {
+            _step = 1;
+            renderStep();
+        }
+
+        // تحقق من أن الاسم تجاري وليس اسم شخص
+        function looksLikePersonName(name) {
+            const trimmed = name.trim();
+            const businessKeywords = /شركة|مؤسسة|مجموعة|مجمع|مركز|معهد|مستشفى|عيادة|مكتب|محل|متجر|مزرعة|مصنع|وكالة|أكاديمية|جمعية|نادي|فندق|منتجع|قسم|إدارة|هيئة|ديوان|وزارة|بنك|صندوق|مشروع|مقاولات|استشارات|خدمات|للتجارة|للتقنية|للمقاولات|للاستثمار|للصناعة|للخدمات|للتطوير|للتوزيع|industries|group|co\.|corp|ltd|llc/i;
+            if (businessKeywords.test(trimmed)) return false;
+            const words = trimmed.split(/\s+/);
+            if (words.length <= 2 && words.every(w => w.length <= 12)) {
+                const personalPrefixes = /^(محمد|أحمد|عبدالله|عبد|سعد|سلطان|فهد|خالد|ناصر|عمر|يوسف|علي|حسن|مريم|فاطمة|سارة|نورة|هند|لمياء|رنا|دانة|خلدون|إبراهيم|إسماعيل|مصطفى|محمود|راشد|طارق|وليد|ماجد|جاسم|منصور|حمزة|إياد|معتز)$/;
+                if (personalPrefixes.test(words[0])) return true;
+            }
+            return false;
+        }
+
+        function validateCompanyName(input) {
+            const val = input.value.trim();
+            const warning = document.getElementById('nameWarning');
+            const ok = document.getElementById('nameOk');
+            if (!val) {
+                input.classList.remove('input-error', 'input-ok');
+                warning.classList.remove('visible');
+                ok.classList.remove('visible');
+                return;
+            }
+            if (looksLikePersonName(val)) {
+                input.classList.add('input-error');
+                input.classList.remove('input-ok');
+                warning.classList.add('visible');
+                ok.classList.remove('visible');
+            } else if (val.length >= 4) {
+                input.classList.remove('input-error');
+                input.classList.add('input-ok');
+                warning.classList.remove('visible');
+                ok.classList.add('visible');
+            }
+        }
+
+        function goStep2() {
+            const name = document.getElementById('companyName').value.trim();
+            const sector = document.getElementById('sector').value;
+            if (!name) return showError('الرجاء إدخال الاسم التجاري للمنشأة');
+            if (!sector) return showError('الرجاء اختيار القطاع');
+            if (looksLikePersonName(name)) {
+                document.getElementById('companyName').classList.add('input-error');
+                document.getElementById('nameWarning').classList.add('visible');
+                return showError('يجب أن يكون اسم المنشأة اسماً تجارياً رسمياً، وليس اسم شخص');
+            }
+            hideError();
+            const sectorLabels = { services: 'الخدمات', manufacturing: 'التصنيع', retail: 'التجزئة', technology: 'التقنية', healthcare: 'الرعاية الصحية', education: 'التعليم', construction: 'المقاولات', finance: 'المالية', logistics: 'اللوجستيات', government: 'حكومي', other: 'أخرى' };
+            const sizeLabels = { MICRO: '1–9 موظفين', SMALL: '10–49 موظف', MEDIUM: '50–249 موظف', LARGE: '250+ موظف', '': '—' };
+            document.getElementById('review_name').textContent = name;
+            document.getElementById('review_sector').textContent = sectorLabels[sector] || sector;
+            document.getElementById('review_size').textContent = sizeLabels[document.getElementById('orgSize').value] || '—';
+            document.getElementById('review_reg').textContent = document.getElementById('commercialReg').value.trim() || '—';
+            _step = 2;
+            renderStep();
+        }
+
+        function renderStep() {
+            document.querySelectorAll('.step-view').forEach(el => el.classList.remove('visible'));
+            document.getElementById('step' + _step).classList.add('visible');
+            // progress dots
+            for (let i = 1; i <= 3; i++) {
+                const dot = document.getElementById('dot' + i);
+                dot.className = 'step-dot' + (i < _step ? ' done' : i === _step ? ' active' : '');
+            }
+            if (_step >= 2) document.getElementById('line1').classList.add('done'); else document.getElementById('line1').classList.remove('done');
+            if (_step >= 3) document.getElementById('line2').classList.add('done'); else document.getElementById('line2').classList.remove('done');
+        }
+
+        // ══════════════════════════════════════
+        // إرسال البيانات
+        // ══════════════════════════════════════
+        async function submitEntity() {
+            const name = document.getElementById('companyName').value.trim();
+            const sector = document.getElementById('sector').value;
+            const orgSize = document.getElementById('orgSize').value;
+            const commercialRegNo = document.getElementById('commercialReg').value.trim();
+
+            const btn = document.getElementById('btnConfirm');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner"></div><span>تجهيز التشخيص...</span>';
+            hideError();
+
+            const payload = {
+                companyName: name,
+                sector: sector,
+                orgSize: orgSize || null,
+                commercialRegNo: commercialRegNo || null
+            };
+
+            // حفظ بيانات المنشأة مؤقتاً لتأسيسها لاحقاً بعد التشخيص
+            sessionStorage.setItem('pendingEntityPayload', JSON.stringify(payload));
+
+            // Determine diagnostic path based on user identity
+            let diagTarget = '/diagnostic-owner'; // default to owner
+
+            if (currentUserContext) {
+                const userType = currentUserContext.userType || '';
+                const cat = currentUserContext.userCategory || '';
+
+                if (userType === 'DEPT_MANAGER' || cat.startsWith('DEPT_')) {
+                    diagTarget = '/diagnostic-manager';
+                } else if (cat === 'INVESTOR' || userType === 'INVESTOR') {
+                    diagTarget = '/diagnostic-investor';
+                }
+            } else {
+                // Fallback to localStorage
+                try {
+                    const u = JSON.parse(localStorage.getItem('user') || '{}');
+                    const userType = u.userType || '';
+                    const cat = u.userCategory || '';
+                    if (userType === 'DEPT_MANAGER' || cat.startsWith('DEPT_')) {
+                        diagTarget = '/diagnostic-manager';
+                    } else if (cat === 'INVESTOR' || userType === 'INVESTOR') {
+                        diagTarget = '/diagnostic-investor';
+                    }
+                } catch (e) { }
+            }
+
+            // التوجه للتشخيص و إرفاق متغير (from=add-entity)
+            window.location.href = diagTarget + '?from=add-entity';
+        }
+
+        // ══════════════════════════════════════
+        // التوجيه بعد الإضافة
+        // ══════════════════════════════════════
+        function goToDashboard() {
+            if (_deptCode) {
+                window.location.href = '/dept-dashboard.html?dept=' + _deptCode;
+            } else {
+                window.location.href = '/dashboard.html';
+            }
+        }
+
+        function goBack() {
+            const referrer = document.referrer;
+            if (referrer && referrer.includes(window.location.hostname)) {
+                history.back();
+            } else {
+                window.location.href = '/dept-dashboard.html';
+            }
+        }
+
+        // ══════════════════════════════════════
+        // الأخطاء
+        // ══════════════════════════════════════
+        function showError(msg) {
+            const el = document.getElementById('errorMsg');
+            document.getElementById('errorText').textContent = msg;
+            el.classList.add('visible');
+            el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function hideError() {
+            document.getElementById('errorMsg').classList.remove('visible');
+        }
+
+        // ══════════════════════════════════════
+        // تحقق من تسجيل الدخول
+        // ══════════════════════════════════════
+        let currentUserContext = null;
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetch('/api/user/me', { credentials: 'include' });
+                if (!res.ok) {
+                    window.location.href = '/login.html';
+                } else {
+                    currentUserContext = await res.json();
+                }
+            } catch {
+                window.location.href = '/login.html';
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -6,9 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ستارتكس — تحليل الموارد البشرية العميق</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <!-- ✅ إضافة Bootstrap CSS المفقود لفك تعارض التنسيق -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
         rel="stylesheet">
     <link href="/assets/css/sidebar.css" rel="stylesheet">
+    <link href="/css/dept-pages.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -38,7 +41,33 @@
             background: var(--bg);
             font-family: 'Tajawal', sans-serif;
             color: var(--text);
-            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        .stx-wrapper {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        .stx-sidebar-container {
+            width: 240px;
+            flex-shrink: 0;
+            background: #1a1d2e;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stx-main-content {
+            flex: 1;
+            height: 100vh;
+            overflow-y: auto;
+            background: var(--bg);
+            padding: 0;
         }
 
         .top-nav {
@@ -574,244 +603,232 @@
 </head>
 
 <body>
-    <nav class="top-nav">
-        <a href="/dashboard" class="brand"><i class="bi bi-rocket-takeoff-fill"></i> ستارتكس</a>
-        <div class="nav-links">
-            <a href="/dashboard"><i class="bi bi-house"></i> الرئيسية</a>
-            <a href="/finance-deep"><i class="bi bi-cash-stack"></i> المالية</a>
-        </div>
-        <div class="user-area">
-            <span style="color:#fff;font-size:13px" id="userName">مدير النظام</span>
-            <div class="user-avatar" id="userAvatar">م</div>
-            <button class="btn-logout" onclick="location.href='/login'">خروج</button>
-        </div>
-    </nav>
+    <div class="stx-wrapper">
+        <!-- Sidebar Container (Unified 15 Tools) -->
+        <aside class="stx-sidebar-container"></aside>
 
-    <div class="layout">
-        <nav class="sidebar"></nav>
-        <main class="main-content">
-
-            <div class="hero">
-                <div class="hero-icon">👥</div>
+        <!-- Main Content Area -->
+        <main class="stx-main-content">
+            <!-- Header Section (Pinned) -->
+            <div class="sticky-top p-4 d-flex justify-content-between align-items-center"
+                style="background: rgba(15,17,23,0.9); backdrop-filter: blur(10px); z-index: 100; border-bottom: 1px solid var(--border);">
                 <div>
-                    <h2>تحليل الموارد البشرية العميق</h2>
-                    <p>أدخل بيانات فريقك الحقيقية — وسيحلل النظام <strong>12 مؤشر للموارد البشرية</strong> تلقائياً:
-                        معدل الدوران، نسبة التوطين، تكلفة الموظف، فجوة الكوادر، وامتثال العقود. تشخيص مبني على أرقام —
-                        مو تقديرات.</p>
+                    <h1 style="font-weight: 800; font-size: 1.5rem; color: #fff;">تحليل الموارد البشرية العميق</h1>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">تشخيص القدرات وهيكل القوى
+                        العاملة</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button onclick="saveAndContinue()" class="btn"
+                        style="background: var(--primary); color: #fff; border-radius: 8px; font-weight: 700; padding: 10px 24px;">حفظ
+                        التقدم</button>
+                    <a href="/dept-dashboard.html?dept=hr" class="btn"
+                        style="border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 10px 20px;">رجوع
+                        للوحة الإدارة</a>
                 </div>
             </div>
 
-            <div class="wiz-bar">
-                <div class="wiz-step active" onclick="showStep(1)" id="ws1"><span class="step-num">👥</span> هيكل القوى
-                </div>
-                <div class="wiz-step" onclick="showStep(2)" id="ws2"><span class="step-num">💰</span> التكاليف والمزايا
-                </div>
-                <div class="wiz-step" onclick="showStep(3)" id="ws3"><span class="step-num">⚖️</span> الأداء والامتثال
-                </div>
-                <div class="wiz-step" onclick="showStep(4)" id="ws4"><span class="step-num">🤖</span> التقرير الذكي
-                </div>
-            </div>
+            <div class="p-4">
 
-            <!-- ═══ STEP 1: هيكل القوى العاملة ═══ -->
-            <div id="step1" class="section-card">
-                <h3>👥 هيكل القوى العاملة <span class="badge"
-                        style="background:rgba(139,92,246,.1);color:#a78bfa;">القسم 1 من 3</span></h3>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label><i class="bi bi-people-fill"></i> إجمالي عدد الموظفين</label>
-                        <input type="number" class="form-input" id="totalEmployees" placeholder="مثال: 45" min="1">
-                    </div>
-                    <div class="form-group">
-                        <label><i class="bi bi-flag"></i> عدد الموظفين السعوديين</label>
-                        <input type="number" class="form-input" id="saudiEmployees" placeholder="مثال: 15" min="0">
-                    </div>
-                    <div class="form-group">
-                        <label><i class="bi bi-person-plus"></i> عدد الموظفين الجدد (آخر 6 أشهر)</label>
-                        <input type="number" class="form-input" id="newHires" placeholder="مثال: 8" min="0">
-                    </div>
-                    <div class="form-group">
-                        <label><i class="bi bi-person-dash"></i> عدد المستقيلين (آخر 12 شهر)</label>
-                        <input type="number" class="form-input" id="resignations" placeholder="مثال: 6" min="0">
-                    </div>
-                    <div class="form-group">
-                        <label><i class="bi bi-briefcase"></i> عدد المناصب الشاغرة حالياً</label>
-                        <input type="number" class="form-input" id="vacancies" placeholder="مثال: 4" min="0">
-                    </div>
-                    <div class="form-group">
-                        <label><i class="bi bi-building"></i> عدد الإدارات / الأقسام</label>
-                        <input type="number" class="form-input" id="departments" placeholder="مثال: 5" min="1">
-                    </div>
-                    <div class="form-group">
-                        <label><i class="bi bi-person-workspace"></i> عدد المناصب القيادية (مدراء)</label>
-                        <input type="number" class="form-input" id="managers" placeholder="مثال: 6" min="0">
-                    </div>
-                    <div class="form-group">
-                        <label><i class="bi bi-clock-history"></i> متوسط سنوات الخبرة في الفريق</label>
-                        <input type="number" class="form-input" id="avgExperience" placeholder="مثال: 4" min="0"
-                            step="0.5">
+                <div class="hero">
+                    <div class="hero-icon">👥</div>
+                    <div>
+                        <h2>تحليل الموارد البشرية العميق</h2>
+                        <p>أدخل بيانات فريقك الحقيقية — وسيحلل النظام <strong>12 مؤشر للموارد البشرية</strong> تلقائياً:
+                            معدل الدوران، نسبة التوطين، تكلفة الموظف، فجوة الكوادر، وامتثال العقود. تشخيص مبني على أرقام
+                            —
+                            مو تقديرات.</p>
                     </div>
                 </div>
-                <div class="btn-row">
-                    <button class="btn btn-primary" onclick="showStep(2)">التالي: التكاليف <i
-                            class="bi bi-arrow-left"></i></button>
-                </div>
-            </div>
 
-            <!-- ═══ STEP 2: التكاليف والمزايا ═══ -->
-            <div id="step2" class="section-card" style="display:none">
-                <h3>💰 التكاليف والمزايا <span class="badge" style="background:rgba(245,158,11,.1);color:#fbbf24;">القسم
-                        2 من 3</span></h3>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label><i class="bi bi-wallet2"></i> إجمالي الرواتب الشهرية (ريال)</label>
-                        <input type="text" class="form-input" id="totalSalaries" placeholder="مثال: 180000"
-                            oninput="formatNum(this)">
+                <div class="wiz-bar">
+                    <div class="wiz-step active" onclick="showStep(1)" id="ws1"><span class="step-num">👥</span> هيكل
+                        القوى
                     </div>
-                    <div class="form-group">
-                        <label><i class="bi bi-heart-pulse"></i> تكلفة التأمين الطبي (سنوي)</label>
-                        <input type="text" class="form-input" id="medicalInsuranceCost" placeholder="مثال: 75000"
-                            oninput="formatNum(this)">
+                    <div class="wiz-step" onclick="showStep(2)" id="ws2"><span class="step-num">💰</span> التكاليف
+                        والمزايا
                     </div>
-                    <div class="form-group">
-                        <label><i class="bi bi-mortarboard"></i> ميزانية التدريب (سنوي)</label>
-                        <input type="text" class="form-input" id="trainingBudget" placeholder="مثال: 30000"
-                            oninput="formatNum(this)">
+                    <div class="wiz-step" onclick="showStep(3)" id="ws3"><span class="step-num">⚖️</span> الأداء
+                        والامتثال
                     </div>
-                    <div class="form-group">
-                        <label><i class="bi bi-gift"></i> تكلفة المزايا الأخرى (سنوي)</label>
-                        <input type="text" class="form-input" id="otherBenefits" placeholder="سكن، نقل، بدلات..."
-                            oninput="formatNum(this)">
-                        <div class="form-hint">سكن، نقل، بدلات، مكافآت</div>
-                    </div>
-                    <div class="form-group">
-                        <label><i class="bi bi-currency-dollar"></i> أعلى راتب في المنشأة (شهري)</label>
-                        <input type="text" class="form-input" id="highestSalary" placeholder="مثال: 25000"
-                            oninput="formatNum(this)">
-                    </div>
-                    <div class="form-group">
-                        <label><i class="bi bi-currency-dollar"></i> أدنى راتب في المنشأة (شهري)</label>
-                        <input type="text" class="form-input" id="lowestSalary" placeholder="مثال: 3500"
-                            oninput="formatNum(this)">
+                    <div class="wiz-step" onclick="showStep(4)" id="ws4"><span class="step-num">🤖</span> التقرير الذكي
                     </div>
                 </div>
-                <div class="btn-row">
-                    <button class="btn btn-secondary" onclick="showStep(1)"><i class="bi bi-arrow-right"></i>
-                        السابق</button>
-                    <button class="btn btn-primary" onclick="showStep(3)">التالي: الأداء <i
-                            class="bi bi-arrow-left"></i></button>
-                </div>
-            </div>
 
-            <!-- ═══ STEP 3: الأداء والامتثال ═══ -->
-            <div id="step3" class="section-card" style="display:none">
-                <h3>⚖️ الأداء والامتثال <span class="badge" style="background:rgba(34,197,94,.1);color:#4ade80;">القسم 3
-                        من 3</span></h3>
-
-                <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:16px;">اضغط على كل بند موجود عندك ✅</p>
-                <div class="form-grid">
-                    <div class="form-group full-width">
-                        <label style="color:var(--purple);font-weight:800;font-size:.9rem;">📋 الامتثال النظامي</label>
-                        <div class="toggle-row" id="complianceToggles">
-                            <button class="toggle-btn" data-key="contracts_qiwa" onclick="toggleC(this)">📄 عقود موثقة
-                                في قوى</button>
-                            <button class="toggle-btn" data-key="mudad" onclick="toggleC(this)">💳 حماية أجور
-                                (مدد)</button>
-                            <button class="toggle-btn" data-key="medical" onclick="toggleC(this)">🏥 تأمين طبي
-                                شامل</button>
-                            <button class="toggle-btn" data-key="work_rules" onclick="toggleC(this)">📑 لائحة عمل
-                                معتمدة</button>
-                            <button class="toggle-btn" data-key="gosi" onclick="toggleC(this)">🏦 تأمينات
-                                اجتماعية</button>
-                            <button class="toggle-btn" data-key="safety" onclick="toggleC(this)">🦺 لجنة سلامة
-                                مهنية</button>
+                <!-- ═══ STEP 1: هيكل القوى العاملة ═══ -->
+                <div id="step1" class="section-card">
+                    <h3>👥 هيكل القوى العاملة <span class="badge"
+                            style="background:rgba(139,92,246,.1);color:#a78bfa;">القسم 1 من 3</span></h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label><i class="bi bi-people-fill"></i> إجمالي عدد الموظفين</label>
+                            <input type="number" class="form-input" id="totalEmployees" placeholder="مثال: 45" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-flag"></i> عدد الموظفين السعوديين</label>
+                            <input type="number" class="form-input" id="saudiEmployees" placeholder="مثال: 15" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-person-plus"></i> عدد الموظفين الجدد (آخر 6 أشهر)</label>
+                            <input type="number" class="form-input" id="newHires" placeholder="مثال: 8" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-person-dash"></i> عدد المستقيلين (آخر 12 شهر)</label>
+                            <input type="number" class="form-input" id="resignations" placeholder="مثال: 6" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-briefcase"></i> عدد المناصب الشاغرة حالياً</label>
+                            <input type="number" class="form-input" id="vacancies" placeholder="مثال: 4" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-building"></i> عدد الإدارات / الأقسام</label>
+                            <input type="number" class="form-input" id="departments" placeholder="مثال: 5" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-person-workspace"></i> عدد المناصب القيادية (مدراء)</label>
+                            <input type="number" class="form-input" id="managers" placeholder="مثال: 6" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-clock-history"></i> متوسط سنوات الخبرة في الفريق</label>
+                            <input type="number" class="form-input" id="avgExperience" placeholder="مثال: 4" min="0"
+                                step="0.5">
                         </div>
                     </div>
-                    <div class="form-group full-width">
-                        <label style="color:var(--teal);font-weight:800;font-size:.9rem;">🎯 إدارة الأداء</label>
-                        <div class="toggle-row" id="performanceToggles">
-                            <button class="toggle-btn" data-key="perf_review" onclick="toggleC(this)">📊 تقييم أداء
-                                سنوي</button>
-                            <button class="toggle-btn" data-key="job_desc" onclick="toggleC(this)">📝 وصف وظيفي
-                                واضح</button>
-                            <button class="toggle-btn" data-key="org_chart" onclick="toggleC(this)">🏗️ هيكل تنظيمي
-                                محدّث</button>
-                            <button class="toggle-btn" data-key="succession" onclick="toggleC(this)">🔄 خطة تعاقب
-                                وظيفي</button>
-                            <button class="toggle-btn" data-key="hr_system" onclick="toggleC(this)">💻 نظام HR
-                                إلكتروني</button>
-                            <button class="toggle-btn" data-key="training_plan" onclick="toggleC(this)">📚 خطة تدريب
-                                سنوية</button>
+                    <div class="btn-row">
+                        <button class="btn btn-primary" onclick="showStep(2)">التالي: التكاليف <i
+                                class="bi bi-arrow-left"></i></button>
+                    </div>
+                </div>
+
+                <!-- ═══ STEP 2: التكاليف والمزايا ═══ -->
+                <div id="step2" class="section-card" style="display:none">
+                    <h3>💰 التكاليف والمزايا <span class="badge"
+                            style="background:rgba(245,158,11,.1);color:#fbbf24;">القسم
+                            2 من 3</span></h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label><i class="bi bi-wallet2"></i> إجمالي الرواتب الشهرية (ريال)</label>
+                            <input type="text" class="form-input" id="totalSalaries" placeholder="مثال: 180000"
+                                oninput="formatNum(this)">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-heart-pulse"></i> تكلفة التأمين الطبي (سنوي)</label>
+                            <input type="text" class="form-input" id="medicalInsuranceCost" placeholder="مثال: 75000"
+                                oninput="formatNum(this)">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-mortarboard"></i> ميزانية التدريب (سنوي)</label>
+                            <input type="text" class="form-input" id="trainingBudget" placeholder="مثال: 30000"
+                                oninput="formatNum(this)">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-gift"></i> تكلفة المزايا الأخرى (سنوي)</label>
+                            <input type="text" class="form-input" id="otherBenefits" placeholder="سكن، نقل، بدلات..."
+                                oninput="formatNum(this)">
+                            <div class="form-hint">سكن، نقل، بدلات، مكافآت</div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-currency-dollar"></i> أعلى راتب في المنشأة (شهري)</label>
+                            <input type="text" class="form-input" id="highestSalary" placeholder="مثال: 25000"
+                                oninput="formatNum(this)">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-currency-dollar"></i> أدنى راتب في المنشأة (شهري)</label>
+                            <input type="text" class="form-input" id="lowestSalary" placeholder="مثال: 3500"
+                                oninput="formatNum(this)">
                         </div>
                     </div>
-                </div>
-
-                <h3 style="font-size:.9rem;margin-top:18px;">📈 رضا الموظفين</h3>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>هل يوجد استبيان رضا موظفين؟</label>
-                        <select class="form-input form-select" id="hasSurvey">
-                            <option value="">— اختر —</option>
-                            <option value="yes_recent">نعم (آخر 6 أشهر)</option>
-                            <option value="yes_old">نعم (أقدم من 6 أشهر)</option>
-                            <option value="no">لا يوجد</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>نسبة رضا الموظفين (لو معروفة) %</label>
-                        <input type="number" class="form-input" id="satisfactionRate" placeholder="مثال: 72" min="0"
-                            max="100">
+                    <div class="btn-row">
+                        <button class="btn btn-secondary" onclick="showStep(1)"><i class="bi bi-arrow-right"></i>
+                            السابق</button>
+                        <button class="btn btn-primary" onclick="showStep(3)">التالي: الأداء <i
+                                class="bi bi-arrow-left"></i></button>
                     </div>
                 </div>
 
-                <div class="btn-row">
-                    <button class="btn btn-secondary" onclick="showStep(2)"><i class="bi bi-arrow-right"></i>
-                        السابق</button>
-                    <button class="btn btn-success" onclick="runAnalysis()"><i class="bi bi-cpu"></i> شغّل التحليل
-                        الذكي</button>
-                </div>
-            </div>
+                <!-- ═══ STEP 3: الأداء والامتثال ═══ -->
+                <div id="step3" class="section-card" style="display:none">
+                    <h3>⚖️ الأداء والامتثال <span class="badge"
+                            style="background:rgba(34,197,94,.1);color:#4ade80;">القسم 3
+                            من 3</span></h3>
 
-            <!-- ═══ STEP 4: النتائج ═══ -->
-            <div id="step4" class="results-section">
-                <div class="health-card" id="healthCard">
-                    <div
-                        style="font-size:.8rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:2px;font-weight:700;">
-                        صحة الموارد البشرية</div>
-                    <div class="health-score" id="healthScore">—</div>
-                    <div class="health-label" id="healthLabel">—</div>
-                    <div class="health-sub" id="healthSub">—</div>
-                </div>
-                <div class="kpi-grid" id="kpiGrid"></div>
-                <div class="charts-row">
-                    <div class="chart-box">
-                        <h3><i class="bi bi-pie-chart" style="color:var(--purple)"></i> توزيع القوى العاملة</h3><canvas
-                            id="workforceChart" height="200"></canvas>
+                    <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:16px;">اضغط على كل بند موجود عندك ✅
+                    </p>
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label style="color:var(--purple);font-weight:800;font-size:.9rem;">📋 الامتثال
+                                النظامي</label>
+                            <div class="toggle-row" id="complianceToggles">
+                                <button class="toggle-btn" data-key="contracts_qiwa" onclick="toggleC(this)">📄 عقود
+                                    موثقة
+                                    في قوى</button>
+                                <button class="toggle-btn" data-key="mudad" onclick="toggleC(this)">💳 حماية أجور
+                                    (مدد)</button>
+                                <button class="toggle-btn" data-key="medical" onclick="toggleC(this)">🏥 تأمين طبي
+                                    شامل</button>
+                                <button class="toggle-btn" data-key="work_rules" onclick="toggleC(this)">📑 لائحة عمل
+                                    معتمدة</button>
+                                <button class="toggle-btn" data-key="gosi" onclick="toggleC(this)">🏦 تأمينات
+                                    اجتماعية</button>
+                                <button class="toggle-btn" data-key="safety" onclick="toggleC(this)">🦺 لجنة سلامة
+                                    مهنية</button>
+                            </div>
+                        </div>
+                        <div class="form-group full-width">
+                            <label style="color:var(--teal);font-weight:800;font-size:.9rem;">🎯 إدارة الأداء</label>
+                            <div class="toggle-row" id="performanceToggles">
+                                <button class="toggle-btn" data-key="perf_review" onclick="toggleC(this)">📊 تقييم أداء
+                                    سنوي</button>
+                                <button class="toggle-btn" data-key="job_desc" onclick="toggleC(this)">📝 وصف وظيفي
+                                    واضح</button>
+                                <button class="toggle-btn" data-key="org_chart" onclick="toggleC(this)">🏗️ هيكل تنظيمي
+                                    محدّث</button>
+                                <button class="toggle-btn" data-key="succession" onclick="toggleC(this)">🔄 خطة تعاقب
+                                    وظيفي</button>
+                                <button class="toggle-btn" data-key="hr_system" onclick="toggleC(this)">💻 نظام HR
+                                    إلكتروني</button>
+                                <button class="toggle-btn" data-key="training_plan" onclick="toggleC(this)">📚 خطة تدريب
+                                    سنوية</button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="chart-box">
-                        <h3><i class="bi bi-bar-chart" style="color:var(--teal)"></i> مؤشرات الامتثال</h3><canvas
-                            id="complianceChart" height="200"></canvas>
+
+                    <h3 style="font-size:.9rem;margin-top:18px;">📈 رضا الموظفين</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>هل يوجد استبيان رضا موظفين؟</label>
+                            <select class="form-input form-select" id="hasSurvey">
+                                <option value="">— اختر —</option>
+                                <option value="yes_recent">نعم (آخر 6 أشهر)</option>
+                                <option value="yes_old">نعم (أقدم من 6 أشهر)</option>
+                                <option value="no">لا يوجد</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>نسبة رضا الموظفين (لو معروفة) %</label>
+                            <input type="number" class="form-input" id="satisfactionRate" placeholder="مثال: 72" min="0"
+                                max="100">
+                        </div>
+                    </div>
+
+                    <div class="btn-row">
+                        <button class="btn btn-secondary" onclick="showStep(2)"><i class="bi bi-arrow-right"></i>
+                            السابق</button>
+                        <button class="btn btn-success" id="finalAnalysisBtn"
+                            onclick="runAnalysis();">عرض التوصيات
+                            الذكية</button>
                     </div>
                 </div>
-                <div class="section-card">
-                    <h3>🤖 التوصيات الذكية</h3>
-                    <div id="recommendations"></div>
-                </div>
-                <div class="btn-row" style="justify-content:center;margin-top:28px;">
-                    <button class="btn btn-secondary" onclick="showStep(1)"><i class="bi bi-pencil"></i> تعديل
-                        البيانات</button>
-                    <button class="btn btn-primary" onclick="saveAndContinue()"><i class="bi bi-check-lg"></i> حفظ
-                        ومتابعة لـ SWOT</button>
-                    <button class="btn btn-secondary" style="border-color:rgba(6,182,212,.4);color:#06b6d4"
-                        onclick="window.location.href='/simulation-lab.html?dept=hr'"><i class="bi bi-lightning"></i> 🔮
-                        محاكاة قرارات</button>
-                </div>
-            </div>
+
         </main>
     </div>
 
-    <script src="/assets/js/api.js"></script>
+    <!-- ✅ السكربتات الموحدة (إصلاح التحميل المسبق) -->
+    <script src="/js/api.js"></script>
+    <script src="/js/context-manager.js"></script>
+    <script src="/js/dept-page.js"></script>
+    <script src="/js/steps-config.js"></script>
+    <script src="/js/sidebar.js"></script>
     <script src="/assets/js/hr-handlers.js"></script>
-    <script src="/assets/js/sidebar.js"></script>
     <script>
         function $(id) { return document.getElementById(id); }
         function num(id) { return parseFloat(($(id)?.value || '0').replace(/,/g, '')) || 0; }
@@ -942,37 +959,86 @@
 
             if (recos.length === 0) recos.push({ icon: '✅', color: '#22c55e', bg: 'rgba(34,197,94,.1)', title: 'وضع ممتاز — لا توجد تحذيرات حرجة', desc: 'استمر بالتطوير. ركّز على برامج التدريب والاحتفاظ بالمواهب.' });
 
-            $('recommendations').innerHTML = recos.map(r => `<div class="reco-card"><div class="reco-icon" style="background:${r.bg};color:${r.color}">${r.icon}</div><div><h4>${r.title}</h4><p>${r.desc}</p></div></div>`).join('');
-
             // Save (dual-write: old key + new stratix_ key)
             const resultPayload = { score, data: d, saudizationRate, turnoverRate, vacancyRate, complianceScore, perfScore, compliance: [...activeToggles], timestamp: new Date().toISOString() };
             localStorage.setItem('hrDeepResults', JSON.stringify(resultPayload));
             localStorage.setItem('stratix_hr_deep_results', JSON.stringify(resultPayload));
-            showStep(4);
+
+            // الآن ننتقل لصفحة التوصيات الذكية الاحترافية
+            saveAndContinue();
         }
 
-        function saveAndContinue() {
-            const results = JSON.parse(localStorage.getItem('hrDeepResults') || '{}');
+        // ╒═════════════════════════════════════════════╝
+        // شوى Toast — عامة للصفحة
+        // ╒═════════════════════════════════════════════╝
+        function showToast(msg, type = 'success') {
+            // أفضل DeptPage.showMessage إن متوفر
+            if (typeof DeptPage !== 'undefined' && DeptPage.showMessage) {
+                DeptPage.showMessage(msg, type === 'error');
+                return;
+            }
+            // Fallback مضمّن
+            const existing = document.querySelector('.dept-toast');
+            if (existing) existing.remove();
+            const div = document.createElement('div');
+            div.textContent = msg;
+            div.style.cssText = `position:fixed;bottom:20px;right:20px;padding:12px 20px;
+                border-radius:12px;font-weight:700;z-index:9999;
+                color:white;box-shadow:0 4px 12px rgba(0,0,0,.3);
+                font-family:Tajawal,sans-serif;font-size:14px;
+                background:${type === 'success' ? '#22c55e' : type === 'warning' ? '#f59e0b' : '#ef4444'};`;
+            div.className = 'dept-toast';
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 4000);
+        }
 
-            // 1. حفظ في companyHealth (للتوافق مع company-health.html)
-            const existing = JSON.parse(localStorage.getItem('companyHealth') || '{}');
-            existing.hr = results;
-            existing.lastUpdated = new Date().toISOString();
-            localStorage.setItem('companyHealth', JSON.stringify(existing));
+        // تسجيل الخطوة محلياً (دفاعي — Context.markStepCompleted تكمله)
+        function updateCompletedSteps(stepIndex) {
+            try {
+                const raw = localStorage.getItem('stratix_mgr_journey');
+                let journey = raw ? JSON.parse(raw) : { dept: 'hr', steps: [] };
+                if (!Array.isArray(journey.steps)) journey.steps = [];
+                // تمديد تلقائي إلى طول الفهرس
+                while (journey.steps.length < stepIndex) journey.steps.push(false);
+                journey.steps[stepIndex - 1] = true;
+                localStorage.setItem('stratix_mgr_journey', JSON.stringify(journey));
+            } catch (e) {
+                console.error('[hr-deep] updateCompletedSteps error:', e);
+            }
+        }
 
-            // 2. استخلاص نقاط القوة والضعف
-            const { strengths, weaknesses } = extractHRInsights(results);
-            localStorage.setItem('stratix_hr_strengths', JSON.stringify(strengths));
-            localStorage.setItem('stratix_hr_weaknesses', JSON.stringify(weaknesses));
+        async function saveAndContinue() {
+            try {
+                const results = JSON.parse(localStorage.getItem('hrDeepResults') || '{}');
+                const existing = JSON.parse(localStorage.getItem('companyHealth') || '{}');
+                existing.hr = results;
+                existing.lastUpdated = new Date().toISOString();
+                localStorage.setItem('companyHealth', JSON.stringify(existing));
 
-            // 3. تسجيل إكمال الخطوة 1
-            updateCompletedSteps(1);
+                const { strengths, weaknesses } = extractHRInsights(results);
+                localStorage.setItem('stratix_hr_strengths', JSON.stringify(strengths));
+                localStorage.setItem('stratix_hr_weaknesses', JSON.stringify(weaknesses));
 
-            // 4. إشعار + انتقال لـ SWOT
-            showToast('تم إكمال تحليل الموارد البشرية — جاري الانتقال لـ SWOT', 'success');
-            setTimeout(() => {
-                window.location.href = '/swot.html?dept=hr';
-            }, 1200);
+                if (typeof Context !== 'undefined') {
+                    Context.setItem('hr_strengths', strengths);
+                    Context.setItem('hr_weaknesses', weaknesses);
+                }
+
+                // حفظ دفاعي وسريع
+                if (typeof DeptPage !== 'undefined') { DeptPage.saveToAPI('DEEP', results).catch(() => { }); }
+                updateCompletedSteps(1);
+                if (typeof Context !== 'undefined' && Context.markStepCompleted) { Context.markStepCompleted('deep').catch(() => { }); }
+
+                showToast('تم إكمال التحليل — جاري استعراض التوصيات الذكية', 'success');
+
+                setTimeout(() => {
+                    window.location.href = '/hr-recommendations.html?dept=hr';
+                }, 800);
+            } catch (err) {
+                console.error('[hr-deep] saveAndContinue error:', err);
+                // حتى لو فشل الحفظ في الذاكرة، ننتقل لصفحة التوصيات لضمان عدم تعليق المستخدم
+                window.location.href = '/hr-recommendations.html?dept=hr';
+            }
         }
 
         // Load saved
@@ -1003,7 +1069,12 @@
                 if (u.name) { $('userName').textContent = u.name; $('userAvatar').textContent = u.name[0]; }
             } catch (e) { }
         })();
+
+        // ✅ الزر مربوط عبر onclick مباشرة — لا حاجة لربط إضافي
     </script>
+    </div> <!-- .p-4 -->
+    </main>
+    </div> <!-- .stx-wrapper -->
 </body>
 
 </html>

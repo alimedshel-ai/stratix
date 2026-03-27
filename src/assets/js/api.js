@@ -121,8 +121,14 @@ window.api = {
     getUserData: getUserData
 };
 
+// تعريف الاسم البديل لضمان التوافق مع الكود الجديد (pestel, health, etc.)
+window.apiCall = api;
+
 // تعريف الاسم البديل الجديد الذي تم استخدامه في جميع الصفحات
-window.apiRequest = (...args) => window.fetch(...args);
+
+window.apiRequest = (url, options = {}) => {
+    return window.fetch(url, { ...options, credentials: 'include' });
+};
 
 // -----------------------------------------------------------------
 // 3. دوال UI (بانر الكيان والدور)

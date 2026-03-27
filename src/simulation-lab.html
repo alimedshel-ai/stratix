@@ -915,9 +915,10 @@
         </div>
     </div>
 
-    <script src="/assets/js/api.js"></script>
-    <script src="/assets/js/sidebar.js"></script>
-    <script src="/assets/js/ai-advisor.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/steps-config.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script src="/js/ai-advisor.js"></script>
     <script>
         /* Legacy token redirect removed */
 
@@ -932,7 +933,7 @@
         async function api(url, opts = {}) {
             const res = await window.apiRequest(url, {
                 ...opts,
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...opts.headers }
+                headers: { 'Content-Type': 'application/json', ...opts.headers }
             });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             return res.json();
@@ -1370,6 +1371,39 @@
         }
 
         function logout() { localStorage.clear(); window.location.href = '/login'; }
+    </script>
+
+    <!-- ═══ DEPT DETECTION — تخصيص الصفحة لمدير الإدارة ═══ -->
+    <script>
+        (function () {
+            const _dp = new URLSearchParams(window.location.search).get('dept');
+            if (!_dp) return;
+
+            const _deptNames = { hr: 'الموارد البشرية', finance: 'المالية', operations: 'العمليات', marketing: 'التسويق', sales: 'المبيعات', compliance: 'الامتثال', it: 'تقنية المعلومات', cs: 'خدمة العملاء', quality: 'الجودة', support: 'الخدمات المساندة' };
+            const _dn = _deptNames[_dp] || _dp;
+
+            // 1. تحديث العنواين
+            document.title = 'ستارتكس — محاكاة إدارة ' + _dn;
+            const h1 = document.querySelector('.page-header h1');
+            if (h1) h1.textContent = '🔬 محاكاة إدارة ' + _dn;
+
+            const desc = document.querySelector('.page-header p');
+            if (desc) desc.textContent = 'اختبر سيناريوهات التغيير على مؤشرات وأهداف الإدارة وتتبع الأثر التشغيلي.';
+
+            // 2. تحديث قائمة التنقل العلوية
+            const _brand = document.querySelector('a.brand');
+            if (_brand) {
+                _brand.href = '/dept-dashboard.html?dept=' + _dp;
+                _brand.innerHTML = '<i class="bi bi-box-arrow-in-left"></i> العودة للوحة الإدارة';
+            }
+
+            document.querySelectorAll('.nav-links a').forEach(a => {
+                // إخفاء روابط الآفاق والـ OGSM الخاصة بالشركة ووضع العودة
+                a.style.display = 'none';
+            });
+
+            console.log('[SimulationLab] ✅ dept mode applied:', _dn);
+        })();
     </script>
 </body>
 

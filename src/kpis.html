@@ -7,8 +7,8 @@
   <title>ستارتكس - مؤشرات الأداء</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <script src="/assets/js/dept-theme.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <script src="/js/dept-theme.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
       --primary: #667eea;
@@ -629,50 +629,8 @@
       </div>
 
       <!-- شريط مسار التخطيط -->
-      <div id="planningPathBar"
+      <div id="planStepperContainer"
         style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:18px 22px;margin-bottom:20px">
-        <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:12px">🗺️ مسار التخطيط</div>
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <a href="/directions.html"
-            style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);text-decoration:none;flex:1;min-width:100px">
-            <span style="font-size:16px">🧭</span>
-            <div>
-              <div style="font-size:11px;font-weight:700;color:#22c55e">التوجهات ✅</div>
-            </div>
-          </a>
-          <div style="font-size:12px;color:var(--text-muted)">←</div>
-          <a href="/choices.html"
-            style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);text-decoration:none;flex:1;min-width:100px">
-            <span style="font-size:16px">⚖️</span>
-            <div>
-              <div style="font-size:11px;font-weight:700;color:#22c55e">الخيارات ✅</div>
-            </div>
-          </a>
-          <div style="font-size:12px;color:var(--text-muted)">←</div>
-          <a href="/objectives.html"
-            style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);text-decoration:none;flex:1;min-width:100px">
-            <span style="font-size:16px">🎯</span>
-            <div>
-              <div style="font-size:11px;font-weight:700;color:#22c55e">الأهداف ✅</div>
-            </div>
-          </a>
-          <div style="font-size:12px;color:var(--text-muted)">←</div>
-          <a href="/kpis.html"
-            style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:rgba(102,126,234,0.1);border:2px solid rgba(102,126,234,0.4);text-decoration:none;flex:1;min-width:100px;box-shadow:0 0 10px rgba(102,126,234,0.15)">
-            <span style="font-size:16px">📊</span>
-            <div>
-              <div style="font-size:11px;font-weight:700;color:#667eea">المؤشرات 👈</div>
-            </div>
-          </a>
-          <div style="font-size:12px;color:var(--text-muted)">←</div>
-          <a href="/initiatives.html"
-            style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid var(--border);text-decoration:none;flex:1;min-width:100px">
-            <span style="font-size:16px">🚀</span>
-            <div>
-              <div style="font-size:11px;font-weight:600;color:var(--text-muted)">المبادرات</div>
-            </div>
-          </a>
-        </div>
       </div>
       <!-- Stats -->
       <div class="mini-stats">
@@ -742,6 +700,15 @@
         </div>
         <div class="modal-body">
           <input type="hidden" id="editId">
+
+          <!-- Smart Suggestions from Strategy/OKRs -->
+          <div id="smartKpiSuggestions" style="display:none; margin-bottom:16px;">
+            <label
+              style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;margin-bottom:8px;color:var(--primary)">
+              <i class="bi bi-robot"></i> مؤشرات مستنتجة آلياً من تحليلاتك وأهدافك السابقة
+            </label>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px" id="smartKpiContainer"></div>
+          </div>
 
           <!-- Templates -->
           <div id="kpiTplSection" style="margin-bottom:14px">
@@ -822,8 +789,9 @@
             </label>
             <div style="font-size:10px;color:var(--text-muted);margin:-2px 0 6px"><i class="bi bi-info-circle"
                 style="font-size:9px"></i> الهدف الاستراتيجي الذي يخدمه هذا المؤشر</div>
-            <input type="text" class="form-input" id="formObj" placeholder="مثال: رفع مستوى رضا العملاء"
-              oninput="updateKpiPreview()">
+            <input type="text" class="form-input" id="formObj" list="objectivesList"
+              placeholder="مسال: رفع مستوى رضا العملاء (أو اختر من القائمة)" oninput="updateKpiPreview()">
+            <datalist id="objectivesList"></datalist>
           </div>
 
           <!-- الإدارة المسؤولة -->
@@ -922,12 +890,13 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="/assets/js/hr-handlers.js"></script>
-  <script src="/assets/js/finance-handlers.js"></script>
+  <script src="/js/hr-handlers.js"></script>
+  <script src="/js/finance-handlers.js"></script>
   <script src="/js/data-layer.js"></script>
-  <script src="/assets/js/api.js"></script>
-  <script src="/assets/js/sidebar.js"></script>
-  <script src="/assets/js/ai-advisor.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/steps-config.js"></script>
+    <script src="/js/sidebar.js"></script>
+  <script src="/js/ai-advisor.js"></script>
   <script>
     if (window.StartixAPI?.showEntityBanner) {
       StartixAPI.showEntityBanner({ toolName: 'مؤشرات الأداء' });
@@ -1031,10 +1000,10 @@
         if (_deptParam) {
           const formDeptSel = document.getElementById('formDept');
           const deptDisplayNames = { hr: 'الموارد البشرية', finance: 'المالية', operations: 'العمليات', marketing: 'التسويق والعملاء', sales: 'المبيعات', compliance: 'الامتثال والحوكمة', it: 'التقنية', cs: 'التسويق والعملاء', quality: 'الجودة' };
-          const deptFormValue = deptDisplayNames[_deptParam] || deptName;
+          const deptFormValue = deptDisplayNames[_deptParam] || '';
           if (formDeptSel) {
             for (const opt of formDeptSel.options) {
-              if (opt.value === deptName || opt.textContent.includes(deptName)) {
+              if (deptFormValue && (opt.value === deptFormValue || opt.textContent.includes(deptFormValue))) {
                 formDeptSel.value = opt.value;
                 break;
               }
@@ -1045,11 +1014,108 @@
         }
       } catch (deptErr) { console.warn('[KPIs] dept detection error:', deptErr); }
 
-    try { renderAll(); } catch (re) { console.warn('[KPIs] renderAll error:', re); }
-    // إذا بيانات تجريبية، أظهر تنبيه
-    if (!isApiMode) {
-      setTimeout(() => { try { showDemoBanner(); } catch (e) { } }, 300);
+      try { renderAll(); } catch (re) { console.warn('[KPIs] renderAll error:', re); }
+      // إذا بيانات تجريبية، أظهر تنبيه
+      if (!isApiMode) {
+        setTimeout(() => { try { showDemoBanner(); } catch (e) { } }, 300);
+      }
+
+      setTimeout(() => { showObjectivesConnectionBanner(); }, 400);
     }
+
+    async function showObjectivesConnectionBanner() {
+      try {
+        const _vId = localStorage.getItem('selectedVersionId') || activeVersionId;
+        const _dp = new URLSearchParams(window.location.search).get('dept') || localStorage.getItem('stratix_v10_dept');
+        const res = await window.apiRequest('/api/strategic/objectives?limit=50&versionId=' + (_vId || ''), {
+          headers: apiHeaders,
+          credentials: 'same-origin'
+        });
+
+        const mc = document.querySelector('.main-content');
+        if (!mc) return;
+
+        let objCount = 0;
+        let objs = [];
+
+        if (res.ok) {
+          const data = await res.json();
+          objs = data.objectives || [];
+        }
+
+        try {
+          const dirKey = _dp ? 'stratix_' + _dp + '_directions' : 'stratix_directions';
+          const localDirs = JSON.parse(localStorage.getItem(dirKey) || '[]');
+          const ltg = localDirs.filter(d => d.type === 'LONG_TERM_GOALS' || d.type === 'LONG_TERM_GOAL');
+          ltg.forEach(g => {
+            let title = '';
+            if (typeof g === 'string') title = g;
+            else if (g.content) title = g.content.split('—')[0].trim() || g.content;
+            else title = g.title || g.text || '';
+            if (title && !objs.find(o => (o.title || o.name || '') === title)) {
+              objs.push({ title: title, source: 'directions' });
+            }
+          });
+        } catch (e) { console.warn('KPIs: error merging directions goals', e); }
+
+        objCount = objs.length;
+
+        const banner = document.createElement('div');
+
+        if (objCount > 0) {
+          banner.style.cssText = 'background:linear-gradient(135deg,rgba(167,139,250,0.08),rgba(99,102,241,0.04));border:1px solid rgba(167,139,250,0.2);border-radius:14px;padding:16px 20px;margin-bottom:16px;display:flex;flex-direction:column;gap:12px;animation:fadeIn 0.5s ease;';
+
+          let btnsHtml = objs.slice(0, 4).map(o => {
+            const title = escapeHtml(o.title || o.name || '');
+            return `<button onclick="document.getElementById('formObj').value='${title.replace(/'/g, "\\'")}';openCreateModal()" style="font-size:11px;background:rgba(255,255,255,0.05);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;text-align:right;transition:.2s" onmouseover="this.style.background='rgba(167,139,250,0.1)';this.style.borderColor='rgba(167,139,250,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.borderColor='var(--border)'">
+                <div style="font-weight:700;color:#a78bfa;margin-bottom:2px">🎯 ${title}</div>
+                <div style="font-size:9px;color:var(--text-muted)">انقر لبناء مؤشر جديد يقيس هذا الهدف</div>
+            </button>`;
+          }).join('');
+
+          banner.innerHTML = `
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+                <div style="font-size:28px">🔗</div>
+                <div style="flex:1;min-width:250px">
+                    <div style="font-weight:700;font-size:14px;color:var(--text-primary);margin-bottom:4px">تكامل الأداء: بناء المؤشرات بناءً على الأهداف</div>
+                    <div style="font-size:12px;color:var(--text-muted)">
+                        المؤشرات صُممت أساساً كمقياس لمدى تحقّق أهدافك. لقد أسست عبوراً استراتيجياً متسلسلاً، ولديك <strong>${objCount} هدف مسجل</strong> في المرحلة السابقة (الأهداف).
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;border-top:1px dashed rgba(167,139,250,0.2);padding-top:12px;margin-top:4px">
+                <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:100%;margin-bottom:4px">خيارات سريعة ليعتمد عليها مؤشر جديد:</div>
+                ${btnsHtml}
+            </div>
+          `;
+        } else {
+          banner.style.cssText = 'background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.2);border-radius:14px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:14px;animation:fadeIn 0.5s ease;flex-wrap:wrap';
+
+          banner.innerHTML = `
+              <div style="font-size:24px">⚠️</div>
+              <div style="flex:1;min-width:250px">
+                  <div style="font-weight:700;font-size:14px;color:#f97316;margin-bottom:4px">توضيح هيكلة الأداء — لا يوجد أهداف ليتم قياسها!</div>
+                  <div style="font-size:12px;color:var(--text-muted)">
+                      لم نتمكن من العثور على أهداف استراتيجية مسجلة سابقاً. <br>
+                      <strong>سبب هذا النقص:</strong> لم يتم تحديد أهداف في المرحلة التي تسبق المؤشرات. لكي تكون مؤشرات الأداء فعّالة وتصب في ترابط استراتيجي حقيقي، يجب أن ترتبط بمقياس لتحقيق هدف محدد.
+                  </div>
+              </div>
+              <a href="/objectives.html${_dp ? '?dept=' + _dp : ''}" style="font-size:12px;font-weight:700;background:rgba(249,115,22,0.1);color:#f97316;border:1px solid rgba(249,115,22,0.3);border-radius:8px;padding:8px 16px;text-decoration:none">
+                  الرجوع وبناء الأهداف أولاً ←
+              </a>
+          `;
+        }
+
+        const stepper = document.getElementById('planStepperContainer');
+        if (stepper && stepper.nextSibling) {
+          stepper.parentNode.insertBefore(banner, stepper.nextSibling);
+        } else {
+          mc.insertBefore(banner, mc.childNodes[2] || mc.firstChild);
+        }
+
+      } catch (err) {
+        console.warn('Failed to load objectives for connection banner', err);
+      }
     }
 
     // ═══ بانر KPI مشترَك ═══
@@ -1148,7 +1214,21 @@
 
     function getFiltered() {
       let data = kpis;
-      if (currentDept !== 'all') data = data.filter(k => k.dept === currentDept);
+
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      const isDeptManager = u.userType === 'DEPT_MANAGER' || (u.userCategory && u.userCategory.startsWith('DEPT_'));
+
+      if (isDeptManager) {
+        let dKey = u.department?.key || (u.userCategory ? u.userCategory.replace('DEPT_', '').toLowerCase() : '');
+        if (dKey === 'manager') dKey = '';
+        const mapKey = { 'ops': 'operations', 'service': 'cs', 'legal': 'compliance', 'pmo': 'projects', 'hr': 'الموارد البشرية', 'finance': 'المالية', 'marketing': 'التسويق والعملاء', 'operations': 'العمليات', 'quality': 'الجودة', 'it': 'التقنية' };
+        const arabicDept = mapKey[dKey] || dKey;
+
+        // 🛡️ عزل صارم: لا يرى خيار "الكل" الذي يخص الـ CEO
+        data = data.filter(k => k.dept === arabicDept || k.departmentKey === dKey);
+      } else if (currentDept !== 'all') {
+        data = data.filter(k => k.dept === currentDept);
+      }
       if (currentFilter !== 'all') data = data.filter(k => k.status === currentFilter);
       return data;
     }
@@ -1501,6 +1581,26 @@
 
     function renderReadiness() {
       const banner = document.getElementById('kpiReadinessBanner');
+
+      // --- التحقق من وجود أهداف استراتيجية قبل المؤشرات ---
+      let hasObjectives = false;
+      try {
+        hasObjectives = (JSON.parse(localStorage.getItem('stratix_objectives') || '[]').length > 0) || (JSON.parse(localStorage.getItem('stratix_okrs') || '[]').length > 0);
+      } catch (e) { }
+      if (!hasObjectives && currentDept === 'all') {
+        banner.innerHTML = `
+              <div style="background:rgba(239,68,68,0.06); border:1px dashed rgba(239,68,68,0.3); border-radius:14px; padding:16px 20px; display:flex; align-items:center; gap:16px;">
+                  <i class="bi bi-exclamation-triangle-fill" style="font-size:28px; color:var(--danger)"></i>
+                  <div style="flex:1">
+                      <div style="font-weight:800; color:var(--danger); font-size:14px; margin-bottom:4px;">لم يتم تحديد الأهداف الاستراتيجية بعد!</div>
+                      <div style="font-size:12px; color:var(--text-muted); line-height:1.6;">مؤشرات الأداء لا تعمل بمعزل. يجب صياغة أهدافك أولاً لكي يتمكن النظام من استنتاج المؤشرات آلياً وقياس تقدم المنظمة بناءً عليها.</div>
+                  </div>
+                  <a href="/objectives.html" style="padding:10px 20px; border-radius:10px; background:linear-gradient(135deg,var(--danger),#b91c1c); color:white; text-decoration:none; font-size:12px; font-weight:700; white-space:nowrap;">🎯 بناء الأهداف ←</a>
+              </div>
+          `;
+        return;
+      }
+
       if (!kpis.length && currentDept === 'all') { banner.innerHTML = ''; return; }
 
       // === لمدير الإدارة: عرض إدارته فقط ===
@@ -1667,6 +1767,71 @@
         <div style="text-align:center;font-size:10px;margin-top:3px;color:${stColor};font-weight:700">${percent}%</div>`;
     }
 
+    // ===== SMART KPI GENERATOR =====
+    function loadSmartKPISuggestions() {
+      const container = document.getElementById('smartKpiSuggestions');
+      const grid = document.getElementById('smartKpiContainer');
+      if (!container || !grid) return;
+      let suggestions = [];
+
+      // 1. استخراج المؤشرات من OKRs
+      try {
+        const okrs = JSON.parse(localStorage.getItem('stratix_okrs') || '[]');
+        okrs.forEach(okr => { (okr.krs || []).forEach(kr => { suggestions.push({ name: kr.name, target: kr.target, unit: kr.metric || kr.unit || '', objective: okr.objective || okr.title || '', src: 'OKR' }); }); });
+      } catch (e) { }
+
+      // 2. استخراج المؤشرات من الأهداف الكلاسيكية BSC
+      try {
+        const objs = JSON.parse(localStorage.getItem('stratix_objectives') || '[]');
+        objs.forEach(obj => {
+          (obj.kpis || []).forEach(kpi => {
+            if (!suggestions.find(s => s.name === kpi.name)) {
+              suggestions.push({ name: kpi.name, target: kpi.target ? String(kpi.target).replace(/[^0-9.]/g, '') : '', unit: String(kpi.target).includes('%') ? '%' : '', objective: obj.name || obj.title || '', src: 'هدف' });
+            }
+          });
+        });
+      } catch (e) { }
+
+      // 3. استخراج اقتراحات من التحليل العميق (لو الأهداف فارغة)
+      if (suggestions.length === 0) {
+        try {
+          const deptData = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || '{}');
+          Object.keys(deptData).forEach(deptKey => {
+            if (deptKey !== 'completedDepts' && deptData[deptKey].goals) {
+              deptData[deptKey].goals.slice(0, 2).forEach(goal => { suggestions.push({ name: `قياس تقدم: ${goal.substring(0, 15)}...`, target: '100', unit: '%', objective: goal, src: 'تشخيص' }); });
+            }
+          });
+        } catch (e) { }
+      }
+
+      // استبعاد المؤشرات اللي انضافت مسبقاً
+      const existingNames = kpis.map(k => k.name);
+      suggestions = suggestions.filter(s => !existingNames.includes(s.name));
+
+      if (suggestions.length > 0) {
+        grid.innerHTML = suggestions.slice(0, 4).map((s, i) => `
+                <div onclick="fillKpiSuggestion(${i})" style="background:rgba(102,126,234,0.06);border:1px dashed rgba(102,126,234,0.3);border-radius:10px;padding:10px;cursor:pointer;transition:all 0.2s;font-size:11px">
+                    <div style="font-weight:700;color:var(--text);margin-bottom:4px"><i class="bi bi-plus-circle" style="color:var(--primary);margin-left:4px"></i>${escapeHtml(s.name)}</div>
+                    <div style="color:var(--text-muted);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">الارتباط: ${escapeHtml(s.objective)}</div>
+                    <div style="color:var(--primary);font-size:10px;font-weight:700;margin-top:4px">المستهدف: ${s.target}${s.unit}</div>
+                </div>
+            `).join('');
+        container.style.display = 'block';
+        window._tempKpiSuggestions = suggestions;
+      } else {
+        container.style.display = 'none';
+      }
+    }
+
+    window.fillKpiSuggestion = function (index) {
+      const s = window._tempKpiSuggestions[index];
+      if (!s) return;
+      document.getElementById('formName').value = s.name;
+      document.getElementById('formObj').value = s.objective;
+      document.getElementById('formTarget').value = s.target + s.unit;
+      updateKpiPreview();
+    };
+
     function openCreateModal() {
       document.getElementById('modalTitle').innerHTML = '<i class="bi bi-plus-circle"></i> مؤشر جديد';
       document.getElementById('editId').value = '';
@@ -1677,6 +1842,7 @@
       document.getElementById('kpiTplSection').style.display = '';
       document.querySelectorAll('.kpi-tpl').forEach(el => { el.style.boxShadow = ''; });
       updateKpiPreview();
+      loadSmartKPISuggestions();
       new bootstrap.Modal(document.getElementById('kpiModal')).show();
     }
 
@@ -1877,10 +2043,6 @@
       const subtitle = document.querySelector('.page-subtitle');
       if (subtitle) subtitle.textContent = 'مراقبة وقياس الأداء الخاص بـ ' + _dn;
 
-      // 2. إخفاء Planning Path Bar لمدير الإدارة
-      const pathBar = document.getElementById('planningPathBar');
-      if (pathBar) pathBar.style.display = 'none';
-
       // 3. إخفاء Department Filter
       const deptFilter = document.getElementById('deptFilterSection');
       if (deptFilter) deptFilter.style.display = 'none';
@@ -1888,115 +2050,115 @@
       const isDeptManager = true;
 
       // 4. تعيين الإدارة
-    if (typeof currentDept !== 'undefined') currentDept = _dn;
+      if (typeof currentDept !== 'undefined') currentDept = _dn;
 
-    // 5. إخفاء بار الكيان (entity banner) — مدير الإدارة ما يحتاجه
-    setTimeout(function () {
+      // 5. إخفاء بار الكيان (entity banner) — مدير الإدارة ما يحتاجه
+      setTimeout(function () {
         const eb = document.querySelector('.stx-entity-banner');
         if (eb) eb.style.display = 'none';
       }, 200);
 
-    // 6. إعادة الفلتر بعد ما البيانات تتحمل من API (async)
-    function _refilterForDept() {
-      if (typeof currentDept !== 'undefined') currentDept = _dn;
-      if (typeof renderAll === 'function') {
-        try { renderAll(); } catch (e) { }
-      }
+      // 6. إعادة الفلتر بعد ما البيانات تتحمل من API (async)
+      function _refilterForDept() {
+        if (typeof currentDept !== 'undefined') currentDept = _dn;
+        if (typeof renderAll === 'function') {
+          try { renderAll(); } catch (e) { }
+        }
         const eb2 = document.querySelector('.stx-entity-banner');
         if (eb2) eb2.style.display = 'none';
       }
       setTimeout(_refilterForDept, 800);
       setTimeout(_refilterForDept, 2000);
 
-    // 7. تخصيص قوالب المودال حسب الإدارة
-    const _deptTemplates = {
-      hr: [
-        { name: 'نسبة التوطين', icon: 'bi-flag-fill', color: '#22c55e', objective: 'رفع نسبة التوطين للحد النظامي', actual: '20%', target: '25%', trend: 'up', percent: 80 },
-        { name: 'معدل الدوران السنوي', icon: 'bi-arrow-repeat', color: '#ef4444', objective: 'خفض نسبة ترك الموظفين', actual: '18%', target: '15%', trend: 'down', percent: 60 },
-        { name: 'نسبة الامتثال النظامي', icon: 'bi-shield-check', color: '#8b5cf6', objective: 'الالتزام بأنظمة العمل والتأمينات', actual: '85%', target: '100%', trend: 'up', percent: 85 },
-        { name: 'ساعات التدريب لكل موظف', icon: 'bi-mortarboard', color: '#3b82f6', objective: 'تطوير مهارات الموظفين', actual: '30', target: '40 ساعة', trend: 'up', percent: 75 },
-        { name: 'نسبة الرضا الوظيفي', icon: 'bi-emoji-smile', color: '#f59e0b', objective: 'رفع مستوى رضا الموظفين', actual: '68%', target: '75%', trend: 'up', percent: 90 },
-        { name: 'متوسط وقت التوظيف', icon: 'bi-clock-history', color: '#06b6d4', objective: 'تسريع عملية الاستقطاب', actual: '45 يوم', target: '30 يوم', trend: 'flat', percent: 67 },
-      ],
-      finance: [
-        { name: 'نمو الإيرادات', icon: 'bi-graph-up-arrow', color: '#22c55e', objective: 'زيادة الإيرادات السنوية', actual: '18%', target: '20%', trend: 'up', percent: 90 },
-        { name: 'هامش الربح الصافي', icon: 'bi-cash-stack', color: '#10b981', objective: 'تحسين الربحية التشغيلية', actual: '12%', target: '15%', trend: 'up', percent: 80 },
-        { name: 'نسبة السيولة', icon: 'bi-droplet', color: '#3b82f6', objective: 'الحفاظ على سيولة كافية', actual: '1.8', target: '2.0', trend: 'flat', percent: 90 },
-        { name: 'معدل تحصيل الذمم', icon: 'bi-receipt', color: '#f59e0b', objective: 'تسريع التحصيل', actual: '60 يوم', target: '45 يوم', trend: 'up', percent: 75 },
-        { name: 'نسبة الانحراف عن الميزانية', icon: 'bi-bar-chart', color: '#ef4444', objective: 'ضبط الإنفاق ضمن الميزانية', actual: '8%', target: '5%', trend: 'down', percent: 62 },
-        { name: 'العائد على الاستثمار ROI', icon: 'bi-arrow-up-circle', color: '#8b5cf6', objective: 'تعظيم العائد على الاستثمارات', actual: '15%', target: '20%', trend: 'up', percent: 75 },
-      ],
-      operations: [
-        { name: 'كفاءة العمليات', icon: 'bi-gear-wide-connected', color: '#22c55e', objective: 'تحسين كفاءة العمليات التشغيلية', actual: '82%', target: '90%', trend: 'up', percent: 91 },
-        { name: 'نسبة الأتمتة', icon: 'bi-robot', color: '#8b5cf6', objective: 'أتمتة العمليات اليدوية', actual: '60%', target: '80%', trend: 'up', percent: 75 },
-        { name: 'وقت التنفيذ', icon: 'bi-stopwatch', color: '#f59e0b', objective: 'تقليل وقت تنفيذ العمليات', actual: '4 أيام', target: '2 يوم', trend: 'flat', percent: 50 },
-        { name: 'نسبة الأخطاء التشغيلية', icon: 'bi-exclamation-triangle', color: '#ef4444', objective: 'تقليل الأخطاء', actual: '5%', target: '2%', trend: 'down', percent: 60 },
-        { name: 'رضا العملاء الداخليين', icon: 'bi-emoji-smile', color: '#3b82f6', objective: 'رفع رضا الأقسام المستفيدة', actual: '75%', target: '85%', trend: 'up', percent: 88 },
-        { name: 'تكلفة الوحدة التشغيلية', icon: 'bi-cash', color: '#06b6d4', objective: 'خفض التكلفة التشغيلية', actual: '120 ر.س', target: '100 ر.س', trend: 'flat', percent: 83 },
-      ],
-    };
-    // القوالب الافتراضية للإدارات الأخرى
-    const _defaultTemplates = [
-      { name: 'مؤشر أداء رئيسي', icon: 'bi-speedometer2', color: '#667eea', objective: 'تحقيق الهدف الاستراتيجي', actual: '0%', target: '100%', trend: 'up', percent: 0 },
-      { name: 'نسبة الإنجاز', icon: 'bi-check2-all', color: '#22c55e', objective: 'إنجاز المشاريع في الوقت المحدد', actual: '60%', target: '90%', trend: 'up', percent: 67 },
-      { name: 'رضا المستفيدين', icon: 'bi-emoji-smile', color: '#f59e0b', objective: 'رفع رضا المستفيدين', actual: '70%', target: '85%', trend: 'up', percent: 82 },
-    ];
+      // 7. تخصيص قوالب المودال حسب الإدارة
+      const _deptTemplates = {
+        hr: [
+          { name: 'نسبة التوطين', icon: 'bi-flag-fill', color: '#22c55e', objective: 'رفع نسبة التوطين للحد النظامي', actual: '20%', target: '25%', trend: 'up', percent: 80 },
+          { name: 'معدل الدوران السنوي', icon: 'bi-arrow-repeat', color: '#ef4444', objective: 'خفض نسبة ترك الموظفين', actual: '18%', target: '15%', trend: 'down', percent: 60 },
+          { name: 'نسبة الامتثال النظامي', icon: 'bi-shield-check', color: '#8b5cf6', objective: 'الالتزام بأنظمة العمل والتأمينات', actual: '85%', target: '100%', trend: 'up', percent: 85 },
+          { name: 'ساعات التدريب لكل موظف', icon: 'bi-mortarboard', color: '#3b82f6', objective: 'تطوير مهارات الموظفين', actual: '30', target: '40 ساعة', trend: 'up', percent: 75 },
+          { name: 'نسبة الرضا الوظيفي', icon: 'bi-emoji-smile', color: '#f59e0b', objective: 'رفع مستوى رضا الموظفين', actual: '68%', target: '75%', trend: 'up', percent: 90 },
+          { name: 'متوسط وقت التوظيف', icon: 'bi-clock-history', color: '#06b6d4', objective: 'تسريع عملية الاستقطاب', actual: '45 يوم', target: '30 يوم', trend: 'flat', percent: 67 },
+        ],
+        finance: [
+          { name: 'نمو الإيرادات', icon: 'bi-graph-up-arrow', color: '#22c55e', objective: 'زيادة الإيرادات السنوية', actual: '18%', target: '20%', trend: 'up', percent: 90 },
+          { name: 'هامش الربح الصافي', icon: 'bi-cash-stack', color: '#10b981', objective: 'تحسين الربحية التشغيلية', actual: '12%', target: '15%', trend: 'up', percent: 80 },
+          { name: 'نسبة السيولة', icon: 'bi-droplet', color: '#3b82f6', objective: 'الحفاظ على سيولة كافية', actual: '1.8', target: '2.0', trend: 'flat', percent: 90 },
+          { name: 'معدل تحصيل الذمم', icon: 'bi-receipt', color: '#f59e0b', objective: 'تسريع التحصيل', actual: '60 يوم', target: '45 يوم', trend: 'up', percent: 75 },
+          { name: 'نسبة الانحراف عن الميزانية', icon: 'bi-bar-chart', color: '#ef4444', objective: 'ضبط الإنفاق ضمن الميزانية', actual: '8%', target: '5%', trend: 'down', percent: 62 },
+          { name: 'العائد على الاستثمار ROI', icon: 'bi-arrow-up-circle', color: '#8b5cf6', objective: 'تعظيم العائد على الاستثمارات', actual: '15%', target: '20%', trend: 'up', percent: 75 },
+        ],
+        operations: [
+          { name: 'كفاءة العمليات', icon: 'bi-gear-wide-connected', color: '#22c55e', objective: 'تحسين كفاءة العمليات التشغيلية', actual: '82%', target: '90%', trend: 'up', percent: 91 },
+          { name: 'نسبة الأتمتة', icon: 'bi-robot', color: '#8b5cf6', objective: 'أتمتة العمليات اليدوية', actual: '60%', target: '80%', trend: 'up', percent: 75 },
+          { name: 'وقت التنفيذ', icon: 'bi-stopwatch', color: '#f59e0b', objective: 'تقليل وقت تنفيذ العمليات', actual: '4 أيام', target: '2 يوم', trend: 'flat', percent: 50 },
+          { name: 'نسبة الأخطاء التشغيلية', icon: 'bi-exclamation-triangle', color: '#ef4444', objective: 'تقليل الأخطاء', actual: '5%', target: '2%', trend: 'down', percent: 60 },
+          { name: 'رضا العملاء الداخليين', icon: 'bi-emoji-smile', color: '#3b82f6', objective: 'رفع رضا الأقسام المستفيدة', actual: '75%', target: '85%', trend: 'up', percent: 88 },
+          { name: 'تكلفة الوحدة التشغيلية', icon: 'bi-cash', color: '#06b6d4', objective: 'خفض التكلفة التشغيلية', actual: '120 ر.س', target: '100 ر.س', trend: 'flat', percent: 83 },
+        ],
+      };
+      // القوالب الافتراضية للإدارات الأخرى
+      const _defaultTemplates = [
+        { name: 'مؤشر أداء رئيسي', icon: 'bi-speedometer2', color: '#667eea', objective: 'تحقيق الهدف الاستراتيجي', actual: '0%', target: '100%', trend: 'up', percent: 0 },
+        { name: 'نسبة الإنجاز', icon: 'bi-check2-all', color: '#22c55e', objective: 'إنجاز المشاريع في الوقت المحدد', actual: '60%', target: '90%', trend: 'up', percent: 67 },
+        { name: 'رضا المستفيدين', icon: 'bi-emoji-smile', color: '#f59e0b', objective: 'رفع رضا المستفيدين', actual: '70%', target: '85%', trend: 'up', percent: 82 },
+      ];
 
-    const _myTemplates = _deptTemplates[_dp] || _defaultTemplates;
+      const _myTemplates = _deptTemplates[_dp] || _defaultTemplates;
 
-    // استبدال kpiTemplates
-    if (typeof kpiTemplates !== 'undefined') {
-      kpiTemplates.length = 0;
-      _myTemplates.forEach(t => kpiTemplates.push(t));
-    }
+      // استبدال kpiTemplates
+      if (typeof kpiTemplates !== 'undefined') {
+        kpiTemplates.length = 0;
+        _myTemplates.forEach(t => kpiTemplates.push(t));
+      }
 
-    // استبدال HTML القوالب في المودال
-    const _tplContainer = document.querySelector('#kpiTplSection > div');
-    if (_tplContainer) {
-      let tplHtml = '';
-      _myTemplates.forEach((t, i) => {
-        tplHtml += `<div class="kpi-tpl" onclick="fillKpiTpl(${i})"
+      // استبدال HTML القوالب في المودال
+      const _tplContainer = document.querySelector('#kpiTplSection > div');
+      if (_tplContainer) {
+        let tplHtml = '';
+        _myTemplates.forEach((t, i) => {
+          tplHtml += `<div class="kpi-tpl" onclick="fillKpiTpl(${i})"
             style="background:${t.color}0a;border:1px solid ${t.color}25;border-radius:8px;padding:8px;cursor:pointer;text-align:center;transition:all 0.2s;font-size:10px"
             onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform=''">
             <i class="bi ${t.icon}" style="font-size:16px;color:${t.color};display:block;margin-bottom:2px"></i>
             <div style="font-weight:700">${t.name}</div>
           </div>`;
-      });
-      _tplContainer.style.gridTemplateColumns = 'repeat(3,1fr)';
-      _tplContainer.innerHTML = tplHtml;
-    }
-
-    // استبدال اقتراحات الأسماء
-    const _nameInput = document.getElementById('formName');
-    if (_nameInput) {
-      const _sugContainer = _nameInput.parentElement.querySelector('div[style*="flex-wrap"]');
-      if (_sugContainer) {
-        _sugContainer.innerHTML = _myTemplates.slice(0, 3).map(t =>
-          `<span onclick="document.getElementById('formName').value=this.textContent;updateKpiPreview()"
-              style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(102,126,234,0.08);color:var(--primary);cursor:pointer;border:1px solid rgba(102,126,234,0.15)">${t.name}</span>`
-        ).join('');
+        });
+        _tplContainer.style.gridTemplateColumns = 'repeat(3,1fr)';
+        _tplContainer.innerHTML = tplHtml;
       }
-    }
 
-    // تعديل openCreateModal ليعيّن الإدارة تلقائياً
-    const _origOpen = typeof openCreateModal === 'function' ? openCreateModal : null;
-    window.openCreateModal = function () {
-      if (_origOpen) _origOpen();
-      else {
-        document.getElementById('modalTitle').innerHTML = '<i class="bi bi-plus-circle"></i> مؤشر جديد';
-        document.getElementById('editId').value = '';
-        ['formName', 'formObj', 'formActual', 'formTarget'].forEach(id => document.getElementById(id).value = '');
-        document.getElementById('formTrend').value = 'up';
-        document.getElementById('formPercent').value = 0;
-        document.getElementById('kpiTplSection').style.display = '';
-        document.querySelectorAll('.kpi-tpl').forEach(el => { el.style.boxShadow = ''; });
-        if (typeof updateKpiPreview === 'function') updateKpiPreview();
+      // استبدال اقتراحات الأسماء
+      const _nameInput = document.getElementById('formName');
+      if (_nameInput) {
+        const _sugContainer = _nameInput.parentElement.querySelector('div[style*="flex-wrap"]');
+        if (_sugContainer) {
+          _sugContainer.innerHTML = _myTemplates.slice(0, 3).map(t =>
+            `<span onclick="document.getElementById('formName').value=this.textContent;updateKpiPreview()"
+              style="font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(102,126,234,0.08);color:var(--primary);cursor:pointer;border:1px solid rgba(102,126,234,0.15)">${t.name}</span>`
+          ).join('');
+        }
+      }
+
+      // تعديل openCreateModal ليعيّن الإدارة تلقائياً
+      const _origOpen = typeof openCreateModal === 'function' ? openCreateModal : null;
+      window.openCreateModal = function () {
+        if (_origOpen) _origOpen();
+        else {
+          document.getElementById('modalTitle').innerHTML = '<i class="bi bi-plus-circle"></i> مؤشر جديد';
+          document.getElementById('editId').value = '';
+          ['formName', 'formObj', 'formActual', 'formTarget'].forEach(id => document.getElementById(id).value = '');
+          document.getElementById('formTrend').value = 'up';
+          document.getElementById('formPercent').value = 0;
+          document.getElementById('kpiTplSection').style.display = '';
+          document.querySelectorAll('.kpi-tpl').forEach(el => { el.style.boxShadow = ''; });
+          if (typeof updateKpiPreview === 'function') updateKpiPreview();
           const modalEl = document.getElementById('kpiModal');
           if (typeof bootstrap !== 'undefined') {
-              new bootstrap.Modal(modalEl).show();
+            new bootstrap.Modal(modalEl).show();
           } else {
-              modalEl.classList.add('show');
-              modalEl.style.display = 'block';
+            modalEl.classList.add('show');
+            modalEl.style.display = 'block';
           }
         }
         const _fd = document.getElementById('formDept');
@@ -2017,10 +2179,50 @@
         }
       };
 
-    console.log('[KPIs] ✅ dept detection applied:', _dn);
+      console.log('[KPIs] ✅ dept detection applied:', _dn);
     })();
   </script>
-  <script src="/assets/js/path-tracker.js"></script>
+  <script src="/js/path-tracker.js"></script>
+  <script>
+    // جلب الأهداف لربط المؤشرات بها
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const _vId = localStorage.getItem('selectedVersionId') || activeVersionId;
+        const res = await window.apiRequest('/api/strategic/objectives?limit=50&versionId=' + (_vId || ''), {
+          headers: apiHeaders,
+          credentials: 'same-origin'
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const objs = data.objectives || [];
+
+          try {
+            const _dp2 = new URLSearchParams(window.location.search).get('dept') || localStorage.getItem('stratix_v10_dept');
+            const dirKey = _dp2 ? 'stratix_' + _dp2 + '_directions' : 'stratix_directions';
+            const localDirs = JSON.parse(localStorage.getItem(dirKey) || '[]');
+            const ltg = localDirs.filter(d => d.type === 'LONG_TERM_GOALS' || d.type === 'LONG_TERM_GOAL');
+            ltg.forEach(g => {
+              let title = '';
+              if (typeof g === 'string') title = g;
+              else if (g.content) title = g.content.split('—')[0].trim() || g.content;
+              else title = g.title || g.text || '';
+              if (title && !objs.find(o => (o.title || o.name || '') === title)) {
+                objs.push({ title: title });
+              }
+            });
+          } catch (e) { }
+
+          const dl = document.getElementById('objectivesList');
+          if (dl && objs.length > 0) {
+            dl.innerHTML = objs.map(o => `<option value="${escapeHtml(o.title || o.name || '')}"></option>`).join('');
+          }
+        }
+      } catch (err) {
+        console.warn('استرجاع الأهداف فشل', err);
+      }
+    });
+  </script>
+  <script src="/js/stepper.js"></script>
 </body>
 
 </html>

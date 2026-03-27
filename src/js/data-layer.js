@@ -109,16 +109,24 @@
             if (result && result.success) {
                 const data = result.data;
 
-                // تحديث localStorage cache
-                if (deptKey) {
-                    // تحديث إدارة واحدة في الـ cache
+                // تحديث localStorage cache مع الحفاظ على البيانات غير المرفوعة
+                // لا نقوم بالمسح لمجرد أن قاعدة البيانات أعادت نتيجة فارغة
+                if (data && Object.keys(data).length > 0) {
                     try {
                         const cached = JSON.parse(localStorage.getItem(DEPT_DEEP_CACHE_KEY) || '{}');
-                        cached[deptKey] = data;
-                        localStorage.setItem(DEPT_DEEP_CACHE_KEY, JSON.stringify(cached));
+                        if (deptKey) {
+                            // دمج الإدارة المحددة فقط وتكون الأولوية للبيانات المحلية الأحدث
+                            cached[deptKey] = { ...data, ...(cached[deptKey] || {}) };
+                            localStorage.setItem(DEPT_DEEP_CACHE_KEY, JSON.stringify(cached));
+                        } else {
+                            // دمج كل الإدارات مع الحفاظ على الأولوية المحلية للمسودات المتأخرة الرفع
+                            const merged = { ...cached };
+                            for (const k in data) {
+                                merged[k] = { ...data[k], ...(cached[k] || {}) };
+                            }
+                            localStorage.setItem(DEPT_DEEP_CACHE_KEY, JSON.stringify(merged));
+                        }
                     } catch (e) { }
-                } else {
-                    localStorage.setItem(DEPT_DEEP_CACHE_KEY, JSON.stringify(data));
                 }
 
                 return {
@@ -215,6 +223,41 @@
     }
 
     // ═══════════════════════════════════
+    //  OKRs & OTHER TOOLS DATA
+    // ═══════════════════════════════════
+
+    const OKRS_CACHE_KEY = 'stratix_okrs';
+
+    async function getOKRs() {
+        try {
+            const data = await apiFetch('/okrs');
+            if (data && Array.isArray(data)) return data;
+        } catch (e) {
+            console.warn('⚠️ [data-layer] API getOKRs failed, falling back to local storage.');
+        }
+        return getLocal(OKRS_CACHE_KEY, []);
+    }
+
+    async function saveOKRs(okrsData) {
+        setLocal(OKRS_CACHE_KEY, okrsData);
+        try {
+            await apiFetch('/okrs', { method: 'PUT', body: JSON.stringify(okrsData) });
+            return true;
+        } catch (e) {
+            console.warn('⚠️ [data-layer] API saveOKRs failed, saved local only');
+            return true;
+        }
+    }
+
+    async function getIdentity() {
+        try { return await apiFetch('/assessment/active'); } catch (e) { return getLocal('stratix_identity_payload'); }
+    }
+
+    async function getSwot() {
+        try { return await apiFetch('/analysis/active'); } catch (e) { return getLocal('stratix_swot_payload'); }
+    }
+
+    // ═══════════════════════════════════
     //  EXPORT
     // ═══════════════════════════════════
 
@@ -226,6 +269,12 @@
         // Dept-Deep
         getDeptDeep,
         saveDeptDeep,
+
+        // OKRs & Others
+        getOKRs,
+        saveOKRs,
+        getIdentity,
+        getSwot,
 
         // Generic
         getLocal,

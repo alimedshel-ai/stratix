@@ -175,6 +175,48 @@
                         <div class="diag-option-desc">اللوائح، المخاطر، التدقيق، الحوكمة</div>
                     </div>
                 </div>
+                <div class="diag-option" onclick="answer('department', 'sales', this)">
+                    <div class="diag-option-icon" style="background:rgba(16,185,129,0.12); color:#10b981;">🤝</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">المبيعات</div>
+                        <div class="diag-option-desc">الصفقات، العملاء، الإيرادات المستهدفة</div>
+                    </div>
+                </div>
+                <div class="diag-option" onclick="answer('department', 'cs', this)">
+                    <div class="diag-option-icon" style="background:rgba(59,130,246,0.12); color:#3b82f6;">🎧</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">خدمة العملاء</div>
+                        <div class="diag-option-desc">الدعم الفني، التذاكر، رضا العملاء</div>
+                    </div>
+                </div>
+                <div class="diag-option" onclick="answer('department', 'quality', this)">
+                    <div class="diag-option-icon" style="background:rgba(139,92,246,0.12); color:#8b5cf6;">🏆</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">الجودة</div>
+                        <div class="diag-option-desc">الآيزو، المعايير، التفتيش والتحسين</div>
+                    </div>
+                </div>
+                <div class="diag-option" onclick="answer('department', 'projects', this)">
+                    <div class="diag-option-icon" style="background:rgba(245,158,11,0.12); color:#f59e0b;">🏗️</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">المشاريع</div>
+                        <div class="diag-option-desc">PMO، تنفيذ المشاريع، الجدول الزمني</div>
+                    </div>
+                </div>
+                <div class="diag-option" onclick="answer('department', 'governance', this)">
+                    <div class="diag-option-icon" style="background:rgba(107,114,128,0.12); color:#6b7280;">⚖️</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">الحوكمة</div>
+                        <div class="diag-option-desc">السياسات، الصلاحيات، الإشراف العام</div>
+                    </div>
+                </div>
+                <div class="diag-option" onclick="answer('department', 'support', this)">
+                    <div class="diag-option-icon" style="background:rgba(239,68,68,0.12); color:#ef4444;">🔧</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">الخدمات المساندة</div>
+                        <div class="diag-option-desc">المشتريات، الشؤون الإدارية، المرافق</div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -291,11 +333,72 @@
         </div>
     </div>
 
-    <script src="/assets/js/diagnostic-engine.js"></script>
+    <script src="/js/diagnostic-engine.js"></script>
     <script>
         const answers = {};
         let currentQ = 1;
-        const totalQ = 5;
+        let totalQ = 5;
+        let skipToQ = 1;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const isAddEntity = new URLSearchParams(window.location.search).get('from') === 'add-entity';
+            if (isAddEntity) {
+                // استخراج المعلومات المحفوظة مسبقاً من إضافة المنشأة وحساب المستخدم
+                const pendingStr = sessionStorage.getItem('pendingEntityPayload');
+                const pending = pendingStr ? JSON.parse(pendingStr) : {};
+                const u = JSON.parse(localStorage.getItem('user') || '{}');
+
+                // تعيين القطاع تلقائياً
+                const sectorMap = {
+                    'services': 'private_services', 'manufacturing': 'private_industrial',
+                    'retail': 'private_commercial', 'technology': 'private_commercial',
+                    'healthcare': 'private_services', 'education': 'private_services',
+                    'construction': 'private_industrial', 'finance': 'private_commercial',
+                    'logistics': 'private_services', 'government': 'public_sector',
+                    'other': 'private_services'
+                };
+                answers['activity'] = sectorMap[pending.sector || 'services'] || 'private_services';
+
+                // تعيين الإدارة تلقائياً
+                const deptKey = (u.department?.key || u.userCategory?.replace('DEPT_', '') || 'hr').toLowerCase();
+                const validDepts = ['hr', 'finance', 'marketing', 'operations', 'it', 'compliance'];
+                answers['department'] = validDepts.includes(deptKey) ? deptKey : 'operations';
+
+                // إخفاء الأسئلة المتخطاة وتنظيم الواجهة لتبدو وكأنها ٣ أسئلة فقط
+                document.getElementById('q1').style.display = 'none';
+                document.getElementById('q2').style.display = 'none';
+
+                document.querySelector('#q3 .diag-q-label').textContent = 'السؤال 1 من 3';
+                document.querySelector('#q4 .diag-q-label').textContent = 'السؤال 2 من 3';
+                document.querySelector('#q5 .diag-q-label').textContent = 'السؤال 3 من 3';
+
+                // تحديث شريط التقدم
+                const pb = document.getElementById('progressBar');
+                document.getElementById('prog-1').remove();
+                document.getElementById('prog-2').remove();
+
+                // إعادة تسمية الآي دي للثلاثة المتبقية لتعمل مع نظام التقدم الخاص بنا
+                const steps = pb.querySelectorAll('.diag-progress-step');
+                steps[0].id = 'prog-1';
+                steps[1].id = 'prog-2';
+                steps[2].id = 'prog-3';
+
+                totalQ = 3;
+                skipToQ = 3;
+
+                // بدء الأسئلة من هنا (لاحظ أن currentQ في المنطق يبقى ١ ولكن للـ DOM نستخدم تخطيط ذكي)
+                // سنقوم بإعادة توجيه currentQ والخطوات
+                document.querySelectorAll('.diag-question').forEach(q => q.classList.remove('active'));
+
+                // لنقم بتغيير معرفات الـ DOM لتتوافق مع currentQ المستحدث
+                const q3 = document.getElementById('q3'); q3.id = 'q1_actual';
+                const q4 = document.getElementById('q4'); q4.id = 'q2_actual';
+                const q5 = document.getElementById('q5'); q5.id = 'q3_actual';
+
+                // إظهار السؤال الأول الفعلي
+                document.getElementById('q1_actual').classList.add('active');
+            }
+        });
 
         function answer(key, value, el) {
             answers[key] = value;
@@ -313,9 +416,13 @@
         }
 
         function goToQuestion(num) {
-            document.getElementById('q' + currentQ).classList.remove('active');
+            const isAddEntity = new URLSearchParams(window.location.search).get('from') === 'add-entity';
+            const prevId = isAddEntity ? 'q' + currentQ + '_actual' : 'q' + currentQ;
+            const nextId = isAddEntity ? 'q' + num + '_actual' : 'q' + num;
+
+            document.getElementById(prevId).classList.remove('active');
             currentQ = num;
-            document.getElementById('q' + currentQ).classList.add('active');
+            document.getElementById(nextId).classList.add('active');
             updateProgress();
         }
 
@@ -340,7 +447,10 @@
         function calculateResult() {
             const result = DiagnosticEngine.determineManagerPath(answers);
             DiagnosticEngine.saveToSession(result);
-            window.location.href = '/diagnostic-result';
+            // الانتقال لشاشة النتيجة مع حفظ المتغيرات
+            const urlParams = new URLSearchParams(window.location.search);
+            const fromQuery = urlParams.get('from') ? `?from=${urlParams.get('from')}` : '';
+            window.location.href = '/diagnostic-result' + fromQuery;
         }
     </script>
 

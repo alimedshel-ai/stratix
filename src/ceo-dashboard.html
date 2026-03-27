@@ -918,21 +918,21 @@
             <div style="max-width:1200px;margin:0 auto;padding:0 20px;">
                 <div id="smartContextWelcome" style="margin-top:16px;"></div>
             </div>
-            <script src="/assets/js/smart-context.js?v=3"></script>
+            <script src="/js/smart-context.js?v=3"></script>
             <script>SmartContext.renderWelcome('smartContextWelcome');</script>
 
             <!-- ⚡ الإشارة الذكية — Smart Pings (Phase 13A) -->
             <div style="max-width:1200px;margin:0 auto;padding:0 20px;">
                 <div id="smartPingsContainer" style="display:none; margin-bottom:16px;"></div>
             </div>
-            <script src="/assets/js/smart-pings.js?v=3"></script>
+            <script src="/js/smart-pings.js?v=3"></script>
             <script>SmartPings.render('smartPingsContainer');</script>
 
             <!-- 🧭 بطاقة الإرشاد الذكي -->
             <div style="max-width:1200px;margin:0 auto;padding:0 20px;">
                 <div id="smartGuideCard" style="display:none; margin-bottom:0;"></div>
             </div>
-            <script src="/assets/js/smart-guide.js?v=3"></script>
+            <script src="/js/smart-guide.js?v=3"></script>
             <script>SmartGuide.render('smartGuideCard', 'ceo');</script>
 
             <div class="ceo-grid">
@@ -1202,9 +1202,9 @@
 
     <div class="toast-container" id="toastContainer"></div>
 
-    <script src="/assets/js/api.js?v=3"></script>
-    <script src="/assets/js/sidebar.js?v=3"></script>
-    <script src="/assets/js/ai-advisor.js?v=3"></script>
+    <script src="/js/api.js?v=3"></script>
+    <script src="/js/sidebar.js?v=3"></script>
+    <script src="/js/ai-advisor.js?v=3"></script>
     <script>
         // === Date ===
         const now = new Date();
@@ -1703,6 +1703,18 @@
                 const data = await res.json();
                 const insights = data.insights || [];
 
+                // ─── دمج تنبيهات الموارد البشرية في شريط التنبيهات ───
+                try {
+                    const deptDeep = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || '{}');
+                    if (deptDeep.hr && deptDeep.hr.score < 60) {
+                        insights.unshift({
+                            icon: '⚠️',
+                            title: `تنبيه: أداء الموارد البشرية في وضع حرج (${deptDeep.hr.score}%)`,
+                            severity: 'CRITICAL'
+                        });
+                    }
+                } catch (e) { }
+
                 if (insights.length === 0) return;
 
                 // Show notification bell
@@ -1721,7 +1733,7 @@
                 const critical = insights.filter(i => i.severity === 'CRITICAL').length;
                 const high = insights.filter(i => i.severity === 'HIGH').length;
                 document.getElementById('alertsSubtext').textContent =
-                    `${insights.length} تنبيه${critical > 0 ? ` — ${critical} حرج` : ''}${high > 0 ? ` — ${high} عالي` : ''}`;
+                    `${insights.length} تنبيه${critical > 0 ? ` — ${critical} حرج` : ''}${high > 0 ? ` — ${high} عالي` : ''} `;
 
                 // Update bell color if critical
                 if (critical > 0) {
@@ -1739,18 +1751,16 @@
                 document.getElementById('alertsList').innerHTML = topAlerts.map(a => {
                     const sc = sevColors[a.severity] || sevColors.MEDIUM;
                     return `
-                    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:${sc.bg};border:1px solid ${sc.border};margin-bottom:8px;cursor:pointer" onclick="location.href='/contradictions.html'">
-                        <span style="font-size:22px;flex-shrink:0">${a.icon || '⚠️'}</span>
-                        <div style="flex:1;min-width:0">
-                            <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.title}</div>
-                            <div style="font-size:11px;color:var(--muted);margin-top:2px">${(a.departments || []).join(' ↔ ')}</div>
-                        </div>
-                        <span style="padding:3px 10px;border-radius:8px;font-size:10px;font-weight:700;background:${sc.bg};color:${sc.color};border:1px solid ${sc.border}">
-                            ${{ CRITICAL: 'حرج', HIGH: 'عالي', MEDIUM: 'متوسط' }[a.severity] || '—'}
-                        </span>
-                    </div>`;
+                        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--card);border:1px solid ${sc.border};border-radius:12px;margin-bottom:8px">
+                            <div style="flex:1;min-width:0">
+                                <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.title}</div>
+                                <div style="font-size:11px;color:var(--muted);margin-top:2px">${(a.departments || []).join(' ↔ ')}</div>
+                            </div>
+                            <span style="padding:3px 10px;border-radius:8px;font-size:10px;font-weight:700;background:${sc.bg};color:${sc.color};border:1px solid ${sc.border}">
+                                ${{ CRITICAL: 'حرج', HIGH: 'عالي', MEDIUM: 'متوسط' }[a.severity] || '—'}
+                            </span>
+                        </div>`;
                 }).join('');
-
             } catch (e) {
                 console.error('Alerts load error:', e);
             }

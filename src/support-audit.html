@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <title>ستارتكس | التقييم الوصفي - الدعم</title>
+    <link rel="stylesheet" href="/css/dept-pages.css">
+    <script src="/js/context-manager.js"></script>
+    <script src="/js/dept-page.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>📋 التقييم الوصفي – الخدمات المساندة</h1>
+        <div class="sub">أجب عن الأسئلة التالية لتحديد نقاط القوة والضعف في قسم الخدمات المساندة</div>
+        <div id="deepSummary" class="deep-summary-box"></div>
+        <form id="auditForm">
+            <div class="question"><label>جاهزية وكفاءة فريق الدعم الداخلي</label><select name="support_readiness"
+                    required>
+                    <option value="">اختر</option>
+                    <option value="ضعيفة">ضعيفة</option>
+                    <option value="متوسطة">متوسطة</option>
+                    <option value="عالية">عالية</option>
+                </select></div>
+            <div class="question"><label>جودة قاعدة المعرفة والتوثيق الداخلي</label><select name="knowledge_base"
+                    required>
+                    <option value="">اختر</option>
+                    <option value="ضعيفة">ضعيفة (توثيق شبه معدوم)</option>
+                    <option value="متوسطة">متوسطة (توثيق جزئي)</option>
+                    <option value="ممتازة">ممتازة (قاعدة معرفة شاملة)</option>
+                </select></div>
+            <div class="question"><label>أبرز تحديات الخدمات المساندة الحالية</label><textarea name="support_challenges"
+                    rows="3" placeholder="مثال: ضعف أتمتة العمليات الإدارية..."></textarea></div>
+            <div class="question"><label>ما هي نقاط القوة في قسم الخدمات المساندة؟</label><textarea
+                    name="strengths_comment" rows="3" placeholder="افصل بين النقاط بفاصلة أو سطر جديد"></textarea></div>
+            <div class="question"><label>ما هي نقاط الضعف التي تحتاج تحسيناً؟</label><textarea name="weaknesses_comment"
+                    rows="3" placeholder="افصل بين النقاط بفاصلة أو سطر جديد"></textarea></div>
+            <button type="submit">حفظ التحليل والمتابعة إلى SWOT</button>
+        </form>
+    </div>
+    <script>
+        const dept = 'support';
+        function extractStrengthsWeaknesses(a) {
+            const s = [], w = [];
+            if (a.support_readiness === 'عالية') s.push('فريق دعم عالي الجاهزية والكفاءة');
+            else if (a.support_readiness === 'ضعيفة') w.push('ضعف جاهزية فريق الخدمات المساندة');
+            if (a.knowledge_base === 'ممتازة') s.push('قاعدة معرفة شاملة تسرع الحل وتقلل الأخطاء');
+            else if (a.knowledge_base === 'ضعيفة') w.push('غياب قاعدة المعرفة والتوثيق الداخلي');
+            if (a.strengths_comment) a.strengths_comment.split(/[،,\n]/).forEach(l => { if (l.trim()) s.push(l.trim()); });
+            if (a.weaknesses_comment) a.weaknesses_comment.split(/[،,\n]/).forEach(l => { if (l.trim()) w.push(l.trim()); });
+            return { strengths: s, weaknesses: w };
+        }
+        document.addEventListener('DOMContentLoaded', async () => {
+            const ok = await DeptPage.init(dept);
+            if (!ok) return;
+            await DeptPage.loadDeepSummary('deepSummary');
+            let saved = await DeptPage.loadFromAPI('AUDIT') || Context.getTemp('audit_data') || DeptPage.migrateFromLocalStorage(`stratix_${dept}_audit`);
+            DeptPage.fillForm(saved);
+            document.getElementById('auditForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const answers = Object.fromEntries(new FormData(e.target));
+                let missing = false;
+                document.querySelectorAll('[required]').forEach(f => {
+                    if (!answers[f.name]) { missing = true; f.style.borderColor = '#ef4444'; }
+                    else f.style.borderColor = '';
+                });
+                if (missing) { DeptPage.showMessage('يرجى الإجابة على جميع الأسئلة المطلوبة', true); return; }
+                Context.setTemp('audit_data', answers);
+                Context.setTemp('audit_completed', true);
+                const { strengths, weaknesses } = extractStrengthsWeaknesses(answers);
+                Context.setItem(`${dept}_strengths`, strengths);
+                Context.setItem(`${dept}_weaknesses`, weaknesses);
+                const saved = await DeptPage.saveToAPI('AUDIT', answers);
+                DeptPage.showMessage(saved ? 'تم حفظ التقييم الوصفي بنجاح' : 'فشل الحفظ في الخادم، لكن البيانات محفوظة محلياً', !saved);
+                setTimeout(() => window.location.href = `/swot.html?dept=${dept}`, 1500);
+            });
+        });
+    </script>
+</body>
+
+</html>

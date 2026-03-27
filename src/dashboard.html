@@ -738,10 +738,10 @@
 
             <!-- Scripts -->
             <script src="https://cdn.jsdelivr.net/npm/jwt-decode/build/jwt-decode.min.js"></script>
-            <script src="/assets/js/api.js?v=3"></script>
-            <script src="/assets/js/path-engine.js?v=3"></script>
-            <script src="/assets/js/progress-engine.js?v=3"></script>
-            <script src="/assets/js/sidebar.js?v=3"></script>
+            <script src="/js/api.js?v=3"></script>
+            <script src="/js/path-engine.js?v=3"></script>
+            <script src="/js/progress-engine.js?v=3"></script>
+            <script src="/js/sidebar.js?v=3"></script>
             <script>
                 function toggleSidebar() {
                     const sidebar = document.querySelector('.stx-sidebar');
@@ -814,7 +814,10 @@
                                 if (entities.length === 0) {
                                     window.location.replace('/onboarding.html'); return;
                                 }
-                                if (entities.length > 1) {
+
+                                // التحقق مما إذا كان هناك كيان نشط بالفعل لتجنب حلقة التوجيه اللانهائية
+                                const hasActiveEntity = entities.some(e => e.isCurrent) || u.activeEntityId || u.entity?.id;
+                                if (entities.length > 1 && !hasActiveEntity) {
                                     window.location.replace('/context-select.html'); return;
                                 }
                                 // كيان واحد — اكمل التوجيه العادي
@@ -827,7 +830,14 @@
                         if (u.role === 'CONSULTANT') { window.location.replace('/consultant-dashboard.html'); return; }
                         if (u.role === 'DATA_ENTRY' || u.role === 'VIEWER') { window.location.replace('/viewer-hub.html'); return; }
                         if (u.userType === 'BOARD_VIEWER') { window.location.replace('/board-dashboard.html'); return; }
-                        if (u.userType === 'DEPT_MANAGER') { window.location.replace('/dept-dashboard.html'); return; }
+                        if (u.userType === 'DEPT_MANAGER' || (u.userCategory && u.userCategory.startsWith('DEPT_'))) {
+                            let dKey = u.department?.key || (u.userCategory ? u.userCategory.replace('DEPT_', '').toLowerCase() : '');
+                            if (dKey === 'manager') dKey = ''; // حماية إذا كان القسم غير محدد
+                            const dMap = { ops: 'operations', legal: 'compliance', pmo: 'projects', service: 'cs' };
+                            dKey = dMap[dKey] || dKey;
+                            window.location.replace('/dept-dashboard.html' + (dKey ? '?dept=' + dKey : ''));
+                            return;
+                        }
                         if (u.userType === 'COMPANY_MANAGER' || u.role === 'OWNER') { window.location.replace('/ceo-dashboard.html'); return; }
                     }
 

@@ -795,9 +795,10 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/assets/js/api.js"></script>
-    <script src="/assets/js/sidebar.js"></script>
-    <script src="/assets/js/ai-advisor.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/steps-config.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script src="/js/ai-advisor.js"></script>
     <script>
         if (window.StartixAPI?.showEntityBanner) {
             StartixAPI.showEntityBanner({ toolName: 'المهام' });
@@ -846,12 +847,21 @@
 
         // ── Load from localStorage or seed dept-specific defaults ──
         function loadTasks() {
-            const saved = localStorage.getItem('stratix_tasks');
-            if (saved) {
-                let all = JSON.parse(saved);
-                // لو فيه dept محدد → فلتر المهام
-                if (currentDept) all = all.filter(t => (t.dept === currentDept) || (!t.dept));
-                return all;
+            if (window.Context) {
+                const saved = Context.getItem('tasks');
+                if (saved) {
+                    let all = saved;
+                    if (currentDept) all = all.filter(t => (t.dept === currentDept) || (!t.dept));
+                    return all;
+                }
+            } else {
+                const saved = localStorage.getItem('stratix_tasks');
+                if (saved) {
+                    let all = JSON.parse(saved);
+                    // لو فيه dept محدد → فلتر المهام
+                    if (currentDept) all = all.filter(t => (t.dept === currentDept) || (!t.dept));
+                    return all;
+                }
             }
             // Seed with sample tasks
             const seeds = {
@@ -883,7 +893,11 @@
         function saveTasks() {
             // حفظ كل المهام (مع dept tag)
             let allTasks = [];
-            try { allTasks = JSON.parse(localStorage.getItem('stratix_tasks') || '[]'); } catch (e) { }
+            if (window.Context) {
+                allTasks = Context.getItem('tasks', []);
+            } else {
+                try { allTasks = JSON.parse(localStorage.getItem('stratix_tasks') || '[]'); } catch (e) { }
+            }
             // إزالة المهام القديمة لهذا الـ dept وإضافة الجديدة
             if (currentDept) {
                 allTasks = allTasks.filter(t => t.dept && t.dept !== currentDept);
@@ -891,18 +905,27 @@
             } else {
                 allTasks = tasks;
             }
-            localStorage.setItem('stratix_tasks', JSON.stringify(allTasks));
+            if (window.Context) {
+                Context.setItem('tasks', allTasks);
+            } else {
+                localStorage.setItem('stratix_tasks', JSON.stringify(allTasks));
+            }
         }
 
         // ── Read OKRs from localStorage ──
         function getOKRs() {
-            return JSON.parse(localStorage.getItem('stratix_okrs') || '[]');
+            return window.Context ? Context.getItem('okrs', []) : JSON.parse(localStorage.getItem('stratix_okrs') || '[]');
         }
 
         // ── Read Initiatives (from localStorage or default list) ──
         function getInitiatives() {
-            const saved = localStorage.getItem('stratix_initiatives');
-            if (saved) return JSON.parse(saved);
+            if (window.Context) {
+                const saved = Context.getItem('initiatives');
+                if (saved) return saved;
+            } else {
+                const saved = localStorage.getItem('stratix_initiatives');
+                if (saved) return JSON.parse(saved);
+            }
             return [
                 { id: 'init_1', name: 'إطلاق التطبيق الرقمي للعملاء', objective: 'رفع رضا العملاء', status: 'IN_PROGRESS' },
                 { id: 'init_2', name: 'برنامج التحول الرقمي الداخلي', objective: 'أتمتة العمليات', status: 'IN_PROGRESS' },
@@ -956,6 +979,20 @@
 
         function getFiltered() {
             let data = tasks;
+
+            const u = JSON.parse(localStorage.getItem('user') || '{}');
+            const isDeptManager = u.userType === 'DEPT_MANAGER' || (u.userCategory && u.userCategory.startsWith('DEPT_'));
+
+            if (isDeptManager) {
+                let dKey = u.department?.key || (u.userCategory ? u.userCategory.replace('DEPT_', '').toLowerCase() : '');
+                if (dKey === 'manager') dKey = '';
+                const mapKey = { 'ops': 'operations', 'service': 'cs', 'legal': 'compliance', 'pmo': 'projects' };
+                dKey = mapKey[dKey] || dKey;
+
+                // 🛡️ عزل صارم للمهام
+                data = data.filter(t => t.dept === dKey || t.departmentKey === dKey);
+            }
+
             if (currentFilter !== 'all') data = data.filter(t => t.status === currentFilter);
             if (searchQuery) data = data.filter(t => t.title.includes(searchQuery) || t.project?.includes(searchQuery) || t.assignee?.includes(searchQuery) || t.initiative?.includes(searchQuery));
             return data;

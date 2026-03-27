@@ -261,8 +261,8 @@
         </div>
     </div>
 
-    <script src="/assets/js/path-engine.js"></script>
-    <script src="/assets/js/diagnostic-engine.js"></script>
+    <script src="/js/path-engine.js"></script>
+    <script src="/js/diagnostic-engine.js"></script>
     <script>
         let currentResult = null;
 
@@ -274,6 +274,25 @@
             }
             renderInteractiveReport(currentResult);
             setupActionListeners();
+
+            // Check if we are in the 'add-entity' flow
+            const isAddEntity = new URLSearchParams(window.location.search).get('from') === 'add-entity';
+            if (isAddEntity) {
+                const btn = document.querySelector('[data-action="accept-path"]');
+                if (btn) btn.innerHTML = '<i class="bi bi-rocket-takeoff"></i> تأكيد وحفظ المنشأة';
+
+                const registerOverlay = document.querySelector('.register-overlay');
+                if (registerOverlay) {
+                    const p = registerOverlay.querySelector('p');
+                    if (p) p.textContent = 'لقد اكتمل التشخيص، يمكنك الآن حفظ المنشأة وبدء العمل.';
+                    const i = registerOverlay.querySelector('i');
+                    if (i) {
+                        i.className = 'bi bi-check-circle-fill';
+                        i.style.color = '#10b981';
+                        i.style.textShadow = 'none';
+                    }
+                }
+            }
         });
 
         // 🛡️ ترياق الـ XSS
@@ -293,10 +312,10 @@
 
         function setupActionListeners() {
             document.querySelectorAll('.action-btn').forEach(btn => {
-                btn.addEventListener('click', function(e) {
+                btn.addEventListener('click', function (e) {
                     e.preventDefault();
                     const action = this.getAttribute('data-action');
-                    switch(action) {
+                    switch (action) {
                         case 'accept-path': acceptPath(); break;
                         case 'change-path': changePath(); break;
                         case 'select-comprehensive': selectComprehensive(); break;
@@ -304,19 +323,19 @@
                     }
                 });
             });
-            
-            document.getElementById('allPathsGrid').addEventListener('click', function(e) {
+
+            document.getElementById('allPathsGrid').addEventListener('click', function (e) {
                 const card = e.target.closest('.diag-card');
-                if(card) {
+                if (card) {
                     const pathKey = card.getAttribute('data-path');
-                    if(pathKey) selectPath(pathKey);
+                    if (pathKey) selectPath(pathKey);
                 }
             });
         }
 
         function renderInteractiveReport(result) {
             const ans = result.answers || {};
-            
+
             // تحديث العناوين الأساسية
             if (result.category === 'owner') {
                 const pathDef = (typeof PathEngine !== 'undefined' && PathEngine.PATH_DEFINITIONS) ? PathEngine.PATH_DEFINITIONS[result.patternKey] : null;
@@ -336,14 +355,14 @@
 
             // حوسبة المؤشر
             let score = 50;
-            if(ans.maturity === 'nascent') score -= 15;
-            if(ans.maturity === 'mature') score += 20;
-            if(ans.organization === 'none') score -= 25;
-            if(ans.organization === 'advanced') score += 25;
-            
+            if (ans.maturity === 'nascent') score -= 15;
+            if (ans.maturity === 'mature') score += 20;
+            if (ans.organization === 'none') score -= 25;
+            if (ans.organization === 'advanced') score += 25;
+
             const challengesArr = Array.isArray(ans.challenge) ? ans.challenge : [ans.challenge];
-            if(challengesArr.includes('financial')) score -= 20;
-            if(challengesArr.includes('crisis')) score -= 30;
+            if (challengesArr.includes('financial')) score -= 20;
+            if (challengesArr.includes('crisis')) score -= 30;
 
             score = Math.max(15, Math.min(score, 98));
 
@@ -352,16 +371,16 @@
                 const mText = document.getElementById('maturityText');
                 const mIcon = document.getElementById('maturityIcon');
                 document.getElementById('maturityPercent').textContent = score + '%';
-                
+
                 bar.style.width = score + '%';
 
-                if(score < 40) {
+                if (score < 40) {
                     bar.style.background = 'linear-gradient(90deg, #ef4444, #fca5a5)';
                     mIcon.className = 'bi bi-exclamation-triangle-fill';
                     mText.textContent = ' منطقة خطر — الشركة بحاجة لتدخل إنقاذي عاجل للحد من التدهور.';
                     mText.style.color = '#fca5a5'; mIcon.style.color = '#fca5a5';
                     bar.style.boxShadow = '0 0 15px rgba(239,68,68,0.5)';
-                } else if(score < 75) {
+                } else if (score < 75) {
                     bar.style.background = 'linear-gradient(90deg, #f59e0b, #fcd34d)';
                     mIcon.className = 'bi bi-info-circle-fill';
                     mText.textContent = ' وضع مستقر نسبياً — ولكن ينقصه التنظيم المؤسسي الصلب لمنع التخبط.';
@@ -384,24 +403,24 @@
 
             let customAdvice = "تحتاج لخطط استراتيجية مستقبلية.";
             let tools = [];
-            
-            if(primaryChallengeRaw === 'financial' || primaryChallengeRaw === 'crisis') {
+
+            if (primaryChallengeRaw === 'financial' || primaryChallengeRaw === 'crisis') {
                 customAdvice = " سترتكس ترى أن الاستمرار بهذا النزيف سيؤدي لخسائر كارثية قريباً. ننصحك بإجراء اختبار ضغط فوري وإعادة هندسة سلسلة القيمة لديك لإيقاف الهدر المالي كخطوة أولى.";
-                tools = [ { icon: '⚡', name: 'اختبار الضغط الاستراتيجي', color: '#ef4444' }, { icon: '🔗', name: 'تحليل سلسلة القيمة', color: '#0891b2' } ];
+                tools = [{ icon: '⚡', name: 'اختبار الضغط الاستراتيجي', color: '#ef4444' }, { icon: '🔗', name: 'تحليل سلسلة القيمة', color: '#0891b2' }];
             } else if (primaryChallengeRaw === 'organizational' || primaryChallengeRaw === 'operational') {
                 customAdvice = " غياب التنظيم يخنق إنتاجية فريقك. لا تقم بالتوظيف العشوائي الآن، بل استخدم المصفوفات الإدارية لتوضيح الأهداف وقياس أداء كل قسم بدقة من خلال لوحة أهداف شفافة.";
-                tools = [ { icon: '🎯', name: 'مصفوفة بناء الأهداف OKRs', color: '#ec4899' }, { icon: '🟩', name: 'تحليل الفجوات SWOT', color: '#22c55e' } ];
+                tools = [{ icon: '🎯', name: 'مصفوفة بناء الأهداف OKRs', color: '#ec4899' }, { icon: '🟩', name: 'تحليل الفجوات SWOT', color: '#22c55e' }];
             } else {
                 customAdvice = " لديك فرصة عظيمة للسيطرة على السوق لو قمت بإعادة توجيه استراتيجيتك ومراقبة تحركات المنافسين ومخاطرهم بعمق، قبل ضخ ميزانيات إضافية.";
-                tools = [ { icon: '⚔️', name: 'قوى بورتر للمنافسة', color: '#f59e0b' }, { icon: '🗺️', name: 'الخريطة الاستراتيجية', color: '#8b5cf6' } ];
+                tools = [{ icon: '⚔️', name: 'قوى بورتر للمنافسة', color: '#f59e0b' }, { icon: '🗺️', name: 'الخريطة الاستراتيجية', color: '#8b5cf6' }];
             }
 
             const pInsight = document.getElementById('aiInsightText');
-            pInsight.innerHTML = ''; 
+            pInsight.innerHTML = '';
 
             pInsight.appendChild(document.createTextNode("بصفتك تدير مشروعاً في نشاط "));
             const s1 = document.createElement('strong'); s1.textContent = sectorStr; pInsight.appendChild(s1);
-            
+
             pInsight.appendChild(document.createTextNode(" بفريق "));
             const s2 = document.createElement('strong'); s2.textContent = sizeStr; pInsight.appendChild(s2);
 
@@ -417,26 +436,77 @@
                 const card = document.createElement('div');
                 card.className = 'mock-tool-card';
                 card.style.borderLeft = `3px solid ${escapeHtml(t.color)}`;
-                
+
                 const iconSpan = document.createElement('span');
                 iconSpan.className = 'mock-tool-icon';
                 iconSpan.style.color = escapeHtml(t.color);
                 iconSpan.style.background = `${escapeHtml(t.color)}15`;
                 iconSpan.textContent = escapeHtml(t.icon);
-                
+
                 const nameSpan = document.createElement('span');
                 nameSpan.className = 'mock-tool-name';
                 nameSpan.textContent = escapeHtml(t.name);
-                
+
                 card.appendChild(iconSpan);
                 card.appendChild(nameSpan);
                 toolsGrid.appendChild(card);
             });
         }
 
-        function acceptPath() {
+        async function acceptPath() {
             if (currentResult) DiagnosticEngine.saveToSession(currentResult);
-            window.location.href = '/login?tab=signup&from=diagnostic';
+
+            const isAddEntity = new URLSearchParams(window.location.search).get('from') === 'add-entity';
+
+            if (isAddEntity) {
+                const payloadStr = sessionStorage.getItem('pendingEntityPayload');
+                if (!payloadStr) {
+                    alert('انتهت الجلسة. يرجى إعادة المحاولة.');
+                    return window.location.href = '/add-entity';
+                }
+                const payload = JSON.parse(payloadStr);
+                payload.diagnosticData = currentResult; // Inject diagnostic data
+
+                const btn = document.querySelector('[data-action="accept-path"]');
+                if (btn) {
+                    btn.innerHTML = '<div class="spinner" style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;margin-left:8px;"></div> جاري تجهيز المنشأة...';
+                    btn.disabled = true;
+                }
+
+                try {
+                    const res = await fetch('/api/auth/add-entity', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                    });
+                    const data = await res.json();
+                    if (!res.ok) {
+                        alert(data.error || 'فشل إضافة المنشأة');
+                        if (btn) {
+                            btn.innerHTML = '<i class="bi bi-rocket-takeoff"></i> تأكيد وحفظ المنشأة';
+                            btn.disabled = false;
+                        }
+                        return;
+                    }
+
+                    // Cleanup and redirect
+                    sessionStorage.removeItem('pendingEntityPayload');
+                    if (data.user && data.user.deptCode) {
+                        window.location.href = '/dept-dashboard?dept=' + data.user.deptCode;
+                    } else {
+                        window.location.href = '/dashboard';
+                    }
+                } catch (err) {
+                    alert('خطأ في الاتصال');
+                    if (btn) {
+                        btn.innerHTML = '<i class="bi bi-rocket-takeoff"></i> تأكيد وحفظ المنشأة';
+                        btn.disabled = false;
+                    }
+                }
+            } else {
+                window.location.href = '/login?tab=signup&from=diagnostic';
+            }
         }
 
         function changePath() {
@@ -453,7 +523,7 @@
         // 100/100: DocumentFragment + createElement بالكامل
         function renderAllPaths() {
             const grid = document.getElementById('allPathsGrid');
-            grid.innerHTML = ''; 
+            grid.innerHTML = '';
             if (typeof PathEngine === 'undefined' || !PathEngine.PATH_DEFINITIONS) return;
 
             const defs = PathEngine.PATH_DEFINITIONS;
@@ -461,7 +531,7 @@
 
             Object.entries(defs).forEach(([key, def]) => {
                 const isActive = currentResult && currentResult.patternKey === key;
-                
+
                 const card = document.createElement('div');
                 card.className = `diag-card ${isActive ? 'selected' : ''}`;
                 card.setAttribute('data-path', key);
@@ -485,26 +555,26 @@
 
                 const badgeContainer = document.createElement('div');
                 badgeContainer.style.marginTop = '8px';
-                
+
                 const badge = document.createElement('span');
                 badge.className = 'diag-step-badge';
                 badge.style.fontSize = '0.75rem';
-                
+
                 const clockIcon = document.createElement('i');
                 clockIcon.className = 'bi bi-clock';
                 badge.appendChild(clockIcon);
                 badge.appendChild(document.createTextNode(' ' + (def.estimatedTime || '')));
 
                 badgeContainer.appendChild(badge);
-                
+
                 card.appendChild(emoji);
                 card.appendChild(title);
                 card.appendChild(desc);
                 card.appendChild(badgeContainer);
-                
+
                 fragment.appendChild(card);
             });
-            
+
             grid.appendChild(fragment);
         }
 

@@ -8,7 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-    <script src="/assets/js/dept-theme.js"></script>
+    <script src="/js/dept-theme.js"></script>
     <style>
         :root {
             --primary: #667eea;
@@ -833,15 +833,26 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/assets/js/api.js"></script>
-    <script src="/assets/js/sidebar.js"></script>
-    <script src="/assets/js/ai-advisor.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/steps-config.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script src="/js/ai-advisor.js"></script>
     <script>
         if (window.StartixAPI?.showEntityBanner) {
             StartixAPI.showEntityBanner({ toolName: 'المشاريع' });
         }
     </script>
     <script>
+        function escapeHtml(str) {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
         let currentFilter = 'all';
         const colors = ['#667eea', '#22c55e', '#38bdf8', '#facc15', '#ef4444', '#a78bfa', '#f97316', '#06b6d4'];
 
@@ -858,13 +869,13 @@
                 const initRes = await window.api.request('/api/strategic/initiatives');
                 const initiatives = await initRes.json();
                 const initSelect = document.getElementById('formInit');
-                initSelect.innerHTML = '<option value="">-- اختر المبادرة الأم --</option>' + (Array.isArray(initiatives) ? initiatives.map(i => `<option value="${i.title}">${i.title}</option>`).join('') : '');
+                initSelect.innerHTML = '<option value="">-- اختر المبادرة الأم --</option>' + (Array.isArray(initiatives) ? initiatives.map(i => `<option value="${escapeHtml(i.title)}">${escapeHtml(i.title)}</option>`).join('') : '');
 
                 // Fetch objectives
                 const objRes = await window.api.request('/api/strategic/objectives');
                 const objectives = await objRes.json();
                 const objSelect = document.getElementById('formObj');
-                objSelect.innerHTML = '<option value="">-- اختر الهدف الاستراتيجي --</option>' + (Array.isArray(objectives) ? objectives.map(o => `<option value="${o.title}">${o.title}</option>`).join('') : '');
+                objSelect.innerHTML = '<option value="">-- اختر الهدف الاستراتيجي --</option>' + (Array.isArray(objectives) ? objectives.map(o => `<option value="${escapeHtml(o.title)}">${escapeHtml(o.title)}</option>`).join('') : '');
             } catch (e) {
                 console.error("Error loading dropdowns:", e);
             }
@@ -924,14 +935,14 @@
           <div class="proj-bar ${p.status}"></div>
           <div class="proj-body">
             <div class="proj-header">
-              <div class="proj-title">${p.name}</div>
+              <div class="proj-title">${escapeHtml(p.name)}</div>
               <span class="proj-badge ${p.status}">${statusLabels[p.status]}</span>
             </div>
-            <div class="proj-desc">${p.description || 'لا يوجد وصف'}</div>
+            <div class="proj-desc">${escapeHtml(p.description) || 'لا يوجد وصف'}</div>
             <div class="proj-chain">
-              <span class="chain-item obj"><i class="bi bi-bullseye"></i> ${p.objective || 'غير محدد'}</span>
+              <span class="chain-item obj"><i class="bi bi-bullseye"></i> ${escapeHtml(p.objective) || 'غير محدد'}</span>
               <span class="chain-sep">←</span>
-              <span class="chain-item init"><i class="bi bi-rocket-takeoff"></i> ${p.initiative || 'غير محدد'}</span>
+              <span class="chain-item init"><i class="bi bi-rocket-takeoff"></i> ${escapeHtml(p.initiative) || 'غير محدد'}</span>
             </div>
             <div class="proj-progress">
               <div class="proj-progress-header">
@@ -941,12 +952,12 @@
               <div class="proj-progress-bar"><div class="proj-progress-fill" style="width:${p.progress}%;background:${getProgressColor(p.progress)}"></div></div>
             </div>
             <div class="proj-meta">
-              <div class="proj-meta-item"><i class="bi bi-person"></i> ${p.manager || 'لم يحدد'}</div>
+              <div class="proj-meta-item"><i class="bi bi-person"></i> ${escapeHtml(p.manager) || 'لم يحدد'}</div>
               <div class="proj-meta-item"><i class="bi bi-calendar3"></i> ${p.endDate ? new Date(p.endDate).toLocaleDateString('ar-EG') : 'بدون تاريخ'}</div>
             </div>
             ${p.team && p.team.length > 0 ? `
             <div class="proj-team">
-              ${p.team.map((m, i) => `<div class="proj-avatar" style="background:${colors[i % colors.length]};color:white;z-index:${10 - i}">${m}</div>`).join('')}
+              ${p.team.map((m, i) => `<div class="proj-avatar" style="background:${colors[i % colors.length]};color:white;z-index:${10 - i}">${escapeHtml(m)}</div>`).join('')}
               <span class="proj-team-count">${p.team.length} أعضاء</span>
             </div>` : ''}
             <div class="proj-actions">
@@ -1039,7 +1050,7 @@
         function showToast(msg) {
             const t = document.createElement('div');
             t.className = 'toast-msg';
-            t.innerHTML = `<i class="bi bi-check-circle"></i> ${msg}`;
+            t.innerHTML = `<i class="bi bi-check-circle"></i> <span>${escapeHtml(msg)}</span>`;
             document.getElementById('toastContainer').appendChild(t);
             setTimeout(() => t.remove(), 3000);
         }

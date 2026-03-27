@@ -31,6 +31,8 @@ async function seed() {
     await prisma.AuditLog.deleteMany();
     await prisma.Member.deleteMany();
     await prisma.Entity.deleteMany();
+    await prisma.Subscription.deleteMany();
+    await prisma.Company.deleteMany();
     await prisma.User.deleteMany();
     await prisma.EntityType.deleteMany();
     await prisma.Industry.deleteMany();
@@ -76,6 +78,30 @@ async function seed() {
     console.log('✅ Created 3 Entity Types');
 
     // =========================================
+    // 1b. COMPANIES & SUBSCRIPTIONS
+    // =========================================
+    console.log('🏢 Creating Companies...');
+    const company1 = await prisma.company.create({
+      data: {
+        nameAr: 'مجموعة ستارتكس القابضة',
+        nameEn: 'Stratix Holding Group',
+        code: 'STRATIX_GROUP',
+        status: 'ACTIVE',
+      },
+    });
+
+    await prisma.subscription.create({
+      data: {
+        companyId: company1.id,
+        plan: 'ENTERPRISE',
+        status: 'ACTIVE',
+        maxUsers: 100,
+        maxEntities: 10,
+      },
+    });
+    console.log('✅ Created 1 Company + Subscription');
+
+    // =========================================
     // 2. USERS — كلمات مرور قوية للعرض
     // =========================================
     console.log('👥 Creating Users...');
@@ -106,6 +132,7 @@ async function seed() {
       data: {
         legalName: 'شركة ستارتكس للحلول الاستراتيجية',
         displayName: 'شركة ستارتكس',
+        companyId: company1.id,
         sectorId: sectorPrivate.id,
         industryId: industryTech.id,
         typeId: typeCompany.id,

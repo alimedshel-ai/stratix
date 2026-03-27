@@ -187,6 +187,8 @@ model User {
   financialAudits FinancialAudit[]
   healthReports   CompanyHealthReport[] @relation("HealthReporter")
   resourceAccess  ResourceAccess[]
+  createdIssues   Issue[]               @relation("createdIssues")
+  assignedIssues  Issue[]               @relation("assignedIssues")
 
   @@map("users")
 }
@@ -243,6 +245,7 @@ model Entity {
   healthReports      CompanyHealthReport[] // ✨ تقارير صحة الشركة
   dimensions         CompanyDimension?     @relation("EntityDimensions") // ✨ الأبعاد الثلاثة (المالي، الإداري، التوطين)
   webhooks           Webhook[]             @relation("EntityWebhooks") // ✨ إشعارات Slack/Teams/Zapier
+  issues             Issue[]               // ✨ سجل المشاكل والتحديات (Issue Tracker)
 
   @@index([companyId])
   @@index([sectorId])
@@ -302,6 +305,79 @@ model Department {
   @@index([entityId])
   @@map("departments")
 }
+
+/// تقييم صحة الإدارة (Dept Health)
+model DepartmentHealth {
+  id             String   @id @default(cuid())
+  entityId       String
+  departmentKey  String   // HR, FINANCE, etc.
+  
+  skills         String?  // الكفاءات
+  processes      String?  // العمليات
+  culture        String?  // الثقافة
+  resources      String?  // الموارد
+  satisfaction   String?  // الرضا
+  productivity   String?  // الإنتاجية
+  
+  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now())
+
+  @@unique([entityId, departmentKey])
+  @@index([entityId])
+  @@map("dept_health")
+}
+
+/// السيناريوهات الاستراتيجية (Scenarios)
+model DepartmentScenario {
+  id             String   @id @default(cuid())
+  entityId       String
+  departmentKey  String   // HR, FINANCE, etc.
+  
+  optimistic     String?  // السيناريو المتفائل
+  realistic      String?  // السيناريو الواقعي
+  pessimistic    String?  // السيناريو المتشائم
+  
+  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now())
+
+  @@unique([entityId, departmentKey])
+  @@index([entityId])
+  @@map("dept_scenarios")
+}
+
+/// الأهداف والنتائج الرئيسية (OKRs)
+model DepartmentObjective {
+  id             String      @id @default(cuid())
+  entityId       String
+  departmentKey  String      // HR, FINANCE, etc.
+  
+  title          String      // عنوان الهدف
+  description    String?     // وصف الهدف
+  
+  keyResults     KeyResult[] // النتائج الرئيسية المرتبطة
+  
+  updatedAt      DateTime    @updatedAt
+  createdAt      DateTime    @default(now())
+
+  @@index([entityId])
+  @@map("dept_objectives")
+}
+
+model KeyResult {
+  id             String   @id @default(cuid())
+  objectiveId    String
+  title          String   // عنوان النتيجة الرئيسية
+  targetValue    String?  // القيمة المستهدفة
+  currentValue   String?  // القيمة الحالية
+  
+  objective      DepartmentObjective @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
+
+  @@index([objectiveId])
+  @@map("dept_key_results")
+}
+
+
+
 
 /// Invitation model - دعوات الانضمام للفريق
 model Invitation {
@@ -386,13 +462,14 @@ model StrategyVersion {
 
 /// الاتجاه الاستراتيجي (الهرم الاستراتيجي)
 model StrategicDirection {
-  id        String   @id @default(cuid())
-  versionId String
-  type      String // VISION, MISSION, VALUES, ISSUES, LONG_TERM_GOALS
-  content   String // النص الكامل
-  order     Int      @default(0) // الترتيب (مهم للقيم المتعددة)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(cuid())
+  versionId     String
+  departmentKey String?  // ← تمت إضافته لربط التوجهات بإدارات محددة
+  type          String // VISION, MISSION, VALUES, ISSUES, LONG_TERM_GOALS
+  content       String // النص الكامل
+  order         Int      @default(0) // الترتيب (مهم للقيم المتعددة)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   version StrategyVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
 
@@ -1767,6 +1844,23 @@ model DeptDeepData {
 }
 
 // =========================================
+// Department Analysis (SWOT, PESTEL, etc per dept)
+// =========================================
+model DepartmentAnalysis {
+  id         String   @id @default(cuid())
+  entityId   String
+  department String   // HR, FINANCE, MARKETING, etc
+  type       String   // SWOT, PESTEL, AUDIT, etc
+  data       String   // JSON blob
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([entityId, department, type])
+  @@index([entityId])
+  @@map("department_analysis")
+}
+
+// =========================================
 // PHASE: HR & GOV AUDIT (23 Approved Points)
 // فحص الموارد البشرية والمنصات الحكومية
 // 4 نقاط HR + 19 نقطة منصات حكومية
@@ -2359,4 +2453,44 @@ model ResourceAccess {
   @@index([userId])
   @@index([resourceType, resourceId])
   @@map("resource_access")
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ISSUES & TICKETING — متتبع التحديات والقضايا
+// ─────────────────────────────────────────────────────────────────
+
+/// متتبع المشاكل الاستراتيجية والتشغيلية
+model Issue {
+  id          String    @id @default(cuid())
+  title       String    // عنوان المشكلة/التحدي
+  description String?   // وصف تفصيلي
+  type        String    @default("STRATEGIC") // ADMINISTRATIVE, FINANCIAL, STRATEGIC, GROWTH
+  status      String    @default("OPEN")      // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  priority    String?   @default("MEDIUM")    // LOW, MEDIUM, HIGH, CRITICAL
+
+  // الربط
+  companyId   String?   // الشركة التابعة لها المشكلة
+  investorId  String?   // المستثمر المرتبط بالمشكلة (خيار لربطه بمحفظة)
+  department  String?   // الإدارة المعنية (hr, finance, etc.)
+  
+  assignedTo  String?   // المستخدم المسؤول عن الحل
+  createdById String    // من قام بإنشاء التحدي
+
+  // التتبع
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  resolvedAt  DateTime? // تاريخ الحل
+  resolution  String?   // وصف خطة الحل
+  source      String    @default("MANUAL")    // SWOT, PESTEL, DEPT_DEEP, MANUAL
+  
+  // Relations
+  company      Entity? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  assignedUser User?   @relation("assignedIssues", fields: [assignedTo], references: [id], onDelete: SetNull)
+  createdBy    User    @relation("createdIssues", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([investorId])
+  @@index([assignedTo])
+  @@index([createdById])
+  @@map("issues")
 }

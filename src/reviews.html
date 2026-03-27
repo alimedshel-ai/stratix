@@ -8,7 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-    <script src="/assets/js/dept-theme.js"></script>
+    <script src="/js/dept-theme.js"></script>
 
     <style>
         :root {
@@ -378,6 +378,24 @@
         .findings-list div {
             padding: 2px 0;
             color: var(--text-muted);
+        }
+
+        /* Suggestion Chips */
+        .suggestion-chip {
+            font-size: 10px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .suggestion-chip:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary);
+            border-color: var(--primary);
         }
 
         .empty-state {
@@ -779,10 +797,34 @@
                         <option value="">— اختر الإصدار —</option>
                     </select>
                 </div>
-                <div class="form-group"><label>الملاحظات العامة</label><textarea id="revNotes" class="form-input"
-                        rows="3" placeholder="ملخص عام عن الوضع الحالي..."></textarea></div>
-                <div class="form-group"><label>النتائج (findings) — سطر لكل نتيجة</label><textarea id="revFindings"
-                        class="form-input" rows="4" placeholder="النتيجة 1&#10;النتيجة 2&#10;النتيجة 3"></textarea>
+                <div class="form-group">
+                    <label><i class="bi bi-card-text text-primary"></i> الملاحظات العامة</label>
+                    <textarea id="revNotes" class="form-input" rows="3"
+                        placeholder="ملخص عام عن الوضع الحالي..."></textarea>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+                        <span class="suggestion-chip"
+                            onclick="document.getElementById('revNotes').value+='الأداء العام يتوافق مع التطلعات المخطط لها. '">👍
+                            أداء متوافق</span>
+                        <span class="suggestion-chip"
+                            onclick="document.getElementById('revNotes').value+='نواجه بعض التحديات تتطلب مراجعة الأولويات. '">⚠️
+                            تحديات بالتنفيذ</span>
+                        <span class="suggestion-chip"
+                            onclick="document.getElementById('revNotes').value+='تحسن ملحوظ في مؤشرات الأداء مقارنة بالربع السابق. '">📈
+                            تحسن ملحوظ</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label><i class="bi bi-list-check text-success"></i> النتائج والمخرجات</label>
+                    <p style="font-size:11px;color:var(--text-muted);margin-bottom:8px">أضف النقاط والملاحظات الرئيسية
+                        التي خرجت بها المراجعة</p>
+                    <div id="findingsContainer" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;">
+                        <!-- Dynamic inputs will be generated here -->
+                    </div>
+                    <button type="button" class="btn-action"
+                        style="width:auto;padding:4px 12px;font-size:12px;color:var(--primary);border-color:rgba(102,126,234,0.3)"
+                        onclick="addFindingRow()">
+                        <i class="bi bi-plus-lg"></i> إضافة نتيجة
+                    </button>
                 </div>
 
                 <div class="section-divider"><i class="bi bi-sliders"></i> التصنيف والحالة</div>
@@ -818,10 +860,10 @@
         </div>
     </div>
 
-    <script src="/assets/js/api.js"></script>
+    <script src="/js/api.js"></script>
 
-    <script src="/assets/js/ai-advisor.js"></script>
-    <script src="/assets/js/mentions.js"></script>
+    <script src="/js/ai-advisor.js"></script>
+    <script src="/js/mentions.js"></script>
     <script>
         if (window.StartixAPI?.showEntityBanner) {
             StartixAPI.showEntityBanner({ toolName: 'المراجعات الدورية' });
@@ -843,6 +885,30 @@
         function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
         function closeModal() { document.getElementById('reviewModal').classList.remove('show'); }
         document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+        // ═══ إدارة القوائم الديناميكية للنتائج ═══
+        function addFindingRow(val = '') {
+            const container = document.getElementById('findingsContainer');
+            const div = document.createElement('div');
+            div.style.cssText = 'display:flex; gap:8px; align-items:center;';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'form-input finding-input';
+            input.placeholder = 'اكتب النتيجة هنا...';
+            input.value = val;
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn-action danger';
+            btn.style.cssText = 'flex-shrink:0;';
+            btn.innerHTML = '<i class="bi bi-trash"></i>';
+            btn.onclick = () => div.remove();
+
+            div.appendChild(input);
+            div.appendChild(btn);
+            container.appendChild(div);
+        }
 
         // ═══ الربع الحالي ═══
         function getCurrentQuarter() {
@@ -913,7 +979,7 @@
         }
 
         function showModal() {
-            ['editId', 'revNotes', 'revFindings'].forEach(id => document.getElementById(id).value = '');
+            ['editId', 'revNotes'].forEach(id => document.getElementById(id).value = '');
             // تعبئة تلقائية: العنوان + التاريخ
             document.getElementById('revTitle').value = `المراجعة الربعية ${getQuarterYear()}`;
             document.getElementById('revDate').value = new Date().toISOString().split('T')[0];
@@ -927,6 +993,10 @@
             document.getElementById('smartFillSection').style.display = 'block';
             document.getElementById('smartFillStatus').style.display = 'none';
             document.getElementById('modalTitle').textContent = '📝 مراجعة جديدة — ' + getQuarterYear();
+
+            document.getElementById('findingsContainer').innerHTML = '';
+            addFindingRow();
+
             document.getElementById('reviewModal').classList.add('show');
 
             // تفعيل نظام الإشارة (Mentions)
@@ -968,6 +1038,8 @@
             let scoreCount = 0;
 
             try {
+                const _dp = new URLSearchParams(window.location.search).get('dept') || localStorage.getItem('stratix_v10_dept') || '';
+
                 // ─── جلب versionId النشط أولاً (مطلوب لـ kpis و tasks) ───
                 let activeVersionId = null;
                 const vSelVal = document.getElementById('versionFilter')?.value;
@@ -986,9 +1058,10 @@
 
                 // 1. سحب KPIs — يحتاج versionId (fallback: kpi-entries)
                 if (activeVersionId) {
-                    const kpiRes = await fetch(`/api/kpis?versionId=${activeVersionId}`, { headers }).catch(() => null);
+                    const kpiRes = await fetch(`/api/strategic/kpis?versionId=${activeVersionId}`, { headers }).catch(() => null);
                     const kpiData = kpiRes && kpiRes.ok ? await kpiRes.json() : null;
-                    const kpiArr = kpiData ? (Array.isArray(kpiData) ? kpiData : (kpiData.kpis || [])) : [];
+                    let kpiArr = kpiData ? (Array.isArray(kpiData) ? kpiData : (kpiData.kpis || [])) : [];
+                    if (_dp) kpiArr = kpiArr.filter(k => !k.departmentKey || k.departmentKey === _dp);
 
                     // fallback: kpi-entries لو kpis فارغ
                     const fallbackArr = kpiArr.length ? kpiArr : await (async () => {
@@ -1017,10 +1090,11 @@
 
                 // 2. سحب المبادرات — يحتاج versionId
                 if (activeVersionId) {
-                    const initRes = await fetch(`/api/initiatives?versionId=${activeVersionId}`, { headers }).catch(() => null);
+                    const initRes = await fetch(`/api/strategic/initiatives?versionId=${activeVersionId}`, { headers }).catch(() => null);
                     if (initRes && initRes.ok) {
                         const inits = await initRes.json();
-                        const initArr = Array.isArray(inits) ? inits : (inits.initiatives || []);
+                        let initArr = Array.isArray(inits) ? inits : (inits.initiatives || []);
+                        if (_dp) initArr = initArr.filter(i => !i.departmentKey || i.departmentKey === _dp || (i.owner || '').toLowerCase().includes(_dp));
                         if (initArr.length) {
                             const active = initArr.filter(i => i.status !== 'COMPLETED' && i.status !== 'CANCELLED');
                             const completed = initArr.filter(i => i.status === 'COMPLETED');
@@ -1089,7 +1163,11 @@
                     `• عدد النتائج المكتشفة: ${findings.length}`;
 
                 document.getElementById('revNotes').value = notesText;
-                document.getElementById('revFindings').value = findings.join('\n');
+
+                const findingsContainer = document.getElementById('findingsContainer');
+                findingsContainer.innerHTML = '';
+                findings.forEach(f => addFindingRow(f));
+
                 document.getElementById('revDecision').value = suggestedDecision;
 
                 // ═══ حالة النجاح ═══
@@ -1116,7 +1194,15 @@
                 const res = await fetch(`/api/strategic/reviews/${id}`, { headers }); const r = await res.json();
                 document.getElementById('editId').value = r.id; document.getElementById('revTitle').value = r.title;
                 document.getElementById('revDate').value = r.reviewDate ? r.reviewDate.split('T')[0] : '';
-                document.getElementById('revNotes').value = r.notes || ''; document.getElementById('revFindings').value = r.findings || '';
+                document.getElementById('revNotes').value = r.notes || '';
+
+                const container = document.getElementById('findingsContainer');
+                container.innerHTML = '';
+                if (r.findings) {
+                    r.findings.split('\n').forEach(f => { if (f.trim()) addFindingRow(f); });
+                }
+                if (container.children.length === 0) addFindingRow();
+
                 document.getElementById('revDecision').value = r.decision || ''; document.getElementById('revStatus').value = r.status;
                 document.getElementById('revType').value = r.type || 'QUARTERLY';
                 document.getElementById('revVersion').value = r.versionId || '';
@@ -1137,7 +1223,15 @@
             const title = document.getElementById('revTitle').value.trim();
             const reviewDate = document.getElementById('revDate').value || new Date().toISOString();
             const notes = document.getElementById('revNotes').value.trim();
-            const findings = document.getElementById('revFindings').value.trim();
+
+            // تجميع النتائج من الحقول الديناميكية
+            const findingInputs = document.querySelectorAll('.finding-input');
+            const findingsArr = [];
+            findingInputs.forEach(inp => {
+                if (inp.value.trim()) findingsArr.push(inp.value.trim());
+            });
+            const findings = findingsArr.join('\n');
+
             const decision = document.getElementById('revDecision').value;
             const status = document.getElementById('revStatus').value;
             const type = document.getElementById('revType').value;
@@ -1191,7 +1285,33 @@
 
         init();
     </script>
-    <script src="/assets/js/impersonation.js"></script>
+
+    <!-- ═══ DEPT DETECTION — تخصيص الصفحة لمدير الإدارة ═══ -->
+    <script>
+        (function () {
+            const _dp = new URLSearchParams(window.location.search).get('dept');
+            if (!_dp) return;
+
+            const _deptNames = { hr: 'الموارد البشرية', finance: 'المالية', operations: 'العمليات', marketing: 'التسويق', sales: 'المبيعات', compliance: 'الامتثال', it: 'تقنية المعلومات', cs: 'خدمة العملاء', quality: 'الجودة', support: 'الخدمات المساندة', projects: 'المشاريع' };
+            const _dn = _deptNames[_dp] || _dp;
+
+            // 1. تحديث الطابع والعنوان
+            document.title = 'ستارتكس — مراجعات ' + _dn;
+            const h1 = document.querySelector('.page-header h1');
+            if (h1) h1.innerHTML = '<i class="bi bi-journal-check"></i> المراجعات الدورية (' + _dn + ')';
+
+            const desc = document.querySelector('.page-header p');
+            if (desc) desc.innerHTML = 'راجع أداء <b>' + _dn + '</b> بشكل دوري — الاستراتيجيّة الناجحة تتطلّب فحصاً مستمراً 🎯';
+
+            // 2. تحديث قائمة التنقل لاستبدال زر العودة والشعار
+            const _brand = document.querySelector('a.brand');
+            if (_brand) {
+                _brand.href = '/dept-dashboard.html?dept=' + _dp;
+                _brand.innerHTML = '<i class="bi bi-box-arrow-in-left"></i> العودة للوحة الإدارة';
+            }
+        })();
+    </script>
+    <script src="/js/impersonation.js"></script>
 </body>
 
 </html>

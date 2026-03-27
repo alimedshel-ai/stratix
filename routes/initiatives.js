@@ -20,19 +20,24 @@ function getVersionId(req) {
 //   req.user.dept           → 'finance', 'hr' ...
 function resolveDeptKey(user) {
     if (!user) return null;
+    let key = null;
 
-    // الحقل المباشر (الأفضل)
-    if (user.dept) return user.dept.toLowerCase();
-
-    // departmentRole  → 'FINANCE' → 'finance'
-    if (user.departmentRole) return user.departmentRole.toLowerCase();
-
-    // userCategory → 'DEPT_FINANCE' → 'finance'
-    if (user.userCategory && user.userCategory.startsWith('DEPT_')) {
-        return user.userCategory.replace('DEPT_', '').toLowerCase();
+    if (user.dept) key = user.dept.toLowerCase();
+    else if (user.departmentRole) key = user.departmentRole.toLowerCase();
+    else if (user.userCategory && user.userCategory.startsWith('DEPT_')) {
+        key = user.userCategory.replace('DEPT_', '').toLowerCase();
     }
 
-    return null;
+    if (!key) return null;
+
+    const keyMapping = {
+        'ops': 'operations',
+        'service': 'cs',
+        'legal': 'compliance',
+        'pmo': 'projects'
+    };
+
+    return keyMapping[key] || key;
 }
 
 // ── helper: بناء شرط فلترة Prisma لمدير الإدارة ──────────────────────────────

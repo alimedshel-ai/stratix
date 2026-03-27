@@ -4,991 +4,657 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Startix — تحليل الفجوات</title>
-    <meta name="description"
-        content="أداة تحليل الفجوات — حدد الفرق بين الوضع الحالي والمستهدف واقترح إجراءات لسد الفجوة">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <title>تحليل الفجوات - ستارتكس</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
             --bg: #0f1117;
             --bg-card: #1a1d2e;
             --text: #e2e8f0;
             --text-muted: #94a3b8;
-            --primary: #667eea;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --purple: #8b5cf6;
-            --cyan: #06b6d4;
             --border: rgba(255, 255, 255, 0.08);
-            --radius: 12px;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            --danger: #ef4444;
+            --warning: #facc15;
+            --success: #22c55e;
         }
 
         body {
-            font-family: 'Tajawal', sans-serif;
             background: var(--bg);
+            font-family: 'Tajawal', sans-serif;
             color: var(--text);
             min-height: 100vh;
         }
 
-        .top-navbar {
-            background: rgba(15, 17, 23, 0.95);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border);
-            padding: 0 24px;
-            height: 60px;
+        .top-nav {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 14px 30px;
             display: flex;
-            align-items: center;
             justify-content: space-between;
+            align-items: center;
             position: sticky;
             top: 0;
             z-index: 100;
         }
 
-        .top-navbar .brand {
-            font-size: 20px;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--primary), #a78bfa);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 16px;
-        }
-
-        .nav-links a {
-            color: var(--text-muted);
+        .top-nav .brand {
+            color: white;
             text-decoration: none;
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
+            font-size: 20px;
+            font-weight: 700;
         }
 
-        .nav-links a:hover {
-            color: var(--text);
-        }
-
-        .page-layout {
+        .layout {
             display: flex;
             min-height: calc(100vh - 60px);
         }
 
         .main-content {
             flex: 1;
-            padding: 32px;
-            overflow-y: auto;
+            padding: 30px;
         }
 
         .page-header {
+            margin-bottom: 24px;
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 28px;
+            align-items: center;
         }
 
         .page-header h1 {
-            font-size: 28px;
-            font-weight: 800;
-            margin-bottom: 6px;
-        }
-
-        .page-header p {
-            color: var(--text-muted);
-            font-size: 14px;
-        }
-
-        .card-dark {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 24px;
-            margin-bottom: 20px;
-        }
-
-        .card-dark h3 {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 16px;
-        }
-
-        .input-dark {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-family: 'Tajawal', sans-serif;
-            width: 100%;
-        }
-
-        .input-dark:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .select-dark {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-family: 'Tajawal', sans-serif;
-        }
-
-        .select-dark:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .btn-grad {
-            background: linear-gradient(135deg, var(--primary), var(--purple));
-            color: white;
-            border: none;
-            padding: 10px 22px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            font-family: 'Tajawal', sans-serif;
-            transition: .2s;
-        }
-
-        .btn-grad:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
-        }
-
-        .btn-outline-sm {
-            background: transparent;
-            color: var(--text-muted);
-            border: 1px solid var(--border);
-            padding: 6px 14px;
-            border-radius: 8px;
-            font-size: 12px;
-            cursor: pointer;
-            font-family: 'Tajawal', sans-serif;
-        }
-
-        .btn-outline-sm:hover {
-            border-color: var(--text);
-            color: var(--text);
-        }
-
-        .btn-danger-sm {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            cursor: pointer;
-            font-family: 'Tajawal';
-        }
-
-        /* CONTEXT */
-        .context-bar {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 24px;
-            padding: 12px 16px;
-            background: var(--bg-card);
-            border-radius: 10px;
-            border: 1px solid var(--border);
-            align-items: center;
-        }
-
-        .context-bar select {
-            max-width: 240px;
-        }
-
-        .context-bar label {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        /* DIMENSION ROW */
-        .dimension-row {
-            display: grid;
-            grid-template-columns: 1fr 120px 120px 70px 1fr 50px;
-            gap: 12px;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-        }
-
-        .dimension-row:last-child {
-            border-bottom: none;
-        }
-
-        .slider-container {
-            position: relative;
-        }
-
-        .slider-current,
-        .slider-target {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 100%;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 3px;
-            outline: none;
-        }
-
-        .slider-current::-webkit-slider-thumb,
-        .slider-target::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            cursor: pointer;
-        }
-
-        .slider-current::-webkit-slider-thumb {
-            background: var(--warning);
-        }
-
-        .slider-target::-webkit-slider-thumb {
-            background: var(--success);
-        }
-
-        .slider-val {
-            font-size: 18px;
-            font-weight: 800;
-            text-align: center;
-        }
-
-        /* GAP BAR */
-        .gap-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .gap-high {
-            background: rgba(239, 68, 68, 0.15);
-            color: var(--danger);
-        }
-
-        .gap-medium {
-            background: rgba(245, 158, 11, 0.15);
-            color: var(--warning);
-        }
-
-        .gap-low {
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--success);
-        }
-
-        .gap-none {
-            background: rgba(148, 163, 184, 0.1);
-            color: var(--text-muted);
-        }
-
-        /* CHART */
-        .chart-wrapper {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .chart-wrapper canvas {
-            max-height: 400px;
-        }
-
-        /* RANKING */
-        .ranking-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .ranking-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 14px;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 10px;
-            border: 1px solid var(--border);
-        }
-
-        .ranking-num {
-            width: 28px;
-            height: 28px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            font-weight: 800;
-            flex-shrink: 0;
-        }
-
-        .ranking-num.high {
-            background: rgba(239, 68, 68, 0.15);
-            color: var(--danger);
-        }
-
-        .ranking-num.medium {
-            background: rgba(245, 158, 11, 0.15);
-            color: var(--warning);
-        }
-
-        .ranking-num.low {
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--success);
-        }
-
-        .ranking-info {
-            flex: 1;
-        }
-
-        .ranking-info .name {
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .ranking-info .desc {
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-
-        .ranking-gap {
-            font-size: 16px;
-            font-weight: 800;
-        }
-
-        /* ACTIONS */
-        .action-tag {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 5px;
-            font-size: 11px;
-            background: rgba(102, 126, 234, 0.1);
-            color: var(--primary);
-            margin: 2px;
-        }
-
-        /* STATS */
-        .stats-mini {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .stat-mini {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 16px;
-            text-align: center;
-        }
-
-        .stat-mini .val {
             font-size: 24px;
             font-weight: 800;
         }
 
-        .stat-mini .label {
+        .card-custom {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .gap-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .gap-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .gap-item:hover {
+            border-color: var(--primary);
+        }
+
+        .gap-info {
+            flex: 1;
+        }
+
+        .gap-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .gap-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .gap-metrics {
+            display: flex;
+            gap: 20px;
+            text-align: center;
+        }
+
+        .metric {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+
+        .metric-label {
             font-size: 11px;
             color: var(--text-muted);
         }
 
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        /* Company Banner */
-        .company-banner {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08));
-            border: 1px solid rgba(102, 126, 234, 0.2);
-            border-radius: 14px;
-            padding: 16px 22px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            animation: fadeIn 0.4s ease;
-        }
-
-        .company-banner .cb-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, var(--primary), #a78bfa);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            flex-shrink: 0;
-        }
-
-        .company-banner .cb-info {
-            flex: 1;
-        }
-
-        .company-banner .cb-name {
+        .metric-value {
             font-size: 16px;
             font-weight: 800;
+        }
+
+        .metric-value.current {
+            color: var(--warning);
+        }
+
+        .metric-value.target {
+            color: var(--success);
+        }
+
+        .metric-value.diff {
+            color: var(--danger);
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Modal */
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
             color: var(--text);
         }
 
-        .company-banner .cb-meta {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 2px;
+        .modal-header {
+            border-bottom: 1px solid var(--border);
         }
 
-        .company-banner .cb-badge {
-            padding: 6px 14px;
-            border-radius: 10px;
-            font-size: 12px;
-            font-weight: 700;
-            background: rgba(102, 126, 234, 0.12);
-            color: var(--primary);
-            white-space: nowrap;
+        .modal-footer {
+            border-top: 1px solid var(--border);
         }
 
-        .company-banner.no-entity {
-            background: rgba(245, 158, 11, 0.06);
-            border-color: rgba(245, 158, 11, 0.2);
+        .form-control {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: white;
         }
 
-        .company-banner.no-entity .cb-icon {
-            background: linear-gradient(135deg, var(--warning), #fb923c);
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-8px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .grid-2 {
-                grid-template-columns: 1fr;
-            }
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: none;
         }
     </style>
 </head>
 
 <body>
-
-    <nav class="top-navbar">
-        <span class="brand">⚡ Startix</span>
-        <div class="nav-links">
-            <a href="/"><i class="bi bi-house"></i> الرئيسية</a>
-        </div>
+    <nav class="top-nav">
+        <a href="/dashboard.html" class="brand"><i class="bi bi-gem"></i> ستارتكس</a>
     </nav>
-
-    <div class="page-layout">
-        <nav class="sidebar"></nav>
-
+    <div class="layout">
+        <aside class="sidebar-placeholder" id="sidebarContainer"></aside>
         <div class="main-content">
             <div class="page-header">
                 <div>
-                    <h1>📊 تحليل الفجوات (Gap Analysis)</h1>
-                    <p>حدد الفجوة بين "وين أنت" و"وين تبي توصل" — واقترح كيف تسدها</p>
+                    <h1><i class="bi bi-bar-chart-steps"></i> تحليل الفجوات (Gap Analysis)</h1>
+                    <p style="color:var(--text-muted);font-size:14px">مقارنة وضعك الحالي مع أهدافك المستقبلية وتحديد خطط
+                        العمل لسد الفجوة</p>
                 </div>
-                <button class="btn-grad" onclick="saveGapData()"><i class="bi bi-check-lg"></i> حفظ التحليل</button>
+                <button class="btn-add" onclick="newGap()"><i class="bi bi-plus-lg"></i> إضافة فجوة</button>
             </div>
 
-            <!-- Company Banner -->
-            <div class="company-banner no-entity" id="companyBanner">
-                <div class="cb-icon">⚠️</div>
-                <div class="cb-info">
-                    <div class="cb-name" id="cbName">لم يتم تحديد الكيان</div>
-                    <div class="cb-meta" id="cbMeta">اختر الكيان والنسخة من القائمة أدناه</div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card-custom">
+                        <h3 style="font-size:16px;font-weight:700;margin-bottom:16px"><i class="bi bi-radar"></i> مقارنة
+                            شاملة (رادار)</h3>
+                        <div class="chart-container">
+                            <canvas id="radarChart"></canvas>
+                        </div>
+                    </div>
                 </div>
-                <div class="cb-badge" id="cbBadge">غير محدد</div>
-            </div>
-
-            <!-- Context -->
-            <div class="context-bar">
-                <div><label>الكيان</label><select class="select-dark" id="entitySelect">
-                        <option value="">اختر...</option>
-                    </select></div>
-                <div><label>النسخة</label><select class="select-dark" id="versionSelect">
-                        <option value="">اختر...</option>
-                    </select></div>
-            </div>
-
-            <!-- Stats -->
-            <div class="stats-mini">
-                <div class="stat-mini">
-                    <div class="val" style="color:var(--danger)" id="statMaxGap">0</div>
-                    <div class="label">أكبر فجوة</div>
-                </div>
-                <div class="stat-mini">
-                    <div class="val" style="color:var(--warning)" id="statAvgGap">0</div>
-                    <div class="label">متوسط الفجوات</div>
-                </div>
-                <div class="stat-mini">
-                    <div class="val" style="color:var(--success)" id="statDimensions">0</div>
-                    <div class="label">عدد الأبعاد</div>
-                </div>
-            </div>
-
-            <!-- Dimensions Input -->
-            <div class="card-dark">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-                    <h3 style="margin:0"><i class="bi bi-sliders"></i> أبعاد التحليل</h3>
-                    <button class="btn-outline-sm" onclick="addDimension()"><i class="bi bi-plus"></i> إضافة
-                        بُعد</button>
-                </div>
-                <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px">قيّم كل بُعد من 1 (ضعيف) إلى 5
-                    (ممتاز) — الحالي والمستهدف</p>
-
-                <div class="dimension-row"
-                    style="font-weight:700;font-size:12px;color:var(--text-muted);border-bottom:1px solid var(--border);padding-bottom:8px">
-                    <span>البُعد</span>
-                    <span style="text-align:center">الحالي</span>
-                    <span style="text-align:center">المستهدف</span>
-                    <span style="text-align:center">الفجوة</span>
-                    <span>إجراءات مقترحة</span>
-                    <span></span>
-                </div>
-                <div id="dimensionsContainer"></div>
-            </div>
-
-            <div class="grid-2">
-                <!-- Radar Chart -->
-                <div class="chart-wrapper">
-                    <h3 style="font-size:15px;margin-bottom:12px"><i class="bi bi-radar"></i> الحالي vs المستهدف</h3>
-                    <canvas id="radarChart"></canvas>
-                </div>
-
-                <!-- Gap Ranking -->
-                <div class="card-dark">
-                    <h3><i class="bi bi-sort-down"></i> ترتيب الفجوات (الأكبر أولاً)</h3>
-                    <div class="ranking-list" id="rankingList">
-                        <p style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px">أضف أبعاد
-                            وقيّمها لرؤية الترتيب</p>
+                <div class="col-md-6">
+                    <div class="card-custom">
+                        <h3 style="font-size:16px;font-weight:700;margin-bottom:16px"><i
+                                class="bi bi-bar-chart-line"></i> حجم الفجوات</h3>
+                        <div class="chart-container">
+                            <canvas id="barChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Bar Chart -->
-            <div class="chart-wrapper">
-                <h3 style="font-size:15px;margin-bottom:12px"><i class="bi bi-bar-chart-fill"></i> مقارنة الفجوات</h3>
-                <canvas id="barChart" height="200"></canvas>
-            </div>
-
-            <!-- SWOT Suggestions -->
-            <div class="card-dark" id="swotSuggestions" style="display:none">
-                <h3><i class="bi bi-lightbulb"></i> اقتراحات من تحليل SWOT</h3>
-                <div id="swotContent"></div>
+            <div class="card-custom">
+                <h3 style="font-size:16px;font-weight:700;margin-bottom:16px"><i class="bi bi-list-task"></i> سجل
+                    الفجوات وخطة العمل</h3>
+                <div class="gap-list" id="gapList">
+                    <!-- Dynamic Content -->
+                </div>
             </div>
         </div>
     </div>
 
-    <script src="/assets/js/api.js"></script>
-    <script src="/assets/js/sidebar.js"></script>
-    <script src="/assets/js/ai-advisor.js"></script>
-    <script src="/js/data-layer.js"></script>
+    <!-- Modal -->
+    <div class="modal fade" id="gapModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">إضافة/تعديل فجوة</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editId">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">اسم المحور / الفجوة</label>
+                        <input type="text" id="gapName" class="form-control"
+                            placeholder="مثال: الحصة السوقية، الكفاءة التشغيلية...">
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label text-muted">الوضع الحالي (1-100)</label>
+                            <input type="number" id="gapCurrent" class="form-control" min="0" max="100">
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label text-muted">المستهدف (1-100)</label>
+                            <input type="number" id="gapTarget" class="form-control" min="0" max="100">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">خطة العمل لردم الفجوة</label>
+                        <textarea id="gapAction" class="form-control" rows="3"
+                            placeholder="ما الخطوات المطلوبة للوصول للهدف؟"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-primary" onclick="saveGap()"
+                        style="background:var(--primary);border:none">حفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/steps-config.js"></script>
+    <script src="/js/sidebar.js"></script>
     <script>
-        const API = '/api';
-        let dimensions = [];
+        let gaps = [];
+        let analysisId = null;
+        let versionId = localStorage.getItem('selectedVersionId') || '';
         let radarChart, barChart;
 
-        function getToken() { return localStorage.getItem('token'); }
-        function authHeaders() {
-            const h = { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' };
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
-            if (user.entity?.id) h['X-Entity-Id'] = user.entity.id;
-            return h;
-        }
-        if (!getToken()) window.location.href = '/login';
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            await loadEntities();
-            // Phase 6B: محاولة تعبئة من جسر التشخيص أولاً
-            const filled = await fillFromDiagnosticBridge();
-            if (!filled && dimensions.length === 0) {
-                // Default dimensions
-                ['الموارد البشرية', 'التقنية والأنظمة', 'العمليات والإجراءات', 'الثقافة التنظيمية', 'الابتكار'].forEach(name => {
-                    addDimension({ name, current: 2, target: 4, actions: [] });
-                });
-            }
-        });
-
-        // Phase 6B: تعبئة أبعاد الرادار من درجات المحاور
-        async function fillFromDiagnosticBridge() {
-            try {
-                const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
-                // 📊 المرحلة 3: DB أولاً
-                let dept = null;
+        async function init() {
+            if (!versionId) {
                 try {
-                    const result = await StratixData.getDeptDeep();
-                    if (!result._error) dept = result;
-                } catch(e) { }
-                if (!dept) dept = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || 'null');
-                if (!diag?.radar?.axisScores) return false;
+                    const res = await window.apiRequest('/api/versions');
+                    const data = await res.json();
+                    const active = (data.versions || []).find(v => v.isActive) || (data.versions || [])[0];
+                    if (active) {
+                        versionId = active.id;
+                        localStorage.setItem('selectedVersionId', versionId);
+                    }
+                } catch (e) { console.warn('Could not load versions', e); }
+            }
 
-                const AXIS_TO_DIM = {
-                    'مالي': { name: 'الأداء المالي', target: 5 },
-                    'عمالة': { name: 'الموارد البشرية', target: 5 },
-                    'إداري': { name: 'الكفاءة التشغيلية', target: 5 },
-                    'تنظيمي': { name: 'الامتثال التنظيمي', target: 5 },
-                    'قطاعي': { name: 'الأداء في القطاع', target: 5 },
-                };
-
-                Object.entries(diag.radar.axisScores).forEach(([axis, score]) => {
-                    const cfg = AXIS_TO_DIM[axis]; if (!cfg) return;
-                    // تحويل النسبة المئوية (0-100) لمقياس (0-5)
-                    const current = parseFloat((score / 20).toFixed(1));
-                    addDimension({ name: cfg.name, current, target: cfg.target, actions: [] });
-                });
-
-                // إضافة أبعاد من الإدارات (dept-deep goals)
-                if (dept) {
-                    const DEPT_LABELS = { compliance: 'الامتثال', finance: 'المالية', sales: 'المبيعات', hr: 'الموارد البشرية', marketing: 'التسويق', operations: 'العمليات', support: 'الخدمات المساندة' };
-                    Object.entries(dept).forEach(([key, data]) => {
-                        if (!data?.completed) return;
-                        const exists = dimensions.some(d => d.name.includes(DEPT_LABELS[key] || key));
-                        if (!exists) {
-                            // درجة من إجابات الإدارة (تقدير بسيط)
-                            const answerCount = Object.keys(data.answers || {}).length;
-                            const current = Math.min(4, Math.max(1, Math.round(answerCount / 2)));
-                            addDimension({ name: `إدارة ${DEPT_LABELS[key] || key}`, current, target: 5, actions: [] });
+            if (versionId) {
+                try {
+                    const res = await window.apiRequest(`/api/company-analysis/version/${versionId}/GAP_ANALYSIS`);
+                    if (res.ok) {
+                        const analysis = await res.json();
+                        analysisId = analysis.id;
+                        if (analysis.parsedData && Array.isArray(analysis.parsedData)) {
+                            gaps = analysis.parsedData;
+                        } else if (analysis.data) {
+                            try { gaps = JSON.parse(analysis.data); } catch (e) { }
                         }
-                    });
-                }
+                    }
+                } catch (e) { console.warn('Could not load gap analysis', e); }
+            }
 
-                // عرض بانر التأكيد
-                showBridgeBanner(diag.results?.maturity);
-                return true;
-            } catch (e) { console.warn('Gap bridge error:', e); return false; }
+            renderAll();
         }
 
-        function showBridgeBanner(maturity) {
-            const existing = document.getElementById('gapBridgeBanner');
-            if (existing) return;
-            const b = document.createElement('div');
-            b.id = 'gapBridgeBanner';
-            b.style.cssText = 'padding:12px 16px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);border-radius:12px;margin-bottom:16px;font-size:13px;display:flex;align-items:center;gap:12px';
-            b.innerHTML = `<span style="font-size:20px">📊</span><span><strong>تم تعبئة أبعاد الرادار من التشخيص</strong> — نضج ${maturity ?? '?'}% — يمكنك تعديل القيم يدوياً</span>`;
-            const mainEl = document.querySelector('.main-content') || document.querySelector('main') || document.body;
-            mainEl.insertBefore(b, mainEl.firstChild);
-        }
+        async function saveToServer() {
+            if (!versionId) return;
+            const payload = {
+                versionId,
+                toolCode: 'GAP_ANALYSIS',
+                data: JSON.stringify(gaps),
+                status: gaps.length > 0 ? 'IN_PROGRESS' : 'DRAFT'
+            };
 
-        async function loadEntities() {
             try {
-                const res = await window.apiRequest(`${API}/entities?limit=100`, { headers: authHeaders() });
-                const data = await res.json();
-                const sel = document.getElementById('entitySelect');
-                (data.entities || []).forEach(e => {
-                    const opt = document.createElement('option');
-                    opt.value = e.id; opt.textContent = e.displayName || e.legalName;
-                    sel.appendChild(opt);
-                });
-                const user = JSON.parse(localStorage.getItem('user') || '{}');
-                if (user.entity?.id) sel.value = user.entity.id;
-                sel.addEventListener('change', () => { updateCompanyBanner(); loadVersions(); });
-                updateCompanyBanner();
-                await loadVersions();
-            } catch (e) { console.error(e); }
-        }
-
-        function updateCompanyBanner() {
-            const sel = document.getElementById('entitySelect');
-            const banner = document.getElementById('companyBanner');
-            const nameEl = document.getElementById('cbName');
-            const metaEl = document.getElementById('cbMeta');
-            const badgeEl = document.getElementById('cbBadge');
-            const versionSel = document.getElementById('versionSelect');
-
-            if (sel.value && sel.selectedOptions[0]) {
-                const entityName = sel.selectedOptions[0].textContent;
-                const versionName = versionSel.value && versionSel.selectedOptions[0] ? versionSel.selectedOptions[0].textContent : '';
-                banner.className = 'company-banner';
-                banner.querySelector('.cb-icon').textContent = '🏢';
-                nameEl.textContent = entityName;
-                metaEl.textContent = versionName ? `النسخة: ${versionName} — تحليل الفجوات` : 'تحليل الفجوات لهذا الكيان';
-                badgeEl.textContent = '📊 تحليل نشط';
-                badgeEl.style.background = 'rgba(16,185,129,0.12)';
-                badgeEl.style.color = 'var(--success)';
-            } else {
-                banner.className = 'company-banner no-entity';
-                banner.querySelector('.cb-icon').textContent = '⚠️';
-                nameEl.textContent = 'لم يتم تحديد الكيان';
-                metaEl.textContent = 'اختر الكيان والنسخة من القائمة أدناه';
-                badgeEl.textContent = 'غير محدد';
-                badgeEl.style.background = 'rgba(245,158,11,0.12)';
-                badgeEl.style.color = 'var(--warning)';
+                if (analysisId) {
+                    await window.apiRequest(`/api/company-analysis/${analysisId}`, {
+                        method: 'PATCH',
+                        body: JSON.stringify(payload)
+                    });
+                } else {
+                    const res = await window.apiRequest('/api/company-analysis', {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await res.json();
+                    if (data.id) analysisId = data.id;
+                }
+            } catch (e) {
+                console.error('Failed to save to server', e);
             }
         }
 
-        async function loadVersions() {
-            const entityId = document.getElementById('entitySelect').value;
-            const sel = document.getElementById('versionSelect');
-            sel.innerHTML = '<option value="">اختر...</option>';
-            if (!entityId) return;
-            try {
-                const res = await window.apiRequest(`${API}/versions?entityId=${entityId}`, { headers: authHeaders() });
-                const data = await res.json();
-                (data.versions || data || []).forEach(v => {
-                    const opt = document.createElement('option');
-                    opt.value = v.id; opt.textContent = v.name || `v${v.versionNumber}`;
-                    if (v.isActive) opt.textContent += ' ●';
-                    sel.appendChild(opt);
-                });
-                const active = (data.versions || data || []).find(v => v.isActive);
-                if (active) sel.value = active.id;
-                sel.addEventListener('change', () => { updateCompanyBanner(); loadExistingData(); loadSWOTSuggestions(); });
-                updateCompanyBanner();
-                loadExistingData();
-                loadSWOTSuggestions();
-            } catch (e) { console.error(e); }
+        function renderAll() {
+            renderList();
+            renderCharts();
         }
 
-        // ============ DIMENSIONS ============
-        function addDimension(data = {}) {
-            dimensions.push({
-                name: data.name || '',
-                current: data.current || 1,
-                target: data.target || 5,
-                actions: data.actions || []
-            });
-            renderDimensions();
-        }
-
-        function renderDimensions() {
-            const container = document.getElementById('dimensionsContainer');
-            container.innerHTML = dimensions.map((d, i) => {
-                const gap = d.target - d.current;
-                const gapClass = gap >= 3 ? 'gap-high' : gap >= 2 ? 'gap-medium' : gap > 0 ? 'gap-low' : 'gap-none';
-                return `
-                <div class="dimension-row">
-                    <input class="input-dark" value="${d.name}" onchange="dimensions[${i}].name=this.value;updateCharts()" placeholder="اسم البُعد">
-
-                    <div style="text-align:center">
-                        <input type="range" class="slider-current" min="1" max="5" value="${d.current}"
-                            oninput="dimensions[${i}].current=+this.value;renderDimensions()">
-                        <div class="slider-val" style="color:var(--warning)">${d.current}</div>
-                    </div>
-
-                    <div style="text-align:center">
-                        <input type="range" class="slider-target" min="1" max="5" value="${d.target}"
-                            oninput="dimensions[${i}].target=+this.value;renderDimensions()">
-                        <div class="slider-val" style="color:var(--success)">${d.target}</div>
-                    </div>
-
-                    <div style="text-align:center">
-                        <span class="gap-badge ${gapClass}">${gap > 0 ? '-' + gap : '✓'}</span>
-                    </div>
-
-                    <div>
-                        <input class="input-dark" value="${d.actions.join(', ')}" 
-                            onchange="dimensions[${i}].actions=this.value.split(',').map(s=>s.trim()).filter(Boolean)" 
-                            placeholder="إجراء 1, إجراء 2, ...">
-                    </div>
-
-                    <button class="btn-danger-sm" onclick="dimensions.splice(${i},1);renderDimensions()"><i class="bi bi-trash"></i></button>
-                </div>
-            `;
-            }).join('');
-
-            updateCharts();
-            updateStats();
-            updateRanking();
-        }
-
-        function updateStats() {
-            const named = dimensions.filter(d => d.name);
-            const gaps = named.map(d => d.target - d.current);
-            document.getElementById('statDimensions').textContent = named.length;
-            document.getElementById('statMaxGap').textContent = gaps.length ? Math.max(...gaps) : 0;
-            document.getElementById('statAvgGap').textContent = gaps.length ? (gaps.reduce((a, b) => a + b, 0) / gaps.length).toFixed(1) : 0;
-        }
-
-        function updateRanking() {
-            const list = document.getElementById('rankingList');
-            const sorted = dimensions.filter(d => d.name).map(d => ({ ...d, gap: d.target - d.current }))
-                .sort((a, b) => b.gap - a.gap);
-
-            if (sorted.length === 0) {
-                list.innerHTML = '<p style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px">أضف أبعاد وقيّمها</p>';
+        function renderList() {
+            const list = document.getElementById('gapList');
+            if (gaps.length === 0) {
+                list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">لا توجد فجوات مضافة بعد</div>';
                 return;
             }
 
-            list.innerHTML = sorted.map((d, i) => {
-                const gapClass = d.gap >= 3 ? 'high' : d.gap >= 2 ? 'medium' : 'low';
-                const gapColor = d.gap >= 3 ? 'danger' : d.gap >= 2 ? 'warning' : 'success';
-                return `
-                <div class="ranking-item">
-                    <div class="ranking-num ${gapClass}">${i + 1}</div>
-                    <div class="ranking-info">
-                        <div class="name">${d.name}</div>
-                        <div class="desc">${d.current}/5 → ${d.target}/5 ${d.actions.length ? '| ' + d.actions.map(a => `<span class="action-tag">${a}</span>`).join(' ') : ''}</div>
+            list.innerHTML = gaps.map(g => `
+                <div class="gap-item">
+                    <div class="gap-info">
+                        <div class="gap-title">${g.name}</div>
+                        <div class="gap-desc"><i class="bi bi-arrow-return-right text-primary"></i> ${g.action || 'لا توجد خطة عمل مسجلة'}</div>
                     </div>
-                    <div class="ranking-gap" style="color:var(--${gapColor})">${d.gap > 0 ? '-' + d.gap : '✓'}</div>
+                    <div class="gap-metrics">
+                        <div class="metric">
+                            <div class="metric-label">الحالي</div>
+                            <div class="metric-value current">${g.current}%</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">المستهدف</div>
+                            <div class="metric-value target">${g.target}%</div>
+                        </div>
+                        <div class="metric" style="background:rgba(239,68,68,0.1)">
+                            <div class="metric-label">الفجوة</div>
+                            <div class="metric-value diff">-${Math.max(0, g.target - g.current)}%</div>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="editGap(${g.id})" style="border:none;color:var(--text-muted)"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteGap(${g.id})" style="border:none;color:var(--danger)"><i class="bi bi-trash"></i></button>
+                    </div>
                 </div>
-            `;
-            }).join('');
+            `).join('');
         }
 
-        function updateCharts() {
-            const named = dimensions.filter(d => d.name);
-            const labels = named.map(d => d.name);
-            const current = named.map(d => d.current);
-            const target = named.map(d => d.target);
+        function renderCharts() {
+            const labels = gaps.map(g => g.name);
+            const currentData = gaps.map(g => g.current);
+            const targetData = gaps.map(g => g.target);
+            const gapData = gaps.map(g => Math.max(0, g.target - g.current));
 
-            // Radar
+            // Radar Chart
+            const ctxRadar = document.getElementById('radarChart').getContext('2d');
             if (radarChart) radarChart.destroy();
-            radarChart = new Chart(document.getElementById('radarChart'), {
+            radarChart = new Chart(ctxRadar, {
                 type: 'radar',
                 data: {
-                    labels,
+                    labels: labels,
                     datasets: [
-                        { label: 'الحالي', data: current, borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', pointBackgroundColor: '#f59e0b' },
-                        { label: 'المستهدف', data: target, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', pointBackgroundColor: '#10b981' }
+                        {
+                            label: 'المستهدف',
+                            data: targetData,
+                            backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                            borderColor: '#22c55e',
+                            borderWidth: 2,
+                            pointBackgroundColor: '#22c55e'
+                        },
+                        {
+                            label: 'الوضع الحالي',
+                            data: currentData,
+                            backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                            borderColor: '#facc15',
+                            borderWidth: 2,
+                            pointBackgroundColor: '#facc15'
+                        }
                     ]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     scales: {
                         r: {
-                            min: 0, max: 5, ticks: { stepSize: 1, color: '#94a3b8', backdropColor: 'transparent' },
-                            grid: { color: 'rgba(255,255,255,0.05)' },
-                            angleLines: { color: 'rgba(255,255,255,0.05)' },
-                            pointLabels: { color: '#e2e8f0', font: { family: 'Tajawal', size: 12 } }
+                            angleLines: { color: 'rgba(255,255,255,0.1)' },
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            pointLabels: { color: '#94a3b8', font: { family: 'Tajawal', size: 12 } },
+                            ticks: { display: false, min: 0, max: 100 }
                         }
                     },
-                    plugins: { legend: { labels: { color: '#94a3b8', font: { family: 'Tajawal' } } } }
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#e2e8f0', font: { family: 'Tajawal' } } }
+                    }
                 }
             });
 
-            // Bar
+            // Bar Chart
+            const ctxBar = document.getElementById('barChart').getContext('2d');
             if (barChart) barChart.destroy();
-            const gaps = named.map(d => d.target - d.current);
-            barChart = new Chart(document.getElementById('barChart'), {
+            barChart = new Chart(ctxBar, {
                 type: 'bar',
                 data: {
-                    labels,
-                    datasets: [
-                        { label: 'الحالي', data: current, backgroundColor: 'rgba(245,158,11,0.7)', borderRadius: 4 },
-                        { label: 'المستهدف', data: target, backgroundColor: 'rgba(16,185,129,0.7)', borderRadius: 4 }
-                    ]
+                    labels: labels,
+                    datasets: [{
+                        label: 'حجم الفجوة',
+                        data: gapData,
+                        backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                        borderRadius: 6
+                    }]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     scales: {
-                        y: { min: 0, max: 5, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                        x: { ticks: { color: '#94a3b8', font: { family: 'Tajawal' } }, grid: { display: false } }
+                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { family: 'Tajawal' } } }
                     },
-                    plugins: { legend: { labels: { color: '#94a3b8', font: { family: 'Tajawal' } } } }
+                    plugins: {
+                        legend: { display: false }
+                    }
                 }
             });
         }
 
-        // ============ SWOT SUGGESTIONS ============
-        async function loadSWOTSuggestions() {
-            const versionId = document.getElementById('versionSelect').value;
-            if (!versionId) return;
-            try {
-                const res = await window.apiRequest(`${API}/company-analysis/version/${versionId}/SWOT`, { headers: authHeaders() });
-                if (!res.ok) return;
-                const data = await res.json();
-                const swot = data.parsedData;
-                if (!swot) return;
+        const modal = new bootstrap.Modal(document.getElementById('gapModal'));
 
-                const container = document.getElementById('swotContent');
-                const suggestions = [];
-
-                // Get weaknesses
-                const weaknesses = swot.weaknesses || swot.W || [];
-                if (weaknesses.length > 0) {
-                    suggestions.push(`<div style="margin-bottom:12px"><strong style="color:var(--danger)">⚠️ نقاط الضعف (يمكن استخدامها كإجراءات):</strong><div style="margin-top:6px">${weaknesses.map(w => `<span class="action-tag">${typeof w === 'string' ? w : w.text || w.title || JSON.stringify(w)}</span>`).join(' ')
-                        }</div></div>`);
-                }
-
-                // Get threats
-                const threats = swot.threats || swot.T || [];
-                if (threats.length > 0) {
-                    suggestions.push(`<div><strong style="color:var(--warning)">⚡ التهديدات (يجب مراعاتها):</strong><div style="margin-top:6px">${threats.map(t => `<span class="action-tag">${typeof t === 'string' ? t : t.text || t.title || JSON.stringify(t)}</span>`).join(' ')
-                        }</div></div>`);
-                }
-
-                if (suggestions.length > 0) {
-                    container.innerHTML = suggestions.join('');
-                    document.getElementById('swotSuggestions').style.display = 'block';
-                }
-            } catch (e) { /* no SWOT data */ }
+        function newGap() {
+            document.getElementById('editId').value = '';
+            document.getElementById('gapName').value = '';
+            document.getElementById('gapCurrent').value = '';
+            document.getElementById('gapTarget').value = '';
+            document.getElementById('gapAction').value = '';
+            modal.show();
         }
 
-        // ============ SAVE/LOAD ============
-        async function saveGapData() {
-            const versionId = document.getElementById('versionSelect').value;
-            if (!versionId) { alert('اختر النسخة أولاً'); return; }
-
-            const data = { dimensions: dimensions.filter(d => d.name) };
-
-            try {
-                const checkRes = await window.apiRequest(`${API}/company-analysis/version/${versionId}/GAP_ANALYSIS`, { headers: authHeaders() });
-                if (checkRes.ok) {
-                    const existing = await checkRes.json();
-                    await window.apiRequest(`${API}/company-analysis/${existing.id}`, {
-                        method: 'PATCH', headers: authHeaders(),
-                        body: JSON.stringify({ data: JSON.stringify(data), status: 'IN_PROGRESS' })
-                    });
-                } else {
-                    await window.apiRequest(`${API}/company-analysis`, {
-                        method: 'POST', headers: authHeaders(),
-                        body: JSON.stringify({ versionId, toolCode: 'GAP_ANALYSIS', data: JSON.stringify(data), status: 'IN_PROGRESS' })
-                    });
-                }
-                alert('✅ تم حفظ تحليل الفجوات');
-            } catch (e) { alert('❌ خطأ في الحفظ'); console.error(e); }
+        function editGap(id) {
+            const g = gaps.find(x => x.id === id);
+            if (!g) return;
+            document.getElementById('editId').value = g.id;
+            document.getElementById('gapName').value = g.name;
+            document.getElementById('gapCurrent').value = g.current;
+            document.getElementById('gapTarget').value = g.target;
+            document.getElementById('gapAction').value = g.action;
+            modal.show();
         }
 
-        async function loadExistingData() {
-            const versionId = document.getElementById('versionSelect').value;
-            if (!versionId) return;
-            try {
-                const res = await window.apiRequest(`${API}/company-analysis/version/${versionId}/GAP_ANALYSIS`, { headers: authHeaders() });
-                if (res.ok) {
-                    const analysis = await res.json();
-                    if (analysis?.parsedData?.dimensions) {
-                        dimensions = analysis.parsedData.dimensions;
-                        renderDimensions();
-                    }
+        async function saveGap() {
+            const id = document.getElementById('editId').value;
+            const name = document.getElementById('gapName').value;
+            const current = parseInt(document.getElementById('gapCurrent').value) || 0;
+            const target = parseInt(document.getElementById('gapTarget').value) || 0;
+            const action = document.getElementById('gapAction').value;
+
+            if (!name) { alert('الرجاء كتابة اسم المحور'); return; }
+
+            if (id) {
+                const g = gaps.find(x => x.id == id);
+                if (g) {
+                    g.name = name; g.current = current; g.target = target; g.action = action;
                 }
-            } catch (e) { /* no data */ }
+            } else {
+                gaps.push({ id: Date.now(), name, current, target, action });
+            }
+
+            modal.hide();
+            renderAll();
+            await saveToServer();
         }
+
+        async function deleteGap(id) {
+            if (confirm('هل تريد حذف هذه الفجوة؟')) {
+                gaps = gaps.filter(x => x.id != id);
+                renderAll();
+                await saveToServer();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
     </script>
-    <script src="/assets/js/path-tracker.js"></script>
+</body>
+
+</html> function renderCharts() {
+const labels = gaps.map(g => g.name);
+const currentData = gaps.map(g => g.current);
+const targetData = gaps.map(g => g.target);
+const gapData = gaps.map(g => Math.max(0, g.target - g.current));
+
+// Radar Chart
+const ctxRadar = document.getElementById('radarChart').getContext('2d');
+if (radarChart) radarChart.destroy();
+radarChart = new Chart(ctxRadar, {
+type: 'radar',
+data: {
+labels: labels,
+datasets: [
+{
+label: 'المستهدف',
+data: targetData,
+backgroundColor: 'rgba(34, 197, 94, 0.2)',
+borderColor: '#22c55e',
+borderWidth: 2,
+pointBackgroundColor: '#22c55e'
+},
+{
+label: 'الوضع الحالي',
+data: currentData,
+backgroundColor: 'rgba(245, 158, 11, 0.2)',
+borderColor: '#facc15',
+borderWidth: 2,
+pointBackgroundColor: '#facc15'
+}
+]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+scales: {
+r: {
+angleLines: { color: 'rgba(255,255,255,0.1)' },
+grid: { color: 'rgba(255,255,255,0.1)' },
+pointLabels: { color: '#94a3b8', font: { family: 'Tajawal', size: 12 } },
+ticks: { display: false, min: 0, max: 100 }
+}
+},
+plugins: {
+legend: { position: 'bottom', labels: { color: '#e2e8f0', font: { family: 'Tajawal' } } }
+}
+}
+});
+
+// Bar Chart
+const ctxBar = document.getElementById('barChart').getContext('2d');
+if (barChart) barChart.destroy();
+barChart = new Chart(ctxBar, {
+type: 'bar',
+data: {
+labels: labels,
+datasets: [{
+label: 'حجم الفجوة',
+data: gapData,
+backgroundColor: 'rgba(239, 68, 68, 0.8)',
+borderRadius: 6
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+scales: {
+y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { family: 'Tajawal' } } }
+},
+plugins: {
+legend: { display: false }
+}
+}
+});
+}
+
+const modal = new bootstrap.Modal(document.getElementById('gapModal'));
+
+function newGap() {
+document.getElementById('editId').value = '';
+document.getElementById('gapName').value = '';
+document.getElementById('gapCurrent').value = '';
+document.getElementById('gapTarget').value = '';
+document.getElementById('gapAction').value = '';
+modal.show();
+}
+
+function editGap(id) {
+const g = gaps.find(x => x.id === id);
+if (!g) return;
+document.getElementById('editId').value = g.id;
+document.getElementById('gapName').value = g.name;
+document.getElementById('gapCurrent').value = g.current;
+document.getElementById('gapTarget').value = g.target;
+document.getElementById('gapAction').value = g.action;
+modal.show();
+}
+
+function saveGap() {
+const id = document.getElementById('editId').value;
+const name = document.getElementById('gapName').value;
+const current = parseInt(document.getElementById('gapCurrent').value) || 0;
+const target = parseInt(document.getElementById('gapTarget').value) || 0;
+const action = document.getElementById('gapAction').value;
+
+if (!name) { alert('الرجاء كتابة اسم المحور'); return; }
+
+if (id) {
+const g = gaps.find(x => x.id == id);
+if (g) {
+g.name = name; g.current = current; g.target = target; g.action = action;
+}
+} else {
+gaps.push({ id: Date.now(), name, current, target, action });
+}
+
+modal.hide();
+renderAll();
+}
+
+function deleteGap(id) {
+if (confirm('هل تريد حذف هذه الفجوة؟')) {
+gaps = gaps.filter(x => x.id != id);
+renderAll();
+}
+}
+
+document.addEventListener('DOMContentLoaded', renderAll);
+</script>
 </body>
 
 </html>

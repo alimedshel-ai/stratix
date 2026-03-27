@@ -1113,8 +1113,43 @@
             // ==================== قراءة البيانات الموحدة ====================
             function loadUnifiedHealth() {
                 // محاولة قراءة الكائن الموحد الجديد
-                let health = JSON.parse(localStorage.getItem('stratix_company_health') || 'null');
-                if (health) return health;
+                let health = window.Context ? Context.getItem('company_health', null) : JSON.parse(localStorage.getItem('stratix_company_health') || 'null');
+                if (health) {
+                    // مزامنة مستمرة دائمًا لأحدث تحديثات الإدارات من dept-deep لضمان الحيوية
+                    const deptDeep = window.Context ? Context.getItem('dept_deep_payload', {}) : JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || '{}');
+                    DEPTS.forEach(dept => {
+                        const d = deptDeep[dept.key] || {};
+                        if (Object.keys(d).length > 0) {
+                            health.departments[dept.key] = {
+                                score: d.score || health.departments[dept.key]?.score || null,
+                                answers: d.answers || health.departments[dept.key]?.answers || {},
+                                manager: d.deptManagerInfo || health.departments[dept.key]?.manager || {},
+                                challenges: d.challenges || health.departments[dept.key]?.challenges || [],
+                                goals: d.goals || health.departments[dept.key]?.goals || [],
+                                completed: d.completed || health.departments[dept.key]?.completed || false
+                            };
+                        }
+                    });
+
+                    // مزامنة مستمرة دائمًا للإدارات التي لها صفحات تقييم مخصصة (Custom Wizards)
+                    ['compliance', 'finance', 'sales', 'hr', 'marketing'].forEach(key => {
+                        const deep = window.Context ? Context.getItem(key + '_deep_results', null) : JSON.parse(localStorage.getItem(key + 'DeepResults') || 'null');
+                        if (deep) {
+                            if (!health.deepAnalysis[key]) health.deepAnalysis[key] = {};
+                            health.deepAnalysis[key] = deep;
+                            if (health.departments[key]) {
+                                health.departments[key].score = deep.score || health.departments[key].score;
+                                health.departments[key].deepScore = deep.score;
+                                health.departments[key].completed = true;
+                                // mock answers count to show 100% completion in the UI
+                                health.departments[key].answers = health.departments[key].answers || { completed: true };
+                            }
+                        }
+                    });
+
+                    saveUnifiedHealth(health);
+                    return health;
+                }
 
                 // إذا لم يوجد، نقوم بترحيل البيانات القديمة (migration)
                 return migrateOldData();
@@ -1134,11 +1169,11 @@
                 };
 
                 // 1. الحجم من painAmbition
-                const pa = JSON.parse(localStorage.getItem('painAmbition') || '{}');
+                const pa = window.Context ? Context.getItem('pain_ambition', {}) : JSON.parse(localStorage.getItem('painAmbition') || '{}');
                 health.sizeCategory = pa.sizeCategory || 'medium';
 
                 // 2. بيانات deptDeep
-                const deptDeep = JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || '{}');
+                const deptDeep = window.Context ? Context.getItem('dept_deep_payload', {}) : JSON.parse(localStorage.getItem('stratix_dept_deep_payload') || '{}');
                 DEPTS.forEach(dept => {
                     const d = deptDeep[dept.key] || {};
                     health.departments[dept.key] = {
@@ -1153,7 +1188,7 @@
 
                 // 3. نتائج التحليل العميق (deep results)
                 ['compliance', 'finance', 'sales', 'hr'].forEach(key => {
-                    const deep = JSON.parse(localStorage.getItem(key + 'DeepResults') || 'null');
+                    const deep = window.Context ? Context.getItem(key + '_deep_results', null) : JSON.parse(localStorage.getItem(key + 'DeepResults') || 'null');
                     if (deep) {
                         if (!health.deepAnalysis[key]) health.deepAnalysis[key] = {};
                         health.deepAnalysis[key] = deep;
@@ -1166,41 +1201,75 @@
                 // 4. بيانات سلسلة القيمة (لم تكن موجودة بشكل منفصل، نضعها فارغة)
 
                 // حفظ الكيان الموحد
-                localStorage.setItem('stratix_company_health', JSON.stringify(health));
+                if (window.Context) { Context.setItem('company_health', health); } else { localStorage.setItem('stratix_company_health', JSON.stringify(health)); }
                 return health;
             }
 
             function saveUnifiedHealth(health) {
-                localStorage.setItem('stratix_company_health', JSON.stringify(health));
+                if (window.Context) {
+                    Context.setItem('company_health', health);
+                } else {
+                    localStorage.setItem('stratix_company_health', JSON.stringify(health));
+                }
             }
 
             const healthData = loadUnifiedHealth();
             const sizeCategory = healthData.sizeCategory; // 'small', 'medium', 'large'
 
             // اسم الشركة من التشخيص القديم (أو من health)
-            const diagPayload = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
-            const companyName = diagPayload?.company?.name || localStorage.getItem('stratix_company_name') || '';
+            const diagPayload = window.Context ? Context.getItem('diagnostic_payload', null) : JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
+            const companyName = diagPayload?.company?.name || (window.Context ? Context.getItem('company_name', '') : localStorage.getItem('stratix_company_name')) || '';
             if (companyName) {
                 document.getElementById('companyName').textContent = `${companyName} — تحليل متكامل حسب حجم المنشأة`;
             }
 
-            // ==================== دعم URL Parameters ====================
+            // ==================== دعم URL Parameters وربط دور مدير الإدارة ====================
             const urlParams = new URLSearchParams(window.location.search);
+            try {
+                const _user = JSON.parse(localStorage.getItem('user'));
+                if (!urlParams.get('dept') && _user && (_user.userType === 'DEPT_MANAGER' || _user.userCategory === 'DEPT_MANAGER')) {
+                    const matchedDept = _user.department?.key || _user.userCategory.replace('DEPT_', '').toLowerCase();
+                    if (matchedDept) {
+                        urlParams.set('dept', matchedDept);
+                        // Update visual URL without reloading so sharing links work correctly
+                        const newUrl = new URL(window.location);
+                        newUrl.searchParams.set('dept', matchedDept);
+                        window.history.replaceState({}, '', newUrl);
+                    }
+                }
+            } catch (e) { }
+
             const requestedTab = urlParams.get('tab') || 'overview';
+            const _finalDept = urlParams.get('dept');
+            const isDeptMode = !!_finalDept;
+
+            // ==================== تخصيص العناوين للمدير ====================
+            if (isDeptMode) {
+                const _dt = DEPTS.find(d => d.key === _finalDept);
+                if (_dt) {
+                    document.title = `ستارتكس — صحة إدارة ${_dt.label}`;
+                    const cName = document.getElementById('companyName');
+                    if (cName) cName.innerHTML = `<i class="bi bi-diagram-3-fill"></i> لوحة عمل إدارة ${_dt.label}`;
+
+                    const heroP = document.querySelector('.company-health-desc');
+                    if (heroP) heroP.textContent = `تحليل شامل لإدارة ${_dt.label} من الفحص إلى الخطة`;
+                }
+            }
 
             // ==================== بناء التبويبات ====================
             const tabs = [
-                { id: 'overview', label: 'نظرة عامة', icon: 'bi-eye-fill', always: true },
-                { id: 'departments', label: 'الإدارات', icon: 'bi-grid-3x3-gap-fill', always: true },
-                { id: 'deep', label: 'تعمق', icon: 'bi-search-heart', condition: sizeCategory === 'large' }
+                { id: 'overview', label: 'نظرة عامة', icon: 'bi-eye-fill', condition: !isDeptMode },
+                { id: 'departments', label: isDeptMode ? 'التقييم التشغيلي' : 'الإدارات', icon: 'bi-grid-3x3-gap-fill', always: true },
+                { id: 'deep', label: 'تعمق', icon: 'bi-search-heart', condition: sizeCategory === 'large' && !isDeptMode }
             ];
 
             const tabsContainer = document.getElementById('tabsContainer');
             tabsContainer.innerHTML = '';
 
-            // تحديد التبويب الافتراضي (من URL أو overview)
+            // تحديد التبويب الافتراضي (من URL أو أول تبويب متاح)
             const availableTabs = tabs.filter(t => t.condition !== false);
-            const defaultTab = availableTabs.find(t => t.id === requestedTab) ? requestedTab : 'overview';
+            const fallbackTab = availableTabs.length > 0 ? availableTabs[0].id : 'overview';
+            const defaultTab = availableTabs.find(t => t.id === requestedTab) ? requestedTab : fallbackTab;
 
             tabs.forEach(tab => {
                 if (tab.condition === false) return; // لا يظهر

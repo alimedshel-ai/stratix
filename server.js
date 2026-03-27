@@ -39,12 +39,10 @@ const alertEngineRoutes = require('./routes/alert-engine');
 const towsRoutes = require('./routes/tows');
 const pathRoutes = require('./routes/path');
 const importRoutes = require('./routes/import');
-const okrsRoutes = require('./routes/okrs');
+const webhooksRoutes = require('./routes/webhooks');
 const entityTypesRoutes = require('./routes/entity-types');
 const priorityMatrixRoutes = require('./routes/priority-matrix');
 const inspectorRoutes = require('./routes/system-inspector');
-const webhooksRoutes = require('./routes/webhooks');
-const scenariosRoutes = require('./routes/scenarios');
 const commentsRoutes = require('./routes/comments');
 const activitiesRoutes = require('./routes/activities');
 const aiAdvisorRoutes = require('./routes/ai-advisor');
@@ -56,6 +54,8 @@ const companyHealthRoutes = require('./routes/company-health');
 const dimensionsRoutes = require('./routes/dimensions');
 const deptDataRoutes = require('./routes/dept-data');  // ✅ استبيان الإدارات
 const departmentsRoutes = require('./routes/departments'); // ✅ بيانات الأقسام
+const issuesRoutes = require('./routes/issues'); // ✨ متتبع المشاكل الاستراتيجية
+
 
 
 const app = express();
@@ -118,17 +118,17 @@ app.use((req, res, next) => {
 
 // Rate Limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500, // limit each IP to 500 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
+  windowMs: 1 * 60 * 1000, // دقيقة واحدة بدلاً من 15
+  max: 2000, // 2000 طلب في الدقيقة (كافية جداً للتطوير)
+  message: 'محاولات كثيرة جداً. يرجى الانتظار قليلاً.',
   standardHeaders: true,
   legacyHeaders: false,
 });
 
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'production' ? 10 : 100,
-  message: { error: 'محاولات تسجيل دخول كثيرة. حاول بعد 15 دقيقة.' },
+  windowMs: 5 * 60 * 1000,
+  max: 1000, // ارفع الحد لعمليات الدخول
+  message: { error: 'محاولات تسجيل دخول كثيرة. حاول بعد 5 دقائق.' },
   skipSuccessfulRequests: true,
   standardHeaders: true,
   legacyHeaders: false,
@@ -295,9 +295,27 @@ app.use('/api/dashboard', dashboardApiRoutes);
 
 // 🏥 صحة الشركة — لوحة أم تستقبل بيانات الإدارات
 app.use('/api/company-health', companyHealthRoutes);
+app.use('/api/issues', issuesRoutes);
+
 app.use('/api/dimensions', dimensionsRoutes); // ✨ الأبعاد الثلاثة
 app.use('/api/dept-data', deptDataRoutes);    // ✅ استبيان الإدارات ومؤشراتها
 app.use('/api/departments', departmentsRoutes); // ✅ بيانات الأقسام
+
+// 📍 تتبع تقدم رحلة مدير الإدارة (localStorage-first)
+const progressRoutes = require('./routes/progress');
+const pestelRoutes = require('./routes/pestel');
+const swotRoutes = require('./routes/swot');
+const deptHealthRoutes = require('./routes/dept-health');
+const scenariosRoutes = require('./routes/scenarios');
+const okrRoutes = require('./routes/okrs');
+app.use('/api/progress', progressRoutes);
+app.use('/api/pestel', pestelRoutes);
+app.use('/api/swot', swotRoutes);
+app.use('/api/dept-health', deptHealthRoutes);
+app.use('/api/scenarios', scenariosRoutes);
+app.use('/api/okrs', okrRoutes);
+
+
 
 
 // 🎯 Executive Dashboard API v1 — BSC-Driven
@@ -362,8 +380,7 @@ app.use('/api/excel', excelRoutes);
 const statsRoutes = require('./routes/stats');
 app.use('/api/stats', statsRoutes);
 
-// 🎯 OKRs
-app.use('/api/okrs', okrsRoutes);
+// OKRs are handled above in the department managers section
 
 // 🚀 المبادرات الاستراتيجية
 const initiativesRoutes = require('./routes/initiatives');
@@ -382,7 +399,7 @@ app.use('/api/priority-matrix', priorityMatrixRoutes);
 app.use('/api/inspector', inspectorRoutes);
 
 // 🔮 محاكاة السيناريوهات
-app.use('/api/scenarios', scenariosRoutes);
+// Removed duplicate scenarios use
 
 // 💬 التعليقات والنشاطات
 app.use('/api/comments', commentsRoutes);
@@ -438,7 +455,6 @@ const REDIRECTS = {
   // '/pain-ambition' — يُعالج يدوياً أسفل (مع query params)
   '/strategic-tools': '/tools',
   '/signup': '/login?tab=signup&from=landing',
-  '/swot': '/tool?code=SWOT',
   '/founder-diagnostic': '/select-type',            // ← الجديد: بدل V10
   '/path1': '/',
   '/alerts': '/intelligence',

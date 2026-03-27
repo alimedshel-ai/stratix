@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <title>ستارتكس | التقييم الوصفي - الجودة</title>
+    <link rel="stylesheet" href="/css/dept-pages.css">
+    <script src="/js/context-manager.js"></script>
+    <script src="/js/dept-page.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>📋 التقييم الوصفي – الجودة</h1>
+        <div class="sub">أجب عن الأسئلة التالية لتحديد نقاط القوة والضعف في قسم الجودة</div>
+        <div id="deepSummary" class="deep-summary-box"></div>
+        <form id="auditForm">
+            <div class="question"><label>فعالية نظام إدارة الجودة المعمول به</label><select name="qms_effectiveness"
+                    required>
+                    <option value="">اختر</option>
+                    <option value="ضعيف">ضعيف (لا توجد معايير واضحة)</option>
+                    <option value="متوسط">متوسط (معايير موجودة لكن متبعة جزئياً)</option>
+                    <option value="قوي">قوي (معايير صارمة ومتبعة)</option>
+                </select></div>
+            <div class="question"><label>كفاية التدريب على الجودة وأدواتها</label><select name="training_adequacy"
+                    required>
+                    <option value="">اختر</option>
+                    <option value="غير كاف">غير كاف</option>
+                    <option value="كافي">كافي</option>
+                    <option value="متميز">متميز</option>
+                </select></div>
+            <div class="question"><label>أبرز تحديات الجودة الحالية</label><textarea name="quality_challenges" rows="3"
+                    placeholder="مثال: صعوبة تطبيق معايير الجودة على الموردين..."></textarea></div>
+            <div class="question"><label>ما هي نقاط القوة في قسم الجودة؟</label><textarea name="strengths_comment"
+                    rows="3" placeholder="افصل بين النقاط بفاصلة أو سطر جديد"></textarea></div>
+            <div class="question"><label>ما هي نقاط الضعف التي تحتاج تحسيناً؟</label><textarea name="weaknesses_comment"
+                    rows="3" placeholder="افصل بين النقاط بفاصلة أو سطر جديد"></textarea></div>
+            <button type="submit">حفظ التحليل والمتابعة إلى SWOT</button>
+        </form>
+    </div>
+    <script>
+        const dept = 'quality';
+        function extractStrengthsWeaknesses(a) {
+            const s = [], w = [];
+            if (a.qms_effectiveness === 'قوي') s.push('نظام إدارة جودة صارم ومطبق بفعالية');
+            else if (a.qms_effectiveness === 'ضعيف') w.push('ضعف نظام إدارة الجودة ومعاييرها');
+            if (a.training_adequacy === 'متميز') s.push('تدريب متميز على أدوات ومبادئ الجودة');
+            else if (a.training_adequacy === 'غير كاف') w.push('تدريب غير كافٍ على الجودة وأدواتها');
+            if (a.strengths_comment) a.strengths_comment.split(/[،,\n]/).forEach(l => { if (l.trim()) s.push(l.trim()); });
+            if (a.weaknesses_comment) a.weaknesses_comment.split(/[،,\n]/).forEach(l => { if (l.trim()) w.push(l.trim()); });
+            return { strengths: s, weaknesses: w };
+        }
+        document.addEventListener('DOMContentLoaded', async () => {
+            const ok = await DeptPage.init(dept);
+            if (!ok) return;
+            await DeptPage.loadDeepSummary('deepSummary');
+            let saved = await DeptPage.loadFromAPI('AUDIT') || Context.getTemp('audit_data') || DeptPage.migrateFromLocalStorage(`stratix_${dept}_audit`);
+            DeptPage.fillForm(saved);
+            document.getElementById('auditForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const answers = Object.fromEntries(new FormData(e.target));
+                let missing = false;
+                document.querySelectorAll('[required]').forEach(f => {
+                    if (!answers[f.name]) { missing = true; f.style.borderColor = '#ef4444'; }
+                    else f.style.borderColor = '';
+                });
+                if (missing) { DeptPage.showMessage('يرجى الإجابة على جميع الأسئلة المطلوبة', true); return; }
+                Context.setTemp('audit_data', answers);
+                Context.setTemp('audit_completed', true);
+                const { strengths, weaknesses } = extractStrengthsWeaknesses(answers);
+                Context.setItem(`${dept}_strengths`, strengths);
+                Context.setItem(`${dept}_weaknesses`, weaknesses);
+                const saved = await DeptPage.saveToAPI('AUDIT', answers);
+                DeptPage.showMessage(saved ? 'تم حفظ التقييم الوصفي بنجاح' : 'فشل الحفظ في الخادم، لكن البيانات محفوظة محلياً', !saved);
+                setTimeout(() => window.location.href = `/swot.html?dept=${dept}`, 1500);
+            });
+        });
+    </script>
+</body>
+
+</html>

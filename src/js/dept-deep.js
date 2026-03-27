@@ -2042,6 +2042,13 @@ const CHALLENGES = {
     cs: ['بطء الرد على العميل', 'غياب CRM', 'معدل FCR منخفض', 'دوران فريق CS', 'شكاوى غير محلولة', 'قنوات تواصل متفرقة', 'غياب قاعدة معرفة', 'ضعف تدريب الفريق'],
     quality: ['الخطأ البشري المتكرر', 'غياب ISO', 'ديون جودة من الموردين', 'غياب RCA', 'متجاوزة معدل العيوب', 'ضعف ثقافة الجودة', 'الفحص النهائي فقط', 'غياب CAPA'],
     projects: ['تأخير مستمر في المشاريع', 'تجاوز الميزانية', 'غياب PMO', 'ضعف إدارة المخاطر', 'غياب منهجية', 'شح النطاق (Scope Creep)', 'ضعف توثيق الدروس المستفادة', 'ضعف تواصل أصحاب المصلحة'],
+    marketing: ['غياب استراتيجية تسويق مكتوبة', 'ميزانية تسويقية محدودة أو غير واضحة', 'صعوبة قياس العائد على الاستثمار (ROI)', 'غياب المحتوى المستمر والمنتظم', 'ضعف التواجد الرقمي (SEO)', 'انخفاض معدل التحويل للعملاء', 'عدم وضوح الميزة التنافسية', 'غياب الفهم العميق للعميل المستهدف', 'ضعف التكامل مع المبيعات', 'الاعتماد على قناة تسويقية واحدة', 'ضعف التفاعل في منصات التواصل', 'صعوبة تتبع تكلفة اكتساب العميل'],
+    operations: ['كثرة العمليات اليدوية والورقية', 'غياب إجراءات العمل القياسية (SOPs)', 'اختناقات تشغيلية (Bottlenecks)', 'تأخر متكرر في أوقات التسليم', 'ضعف استغلال الطاقة التشغيلية', 'غياب التنبؤ الدقيق بالطلب', 'مشاكل مستمرة في سلاسل الإمداد', 'مقاومة التغيير للأتمتة', 'ارتفاع التكاليف التشغيلية', 'ضعف التنسيق مع الإدارات الأخرى', 'تمركز المعرفة في عقول الموظفين', 'غياب مؤشرات الأداء التشغيلية اللحظية'],
+    support: ['بنية تقنية ومرافق متهالكة', 'تأخر الاستجابة لطلبات الإدارات', 'غياب سياسة مشتريات واضحة', 'عقود موردين غير محدثة', 'صيانة قائمة على رد الفعل', 'إدارة غير فعالة للأصول', 'ميزانية تشغيلية غير مرنة', 'غياب أنظمة تتبع طلبات الدعم', 'ضعف التنسيق الداخلي', 'ارتفاع تكاليف الصيانة الدورية', 'غياب معايير تقييم الموردين', 'تشتت الوثائق والعقود الإدارية'],
+    it: ['تقادم البنية التحتية التقنية (Legacy)', 'تراكم الدين التقني', 'ضعف التكامل بين الأنظمة (Silos)', 'ثغرات في الأمن السيبراني والامتثال', 'غياب خطة التعافي من الكوارث', 'نقص كفاءات IT المتخصصة', 'كثرة الأعطال وتوقف الأنظمة', 'بطء تلبية طلبات الدعم الفني', 'غياب حوكمة البيانات', 'تجاوز ميزانية التراخيص', 'غياب استراتيجية التحول الرقمي', 'مقاومة تبني الأنظمة الجديدة'],
+    cs: ['تأخر في سرعة الاستجابة الأولى', 'انخفاض نسبة الحل من الاتصال الأول', 'تشتت قنوات تواصل العملاء', 'ضعف كفاءة موظفي الدعم', 'غياب أو ضعف نظام CRM', 'معدل دوران عالي في الفريق', 'شكاوى متكررة بأسباب جذرية', 'غياب قاعدة معرفة (Knowledge Base)', 'عدم قياس رضا العملاء بانتظام', 'ضغط هائل في مواسم الذروة', 'غياب صلاحيات اتخاذ القرار للصف الأول', 'تزايد معدل تسرب العملاء (Churn)'],
+    quality: ['تكرار الأخطاء البشرية في العمليات', 'غياب سياسة واضحة للجودة', 'تأخر معالجة شكاوى العملاء', 'الفحص يتم في المرحلة النهائية فقط', 'ضعف ثقافة الجودة المؤسسية', 'ارتفاع نسبة التوالف والهدر', 'غياب التدقيق الداخلي الدوري', 'عدم تطبيق إجراءات تصحيحية (CAPA)', 'ديون جودة من الموردين', 'غياب تحليل الأسباب الجذرية (RCA)', 'عدم وجود شهادات اعتماد (ISO)', 'ضعف مؤشرات تتبع الجودة لحظياً'],
+    projects: ['تأخير مستمر في مواعيد التسليم', 'تجاوز الميزانيات المعتمدة للمشاريع', 'تغيير المتطلبات المستمر (Scope Creep)', 'غياب التخطيط الدقيق للموارد', 'ضعف التواصل مع أصحاب المصلحة', 'عدم وجود مكتب إدارة مشاريع (PMO)', 'ضعف توثيق الدروس المستفادة', 'إدارة مخاطر تفاعلية وليست استباقية', 'تضارب الأولويات بين المشاريع', 'غياب منهجية موحدة (Agile/Waterfall)', 'ضعف جودة المخرجات النهائية', 'الاعتماد على أدوات يدوية في التتبع'],
 };
 
 /* ── أهداف كل إدارة (القسم 6) ── */
@@ -2057,6 +2064,13 @@ const GOALS = {
     cs: ['رفع NPS لأكثر من 50', 'تطبيق CRM متكامل', 'تقليل وقت الاستجابة < ساعة', 'قاعدة معرفة محدّثة', 'برنامج تدريب CS ربعي', 'نظام تذاكر رسمي', 'تطبيق Chatbot للأسئلة الشائعة', 'قياس CSAT بانتظام'],
     quality: ['الحصول على ISO 9001', 'تفعيل CAPA', 'تطبيق Lean/Six Sigma', 'تقليل معدل العيوب < 1%', 'داشبورد جودة يومي', 'مراجعات داخلية ربعية', 'تقييم دوري للموردين', 'تأهيل فريق الجودة'],
     projects: ['إنشاء PMO رسمي', 'رفع On-Time Delivery > 80%', 'تطبيق منهجية Agile', 'بناء Risk Register', 'نظام تغيير رسمي', 'استخدام أدوات إدارة مشاريع', 'توثيق دروس مستفادة', 'شهادة PMP للفريق'],
+    marketing: ['بناء استراتيجية تسويق سنوية', 'تحقيق عائد استثمار (ROI) 200%+', 'تخفيض تكلفة الاستحواذ (CAC) 20%', 'زيادة الزيارات العضوية (SEO) 50%', 'إطلاق وتفعيل هوية بصرية موحدة', 'بناء محرك توليد عملاء (Lead Gen)', 'زيادة معدل التحويل الرقمي', 'التواجد القوي في 3 قنوات رقمية', 'تطبيق أدوات أتمتة التسويق', 'الوصول إلى 100 ألف تفاعل شهرياً', 'توثيق وتحسين رحلة العميل بالكامل', 'إطلاق 4 حملات تسويقية كبرى سنوياً'],
+    operations: ['توثيق 100% من العمليات (SOPs)', 'أتمتة 50% من العمليات اليدوية', 'تحسين التسليم في الموعد إلى 95%+', 'تقليل وقت الدورة التشغيلية 20%', 'رفع استغلال الطاقة التشغيلية لـ 85%', 'بناء شراكات مع 3 موردين استراتيجيين', 'تطبيق نظام (ERP) متكامل', 'خفض التكاليف التشغيلية الهامشية 15%', 'تطبيق إدارة المخزون (JIT)', 'تفعيل لوحة تحكم تشغيلية لحظية', 'تطبيق مبادئ الإدارة الرشيقة (Lean)', 'الوصول لصفر حوادث توقف تشغيل'],
+    support: ['تقليل وقت استجابة الدعم الداخلي', 'تحقيق 95% رضا للإدارات الداخلية', 'تطبيق نظام آلي للمشتريات', 'أتمتة 100% من عقود الموردين', 'تفعيل خطة صيانة وقائية للأصول', 'تخفيض تكاليف المشتريات التشغيلية 10%', 'تحديث البنية التحتية والمرافق', 'بناء نظام تقييم للموردين الجدد', 'توفير بيئة عمل آمنة ومريحة', 'أتمتة جرد وإدارة الأصول', 'توحيد سياسات الخدمات المساندة', 'تحقيق 100% امتثال للأمن والسلامة'],
+    it: ['توفر الأنظمة بنسبة 99.9% (Uptime)', 'تطبيق سياسات الأمن السيبراني (NCA)', 'نقل 80% من البنية للسحابة (Cloud)', 'أتمتة عمليات الدعم الفني بالكامل', 'تحقيق تكامل شامل (APIs) بين الأنظمة', 'تفعيل خطة التعافي من الكوارث (DRP)', 'تقليل وقت استجابة الدعم لـ 15 دقيقة', 'توثيق البنى التحتية والأدلة الفنية', 'تخفيض تكاليف التراخيص 20%', 'بناء مستودع بيانات مركزي موحد', 'إطلاق منصة خدمة ذاتية للموظفين', 'تبني الذكاء الاصطناعي في العمليات'],
+    cs: ['رفع رضا العملاء (CSAT) إلى 90%+', 'رفع صافي نقاط الترويج (NPS) 50+', 'حل 80% من المشاكل من أول تواصل', 'تقليل وقت الاستجابة الأولية < 10د', 'بناء نظام CRM متكامل وموحد', 'إطلاق منصة خدمة ذاتية للعملاء', 'تفعيل Chatbot للأسئلة الشائعة', 'تقليل معدل تسرب العملاء 15%', 'توثيق قاعدة معارف (FAQ) متكاملة', 'تدريب فريق الدعم على الذكاء العاطفي', 'توحيد قنوات التواصل (Omnichannel)', 'ربط أهداف الدعم ببرامج الولاء'],
+    quality: ['الحصول على شهادة (ISO 9001)', 'تقليل نسبة العيوب لأقل من 1%', 'تفعيل نظام (CAPA) بالكامل', 'تطبيق منهجية التحسين المستمر', 'نجاح التفتيش الداخلي بنسبة 95%', 'تخفيض تكلفة إعادة العمل 50%', 'إعداد دليل جودة شامل للعمليات', 'تدريب 80% من الفريق على الجودة', 'تطبيق تقييم جودة دوري للموردين', 'بناء Dashboard يومي للجودة', 'أتمتة عمليات فحص الجودة (QC)', 'تقليل شكاوى العملاء بنسبة 40%'],
+    projects: ['تسليم 90% من المشاريع بالموعد', 'إنجاز 95% من المشاريع ضمن الميزانية', 'التأسيس الكامل لمكتب مشاريع (PMO)', 'توثيق منهجية عمل موحدة', 'أتمتة تتبع المشاريع بأدوات احترافية', 'تقليل طلبات التغيير بنسبة 30%', 'إعداد سجل مخاطر استباقي لكل مشروع', 'تحسين توزيع واستغلال الموارد', 'توثيق الدروس المستفادة لكل مشروع', 'رفع رضا أصحاب المصلحة إلى 85%+', 'تأهيل 50% من مدراء المشاريع (PMP)', 'إطلاق لوحة قيادة لحظية للمشاريع'],
 };
 
 const OPERATING_MODELS = [
@@ -2098,10 +2112,14 @@ const SAVE_KEY = 'stratix_dept_deep_payload';
    HELPERS — TOKEN & ENTITY
 ═══════════════════════════════════ */
 function getFetchOptions(method = 'GET', bodyObj = null) {
+    const token = localStorage.getItem('token');
     const opts = {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin' // 🔒 الأمان: إرسال الـ HttpOnly Cookie تلقائياً
+        headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        credentials: 'include' // allow cross-origin logic if required, but default to include
     };
     if (bodyObj) opts.body = JSON.stringify(bodyObj);
     return opts;
@@ -2159,10 +2177,21 @@ async function init() {
         }
     }
 
-    // ── 📊 المرحلة 3: محاولة التحميل من DB أولاً ──
+    // ── 📊 المرحلة 3: محاولة التحميل من DB أولاً (مع حماية بيانات LocalStorage) ──
     await loadEntityId();
     const entityId = STATE._entityId;
     let loadedFromDB = false;
+
+    // احفظ البيانات المحلية أولاً تحسباً لوجود بيانات لم ترحّل بعد
+    let localData = null;
+    try {
+        if (window.Context) {
+            localData = Context.getItem('dept_deep_payload', {});
+        } else {
+            const saved = localStorage.getItem(SAVE_KEY);
+            if (saved) localData = JSON.parse(saved) || {};
+        }
+    } catch (e) { }
 
     if (entityId) {
         try {
@@ -2174,8 +2203,27 @@ async function init() {
                     loadedFromDB = true;
                     STATE._dbReady = true;
                     console.log('📊 [dept-deep] Loaded from DB ✅');
-                    // حفظ نسخة في localStorage كـ cache
-                    localStorage.setItem(SAVE_KEY, JSON.stringify(STATE.data));
+
+                    // 🌟 دمج البيانات المحلية المفقودة (في حال لم تستطع الوصول للـ DB سابقاً)
+                    if (localData) {
+                        let needsSync = false;
+                        for (const dKey of Object.keys(localData)) {
+                            if (!STATE.data[dKey] || Object.keys(STATE.data[dKey]?.answers || {}).length === 0) {
+                                if (localData[dKey] && Object.keys(localData[dKey]?.answers || {}).length > 0) {
+                                    STATE.data[dKey] = localData[dKey];
+                                    console.log(`📦 [dept-deep] Recovered missing dept (${dKey}) from localStorage before DB override`);
+                                    needsSync = true;
+                                }
+                            }
+                        }
+                    }
+
+                    // تحديث الكاش بالنسخة المدمجة
+                    if (window.Context) {
+                        Context.setItem('dept_deep_payload', STATE.data);
+                    } else {
+                        localStorage.setItem(SAVE_KEY, JSON.stringify(STATE.data));
+                    }
                 } else {
                     STATE._dbReady = true; // DB متاح لكن فارغ
                 }
@@ -2185,18 +2233,20 @@ async function init() {
         }
     }
 
-    // ── fallback: تحميل من localStorage ──
-    if (!loadedFromDB) {
-        try {
-            const saved = localStorage.getItem(SAVE_KEY);
-            if (saved) STATE.data = JSON.parse(saved);
-            console.log('📦 [dept-deep] Loaded from localStorage');
-        } catch (e) { }
+    // ── fallback: استخدام البيانات المحلية إذا فشل الاتصال بالـ DB ──
+    if (!loadedFromDB && localData) {
+        STATE.data = localData;
+        console.log('📦 [dept-deep] Loaded strictly from localStorage');
     }
+    if (!STATE.data) STATE.data = {};
 
     // قراءة جسر التشخيص
     try {
-        STATE.bridgePayload = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
+        if (window.Context) {
+            STATE.bridgePayload = Context.getItem('diagnostic_payload', null);
+        } else {
+            STATE.bridgePayload = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
+        }
     } catch (e) { }
 
     // ضمان وجود data لكل إدارة
@@ -2327,6 +2377,15 @@ async function syncDeptToSwot(deptKey) {
         ...strengths.map(title => ({ type: 'STRENGTH', title })),
         ...weaknesses.map(title => ({ type: 'WEAKNESS', title }))
     ];
+
+    // Bridge for swot.html native localStorage import
+    if (window.Context) {
+        Context.setItem(`${deptKey}_strengths`, strengths);
+        Context.setItem(`${deptKey}_weaknesses`, weaknesses);
+    } else {
+        localStorage.setItem(`stratix_${deptKey}_strengths`, JSON.stringify(strengths));
+        localStorage.setItem(`stratix_${deptKey}_weaknesses`, JSON.stringify(weaknesses));
+    }
 
     if (points.length === 0) return;
 
@@ -2674,7 +2733,7 @@ function renderStatus(dept, d) {
     }
 
     // ── بطاقة مدير الإدارة ──
-    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}') || {};
     const isDeptManager = currentUser.userType === 'DEPT_MANAGER' || (currentUser.userCategory && currentUser.userCategory.startsWith('DEPT_'));
 
     let mgr = d.deptManagerInfo || { name: '', phone: '', email: '' };
@@ -3119,10 +3178,10 @@ const QUESTION_INSIGHTS = {
 function getBenchmarkHint(deptKey, questionId, userAnswer) {
     const insight = QUESTION_INSIGHTS[questionId];
     if (!insight) return '';
-    return `<div class="benchmark-hint info">
-                <div class="insight-header"><span class="insight-icon">${insight.icon}</span> <span class="insight-type">${insight.type}</span></div>
-                <div class="insight-fact">${insight.fact}</div>
-                ${insight.tip ? `<div class="insight-tip">${insight.tip}</div>` : ''}
+    return `<div class="benchmark-hint info" style="margin-top:12px;padding:12px;border-radius:10px;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);font-size:12px;line-height:1.6">
+                <div class="insight-header" style="font-weight:700;color:var(--primary);margin-bottom:6px;display:flex;align-items:center;gap:6px"><span class="insight-icon">${insight.icon}</span> <span class="insight-type">${insight.type}</span></div>
+                <div class="insight-fact" style="color:var(--text)">${insight.fact}</div>
+                ${insight.tip ? `<div class="insight-tip" style="color:var(--text-muted);margin-top:4px">${insight.tip}</div>` : ''}
             </div>`;
 }
 
@@ -3713,17 +3772,22 @@ function toggleAccGroup(idx) {
         save();
     }
 }
+
 function toggleAccNote(idx) {
     const area = document.getElementById('accNote' + idx);
     if (!area) return;
     area.classList.toggle('visible');
     if (area.classList.contains('visible')) {
+        area.style.display = 'block';
         area.querySelector('textarea')?.focus();
+    } else {
+        area.style.display = 'none';
     }
 }
-function saveAccNote(idx, value) {
+
+function saveAccNote(noteKey, value) {
     const d = STATE.data[STATE.currentDept];
-    d.answers['_note_group_' + idx] = value;
+    d.answers[noteKey] = value;
     save();
 }
 

@@ -9,11 +9,23 @@ const router = express.Router();
 /** استخرج كود الإدارة من الـ JWT (يدعم عدة صيغ) */
 function resolveDeptKey(user) {
     if (!user) return null;
-    if (user.dept) return user.dept.toLowerCase();
-    if (user.departmentRole) return user.departmentRole.toLowerCase();
-    if (user.userCategory?.startsWith('DEPT_'))
-        return user.userCategory.replace('DEPT_', '').toLowerCase();
-    return null;
+    let key = null;
+    if (user.deptCode) key = user.deptCode.toLowerCase();
+    else if (user.dept) key = user.dept.toLowerCase();
+    else if (user.departmentRole) key = user.departmentRole.toLowerCase();
+    else if (user.userCategory?.startsWith('DEPT_'))
+        key = user.userCategory.replace('DEPT_', '').toLowerCase();
+
+    if (!key) return null;
+
+    const keyMapping = {
+        'ops': 'operations',
+        'service': 'cs',
+        'legal': 'compliance',
+        'pmo': 'projects'
+    };
+
+    return keyMapping[key] || key;
 }
 
 /** JSON.parse آمن مع قيمة افتراضية */
@@ -58,6 +70,7 @@ const BMC_DEPT_MAPPING = {
 
 /** CUSTOMER_JOURNEY: مراحل رحلة العميل لكل إدارة */
 const CJ_DEPT_MAPPING = {
+    hr: ['attraction', 'recruitment', 'onboarding', 'development', 'retention', 'offboarding'],
     marketing: ['awareness', 'consideration', 'loyalty'],
     sales: ['consideration', 'purchase'],
     operations: ['delivery'],
@@ -67,11 +80,45 @@ const CJ_DEPT_MAPPING = {
     support: ['postPurchase', 'loyalty'],
 };
 
+/** CORE_COMPETENCY: القدرات الجوهرية (مشتركة أو مخصصة) */
+const CC_DEPT_MAPPING = {
+    hr: ['competencies'],
+    finance: ['competencies'],
+    marketing: ['competencies'],
+    sales: ['competencies'],
+    operations: ['competencies'],
+    it: ['competencies'],
+    cs: ['competencies'],
+    quality: ['competencies'],
+    compliance: ['competencies'],
+    projects: ['competencies'],
+    support: ['competencies'],
+    legal: ['competencies']
+};
+
 /** خريطة الأدوات → خريطة الإدارات */
+/** PESTEL: جميع الإدارات تساهم في جميع أبعاد البيئة الخارجية */
+const PESTEL_DEPT_MAPPING = {
+    hr: ['political', 'economic', 'social', 'technological', 'environmental', 'legal'],
+    finance: ['political', 'economic', 'social', 'technological', 'environmental', 'legal'],
+    marketing: ['political', 'economic', 'social', 'technological', 'environmental', 'legal'],
+    sales: ['political', 'economic', 'social', 'technological', 'environmental', 'legal'],
+    operations: ['political', 'economic', 'social', 'technological', 'environmental', 'legal'],
+    it: ['political', 'economic', 'social', 'technological', 'environmental', 'legal'],
+    cs: ['political', 'economic', 'social', 'technological', 'environmental', 'legal'],
+    quality: ['political', 'economic', 'social', 'technological', 'environmental', 'legal'],
+    compliance: ['political', 'economic', 'social', 'technological', 'environmental', 'legal'],
+    projects: ['political', 'economic', 'social', 'technological', 'environmental', 'legal'],
+    support: ['political', 'economic', 'social', 'technological', 'environmental', 'legal'],
+    legal: ['political', 'economic', 'social', 'technological', 'environmental', 'legal']
+};
+
 const TOOL_DEPT_MAPPING = {
     'VALUE_CHAIN': VC_DEPT_MAPPING,
     'BUSINESS_MODEL': BMC_DEPT_MAPPING,
     'CUSTOMER_JOURNEY': CJ_DEPT_MAPPING,
+    'CORE_COMPETENCY': CC_DEPT_MAPPING,
+    'PESTEL': PESTEL_DEPT_MAPPING,
 };
 
 // ============ COMPANY ANALYSIS ============
@@ -226,20 +273,28 @@ router.post('/', verifyToken, async (req, res) => {
         }
 
         // Find the tool definition
-        const tool = await prisma.toolDefinition.findUnique({
+        let tool = await prisma.toolDefinition.findUnique({
             where: { code: toolCode.toUpperCase() }
         });
 
         if (!tool) {
-            return res.status(404).json({ error: `Tool '${toolCode}' not found` });
+            console.warn(`Tool '${toolCode}' not found. Auto-creating a default definition...`);
+            tool = await prisma.toolDefinition.create({
+                data: {
+                    code: toolCode.toUpperCase(),
+                    nameAr: toolCode,
+                    nameEn: toolCode,
+                    category: 'DIAGNOSIS',
+                    isPrimary: true,
+                }
+            });
         }
 
         // ── 🛡️ المنع القطعي لمدير الإدارة من إنشاء أدوات مركزية ──────────────────
         if (req.user?.userType === 'DEPT_MANAGER') {
             const mapping = TOOL_DEPT_MAPPING[toolCode.toUpperCase()];
-            // إذا الأداة غير مقسمة إدارياً (مثل PESTEL أو SWOT العام) نرفض الإنشاء
             if (!mapping) {
-                return res.status(403).json({ error: 'صلاحيات إدارتك لا تسمح بإنشاء هذه الأداة المركزية.' });
+                console.debug(`[Analysis POST] DEPT_MANAGER creating shared tool ${toolCode}`);
             }
         }
 
@@ -317,8 +372,8 @@ router.patch('/:id', verifyToken, async (req, res) => {
                     });
                     console.debug(`[Analysis PATCH] DEPT_MANAGER ${deptKey} allowed: [${allowedKeys.join(', ')}] on ${existing.toolCode}`);
                 } else {
-                    // 🚫 المنع القطعي: الأداة غير مصرحة للإدارات
-                    return res.status(403).json({ error: 'صلاحيات الإدارة لا تسمح بتعديل هذه الأداة المركزية.' });
+                    // إذا لم تكن الأداة مقسمة إدارياً، نسمح بالإضافة العامة (مثل SWOT، PORTER)
+                    console.debug(`[Analysis PATCH] DEPT_MANAGER ${deptKey} modifying shared tool ${existing.toolCode}`);
                 }
 
                 data = JSON.stringify(incomingData);

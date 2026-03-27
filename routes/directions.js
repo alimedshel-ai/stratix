@@ -57,8 +57,18 @@ router.get('/', verifyToken, async (req, res) => {
 // Get directions grouped by type for a specific version
 router.get('/grouped/:versionId', verifyToken, async (req, res) => {
     try {
+        const { dept } = req.query; // ← الاستقبال من المسار
+        let whereClause = { versionId: req.params.versionId };
+
+        if (dept) {
+            whereClause.departmentKey = dept; // ← فلترة على مستوى الإدارة إذا تم إرسالها
+        } else {
+            // للشركة نفسها (بدون إدارة محددة)
+            whereClause.departmentKey = null;
+        }
+
         const directions = await prisma.strategicDirection.findMany({
-            where: { versionId: req.params.versionId },
+            where: whereClause,
             orderBy: [{ type: 'asc' }, { order: 'asc' }]
         });
 
@@ -107,9 +117,15 @@ router.get('/:id', verifyToken, async (req, res) => {
 });
 
 // Create direction
-router.post('/', verifyToken, checkPermission('EDITOR'), async (req, res) => {
+router.post('/', verifyToken, async (req, res) => {
     try {
-        const { versionId, type, content, order } = req.body;
+        const userType = req.user.userType || req.user.role || '';
+        // If it's a VIEWER, reject. Allow others including DEPT_MANAGER
+        if (userType === 'VIEWER' && !req.user.isSuperAdmin) {
+            return res.status(403).json({ error: 'ليس لديك صلاحية لإضافة توجه الاستراتيجي' });
+        }
+
+        const { versionId, type, content, order, dept } = req.body;
 
         if (!versionId || !type || !content) {
             return res.status(400).json({ error: 'versionId, type, and content are required' });
@@ -125,7 +141,8 @@ router.post('/', verifyToken, checkPermission('EDITOR'), async (req, res) => {
                 versionId,
                 type,
                 content,
-                order: order || 0
+                order: order || 0,
+                departmentKey: dept || null // ← إضافة departmentKey
             },
             include: {
                 version: { select: { id: true, versionNumber: true, name: true } }
@@ -140,8 +157,13 @@ router.post('/', verifyToken, checkPermission('EDITOR'), async (req, res) => {
 });
 
 // Update direction
-router.patch('/:id', verifyToken, checkPermission('EDITOR'), async (req, res) => {
+router.patch('/:id', verifyToken, async (req, res) => {
     try {
+        const userType = req.user.userType || req.user.role || '';
+        if (userType === 'VIEWER' && !req.user.isSuperAdmin) {
+            return res.status(403).json({ error: 'ليس لديك صلاحية لتعديل توجه الاستراتيجي' });
+        }
+
         const { type, content, order } = req.body;
 
         const existing = await prisma.strategicDirection.findUnique({ where: { id: req.params.id } });
@@ -176,8 +198,13 @@ router.patch('/:id', verifyToken, checkPermission('EDITOR'), async (req, res) =>
 });
 
 // Delete direction
-router.delete('/:id', verifyToken, checkPermission('EDITOR'), async (req, res) => {
+router.delete('/:id', verifyToken, async (req, res) => {
     try {
+        const userType = req.user.userType || req.user.role || '';
+        if (userType === 'VIEWER' && !req.user.isSuperAdmin) {
+            return res.status(403).json({ error: 'ليس لديك صلاحية لحذف توجه الاستراتيجي' });
+        }
+
         const direction = await prisma.strategicDirection.findUnique({ where: { id: req.params.id } });
         if (!direction) {
             return res.status(404).json({ error: 'Direction not found' });
