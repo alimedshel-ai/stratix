@@ -901,39 +901,50 @@
             if (spanOfControl > 15) score -= 5; // too thin management
             score = Math.max(0, Math.min(100, score));
 
-            // Health card
-            $('healthScore').textContent = score + '/100';
-            $('healthCard').className = 'health-card ' + (score >= 70 ? 'good' : score >= 40 ? 'warn' : 'danger');
-            $('healthScore').style.color = score >= 70 ? '#4ade80' : score >= 40 ? '#fbbf24' : '#f87171';
-            if (score >= 80) { $('healthLabel').textContent = '🟢 صحة موارد بشرية ممتازة'; $('healthSub').textContent = 'فريق مستقر، امتثال عالي — ركّز على التطوير والنمو'; }
-            else if (score >= 60) { $('healthLabel').textContent = '🟡 صحة مقبولة — تحتاج تحسين'; $('healthSub').textContent = 'بعض المؤشرات تحتاج انتباه لتجنب مشاكل مستقبلية'; }
-            else if (score >= 40) { $('healthLabel').textContent = '🟠 وضع يحتاج تدخل سريع'; $('healthSub').textContent = 'عدة فجوات حرجة في الامتثال أو الاستقرار الوظيفي'; }
-            else { $('healthLabel').textContent = '🔴 وضع خطير — خطر تشغيلي ونظامي'; $('healthSub').textContent = 'تحتاج خطة إصلاح عاجلة — راجع التوصيات بالأسفل'; }
+            // Health card (safe — elements may not exist if page redirects)
+            const hScore = $('healthScore'), hCard = $('healthCard'), hLabel = $('healthLabel'), hSub = $('healthSub');
+            if (hScore) { hScore.textContent = score + '/100'; hScore.style.color = score >= 70 ? '#4ade80' : score >= 40 ? '#fbbf24' : '#f87171'; }
+            if (hCard) hCard.className = 'health-card ' + (score >= 70 ? 'good' : score >= 40 ? 'warn' : 'danger');
+            if (hLabel && hSub) {
+                if (score >= 80) { hLabel.textContent = '🟢 صحة موارد بشرية ممتازة'; hSub.textContent = 'فريق مستقر، امتثال عالي — ركّز على التطوير والنمو'; }
+                else if (score >= 60) { hLabel.textContent = '🟡 صحة مقبولة — تحتاج تحسين'; hSub.textContent = 'بعض المؤشرات تحتاج انتباه لتجنب مشاكل مستقبلية'; }
+                else if (score >= 40) { hLabel.textContent = '🟠 وضع يحتاج تدخل سريع'; hSub.textContent = 'عدة فجوات حرجة في الامتثال أو الاستقرار الوظيفي'; }
+                else { hLabel.textContent = '🔴 وضع خطير — خطر تشغيلي ونظامي'; hSub.textContent = 'تحتاج خطة إصلاح عاجلة — راجع التوصيات بالأسفل'; }
+            }
 
-            // ─── KPI Cards ───
-            const kpis = [
-                { icon: '🇸🇦', label: 'نسبة التوطين', value: pct(saudizationRate), status: saudizationRate >= 35 ? 'good' : saudizationRate >= 20 ? 'warn' : 'bad', statusText: saudizationRate >= 35 ? 'ممتاز' : saudizationRate >= 20 ? 'مقبول' : 'ضعيف', color: '#22c55e' },
-                { icon: '🔄', label: 'معدل الدوران (سنوي)', value: pct(turnoverRate), status: turnoverRate < 10 ? 'good' : turnoverRate < 25 ? 'warn' : 'bad', statusText: turnoverRate < 10 ? 'مستقر' : turnoverRate < 25 ? 'متوسط' : 'مرتفع', color: '#ef4444' },
-                { icon: '🪑', label: 'نسبة الشواغر', value: pct(vacancyRate), status: vacancyRate < 8 ? 'good' : vacancyRate < 18 ? 'warn' : 'bad', statusText: vacancyRate < 8 ? 'ممتلئ' : vacancyRate < 18 ? 'يحتاج توظيف' : 'نقص حاد', color: '#f59e0b' },
-                { icon: '💰', label: 'متوسط الراتب', value: fmt(avgSalary) + ' ر.س', status: avgSalary > 6000 ? 'good' : avgSalary > 4000 ? 'warn' : 'bad', statusText: avgSalary > 6000 ? 'تنافسي' : avgSalary > 4000 ? 'متوسط' : 'ضعيف', color: '#8b5cf6' },
-                { icon: '📚', label: 'استثمار التدريب / موظف', value: fmt(trainingPerHead) + ' ر.س', status: trainingPerHead > 1500 ? 'good' : trainingPerHead > 500 ? 'warn' : 'bad', statusText: trainingPerHead > 1500 ? 'قوي' : trainingPerHead > 500 ? 'متواضع' : 'ضعيف', color: '#3b82f6' },
-                { icon: '⚖️', label: 'الامتثال النظامي', value: pct(complianceScore), status: complianceScore >= 80 ? 'good' : complianceScore >= 50 ? 'warn' : 'bad', statusText: complianceScore >= 80 ? 'ملتزم' : complianceScore >= 50 ? 'جزئي' : 'ضعيف', color: '#14b8a6' },
-                { icon: '🎯', label: 'نضج إدارة الأداء', value: pct(perfScore), status: perfScore >= 70 ? 'good' : perfScore >= 40 ? 'warn' : 'bad', statusText: perfScore >= 70 ? 'ناضج' : perfScore >= 40 ? 'نامي' : 'بدائي', color: '#ec4899' },
-                { icon: '👔', label: 'نطاق الإشراف', value: Math.round(spanOfControl) + ':1', status: spanOfControl >= 5 && spanOfControl <= 10 ? 'good' : 'warn', statusText: spanOfControl >= 5 && spanOfControl <= 10 ? 'مثالي' : spanOfControl > 10 ? 'واسع جداً' : 'ضيق', color: '#667eea' },
-                { icon: '📊', label: 'فجوة الرواتب (أعلى/أدنى)', value: salaryGap > 0 ? salaryGap.toFixed(1) + 'x' : '—', status: salaryGap > 0 && salaryGap < 8 ? 'good' : salaryGap >= 8 ? 'warn' : 'good', statusText: salaryGap >= 10 ? 'فجوة كبيرة' : salaryGap >= 7 ? 'عالية' : 'مقبولة', color: '#06b6d4' },
-            ];
-            $('kpiGrid').innerHTML = kpis.map((k, i) => `<div class="kpi-card"><div style="position:absolute;top:0;left:0;right:0;height:3px;background:${k.color}"></div><div class="kpi-icon">${k.icon}</div><div class="kpi-value">${k.value}</div><div class="kpi-label">${k.label}</div><span class="kpi-status ${k.status}">${k.statusText}</span></div>`).join('');
+            // ─── KPI Cards (optional UI) ───
+            const kpiGrid = $('kpiGrid');
+            if (kpiGrid) {
+                const kpis = [
+                    { icon: '🇸🇦', label: 'نسبة التوطين', value: pct(saudizationRate), status: saudizationRate >= 35 ? 'good' : saudizationRate >= 20 ? 'warn' : 'bad', statusText: saudizationRate >= 35 ? 'ممتاز' : saudizationRate >= 20 ? 'مقبول' : 'ضعيف', color: '#22c55e' },
+                    { icon: '🔄', label: 'معدل الدوران (سنوي)', value: pct(turnoverRate), status: turnoverRate < 10 ? 'good' : turnoverRate < 25 ? 'warn' : 'bad', statusText: turnoverRate < 10 ? 'مستقر' : turnoverRate < 25 ? 'متوسط' : 'مرتفع', color: '#ef4444' },
+                    { icon: '🪑', label: 'نسبة الشواغر', value: pct(vacancyRate), status: vacancyRate < 8 ? 'good' : vacancyRate < 18 ? 'warn' : 'bad', statusText: vacancyRate < 8 ? 'ممتلئ' : vacancyRate < 18 ? 'يحتاج توظيف' : 'نقص حاد', color: '#f59e0b' },
+                    { icon: '💰', label: 'متوسط الراتب', value: fmt(avgSalary) + ' ر.س', status: avgSalary > 6000 ? 'good' : avgSalary > 4000 ? 'warn' : 'bad', statusText: avgSalary > 6000 ? 'تنافسي' : avgSalary > 4000 ? 'متوسط' : 'ضعيف', color: '#8b5cf6' },
+                    { icon: '📚', label: 'استثمار التدريب / موظف', value: fmt(trainingPerHead) + ' ر.س', status: trainingPerHead > 1500 ? 'good' : trainingPerHead > 500 ? 'warn' : 'bad', statusText: trainingPerHead > 1500 ? 'قوي' : trainingPerHead > 500 ? 'متواضع' : 'ضعيف', color: '#3b82f6' },
+                    { icon: '⚖️', label: 'الامتثال النظامي', value: pct(complianceScore), status: complianceScore >= 80 ? 'good' : complianceScore >= 50 ? 'warn' : 'bad', statusText: complianceScore >= 80 ? 'ملتزم' : complianceScore >= 50 ? 'جزئي' : 'ضعيف', color: '#14b8a6' },
+                    { icon: '🎯', label: 'نضج إدارة الأداء', value: pct(perfScore), status: perfScore >= 70 ? 'good' : perfScore >= 40 ? 'warn' : 'bad', statusText: perfScore >= 70 ? 'ناضج' : perfScore >= 40 ? 'نامي' : 'بدائي', color: '#ec4899' },
+                    { icon: '👔', label: 'نطاق الإشراف', value: Math.round(spanOfControl) + ':1', status: spanOfControl >= 5 && spanOfControl <= 10 ? 'good' : 'warn', statusText: spanOfControl >= 5 && spanOfControl <= 10 ? 'مثالي' : spanOfControl > 10 ? 'واسع جداً' : 'ضيق', color: '#667eea' },
+                    { icon: '📊', label: 'فجوة الرواتب (أعلى/أدنى)', value: salaryGap > 0 ? salaryGap.toFixed(1) + 'x' : '—', status: salaryGap > 0 && salaryGap < 8 ? 'good' : salaryGap >= 8 ? 'warn' : 'good', statusText: salaryGap >= 10 ? 'فجوة كبيرة' : salaryGap >= 7 ? 'عالية' : 'مقبولة', color: '#06b6d4' },
+                ];
+                kpiGrid.innerHTML = kpis.map((k, i) => `<div class="kpi-card"><div style="position:absolute;top:0;left:0;right:0;height:3px;background:${k.color}"></div><div class="kpi-icon">${k.icon}</div><div class="kpi-value">${k.value}</div><div class="kpi-label">${k.label}</div><span class="kpi-status ${k.status}">${k.statusText}</span></div>`).join('');
+            }
 
-            // ─── Charts ───
-            const wCtx = $('workforceChart').getContext('2d');
-            if (window._wC) window._wC.destroy();
-            window._wC = new Chart(wCtx, { type: 'doughnut', data: { labels: ['سعوديين', 'أجانب', 'شواغر'], datasets: [{ data: [d.saudis, foreigners, d.vacancies], backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b'], borderWidth: 0 }] }, options: { responsive: true, plugins: { legend: { labels: { color: '#94a3b8', font: { family: 'Tajawal' } } } } } });
+            // ─── Charts (optional UI) ───
+            const wChartEl = $('workforceChart');
+            if (wChartEl) {
+                const wCtx = wChartEl.getContext('2d');
+                if (window._wC) window._wC.destroy();
+                window._wC = new Chart(wCtx, { type: 'doughnut', data: { labels: ['سعوديين', 'أجانب', 'شواغر'], datasets: [{ data: [d.saudis, foreigners, d.vacancies], backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b'], borderWidth: 0 }] }, options: { responsive: true, plugins: { legend: { labels: { color: '#94a3b8', font: { family: 'Tajawal' } } } } } });
+            }
 
-            const cCtx = $('complianceChart').getContext('2d');
-            if (window._cC) window._cC.destroy();
-            const cLabels = ['عقود قوى', 'مدد', 'تأمين طبي', 'لائحة عمل', 'تأمينات', 'سلامة'];
-            const cData = complianceItems.map(k => activeToggles.has(k) ? 100 : 0);
-            window._cC = new Chart(cCtx, { type: 'bar', data: { labels: cLabels, datasets: [{ label: 'الامتثال', data: cData, backgroundColor: cData.map(v => v > 0 ? 'rgba(34,197,94,.6)' : 'rgba(239,68,68,.4)'), borderRadius: 6 }] }, options: { responsive: true, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { max: 100, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,.05)' } }, y: { ticks: { color: '#94a3b8', font: { family: 'Tajawal', size: 11 } }, grid: { display: false } } } } });
+            const cChartEl = $('complianceChart');
+            if (cChartEl) {
+                const cCtx = cChartEl.getContext('2d');
+                if (window._cC) window._cC.destroy();
+                const cLabels = ['عقود قوى', 'مدد', 'تأمين طبي', 'لائحة عمل', 'تأمينات', 'سلامة'];
+                const cData = complianceItems.map(k => activeToggles.has(k) ? 100 : 0);
+                window._cC = new Chart(cCtx, { type: 'bar', data: { labels: cLabels, datasets: [{ label: 'الامتثال', data: cData, backgroundColor: cData.map(v => v > 0 ? 'rgba(34,197,94,.6)' : 'rgba(239,68,68,.4)'), borderRadius: 6 }] }, options: { responsive: true, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { max: 100, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,.05)' } }, y: { ticks: { color: '#94a3b8', font: { family: 'Tajawal', size: 11 } }, grid: { display: false } } } } });
+            }
 
             // ─── Recommendations ───
             const recos = [];

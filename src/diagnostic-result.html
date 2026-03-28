@@ -457,6 +457,7 @@
             if (currentResult) DiagnosticEngine.saveToSession(currentResult);
 
             const isAddEntity = new URLSearchParams(window.location.search).get('from') === 'add-entity';
+            const isLoggedIn = localStorage.getItem('token') && localStorage.getItem('user');
 
             if (isAddEntity) {
                 const payloadStr = sessionStorage.getItem('pendingEntityPayload');
@@ -503,6 +504,49 @@
                         btn.innerHTML = '<i class="bi bi-rocket-takeoff"></i> تأكيد وحفظ المنشأة';
                         btn.disabled = false;
                     }
+                }
+            } else if (isLoggedIn) {
+                // User is already logged in, sync to current entity
+                const btn = document.querySelector('[data-action="accept-path"]');
+                if (btn) {
+                    btn.innerHTML = '<div class="spinner" style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;margin-left:8px;"></div> جاري حفظ التقرير...';
+                    btn.disabled = true;
+                }
+
+                try {
+                    const user = JSON.parse(localStorage.getItem('user'));
+                    const companyId = user.companyId || user.activeEntityId || user.entityId;
+
+                    if (!companyId) {
+                        alert('فشل العثور على المنشأة النشطة');
+                        window.location.href = '/dashboard';
+                        return;
+                    }
+
+                    // Sync to CompanyPattern
+                    const syncRes = await fetch('/api/company-pattern', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            pain: currentResult.answers?.challenge || 'organizational',
+                            ambition: currentResult.answers?.ambition || 'stability',
+                            companyId: companyId
+                        })
+                    });
+
+                    if (syncRes.ok) {
+                        // Success! Update local storage and redirect
+                        DiagnosticEngine.promoteToLocalStorage();
+                        window.location.href = '/dashboard';
+                    } else {
+                        const data = await syncRes.json();
+                        alert(data.message || 'فشل مزامنة البيانات');
+                        window.location.href = '/dashboard';
+                    }
+                } catch (err) {
+                    console.error('Sync error:', err);
+                    window.location.href = '/dashboard';
                 }
             } else {
                 window.location.href = '/login?tab=signup&from=diagnostic';

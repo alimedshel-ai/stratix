@@ -137,7 +137,7 @@ const SmartContext = (() => {
             '/company-health.html': 'صحة الشركة',
             '/strategic-tensions.html': 'التوترات الاستراتيجية',
             '/gap-analysis.html': 'تحليل الفجوات',
-            '/auto-reports.html': 'التقارير',
+            '/reports.html': 'التقارير',
         };
 
         // Check for tool-detail

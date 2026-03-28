@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس | تقرير الإدارة الاستراتيجي</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/css/shared.css">
+    <style>
+        :root {
+            --stx-bg: #0f172a;
+            --stx-card: #1e293b;
+            --stx-border: rgba(255, 255, 255, 0.1);
+            --stx-primary: #818cf8;
+            --stx-accent: #c4b5fd;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--stx-bg);
+            color: #f8fafc;
+            font-family: 'Tajawal', sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container-fluid {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .flex-wrapper {
+            display: flex;
+            flex: 1;
+            width: 100%;
+        }
+
+        #sidebar {
+            width: 260px;
+            background: #141b2d;
+            border-left: 1px solid var(--stx-border);
+            flex-shrink: 0;
+            overflow-y: auto;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+
+        main {
+            flex: 1;
+            padding: 40px 60px 120px;
+            background: radial-gradient(circle at top right, rgba(129, 140, 248, 0.05), transparent);
+        }
+
+        .stx-header {
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--stx-border);
+            padding-bottom: 25px;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 900;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .report-grid {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 35px;
+            /* مسافة أكبر لمنع التداخل */
+        }
+
+        .report-section {
+            background: var(--stx-card);
+            border: 1px solid var(--stx-border);
+            border-radius: 28px;
+            padding: 35px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            transition: 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .report-section:hover {
+            border-color: rgba(129, 140, 248, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .section-header {
+            border-bottom: 1px solid var(--stx-border);
+            margin-bottom: 25px;
+            padding-bottom: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--stx-primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .data-card {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid var(--stx-border);
+            border-radius: 18px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            height: 100%;
+        }
+
+        .data-label {
+            color: #94a3b8;
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-value {
+            color: #f1f5f9;
+            font-size: 1rem;
+            font-weight: 600;
+            word-break: break-word;
+            /* منع فيضان النصوص الطويلة */
+        }
+
+        .btn-print {
+            background: var(--stx-primary);
+            color: white;
+            padding: 12px 28px;
+            border-radius: 14px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: none;
+            box-shadow: 0 10px 20px rgba(129, 140, 248, 0.2);
+            transition: 0.3s;
+        }
+
+        .btn-print:hover {
+            transform: scale(1.05);
+            background: #6366f1;
+        }
+
+        .action-bar {
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            left: 260px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(15px);
+            border-top: 1px solid var(--stx-border);
+            padding: 25px 50px;
+            display: flex;
+            justify-content: flex-end;
+            z-index: 1000;
+        }
+
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            #sidebar,
+            .action-bar,
+            .no-print {
+                display: none !important;
+            }
+
+            main {
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+                background: none !important;
+            }
+
+            .report-section {
+                box-shadow: none !important;
+                border: 2px solid #000 !important;
+                margin-bottom: 40px !important;
+                break-inside: avoid !important;
+                background: white !important;
+                color: black !important;
+                padding: 25px !important;
+                border-radius: 0 !important;
+            }
+
+            .swot-matrix-advanced {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 10px !important;
+            }
+
+            .swot-card {
+                background: white !important;
+                border: 2px solid #333 !important;
+                color: black !important;
+                padding: 15px !important;
+                border-radius: 0 !important;
+                border-top-width: 8px !important;
+            }
+
+            .swot-cat-box {
+                background: #fcfcfc !important;
+                border: 1px solid #ddd !important;
+                color: black !important;
+                margin-bottom: 15px !important;
+            }
+
+            .swot-cat-title {
+                color: black !important;
+                font-weight: 900 !important;
+                border-bottom: 2px solid #000 !important;
+                padding-bottom: 5px !important;
+                font-size: 1rem !important;
+            }
+
+            .swot-sub-list li {
+                color: black !important;
+                font-weight: 600 !important;
+                opacity: 1 !important;
+            }
+
+            .data-card {
+                background: white !important;
+                border: 1px solid #000 !important;
+                color: black !important;
+                border-radius: 0 !important;
+            }
+
+            .data-value {
+                color: black !important;
+                font-weight: 700 !important;
+                line-height: 1.4 !important;
+            }
+
+            .section-title {
+                color: black !important;
+                font-size: 1.8rem !important;
+                font-weight: 900 !important;
+                text-decoration: underline;
+            }
+
+            .page-title {
+                color: black !important;
+                font-size: 2.2rem !important;
+                margin-bottom: 10px !important;
+            }
+        }
+
+        @media (max-width: 1100px) {
+            #sidebar {
+                display: none;
+            }
+
+            .action-bar {
+                left: 0;
+            }
+
+            main {
+                padding: 30px 20px 100px;
+            }
+        }
+    </style>
+</head>
+
+<body class="dir-rtl">
+    <div class="container-fluid p-0">
+        <div class="flex-wrapper">
+            <nav id="sidebar" class="no-print"></nav>
+            <main>
+                <header class="stx-header">
+                    <div>
+                        <h1 class="page-title"><i class="bi bi-file-earmark-bar-graph text-primary"></i> تقرير الإدارة
+                            الاستراتيجي</h1>
+                        <p class="page-subtitle" id="report-meta">تجميع شامل لمخرجات الرحلة الاستراتيجية</p>
+                    </div>
+                    <button class="btn-print no-print" onclick="window.print()">
+                        <i class="bi bi-printer"></i> طباعة التقرير
+                    </button>
+                </header>
+
+                <div class="report-grid" id="report-content">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-3 text-muted">جاري تجميع البيانات الاستراتيجية...</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/context-manager.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const DEPT_NAMES = { hr: 'الموارد البشرية', finance: 'المالية', marketing: 'التسويق', operations: 'العمليات', it: 'تقنية المعلومات' };
+
+        async function loadReportData() {
+            const params = new URLSearchParams(window.location.search);
+            const dept = params.get('dept') || (typeof Context !== 'undefined' ? Context.getDept() : 'hr');
+            const deptName = DEPT_NAMES[dept] || dept;
+
+            document.getElementById('report-meta').textContent = `${deptName} | تاريخ المراجعة: ${new Date().toLocaleDateString('ar-SA')}`;
+
+            const toolsToFetch = [
+                { id: 'SWOT', label: 'تحليل SWOT', icon: 'bi-grid-3x3-gap-fill' },
+                { id: 'TOWS', label: 'مصفوفة TOWS', icon: 'bi-grid-1x2-fill' },
+                { id: 'SCENARIOS', label: 'السيناريوهات الاستراتيجية', icon: 'bi-layers' },
+                { id: 'DIRECTIONS', label: 'التوجهات الاستراتيجية', icon: 'bi-compass' },
+                { id: `OBJECTIVES_${dept.toUpperCase()}`, label: 'الأهداف الاستراتيجية', icon: 'bi-bullseye' },
+                { id: `OKRS_${dept.toUpperCase()}`, label: 'الأهداف والنتائج الرئيسية (OKRs)', icon: 'bi-award' },
+                { id: `KPIS_${dept.toUpperCase()}`, label: 'مؤشرات الأداء', icon: 'bi-speedometer2' },
+                { id: `INITIATIVES_${dept.toUpperCase()}`, label: 'المبادرات والمشاريع', icon: 'bi-rocket-takeoff' }
+            ];
+
+            const container = document.getElementById('report-content');
+            container.innerHTML = '';
+
+            for (const tool of toolsToFetch) {
+                try {
+                    const res = await window.callApiWithTimeout(`/api/dept/analysis?dept=${dept}&type=${tool.id}`);
+                    if (res && res.data) {
+                        const section = document.createElement('div');
+                        section.className = 'report-section mb-4';
+
+                        let contentHtml = '';
+                        const data = res.data;
+
+                        if (tool.id === 'SWOT') {
+                            contentHtml = renderSwot(data);
+                        } else if (tool.id === 'TOWS') {
+                            contentHtml = renderTows(data);
+                        } else if (tool.id.startsWith('OBJECTIVES')) {
+                            contentHtml = renderObjectives(data);
+                        } else if (tool.id.startsWith('OKRS')) {
+                            contentHtml = renderOkrs(data);
+                        } else if (tool.id.startsWith('KPIS')) {
+                            contentHtml = renderKpis(data);
+                        } else if (tool.id.startsWith('INITIATIVES')) {
+                            contentHtml = renderInitiatives(data);
+                        } else if (typeof data === 'object') {
+                            contentHtml = `<div class="data-grid">${Object.entries(data).map(([k, v]) => `<div class="data-card"><div class="data-label">${k}</div><div class="data-value">${v}</div></div>`).join('')}</div>`;
+                        } else {
+                            contentHtml = `<div class="data-value">${data}</div>`;
+                        }
+
+                        section.innerHTML = `
+                            <div class="section-header">
+                                <h2 class="section-title"><i class="bi ${tool.icon}"></i> ${tool.label}</h2>
+                            </div>
+                            ${contentHtml}
+                        `;
+                        container.appendChild(section);
+                    }
+                } catch (e) {
+                    console.warn(`Failed to fetch ${tool.id}`, e);
+                }
+            }
+
+            if (container.children.length === 0) {
+                container.innerHTML = '<div class="text-center py-5 text-muted">لا توجد بيانات مكتملة حالياً لإنشاء التقرير. يرجى إكمال خطوات الرحلة الاستراتيجية أولاً.</div>';
+            }
+        }
+
+        function renderSwot(data) {
+            const quadrants = [
+                { key: 'strengths', label: 'نقاط القوة (Strengths)', color: '#10b981', icon: 'bi-gem', bg: 'rgba(16, 185, 129, 0.05)' },
+                { key: 'weaknesses', label: 'نقاط الضعف (Weaknesses)', color: '#ef4444', icon: 'bi-incognito', bg: 'rgba(239, 68, 68, 0.05)' },
+                { key: 'opportunities', label: 'الفرص (Opportunities)', color: '#3b82f6', icon: 'bi-lightning-charge', bg: 'rgba(59, 130, 246, 0.05)' },
+                { key: 'threats', label: 'التهديدات (Threats)', color: '#f59e0b', icon: 'bi-shield-slash', bg: 'rgba(245, 158, 11, 0.05)' }
+            ];
+
+            const gridHtml = quadrants.map(q => {
+                const rawPoints = Array.isArray(data[q.key]) ? data[q.key] : (data[q.key] ? data[q.key].split('\n') : []);
+
+                // 🧠 ذكاء اصطناعي لترتيب النقاط تحت تصنيفات (Categorization)
+                let categorized = {};
+                let currentCat = 'عام';
+
+                rawPoints.forEach(p => {
+                    const trimmed = p.trim();
+                    if (!trimmed) return;
+
+                    if (trimmed.includes(':')) {
+                        const parts = trimmed.split(':');
+                        currentCat = parts[0].trim();
+                        const val = parts[1].trim();
+                        if (val) {
+                            if (!categorized[currentCat]) categorized[currentCat] = [];
+                            categorized[currentCat].push(val);
+                        }
+                    } else if (trimmed.startsWith('-')) {
+                        if (!categorized[currentCat]) categorized[currentCat] = [];
+                        categorized[currentCat].push(trimmed.substring(1).trim());
+                    } else {
+                        if (!categorized[currentCat]) categorized[currentCat] = [];
+                        categorized[currentCat].push(trimmed);
+                    }
+                });
+
+                const sectionsHtml = Object.entries(categorized).map(([cat, points]) => `
+                    <div class="swot-cat-box mb-3">
+                        <div class="swot-cat-title" style="color: ${q.color}">
+                            <i class="bi bi-caret-left-fill small me-1"></i> ${cat}
+                        </div>
+                        <ul class="swot-sub-list">
+                            ${points.map(p => `<li>${p}</li>`).join('')}
+                        </ul>
+                    </div>
+                `).join('');
+
+                return `
+                    <div class="swot-card" style="background: ${q.bg}; border-top: 6px solid ${q.color}">
+                        <div class="swot-header mb-3" style="color: ${q.color}">
+                            <i class="bi ${q.icon} fs-4"></i>
+                            <span class="fs-5 fw-900">${q.label}</span>
+                        </div>
+                        <div class="swot-body">
+                            ${sectionsHtml || '<div class="text-muted opacity-50 small">لم يتم رصد نقاط حالياً</div>'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            return `<div class="swot-matrix-advanced">${gridHtml}</div>
+            <style>
+                .swot-matrix-advanced {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 30px;
+                }
+                .swot-card {
+                    padding: 30px;
+                    border-radius: 24px;
+                    border: 1px solid rgba(255,255,255,0.05);
+                }
+                .swot-cat-box {
+                    background: rgba(0,0,0,0.2);
+                    padding: 15px;
+                    border-radius: 12px;
+                    border-right: 2px solid rgba(255,255,255,0.1);
+                }
+                .swot-cat-title {
+                    font-size: 0.85rem;
+                    font-weight: 900;
+                    margin-bottom: 10px;
+                    display: flex;
+                    align-items: center;
+                    letter-spacing: 0.5px;
+                }
+                .swot-sub-list {
+                    list-style: none;
+                    padding: 0;
+                    margin: 0;
+                }
+                .swot-sub-list li {
+                    font-size: 0.85rem;
+                    color: #94a3b8;
+                    margin-bottom: 6px;
+                    line-height: 1.5;
+                    position: relative;
+                    padding-right: 15px;
+                }
+                .swot-sub-list li::before {
+                    content: "•";
+                    position: absolute;
+                    right: 0;
+                    opacity: 0.3;
+                }
+                @media (max-width: 992px) { .swot-matrix-advanced { grid-template-columns: 1fr; } }
+            </style>`;
+        }
+
+        function renderTows(data) {
+            const strats = [
+                { key: 'so', label: 'استراتيجيات الهجوم (SO)', color: '#10b981', desc: 'استثمار القوة لاقتناص الفرص' },
+                { key: 'wo', label: 'استراتيجيات التحسين (WO)', color: '#3b82f6', desc: 'معالجة الضعف للاستفادة من الفرص' },
+                { key: 'st', label: 'استراتيجيات الدفاع (ST)', color: '#f59e0b', desc: 'استخدام القوة لتجنب التهديدات' },
+                { key: 'wt', label: 'استراتيجيات الانكماش (WT)', color: '#ef4444', desc: 'تقليل الضعف وتجنب التهديدات' }
+            ];
+
+            const gridHtml = strats.map(s => {
+                const points = Array.isArray(data[s.key]) ? data[s.key] : (data[s.key] ? data[s.key].split('\n') : []);
+                return `
+                    <div class="data-card" style="border-right: 4px solid ${s.color}">
+                        <div class="data-label" style="color: ${s.color}">${s.label}</div>
+                        <div class="small text-muted mb-2">${s.desc}</div>
+                        <div class="data-value" style="font-size: 0.9rem;">${points.join('، ') || '—'}</div>
+                    </div>
+                `;
+            }).join('');
+
+            return `<div class="data-grid">${gridHtml}</div>`;
+        }
+
+        function renderObjectives(data) {
+            if (!Array.isArray(data)) return '<div class="data-value text-muted py-3">لم يتم تحديد أهداف بعد</div>';
+            return `<div class="data-grid">${data.map(obj => `
+                <div class="data-card" style="border-left: 1px solid var(--stx-border)">
+                    <div class="data-label"><i class="bi bi-bullseye text-primary me-2"></i> ${obj.perspective || 'عام'}</div>
+                    <div class="data-value">${obj.text}</div>
+                </div>`).join('')}</div>`;
+        }
+
+        function renderOkrs(data) {
+            if (!Array.isArray(data)) return '<div class="data-value text-muted py-3">لم يتم تحديد OKRs بعد</div>';
+            return `<div class="data-grid">${data.map(o => `
+                <div class="data-card">
+                    <div class="fw-bold mb-3 text-white" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">
+                        <i class="bi bi-award text-accent me-2"></i> ${o.objective}
+                    </div>
+                    <ul class="text-muted small" style="list-style: none; padding: 0;">
+                        ${(o.keyResults || []).map(kr => `<li class="mb-2"><i class="bi bi-check2-circle text-success me-2"></i> ${kr}</li>`).join('')}
+                    </ul>
+                </div>
+            `).join('')}</div>`;
+        }
+
+        function renderKpis(data) {
+            if (!Array.isArray(data)) return '<div class="data-value text-muted py-3">لا توجد مؤشرات أداء</div>';
+            return `<div class="table-responsive rounded-4 overflow-hidden" style="border: 1px solid var(--stx-border)">
+                <table class="table table-dark table-hover mb-0">
+                    <thead style="background: rgba(255,255,255,0.05)">
+                        <tr><th class="py-3 px-4">المؤشر</th><th class="py-3 text-center">المستهدف</th><th class="py-3 text-center">دورية القياس</th></tr>
+                    </thead>
+                    <tbody>${data.map(k => `
+                        <tr>
+                            <td class="py-3 px-4 fw-600">${k.name}</td>
+                            <td class="py-3 text-center text-success fw-bold">${k.target}</td>
+                            <td class="py-3 text-center text-muted">${k.frequency}</td>
+                        </tr>`).join('')}</tbody>
+                </table>
+            </div>`;
+        }
+
+        function renderInitiatives(data) {
+            if (!Array.isArray(data) || data.length === 0) {
+                return '<div class="data-value text-muted py-4">لا توجد مبادرات معتمدة لهذا القسم حالياً</div>';
+            }
+
+            const totalBudget = data.reduce((sum, i) => {
+                const b = typeof i.budget === 'number' ? i.budget : parseFloat(String(i.budget).replace(/[^\d.]/g, '')) || 0;
+                return sum + b;
+            }, 0);
+
+            const fmtDate = (d) => d ? new Date(d).toLocaleDateString('ar-SA', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+
+            const cards = data.map(ini => {
+                const priorityMap = {
+                    HIGH: { label: 'عالية', color: '#ef4444' },
+                    MEDIUM: { label: 'متوسطة', color: '#f59e0b' },
+                    LOW: { label: 'منخفضة', color: '#10b981' }
+                };
+                const p = priorityMap[ini.priority] || priorityMap.MEDIUM;
+                const budgetText = ini.budget ? (typeof ini.budget === 'number' ? ini.budget.toLocaleString('ar-SA') : ini.budget) + ' ر.س' : 'قيد الدراسة';
+
+                return `
+                <div class="data-card" style="border-right: 4px solid ${p.color}">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="data-value" style="font-size: 1rem; color: #fff">${ini.title}</div>
+                        <span style="background: ${p.color}22; color: ${p.color}; border: 1px solid ${p.color}44; padding: 2px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 800">
+                            أولوية ${p.label}
+                        </span>
+                    </div>
+                    <div style="font-size: 0.8rem; color: #94a3b8; display: flex; flex-wrap: wrap; gap: 15px">
+                        <span><i class="bi bi-cash me-1"></i> ${budgetText}</span>
+                        ${ini.startDate ? `<span><i class="bi bi-calendar3 me-1"></i> ${fmtDate(ini.startDate)}</span>` : ''}
+                        <span><i class="bi bi-info-circle me-1"></i> ${ini.status || 'PLANNED'}</span>
+                    </div>
+                </div>`;
+            }).join('');
+
+            return `
+            <div class="mb-4 d-flex gap-4 p-4 rounded-4" style="background: rgba(255,255,255,0.03); border: 1px solid var(--stx-border)">
+                <div><span class="text-muted small">إجمالي المبادرات:</span> <br> <strong class="fs-4 text-white">${data.length}</strong></div>
+                <div class="vr opacity-10"></div>
+                <div><span class="text-muted small">الميزانية التقديرية الكلية:</span> <br> <strong class="fs-4 text-warning">${totalBudget.toLocaleString('ar-SA')} ر.س</strong></div>
+            </div>
+            <div class="data-grid">${cards}</div>`;
+        }
+
+        (async function init() {
+            if (typeof window.initSidebar === 'function') window.initSidebar();
+            await loadReportData();
+        })();
+    </script>
+</body>
+
+</html>

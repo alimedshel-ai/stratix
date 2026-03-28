@@ -9,7 +9,7 @@ const router = express.Router();
 router.get('/:dept', verifyToken, async (req, res) => {
     try {
         const { dept } = req.params;
-        const entityId = req.user.entityId;
+        const entityId = req.user.activeEntityId || req.user.entityId;
 
         const health = await prisma.departmentHealth.findUnique({
             where: {
@@ -33,7 +33,7 @@ router.post('/:dept', verifyToken, async (req, res) => {
     try {
         const { dept } = req.params;
         const { skills, processes, culture, resources, satisfaction, productivity } = req.body;
-        const entityId = req.user.entityId;
+        const entityId = req.user.activeEntityId || req.user.entityId;
 
         await prisma.departmentHealth.upsert({
             where: {

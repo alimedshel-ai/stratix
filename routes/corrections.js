@@ -503,4 +503,64 @@ router.get('/for-review/:versionId', verifyToken, async (req, res) => {
     }
 });
 
+// ──────────────────────────────────────────────────────
+// GET /api/corrections/:dept — جلب تصحيحات القسم (Wizard)
+// ──────────────────────────────────────────────────────
+router.get('/:dept', verifyToken, async (req, res) => {
+    try {
+        const { dept } = req.params;
+        const entityId = req.user.entityId;
+
+        const analysis = await prisma.departmentAnalysis.findFirst({
+            where: {
+                entityId,
+                department: dept.toUpperCase(),
+                type: 'CORRECTIONS'
+            }
+        });
+
+        if (!analysis) return res.json({});
+        res.json(JSON.parse(analysis.data));
+    } catch (error) {
+        console.error('Error fetching departmental corrections:', error);
+        res.status(500).json({ error: 'Failed to fetch departmental corrections' });
+    }
+});
+
+// ──────────────────────────────────────────────────────
+// POST /api/corrections/:dept — حفظ تصحيحات القسم (Wizard)
+// ──────────────────────────────────────────────────────
+router.post('/:dept', verifyToken, async (req, res) => {
+    try {
+        const { dept } = req.params;
+        const data = req.body;
+        const entityId = req.user.entityId;
+
+        await prisma.departmentAnalysis.upsert({
+            where: {
+                entityId_department_type: {
+                    entityId,
+                    department: dept.toUpperCase(),
+                    type: 'CORRECTIONS'
+                }
+            },
+            update: {
+                data: JSON.stringify(data),
+                updatedAt: new Date()
+            },
+            create: {
+                entityId,
+                department: dept.toUpperCase(),
+                type: 'CORRECTIONS',
+                data: JSON.stringify(data)
+            }
+        });
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error saving departmental corrections:', error);
+        res.status(500).json({ error: 'Failed to save departmental corrections' });
+    }
+});
+
 module.exports = router;

@@ -4,536 +4,307 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تحليل SWOT</title>
+    <title>تحليل SWOT - ستارتكس</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/css/shared.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
     <style>
-        .toast-container {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1100;
+        :root {
+            --stx-strength: #28a745;
+            --stx-weakness: #dc3545;
+            --stx-opportunity: #0d9488;
+            --stx-threat: #f97316;
+            --stx-bg: #0f172a;
+            --stx-card: #1e293b;
+            --stx-border: rgba(255, 255, 255, 0.1);
         }
 
-        .toast-success {
-            background-color: #28a745;
-            color: white;
-        }
-
-        .toast-error {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .btn-loading {
-            opacity: 0.7;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-
-        .suggestion-chip {
-            display: inline-block;
-            background-color: #f0f0f0;
-            border-radius: 20px;
-            padding: 4px 12px;
-            margin: 4px 6px 4px 0;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .suggestion-chip:hover {
-            transform: scale(1.02);
-            background-color: #e0e0e0;
-        }
-
-        .chip-selected {
-            background-color: #d4edda;
-        }
-
-        .chip-strength {
-            border-right: 3px solid #28a745;
-        }
-
-        .chip-weakness {
-            border-right: 3px solid #dc3545;
-        }
-
-        .chip-opportunity {
-            border-right: 3px solid #0d9488;
-        }
-
-        .chip-threat {
-            border-right: 3px solid #f97316;
-        }
-
-        .card-swot {
-            border: none;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            transition: all 0.2s;
-        }
-
-        .card-swot:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-
-        .card-header-swot {
-            font-weight: 700;
-            font-size: 1.2rem;
-            border-bottom: 2px solid;
-        }
-
-        .card-header-strength {
-            color: #28a745;
-            border-bottom-color: #28a745;
-        }
-
-        .card-header-weakness {
-            color: #dc3545;
-            border-bottom-color: #dc3545;
-        }
-
-        .card-header-opportunity {
-            color: #0d9488;
-            border-bottom-color: #0d9488;
-        }
-
-        .card-header-threat {
-            color: #f97316;
-            border-bottom-color: #f97316;
-        }
-    </style>
-    <style>
-        /* ── تنسيقات Dark Mode للصفحة ── */
         body {
-            background: #0f1117;
+            background-color: var(--stx-bg);
             color: #e2e8f0;
             font-family: 'Tajawal', sans-serif;
             margin: 0;
+            padding: 0;
         }
 
-        .page-wrapper {
+        /* Modern Shell Layout */
+        .stx-wrapper {
             display: flex;
             min-height: 100vh;
         }
 
         .stx-sidebar-container {
-            width: 240px;
+            width: 260px;
             flex-shrink: 0;
-        }
-
-        .main-content {
-            flex: 1;
-            min-width: 0;
-            padding: 28px 32px;
-        }
-
-        .swot-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 24px;
-        }
-
-        @media (max-width: 768px) {
-            .swot-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .main-content {
-                padding: 16px;
-            }
-
-            .stx-sidebar-container {
-                display: none;
-            }
-        }
-
-        .swot-card {
             background: #1a1d2e;
+            border-left: 1px solid var(--stx-border);
+            z-index: 1000;
+        }
+
+        .stx-main-content {
+            flex-grow: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* SWOT Cards */
+        .card-swot {
+            background: var(--stx-card);
+            border: 1px solid var(--stx-border);
             border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            overflow: hidden;
-            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 24px;
+            height: 100%;
+            transition: transform 0.2s;
         }
 
-        .swot-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        .card-swot:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.2);
         }
 
-        .swot-card-header {
+        .card-header-swot {
             padding: 16px 20px;
-            font-size: 16px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border-bottom: 2px solid;
-        }
-
-        .swot-strengths .swot-card-header {
-            color: #22c55e;
-            border-color: #22c55e;
-            background: rgba(34, 197, 94, 0.06);
-        }
-
-        .swot-weaknesses .swot-card-header {
-            color: #ef4444;
-            border-color: #ef4444;
-            background: rgba(239, 68, 68, 0.06);
-        }
-
-        .swot-opportunities .swot-card-header {
-            color: #0d9488;
-            border-color: #0d9488;
-            background: rgba(13, 148, 136, 0.06);
-        }
-
-        .swot-threats .swot-card-header {
-            color: #f97316;
-            border-color: #f97316;
-            background: rgba(249, 115, 22, 0.06);
-        }
-
-        .swot-card-body {
-            padding: 16px 20px;
-        }
-
-        .suggestion-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 12px;
-        }
-
-        .swot-textarea {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 10px;
-            color: #e2e8f0;
-            padding: 12px;
-            font-family: 'Tajawal', sans-serif;
-            font-size: 14px;
-            resize: vertical;
-            min-height: 110px;
-            transition: border-color 0.2s;
-        }
-
-        .swot-textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
-        }
-
-        .page-title {
-            font-size: 24px;
             font-weight: 800;
+            border-bottom: 1px solid var(--stx-border);
+            border-radius: 16px 16px 0 0;
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 6px;
-        }
-
-        .page-subtitle {
-            color: #94a3b8;
-            font-size: 14px;
-            margin-bottom: 0;
-        }
-
-        .action-bar {
-            display: flex;
-            justify-content: flex-end;
             gap: 12px;
-            margin-top: 28px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        .btn-save {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 12px 32px;
+        .card-header-strength {
+            color: var(--stx-strength);
+            border-bottom: 3px solid var(--stx-strength);
+        }
+
+        .card-header-weakness {
+            color: var(--stx-weakness);
+            border-bottom: 3px solid var(--stx-weakness);
+        }
+
+        .card-header-opportunity {
+            color: var(--stx-opportunity);
+            border-bottom: 3px solid var(--stx-opportunity);
+        }
+
+        .card-header-threat {
+            color: var(--stx-threat);
+            border-bottom: 3px solid var(--stx-threat);
+        }
+
+        .suggestion-panel {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px dashed var(--stx-border);
             border-radius: 12px;
-            font-family: 'Tajawal', sans-serif;
-            font-size: 15px;
-            font-weight: 700;
+            padding: 15px;
+            margin-bottom: 15px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .suggestion-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            color: #cbd5e1;
             cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .btn-save:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-save:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .toast-msg {
-            position: fixed;
-            bottom: 24px;
-            left: 24px;
-            padding: 14px 22px;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 600;
-            color: white;
-            z-index: 9999;
-            display: flex;
+            margin: 3px;
+            transition: 0.2s;
+            display: inline-flex;
             align-items: center;
-            gap: 10px;
-            animation: slideUp 0.3s ease;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            gap: 5px;
         }
 
-        .toast-msg.success {
-            background: rgba(34, 197, 94, 0.95);
+        .suggestion-btn:hover {
+            border-color: #6366f1;
+            background: rgba(99, 102, 241, 0.1);
         }
 
-        .toast-msg.error {
-            background: rgba(239, 68, 68, 0.95);
+        .form-control {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--stx-border);
+            color: white;
+            border-radius: 12px;
+            padding: 12px;
         }
 
-        @keyframes slideUp {
-            from {
-                transform: translateY(20px);
-                opacity: 0;
-            }
+        .form-control:focus {
+            background: rgba(15, 23, 42, 0.8);
+            border-color: #6366f1;
+            color: white;
+            box-shadow: none;
+        }
 
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+        .btn-modern {
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+
+        .sync-badge {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border: 1px solid rgba(34, 197, 94, 0.2);
         }
     </style>
 </head>
 
 <body>
-    <div class="page-wrapper">
-        <aside class="stx-sidebar-container"></aside>
-        <main class="main-content">
-            <div class="page-title">
-                <i class="bi bi-grid-3x3" style="color:#667eea"></i>
-                تحليل SWOT
+    <div class="stx-wrapper">
+        <!-- Sidebar Container (Golden Thread v2 Compatibility) -->
+        <aside class="stx-sidebar-container" id="sidebar"></aside>
+
+        <main class="stx-main-content">
+            <div class="mb-5 d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <h1 class="fw-900 m-0"><i class="bi bi-diagram-3-fill text-primary me-2"></i> تحليل SWOT</h1>
+                        <span class="sync-badge"><i class="bi bi-cpu"></i> مزامنة ذكية نشطة</span>
+                    </div>
+                    <p class="text-muted fs-5" id="dept-header">جاري تحميل تحليل الإدارة وتنسيق البيانات...</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button id="btnSync" class="btn btn-outline-success btn-modern">
+                        <i class="bi bi-magic"></i> مزامنة تشخيص الإدارة
+                    </button>
+                    <button id="btnClear" class="btn btn-outline-danger btn-modern">
+                        <i class="bi bi-trash3"></i> مسح الحقول
+                    </button>
+                </div>
             </div>
-            <p class="page-subtitle">تحديد نقاط القوة والضعف الداخلية، والفرص والتهديدات الخارجية للإدارة.</p>
 
             <form id="swot-form">
-                <div class="swot-grid">
+                <div class="row g-4">
                     <!-- Strengths -->
-                    <div class="swot-card swot-strengths">
-                        <div class="swot-card-header">
-                            <i class="bi bi-star-fill"></i> نقاط القوة (Strengths)
-                        </div>
-                        <div class="swot-card-body">
-                            <div id="strengths-suggestions" class="suggestion-chips"></div>
-                            <textarea class="swot-textarea" id="strengths"
-                                placeholder="مثال: خبرة فريق عالية، سمعة قوية في السوق..."></textarea>
+                    <div class="col-lg-6">
+                        <div class="card card-swot">
+                            <div class="card-header-swot card-header-strength">
+                                <i class="bi bi-shield-check"></i> نقاط القوة (Internal)
+                            </div>
+                            <div class="card-body">
+                                <div class="suggestion-panel" id="strengths-options"></div>
+                                <textarea id="strengths" class="form-control" rows="5"
+                                    placeholder="قوة في المهارات، التقنية، أو العمليات..."></textarea>
+                            </div>
                         </div>
                     </div>
+
                     <!-- Weaknesses -->
-                    <div class="swot-card swot-weaknesses">
-                        <div class="swot-card-header">
-                            <i class="bi bi-exclamation-triangle-fill"></i> نقاط الضعف (Weaknesses)
-                        </div>
-                        <div class="swot-card-body">
-                            <div id="weaknesses-suggestions" class="suggestion-chips"></div>
-                            <textarea class="swot-textarea" id="weaknesses"
-                                placeholder="مثال: نقص في المهارات الرقمية، بطء الإجراءات..."></textarea>
+                    <div class="col-lg-6">
+                        <div class="card card-swot">
+                            <div class="card-header-swot card-header-weakness">
+                                <i class="bi bi-bug"></i> نقاط الضعف (Internal)
+                            </div>
+                            <div class="card-body">
+                                <div class="suggestion-panel" id="weaknesses-options"></div>
+                                <textarea id="weaknesses" class="form-control" rows="5"
+                                    placeholder="فجوات مهارية، بطء إجراءات، أو تحديات تقنية..."></textarea>
+                            </div>
                         </div>
                     </div>
+
                     <!-- Opportunities -->
-                    <div class="swot-card swot-opportunities">
-                        <div class="swot-card-header">
-                            <i class="bi bi-graph-up"></i> الفرص (Opportunities)
-                        </div>
-                        <div class="swot-card-body">
-                            <div id="opportunities-suggestions" class="suggestion-chips"></div>
-                            <textarea class="swot-textarea" id="opportunities"
-                                placeholder="مثال: نمو السوق، الدعم الحكومي، تقنيات جديدة..."></textarea>
+                    <div class="col-lg-6">
+                        <div class="card card-swot">
+                            <div class="card-header-swot card-header-opportunity">
+                                <i class="bi bi-graph-up-arrow"></i> الفرص (External)
+                            </div>
+                            <div class="card-body">
+                                <div class="suggestion-panel" id="opportunities-options"></div>
+                                <textarea id="opportunities" class="form-control" rows="5"
+                                    placeholder="فرص تطويرية، اتجاهات سوقية، أو مبادرات كبرى..."></textarea>
+                            </div>
                         </div>
                     </div>
+
                     <!-- Threats -->
-                    <div class="swot-card swot-threats">
-                        <div class="swot-card-header">
-                            <i class="bi bi-shield-exclamation"></i> التهديدات (Threats)
-                        </div>
-                        <div class="swot-card-body">
-                            <div id="threats-suggestions" class="suggestion-chips"></div>
-                            <textarea class="swot-textarea" id="threats"
-                                placeholder="مثال: منافسة شديدة، تغيرات تشريعية..."></textarea>
+                    <div class="col-lg-6">
+                        <div class="card card-swot">
+                            <div class="card-header-swot card-header-threat">
+                                <i class="bi bi-exclamation-triangle"></i> التهديدات (External)
+                            </div>
+                            <div class="card-body">
+                                <div class="suggestion-panel" id="threats-options"></div>
+                                <textarea id="threats" class="form-control" rows="5"
+                                    placeholder="مخاطر سوقية، تغيرات قانونية، أو منافسة..."></textarea>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="action-bar">
-                    <button type="submit" class="btn-save" id="btnSave">
-                        <i class="bi bi-check-circle-fill"></i> حفظ ومتابعة
+                <div
+                    class="action-bar d-flex justify-content-between p-4 bg-dark bg-opacity-25 rounded-4 mt-4 border border-white border-opacity-10">
+                    <button type="button" onclick="history.back()"
+                        class="btn btn-link text-muted text-decoration-none fw-800">
+                        <i class="bi bi-arrow-right me-2"></i> العودة
+                    </button>
+                    <button type="submit" id="btnSave" class="btn btn-primary px-5 btn-modern">
+                        حفظ ومتابعة لمصفوفة TOWS <i class="bi bi-arrow-left ms-2"></i>
                     </button>
                 </div>
             </form>
         </main>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Scripts -->
     <script src="/js/api.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/context-manager.js"></script>
     <script src="/js/steps-config.js"></script>
     <script src="/js/sidebar.js"></script>
+    <script src="/js/dept-page.js"></script>
+    <script src="/assets/js/hr-handlers.js"></script>
+    <script src="/assets/js/finance-handlers.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // مقترحات ذكية لكل ربع
-        const suggestions = {
-            strengths: [
-                'خبرة فريق عمل عالية',
-                'سمعة قوية في السوق',
-                'ولاء عملاء مرتفع',
-                'بنية تحتية تقنية متطورة',
-                'ميزانية تدريب كافية',
-                'هيكل تنظيمي مرن',
-                'قيادة ملهمة',
-                'منتجات/خدمات متميزة'
-            ],
-            weaknesses: [
-                'نقص في المهارات الرقمية',
-                'إجراءات إدارية بطيئة',
-                'ضعف التخطيط الاستراتيجي',
-                'معدل دوران مرتفع للموظفين',
-                'ميزانية محدودة',
-                'غياب التوثيق الرسمي',
-                'ضعف ثقافة الابتكار',
-                'اعتماد مفرط على موردين محددين'
-            ],
-            opportunities: [
-                'نمو السوق المستهدف',
-                'دعم حكومي للتحول الرقمي',
-                'اتجاهات جديدة في الصناعة',
-                'شراكات استراتيجية محتملة',
-                'توسع جغرافي',
-                'تطورات تكنولوجية واعدة',
-                'حوافز ضريبية جديدة',
-                'زيادة الطلب على الخدمات المبتكرة'
-            ],
-            threats: [
-                'منافسة شرسة',
-                'تغيرات تشريعية غير مواتية',
-                'تقلبات اقتصادية',
-                'ارتفاع تكاليف المواد الخام',
-                'هجمات إلكترونية',
-                'نقص في الكوادر المؤهلة',
-                'تغير سريع في تفضيلات العملاء',
-                'عدم استقرار سياسي'
-            ]
-        };
-
-        const CHIP_STYLES = {
-            strengths: { bg: 'rgba(34,197,94,0.12)', border: 'rgba(34,197,94,0.35)', color: '#4ade80' },
-            weaknesses: { bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.35)', color: '#f87171' },
-            opportunities: { bg: 'rgba(13,148,136,0.12)', border: 'rgba(13,148,136,0.35)', color: '#2dd4bf' },
-            threats: { bg: 'rgba(249,115,22,0.12)', border: 'rgba(249,115,22,0.35)', color: '#fb923c' },
-        };
-
-        function addChip(containerId, text, category) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            const s = CHIP_STYLES[category] || { bg: 'rgba(102,126,234,0.12)', border: 'rgba(102,126,234,0.35)', color: '#818cf8' };
-            const chip = document.createElement('span');
-            chip.textContent = text;
-            chip.style.cssText = `
-                display:inline-block;
-                background:${s.bg};
-                border:1px solid ${s.border};
-                color:${s.color};
-                padding:4px 12px;
-                border-radius:20px;
-                font-size:12px;
-                font-weight:600;
-                cursor:pointer;
-                transition:all 0.2s;
-                font-family:'Tajawal',sans-serif;
-                user-select:none;
-            `;
-            chip.addEventListener('mouseenter', () => {
-                chip.style.background = s.border;
-                chip.style.color = '#fff';
-            });
-            chip.addEventListener('mouseleave', () => {
-                chip.style.background = s.bg;
-                chip.style.color = s.color;
-            });
-            chip.addEventListener('click', () => {
-                const textarea = document.getElementById(category);
-                const current = textarea.value.trim();
-                textarea.value = current ? current + '، ' + text : text;
-                chip.style.background = s.border;
-                chip.style.opacity = '0.6';
-                setTimeout(() => { chip.style.background = s.bg; chip.style.opacity = '1'; }, 400);
-            });
-            container.appendChild(chip);
-        }
-
-
-        // callApiWithTimeout متوفرة عبر /js/utils.js (window.callApiWithTimeout)
-
-        function showToast(msg, type = 'success') {
-            const old = document.querySelector('.swot-toast-msg');
-            if (old) old.remove();
-            const el = document.createElement('div');
-            el.className = `toast-msg ${type}`;
-            const icons = { success: 'check-circle-fill', error: 'x-circle-fill', warn: 'exclamation-triangle-fill' };
-            el.innerHTML = `<i class="bi bi-${icons[type] || icons.success}"></i> ${msg}`;
-            el.classList.add('swot-toast-msg');
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), 3500);
-        }
-
         (async function () {
-            const params = new URLSearchParams(window.location.search);
-            let dept = params.get('dept');
-            if (!dept && typeof Context !== 'undefined') dept = Context.getDept();
-            if (!dept) {
-                window.location.href = '/dept-dashboard.html';
-                return;
+            // 🛡️ تهيئة الصفحة (تضمن تحميل المستخدم والقسم)
+            const dept = await window.initDeptPage();
+            if (!dept) return;
+
+            const DEPT_AR = {
+                hr: 'الموارد البشرية', finance: 'المالية', sales: 'المبيعات',
+                marketing: 'التسويق', operations: 'العمليات', compliance: 'الامتثال',
+                it: 'تقنية المعلومات', cs: 'خدمة العملاء', quality: 'الجودة',
+                projects: 'المشاريع', support: 'الخدمات المساندة', governance: 'الحوكمة'
+            };
+
+            document.getElementById('dept-header').textContent = `إدارة ${DEPT_AR[dept.toLowerCase()] || dept.toUpperCase()} | تحليل نقاط القوة والضعف والفرص والتهديدات`;
+
+            // تهيئة DeptPage (مهم جداً للحفظ)
+            await DeptPage.init(dept);
+
+            if (window.initSidebar) window.initSidebar();
+
+            await loadPreviousData(dept);
+            const data = await refreshSuggestions(dept);
+
+            // سحب تلقائي إذا كانت الحقول فارغة
+            const fields = ['strengths', 'weaknesses', 'opportunities', 'threats'];
+            const allEmpty = fields.every(f => !document.getElementById(f).value.trim());
+            if (allEmpty && (data.strengths.length || data.weaknesses.length)) {
+                await smartSync(dept, true);
             }
 
-            // إنشاء الكبسولات لكل ربع
-            for (const [category, items] of Object.entries(suggestions)) {
-                const containerId = `${category}-suggestions`;
-                items.forEach(item => addChip(containerId, item, category));
-            }
+            document.getElementById('btnSync').onclick = () => smartSync(dept);
+            document.getElementById('btnClear').onclick = clearFields;
 
-            // تحميل البيانات المحفوظة
-            try {
-                const data = await window.callApiWithTimeout(`/api/swot/${dept}`, { method: 'GET' });
-                if (data) {
-                    document.getElementById('strengths').value = data.strengths || '';
-                    document.getElementById('weaknesses').value = data.weaknesses || '';
-                    document.getElementById('opportunities').value = data.opportunities || '';
-                    document.getElementById('threats').value = data.threats || '';
-                }
-            } catch (e) {
-                if (e.status !== 404) {
-                    console.error('خطأ في تحميل البيانات:', e);
-                    showToast('حدث خطأ في تحميل البيانات السابقة.', 'error');
-                }
-            }
-
-            const form = document.getElementById('swot-form');
-            form.addEventListener('submit', async (e) => {
+            // هندلة النموذج
+            document.getElementById('swot-form').onsubmit = async (e) => {
                 e.preventDefault();
                 const btn = document.getElementById('btnSave');
-                const originalHtml = btn.innerHTML;
                 btn.disabled = true;
-                btn.innerHTML = '<span class="shared-spinner"></span> جاري الحفظ...';
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> جاري الحفظ...';
 
                 const payload = {
                     strengths: document.getElementById('strengths').value,
@@ -542,32 +313,170 @@
                     threats: document.getElementById('threats').value
                 };
 
-                const hasContent = Object.values(payload).some(v => v && v.trim());
-                if (!hasContent) {
-                    showToast('يرجى ملء حقل واحد على الأقل قبل الحفظ.', 'error');
+                const success = await DeptPage.saveToAPI('SWOT_' + dept.toUpperCase(), payload);
+                if (success) {
+                    if (window.Context && Context.markStepCompleted) await Context.markStepCompleted('swot');
+                    DeptPage.showMessage('تم حفظ تحليل SWOT بنجاح');
+                    setTimeout(() => {
+                        window.location.href = `/tows.html?dept=${dept}`;
+                    }, 1500);
+                } else {
                     btn.disabled = false;
-                    btn.innerHTML = originalHtml;
-                    return;
+                    btn.innerHTML = 'حفظ ومتابعة لمصفوفة TOWS <i class="bi bi-arrow-left ms-2"></i>';
+                }
+            };
+        })();
+
+        async function fetchAllSourceData(dept) {
+            let s = [], w = [], o = [], t = [];
+            try {
+                const user = await window.api.getCurrentUser();
+                if (!user) return { strengths: [], weaknesses: [], opportunities: [], threats: [] };
+
+                const entityId = user.activeEntityId || user.entityId;
+                const dKey = dept.toLowerCase();
+                const dKeyUpper = dept.toUpperCase();
+
+                // المزامنة من مصادر متعددة (قاعدة البيانات + fallbacks)
+                const [healthRes, deepRes, auditRes, pestelRes, deepStandardRes, healthStandardRes] = await Promise.all([
+                    window.callApiWithTimeout(`/api/dept-health/${dept}`).catch(() => null),
+                    window.callApiWithTimeout(`/api/dept-deep/${entityId}/${dKey}`).catch(() => null),
+                    window.callApiWithTimeout(`/api/dept/analysis?dept=${dept}&type=AUDIT_${dKeyUpper}`).catch(() => null),
+                    window.callApiWithTimeout(`/api/pestel/${dKeyUpper}`).catch(() => null),
+                    window.callApiWithTimeout(`/api/dept/analysis?dept=${dept}&type=DEEP`).catch(() => null),
+                    window.callApiWithTimeout(`/api/dept/analysis?dept=${dept}&type=HEALTH`).catch(() => null)
+                ]);
+
+                // 1. مخرجات الفحص الوصفي (Audit)
+                if (auditRes?.data) {
+                    const audit = auditRes.data;
+                    Object.entries(audit).forEach(([qId, item]) => {
+                        const val = parseInt(item.val);
+                        if (val >= 2) w.push(`[مراجعة] ${item.label}`);
+                        else if (val <= 1) s.push(`[مراجعة] ${item.label}`);
+                    });
                 }
 
-                try {
-                    await window.callApiWithTimeout(`/api/swot/${dept}`, { method: 'POST', body: payload });
-                    const completed = typeof Context !== 'undefined' ? await Context.markStepCompleted('swot') : true;
-                    showToast(completed ? '✅ تم حفظ تحليل SWOT بنجاح!' : '⚠️ تم الحفظ ولكن فشل تحديث التقدم.', completed ? 'success' : 'warn');
-                    setTimeout(() => {
-                        window.location.href = `/dept-dashboard.html?dept=${dept}`;
-                    }, 2000);
-                } catch (err) {
-                    console.error('خطأ في الحفظ:', err);
-                    showToast('حدث خطأ أثناء الحفظ، حاول مرة أخرى', 'error');
-                } finally {
-                    btn.disabled = false;
-                    btn.innerHTML = originalHtml;
+                // 2. مخرجات التقييم الصحي (Health)
+                const hData = healthStandardRes?.data || healthRes;
+                if (hData) {
+                    ['skills', 'processes', 'satisfaction', 'tech', 'leadership', 'culture', 'resources', 'productivity'].forEach(key => {
+                        if (hData[key] && typeof hData[key] === 'string') {
+                            const lines = hData[key].split('\n').filter(l => l.trim().length > 5);
+                            lines.forEach(line => {
+                                const clean = line.replace(/^[\s\-\*\d\.]+/g, '').trim();
+                                const weaknessesKeywords = ['نقص', 'ضعف', 'حاجة', 'فجوة', 'تذمر', 'مشكلة', 'تحدي', 'تأخير', 'غياب', 'عدم', 'منخفض', 'متدني', 'سلبي', 'صعوبة', 'تعثر', 'خطر', 'قصور'];
+                                if (weaknessesKeywords.some(k => clean.includes(k))) w.push(`[صحة] ${clean}`);
+                                else s.push(`[صحة] ${clean}`);
+                            });
+                        }
+                    });
+                }
+
+                // 3. مخرجات الفحص العميق (Deep)
+                const deepData = deepStandardRes?.data || deepRes?.data;
+                if (deepData) {
+                    // هندلة ذكية للإدارات التخصصية
+                    if (dKey === 'hr' && typeof extractHRInsights === 'function') {
+                        const insights = extractHRInsights(deepData);
+                        if (insights.strengths) s.push(...insights.strengths.map(txt => `[فحص] ${txt}`));
+                        if (insights.weaknesses) w.push(...insights.weaknesses.map(txt => `[فحص] ${txt}`));
+                    } else if (dKey === 'finance' && typeof extractFinanceInsights === 'function') {
+                        const insights = extractFinanceInsights(deepData);
+                        if (insights.strengths) s.push(...insights.strengths.map(txt => `[فحص] ${txt}`));
+                        if (insights.weaknesses) w.push(...insights.weaknesses.map(txt => `[فحص] ${txt}`));
+                    }
+
+                    // هندلة عامة (Generic Format)
+                    if (Array.isArray(deepData.challenges)) w.push(...deepData.challenges);
+                    if (Array.isArray(deepData.goals)) o.push(...deepData.goals);
+                    if (Array.isArray(deepData.extraStrengths)) s.push(...deepData.extraStrengths);
+                    if (Array.isArray(deepData.extraWeaknesses)) w.push(...deepData.extraWeaknesses);
+                }
+
+                // 4. تحليل PESTEL
+                if (pestelRes) {
+                    Object.entries(pestelRes).forEach(([key, val]) => {
+                        if (typeof val === 'string' && val.length > 5) {
+                            if (val.includes('فرصة') || val.includes('نمو') || val.includes('توسع')) o.push(`[بستل] ${val}`);
+                            else if (val.includes('خطر') || val.includes('منافسة') || val.includes('تراجع')) t.push(`[بستل] ${val}`);
+                            else o.push(`[بستل] ${val}`); // افتراضي فرصة إذا لم يكن خطراً واضحاً
+                        }
+                    });
+                }
+
+                return {
+                    strengths: [...new Set(s)],
+                    weaknesses: [...new Set(w)],
+                    opportunities: [...new Set(o)],
+                    threats: [...new Set(t)]
+                };
+            } catch (err) {
+                console.warn('⚠️ [SWOT Sync] Error fetching data:', err);
+                return { strengths: [], weaknesses: [], opportunities: [], threats: [] };
+            }
+        }
+
+        async function loadPreviousData(dept) {
+            try {
+                const data = await DeptPage.loadFromAPI('SWOT_' + dept.toUpperCase());
+                if (data) {
+                    document.getElementById('strengths').value = data.strengths || '';
+                    document.getElementById('weaknesses').value = data.weaknesses || '';
+                    document.getElementById('opportunities').value = data.opportunities || '';
+                    document.getElementById('threats').value = data.threats || '';
+                }
+            } catch (e) { }
+        }
+
+        async function refreshSuggestions(dept) {
+            const data = await fetchAllSourceData(dept);
+            renderSuggestions('strengths', data.strengths);
+            renderSuggestions('weaknesses', data.weaknesses);
+            renderSuggestions('opportunities', data.opportunities);
+            renderSuggestions('threats', data.threats);
+            return data;
+        }
+
+        function renderSuggestions(id, items) {
+            const container = document.getElementById(`${id}-options`);
+            container.innerHTML = '';
+            if (!items.length) {
+                container.innerHTML = '<span class="text-muted small">لا توجد مخرجات تشخيصية حالياً...</span>';
+                return;
+            }
+            items.forEach(txt => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'suggestion-btn';
+                btn.innerHTML = `<i class="bi bi-plus"></i> ${txt.slice(0, 45)}${txt.length > 45 ? '...' : ''}`;
+                btn.onclick = () => {
+                    const area = document.getElementById(id);
+                    if (!area.value.includes(txt)) area.value = (area.value.trim() ? area.value + '\n' : '') + txt;
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        async function smartSync(dept, isAuto = false) {
+            const data = await refreshSuggestions(dept);
+            const mapping = { strengths: 'strengths', weaknesses: 'weaknesses', opportunities: 'opportunities', threats: 'threats' };
+            Object.entries(mapping).forEach(([dataKey, fieldId]) => {
+                const area = document.getElementById(fieldId);
+                const newItems = data[dataKey].filter(i => !area.value.includes(i));
+                if (newItems.length > 0) {
+                    area.value = (area.value.trim() ? area.value + '\n' : '') + newItems.join('\n');
                 }
             });
-        })();
-    </script>
+            if (!isAuto) DeptPage.showMessage('تمت المزامنة الذكية بنجاح');
+        }
 
+        function clearFields() {
+            if (confirm('هل أنت متأكد من مسح جميع الحقول؟')) {
+                ['strengths', 'weaknesses', 'opportunities', 'threats'].forEach(id => document.getElementById(id).value = '');
+            }
+        }
+    </script>
 </body>
 
 </html>

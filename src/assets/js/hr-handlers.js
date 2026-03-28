@@ -368,77 +368,62 @@ function getSuggestedKPIs(directionId) {
 // 6. توليد استراتيجيات SWOT
 // ═══════════════════════════════════════════════════
 function generateHRStrategies(strengths, weaknesses, opportunities, threats, maxPerType = 5) {
-
     const hrTemplates = {
         so: [
-            { sKey: 'توطين', oKey: 'دعم', text: 'الاستفادة من نسبة التوطين العالية للحصول على دعم حكومي إضافي' },
-            { sKey: 'تدريب', oKey: 'تقنية', text: 'ربط برامج التدريب القوية بمنصات التعلم الرقمي' },
-            { sKey: 'امتثال', oKey: 'سمعة', text: 'استغلال الامتثال العالي لتعزيز سمعة الشركة كجهة عمل مفضلة' },
-            { sKey: 'مستقر', oKey: 'توسع', text: 'استثمار استقرار الفريق في خطط التوسع والنمو' },
-            { sKey: 'رضا', oKey: 'استقطاب', text: 'استغلال الرضا الوظيفي العالي لجذب كفاءات جديدة' }
+            { sKey: 'توطين', oKey: 'دعم', text: 'الاستفادة من نسبة التوطين العالية للحصول على دعم حكومي إضافي (هدف، تمهير)' },
+            { sKey: 'تدريب', oKey: 'تقنية', text: 'ربط برامج التدريب القوية بمنصات التعلم الرقمي لرفع الكفاءة بتكلفة أقل' },
+            { sKey: 'امتثال', oKey: 'سمعة', text: 'استغلال الامتثال العالي لتعزيز سمعة الشركة كجهة عمل مفضلة واستقطاب المواهب' },
+            { sKey: 'مستقر', oKey: 'توسع', text: 'استثمار استقرار الفريق وخبرته في قيادة خطط التوسع والنمو المستقبلي' },
+            { sKey: 'رضا', oKey: 'استقطاب', text: 'استغلال الرضا الوظيفي العالي لموظفينا الحاليين كأداة جذب للكفاءات النادرة' }
         ],
         wo: [
-            { wKey: 'دوران', oKey: 'برامج', text: 'استخدام برامج الدعم الحكومي لمعالجة الدوران الوظيفي' },
-            { wKey: 'تدريب', oKey: 'منصات', text: 'الاستفادة من المنصات الرقمية لسد فجوة التدريب بتكلفة منخفضة' },
-            { wKey: 'يدوي', oKey: 'أتمتة', text: 'التحول الرقمي للعمليات اليدوية في HR' },
-            { wKey: 'تقييم', oKey: 'تقنية', text: 'تبني أنظمة تقييم أداء إلكترونية' }
+            { wKey: 'دوران', oKey: 'برامج', text: 'استخدام برامج الدعم الحكومي لتحسين الحوافز ومعالجة الدوران الوظيفي' },
+            { wKey: 'تدريب', oKey: 'منصات', text: 'الاستفادة من المنصات الرقمية المتاحة لسد فجوة التدريب بتكلفة منخفضة' },
+            { wKey: 'يدوي', oKey: 'أتمتة', text: 'التحول الرقمي للعمليات اليدوية في HR لتقليل الأخطاء البشرية' }
         ],
         st: [
-            { sKey: 'امتثال', tKey: 'غرامة', text: 'تعزيز الامتثال الحالي لمواجهة تشديد الرقابة النظامية' },
-            { sKey: 'مستقر', tKey: 'منافسة', text: 'تعزيز ثقافة الانتماء لمواجهة محاولات استقطاب المنافسين' }
+            { sKey: 'امتثال', tKey: 'غرامة', text: 'تعزيز الامتثال الحالي لتجنب المخاطر القانونية والتشديد الرقابي' },
+            { sKey: 'مستقر', tKey: 'منافسة', text: 'تعزيز ثقافة الانتماء والحوافز غير المادية لمواجهة إغراءات المنافسين' },
+            { sKey: 'خبرة', tKey: 'تقلب', text: 'استغلال خبرة القيادات الحالية في وضع خطط طوارئ لمواجهة التقلبات' }
         ],
         wt: [
             { wKey: 'دوران', tKey: 'منافسة', text: 'خطة عاجلة لتحسين بيئة العمل لمنع هجرة الكفاءات للمنافسين' },
-            { wKey: 'توطين', tKey: 'غرامة', text: 'رفع التوطين فوراً لتجنب الغرامات وإيقاف الخدمات' },
-            { wKey: 'سلامة', tKey: 'حوادث', text: 'تفعيل السلامة المهنية لتجنب حوادث العمل والمسؤولية القانونية' }
+            { wKey: 'توطين', tKey: 'غرامة', text: 'رفع التوطين فوراً لتجنب الغرامات وإيقاف الخدمات الحكومية' }
         ]
     };
 
-    function generateType(listA, listB, templateFn, templates, maxItems) {
+    function generateType(listA, listB, typeTemplates, code, max) {
         const results = [];
-
-        // أولاً: القوالب المخصصة
-        if (templates) {
-            templates.forEach(t => {
+        if (typeTemplates) {
+            typeTemplates.forEach(t => {
                 const keys = Object.entries(t).filter(([k]) => k !== 'text');
                 const matchA = listA.find(item => item.includes(keys[0][1]));
                 const matchB = listB.find(item => item.includes(keys[1][1]));
-                if (matchA && matchB && results.length < maxItems) {
-                    results.push(t.text);
-                }
+                if (matchA && matchB && results.length < max) results.push(t.text);
             });
         }
-
-        // ثانياً: التوليد التلقائي
-        if (results.length < maxItems) {
+        if (results.length < max) {
             for (const a of listA) {
                 for (const b of listB) {
-                    if (results.length >= maxItems) break;
-                    const generated = templateFn(a, b);
-                    if (!results.includes(generated)) {
-                        results.push(generated);
-                    }
+                    if (results.length >= max) break;
+                    let gen = "";
+                    const s = a.replace(/\[.*?\]\s*/g, '');
+                    const o = b.replace(/\[.*?\]\s*/g, '');
+                    if (code === 'so') gen = `توظيف قوة "${s}" لاغتنام فرصة "${o}"`;
+                    else if (code === 'wo') gen = `استخدام "${o}" لمعالجة التحدي في "${s}"`;
+                    else if (code === 'st') gen = `الاعتماد على "${s}" كحصن دفاعي ضد تهديد "${o}"`;
+                    else if (code === 'wt') gen = `تقليص الضعف في "${s}" للحد من أثر "${o}"`;
+                    if (gen && !results.includes(gen)) results.push(gen);
                 }
-                if (results.length >= maxItems) break;
             }
         }
-
-        return results.slice(0, maxItems);
+        return results.slice(0, max);
     }
-
     return {
-        so: generateType(strengths, opportunities,
-            (s, o) => `استغل "${s}" لتحقيق "${o}"`,
-            hrTemplates.so, maxPerType),
-        wo: generateType(weaknesses, opportunities,
-            (w, o) => `استخدم "${o}" لمعالجة "${w}"`,
-            hrTemplates.wo, maxPerType),
-        st: generateType(strengths, threats,
-            (s, t) => `استخدم "${s}" لمواجهة "${t}"`,
-            hrTemplates.st, maxPerType),
-        wt: generateType(weaknesses, threats,
-            (w, t) => `عالج "${w}" لتتجنب "${t}"`,
-            hrTemplates.wt, maxPerType)
+        so: generateType(strengths, opportunities, hrTemplates.so, 'so', maxPerType),
+        wo: generateType(weaknesses, opportunities, hrTemplates.wo, 'wo', maxPerType),
+        st: generateType(strengths, threats, hrTemplates.st, 'st', maxPerType),
+        wt: generateType(weaknesses, threats, hrTemplates.wt, 'wt', maxPerType)
     };
 }
 
@@ -516,6 +501,175 @@ function dualWrite(localKey, data, apiEndpoint, dept = 'hr') {
     }
 }
 
+// ═══════════════════════════════════════════════════
+// 7. توليد السيناريوهات (Scenarios)
+// ═══════════════════════════════════════════════════
+function generateHRScenarios(towsData = {}) {
+    return {
+        optimistic: [
+            "تحقيق قفزة نوعية في الإنتاجية بفضل أتمتة العمليات (SO) واكتمال برامج التدريب.",
+            "استقطاب كفاءات عالمية المستوى بفضل سمعة الشركة المتميزة وتنافسية الحوافز.",
+            "التحول إلى إدارة استباقية تساهم في أرباح الشركة عبر تحسين كفاءة الموارد البشربة."
+        ],
+        realistic: [
+            "استقرار معدلات الدوران الوظيفي ضمن الحدود الطبيعية نتيجة تحسين السياسات والارتباط.",
+            "إنجاز التحول الرقمي الأساسي بنجاح مع استمرار تحديات طفيفة في تبني التقنيات المتقدمة.",
+            "زيادة نسبة التوطين والالتزام التام بكافة الأنظمة والتشريعات العمالية الجديدة."
+        ],
+        pessimistic: [
+            "ظهور فجوات مهارية حادة نتيجة تسارع المنافسة في السوق وضعف ميزانية التدريب.",
+            "ارتفاع تكاليف التشغيل والارتباط نتيجة تغييرات نظامية أو اقتصادية غير متوقعة.",
+            "فقدان بعض الكوادر الرئيسية لصالح المنافسين في حال تأخر تحسين بيئة العمل."
+        ]
+    };
+}
+
+// ═══════════════════════════════════════════════════
+// 8. هوية القسم (Vision, Mission, Values)
+// ═══════════════════════════════════════════════════
+function generateHRVisionMission(dept = 'hr') {
+    return {
+        vision: [
+            "أن نكون الشريك الاستراتيجي الأول في تمكين رأس المال البشري وتحقيق التميز المؤسسي.",
+            "الريادة في صناعة بيئة عمل محفزة ومبتكرة تضع الموظف في قلب النجاح.",
+            "تطوير نموذج إدارة موارد بشرية ذكي ومستدام يدعم رؤية وتوسع المنظمة عالمياً."
+        ],
+        mission: [
+            "تمكين موظفينا عبر تقديم خدمات إدارية وتطويرية متميزة تدعم الإنتاجية والارتباط.",
+            "استقطاب وتطوير أفضل المواهب وبناء قيادات فاعلة تساهم في تحقيق أهداف الشركة.",
+            "ضمان الامتثال التام والحوكمة الفاعلة لكافة ممارسات الموارد البشرية وفق أحدث الأنظمة."
+        ],
+        values: [
+            "• الشفافية والنزاهة في كافة التعاملات والمساواة في الفرص.",
+            "• الابتكار المستمر في تطوير السياسات والإجراءات.",
+            "• التركيز على العميل الداخلي (الموظف) كأولوية قصوى.",
+            "• العمل بروح الفريق والمسؤولية الجماعية عن النجاح.",
+            "• التميز في الأداء والنتائج وسرعة الاستجابة للمتغيرات."
+        ]
+    };
+}
+
+
+// ═══════════════════════════════════════════════════
+// 9. توليد أهداف استراتيجية (BSC Objectives)
+// ═══════════════════════════════════════════════════
+function generateHRObjectives(towsData = {}) {
+    return {
+        financial: [
+            "حوكمة وترشيد تكاليف التوظيف بنسبة 15% عبر تحسين القنوات المباشرة.",
+            "تحسين العائد على الاستثمار في رأس المال البشري (HCROI) بمقدار 0.5 نقطة.",
+            "خفض التكاليف الناتجة عن دوران الموظفين والامتثال القانوني."
+        ],
+        customer: [
+            "رفع مؤشر رضا الموظفين (eNPS) إلى +40 نقطة كأولوية قصوى.",
+            "تقليل زمن الاستجابة لطلبات الموظفين (SLA) بنسبة 30%.",
+            "تحسين تجربة استقطاب المرشحين وتعزيز العلامة التجارية لجهة العمل."
+        ],
+        internal: [
+            "أتمتة كافة العمليات اليدوية المتبقية بنسبة 100% بنهاية الربع.",
+            "تطوير وتفعيل نظام متقدم لإدارة الأداء والتعاقب الوظيفي.",
+            "تحديث كافة الأوصاف الوظيفية والهياكل التنظيمية لتتواءم مع الاستراتيجية."
+        ],
+        learning: [
+            "إتمام 40 ساعة تدريبية تقنية لكل موظف سنوياً في المجالات الحرجة.",
+            "بناء مهارات القيادة الرقمية لمديري الصف الأول والوسط.",
+            "تفعيل ثقافة الابتكار عبر إطلاق مبادرة 'صوت الموظف' للأفكار التطويرية."
+        ]
+    };
+}
+
+// ═══════════════════════════════════════════════════
+// 10. توليد نتائج رئيسية (Key Results - OKRs)
+// ═══════════════════════════════════════════════════
+function generateHRKeyResults(objective = "") {
+    const templates = [
+        { text: "خفض معدل الدوران الوظيفي من 25% إلى 15% بنهاية العام.", target: "15%" },
+        { text: "إتمام توثيق 100% من عقود الموظفين في منصة قوى.", target: "100%" },
+        { text: "رفع نسبة التوطين في الوظائف القيادية لتصل إلى 40%.", target: "40%" },
+        { text: "تحقيق درجة 85% في استبيان رضا الموظفين ربع السنوي.", target: "85%" },
+        { text: "أتمتة 5 عمليات يدوية رئيسية في شؤون الموظفين.", target: "5 عمليات" },
+        { text: "إتمام برنامج تطوير القيادات لـ 15 مديراً تنفيذياً.", target: "15 مديراً" },
+        { text: "خفض متوسط وقت التوظيف من 45 يوماً إلى 30 يوماً.", target: "30 يوم" }
+    ];
+
+    // محرك التحليل الديناميكي: استخراج النسب المئوية من عنوان الهدف
+    const matches = objective.match(/(\d+)%/);
+    const userPercent = matches ? matches[1] + "%" : "15%"; // الافتراضي 15% لو لم يجد
+
+    // استجابة ذكية لترشيد التكاليف والتوظيف
+    if (objective.includes("تكاليف") && objective.includes("التوظيف")) {
+        return [
+            { text: "تخفيض الاعتماد على شركات التوظيف الخارجية (Headhunters) بنسبة كبيرة.", target: "40%" },
+            { text: "تفعيل قنوات التوظيف المباشرة (مثل LinkedIn) لزيادة المتقدمين المباشرين.", target: "60%" },
+            { text: "تحقيق ترشيد حقيقي في ميزانية التوظيف السنوية.", target: userPercent }
+        ];
+    }
+
+    if (objective.includes("أتمتة") || objective.includes("حوكمة")) {
+        return [
+            { text: "أتمتة 100% من طلبات التوظيف عبر نظام الـ ATS المعتمد.", target: "100%" },
+            { text: "تقليص فترة الاعتماد الإداري لطلبات التعيين من 10 أيام إلى يومين.", target: "2 يوم" },
+            { text: "نشر دليل سياسات وإجراءات التوظيف المحدث بنسبة 100%.", target: "100%" }
+        ];
+    }
+
+    // التبديل العشوائي في حال عدم وجود تطابق دقيق
+    return templates.sort(() => 0.5 - Math.random()).slice(0, 3);
+}
+
+// ═══════════════════════════════════════════════════
+// 11. حساب الوزن النسبي المقترح (Strategic Weighting)
+// ═══════════════════════════════════════════════════
+function calculateSuggestedWeight(title = "", perspective = "") {
+    let deep = {};
+    try {
+        const raw = localStorage.getItem(HR_KEYS.deep_results) || localStorage.getItem(HR_LEGACY_KEYS.deep_results);
+        if (raw && raw !== 'undefined') deep = JSON.parse(raw);
+    } catch (e) { }
+
+    let weight = 10; // Default base
+
+    // 1. تحليل الفجوات الحرجة لزيادة الثقل
+    if (title.includes("التوطين") && deep.saudizationRate < 20) weight += 15;
+    if (title.includes("الدوران") && deep.turnoverRate > 25) weight += 15;
+    if (title.includes("التوظيف") && deep.vacancyRate > 15) weight += 10;
+    if (title.includes("الامتثال") && deep.complianceScore < 60) weight += 10;
+    if (title.includes("الأداء") && deep.perfScore < 40) weight += 5;
+
+    // 2. توزيع حسب المنظور (في حال عدم وجود فجوة حادة)
+    if (perspective === 'financial' && weight === 10) weight = 15;
+    if (perspective === 'customer' && weight === 10) weight = 20; // رضا الموظفين غالباً عالي الأهمية
+
+    return Math.min(40, weight); // سقف 40% لهدف واحد لضمان التوازن
+}
+
+function getPerspectiveMetrics(p = "") {
+    const metrics = {
+        financial: { label: "الأثر المالي المتوقع / الميزانية (ر.س)", unit: "ر.س", placeholder: "مثال: 50,000 ر.س" },
+        customer: { label: "المستهدف الزمني / عدد الموظفين", unit: "يوم / عدد", placeholder: "مثال: 3 أيام للرد / 100 موظف" },
+        internal: { label: "مدة التنفيذ / عدد العمليات", unit: "يوم / عدد", placeholder: "مثال: 90 يوم للانتقال للتحول الرقمي" },
+        learning: { label: "ساعات التدريب / عدد الكوادر", unit: "ساعة / موظف", placeholder: "مثال: 40 ساعة / 15 موظف" }
+    };
+    return metrics[p] || metrics.internal;
+}
+
+function getRationaleBullets(title = "") {
+    if (title.includes("التوظيف")) return "• تقليل الاعتماد على جهات التوظيف الخارجية بنسبة 80%.\n• توجيه الموارد المالية نحو استقطاب الكفاءات النادرة.\n• تحسين جودة المرشحين عبر قنوات متخصصة.";
+    if (title.includes("رضا الموظفين")) return "• خفض معدل الدوران الوظيفي بنسبة 10%.\n• رفع إنتاجية الفرد عبر بيئة محفزة.\n• تعزيز صورة الشركة كوجهة عمل مفضلة.";
+    if (title.includes("أتمتة")) return "• تقليل الوقت المستغرق للإجراءات بنسبة 40%.\n• تقليص الأخطاء البشرية وضمان الامتثال.\n• توفير 3 ساعات عمل يومية لكل موظف HR.";
+    return "• تحسين الممارسات الاستراتيجية للإدارة.\n• مواءمة العمليات مع الأهداف العامة للشركة.\n• ضمان الاستدامة في أداء الفريق الوطني.";
+}
+
+function getObjectiveRationale(title = "") {
+    const t = title.toLowerCase();
+    if (t.includes("توطين") || t.includes("سعوية")) return "يعد رفع التوطين أولوية استراتيجية لضمان الامتثال لضوابط 'نطاقات' وتقليل مخاطر الاعتماد على العمالة الوافدة، مما يعزز الاستدامة التشغيلية للشركة.";
+    if (t.includes("دوران") || t.includes("استبقاء")) return "خفض الدوران الوظيفي يقلل من تكاليف الاستبدال التدريب المتكرر، ويحمي الرأس المال الفكري للشركة، مما يؤدي لاستقرار الإنتاجية على المدى الطويل.";
+    if (t.includes("رضا") || t.includes("تجربة")) return "تحسين تجربة الموظف هو المحرك الرئيسي للارتباط الوظيفي، والذي ينعكس مباشرة على جودة الخدمة المقدمة للعملاء النهائيين وكفاءة العمليات.";
+    if (t.includes("أتمتة") || t.includes("نظام") || t.includes("رقمي")) return "التحول الرقمي لعمليات الموارد البشرية يقلل من التدخل البشري والبيروقراطية، مما يتيح للإدارة التركيز على المهام الاستراتيجية بدلاً من الأعباء الإدارية.";
+    if (t.includes("تدريب") || t.includes("تطوير") || t.includes("مهارات")) return "الاستثمار في تدريب الكوادر يسد الفجوات المهارية الحرجة ويجهز الشركة للتعامل مع المتغيرات التقنية المتسارعة في السوق.";
+    return "هذا الهدف يدعم التوجه الاستراتيجي العام للإدارة ويساعد في تحقيق التوازن المطلوب بين الأداء المالي والتميز التشغيلي.";
+}
+
 // تصدير (لو استُخدم كـ module)
 if (typeof window !== 'undefined') {
     window.HR_KEYS = HR_KEYS;
@@ -525,6 +679,15 @@ if (typeof window !== 'undefined') {
     window.suggestHRDirections = suggestHRDirections;
     window.getSuggestedKPIs = getSuggestedKPIs;
     window.generateHRStrategies = generateHRStrategies;
+    window.generateHRScenarios = generateHRScenarios;
+    window.generateHRVisionMission = generateHRVisionMission;
+    window.generateHRObjectives = generateHRObjectives;
+    window.generateHRKeyResults = generateHRKeyResults;
+    window.calculateSuggestedWeight = calculateSuggestedWeight;
+    window.getObjectiveRationale = getObjectiveRationale;
+    window.getPerspectiveMetrics = getPerspectiveMetrics;
+    window.getRationaleBullets = getRationaleBullets;
+    window.getDeptObjectives = generateHRObjectives;
     window.getDeptFromURL = getDeptFromURL;
     window.updateCompletedSteps = updateCompletedSteps;
     window.getCompletedSteps = getCompletedSteps;
@@ -533,3 +696,5 @@ if (typeof window !== 'undefined') {
     window.validateHRData = validateHRData;
     window.HR_KPI_SUGGESTIONS = HR_KPI_SUGGESTIONS;
 }
+
+

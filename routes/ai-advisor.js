@@ -80,13 +80,15 @@ router.get('/context', verifyToken, async (req, res) => {
             }
         });
 
-        // === 3. جلب الألم والطموح ===
+        // === 3. جلب الألم والطموح والميتاداتا ===
         let painAmbitionData = null;
+        let metadata = {};
         try {
-            if (entity.metadata && typeof entity.metadata === 'object') {
-                painAmbitionData = entity.metadata.painAmbition || null;
+            if (entity.metadata) {
+                metadata = (typeof entity.metadata === 'string') ? JSON.parse(entity.metadata) : entity.metadata;
+                painAmbitionData = metadata.painAmbition || null;
             }
-        } catch (e) { /* ignore */ }
+        } catch (e) { console.error('[AI-Advisor] Metadata parse error:', e); }
 
         // === 4. جلب التحليلات المكتملة ===
         let completedTools = [];

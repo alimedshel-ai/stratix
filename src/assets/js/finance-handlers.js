@@ -396,4 +396,31 @@ if (typeof dualWrite === 'undefined') {
     };
 }
 
+function generateFinanceObjectives() {
+    return {
+        financial: [
+            'تقليص التكاليف التشغيلية بنسبة 10% عبر أتمتة العمليات.',
+            'تحسين التدفق النقدي الحر بنسبة 15% بنهاية العام.',
+            'رفع دقة التنبؤات المالية لتصل إلى 95%.'
+        ],
+        customer: [
+            'تسهيل إجراءات الفوترة والتحصيل للعملاء الداخليين.',
+            'تقديم تقارير مالية شفافة وسهلة القراءة لمديري الإدارات.'
+        ],
+        internal: [
+            'أتمتة دورة المشتريات والموردين بالكامل.',
+            'تطوير نظام لضبط المصاريف النثرية إلكترونياً.'
+        ],
+        learning: [
+            'تدريب الفريق المالي على تقنيات تحليل البيانات الحديثة.',
+            'الحصول على شهادة الآيزو في المعايير المالية الدولية.'
+        ]
+    };
+}
+
+if (typeof window !== 'undefined') {
+    window.generateFinanceObjectives = generateFinanceObjectives;
+    window.getDeptObjectives = generateFinanceObjectives;
+}
+
 console.log('✅ finance-handlers.js loaded —', Object.keys(FINANCE_KPI_SUGGESTIONS).length, 'KPI categories');

@@ -9,7 +9,7 @@ const router = express.Router();
 router.get('/:dept', verifyToken, async (req, res) => {
     try {
         const { dept } = req.params;
-        const entityId = req.user.entityId;
+        const entityId = req.user.activeEntityId || req.user.entityId;
 
         const analysis = await prisma.departmentAnalysis.findFirst({
             where: {
@@ -32,7 +32,7 @@ router.post('/:dept', verifyToken, async (req, res) => {
     try {
         const { dept } = req.params;
         const data = req.body;
-        const entityId = req.user.entityId;
+        const entityId = req.user.activeEntityId || req.user.entityId;
 
         await prisma.departmentAnalysis.upsert({
             where: {

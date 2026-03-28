@@ -1,8 +1,8 @@
 // js/context-manager.js
 /**
- * 🛠️ Stratix Context Manager – النسخة النهائية المعدلة
- * يدير السياق بين جميع الأدوار: مالك، مدير قسم، مستثمر، مستشار، مسؤول، مشرف، زائر
- * يحافظ على توافق النظام القديم مع الإضافات الخاصة بالدروع (SessionStorage)
+ * 🛠️ Stratix Context Manager – النسخة النهائية
+ * يدير السياق بين الأدوار مع عزل بيانات الشركات (entityId) لمدير الإدارة
+ * ويوفر قراءة متزامنة + استعلام API للتقدم
  */
 (function (window) {
     // ======================
@@ -10,86 +10,80 @@
     // ======================
     function safeParse(str, fallback = null) {
         if (!str) return fallback;
-        try {
-            return JSON.parse(str);
-        } catch (e) {
-            return fallback;
-        }
+        try { return JSON.parse(str); } catch (e) { return fallback; }
     }
 
-    // قراءة آمنة من localStorage
     function safeLocalParse(key, fallback = null) {
-        const val = localStorage.getItem(key);
-        return safeParse(val, fallback);
+        return safeParse(localStorage.getItem(key), fallback);
     }
 
-    // الحصول على المستخدم (من window.user أو localStorage)
+    // الحصول على المستخدم (تفضيل بيانات السيرفر المباشرة)
     function getUser() {
-        if (window.user) return window.user;
+        if (window._cachedUser) return window._cachedUser;
+        // 1. من api.js (الكاش النشط)
+        const apiUser = window.api?.getCachedUser?.();
+        if (apiUser && Object.keys(apiUser).length > 0) {
+            window._cachedUser = apiUser;
+            return apiUser;
+        }
+        // 2. من localStorage (للتوافق القديم)
         const localUser = safeLocalParse('user');
         if (localUser) {
-            window.user = localUser;
+            window._cachedUser = localUser;
             return localUser;
         }
         return null;
     }
 
-    // تحديد الدور الحالي
+    // الحصول على الدور الحالي
     function getUserRole() {
         const user = getUser();
         if (user) {
-            const role = (user.role || user.userType || user.systemRole || '').toUpperCase();
+            if (user.userType === 'DEPT_MANAGER' || user.userCategory?.startsWith('DEPT_')) {
+                return 'dept_manager';
+            }
             const ownerRoles = ['OWNER', 'ADMIN', 'SUPER_ADMIN', 'CEO', 'COMPANY_MANAGER'];
-
-            if (user.userType === 'DEPT_MANAGER' || (user.userCategory && user.userCategory.startsWith('DEPT_'))) return 'dept_manager';
+            const role = (user.role || user.userType || '').toUpperCase();
             if (ownerRoles.includes(role)) return 'owner';
             if (role === 'INVESTOR') return 'investor';
-            if (role === 'CONSULTANT' || user.userType === 'CONSULTANT') return 'consultant';
-            if (role === 'SYSTEM_ADMIN') return 'system_admin';
-            if (role === 'SUPERVISOR') return 'supervisor';
-
-            return 'owner'; // افتراضي للمستخدمين المسجلين غير المحددين
+            if (user.userType === 'CONSULTANT') return 'consultant';
+            return 'owner';
         }
         // زائر: من sessionStorage
-        const guestDiag = sessionStorage.getItem('stratix_guest_diagnosis');
-        if (guestDiag) {
-            try {
-                const diag = JSON.parse(guestDiag);
-                if (diag.role) return diag.role;
-            } catch (e) { }
-        }
-        return 'guest';
+        return sessionStorage.getItem('stratix_guest_diagnosis') ? 'guest' : 'guest';
     }
 
-    // الحصول على القسم (للمدير أو المشرف)
+    // الحصول على القسم (مرونة قصوى)
     function getDept() {
-        const role = getUserRole();
-        if (!['dept_manager', 'supervisor'].includes(role)) return null;
-
+        // 1. من URL (أولوية قصوى للمعاينة والتنقل)
         const urlParams = new URLSearchParams(window.location.search);
         let dept = urlParams.get('dept');
-        if (!dept) dept = localStorage.getItem('stratix_v10_dept') || localStorage.getItem('stratix_current_dept');
-
         if (dept) return dept.toLowerCase();
 
-        const user = getUser();
-        if (user?.department?.key) return user.department.key.toLowerCase();
-        if (user?.deptCode) return user.deptCode.toLowerCase();
+        // 2. من بيانات المستخدم السيرفرية
+        const user = (window.api?.getCachedUser?.() || window._cachedUser || window.api?.getUserData?.() || {});
+        if (user.userCategory?.startsWith('DEPT_')) {
+            let d = user.userCategory.replace('DEPT_', '').toLowerCase();
+            if (d) return d;
+        }
+        if (user.department?.key) return user.department.key.toLowerCase();
+        if (user.deptCode) return user.deptCode.toLowerCase();
 
-        return null;
+        // 3. Fallback: localStorage (للتوافق مع النسخ القديمة)
+        try {
+            return localStorage.getItem('stratix_v10_dept')?.toLowerCase() ||
+                localStorage.getItem('stratix_current_dept')?.toLowerCase() || null;
+        } catch { return null; }
     }
 
     // الحصول على versionId (للمالك أو المشرف)
     function getActiveVersionId() {
         const role = getUserRole();
         if (!['owner', 'supervisor'].includes(role)) return null;
-
         if (role === 'supervisor') {
-            const urlParams = new URLSearchParams(window.location.search);
-            const version = urlParams.get('versionId');
+            const version = new URLSearchParams(window.location.search).get('versionId');
             if (version) return version;
         }
-
         const user = getUser();
         let fallback = localStorage.getItem('stratix_last_version') || localStorage.getItem('selectedVersionId');
         return user?.entity?.activeVersionId || fallback || null;
@@ -98,17 +92,22 @@
     // بناء المفتاح للتخزين (عزل تام)
     function buildKey(baseKey, isTemporary = false) {
         const role = getUserRole();
+        const user = getUser();
+        const entityId = user?.activeEntityId || user?.entityId || user?.entity?.id;   // معرف الشركة الحالية (من بيانات السيرفر)
+        const dept = getDept();
+
+        if (role === 'dept_manager') {
+            if (!dept) throw new Error('[Context] مدير قسم بدون تحديد القسم');
+            // المفتاح يحتوي على entityId + dept لعزل بيانات الشركات
+            const prefix = entityId ? `dept_${entityId}_${dept}` : `stratix_${dept}`;
+            return `${prefix}_${baseKey}`;
+        }
         if (role === 'owner') {
             const versionId = getActiveVersionId();
-            return versionId ? `owner_${versionId}_${baseKey}` : `stratix_${baseKey}`; // Backward compat
-        }
-        if (role === 'dept_manager') {
-            const dept = getDept();
-            if (!dept) throw new Error('[Context] مدير قسم بدون تحديد القسم');
-            return `stratix_${dept}_${baseKey}`;
+            return versionId ? `owner_${versionId}_${baseKey}` : `stratix_${baseKey}`;
         }
         if (role === 'investor') {
-            const userId = getUser()?.id || 'unknown';
+            const userId = user?.id || 'unknown';
             return `investor_${userId}_${baseKey}`;
         }
         if (role === 'consultant') {
@@ -116,11 +115,11 @@
             return `consultant_${clientId}_${baseKey}`;
         }
         if (role === 'system_admin') {
-            const userId = getUser()?.id || 'unknown';
+            const userId = user?.id || 'unknown';
             return `admin_${userId}_${baseKey}`;
         }
         if (role === 'supervisor') {
-            const userId = getUser()?.id || 'unknown';
+            const userId = user?.id || 'unknown';
             const versionId = getActiveVersionId();
             const suffix = versionId ? `_${versionId}` : '';
             return `supervisor_${userId}${suffix}_${baseKey}`;
@@ -130,47 +129,55 @@
 
     // واجهة التخزين
     function setItem(key, value, isTemporary = false) {
-        const fullKey = buildKey(key, isTemporary);
-        const storage = isTemporary ? sessionStorage : localStorage;
-        storage.setItem(fullKey, JSON.stringify(value));
-        return value;
+        try {
+            const fullKey = buildKey(key, isTemporary);
+            const storage = isTemporary ? sessionStorage : localStorage;
+            storage.setItem(fullKey, JSON.stringify(value));
+            return value;
+        } catch (e) { console.error('[Context] Error setting item:', e); return null; }
     }
 
     function getItem(key, defaultValue = null, isTemporary = false) {
-        const fullKey = buildKey(key, isTemporary);
-        const storage = isTemporary ? sessionStorage : localStorage;
-        const raw = storage.getItem(fullKey);
-
-        if (!raw && !isTemporary && getUserRole() === 'owner') {
-            // Fallback for old stratix prefixes if strict versioning fails
-            const fallbackKey = `stratix_${key}`;
-            const fallbackRaw = storage.getItem(fallbackKey);
-            if (fallbackRaw) return safeParse(fallbackRaw, defaultValue);
-        }
-
-        if (!raw) return defaultValue;
-        return safeParse(raw, defaultValue);
+        try {
+            const fullKey = buildKey(key, isTemporary);
+            const storage = isTemporary ? sessionStorage : localStorage;
+            const raw = storage.getItem(fullKey);
+            if (!raw && !isTemporary && getUserRole() === 'owner') {
+                const fallbackKey = `stratix_${key}`;
+                const fallbackRaw = storage.getItem(fallbackKey);
+                if (fallbackRaw) return safeParse(fallbackRaw, defaultValue);
+            }
+            if (!raw) return defaultValue;
+            return safeParse(raw, defaultValue);
+        } catch (e) { return defaultValue; }
     }
 
     function removeItem(key, isTemporary = false) {
-        const fullKey = buildKey(key, isTemporary);
-        const storage = isTemporary ? sessionStorage : localStorage;
-        storage.removeItem(fullKey);
+        try {
+            const fullKey = buildKey(key, isTemporary);
+            const storage = isTemporary ? sessionStorage : localStorage;
+            storage.removeItem(fullKey);
+        } catch (e) { }
     }
 
     function setTemp(key, value) { return setItem(key, value, true); }
     function getTemp(key, defaultValue = null) { return getItem(key, defaultValue, true); }
     function removeTemp(key) { return removeItem(key, true); }
 
-    // التحقق من اكتمال خطوة
+    // ─────────────────────────────────────────────────────
+    // التحقق من اكتمال خطوة (متزامن) – يقرأ من localStorage
+    // ─────────────────────────────────────────────────────
     function isStepCompletedSync(stepName) {
         const userType = getUserRole();
+        const dept = getDept();
+        const deptId = (dept || 'HR').toUpperCase();
 
         if (userType === 'owner') {
             switch (stepName) {
-                case 'swot':
+                case 'swot': {
                     const swot = getItem('swot_data') || safeLocalParse('stratix_swot_payload');
                     return swot && (swot.strengths?.length > 0 || swot.weaknesses?.length > 0);
+                }
                 case 'directions':
                     return getItem('directions_completed') === true;
                 default:
@@ -178,99 +185,145 @@
             }
         } else if (userType === 'dept_manager') {
             switch (stepName) {
+                // 🔍 Diagnostic Phase
                 case 'deep':
-                    const deep = getItem('deep_results') || getItem('audit');
-                    return deep && Object.keys(deep).length > 0;
+                    return getItem('deep_results') || getItem('audit');
                 case 'audit':
-                    return getItem('audit_answers') !== null || getItem('audit_completed') === true;
-                case 'swot':
-                    return getItem('swot') !== null;
-                case 'directions':
-                    const dirs = getItem('directions');
-                    return dirs && dirs.length > 0;
+                    return getItem('audit_answers') || getItem('audit_completed');
+                case 'pestel': {
+                    const pestel = getItem('PESTEL_' + deptId);
+                    return pestel && Object.keys(pestel).length > 0;
+                }
+                case 'dept-health':
+                    return getItem('HEALTH_' + deptId) !== null;
+                case 'swot': {
+                    const swot = getItem('SWOT_' + deptId) || getItem('swot');
+                    return swot && swot.length > 0;
+                }
+                case 'tows': {
+                    const tows = getItem('TOWS_' + deptId);
+                    return tows && tows.length > 0;
+                }
+                // 🧭 Planning Phase
+                case 'scenarios':
+                    return getItem('SCENARIOS_' + deptId) !== null;
+                case 'directions': {
+                    const dirs = getItem('DIRECTIONS_' + deptId);
+                    return dirs && (dirs.vision || dirs.mission || (Array.isArray(dirs) && dirs.length > 0));
+                }
                 case 'objectives':
-                    const objs = getItem('objectives') || getItem('okrs');
-                    return objs && objs.length > 0;
-                case 'initiatives':
-                    const inits = getItem('initiatives');
+                case 'strategic-objectives': {
+                    const objs = getItem('OBJECTIVES_' + deptId) || getItem('okrs');
+                    return objs && (Array.isArray(objs) ? objs.length > 0 : !!objs);
+                }
+                // 🚀 Execution Phase
+                case 'okrs': {
+                    const okrs = getItem('OKRS_' + deptId);
+                    return okrs && okrs.length > 0;
+                }
+                case 'kpis': {
+                    const kpis = getItem('KPIS_' + deptId);
+                    return kpis && kpis.length > 0;
+                }
+                case 'initiatives': {
+                    const inits = getItem('INITIATIVES_' + deptId);
                     return inits && inits.length > 0;
-                default:
-                    return false;
+                }
+                case 'projects': {
+                    const projs = getItem('PROJECTS_' + deptId);
+                    return projs && projs.length > 0;
+                }
+                // 📊 Monitoring Phase
+                case 'reviews':
+                    return getItem('REVIEWS_' + deptId) || getItem('reviews_completed');
+                case 'corrections':
+                    return getItem('CORRECTIONS_' + deptId) || getItem('corrections_completed');
+                case 'reports':
+                    return getItem('REPORTS_' + deptId) !== null;
+                case 'risk-map':
+                    return getItem('RISK_MAP_' + deptId) !== null;
+                default: {
+                    try {
+                        const journey = JSON.parse(localStorage.getItem('stratix_mgr_journey') || '{}');
+                        return journey.completedIds?.includes(stepName);
+                    } catch { return false; }
+                }
             }
         }
         return false;
     }
 
+    // ─────────────────────────────────────────────────────
+    // التحقق من اكتمال خطوة (غير متزامن) – يستعلم API أولاً
+    // ─────────────────────────────────────────────────────
     async function isStepCompleted(stepName) {
-        // Fallback for sync
+        const dept = getDept();
+        // 1. إذا كان هناك API متاح، نطلب الحالة من الخادم
+        if (dept && typeof window.callApiWithTimeout === 'function') {
+            try {
+                const data = await window.callApiWithTimeout(
+                    `/api/progress?dept=${encodeURIComponent(dept)}&stepId=${encodeURIComponent(stepName)}`
+                );
+                if (data?.completed !== undefined) {
+                    return data.completed;
+                }
+            } catch (e) {
+                // فشل الشبكة – ننتقل للـ fallback المحلي
+                console.warn(`[Context] isStepCompleted API failed for ${stepName}:`, e);
+            }
+        }
+        // 2. fallback إلى localStorage (للتوافق القديم)
         return isStepCompletedSync(stepName);
     }
 
-    /**
-     * تسجيل اكتمال خطوة — يحفظ محلياً أولاً، ثم يحاول API
-     * @param {string} stepId - معرف الخطوة ('deep', 'audit', 'swot', ...)
-     * @returns {Promise<boolean>}
-     */
+    // ─────────────────────────────────────────────────────
+    // تسجيل اكتمال خطوة – يحفظ محلياً أولاً ثم عبر API
+    // ─────────────────────────────────────────────────────
     async function markStepCompleted(stepId) {
         const dept = getDept();
 
-        // ── 1. حفظ محلي فوري (لضمان عمل isStepCompleted بعدها) ──
+        // 1. حفظ محلي فوري (لضمان استجابة فورية)
         try {
-            const raw = localStorage.getItem('stratix_mgr_journey');
-            let journey = raw ? JSON.parse(raw) : { dept: dept || '', steps: [] };
-            if (!Array.isArray(journey.steps)) journey.steps = [];
-
-            // إضافة الخطوة إن لم تكن موجودة
+            let journey = JSON.parse(localStorage.getItem('stratix_mgr_journey') || '{}');
             if (!journey.completedIds) journey.completedIds = [];
-            if (!journey.completedIds.includes(stepId)) {
-                journey.completedIds.push(stepId);
-            }
-            // دعم مصفوفة الخطوات بالترتيب (steps-config.js)
-            if (typeof getDepartmentSteps !== 'undefined' && dept) {
-                const allSteps = getDepartmentSteps(dept);
-                const idx = allSteps.findIndex(s => s.id === stepId);
-                while (journey.steps.length <= idx) journey.steps.push(false);
-                if (idx >= 0) journey.steps[idx] = true;
-            }
-            journey.dept = dept || journey.dept;
+            if (!journey.completedIds.includes(stepId)) journey.completedIds.push(stepId);
             localStorage.setItem('stratix_mgr_journey', JSON.stringify(journey));
-        } catch (e) {
-            console.error('[Context] markStepCompleted - localStorage error:', e);
-        }
+        } catch (e) { console.warn('[Context] markStepCompleted local save failed:', e); }
 
-        // ── 2. محاولة API (إن فشلت نرجع true لأن الحفظ المحلي نجح) ──
-        try {
-            const body = JSON.stringify({ stepId, dept: dept || '' });
-            const headers = { 'Content-Type': 'application/json' };
-            let res;
-
-            if (typeof window.apiRequest === 'function') {
-                // api.js موجود
-                res = await window.apiRequest('/api/progress', { method: 'POST', body: { stepId, dept } });
-                return !!res && (res.success === true || res.ok === true || res.status === 'done');
-            } else {
+        // 2. محاولة API (باستخدام callApiWithTimeout الموحدة)
+        if (dept && typeof window.callApiWithTimeout === 'function') {
+            try {
+                const res = await window.callApiWithTimeout('/api/progress', {
+                    method: 'POST',
+                    body: { stepId, dept }
+                });
+                return !!res?.success;
+            } catch (error) {
+                console.warn('[Context] markStepCompleted API failed, local save used:', error);
+                return true; // الحفظ المحلي نجح
+            }
+        } else {
+            // في حال عدم توفر callApiWithTimeout، نحاول fetch مباشر
+            try {
                 const fetchRes = await fetch('/api/progress', {
                     method: 'POST',
-                    headers,
+                    headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
-                    body
+                    body: JSON.stringify({ stepId, dept })
                 });
-                if (!fetchRes.ok) {
-                    // API غير موجود أو خطأ — الحفظ المحلي كافٍ
-                    console.warn('[Context] markStepCompleted - API returned', fetchRes.status, '(local save OK)');
-                    return true;
-                }
+                if (!fetchRes.ok) return true;
                 const data = await fetchRes.json();
-                return !!data && (data.success === true || data.ok === true || data.status === 'done');
+                return !!data?.success;
+            } catch (error) {
+                console.warn('[Context] markStepCompleted fetch failed:', error);
+                return true;
             }
-        } catch (error) {
-            // فشل الشبكة — الحفظ المحلي نجح فنرجع true
-            console.warn('[Context] markStepCompleted - API unreachable, local save used:', error.message);
-            return true;
         }
     }
 
-    // التوجيه بعد التسجيل أو تسجيل الدخول
+    // ─────────────────────────────────────────────────────
+    // التوجيه بعد تسجيل الدخول (محسن)
+    // ─────────────────────────────────────────────────────
     function redirectAfterLogin() {
         const role = getUserRole();
         const user = getUser();
@@ -284,36 +337,27 @@
             return;
         }
         if (role === 'owner') {
-            // التوجيه الذكي باستخدام محرك التشخيص
-            if (window.DiagnosticEngine && window.DiagnosticEngine.classifyOwner) {
+            // التوجيه الذكي باستخدام محرك التشخيص (إن وجد)
+            if (window.DiagnosticEngine?.classifyOwner) {
                 const diagnosis = user?.diagnosticData || user?.entity?.diagnosis || user?.diagnosis;
                 if (diagnosis) {
                     const result = window.DiagnosticEngine.classifyOwner(diagnosis);
-                    const pathKey = result.pathKey; // nascent_cautious, growing_ambitious, mature, etc.
-                    // اذا كان هنالك صفحات مسارات مخصصة:
-                    if (pathKey) {
-                        // We map detailed diagnostic engine paths to the high-level funnels (beginner, rescue, growth)
-                        const mapping = {
-                            nascent_cautious: 'beginner',
-                            nascent_promising: 'growth',
-                            growing_struggling: 'rescue',
-                            growing_ambitious: 'growth',
-                            stable_stagnant: 'rescue',
-                            stable_solid: 'growth',
-                            mature_pioneering: 'growth',
-                            mature_renewing: 'rescue'
-                        };
-                        const mappedPath = mapping[pathKey] || 'beginner';
-                        if (mappedPath === 'growth') {
-                            window.location.href = '/growth-plan.html';
-                        } else {
-                            window.location.href = `/${mappedPath}-path.html`;
-                        }
-                        return;
-                    }
+                    const pathKey = result.pathKey;
+                    const mapping = {
+                        nascent_cautious: 'beginner',
+                        nascent_promising: 'growth',
+                        growing_struggling: 'rescue',
+                        growing_ambitious: 'growth',
+                        stable_stagnant: 'rescue',
+                        stable_solid: 'growth',
+                        mature_pioneering: 'growth',
+                        mature_renewing: 'rescue'
+                    };
+                    const mappedPath = mapping[pathKey] || 'beginner';
+                    window.location.href = mappedPath === 'growth' ? '/growth-plan.html' : `/${mappedPath}-path.html`;
+                    return;
                 }
             }
-
             // Fallback: Dashboard
             window.location.href = '/ceo-dashboard.html';
             return;
@@ -336,11 +380,25 @@
         window.location.href = '/select-type.html';
     }
 
+    // تصدير الواجهة العامة
     window.Context = {
-        getUserRole, getDept, getActiveVersionId, getUser,
-        setItem, getItem, removeItem, setTemp, getTemp, removeTemp,
-        isStepCompleted, isStepCompletedSync, markStepCompleted,
+        getUserRole,
+        getDept,
+        getActiveVersionId,
+        getUser,
+        setItem,
+        getItem,
+        removeItem,
+        setTemp,
+        getTemp,
+        removeTemp,
+        isStepCompleted,
+        isStepCompletedSync,
+        markStepCompleted,
         redirectAfterLogin,
-        getUserType: getUserRole, getVersionId: getActiveVersionId, buildKey,
+        // aliases للتوافق
+        getUserType: getUserRole,
+        getVersionId: getActiveVersionId,
+        buildKey,
     };
 })(window);

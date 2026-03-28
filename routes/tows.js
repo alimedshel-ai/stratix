@@ -261,4 +261,64 @@ router.post('/auto-generate', verifyToken, checkPermission('EDITOR'), async (req
     }
 });
 
+// ──────────────────────────────────────────────────────
+// GET /api/tows/:dept — جلب مصفوفة TOWS للقسم (Wizard)
+// ──────────────────────────────────────────────────────
+router.get('/:dept', verifyToken, async (req, res) => {
+    try {
+        const { dept } = req.params;
+        const entityId = req.user.entityId;
+
+        const analysis = await prisma.departmentAnalysis.findFirst({
+            where: {
+                entityId,
+                department: dept.toUpperCase(),
+                type: 'TOWS'
+            }
+        });
+
+        if (!analysis) return res.json({ matrix: { strategies: [] } });
+        res.json(JSON.parse(analysis.data));
+    } catch (error) {
+        console.error('Error fetching departmental TOWS:', error);
+        res.status(500).json({ error: 'Failed to fetch departmental TOWS' });
+    }
+});
+
+// ──────────────────────────────────────────────────────
+// POST /api/tows/:dept — حفظ مصفوفة TOWS للقسم (Wizard)
+// ──────────────────────────────────────────────────────
+router.post('/:dept', verifyToken, async (req, res) => {
+    try {
+        const { dept } = req.params;
+        const data = req.body;
+        const entityId = req.user.entityId;
+
+        await prisma.departmentAnalysis.upsert({
+            where: {
+                entityId_department_type: {
+                    entityId,
+                    department: dept.toUpperCase(),
+                    type: 'TOWS'
+                }
+            },
+            update: {
+                data: JSON.stringify(data),
+                updatedAt: new Date()
+            },
+            create: {
+                entityId,
+                department: dept.toUpperCase(),
+                type: 'TOWS',
+                data: JSON.stringify(data)
+            }
+        });
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error saving departmental TOWS:', error);
+        res.status(500).json({ error: 'Failed to save departmental TOWS' });
+    }
+});
+
 module.exports = router;

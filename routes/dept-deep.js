@@ -16,7 +16,7 @@ const { verifyToken } = require('../middleware/auth');
 // ── GET /api/dept-deep/:entityId — جلب كل بيانات الفحص العميق ──
 router.get('/:entityId', verifyToken, async (req, res) => {
     try {
-        const { entityId } = req.params;
+        const entityId = req.user.activeEntityId || req.user.entityId;
 
         const records = await prisma.deptDeepData.findMany({
             where: { entityId },
@@ -43,7 +43,8 @@ router.get('/:entityId', verifyToken, async (req, res) => {
 // ── GET /api/dept-deep/:entityId/:dept — جلب إدارة واحدة ──
 router.get('/:entityId/:dept', verifyToken, async (req, res) => {
     try {
-        const { entityId, dept } = req.params;
+        const { dept } = req.params;
+        const entityId = req.user.activeEntityId || req.user.entityId;
 
         const record = await prisma.deptDeepData.findUnique({
             where: { entityId_deptKey: { entityId, deptKey: dept } },
@@ -69,7 +70,7 @@ router.get('/:entityId/:dept', verifyToken, async (req, res) => {
 // يستقبل: { data: { compliance: {...}, finance: {...}, ... } }
 router.post('/:entityId', verifyToken, async (req, res) => {
     try {
-        const { entityId } = req.params;
+        const entityId = req.user.activeEntityId || req.user.entityId;
         const { data } = req.body;
 
         if (!data || typeof data !== 'object') {
@@ -114,7 +115,8 @@ router.post('/:entityId', verifyToken, async (req, res) => {
 // يستقبل: { answers: {...}, challenges: [...], ... }
 router.put('/:entityId/:dept', verifyToken, async (req, res) => {
     try {
-        const { entityId, dept } = req.params;
+        const { dept } = req.params;
+        const entityId = req.user.activeEntityId || req.user.entityId;
         const payload = req.body;
 
         const VALID_DEPTS = ['compliance', 'finance', 'sales', 'hr', 'marketing', 'operations', 'support'];

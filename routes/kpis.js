@@ -68,6 +68,30 @@ router.get('/', verifyToken, async (req, res) => {
 });
 
 // ──────────────────────────────────────────────────────
+// GET /api/kpis/:dept — جلب مؤشرات القسم (Wizard)
+// ──────────────────────────────────────────────────────
+router.get('/:dept', verifyToken, async (req, res) => {
+    try {
+        const { dept } = req.params;
+        const entityId = getEntityId(req);
+
+        const analysis = await prisma.departmentAnalysis.findFirst({
+            where: {
+                entityId,
+                department: dept.toUpperCase(),
+                type: 'KPIS'
+            }
+        });
+
+        if (!analysis) return res.json({ kpis: [] });
+        res.json(JSON.parse(analysis.data));
+    } catch (error) {
+        console.error('Error fetching departmental KPIs:', error);
+        res.status(500).json({ error: 'Failed to fetch departmental KPIs' });
+    }
+});
+
+// ──────────────────────────────────────────────────────
 // GET /api/kpis/:id  — جلب مؤشر واحد مع سجله التاريخي
 // ──────────────────────────────────────────────────────
 router.get('/:id', verifyToken, checkOwnership('kPI'), async (req, res) => {
@@ -205,6 +229,146 @@ router.delete('/:id', verifyToken, checkPermission('ADMIN'), checkOwnership('kPI
         if (err.code === 'P2025') return res.status(404).json({ error: 'KPI غير موجود' });
         console.error('DELETE /api/kpis/:id error:', err);
         res.status(500).json({ error: 'خطأ في حذف المؤشر' });
+    }
+});
+
+
+// ──────────────────────────────────────────────────────
+// POST /api/kpis/:dept — حفظ مؤشرات القسم (Wizard)
+// ──────────────────────────────────────────────────────
+router.post('/:dept', verifyToken, async (req, res) => {
+    try {
+        const { dept } = req.params;
+        const data = req.body; // { kpis: [...] }
+        const entityId = getEntityId(req);
+
+        await prisma.departmentAnalysis.upsert({
+            where: {
+                entityId_department_type: {
+                    entityId,
+                    department: dept.toUpperCase(),
+                    type: 'KPIS'
+                }
+            },
+            update: {
+                data: JSON.stringify(data),
+                updatedAt: new Date()
+            },
+            create: {
+                entityId,
+                department: dept.toUpperCase(),
+                type: 'KPIS',
+                data: JSON.stringify(data)
+            }
+        });
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error saving departmental KPIs:', error);
+        res.status(500).json({ error: 'Failed to save departmental KPIs' });
+    }
+});
+
+// ──────────────────────────────────────────────────────
+// POST /api/kpis/approve/:dept — اعتماد المسودة وتحويلها لمؤشرات حقيقية
+// ──────────────────────────────────────────────────────
+router.post('/approve/:dept', verifyToken, async (req, res) => {
+    try {
+        const { dept } = req.params;
+        const entityId = getEntityId(req);
+
+        // 1. العثور على النسخة النشطة للاستراتيجية
+        let versionId = getVersionId(req);
+        if (!versionId) {
+            const activeVersion = await prisma.strategyVersion.findFirst({
+                where: { entityId, isActive: true },
+                select: { id: true }
+            });
+            if (!activeVersion) {
+                return res.status(400).json({ error: 'لم يتم العثور على نسخة استراتيجية نشطة. يرجى تفعيل نسخة أولاً.' });
+            }
+            versionId = activeVersion.id;
+        }
+
+        // 2. جلب المسودة من DepartmentAnalysis
+        const draftRec = await prisma.departmentAnalysis.findUnique({
+            where: {
+                entityId_department_type: {
+                    entityId,
+                    department: dept.toUpperCase(),
+                    type: 'KPIS'
+                }
+            }
+        });
+
+        if (!draftRec || !draftRec.data) {
+            return res.status(404).json({ error: 'لا توجد مسودة مؤشرات لهذا القسم حالياً' });
+        }
+
+        const kpisDraft = JSON.parse(draftRec.data);
+        if (!Array.isArray(kpisDraft) || kpisDraft.length === 0) {
+            return res.status(400).json({ error: 'مسودة المؤشرات فارغة' });
+        }
+
+        // 3. مزامنة كل مؤشر مع جدول KPI (Upsert)
+        // 3. مزامنة كل مؤشر مع جدول KPI (بشكل تسلسلي لتجنب قفل قاعدة البيانات في SQLite)
+        const results = [];
+        for (const k of kpisDraft) {
+            const name = k.name || k.title || 'مؤشر غير مسمى';
+            const payload = {
+                versionId,
+                name: name,
+                nameAr: k.nameAr || name,
+                description: k.description || `المصدر الأساسي: قسم ${dept.toUpperCase()}`,
+                target: parseFloat(k.target) || 0,
+                unit: k.unit || '%',
+                frequency: k.frequency || 'MONTHLY',
+                dataSource: k.dataSource || `قسم ${dept.toUpperCase()}`,
+                formula: k.formula || null,
+                warningThreshold: k.warningThreshold ? parseFloat(k.warningThreshold) : null,
+                criticalThreshold: k.criticalThreshold ? parseFloat(k.criticalThreshold) : null,
+                kpiType: k.kpiType || null,
+                bscPerspective: k.bscPerspective || null,
+                direction: k.direction || 'HIGHER_IS_BETTER',
+                status: 'ON_TRACK'
+            };
+
+            const existing = await prisma.kPI.findFirst({
+                where: { versionId, name: payload.name }
+            });
+
+            let kpi;
+            if (existing) {
+                kpi = await prisma.kPI.update({
+                    where: { id: existing.id },
+                    data: payload
+                });
+            } else {
+                kpi = await prisma.kPI.create({
+                    data: payload
+                });
+            }
+            results.push(kpi);
+        }
+
+        // 4. تحديث حالة المسودة (علامة الاعتماد)
+        await prisma.departmentAnalysis.update({
+            where: { id: draftRec.id },
+            data: {
+                // إضافة وسم داخلي في الـ JSON للإشارة للاعتماد
+                data: JSON.stringify(kpisDraft.map(k => ({ ...k, _synced: true, _syncedAt: new Date() })))
+            }
+        });
+
+        res.json({
+            success: true,
+            count: results.length,
+            message: `تم اعتماد ${results.length} مؤشر بنجاح في النسخة الاستراتيجية.`
+        });
+
+    } catch (error) {
+        console.error('Error approving KPIs:', error);
+        res.status(500).json({ error: 'فشل اعتماد الخطة والمؤشرات', details: error.message });
     }
 });
 

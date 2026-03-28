@@ -158,20 +158,57 @@ router.post('/', async (req, res) => {
         }
 
         const key = `${pain}+${ambition}`;
-        const pattern = PATTERNS[key] || 'نمط عام';
+        const patternLabel = PATTERNS[key] || 'نمط عام';
         const finalBudget = budget || 20000;
 
-        // 1. حفظ/تحديث نمط الشركة
+        // 1. حفظ/تحديث نمط الشركة في جدول الأنماط
         const companyPattern = await prisma.companyPattern.upsert({
             where: { companyId },
-            update: { pain, ambition, budget: finalBudget, pattern },
-            create: { companyId, pain, ambition, budget: finalBudget, pattern },
+            update: { pain, ambition, budget: finalBudget, pattern: patternLabel },
+            create: { companyId, pain, ambition, budget: finalBudget, pattern: patternLabel },
         });
+
+        // 🔥 تحديث الـ Entity Metadata لمزامنة "المستشار الذكي"
+        const painAmbitionPayload = {
+            pain,
+            ambition,
+            patternKey: key,
+            patternLabel,
+            budget: finalBudget,
+            updatedAt: new Date().toISOString()
+        };
+
+        const entity = await prisma.entity.findFirst({
+            where: { companyId, isActive: true },
+            select: { id: true, metadata: true }
+        });
+
+        if (entity) {
+            let metadata = {};
+            try {
+                if (entity.metadata) {
+                    metadata = (typeof entity.metadata === 'string') ? JSON.parse(entity.metadata) : entity.metadata;
+                }
+            } catch (e) {
+                console.error('[Sync] Metadata parse error:', e);
+            }
+
+            await prisma.entity.update({
+                where: { id: entity.id },
+                data: {
+                    metadata: JSON.stringify({
+                        ...metadata,
+                        painAmbition: painAmbitionPayload
+                    })
+                }
+            });
+            console.log(`[Sync] Updated AI Advisor metadata for entity ${entity.id}`);
+        }
 
         // 2. إنشاء مبادرة تلقائية (إذا وُجدت نسخة استراتيجية نشطة)
         let initiative = null;
         try {
-            const entity = await prisma.entity.findFirst({
+            const activeEntity = await prisma.entity.findFirst({
                 where: { companyId, isActive: true },
                 include: {
                     strategyVersions: {
@@ -181,10 +218,10 @@ router.post('/', async (req, res) => {
                 },
             });
 
-            const version = entity?.strategyVersions?.[0];
+            const version = activeEntity?.strategyVersions?.[0];
 
             if (version) {
-                const initiativeTemplate = AUTO_INITIATIVES[pattern] || DEFAULT_INITIATIVE;
+                const initiativeTemplate = AUTO_INITIATIVES[patternLabel] || DEFAULT_INITIATIVE;
                 const initBudget = Math.round(finalBudget * initiativeTemplate.budgetMultiplier);
                 const now = new Date();
                 const endDate = new Date(now.getTime() + initiativeTemplate.durationDays * 86400000);
@@ -235,7 +272,7 @@ router.post('/', async (req, res) => {
 
         res.json({
             success: true,
-            pattern,
+            pattern: patternLabel,
             data: companyPattern,
             initiative: initiative ? {
                 id: initiative.id,

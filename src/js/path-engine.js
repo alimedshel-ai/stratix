@@ -41,7 +41,7 @@
       ],
       // الصفحات المسموح بها (تشمل الخطوات + صفحات مساعدة)
       allowedPages: [
-        '/onboarding.html', '/select-type', '/company-health.html', '/internal-env.html', '/analysis.html', '/swot.html', '/risk-map.html',
+        '/onboarding.html', '/select-type', '/company-health.html', '/internal-env.html', '/pestel.html', '/swot.html', '/risk-map.html',
         '/directions.html', '/objectives.html', '/kpis.html', '/initiatives.html',
         '/kpi-entries.html', '/dashboard.html', '/tools.html', '/tool-detail.html',
         '/settings.html', '/settings-data.html', '/entities.html',
@@ -115,7 +115,7 @@
       description: 'تحليل تنافسي + تخطيط التميز + تنفيذ سريع',
       estimatedTime: '4-6 ساعات',
       steps: [
-        { label: 'PESTEL', href: '/tool-detail.html?code=PESTEL', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
+        { label: 'PESTEL', href: '/pestel.html', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
         { label: 'قوى بورتر', href: '/tool-detail.html?code=PORTER', icon: 'bi-shield-check', phase: 'DIAGNOSIS' },
         { label: 'المقارنة المعيارية', href: '/benchmarking.html', icon: 'bi-bar-chart-line', phase: 'DIAGNOSIS' },
         { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-heart-pulse', phase: 'DIAGNOSIS' },
@@ -129,7 +129,7 @@
         { label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban', phase: 'EXECUTION' },
       ],
       allowedPages: [
-        '/onboarding.html', '/select-type', '/internal-env.html', '/swot.html', '/dept-deep.html', '/company-health.html', '/analysis.html', '/tows.html',
+        '/onboarding.html', '/select-type', '/internal-env.html', '/swot.html', '/dept-deep.html', '/company-health.html', '/tool-detail.html?code=PESTEL', '/tows.html',
         '/directions.html', '/objectives.html', '/kpis.html', '/okrs.html',
         '/initiatives.html', '/tasks.html', '/kpi-entries.html', '/benchmarking.html',
         '/dashboard.html', '/tools.html', '/tool-detail.html',
@@ -146,7 +146,7 @@
       description: 'وقف النزيف المالي + خفض تكاليف + تنويع إيرادات',
       estimatedTime: '3-4 ساعات',
       steps: [
-        { label: 'PESTEL', href: '/tool-detail.html?code=PESTEL', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
+        { label: 'PESTEL', href: '/pestel.html', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
         { label: 'قوى بورتر', href: '/tool-detail.html?code=PORTER', icon: 'bi-shield-check', phase: 'DIAGNOSIS' },
         { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-heart-pulse', phase: 'DIAGNOSIS' },
         { label: 'سلسلة القيمة', href: '/tool-detail.html?code=VALUE_CHAIN', icon: 'bi-link-45deg', phase: 'DIAGNOSIS' },
@@ -160,7 +160,7 @@
         { label: 'التصحيحات', href: '/corrections.html', icon: 'bi-arrow-repeat', phase: 'ADAPTATION' },
       ],
       allowedPages: [
-        '/onboarding.html', '/select-type', '/company-health.html', '/internal-env.html', '/swot.html', '/analysis.html', '/risk-map.html',
+        '/onboarding.html', '/select-type', '/company-health.html', '/internal-env.html', '/swot.html', '/tool-detail.html?code=PESTEL', '/risk-map.html',
         '/directions.html', '/objectives.html', '/kpis.html', '/financial.html',
         '/initiatives.html', '/kpi-entries.html', '/corrections.html',
         '/dashboard.html', '/tools.html', '/tool-detail.html',
@@ -177,7 +177,7 @@
       description: 'تشخيص فجوات + تخطيط تحوّلي + ابتكار',
       estimatedTime: '5-7 ساعات',
       steps: [
-        { label: 'PESTEL', href: '/tool-detail.html?code=PESTEL', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
+        { label: 'PESTEL', href: '/pestel.html', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
         { label: 'التقييمات', href: '/assessments.html', icon: 'bi-clipboard-check', phase: 'DIAGNOSIS' },
         { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-heart-pulse', phase: 'DIAGNOSIS' },
         { label: 'سلسلة القيمة', href: '/tool-detail.html?code=VALUE_CHAIN', icon: 'bi-link-45deg', phase: 'DIAGNOSIS' },
@@ -192,7 +192,7 @@
       ],
       allowedPages: [
         '/onboarding.html', '/select-type', '/assessments.html', '/internal-env.html', '/dept-deep.html', '/company-health.html', '/swot.html',
-        '/analysis.html', '/tows.html', '/directions.html', '/objectives.html', '/kpis.html',
+        '/tool-detail.html?code=PESTEL', '/tows.html', '/directions.html', '/objectives.html', '/kpis.html',
         '/initiatives.html', '/tasks.html', '/kpi-entries.html', '/scenarios.html', '/reviews.html',
         '/dashboard.html', '/tools.html', '/tool-detail.html',
         '/settings.html', '/settings-data.html', '/entities.html',
@@ -208,7 +208,7 @@
       description: 'تحليل تنافسي شامل + توسع مدروس + ذكاء تنافسي',
       estimatedTime: '6-8 ساعات',
       steps: [
-        { label: 'PESTEL', href: '/tool-detail.html?code=PESTEL', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
+        { label: 'PESTEL', href: '/pestel.html', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
         { label: 'قوى بورتر', href: '/tool-detail.html?code=PORTER', icon: 'bi-shield-check', phase: 'DIAGNOSIS' },
         { label: 'المقارنة المعيارية', href: '/benchmarking.html', icon: 'bi-bar-chart-line', phase: 'DIAGNOSIS' },
         { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-heart-pulse', phase: 'DIAGNOSIS' },
@@ -225,7 +225,7 @@
         { label: 'المراجعات الدورية', href: '/reviews.html', icon: 'bi-journal-check', phase: 'ADAPTATION' },
       ],
       allowedPages: [
-        '/onboarding.html', '/select-type', '/internal-env.html', '/dept-deep.html', '/company-health.html', '/swot.html', '/analysis.html', '/benchmarking.html',
+        '/onboarding.html', '/select-type', '/internal-env.html', '/dept-deep.html', '/company-health.html', '/swot.html', '/pestel.html', '/benchmarking.html',
         '/tows.html', '/directions.html', '/objectives.html', '/kpis.html', '/okrs.html',
         '/initiatives.html', '/tasks.html', '/kpi-entries.html', '/scenarios.html', '/reviews.html',
         '/dashboard.html', '/tools.html', '/tool-detail.html', '/intelligence.html',
@@ -242,7 +242,7 @@
       description: 'كل الأدوات والتحليلات متاحة — للمحترفين والاستشاريين',
       estimatedTime: '6-10 ساعات',
       steps: [
-        { label: 'PESTEL', href: '/tool-detail.html?code=PESTEL', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
+        { label: 'PESTEL', href: '/pestel.html', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
         { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-heart-pulse', phase: 'DIAGNOSIS' },
         { label: 'استكشاف الإدارات', href: '/dept-deep.html', icon: 'bi-building-fill-gear', phase: 'DIAGNOSIS' },
         { label: 'سلسلة القيمة', href: '/tool-detail.html?code=VALUE_CHAIN', icon: 'bi-link-45deg', phase: 'DIAGNOSIS' },
@@ -269,7 +269,7 @@
       estimatedTime: '4-6 ساعات',
       steps: [
         { label: '🏗️ بنيتنا', href: '/onboarding.html', icon: 'bi-building-gear', phase: 'FOUNDATION' },
-        { label: '🔍 تشخيصي', href: '/tool-detail.html?code=PESTEL', icon: 'bi-search-heart', phase: 'DIAGNOSIS' },
+        { label: '🔍 تشخيصي', href: '/pestel.html', icon: 'bi-search-heart', phase: 'DIAGNOSIS' },
         { label: '🎯 خياراتي', href: '/tows.html', icon: 'bi-signpost-split', phase: 'PLANNING' },
         { label: '🚀 تنفيذي', href: '/initiatives.html', icon: 'bi-rocket-takeoff', phase: 'EXECUTION' },
         { label: '📊 متابعتي', href: '/reviews.html', icon: 'bi-bar-chart-line', phase: 'ADAPTATION' },
@@ -278,7 +278,7 @@
         // بنيتنا
         '/onboarding.html', '/entities.html', '/sectors.html', '/settings-data.html',
         // تشخيصي
-        '/analysis.html', '/assessments.html', '/company-health.html', '/internal-env.html',
+        '/pestel.html', '/assessments.html', '/company-health.html', '/internal-env.html',
         '/stakeholders.html', '/risk-map.html', '/statistical-data.html',
         // خياراتي
         '/tows.html', '/directions.html', '/objectives.html', '/kpis.html', '/okrs.html',
@@ -339,7 +339,7 @@
         { label: 'التصحيحات', href: '/corrections.html', icon: 'bi-arrow-repeat', phase: 'ADAPTATION' },
       ],
       allowedPages: [
-        '/onboarding.html', '/select-type', '/risk-map.html', '/company-health.html', '/internal-env.html', '/analysis.html', '/swot.html',
+        '/onboarding.html', '/select-type', '/risk-map.html', '/company-health.html', '/internal-env.html', '/pestel.html', '/swot.html',
         '/scenarios.html', '/directions.html', '/objectives.html', '/kpis.html',
         '/initiatives.html', '/corrections.html', '/kpi-entries.html',
         '/dashboard.html', '/tools.html', '/tool-detail.html',
@@ -722,7 +722,7 @@
   const DEPT_GATE_MIN = 1;
 
   /** الصفحات المقفلة خلف بوابة الإدارات */
-  const GATED_PAGES = ['/analysis.html']; // تم إزالة swot و tows لمنع الحظر الخاطئ أثناء جلب البيانات
+  const GATED_PAGES = ['/pestel.html']; // تم إزالة swot و tows لمنع الحظر الخاطئ أثناء جلب البيانات
 
   /**
    * قراءة حالة الإدارات المكتملة في dept-deep

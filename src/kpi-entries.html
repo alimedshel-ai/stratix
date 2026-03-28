@@ -783,15 +783,13 @@
     </div>
 
     <script src="/js/api.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/context-manager.js"></script>
     <script src="/js/steps-config.js"></script>
     <script src="/js/sidebar.js"></script>
     <script src="/js/ai-advisor.js"></script>
     <script>
-        const token = localStorage.getItem('token') || '';
-        const headers = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        document.getElementById('userName').textContent = user.name || 'مستخدم';
+        document.getElementById('userName').textContent = (window._cachedUser?.name) || 'مستخدم';
         let currentKpiId = null, currentKpiName = '';
         const freqLabel = { MONTHLY: 'شهري', QUARTERLY: 'ربع سنوي', SEMI_ANNUAL: 'نصف سنوي', ANNUAL: 'سنوي' };
 
@@ -809,10 +807,17 @@
         }
         const currentDeptName = DEPT_NAMES[currentDept] || '';
 
-        // ── تحديث العنوان حسب الإدارة ──
-        if (currentDeptName) {
-            document.getElementById('pageTitle').textContent = `✏️ مؤشرات ${currentDeptName}`;
-            document.getElementById('pageSubtitle').textContent = `سجّل القيم الفعلية لمؤشرات إدارة ${currentDeptName} — البيانات المحدّثة تعني قرارات أذكى 📊`;
+        async function init() {
+            const dept = await window.initDeptPage();
+            if (!dept) return;
+
+            // تحديث العناوين
+            const deptName = window.getDeptName ? window.getDeptName(dept) : dept;
+            document.getElementById('pageTitle').textContent = `✏️ مؤشرات ${deptName}`;
+            document.getElementById('pageSubtitle').textContent = `سجّل القيم الفعلية لمؤشرات إدارة ${deptName} — البيانات المحدّثة تعني قرارات أذكى 📊`;
+
+            await loadVersions();
+            await loadKPIs();
         }
 
         function closeModal() { document.getElementById('entryModal').classList.remove('show'); }
@@ -822,7 +827,7 @@
 
         async function loadVersions() {
             try {
-                const res = await window.apiRequest('/api/versions', { headers, credentials: 'same-origin' }); const data = await res.json();
+                const data = await window.apiRequest('/api/versions');
                 const sel = document.getElementById('versionFilter');
                 (data.versions || []).forEach(v => { const o = document.createElement('option'); o.value = v.id; o.textContent = `V${v.versionNumber} — ${v.entity?.legalName || ''}`; sel.appendChild(o); });
             } catch (e) { console.error(e); }
@@ -836,13 +841,7 @@
                 const vId = document.getElementById('versionFilter').value;
                 if (vId) url += `&versionId=${vId}`;
                 console.log('[KPI-Entries] Fetching KPIs:', url);
-                const res = await window.apiRequest(url, { headers, credentials: 'same-origin' });
-                if (res.status === 401) {
-                    container.innerHTML = '<div class="empty-state"><div class="emoji">🔒</div><p>انتهت الجلسة</p><p style="font-size:11px;color:var(--text-muted);margin-top:6px"><a href="/login.html" style="color:var(--primary)">سجّل دخولك مرة أخرى</a></p></div>';
-                    return;
-                }
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const data = await res.json();
+                const data = await window.apiRequest(url);
                 console.log('[KPI-Entries] Response:', data);
                 const list = Array.isArray(data) ? data : (data.kpis || []);
                 if (!list.length) {
@@ -888,15 +887,8 @@
         async function loadEntries(kpiId, kpiName) {
             const area = document.getElementById('entriesArea');
             try {
-                // 🔒 Fix: Promise.allSettled — فشل طلب واحد لا يُسقط الباقي
-                const [entriesResult, statsResult] = await Promise.allSettled([
-                    window.apiRequest(`/api/kpi-entries?kpiId=${kpiId}`, { headers, credentials: 'same-origin' }),
-                    window.apiRequest(`/api/kpi-entries/stats/${kpiId}`, { headers, credentials: 'same-origin' })
-                ]);
-                const entriesRes = entriesResult.status === 'fulfilled' ? entriesResult.value : null;
-                const statsRes = statsResult.status === 'fulfilled' ? statsResult.value : null;
-                const entriesData = entriesRes ? await entriesRes.json().catch(() => ({})) : {};
-                const stats = statsRes ? await statsRes.json().catch(() => ({})) : {};
+                const entriesData = await window.apiRequest(`/api/kpi-entries?kpiId=${kpiId}`).catch(() => ({}));
+                const stats = await window.apiRequest(`/api/kpi-entries/stats/${kpiId}`).catch(() => ({}));
                 const entries = entriesData.entries || [];
                 const fmt = d => d ? new Date(d).toLocaleDateString('ar-SA') : '-';
                 const trendIcon = stats.trend === 'UP' ? '<i class="bi bi-arrow-up-short trend-up"></i>' : stats.trend === 'DOWN' ? '<i class="bi bi-arrow-down-short trend-down"></i>' : '<i class="bi bi-dash trend-same"></i>';
@@ -1017,7 +1009,7 @@
 
         async function editEntry(id) {
             try {
-                const res = await window.apiRequest(`/api/kpi-entries/${id}`, { headers, credentials: 'same-origin' }); const e = await res.json();
+                const e = await window.apiRequest(`/api/kpi-entries/${id}`);
                 document.getElementById('editId').value = e.id; document.getElementById('entryValue').value = e.value;
                 document.getElementById('entryStart').value = e.periodStart ? e.periodStart.split('T')[0] : '';
                 document.getElementById('entryEnd').value = e.periodEnd ? e.periodEnd.split('T')[0] : '';
@@ -1044,18 +1036,17 @@
             if (!editId) body.kpiId = currentKpiId;
             try {
                 const url = editId ? `/api/kpi-entries/${editId}` : '/api/kpi-entries';
-                const res = await window.apiRequest(url, { method: editId ? 'PATCH' : 'POST', headers, credentials: 'same-origin', body: JSON.stringify(body) });
-                if (!res.ok) throw new Error('Failed');
+                await window.apiRequest(url, { method: editId ? 'PATCH' : 'POST', body });
                 closeModal(); selectKPI(currentKpiId, currentKpiName); loadKPIs();
             } catch (e) { alert('خطأ في الحفظ'); }
         }
 
-        async function delEntry(id) { if (!confirm('حذف هذا الإدخال؟')) return; try { await window.apiRequest(`/api/kpi-entries/${id}`, { method: 'DELETE', headers, credentials: 'same-origin' }); selectKPI(currentKpiId, currentKpiName); loadKPIs(); } catch (e) { alert('خطأ'); } }
+        async function delEntry(id) { if (!confirm('حذف هذا الإدخال؟')) return; try { await window.apiRequest(`/api/kpi-entries/${id}`, { method: 'DELETE' }); selectKPI(currentKpiId, currentKpiName); loadKPIs(); } catch (e) { alert('خطأ'); } }
         function logout() {
             if (window.globalLogout) {
                 window.globalLogout();
             } else {
-                localStorage.removeItem('token'); localStorage.removeItem('user'); window.apiRequest('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).finally(() => location.href = '/login.html');
+                window.apiRequest('/api/auth/logout', { method: 'POST' }).finally(() => location.href = '/login.html');
             }
         }
         init();

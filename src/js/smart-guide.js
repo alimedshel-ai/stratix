@@ -295,7 +295,7 @@ window.SmartGuide = (function () {
             + '<h3 style="font-size:14px;font-weight:800;color:#16a34a;margin:0 0 2px;">ممتاز! خطتك الاستراتيجية جاهزة</h3>'
             + '<p style="font-size:12px;color:#64748b;margin:0;">تابع المؤشرات وراجع الأداء من التقارير الذكية</p>'
             + '</div>'
-            + '<a href="/auto-reports.html" style="display:inline-flex;align-items:center;gap:6px;background:#22c55e;color:white;padding:8px 16px;border-radius:10px;text-decoration:none;font-size:12px;font-weight:700;"><i class="bi bi-file-earmark-bar-graph"></i> التقارير</a>'
+            + '<a href="/reports.html" style="display:inline-flex;align-items:center;gap:6px;background:#22c55e;color:white;padding:8px 16px;border-radius:10px;text-decoration:none;font-size:12px;font-weight:700;"><i class="bi bi-file-earmark-bar-graph"></i> التقارير</a>'
             + '</div></div>';
     }
 
@@ -343,7 +343,7 @@ window.SmartGuide = (function () {
             + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;margin-bottom:12px;">'
             + deptList + '</div>'
             + '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">'
-            + '<a href="/auto-reports.html" style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#a78bfa,#667eea);color:white;padding:10px 20px;border-radius:12px;text-decoration:none;font-size:13px;font-weight:700;"><i class="bi bi-file-earmark-bar-graph"></i> عرض التقارير المتاحة</a>'
+            + '<a href="/reports.html" style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#a78bfa,#667eea);color:white;padding:10px 20px;border-radius:12px;text-decoration:none;font-size:13px;font-weight:700;"><i class="bi bi-file-earmark-bar-graph"></i> عرض التقارير المتاحة</a>'
             + '<a href="/intelligence.html" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);color:#94a3b8;padding:10px 20px;border-radius:12px;text-decoration:none;font-size:13px;font-weight:600;border:1px solid rgba(255,255,255,0.08);"><i class="bi bi-robot"></i> الذكاء الاستراتيجي</a>'
             + '</div></div></div></div>';
     }

@@ -18,6 +18,7 @@ function escapeHtml(str) {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
 }
+window.escapeHtml = escapeHtml;
 
 function safeText(str) {
     return document.createTextNode(str || '');
@@ -49,8 +50,7 @@ async function getCurrentUser() {
             const data = await res.json().catch(() => null);
             if (!data) { _userFetchPromise = null; return null; }
             _cachedUser = data;
-            // ✅ لا نُصفّر _userFetchPromise عند النجاح —
-            //    _cachedUser يكفي لـ short-circuit المكالمات القادمة
+            window._cachedUser = data; // ✅ Expose to global scope for other tools
             return _cachedUser;
         } catch (err) {
             _userFetchPromise = null;  // reset عند الفشل فقط
@@ -69,7 +69,7 @@ function getUserData() {
 // -----------------------------------------------------------------
 // 2. دوال API الموحدة
 // -----------------------------------------------------------------
-async function api(url, options = {}) {
+async function _apiInternal(url, options = {}) {
     // 🛡️ معالجة ذكية للجسم (Body) - تحويل الكائنات إلى JSON تلقائياً إذا لزم الأمر
     const headers = {
         'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ async function api(url, options = {}) {
     if (response.status === 401) throw new Error('Unauthorized');
 
     if (response.status === 403) {
-        const err = await response.json();
+        const err = await response.json().catch(() => ({}));
         if (err.reason) {
             window.location.href = `/suspended.html?reason=${encodeURIComponent(err.reason)}`;
             return Promise.reject(new Error('SUSPENDED'));
@@ -119,20 +119,45 @@ async function api(url, options = {}) {
 
 // تعريف window.api للتوافق مع الكود القديم
 window.api = {
-    get: (endpoint, options) => api(endpoint, { ...options, method: 'GET' }),
-    post: (endpoint, body) => api(endpoint, { method: 'POST', body }),
-    put: (endpoint, body) => api(endpoint, { method: 'PUT', body }),
-    delete: (endpoint) => api(endpoint, { method: 'DELETE' }),
-    request: api,
+    get: (endpoint, options) => _apiInternal(endpoint, { ...options, method: 'GET' }),
+    post: (endpoint, body) => _apiInternal(endpoint, { method: 'POST', body }),
+    put: (endpoint, body) => _apiInternal(endpoint, { method: 'PUT', body }),
+    patch: (endpoint, body) => _apiInternal(endpoint, { method: 'PATCH', body }),
+    delete: (endpoint) => _apiInternal(endpoint, { method: 'DELETE' }),
+    request: _apiInternal,
     getCurrentUser: getCurrentUser,
-    getUserData: getUserData
+    getUserData: getUserData,
+    getCachedUser: () => _cachedUser
 };
 
-// تعريف الاسم البديل لضمان التوافق مع الكود الجديد (pestel, health, etc.)
-window.apiCall = api;
+// تعريف الاسم البديل لضمان التوافق مع الكود الجديد
+window.apiCall = _apiInternal;
+window.apiRequest = _apiInternal;
+window.apiFunction = _apiInternal;
 
-// تعريف الاسم البديل الجديد الذي تم استخدامه في جميع الصفحات (يستخدم api الموحدة لضمان JSON)
-window.apiRequest = api;
+// 🟢 جسر التوافق مع الكود القديم جدًا (StartixAPI)
+window.StartixAPI = {
+    apiGet: (url) => api(url, { method: 'GET' }),
+    apiPost: (url, body) => api(url, { method: 'POST', body }),
+    apiPut: (url, body) => api(url, { method: 'PUT', body }),
+    apiPatch: (url, body) => api(url, { method: 'PATCH', body }),
+    apiDelete: (url) => api(url, { method: 'DELETE' }),
+    requireAuth: () => {
+        const user = getUserData();
+        return !!(user && user.id);
+    },
+    ensureVersionId: async () => {
+        return localStorage.getItem('currentVersionId') || 'v1';
+    },
+    showToast: (msg, type) => {
+        if (typeof window.showGlobalToast === 'function') {
+            window.showGlobalToast(msg, type);
+        } else {
+            alert(msg);
+        }
+    },
+    showEntityBanner: () => showEntityBanner()
+};
 
 // -----------------------------------------------------------------
 // 3. دوال UI (بانر الكيان والدور)

@@ -242,7 +242,7 @@
                     visibleTo: ['OWNER', 'COMPANY_MANAGER', 'CONSULTANT', 'DEPT_MANAGER']
                 },
                 {
-                    label: 'التقارير', href: '/auto-reports.html', icon: 'bi-file-earmark-bar-graph',
+                    label: 'التقارير', href: '/reports.html', icon: 'bi-file-earmark-bar-graph',
                     visibleTo: null, permission: { INVESTOR: 'full' }
                 },
                 {

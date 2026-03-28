@@ -70,24 +70,31 @@ function getUserData() {
 // 2. دوال API الموحدة
 // -----------------------------------------------------------------
 async function api(url, options = {}) {
+    // 🛡️ معالجة ذكية للجسم (Body) - تحويل الكائنات إلى JSON تلقائياً إذا لزم الأمر
+    const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers
+    };
+
+    let body = options.body;
+    if (body && typeof body === 'object' && !(body instanceof FormData)) {
+        body = JSON.stringify(body);
+    }
+
     const response = await fetch(url, {
         ...options,
         credentials: 'include',
-        headers: {
-            'Content-Type': 'application/json',
-            ...options.headers
-        }
+        headers,
+        body
     });
 
-    if (response.status === 401) {
-        throw new Error('Unauthorized');
-    }
+    if (response.status === 401) throw new Error('Unauthorized');
 
     if (response.status === 403) {
         const err = await response.json();
         if (err.reason) {
             window.location.href = `/suspended.html?reason=${encodeURIComponent(err.reason)}`;
-            return Promise.reject(new Error('SUSPENDED')); // يوقف التنفيذ بشكل نظيف
+            return Promise.reject(new Error('SUSPENDED'));
         }
     }
 
@@ -113,8 +120,8 @@ async function api(url, options = {}) {
 // تعريف window.api للتوافق مع الكود القديم
 window.api = {
     get: (endpoint, options) => api(endpoint, { ...options, method: 'GET' }),
-    post: (endpoint, body) => api(endpoint, { method: 'POST', body: JSON.stringify(body) }),
-    put: (endpoint, body) => api(endpoint, { method: 'PUT', body: JSON.stringify(body) }),
+    post: (endpoint, body) => api(endpoint, { method: 'POST', body }),
+    put: (endpoint, body) => api(endpoint, { method: 'PUT', body }),
     delete: (endpoint) => api(endpoint, { method: 'DELETE' }),
     request: api,
     getCurrentUser: getCurrentUser,
@@ -124,11 +131,8 @@ window.api = {
 // تعريف الاسم البديل لضمان التوافق مع الكود الجديد (pestel, health, etc.)
 window.apiCall = api;
 
-// تعريف الاسم البديل الجديد الذي تم استخدامه في جميع الصفحات
-
-window.apiRequest = (url, options = {}) => {
-    return window.fetch(url, { ...options, credentials: 'include' });
-};
+// تعريف الاسم البديل الجديد الذي تم استخدامه في جميع الصفحات (يستخدم api الموحدة لضمان JSON)
+window.apiRequest = api;
 
 // -----------------------------------------------------------------
 // 3. دوال UI (بانر الكيان والدور)

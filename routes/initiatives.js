@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
 const { verifyToken } = require('../middleware/auth');
 
 // ── Middleware: extract entityId from token ──
@@ -94,6 +93,30 @@ router.get('/', verifyToken, async (req, res) => {
     } catch (err) {
         console.error('GET /api/initiatives error:', err);
         res.status(500).json({ error: 'خطأ في جلب المبادرات' });
+    }
+});
+
+// ──────────────────────────────────────────────────────
+// GET /api/initiatives/:dept — جلب مبادرات القسم (Wizard)
+// ──────────────────────────────────────────────────────
+router.get('/:dept', verifyToken, async (req, res) => {
+    try {
+        const { dept } = req.params;
+        const entityId = req.user.entityId;
+
+        const analysis = await prisma.departmentAnalysis.findFirst({
+            where: {
+                entityId,
+                department: dept.toUpperCase(),
+                type: 'INITIATIVES'
+            }
+        });
+
+        if (!analysis) return res.json({ initiatives: [] });
+        res.json(JSON.parse(analysis.data));
+    } catch (error) {
+        console.error('Error fetching departmental initiatives:', error);
+        res.status(500).json({ error: 'Failed to fetch departmental initiatives' });
     }
 });
 
@@ -266,6 +289,202 @@ router.get('/stats/summary', verifyToken, async (req, res) => {
     } catch (err) {
         console.error('GET /api/initiatives/stats/summary error:', err);
         res.status(500).json({ error: 'خطأ في جلب الملخص' });
+    }
+});
+
+
+// ──────────────────────────────────────────────────────
+// POST /api/initiatives/:dept — حفظ مبادرات القسم (Wizard)
+// ──────────────────────────────────────────────────────
+router.post('/:dept', verifyToken, async (req, res) => {
+    try {
+        const { dept } = req.params;
+        const data = req.body;
+        const entityId = req.user.entityId;
+
+        await prisma.departmentAnalysis.upsert({
+            where: {
+                entityId_department_type: {
+                    entityId,
+                    department: dept.toUpperCase(),
+                    type: 'INITIATIVES'
+                }
+            },
+            update: {
+                data: JSON.stringify(data),
+                updatedAt: new Date()
+            },
+            create: {
+                entityId,
+                department: dept.toUpperCase(),
+                type: 'INITIATIVES',
+                data: JSON.stringify(data)
+            }
+        });
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error saving departmental initiatives:', error);
+        res.status(500).json({ error: 'Failed to save departmental initiatives' });
+    }
+});
+
+// ============================================================
+// 1. إصلاح parseBudget — يتعامل مع "20,000 - 50,000 ر.س"
+// ============================================================
+function parseBudget(raw) {
+    if (!raw || raw === 'قيد الدراسة') return null;
+    if (typeof raw === 'number') return raw;
+
+    // إزالة كل شيء ما عدا الأرقام والفواصل والنقاط والمسافات والشرطة
+    const cleaned = String(raw).replace(/[^\d,.\s-]/g, '');
+    const nums = cleaned.split('-')
+        .map(s => parseFloat(s.replace(/,/g, '').trim()))
+        .filter(n => !isNaN(n) && n > 0);
+
+    if (nums.length === 0) return null;
+    if (nums.length === 1) return nums[0];
+    return Math.round((nums[0] + nums[nums.length - 1]) / 2);
+}
+
+/**
+ * توحيد الأولويات حسب الـ Schema
+ */
+function normalizePriority(p) {
+    const map = { 'عالية': 'HIGH', 'high': 'HIGH', 'متوسطة': 'MEDIUM', 'medium': 'MEDIUM', 'منخفضة': 'LOW', 'low': 'LOW' };
+    return map[(p || '').toLowerCase()] || 'MEDIUM';
+}
+
+// ============================================================
+// 2. إصلاح approve — حذف القديم قبل الإنشاء لمنع التكرار
+// ============================================================
+router.post('/approve/:dept', verifyToken, async (req, res) => {
+    try {
+        const dept = req.params.dept.toUpperCase();
+        const entityId = req.user.activeEntityId || req.user.entityId;
+
+        const activeVersion = await prisma.strategyVersion.findFirst({
+            where: { entityId, isActive: true },
+            select: { id: true },
+        });
+        if (!activeVersion) {
+            return res.status(404).json({ error: 'لا توجد نسخة استراتيجية نشطة' });
+        }
+        const versionId = activeVersion.id;
+
+        // جلب المسودة
+        const draft = await prisma.departmentAnalysis.findUnique({
+            where: {
+                entityId_department_type: { entityId, department: dept, type: 'INITIATIVES' },
+            },
+        });
+        if (!draft) return res.status(404).json({ error: 'لا توجد مسودة مبادرات' });
+
+        let drafts = [];
+        try {
+            const parsed = JSON.parse(draft.data);
+            drafts = Array.isArray(parsed) ? parsed : (parsed.initiatives || []);
+        } catch {
+            return res.status(400).json({ error: 'بيانات المسودة تالفة' });
+        }
+        if (drafts.length === 0) return res.status(400).json({ error: 'المسودة فارغة' });
+
+        // ✅ حذف المبادرات والمشاريع القديمة المولّدة تلقائياً لمنع التكرار
+        await prisma.strategicProject.deleteMany({
+            where: { versionId, description: { contains: 'auto:' + dept } },
+        });
+        await prisma.strategicInitiative.deleteMany({
+            where: { versionId, autoCreated: true, category: dept },
+        });
+
+        // إنشاء المبادرات الجديدة - مع معالجة التكرار
+        const initiatives = [];
+        const projects = [];
+        const processedTitles = new Set();
+
+        for (const d of drafts) {
+            const title = (d.title || d.name || 'مبادرة غير مسماة').trim();
+
+            // تخطي إذا تم معالجة هذا العنوان في هذه الدورة لمنع تكرار الـ Create في نفس الطلب
+            if (processedTitles.has(title)) continue;
+            processedTitles.add(title);
+
+            const budget = parseBudget(d.budget);
+
+            // استخدام upsert لضمان عدم الفشل في حالة وجود مبادرة يدوية بنفس الاسم
+            const initiative = await prisma.strategicInitiative.upsert({
+                where: {
+                    versionId_title: { versionId, title }
+                },
+                update: {
+                    description: d.description ?? null,
+                    owner: d.owner ?? null,
+                    budget,
+                    priority: normalizePriority(d.priority),
+                    startDate: d.startDate ? new Date(d.startDate) : null,
+                    endDate: d.endDate ? new Date(d.endDate) : null,
+                    category: dept,
+                    autoCreated: true,
+                },
+                create: {
+                    versionId,
+                    title,
+                    description: d.description ?? null,
+                    owner: d.owner ?? null,
+                    status: 'PLANNED',
+                    budget,
+                    priority: normalizePriority(d.priority),
+                    startDate: d.startDate ? new Date(d.startDate) : null,
+                    endDate: d.endDate ? new Date(d.endDate) : null,
+                    category: dept,
+                    autoCreated: true,
+                },
+            });
+            initiatives.push(initiative);
+
+            // إنشاء مشروع مرتبط (هنا نستخدم create لأن المشاريع ليس لها Unique Name بالدرورة في الـ Schema، 
+            // ولكننا قمنا بحذف القديم الذي يحتوي على auto:dept في البداية)
+            const project = await prisma.strategicProject.create({
+                data: {
+                    versionId,
+                    name: `مشروع: ${title}`,
+                    description: `auto:${dept}`,
+                    initiative: initiative.id,
+                    objective: d.parent ?? null,
+                    status: 'planning',
+                    progress: 0,
+                    manager: d.owner ?? null,
+                    startDate: d.startDate ? new Date(d.startDate) : null,
+                    endDate: d.endDate ? new Date(d.endDate) : null,
+                },
+            });
+            projects.push(project);
+        }
+
+        // تحديث المسودة
+        await prisma.departmentAnalysis.update({
+            where: {
+                entityId_department_type: { entityId, department: dept, type: 'INITIATIVES' },
+            },
+            data: {
+                data: JSON.stringify({
+                    _approved: true,
+                    _approvedAt: new Date().toISOString(),
+                    initiatives: drafts,
+                }),
+            },
+        });
+
+        res.json({
+            success: true,
+            message: `تم اعتماد ${initiatives.length} مبادرة وإنشاء ${projects.length} مشروع`,
+            initiativesCount: initiatives.length,
+            projectsCount: projects.length,
+        });
+
+    } catch (err) {
+        console.error('Initiative Approval Error:', err);
+        res.status(500).json({ error: 'فشل الاعتماد', detail: err.message });
     }
 });
 

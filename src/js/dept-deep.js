@@ -2463,8 +2463,33 @@ function collectMgrInfo() {
     if (p) d.deptManagerInfo.phone = p.value.trim();
     if (e) d.deptManagerInfo.email = e.value.trim();
 }
-function saveMgrInfo() {
-    collectMgrInfo();
+function saveMgrInfo(field, val) {
+    const d = STATE.data[STATE.currentDept];
+    if (!d.deptManagerInfo) d.deptManagerInfo = { name: '', phone: '', email: '' };
+    if (field) d.deptManagerInfo[field] = val;
+    save(); // Debounced auto-save
+}
+
+function setAnswer(gIdx, qId, val, type) {
+    const d = STATE.data[STATE.currentDept];
+    if (!d.answers) d.answers = {};
+
+    if (type === 'checkbox') {
+        if (!Array.isArray(d.answers[qId])) d.answers[qId] = [];
+        const idx = d.answers[qId].indexOf(val);
+        if (idx > -1) d.answers[qId].splice(idx, 1);
+        else d.answers[qId].push(val);
+    } else {
+        d.answers[qId] = val;
+    }
+
+    save(); // Auto-save
+    render(); // Full re-render to update UI and progress
+}
+
+function setGroupNote(gIdx, val) {
+    const d = STATE.data[STATE.currentDept];
+    d.notes = val; // Store globally for simplicity or by section if preferred
     save();
 }
 
@@ -2632,7 +2657,6 @@ function renderSection(dept) {
 function renderStatus(dept, d) {
     const p = STATE.bridgePayload;
 
-    // خريطة محاور التشخيص للإدارات
     const AXIS_MAP = {
         compliance: 'تنظيمي', finance: 'مالي', sales: 'قطاعي',
         hr: 'عمالة', marketing: 'قطاعي', operations: 'إداري', support: 'إداري',
@@ -2644,7 +2668,7 @@ function renderStatus(dept, d) {
     let scoreHTML = '';
     if (axisScore !== null) {
         const pct = axisScore;
-        const color = pct >= 70 ? 'var(--green)' : pct >= 45 ? 'var(--yellow)' : 'var(--red)';
+        const color = pct >= 70 ? '#22c55e' : pct >= 45 ? '#f59e0b' : '#ef4444';
         const status = pct >= 70 ? '🟢 جيد' : pct >= 45 ? '🟡 يحتاج تطوير' : '🔴 حرج';
         scoreHTML = `
         <div class="status-grid">
@@ -2659,11 +2683,10 @@ function renderStatus(dept, d) {
             <div class="stat-box">
                 <div class="s-label">النضج العام للمنشأة</div>
                 <div class="s-value">${maturity ?? '—'}%</div>
-                <div class="s-sub">${p?.company?.name ?? localStorage.getItem('stratix_company_name') ?? 'منشأتك'}</div>
+                <div class="s-sub">${p?.company?.name || 'منشأتك'}</div>
             </div>
         </div>`;
     } else {
-        // ── محتوى تعريفي غني عند عدم وجود تشخيص ──
         const DEPT_INTROS = {
             compliance: { focus: 'الامتثال التنظيمي والحوكمة والمخاطر القانونية', areas: ['التراخيص والأنظمة', 'حماية البيانات (PDPL)', 'الأمن السيبراني', 'خطة استمرارية الأعمال'] },
             finance: { focus: 'الصحة المالية والتدفق النقدي وهيكل التكاليف', areas: ['جودة الإيرادات', 'هيكل التكاليف (ثابتة/متغيرة)', 'الجاهزية للتوسع', 'إدارة المديونيات'] },
@@ -2675,42 +2698,20 @@ function renderStatus(dept, d) {
         };
         const intro = DEPT_INTROS[dept.key] || { focus: 'تحليل شامل للإدارة', areas: [] };
         scoreHTML = `
-        <div style="background:linear-gradient(135deg,rgba(102,126,234,0.08),rgba(167,139,250,0.05));border:1px solid rgba(102,126,234,0.2);border-radius:16px;padding:20px;margin-bottom:16px">
-            <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:8px">${dept.icon} تحليل ${dept.label} العميق</div>
-            <div style="font-size:13px;color:var(--text-muted);line-height:1.8;margin-bottom:16px">
-                يركز هذا التحليل على: <strong style="color:var(--text)">${intro.focus}</strong>
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px">
-                ${intro.areas.map(a => `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px">
-                    <i class="bi bi-check2" style="color:var(--primary);font-size:14px"></i> ${a}
-                </div>`).join('')}
+        <div class="card mb-3" style="background: linear-gradient(135deg, rgba(129, 140, 248, 0.05), rgba(45, 212, 191, 0.05)); border: 1px solid rgba(129, 140, 248, 0.2);">
+            <div class="h5 fw-bold text-white mb-2">${dept.icon} تحليل ${dept.label} العميق</div>
+            <div class="text-muted small mb-3">يركز هذا التحليل على: <strong class="text-white">${intro.focus}</strong></div>
+            <div class="row g-2">
+                ${intro.areas.map(a => `<div class="col-md-6 col-lg-3"><div class="stat-box py-2 px-3 text-start d-flex align-items-center gap-2"><i class="bi bi-check2 text-primary"></i> <span class="small">${a}</span></div></div>`).join('')}
             </div>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
-            <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.15);border-radius:12px;padding:14px;text-align:center">
-                <div style="font-size:20px;margin-bottom:4px">📋</div>
-                <div style="font-size:11px;font-weight:700;color:var(--text)">6 أقسام</div>
-                <div style="font-size:10px;color:var(--text-muted)">تحليل متكامل</div>
-            </div>
-            <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.15);border-radius:12px;padding:14px;text-align:center">
-                <div style="font-size:20px;margin-bottom:4px">⏱️</div>
-                <div style="font-size:11px;font-weight:700;color:var(--text)">10-15 دقيقة</div>
-                <div style="font-size:10px;color:var(--text-muted)">الوقت المتوقع</div>
-            </div>
-            <div style="background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.15);border-radius:12px;padding:14px;text-align:center">
-                <div style="font-size:20px;margin-bottom:4px">🎯</div>
-                <div style="font-size:11px;font-weight:700;color:var(--text)">تقرير ذكي</div>
-                <div style="font-size:10px;color:var(--text-muted)">نقاط قوة + ضعف + أهداف</div>
-            </div>
-        </div>
-        <div class="info-box info">
-            <i class="bi bi-lightbulb"></i>
-            <span>💡 يمكنك البدء مباشرة — أجب على الأسئلة في الأقسام التالية وسيتم توليد التحليل تلقائياً.</span>
+        <div class="row g-3 mb-4">
+            <div class="col-4"><div class="stat-box"><div class="h3 m-0">📋</div><div class="fw-bold small py-1">6 أقسام</div></div></div>
+            <div class="col-4"><div class="stat-box"><div class="h3 m-0">⏱️</div><div class="fw-bold small py-1">10-15 دقيقة</div></div></div>
+            <div class="col-4"><div class="stat-box"><div class="h3 m-0">🎯</div><div class="fw-bold small py-1">تقرير ذكي</div></div></div>
         </div>`;
     }
 
-    // نقاط القوة والضعف من التشخيص
-    const topPriorities = p?.topPriorities ?? [];
     const strengths = p?.strengths ?? [];
     const weaknesses = p?.weaknesses ?? [];
     const relStrengths = strengths.filter(s => s.axis === axisKey).slice(0, 3);
@@ -2719,90 +2720,58 @@ function renderStatus(dept, d) {
     let insightsHTML = '';
     if (relStrengths.length || relWeaknesses.length) {
         insightsHTML = `
-        <div class="section-label">من التشخيص العام</div>
+        <div class="fw-bold text-muted small mb-3">رؤى من التشخيص العام:</div>
         <div class="sw-grid">
-            <div>
+            <div class="card p-3">
                 <div class="sw-col-title strength"><i class="bi bi-check-circle-fill"></i> نقاط قوة</div>
-                ${relStrengths.length ? relStrengths.map(s => `<div class="sw-tag auto"><i class="bi bi-lightning-charge"></i>${s.label || s}</div>`).join('') : '<div style="font-size:12px;color:var(--text-muted);padding:8px 0">لا يوجد بيانات</div>'}
+                ${relStrengths.length ? relStrengths.map(s => `<div class="sw-tag"><i class="bi bi-lightning-charge text-success"></i>${s.label || s}</div>`).join('') : '<div class="text-muted small">لا يوجد بيانات</div>'}
             </div>
-            <div>
+            <div class="card p-3">
                 <div class="sw-col-title weakness"><i class="bi bi-exclamation-circle-fill"></i> نقاط ضعف</div>
-                ${relWeaknesses.length ? relWeaknesses.map(w => `<div class="sw-tag auto"><i class="bi bi-exclamation"></i>${w.label || w}</div>`).join('') : '<div style="font-size:12px;color:var(--text-muted);padding:8px 0">لا يوجد بيانات</div>'}
+                ${relWeaknesses.length ? relWeaknesses.map(w => `<div class="sw-tag"><i class="bi bi-exclamation text-danger"></i>${w.label || w}</div>`).join('') : '<div class="text-muted small">لا يوجد بيانات</div>'}
             </div>
         </div>`;
     }
 
-    // ── بطاقة مدير الإدارة ──
-    const currentUser = JSON.parse(localStorage.getItem('user') || '{}') || {};
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
     const isDeptManager = currentUser.userType === 'DEPT_MANAGER' || (currentUser.userCategory && currentUser.userCategory.startsWith('DEPT_'));
 
     let mgr = d.deptManagerInfo || { name: '', phone: '', email: '' };
 
-    // إذا كان مسجل الدخول هو مدير الإدارة نفسه
-    if (isDeptManager) {
-        if (!mgr.name && currentUser.name) mgr.name = currentUser.name;
-        if (!mgr.email && currentUser.email) mgr.email = currentUser.email;
-        if (!mgr.phone && currentUser.phone) mgr.phone = currentUser.phone;
-        d.deptManagerInfo = mgr; // تأكيد حفظ بياناته
-    }
-
-    let mgrCardHTML = '';
-    if (isDeptManager) {
-        // إخفاء حقول الإدخال والاكتفاء بعرض صفته كمسؤول
-        mgrCardHTML = `
-        <div style="background:linear-gradient(135deg,rgba(${dept.color ? dept.color.replace('#', '').match(/../g).map(h => parseInt(h, 16)).join(',') : '102,126,234'},.1),rgba(255,255,255,.02));border:1.5px solid rgba(${dept.color ? dept.color.replace('#', '').match(/../g).map(h => parseInt(h, 16)).join(',') : '102,126,234'},.25);border-radius:16px;padding:16px;margin-bottom:18px;display:flex;align-items:center;gap:12px;">
-            <div style="width:40px;height:40px;border-radius:12px;background:${dept.color || '#667eea'};display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:800">${mgr.name ? mgr.name[0] : '<i class="bi bi-person-fill"></i>'}</div>
-            <div>
-                <div style="font-size:14px;font-weight:800;color:var(--text)">أهلاً بك، ${mgr.name || 'مدير الإدارة'}</div>
-                <div style="font-size:11px;color:var(--text-muted)">أنت تجري الآن تقييم الـ ${dept.label} الخاص بإدارتك.</div>
-            </div>
-            <div style="margin-right:auto;background:rgba(255,255,255,0.06);padding:6px 12px;border-radius:8px;font-size:11px;font-weight:700;color:var(--text-muted)"><i class="bi bi-check2-circle"></i> المسؤول المباشر</div>
-        </div>`;
-    } else {
-        // لمالك الشركة والمستشار: إظهار مربعات إدخال بيانات المدير
-        mgrCardHTML = `
-        <div style="background:linear-gradient(135deg,rgba(${dept.color ? dept.color.replace('#', '').match(/../g).map(h => parseInt(h, 16)).join(',') : '102,126,234'},.1),rgba(255,255,255,.02));border:1.5px solid rgba(${dept.color ? dept.color.replace('#', '').match(/../g).map(h => parseInt(h, 16)).join(',') : '102,126,234'},.25);border-radius:16px;padding:20px;margin-bottom:18px">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-                <div style="width:40px;height:40px;border-radius:12px;background:${dept.color || '#667eea'};display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:800">${mgr.name ? mgr.name[0] : '<i class="bi bi-person-fill" style="font-size:16px"></i>'}</div>
+    let mgrCardHTML = `
+        <div class="card p-4 mb-4" style="background: rgba(255,255,255,0.02); border-style: dashed;">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="acc-icon" style="background: ${dept.color}33; color: ${dept.color}; font-size: 1.5rem;">${dept.icon}</div>
                 <div>
-                    <div style="font-size:14px;font-weight:800;color:var(--text)">${mgr.name || 'لم يتم تعيين مدير'}</div>
-                    <div style="font-size:11px;color:var(--text-muted)">مدير إدارة ${dept.label}</div>
+                    <div class="h5 fw-bold text-white mb-0">${mgr.name || 'مدير الإدارة لم يحدد بعد'}</div>
+                    <p class="text-muted small mb-0">مدير إدارة ${dept.label}</p>
                 </div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-                <div style="display:flex;flex-direction:column;gap:4px">
-                    <label style="font-size:11px;font-weight:700;color:var(--text-muted)"><i class="bi bi-person"></i> اسم المدير</label>
-                    <input id="mgrInfoName" type="text" value="${mgr.name || ''}" placeholder="أدخل اسم المدير"
-                        style="background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.1);color:var(--text);padding:9px 12px;border-radius:10px;font-size:13px;font-family:Tajawal;width:100%;box-sizing:border-box"
-                        oninput="saveMgrInfo()" />
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="small text-muted fw-bold mb-2">الاسم الكامل</label>
+                    <input class="form-control bg-dark text-white border-secondary" value="${mgr.name || ''}" oninput="saveMgrInfo('name', this.value)" placeholder="الاسم">
                 </div>
-                <div style="display:flex;flex-direction:column;gap:4px">
-                    <label style="font-size:11px;font-weight:700;color:var(--text-muted)"><i class="bi bi-telephone"></i> رقم الجوال</label>
-                    <input id="mgrInfoPhone" type="tel" value="${mgr.phone || ''}" placeholder="05xxxxxxxx"
-                        style="background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.1);color:var(--text);padding:9px 12px;border-radius:10px;font-size:13px;font-family:Tajawal;width:100%;box-sizing:border-box;direction:ltr;text-align:left"
-                        oninput="saveMgrInfo()" />
+                <div class="col-md-4">
+                    <label class="small text-muted fw-bold mb-2">رقم الجوال</label>
+                    <input class="form-control bg-dark text-white border-secondary" value="${mgr.phone || ''}" oninput="saveMgrInfo('phone', this.value)" placeholder="05xxxxxxxx">
                 </div>
-                <div style="display:flex;flex-direction:column;gap:4px">
-                    <label style="font-size:11px;font-weight:700;color:var(--text-muted)"><i class="bi bi-envelope"></i> البريد الإلكتروني</label>
-                    <input id="mgrInfoEmail" type="email" value="${mgr.email || ''}" placeholder="name@company.com"
-                        style="background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.1);color:var(--text);padding:9px 12px;border-radius:10px;font-size:13px;font-family:Tajawal;width:100%;box-sizing:border-box;direction:ltr;text-align:left"
-                        oninput="saveMgrInfo()" />
+                <div class="col-md-4">
+                    <label class="small text-muted fw-bold mb-2">البريد الإلكتروني</label>
+                    <input class="form-control bg-dark text-white border-secondary" value="${mgr.email || ''}" oninput="saveMgrInfo('email', this.value)" placeholder="email@company.com">
                 </div>
             </div>
         </div>`;
-    }
 
-    const cardSubDesc = isDeptManager ? 'مراجعة ملخص التشخيص المبدئي بناءً على الشركة:' : 'عيّن مدير الإدارة وراجع ملخص التشخيص قبل البدء:';
-
-    return `<div class="card">
-        <div class="card-title">${dept.icon} الوضع الحالي — إدارة ${dept.label}</div>
-        <div class="card-sub">${cardSubDesc}</div>
+    return `<div class="card border-0 shadow-lg">
+        <div class="card-title text-white h4 fw-bold mb-1">${dept.icon} الوضع الحالي — إدارة ${dept.label}</div>
+        <div class="card-sub mb-4">راجع ملخص التشخيص المبدئي وحدد المسؤول عن الإدارة</div>
         ${mgrCardHTML}
         ${scoreHTML}
         ${insightsHTML}
-        <div class="info-box warning" style="margin-top:16px">
-            <i class="bi bi-arrow-left-right"></i>
-            <span>في القسم التالي ستجيب على أسئلة متخصصة توضح الصورة بشكل أدق.</span>
+        <div class="info-box info mt-4">
+            <i class="bi bi-info-circle-fill"></i>
+            <span>أكمل الأقسام التالية للحصول على تحليل دقيق ومقترحات استراتيجية.</span>
         </div>
     </div>`;
 }
@@ -2832,27 +2801,20 @@ function renderDiagnosis(dept, d) {
         totalQuestions += g.totalCount;
     });
     const overallPercent = totalQuestions > 0 ? Math.round((totalAnswered / totalQuestions) * 100) : 0;
-
     const completedGroups = groups.filter(g => g.completed).length;
-    card.querySelector('#diagProgressContainer').innerHTML = `
+
+    const progressHTML = `
         <div class="diag-progress">
             <span class="diag-progress-label">📊 التقدم</span>
             <div class="diag-progress-bar"><div class="diag-progress-fill" style="width:${overallPercent}%"></div></div>
             <span class="diag-progress-num">${completedGroups}/${groups.length} مجموعة</span>
         </div>`;
 
-    const groupsContainer = card.querySelector('#diagGroupsContainer');
-    let globalQNum = 0;
-
-    groups.forEach((g, gIdx) => {
+    const groupsHTML = groups.map((g, gIdx) => {
         const prioColor = g.priority === 'حرج' ? '#ef4444' : g.priority === 'مهم' ? '#f59e0b' : '#60a5fa';
         const prioBg = g.priority === 'حرج' ? 'rgba(239,68,68,0.12)' : g.priority === 'مهم' ? 'rgba(245,158,11,0.12)' : 'rgba(96,165,250,0.12)';
         const statusEmoji = g.completed ? '✅' : g.answeredCount > 0 ? '🔵' : '⬜';
         const countClass = g.completed ? 'all-done' : '';
-
-        const accGroup = document.createElement('div');
-        accGroup.className = `acc-group ${g.completed ? 'acc-done' : ''}`;
-        accGroup.id = 'accGroup' + gIdx;
 
         const prioClass = g.priority === 'حرج' ? 'prio-critical' : g.priority === 'مهم' ? 'prio-important' : 'prio-recommended';
         const prioTitle = g.priority === 'حرج' ? '🚨 قسم حرج — يجب إكماله' : g.priority === 'مهم' ? '⚡ قسم مهم — يُنصح بإكماله' : '💡 موصى به — يرفع جودة التشخيص';
@@ -2877,6 +2839,51 @@ function renderDiagnosis(dept, d) {
                     <div class="acc-impact-tags">${impactHTML}</div>
                 </div>`;
 
+        // Generate Questions HTML for this group
+        const questionsHTML = g.questions.map(q => {
+            const val = d.answers[q.id] || '';
+            const insight = QUESTION_INSIGHTS[q.id];
+
+            let inputUI = '';
+            if (q.type === 'radio' || q.type === 'checkbox') {
+                inputUI = `<div class="options-grid">
+                    ${q.opts.map(opt => {
+                    const selected = q.type === 'radio' ? val === opt : (val || []).includes(opt);
+                    return `<div class="${q.type === 'radio' ? 'radio-option' : 'check-option'} ${selected ? 'selected' : ''}" 
+                                     onclick="setAnswer('${gIdx}', '${q.id}', '${opt.replace(/'/g, "\\'")}', '${q.type}')">
+                            <i class="bi ${selected ? (q.type === 'radio' ? 'bi-check-circle-fill' : 'bi-check-square-fill') : (q.type === 'radio' ? 'bi-circle' : 'bi-square')}"></i>
+                            ${opt}
+                        </div>`;
+                }).join('')}
+                </div>`;
+            } else if (q.type === 'textarea') {
+                inputUI = `<textarea class="form-control bg-dark text-white border-secondary" rows="3" placeholder="${q.placeholder || ''}" 
+                             oninput="setAnswer('${gIdx}', '${q.id}', this.value, 'textarea')">${val}</textarea>`;
+            }
+
+            const insightHTML = insight ? `
+                <div class="mt-3 p-3 rounded" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05);">
+                    <div class="d-flex gap-2 align-items-center mb-2" style="font-size:0.75rem; font-weight:800; color:#94a3b8;">
+                        <span>${insight.icon} معلومة واقعية</span>
+                        <span class="ms-auto scale-down opacity-50">${insight.type}</span>
+                    </div>
+                    <p class="mb-1" style="font-size:0.8rem; color:#cbd5e1;">${insight.fact}</p>
+                    <p class="mb-0 text-primary fw-bold" style="font-size:0.75rem;">${insight.tip}</p>
+                </div>` : '';
+
+            return `<div class="question-block">
+                        <div class="question-label">${q.label}</div>
+                        ${inputUI}
+                        ${insightHTML}
+                    </div>`;
+        }).join('');
+
+        const noteHTML = `<div class="mt-4">
+            <label class="small text-muted fw-bold mb-2">ملاحظات إضافية لهذا القسم:</label>
+            <textarea class="form-control bg-dark text-white border-secondary" rows="2" 
+                      oninput="setGroupNote('${gIdx}', this.value)">${d.notes || ''}</textarea>
+        </div>`;
+
         return `<div class="acc-group ${g.completed ? 'acc-done' : ''}" id="accGroup${gIdx}">
                     <div class="acc-header" onclick="toggleAccGroup(${gIdx})">
                         <span class="acc-icon">${g.icon}</span>
@@ -2900,10 +2907,10 @@ function renderDiagnosis(dept, d) {
     }).join('');
 
     return `<div class="card">
-                <div class="card-title"><i class="bi bi-search"></i> التشخيص العميق</div>
+                <div class="card-title text-white"><i class="bi bi-search text-primary me-2"></i> التشخيص العميق للإدارة</div>
                 <div class="card-sub">أسئلة متخصصة تكشف الواقع الحقيقي لإدارة ${dept.label} — اضغط على أي مجموعة لفتح أسئلتها</div>
                 ${progressHTML}
-                ${groupsHTML}
+                <div id="diagGroupsContainer">${groupsHTML}</div>
             </div>`;
 }
 

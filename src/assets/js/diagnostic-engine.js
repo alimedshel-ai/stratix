@@ -630,6 +630,9 @@ const DiagnosticEngine = (function () {
         promoteToLocalStorage,
         clearSession,
 
+        // Aliases for compatibility
+        classifyOwner: determineOwnerPath,
+
         // الإصدار
         VERSION: '1.0.0',
     };

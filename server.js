@@ -55,6 +55,15 @@ const dimensionsRoutes = require('./routes/dimensions');
 const deptDataRoutes = require('./routes/dept-data');  // ✅ استبيان الإدارات
 const departmentsRoutes = require('./routes/departments'); // ✅ بيانات الأقسام
 const issuesRoutes = require('./routes/issues'); // ✨ متتبع المشاكل الاستراتيجية
+const scenariosRoutes = require('./routes/scenarios');
+const pestelRoutes = require('./routes/pestel');
+const swotRoutes = require('./routes/swot');
+const okrRoutes = require('./routes/okrs');
+const kpisRoutes = require('./routes/kpis');
+const initiativesRoutes = require('./routes/initiatives');
+const deptHealthRoutes = require('./routes/dept-health');
+const progressRoutes = require('./routes/progress');
+const deptAnalysisRoutes = require('./routes/dept-analysis');
 
 
 
@@ -183,6 +192,13 @@ if (process.env.NODE_ENV === 'production' && !process.env.ALLOWED_ORIGINS) {
   console.warn('   Set it in .env: ALLOWED_ORIGINS=https://yourdomain.com,https://app.yourdomain.com');
 }
 
+// Serve static files with explicit MIME types to prevent browser blocking
+app.use((req, res, next) => {
+  if (req.path.endsWith('.js')) res.setHeader('Content-Type', 'text/javascript');
+  if (req.path.endsWith('.css')) res.setHeader('Content-Type', 'text/css');
+  next();
+});
+
 app.use(express.static(path.join(__dirname, 'src')));
 
 // =========================================
@@ -264,6 +280,11 @@ app.get('/api/user/me', verifyToken, async (req, res) => {
       else uType = 'EXPLORER';
     }
 
+    // استنتاج deptCode من userCategory أو من المسار التشخيصي
+    const deptCode = (user.userCategory || '').startsWith('DEPT_')
+      ? user.userCategory.replace('DEPT_', '').toLowerCase()
+      : user.diagnosticData?.department || null;
+
     res.json({
       id: user.id,
       email: user.email,
@@ -272,6 +293,7 @@ app.get('/api/user/me', verifyToken, async (req, res) => {
       systemRole: user.systemRole || 'USER',
       role: primaryMembership?.role || (isSA ? 'OWNER' : 'VIEWER'),
       userType: uType,
+      deptCode,
       userCategory: user.userCategory || null,
       onboardingCompleted: user.onboardingCompleted || false,
       entity: primaryMembership?.entity || null,
@@ -302,18 +324,21 @@ app.use('/api/dept-data', deptDataRoutes);    // ✅ استبيان الإدار
 app.use('/api/departments', departmentsRoutes); // ✅ بيانات الأقسام
 
 // 📍 تتبع تقدم رحلة مدير الإدارة (localStorage-first)
-const progressRoutes = require('./routes/progress');
-const pestelRoutes = require('./routes/pestel');
-const swotRoutes = require('./routes/swot');
-const deptHealthRoutes = require('./routes/dept-health');
-const scenariosRoutes = require('./routes/scenarios');
-const okrRoutes = require('./routes/okrs');
+app.use('/api/dept/analysis', deptAnalysisRoutes);
 app.use('/api/progress', progressRoutes);
+app.use('/api/user-progress', userProgressRoutes);
 app.use('/api/pestel', pestelRoutes);
 app.use('/api/swot', swotRoutes);
+app.use('/api/tows', towsRoutes);
 app.use('/api/dept-health', deptHealthRoutes);
 app.use('/api/scenarios', scenariosRoutes);
 app.use('/api/okrs', okrRoutes);
+app.use('/api/kpis', kpisRoutes);
+app.use('/api/reviews', reviewsRoutes);
+app.use('/api/initiatives', initiativesRoutes);
+app.use('/api/corrections', correctionsRoutes);
+
+
 
 
 
@@ -341,14 +366,14 @@ app.use('/api/audit', auditRoutes);
 // 🎯 الاستراتيجية — EDITOR وأعلى (القراءة متاحة للـ VIEWER)
 app.use('/api/assessments', assessmentsRoutes);
 app.use('/api/strategic', strategicRoutes);
-app.use('/api/strategic/reviews', reviewsRoutes);
+// strategic/reviews handled via root /api/reviews for departmental consistency
 const objectivesSyncRoutes = require('./routes/objectives-sync');
 app.use('/api/strategic/objectives', objectivesSyncRoutes);
 app.use('/api/versions', versionsRoutes);
 app.use('/api/choices', choicesRoutes);
 const projectsRoutes = require('./routes/projects');
 app.use('/api/projects', projectsRoutes);
-app.use('/api/corrections', correctionsRoutes);
+// corrections handled via root consolidate section
 app.use('/api/analysis', analysisRoutes);
 app.use('/api/directions', directionsRoutes);
 app.use('/api/external-analysis', externalAnalysisRoutes);
@@ -357,7 +382,7 @@ app.use('/api/company-analysis', companyAnalysisRoutes);
 app.use('/api/user-progress', userProgressRoutes);
 // TODO: [DEFERRED] causal-links — يُفعّل مع Strategy Map
 // app.use('/api/causal-links', causalLinksRoutes);
-app.use('/api/tows', towsRoutes);
+// tows handled via root consolidate section
 
 // ⚙️ العمليات
 app.use('/api/financial', financialRoutes);
@@ -382,13 +407,7 @@ app.use('/api/stats', statsRoutes);
 
 // OKRs are handled above in the department managers section
 
-// 🚀 المبادرات الاستراتيجية
-const initiativesRoutes = require('./routes/initiatives');
-app.use('/api/initiatives', initiativesRoutes);
-
-// 📊 مؤشرات الأداء الرئيسية (KPIs) — CRUD كامل
-const kpisRoutes = require('./routes/kpis');
-app.use('/api/kpis', kpisRoutes);
+// initiatives and kpis handled via root consolidate section
 
 // ✅ مهام المبادرات (Tasks)
 const tasksRoutes = require('./routes/tasks');

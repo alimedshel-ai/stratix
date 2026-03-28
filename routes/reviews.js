@@ -240,4 +240,64 @@ router.delete('/:id', verifyToken, checkPermission('EDITOR'), async (req, res) =
   }
 });
 
+// ──────────────────────────────────────────────────────
+// GET /api/reviews/:dept — جلب مراجعات القسم (Wizard)
+// ──────────────────────────────────────────────────────
+router.get('/:dept', verifyToken, async (req, res) => {
+  try {
+    const { dept } = req.params;
+    const entityId = req.user.entityId;
+
+    const analysis = await prisma.departmentAnalysis.findFirst({
+      where: {
+        entityId,
+        department: dept.toUpperCase(),
+        type: 'REVIEWS'
+      }
+    });
+
+    if (!analysis) return res.json({});
+    res.json(JSON.parse(analysis.data));
+  } catch (error) {
+    console.error('Error fetching departmental reviews:', error);
+    res.status(500).json({ error: 'Failed to fetch departmental reviews' });
+  }
+});
+
+// ──────────────────────────────────────────────────────
+// POST /api/reviews/:dept — حفظ مراجعات القسم (Wizard)
+// ──────────────────────────────────────────────────────
+router.post('/:dept', verifyToken, async (req, res) => {
+  try {
+    const { dept } = req.params;
+    const data = req.body;
+    const entityId = req.user.entityId;
+
+    await prisma.departmentAnalysis.upsert({
+      where: {
+        entityId_department_type: {
+          entityId,
+          department: dept.toUpperCase(),
+          type: 'REVIEWS'
+        }
+      },
+      update: {
+        data: JSON.stringify(data),
+        updatedAt: new Date()
+      },
+      create: {
+        entityId,
+        department: dept.toUpperCase(),
+        type: 'REVIEWS',
+        data: JSON.stringify(data)
+      }
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error saving departmental reviews:', error);
+    res.status(500).json({ error: 'Failed to save departmental reviews' });
+  }
+});
+
 module.exports = router;

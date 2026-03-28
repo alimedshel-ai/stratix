@@ -1156,6 +1156,16 @@
             const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || 'null');
             const diagSector = diag?.sector || '';
 
+            // 🔥 قراءة بيانات الألم والطموح للتزامن مع المستشار الذكي
+            const v20PainAmbition = JSON.parse(localStorage.getItem('painAmbition') || 'null');
+            const v10Pain = localStorage.getItem('stratix_pain');
+            const v10Redirected = localStorage.getItem('stratix_redirected_from');
+
+            const pain = v20PainAmbition?.diagnosticAnswers?.challenge || v10Pain || '';
+            const ambition = v20PainAmbition?.diagnosticAnswers?.ambition || v10Redirected || '';
+            const patternKey = v20PainAmbition?.patternKey || '';
+            const patternLabel = v20PainAmbition?.patternLabel || '';
+
             const data = {
                 orgName: document.getElementById('orgName').value.trim() || 'منشأتي',
                 orgType: document.getElementById('orgType').value,
@@ -1180,12 +1190,17 @@
             try {
                 const result = await window.apiRequest('/api/auth/complete-onboarding', {
                     method: 'POST',
-                    body: JSON.stringify({
+                    body: {
                         companyName: data.orgName,
                         sector: data.sector,
                         orgSize: data.orgSize,
                         orgType: data.orgType,
-                    })
+                        // إرسال بيانات النمط للمزامنة
+                        pain,
+                        ambition,
+                        patternKey,
+                        patternLabel
+                    }
                 });
 
                 if (result) {
@@ -1231,10 +1246,10 @@
                             try {
                                 await window.apiRequest('/api/sector-configs/link-entity', {
                                     method: 'POST',
-                                    body: JSON.stringify({
+                                    body: {
                                         entityId: result.entityId,
                                         sectorConfigCode: configCode
-                                    })
+                                    }
                                 });
                                 console.log(`✅ Entity linked to sector: ${configCode}`);
                             } catch (e) {

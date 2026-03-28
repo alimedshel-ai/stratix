@@ -722,44 +722,28 @@ router.patch('/company', verifyToken, async (req, res) => {
 // ═══ إكمال الـ Onboarding — إنشاء Company + Entity + Member + Version ═══
 router.post('/complete-onboarding', verifyToken, async (req, res) => {
   try {
-    const { companyName, sector, orgSize, orgType, commercialRegNo } = req.body;
+    const {
+      companyName, sector, orgSize, orgType, commercialRegNo,
+      pain, ambition, patternKey, patternLabel
+    } = req.body;
     const userId = req.user.id;
 
-    // التحقق من عدم تكرار رقم السجل
     if (commercialRegNo) {
       const existing = await prisma.entity.findFirst({ where: { commercialRegNo } });
-      if (existing) {
-        return res.status(400).json({ error: 'رقم السجل التجاري مسجل مسبقاً' });
-      }
+      if (existing) return res.status(400).json({ error: 'رقم السجل التجاري مسجل مسبقاً' });
     }
 
-    // التحقق من أن المستخدم ما عنده كيان (ما نكرر)
     const existingMembership = await prisma.member.findFirst({ where: { userId } });
-
     if (existingMembership) {
-      // عنده كيان بالفعل — بس نحدد إن التأسيس مكتمل
-      await prisma.user.update({
-        where: { id: userId },
-        data: { onboardingCompleted: true }
-      });
-
+      await prisma.user.update({ where: { id: userId }, data: { onboardingCompleted: true } });
       const entity = await prisma.entity.findUnique({
         where: { id: existingMembership.entityId },
         include: { company: { select: { id: true, nameAr: true } } }
       });
-
-      return res.json({
-        message: 'التأسيس مكتمل بالفعل',
-        onboardingCompleted: true,
-        entity,
-        entityId: entity?.id,
-      });
+      return res.json({ message: 'التأسيس مكتمل بالفعل', onboardingCompleted: true, entity, entityId: entity?.id });
     }
 
-    // إنشاء كل شي في Transaction واحد
     const entityName = companyName || 'منشأتي';
-
-    // تحديد نوع المستخدم الفعلي من userCategory
     const currentUser = await prisma.user.findUnique({ where: { id: userId }, select: { userCategory: true } });
     const cat = currentUser?.userCategory || '';
     let actualUserType = 'COMPANY_MANAGER';
@@ -773,16 +757,18 @@ router.post('/complete-onboarding', verifyToken, async (req, res) => {
     }
 
     const result = await prisma.$transaction(async (tx) => {
-      // 1. إنشاء الشركة
       const company = await tx.company.create({
-        data: {
-          nameAr: entityName,
-          nameEn: entityName,
-          status: 'ACTIVE',
-        },
+        data: { nameAr: entityName, nameEn: entityName, status: 'ACTIVE' },
       });
 
-      // 2. إنشاء الكيان
+      const painAmbitionPayload = (pain || ambition) ? {
+        pain: pain || '',
+        ambition: ambition || '',
+        patternKey: patternKey || '',
+        patternLabel: patternLabel || '',
+        updatedAt: new Date().toISOString()
+      } : null;
+
       const entity = await tx.entity.create({
         data: {
           legalName: entityName,
@@ -790,21 +776,23 @@ router.post('/complete-onboarding', verifyToken, async (req, res) => {
           companyId: company.id,
           size: orgSize || null,
           commercialRegNo: commercialRegNo || null,
+          metadata: painAmbitionPayload ? JSON.stringify({ painAmbition: painAmbitionPayload }) : null,
           isActive: true,
         },
       });
 
-      // 3. إنشاء العضوية (بالنوع الفعلي)
+      if (pain || ambition) {
+        await tx.companyPattern.upsert({
+          where: { companyId: company.id },
+          update: { pain: pain || '', ambition: ambition || '', pattern: patternLabel || 'نمط عام' },
+          create: { companyId: company.id, pain: pain || '', ambition: ambition || '', pattern: patternLabel || 'نمط عام' },
+        });
+      }
+
       await tx.member.create({
-        data: {
-          userId,
-          entityId: entity.id,
-          role: 'OWNER',
-          userType: actualUserType,
-        },
+        data: { userId, entityId: entity.id, role: 'OWNER', userType: actualUserType },
       });
 
-      // 4. إنشاء أول نسخة استراتيجية
       await tx.strategyVersion.create({
         data: {
           entityId: entity.id,
@@ -818,7 +806,6 @@ router.post('/complete-onboarding', verifyToken, async (req, res) => {
         },
       });
 
-      // 5. إنشاء 8 أقسام تلقائياً (للمستشار الذكي ومحرك القواعد)
       const DEFAULT_DEPARTMENTS = [
         { code: 'FINANCE', name: 'المالية', icon: 'bi-cash-coin', color: '#f59e0b' },
         { code: 'MARKETING', name: 'التسويق', icon: 'bi-megaphone', color: '#8b5cf6' },
@@ -831,60 +818,32 @@ router.post('/complete-onboarding', verifyToken, async (req, res) => {
       ];
 
       for (const dept of DEFAULT_DEPARTMENTS) {
-        await tx.department.create({
-          data: { entityId: entity.id, ...dept }
-        });
+        await tx.department.create({ data: { entityId: entity.id, ...dept } });
       }
 
-      // 6. تحديث المستخدم — التأسيس مكتمل
-      await tx.user.update({
-        where: { id: userId },
-        data: { onboardingCompleted: true }
-      });
-
+      await tx.user.update({ where: { id: userId }, data: { onboardingCompleted: true } });
       return { company, entity };
     });
 
-    // 6. إنشاء توكن جديد يحتوي entityId و companyId
     const user = await prisma.user.findUnique({ where: { id: userId } });
     const newToken = jwt.sign(
       {
-        id: userId,
-        email: user.email,
-        name: user.name,
-        systemRole: user.systemRole || 'USER',
-        role: 'OWNER',
-        userType: actualUserType,
-        entityId: result.entity.id,
-        companyId: result.company.id,
-        deptCode,
+        id: userId, email: user.email, name: user.name, systemRole: user.systemRole || 'USER',
+        role: 'OWNER', userType: actualUserType, entityId: result.entity.id, companyId: result.company.id, deptCode,
       },
       process.env.JWT_SECRET,
       { expiresIn: '30d' }
     );
 
-    res.cookie('token', newToken, {
-      path: '/',
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    });
-
+    res.cookie('token', newToken, { path: '/', httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', maxAge: 24 * 60 * 60 * 1000 });
     res.json({
-      message: 'تم إكمال التأسيس بنجاح 🎉',
-      onboardingCompleted: true,
-      token: newToken,
-      entity: result.entity,
-      entityId: result.entity.id,
-      companyId: result.company.id,
+      message: 'تم إكمال التأسيس بنجاح 🎉', onboardingCompleted: true, token: newToken,
+      entity: result.entity, entityId: result.entity.id, companyId: result.company.id,
       user: { userType: actualUserType, deptCode },
     });
   } catch (error) {
     console.error('Error completing onboarding:', error);
-    if (error.code === 'P2002') {
-      return res.status(400).json({ error: 'رقم السجل التجاري مستخدم بالفعل' });
-    }
+    if (error.code === 'P2002') return res.status(400).json({ error: 'رقم السجل التجاري مستخدم بالفعل' });
     res.status(500).json({ error: 'فشل إكمال التأسيس' });
   }
 });
@@ -933,7 +892,24 @@ router.post('/add-entity', verifyToken, async (req, res) => {
         data: { nameAr: entityName, nameEn: entityName, status: 'ACTIVE' },
       });
 
-      // 2. إنشاء الكيان
+      // معالجة بيانات التشخيص لـ AI Advisor
+      let metadataObj = null;
+      if (diagnosticData) {
+        metadataObj = {
+          painAmbition: {
+            patternKey: diagnosticData.patternKey,
+            category: diagnosticData.category || 'owner',
+            sizeCategory: diagnosticData.sizeCategory || 'medium',
+            reason: diagnosticData.reason || '',
+            diagnosticAnswers: diagnosticData.answers || {},
+            diagnosticDate: new Date().toISOString(),
+            pain: diagnosticData.answers?.challenge || '',
+            ambition: diagnosticData.answers?.ambition || ''
+          }
+        };
+      }
+
+      // 2. إنشاء الكيان (Entity)
       const entity = await tx.entity.create({
         data: {
           legalName: entityName,
@@ -941,10 +917,24 @@ router.post('/add-entity', verifyToken, async (req, res) => {
           companyId: company.id,
           size: orgSize || null,
           commercialRegNo: commercialRegNo || null,
-          metadata: diagnosticData ? JSON.stringify(diagnosticData) : null,
+          metadata: metadataObj ? JSON.stringify(metadataObj) : null,
           isActive: true,
         },
       });
+
+      // مزامنة نمط الشركة (CompanyPattern) إذا وجدت بيانات تشخيص
+      if (diagnosticData && diagnosticData.patternKey) {
+        await tx.companyPattern.create({
+          data: {
+            entityId: entity.id,
+            patternKey: diagnosticData.patternKey,
+            patternLabel: diagnosticData.patternKey, // استخدام مفتاح النمط كعنوان مبدئي
+            pain: metadataObj.painAmbition.pain,
+            ambition: metadataObj.painAmbition.ambition,
+            status: 'ACTIVE'
+          }
+        });
+      }
 
       // 3. ربط المستخدم بالكيان الجديد بدوره الحالي
       await tx.member.create({
