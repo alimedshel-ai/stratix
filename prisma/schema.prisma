@@ -1,10 +1,3 @@
-// =========================================
-// STRATIX - Strategic Operating System
-// Schema v3.0 — Simplified (20 Core Models)
-// Date: February 20, 2026
-// Strategy: Core models only, disabled models removed
-// =========================================
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,21 +7,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// =========================================
-// 1. REFERENCE TABLES (Classification System)
-// =========================================
-
 /// القطاع (حكومي، خاص، غير ربحي)
 model Sector {
-  id        String   @id @default(cuid())
-  nameAr    String   @unique
-  nameEn    String   @unique
-  code      String?  @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id         String     @id @default(cuid())
+  nameAr     String     @unique
+  nameEn     String     @unique
+  code       String?    @unique
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
   entities   Entity[]
-  industries Industry[]
+  industries Industry[] @relation("IndustryToSector")
 
   @@map("ref_sectors")
 }
@@ -40,9 +28,8 @@ model Industry {
   code      String?  @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  entities Entity[]
-  sectors  Sector[]
+  entities  Entity[]
+  sectors   Sector[] @relation("IndustryToSector")
 
   @@map("ref_industries")
 }
@@ -55,81 +42,54 @@ model EntityType {
   code      String?  @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  entities Entity[]
+  entities  Entity[]
 
   @@map("ref_entity_types")
 }
 
-// =========================================
-// 1b. SECTOR CONFIG (Industry Intelligence)
-// تخصيص ذكي حسب القطاع التجاري
-// =========================================
-
 /// إعدادات القطاع — أسئلة مخصصة + معادلات Break-Even + متوسطات
 model SectorConfig {
-  id   String @id @default(cuid())
-  code String @unique // CONSTRUCTION, RESTAURANT, RETAIL, etc.
-
-  // الأسماء
-  nameAr String // المقاولات والبناء
-  nameEn String // Construction
-  icon   String? // 🏗️
-  color  String? // #f59e0b
-
-  // الوحدة الأساسية للقطاع
-  unitLabelAr String? // المشروع / المستخلص المالي
-  unitLabelEn String? // Project / Financial Statement
-
-  // أسئلة مخصصة لكل دور (JSON strings)
-  cfoQuestions String? // أسئلة CFO المخصصة للقطاع
-  cmoQuestions String? // أسئلة CMO
-  cooQuestions String? // أسئلة COO
-
-  // حساب نقطة التعادل (Break-Even)
-  breakEvenFields String? // الحقول المطلوبة (JSON)
-  formulas        String? // معادلات الحساب (JSON)
-  benchmarks      String? // متوسطات القطاع (JSON)
-
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  entities Entity[]
+  id              String   @id @default(cuid())
+  code            String   @unique
+  nameAr          String
+  nameEn          String
+  icon            String?
+  color           String?
+  unitLabelAr     String?
+  unitLabelEn     String?
+  cfoQuestions    String?
+  cmoQuestions    String?
+  cooQuestions    String?
+  breakEvenFields String?
+  formulas        String?
+  benchmarks      String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  entities        Entity[]
 
   @@map("sector_configs")
 }
 
-// =========================================
-// 2. COMPANY & SUBSCRIPTION (NEW — Evolution)
-// =========================================
-
 /// الشركة المشتركة في النظام (Tenant)
 model Company {
-  id      String  @id @default(cuid())
-  nameAr  String
-  nameEn  String?
-  code    String? @unique
-  logoUrl String?
-  status  String  @default("ACTIVE") // ACTIVE, INACTIVE, TRIAL, SUSPENDED
-
-  // بيانات التواصل
-  email   String?
-  phone   String?
-  website String?
-
-  // بيانات التعليق
-  suspendedAt    DateTime?
-  suspendReason  String?
-  suspendedBy    String?   // ID المدير الذي علّق الحساب
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // العلاقات
-  subscription Subscription?
-  entities     Entity[]
-  pattern      CompanyPattern?
+  id            String          @id @default(cuid())
+  nameAr        String
+  nameEn        String?
+  code          String?         @unique
+  logoUrl       String?
+  status        String          @default("ACTIVE")
+  email         String?
+  phone         String?
+  website       String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  suspendReason String?
+  suspendedAt   DateTime?
+  suspendedBy   String?
+  pattern       CompanyPattern?
+  entities      Entity[]
+  subscription  Subscription?
 
   @@map("companies")
 }
@@ -138,114 +98,89 @@ model Company {
 model Subscription {
   id          String    @id @default(cuid())
   companyId   String    @unique
-  plan        String    @default("TRIAL") // TRIAL, BASIC, PRO, ENTERPRISE
-  status      String    @default("ACTIVE") // ACTIVE, EXPIRED, CANCELLED
+  plan        String    @default("TRIAL")
+  status      String    @default("ACTIVE")
   startDate   DateTime  @default(now())
   endDate     DateTime?
   maxUsers    Int       @default(5)
   maxEntities Int       @default(1)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  company     Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@map("subscriptions")
 }
 
-// =========================================
-// 3. IDENTITY CORE (Users & Entities)
-// =========================================
-
 /// User model
 model User {
-  id         String    @id @default(cuid())
-  email      String    @unique
-  password   String
-  name       String
-  phone      String?   @unique  // ✨ معرّف رئيسي — رقم الجوال
-  phoneVerified Boolean @default(false) // ✨ هل تم التحقق من الجوال
-  systemRole String    @default("USER") // SUPER_ADMIN, USER
-  avatarUrl  String?
-  lastLogin  DateTime? // آخر تسجيل دخول
-  disabled   Boolean   @default(false) // تعطيل الحساب
-  onboardingCompleted Boolean @default(false) // هل أكمل خطوات التأسيس
-
-  // ✨ التحقق من الجوال (SMS)
-  verificationCode   String?   // كود التحقق (6 أرقام)
-  verificationExpiry DateTime? // صلاحية الكود
-
-  // ✨ بيانات التشخيص (محفوظة من قبل التسجيل)
-  diagnosticData String? // JSON: نتيجة التشخيص (مبتدئ أو ألم وطموح)
-  userCategory   String? // INDIVIDUAL_DEV, INDIVIDUAL_IDEA, NEW_PROJECT, COMPANY_SMALL, COMPANY_MEDIUM, COMPANY_LARGE
-
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-
-  memberships     Member[]
-  auditLogs       AuditLog[]
-  financialAudits FinancialAudit[]
-  healthReports   CompanyHealthReport[] @relation("HealthReporter")
-  resourceAccess  ResourceAccess[]
-  createdIssues   Issue[]               @relation("createdIssues")
-  assignedIssues  Issue[]               @relation("assignedIssues")
+  id                  String                @id @default(cuid())
+  email               String                @unique
+  password            String
+  name                String
+  phone               String?               @unique
+  phoneVerified       Boolean               @default(false)
+  systemRole          String                @default("USER")
+  avatarUrl           String?
+  lastLogin           DateTime?
+  disabled            Boolean               @default(false)
+  onboardingCompleted Boolean               @default(false)
+  verificationCode    String?
+  verificationExpiry  DateTime?
+  diagnosticData      String?
+  userCategory        String?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  auditLogs           AuditLog[]
+  healthReports       CompanyHealthReport[] @relation("HealthReporter")
+  financialAudits     FinancialAudit[]
+  createdIssues       Issue[]               @relation("createdIssues")
+  assignedIssues      Issue[]               @relation("assignedIssues")
+  memberships         Member[]
+  resourceAccess      ResourceAccess[]
 
   @@map("users")
 }
 
 /// Entity model - الكيان (المستشفى، الوزارة، الشركة...)
 model Entity {
-  id          String  @id @default(cuid())
-  legalName   String
-  displayName String?
-
-  // 🔗 الربط بالشركة (Tenant)
-  companyId String?
-
-  // 🔗 الربط بشجرة التصنيف (اختياري)
-  sectorId       String?
-  industryId     String?
-  typeId         String?
-  sectorConfigId String? // ✨ ربط بالقطاع الذكي
-
-  // ✨ حقول جديدة — Phase 1
-  size    String? // MICRO, SMALL, MEDIUM, LARGE, ENTERPRISE
-  school  String? // المدرسة الإدارية (BALANCED_SCORECARD, OKR, HOSHIN_KANRI, etc.)
-  culture String? // الثقافة المؤسسية: AMERICAN, JAPANESE, EUROPEAN, ISLAMIC
-
-  // ✨ السجل التجاري
-  commercialRegNo String? @unique // رقم السجل التجاري — فريد لمنع التكرار
-
-  logoUrl   String?
-  metadata  String? // JSON field for extra data (pain/ambition, preferences, etc.)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // العلاقات
-  company      Company?      @relation(fields: [companyId], references: [id], onDelete: SetNull)
-  sector       Sector?       @relation(fields: [sectorId], references: [id], onDelete: SetNull)
-  industry     Industry?     @relation(fields: [industryId], references: [id], onDelete: SetNull)
-  entityType   EntityType?   @relation(fields: [typeId], references: [id], onDelete: SetNull)
-  sectorConfig SectorConfig? @relation(fields: [sectorConfigId], references: [id], onDelete: SetNull)
-
-  // العلاقات مع النظام
-  members            Member[]
-  strategyVersions   StrategyVersion[]
+  id                 String                @id @default(cuid())
+  legalName          String
+  displayName        String?
+  companyId          String?
+  sectorId           String?
+  industryId         String?
+  typeId             String?
+  sectorConfigId     String?
+  size               String?
+  school             String?
+  culture            String?
+  commercialRegNo    String?               @unique
+  logoUrl            String?
+  metadata           String?
+  isActive           Boolean               @default(true)
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
   assessments        Assessment[]
   auditLogs          AuditLog[]
-  stakeholders       Stakeholder[] // ✨ أصحاب المصلحة
-  financialDecisions FinancialDecision[] // ✨ القرارات المالية
-  integrations       Integration[] // ✨ التكاملات
-  departments        Department[] // ✨ الأقسام
-  invitations        Invitation[] // ✨ الدعوات
-  employees          Employee[] // ✨ الموظفين (فحص HR)
-  housingUnits       HousingUnit[] // ✨ السكن (فحص HR)
-  govPlatforms       GovPlatformStatus[] // ✨ المنصات الحكومية (فحص Gov)
-  healthReports      CompanyHealthReport[] // ✨ تقارير صحة الشركة
-  dimensions         CompanyDimension?     @relation("EntityDimensions") // ✨ الأبعاد الثلاثة (المالي، الإداري، التوطين)
-  webhooks           Webhook[]             @relation("EntityWebhooks") // ✨ إشعارات Slack/Teams/Zapier
-  issues             Issue[]               // ✨ سجل المشاكل والتحديات (Issue Tracker)
+  dimensions         CompanyDimension?     @relation("EntityDimensions")
+  healthReports      CompanyHealthReport[]
+  departments        Department[]
+  employees          Employee[]
+  sectorConfig       SectorConfig?         @relation(fields: [sectorConfigId], references: [id])
+  entityType         EntityType?           @relation(fields: [typeId], references: [id])
+  industry           Industry?             @relation(fields: [industryId], references: [id])
+  sector             Sector?               @relation(fields: [sectorId], references: [id])
+  company            Company?              @relation(fields: [companyId], references: [id])
+  financialDecisions FinancialDecision[]
+  govPlatforms       GovPlatformStatus[]
+  housingUnits       HousingUnit[]
+  integrations       Integration[]
+  invitations        Invitation[]
+  issues             Issue[]
+  members            Member[]
+  stakeholders       Stakeholder[]
+  strategyVersions   StrategyVersion[]
+  webhooks           Webhook[]             @relation("EntityWebhooks")
 
   @@index([companyId])
   @@index([sectorId])
@@ -257,21 +192,18 @@ model Entity {
 
 /// Member model - ربط User و Entity مع الأدوار
 model Member {
-  id       String   @id @default(cuid())
-  userId   String
-  entityId String
-  role     String   @default("VIEWER") // OWNER, ADMIN, EDITOR, VIEWER, DATA_ENTRY
-  userType String   @default("EXPLORER") // EXPLORER, COMPANY_MANAGER, DEPT_MANAGER, CONSULTANT
-  joinedAt DateTime @default(now())
-
-  // ✨ Phase 0 — الفريق الاستراتيجي
-  departmentRole String? // CEO, CFO, CMO, COO, CTO, CHRO, CSO, CCO, CLO
+  id             String      @id @default(cuid())
+  userId         String
+  entityId       String
+  role           String      @default("VIEWER")
+  userType       String      @default("EXPLORER")
+  joinedAt       DateTime    @default(now())
+  departmentRole String?
   departmentId   String?
-  department     Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  invitedBy      String? // userId اللي أرسل الدعوة
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  entity Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  invitedBy      String?
+  entity         Entity      @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department     Department? @relation(fields: [departmentId], references: [id])
 
   @@unique([userId, entityId])
   @@index([userId])
@@ -282,24 +214,20 @@ model Member {
 
 /// Department model - الأقسام/الإدارات داخل الكيان
 model Department {
-  id       String @id @default(cuid())
-  entityId String
-  name     String // "المالية", "التسويق", "العمليات"
-  code     String // FINANCE, MARKETING, OPERATIONS, HR, TECH, SALES, SUPPORT, LEGAL
-  icon     String? // bi-cash-coin, bi-megaphone, etc.
-  color    String? // لون البطاقة
-
-  // حالة بيانات القسم
-  dataStatus  String @default("EMPTY") // EMPTY, IN_PROGRESS, COMPLETED
-  dataPercent Int    @default(0) // 0-100 نسبة الإكمال
-  dataSummary String? // JSON — ملخص ما ملأه القسم
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  entity          Entity             @relation(fields: [entityId], references: [id], onDelete: Cascade)
-  members         Member[]
+  id              String           @id @default(cuid())
+  entityId        String
+  name            String
+  code            String
+  icon            String?
+  color           String?
+  dataStatus      String           @default("EMPTY")
+  dataPercent     Int              @default(0)
+  dataSummary     String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  entity          Entity           @relation(fields: [entityId], references: [id], onDelete: Cascade)
   financialAudits FinancialAudit[]
+  members         Member[]
 
   @@unique([entityId, code])
   @@index([entityId])
@@ -308,19 +236,17 @@ model Department {
 
 /// تقييم صحة الإدارة (Dept Health)
 model DepartmentHealth {
-  id             String   @id @default(cuid())
-  entityId       String
-  departmentKey  String   // HR, FINANCE, etc.
-  
-  skills         String?  // الكفاءات
-  processes      String?  // العمليات
-  culture        String?  // الثقافة
-  resources      String?  // الموارد
-  satisfaction   String?  // الرضا
-  productivity   String?  // الإنتاجية
-  
-  updatedAt      DateTime @updatedAt
-  createdAt      DateTime @default(now())
+  id            String   @id @default(cuid())
+  entityId      String
+  departmentKey String
+  skills        String?
+  processes     String?
+  culture       String?
+  resources     String?
+  satisfaction  String?
+  productivity  String?
+  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now())
 
   @@unique([entityId, departmentKey])
   @@index([entityId])
@@ -329,16 +255,14 @@ model DepartmentHealth {
 
 /// السيناريوهات الاستراتيجية (Scenarios)
 model DepartmentScenario {
-  id             String   @id @default(cuid())
-  entityId       String
-  departmentKey  String   // HR, FINANCE, etc.
-  
-  optimistic     String?  // السيناريو المتفائل
-  realistic      String?  // السيناريو الواقعي
-  pessimistic    String?  // السيناريو المتشائم
-  
-  updatedAt      DateTime @updatedAt
-  createdAt      DateTime @default(now())
+  id            String   @id @default(cuid())
+  entityId      String
+  departmentKey String
+  optimistic    String?
+  realistic     String?
+  pessimistic   String?
+  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now())
 
   @@unique([entityId, departmentKey])
   @@index([entityId])
@@ -347,55 +271,47 @@ model DepartmentScenario {
 
 /// الأهداف والنتائج الرئيسية (OKRs)
 model DepartmentObjective {
-  id             String      @id @default(cuid())
-  entityId       String
-  departmentKey  String      // HR, FINANCE, etc.
-  
-  title          String      // عنوان الهدف
-  description    String?     // وصف الهدف
-  
-  keyResults     KeyResult[] // النتائج الرئيسية المرتبطة
-  
-  updatedAt      DateTime    @updatedAt
-  createdAt      DateTime    @default(now())
+  id            String      @id @default(cuid())
+  entityId      String
+  departmentKey String
+  title         String
+  description   String?
+  updatedAt     DateTime    @updatedAt
+  createdAt     DateTime    @default(now())
+  keyResults    KeyResult[]
 
   @@index([entityId])
   @@map("dept_objectives")
 }
 
 model KeyResult {
-  id             String   @id @default(cuid())
-  objectiveId    String
-  title          String   // عنوان النتيجة الرئيسية
-  targetValue    String?  // القيمة المستهدفة
-  currentValue   String?  // القيمة الحالية
-  
-  objective      DepartmentObjective @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
+  id           String              @id @default(cuid())
+  objectiveId  String
+  title        String
+  targetValue  String?
+  currentValue String?
+  objective    DepartmentObjective @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
 
   @@index([objectiveId])
   @@map("dept_key_results")
 }
 
-
-
-
 /// Invitation model - دعوات الانضمام للفريق
 model Invitation {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   entityId       String
   email          String
-  name           String? // اسم المدعو
-  departmentRole String  // CEO, CFO, CMO, COO, CTO, CHRO, CSO, CCO, CLO
-  role           String   @default("EDITOR") // الصلاحية المبدئية
-  token          String   @unique @default(cuid()) // رابط الدعوة الفريد
-  status         String   @default("PENDING") // PENDING, ACCEPTED, EXPIRED, CANCELLED
-  invitedBy      String  // userId اللي أرسل الدعوة
-  message        String? // رسالة شخصية مع الدعوة
+  name           String?
+  departmentRole String
+  role           String    @default("EDITOR")
+  token          String    @unique @default(cuid())
+  status         String    @default("PENDING")
+  invitedBy      String
+  message        String?
   expiresAt      DateTime
   acceptedAt     DateTime?
-  createdAt      DateTime @default(now())
-
-  entity Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  createdAt      DateTime  @default(now())
+  entity         Entity    @relation(fields: [entityId], references: [id], onDelete: Cascade)
 
   @@unique([entityId, email])
   @@index([token])
@@ -404,50 +320,37 @@ model Invitation {
   @@map("invitations")
 }
 
-// DataEntryPermission — DISABLED (removed for simplification)
-
-// =========================================
-// 3. STRATEGY FOUNDATION
-// =========================================
-
 /// نسخة الاستراتيجية — القلب الرئيسي للنظام
 model StrategyVersion {
-  id            String @id @default(cuid())
-  entityId      String
-  versionNumber Int
-  status        String @default("DRAFT") // DRAFT, ACTIVE, ARCHIVED, PENDING
-
-  // ✨ حقول جديدة — Phase 1
-  name        String? // اسم وصفي: "خطة 2024"، "سيناريو التحول الرقمي"
-  description String? // وصف مختصر للنسخة
-  isActive    Boolean   @default(false) // نسخة واحدة فقط نشطة لكل كيان
-  createdBy   String? // ID المستخدم الذي أنشأها
-  approvedBy  String? // ID المستخدم الذي اعتمدها
-  approvedAt  DateTime? // تاريخ الاعتماد
-
-  // 🔗 Linked List - تتبع عمليات Pivot
-  pivotedFromId String?
-  createdAt     DateTime  @default(now())
-  activatedAt   DateTime?
-  updatedAt     DateTime  @updatedAt
-
-  entity       Entity            @relation(fields: [entityId], references: [id], onDelete: Cascade)
-  prevVersion  StrategyVersion?  @relation("VersionLineage", fields: [pivotedFromId], references: [id])
-  nextVersions StrategyVersion[] @relation("VersionLineage")
-
-  // العلاقات الاستراتيجية
-  directions         StrategicDirection[] // ✨ جديد — الهرم الاستراتيجي
-  externalAnalyses   ExternalAnalysis[] // ✨ جديد — PESTEL + Porter
-  objectives         StrategicObjective[]
+  id                 String                @id @default(cuid())
+  entityId           String
+  versionNumber      Int
+  status             String                @default("DRAFT")
+  name               String?
+  description        String?
+  isActive           Boolean               @default(false)
+  createdBy          String?
+  approvedBy         String?
+  approvedAt         DateTime?
+  pivotedFromId      String?
+  createdAt          DateTime              @default(now())
+  activatedAt        DateTime?
+  updatedAt          DateTime              @updatedAt
+  companyAnalyses    CompanyAnalysis[]
+  externalAnalyses   ExternalAnalysis[]
+  financialDecisions FinancialDecision[]
   kpis               KPI[]
+  scenarios          Scenario[]
+  choices            StrategicChoice[]
+  directions         StrategicDirection[]
   initiatives        StrategicInitiative[]
+  objectives         StrategicObjective[]
   projects           StrategicProject[]
   reviews            StrategicReview[]
-  choices            StrategicChoice[]
   risks              StrategicRisk[]
-  scenarios          Scenario[] // ✨ سيناريوهات المحاكاة
-  companyAnalyses    CompanyAnalysis[] // تحليلات الأدوات
-  financialDecisions FinancialDecision[] // ✨ القرارات المالية
+  prevVersion        StrategyVersion?      @relation("VersionLineage", fields: [pivotedFromId], references: [id])
+  nextVersions       StrategyVersion[]     @relation("VersionLineage")
+  entity             Entity                @relation(fields: [entityId], references: [id], onDelete: Cascade)
 
   @@unique([entityId, versionNumber])
   @@index([entityId])
@@ -455,89 +358,65 @@ model StrategyVersion {
   @@map("strategy_versions")
 }
 
-// =========================================
-// 4. STRATEGIC DIRECTION (NEW ✨)
-// رؤية، رسالة، قيم، قضايا كبرى
-// =========================================
-
 /// الاتجاه الاستراتيجي (الهرم الاستراتيجي)
 model StrategicDirection {
-  id            String   @id @default(cuid())
+  id            String          @id @default(cuid())
   versionId     String
-  departmentKey String?  // ← تمت إضافته لربط التوجهات بإدارات محددة
-  type          String // VISION, MISSION, VALUES, ISSUES, LONG_TERM_GOALS
-  content       String // النص الكامل
-  order         Int      @default(0) // الترتيب (مهم للقيم المتعددة)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  version StrategyVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  type          String
+  content       String
+  order         Int             @default(0)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  departmentKey String?
+  version       StrategyVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
 
   @@index([versionId])
   @@index([type])
   @@map("strategic_directions")
 }
 
-// =========================================
-// 5. EXTERNAL ANALYSIS (NEW ✨)
-// PESTEL + Porter's Five Forces
-// =========================================
-
 /// التحليل الخارجي
 model ExternalAnalysis {
-  id          String   @id @default(cuid())
+  id          String          @id @default(cuid())
   versionId   String
-  type        String // POLITICAL, ECONOMIC, SOCIAL, TECHNOLOGICAL, ENVIRONMENTAL, LEGAL,
-  // PORTER_RIVALRY, PORTER_NEW_ENTRANTS, PORTER_SUBSTITUTES, PORTER_SUPPLIERS, PORTER_BUYERS
-  factor      String // العامل (مثال: "تغيير سياسة الضرائب")
-  impact      String   @default("MEDIUM") // HIGH, MEDIUM, LOW
-  probability Float? // 0-1 احتمالية التأثير
-  trend       String? // INCREASING, STABLE, DECREASING — اتجاه العامل
+  type        String
+  factor      String
+  impact      String          @default("MEDIUM")
+  probability Float?
+  trend       String?
   notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  version StrategyVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  version     StrategyVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
 
   @@index([versionId])
   @@index([type])
   @@map("external_analyses")
 }
 
-// =========================================
-// 6. STRATEGIC OBJECTIVES & KPIs (ENHANCED ✨)
-// BSC + OKR Support
-// =========================================
-
 /// الأهداف الاستراتيجية — محسّنة مع BSC + OKR
 model StrategicObjective {
-  id          String  @id @default(cuid())
-  versionId   String
-  title       String
-  description String?
-  status      String  @default("DRAFT")
-
-  // ✨ حقول جديدة — Phase 1
-  parentId      String? // 🔗 OKR Hierarchy — الهدف الأب
-  perspective   String? // BSC: FINANCIAL, CUSTOMER, INTERNAL_PROCESS, LEARNING_GROWTH
-  weight        Float?    @default(1.0) // أهمية نسبية
-  baselineValue Float? // القيمة الأساسية (خط الأساس)
-  targetValue   Float? // القيمة المستهدفة
-  deadline      DateTime? // الموعد النهائي
-  ownerId       String? // مسؤول الهدف (Member ID)
-
-  // ✨ حقول جديدة — Phase 3 (OKR)
-  framework String? @default("BSC") // BSC, OKR, BOTH
-  progress  Float?  @default(0) // 0-100 % تقدم (للـ OKR)
-  quarter   String? // Q1, Q2, Q3, Q4 — لفلترة OKR
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  version  StrategyVersion      @relation(fields: [versionId], references: [id], onDelete: Cascade)
-  parent   StrategicObjective?  @relation("ObjectiveHierarchy", fields: [parentId], references: [id])
-  children StrategicObjective[] @relation("ObjectiveHierarchy")
-  kpis     KPI[]
+  id            String               @id @default(cuid())
+  versionId     String
+  title         String
+  description   String?
+  status        String               @default("DRAFT")
+  parentId      String?
+  perspective   String?
+  weight        Float?               @default(1.0)
+  baselineValue Float?
+  targetValue   Float?
+  deadline      DateTime?
+  ownerId       String?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  framework     String?              @default("BSC")
+  progress      Float?               @default(0)
+  quarter       String?
+  kpis          KPI[]
+  parent        StrategicObjective?  @relation("ObjectiveHierarchy", fields: [parentId], references: [id])
+  children      StrategicObjective[] @relation("ObjectiveHierarchy")
+  version       StrategyVersion      @relation(fields: [versionId], references: [id], onDelete: Cascade)
 
   @@index([versionId])
   @@index([parentId])
@@ -546,37 +425,30 @@ model StrategicObjective {
 
 /// مؤشرات الأداء (KPI) — محسّنة
 model KPI {
-  id          String  @id @default(cuid())
-  versionId   String
-  objectiveId String?
-  name        String
-  nameAr      String?
-  description String?
-  target      Float
-  actual      Float?
-  unit        String  @default("%")
-  status      String  @default("ON_TRACK") // ON_TRACK, AT_RISK, OFF_TRACK, ACHIEVED
-
-  // ✨ حقول جديدة — Phase 1
-  formula           String? // صيغة الحساب (مثال: "Revenue / Employees")
-  dataSource        String? // مصدر البيانات (مثال: "ERP System", "Manual Entry")
-  frequency         String? @default("MONTHLY") // DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY
-  warningThreshold  Float? // نسبة مئوية: تنبيه عند < هذه القيمة (مثال: 0.8 = 80%)
-  criticalThreshold Float? // نسبة مئوية: خطر عند < هذه القيمة (مثال: 0.5 = 50%)
-
-  // ✨ حقول جديدة — Phase B (BSC + Leading/Lagging)
-  kpiType        String? // LEADING, LAGGING — تصنيف المؤشر
-  bscPerspective String? // FINANCIAL, CUSTOMER, INTERNAL_PROCESS, LEARNING_GROWTH — بُعد BSC
-  direction      String  @default("HIGHER_IS_BETTER") // HIGHER_IS_BETTER أو LOWER_IS_BETTER — اتجاه المؤشر
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  version   StrategyVersion     @relation(fields: [versionId], references: [id], onDelete: Cascade)
-  objective StrategicObjective? @relation(fields: [objectiveId], references: [id], onDelete: SetNull)
-
-  entries   KPIEntry[] // ✨ جديد — إدخال البيانات الدوري
-  diagnoses KpiDiagnosis[]
+  id                String              @id @default(cuid())
+  versionId         String
+  objectiveId       String?
+  name              String
+  nameAr            String?
+  description       String?
+  target            Float
+  actual            Float?
+  unit              String              @default("%")
+  status            String              @default("ON_TRACK")
+  formula           String?
+  dataSource        String?
+  frequency         String?             @default("MONTHLY")
+  warningThreshold  Float?
+  criticalThreshold Float?
+  kpiType           String?
+  bscPerspective    String?
+  direction         String              @default("HIGHER_IS_BETTER")
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  diagnoses         KpiDiagnosis[]
+  entries           KPIEntry[]
+  objective         StrategicObjective? @relation(fields: [objectiveId], references: [id])
+  version           StrategyVersion     @relation(fields: [versionId], references: [id], onDelete: Cascade)
 
   @@unique([versionId, name])
   @@index([versionId])
@@ -584,65 +456,49 @@ model KPI {
   @@map("kpis")
 }
 
-// =========================================
-// 7. KPI DATA ENTRY (NEW ✨)
-// إدخال القيم الفعلية دورياً
-// =========================================
-
 /// إدخالات الأداء — سجل تاريخي لقيم KPI
 model KPIEntry {
   id          String   @id @default(cuid())
   kpiId       String
-  value       Float // القيمة الفعلية
-  periodStart DateTime // بداية الفترة
-  periodEnd   DateTime // نهاية الفترة
-  enteredBy   String? // ID المستخدم الذي أدخل البيانات
-  status      String   @default("CONFIRMED") // DRAFT, CONFIRMED
+  value       Float
+  periodStart DateTime
+  periodEnd   DateTime
+  enteredBy   String?
+  status      String   @default("CONFIRMED")
   notes       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  kpi KPI @relation(fields: [kpiId], references: [id], onDelete: Cascade)
+  kpi         KPI      @relation(fields: [kpiId], references: [id], onDelete: Cascade)
 
   @@index([kpiId])
   @@index([periodStart])
   @@map("kpi_entries")
 }
 
-// =========================================
-// 8. STRATEGIC INITIATIVES (ENHANCED ✨)
-// =========================================
-
 /// المبادرات الاستراتيجية — محسّنة
 model StrategicInitiative {
-  id          String  @id @default(cuid())
+  id          String           @id @default(cuid())
   versionId   String
   title       String
   description String?
   owner       String?
-  status      String  @default("PLANNED") // PLANNED, IN_PROGRESS, COMPLETED, CANCELLED, ON_HOLD
-
-  // ✨ حقول جديدة — Phase 1
-  startDate DateTime? // تاريخ البداية
-  endDate   DateTime? // تاريخ النهاية
-  progress  Float?    @default(0) // 0-100 نسبة الإنجاز
-  budget    Float? // الميزانية المخصصة
-  kpiId     String? // ربط بمؤشر الأداء المستهدف
-  priority  String?   @default("MEDIUM") // HIGH, MEDIUM, LOW
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // ✨ حقول auto-initiative (من company-pattern)
-  category    String? // financial_rescue, organization, sales, automation
-  autoCreated Boolean @default(false) // أُنشئت تلقائياً من نمط الشركة
-  budgetSpent Float?  @default(0)
-
-  version    StrategyVersion    @relation(fields: [versionId], references: [id], onDelete: Cascade)
-  tasks      InitiativeTask[]
-  kpis       InitiativeKpi[]
-  milestones Milestone[]
+  status      String           @default("PLANNED")
+  startDate   DateTime?
+  endDate     DateTime?
+  progress    Float?           @default(0)
+  budget      Float?
+  kpiId       String?
+  priority    String?          @default("MEDIUM")
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  category    String?
+  autoCreated Boolean          @default(false)
+  budgetSpent Float?           @default(0)
+  kpis        InitiativeKpi[]
+  tasks       InitiativeTask[]
+  milestones  Milestone[]
   raciEntries RaciEntry[]
+  version     StrategyVersion  @relation(fields: [versionId], references: [id], onDelete: Cascade)
 
   @@unique([versionId, title])
   @@index([versionId])
@@ -650,105 +506,88 @@ model StrategicInitiative {
 }
 
 model StrategicProject {
-  id           String    @id @default(cuid())
-  versionId    String
-  name         String
-  description  String?
-  initiative   String?
-  objective    String?
-  status       String    @default("planning")
-  progress     Int       @default(0)
-  startDate    DateTime?
-  endDate      DateTime?
-  manager      String?
-  
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  version      StrategyVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  id          String          @id @default(cuid())
+  versionId   String
+  name        String
+  description String?
+  initiative  String?
+  objective   String?
+  status      String          @default("planning")
+  progress    Int             @default(0)
+  startDate   DateTime?
+  endDate     DateTime?
+  manager     String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  version     StrategyVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
 
   @@index([versionId])
   @@map("strategic_projects")
 }
 
 model InitiativeTask {
-  id           String    @id @default(cuid())
+  id           String              @id @default(cuid())
   initiativeId String
   title        String
-  status       String    @default("PENDING") // PENDING, ACTIVE, COMPLETED
+  status       String              @default("PENDING")
   dueDate      DateTime?
-  order        Int       @default(0)
-  createdAt    DateTime  @default(now())
-
-  initiative StrategicInitiative @relation(fields: [initiativeId], references: [id], onDelete: Cascade)
+  order        Int                 @default(0)
+  createdAt    DateTime            @default(now())
+  initiative   StrategicInitiative @relation(fields: [initiativeId], references: [id], onDelete: Cascade)
 
   @@index([initiativeId])
   @@map("initiative_tasks")
 }
 
 model InitiativeKpi {
-  id           String   @id @default(cuid())
+  id           String              @id @default(cuid())
   initiativeId String
   name         String
   target       Float
-  current      Float    @default(0)
+  current      Float               @default(0)
   unit         String?
-  createdAt    DateTime @default(now())
-
-  initiative StrategicInitiative @relation(fields: [initiativeId], references: [id], onDelete: Cascade)
+  createdAt    DateTime            @default(now())
+  initiative   StrategicInitiative @relation(fields: [initiativeId], references: [id], onDelete: Cascade)
 
   @@index([initiativeId])
   @@map("initiative_kpis")
 }
 
-// =========================================
-// 9. STRATEGIC REVIEWS (ENHANCED ✨)
-// =========================================
-
 /// المراجعات الاستراتيجية — محسّنة مع محرك القرارات
 model StrategicReview {
-  id         String   @id @default(cuid())
-  versionId  String
-  title      String
-  reviewDate DateTime
-  status     String   @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED
-  notes      String?
-
-  // ✨ حقول جديدة — Phase 1
-  type            String? @default("QUARTERLY_REVIEW") // QUARTERLY_REVIEW, ANNUAL_REVIEW, AD_HOC, AUDIT
-  decision        String? // CONTINUE, ADJUST, PIVOT — محرك القرارات
-  summary         String? // ملخص تنفيذي
-  findings        String? // النتائج والملاحظات
-  recommendations String? // التوصيات
-  overallScore    Float? // متوسط أداء النسخة (0-100)
-  conductedBy     String? // المراجع
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  version StrategyVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  id              String          @id @default(cuid())
+  versionId       String
+  title           String
+  reviewDate      DateTime
+  status          String          @default("PENDING")
+  notes           String?
+  type            String?         @default("QUARTERLY_REVIEW")
+  decision        String?
+  summary         String?
+  findings        String?
+  recommendations String?
+  overallScore    Float?
+  conductedBy     String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  version         StrategyVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
 
   @@index([versionId])
   @@map("strategic_reviews")
 }
 
-// =========================================
-// 10. ASSESSMENTS (Unchanged)
-// =========================================
-
 /// التقييمات الاستراتيجية
 model Assessment {
-  id          String   @id @default(cuid())
-  entityId    String
-  title       String
-  description String?
-  status      String   @default("DRAFT")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
+  id             String          @id @default(cuid())
+  entityId       String
+  title          String
+  description    String?
+  status         String          @default("DRAFT")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  analysisPoints AnalysisPoint[]
   entity         Entity          @relation(fields: [entityId], references: [id], onDelete: Cascade)
   dimensions     Dimension[]
-  analysisPoints AnalysisPoint[]
   towsStrategies TOWSStrategy[]
 
   @@index([entityId])
@@ -757,17 +596,16 @@ model Assessment {
 
 /// أبعاد التقييم
 model Dimension {
-  id           String   @id @default(cuid())
+  id           String      @id @default(cuid())
   assessmentId String
   name         String
   description  String?
-  weight       Float    @default(1.0) // ✨ أهمية البعد (0.5 - 5.0)
-  orderIndex   Int      @default(0) // ✨ ترتيب البعد
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  assessment Assessment  @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  criteria   Criterion[]
+  weight       Float       @default(1.0)
+  orderIndex   Int         @default(0)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  criteria     Criterion[]
+  assessment   Assessment  @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
 
   @@index([assessmentId])
   @@map("dimensions")
@@ -775,48 +613,38 @@ model Dimension {
 
 /// معايير التقييم
 model Criterion {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   dimensionId String
   name        String
   description String?
   score       Float?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  dimension Dimension @relation(fields: [dimensionId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  dimension   Dimension @relation(fields: [dimensionId], references: [id], onDelete: Cascade)
 
   @@index([dimensionId])
   @@map("criteria")
 }
 
-// =========================================
-// 11. STRATEGIC CHOICES & RISKS (ENHANCED ✨)
-// =========================================
-
 /// الخيارات الاستراتيجية — محسّنة مع Ansoff + Porter
 model StrategicChoice {
-  id          String  @id @default(cuid())
-  versionId   String
-  title       String
-  description String?
-  status      String  @default("ACTIVE") // ACTIVE, COMPLETED, DROPPED
-  priority    String  @default("MEDIUM") // HIGH, MEDIUM, LOW
-
-  // ✨ حقول جديدة — Phase 1
-  choiceType           String? // MARKET_PENETRATION, MARKET_DEVELOPMENT, PRODUCT_DEVELOPMENT,
-  // DIVERSIFICATION, COST_LEADERSHIP, DIFFERENTIATION, FOCUS, BEST_COST
-  marketAttractiveness Int? // 1-5 جاذبية السوق
-  competitiveAdvantage Int? // 1-5 الميزة التنافسية
-  feasibility          Int? // 1-5 قابلية التنفيذ
-  riskLevel            String? @default("MEDIUM") // HIGH, MEDIUM, LOW
-  isSelected           Boolean @default(false) // هل تم اختياره كخيار معتمد؟
-  requiredCapabilities String? // القدرات المطلوبة
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  version StrategyVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
-  risks   StrategicRisk[]
+  id                   String          @id @default(cuid())
+  versionId            String
+  title                String
+  description          String?
+  status               String          @default("ACTIVE")
+  priority             String          @default("MEDIUM")
+  choiceType           String?
+  marketAttractiveness Int?
+  competitiveAdvantage Int?
+  feasibility          Int?
+  riskLevel            String?         @default("MEDIUM")
+  isSelected           Boolean         @default(false)
+  requiredCapabilities String?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  version              StrategyVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  risks                StrategicRisk[]
 
   @@index([versionId])
   @@map("strategic_choices")
@@ -824,77 +652,55 @@ model StrategicChoice {
 
 /// المخاطر الاستراتيجية — محسّنة مع تقييم كمّي
 model StrategicRisk {
-  id          String  @id @default(cuid())
-  choiceId    String?
-  versionId   String
-  title       String
-  description String?
-  probability String  @default("MEDIUM") // الاحتمالية النوعية (للتوافق مع البيانات القديمة)
-  impact      String  @default("MEDIUM") // الأثر النوعي
-  mitigation  String?
-  owner       String?
-  status      String  @default("OPEN") // OPEN, MITIGATED, CLOSED, IDENTIFIED, ASSESSING, MONITORING
-
-  // ✨ حقول جديدة — Phase 1
-  category         String? // STRATEGIC, OPERATIONAL, FINANCIAL, COMPLIANCE, REPUTATIONAL
-  probabilityScore Int? // 1-5 الاحتمالية الكمّية
-  impactScore      Int? // 1-5 الأثر الكمّي
-  riskScore        Int? // probability * impact (محسوب تلقائياً)
-  contingency      String? // خطة الطوارئ
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  choice       StrategicChoice?  @relation(fields: [choiceId], references: [id], onDelete: SetNull)
-  version      StrategyVersion   @relation(fields: [versionId], references: [id], onDelete: Cascade)
-  stakeholders StakeholderRisk[] // ✨ جديد — ربط بأصحاب المصلحة
+  id               String            @id @default(cuid())
+  choiceId         String?
+  versionId        String
+  title            String
+  description      String?
+  probability      String            @default("MEDIUM")
+  impact           String            @default("MEDIUM")
+  mitigation       String?
+  owner            String?
+  status           String            @default("OPEN")
+  category         String?
+  probabilityScore Int?
+  impactScore      Int?
+  riskScore        Int?
+  contingency      String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  stakeholders     StakeholderRisk[]
+  version          StrategyVersion   @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  choice           StrategicChoice?  @relation(fields: [choiceId], references: [id])
 
   @@index([choiceId])
   @@index([versionId])
   @@map("strategic_risks")
 }
 
-// =========================================
-// 11b. STAKEHOLDERS & STAKEHOLDER-RISK LINK (NEW ✨)
-// أصحاب المصلحة وربطهم بالمخاطر
-// =========================================
-
 /// أصحاب المصلحة — تحليل القوة والاهتمام
 model Stakeholder {
-  id       String @id @default(cuid())
-  entityId String
-
-  // البيانات الأساسية
-  name String // الاسم (مجلس الإدارة، الموظفون...)
-  role String? // الدور/العلاقة
-  type String  @default("EXTERNAL") // INTERNAL, EXTERNAL, REGULATOR, PARTNER, COMPETITOR, COMMUNITY
-
-  // مصفوفة القوة/الاهتمام (1-5)
-  influence Int    @default(3) // 1-5 مستوى القوة/التأثير
-  interest  Int    @default(3) // 1-5 مستوى الاهتمام
-  strategy  String @default("inform") // manage, satisfy, inform, monitor
-
-  // المشاعر والمشاركة
-  position   String @default("NEUTRAL") // SUPPORTIVE, NEUTRAL, RESISTANT
-  engagement Int    @default(50) // 0-100 نسبة المشاركة
-
-  // التواصل
-  needs         String? // احتياجات صاحب المصلحة
-  expectations  String? // توقعات صاحب المصلحة
-  contactInfo   String? // بيانات التواصل
+  id            String            @id @default(cuid())
+  entityId      String
+  name          String
+  role          String?
+  type          String            @default("EXTERNAL")
+  influence     Int               @default(3)
+  interest      Int               @default(3)
+  strategy      String            @default("inform")
+  position      String            @default("NEUTRAL")
+  engagement    Int               @default(50)
+  needs         String?
+  expectations  String?
+  contactInfo   String?
   lastContactAt DateTime?
-  meetingsCount Int       @default(0)
-
-  // المظهر
-  color String? // لون البطاقة
-
-  // Metadata
-  createdBy String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  entity Entity            @relation(fields: [entityId], references: [id], onDelete: Cascade)
-  risks  StakeholderRisk[] // المخاطر المرتبطة
+  meetingsCount Int               @default(0)
+  color         String?
+  createdBy     String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  risks         StakeholderRisk[]
+  entity        Entity            @relation(fields: [entityId], references: [id], onDelete: Cascade)
 
   @@index([entityId])
   @@index([type])
@@ -904,16 +710,15 @@ model Stakeholder {
 
 /// جدول الربط: أصحاب المصلحة × المخاطر (Many-to-Many)
 model StakeholderRisk {
-  id            String   @id @default(cuid())
+  id            String        @id @default(cuid())
   stakeholderId String
   riskId        String
-  impactLevel   String   @default("MEDIUM") // HIGH, MEDIUM, LOW
-  impactType    String? // AFFECTED_BY, CAUSES, MITIGATES
+  impactLevel   String        @default("MEDIUM")
+  impactType    String?
   notes         String?
-  createdAt     DateTime @default(now())
-
-  stakeholder Stakeholder   @relation(fields: [stakeholderId], references: [id], onDelete: Cascade)
-  risk        StrategicRisk @relation(fields: [riskId], references: [id], onDelete: Cascade)
+  createdAt     DateTime      @default(now())
+  risk          StrategicRisk @relation(fields: [riskId], references: [id], onDelete: Cascade)
+  stakeholder   Stakeholder   @relation(fields: [stakeholderId], references: [id], onDelete: Cascade)
 
   @@unique([stakeholderId, riskId])
   @@index([stakeholderId])
@@ -921,22 +726,17 @@ model StakeholderRisk {
   @@map("stakeholder_risks")
 }
 
-// =========================================
-// 12. CORRECTIONS & DIAGNOSES
-// =========================================
-
 /// تشخيص سبب ضعف مؤشر الأداء
 model KpiDiagnosis {
-  id        String   @id @default(cuid())
-  kpiId     String
-  diagnosis String
-  severity  String   @default("MEDIUM") // HIGH, MEDIUM, LOW
-  rootCause String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  kpi         KPI                @relation(fields: [kpiId], references: [id], onDelete: Cascade)
+  id          String             @id @default(cuid())
+  kpiId       String
+  diagnosis   String
+  severity    String             @default("MEDIUM")
+  rootCause   String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
   corrections CorrectionAction[]
+  kpi         KPI                @relation(fields: [kpiId], references: [id], onDelete: Cascade)
 
   @@index([kpiId])
   @@map("kpi_diagnoses")
@@ -944,111 +744,78 @@ model KpiDiagnosis {
 
 /// الإجراء التصحيحي المرتبط بتشخيص
 model CorrectionAction {
-  id              String    @id @default(cuid())
+  id              String         @id @default(cuid())
   diagnosisId     String
   title           String
   description     String?
   assignee        String?
-  status          String    @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED
+  status          String         @default("PENDING")
   dueDate         DateTime?
   completedAt     DateTime?
   analysisPointId String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  diagnosis     KpiDiagnosis   @relation(fields: [diagnosisId], references: [id], onDelete: Cascade)
-  analysisPoint AnalysisPoint? @relation(fields: [analysisPointId], references: [id], onDelete: SetNull)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  analysisPoint   AnalysisPoint? @relation(fields: [analysisPointId], references: [id])
+  diagnosis       KpiDiagnosis   @relation(fields: [diagnosisId], references: [id], onDelete: Cascade)
 
   @@index([diagnosisId])
   @@index([analysisPointId])
   @@map("correction_actions")
 }
 
-// =========================================
-// 13. STRATEGY ANALYSIS (SWOT) (ENHANCED ✨)
-// ترميز تلقائي + جاهز لربط TOWS
-// =========================================
-
 /// نقاط التحليل الاستراتيجي (SWOT) — مُحسّنة مع ترميز تلقائي
 model AnalysisPoint {
-  id           String   @id @default(cuid())
+  id           String             @id @default(cuid())
   assessmentId String
-  type         String // STRENGTH, WEAKNESS, OPPORTUNITY, THREAT
-  code         String? // ✨ ترميز تلقائي: S1, S2, W1, W2, O1, T1...
+  type         String
   title        String
   description  String?
-  impact       String   @default("MEDIUM")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  assessment    Assessment         @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  corrections   CorrectionAction[]
-  towsInternal  TOWSStrategy[]     @relation("InternalPoint")
-  towsExternal  TOWSStrategy[]     @relation("ExternalPoint")
+  impact       String             @default("MEDIUM")
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  code         String?
+  assessment   Assessment         @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  corrections  CorrectionAction[]
+  towsExternal TOWSStrategy[]     @relation("ExternalPoint")
+  towsInternal TOWSStrategy[]     @relation("InternalPoint")
 
   @@index([assessmentId])
   @@index([type])
   @@map("analysis_points")
 }
 
-// =========================================
-// 13b. CAUSAL LINKS — DISABLED
-// =========================================
-// CausalLink model removed for simplification
-
-// =========================================
-// 13c. TOWS STRATEGY MATRIX
-// =========================================
-
 model TOWSStrategy {
-  id              String   @id @default(cuid())
+  id              String        @id @default(cuid())
   assessmentId    String
-  quadrant        String   // SO, ST, WO, WT
+  quadrant        String
   internalPointId String
   externalPointId String
   strategy        String
-  priority        String   @default("MEDIUM") // HIGH, MEDIUM, LOW
-  status          String   @default("PROPOSED") // PROPOSED, APPROVED, REJECTED
+  priority        String        @default("MEDIUM")
+  status          String        @default("PROPOSED")
   notes           String?
   initiativeId    String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  assessment    Assessment   @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  internalPoint AnalysisPoint @relation("InternalPoint", fields: [internalPointId], references: [id], onDelete: Cascade)
-  externalPoint AnalysisPoint @relation("ExternalPoint", fields: [externalPointId], references: [id], onDelete: Cascade)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  externalPoint   AnalysisPoint @relation("ExternalPoint", fields: [externalPointId], references: [id], onDelete: Cascade)
+  internalPoint   AnalysisPoint @relation("InternalPoint", fields: [internalPointId], references: [id], onDelete: Cascade)
+  assessment      Assessment    @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
 
   @@index([assessmentId])
   @@index([quadrant])
   @@map("tows_strategies")
 }
 
-// =========================================
-// 14. FINANCIAL DECISIONS — DISABLED
-// =========================================
-// FinancialDecision model removed for simplification
-
-// =========================================
-// 15. INTEGRATIONS — DISABLED
-// =========================================
-// Integration model removed for simplification
-
-// =========================================
-// 16. STRATEGIC ALERTS (NEW ✨)
-// نظام التنبيهات الآلية
-// =========================================
-
 /// التنبيهات الاستراتيجية
 model StrategicAlert {
   id            String   @id @default(cuid())
   entityId      String
-  type          String // KPI_WARNING, KPI_CRITICAL, KPI_ACHIEVED, OBJECTIVE_ACHIEVED,
-  // REVIEW_OVERDUE, INITIATIVE_DELAYED, VERSION_PENDING, RISK_HIGH, HEALTH_LOW
-  severity      String   @default("WARNING") // SUCCESS, INFO, WARNING, CRITICAL
+  type          String
+  severity      String   @default("WARNING")
   title         String
   message       String?
-  referenceId   String? // ID العنصر المرتبط (KPI ID, Review ID, etc.)
-  referenceType String? // KPI, REVIEW, INITIATIVE, RISK, VERSION
+  referenceId   String?
+  referenceType String?
   isRead        Boolean  @default(false)
   isDismissed   Boolean  @default(false)
   createdAt     DateTime @default(now())
@@ -1058,10 +825,6 @@ model StrategicAlert {
   @@index([isRead])
   @@map("strategic_alerts")
 }
-
-// =========================================
-// 17. AUDIT & GOVERNANCE (Unchanged)
-// =========================================
 
 /// سجل الرقابة والحوكمة
 model AuditLog {
@@ -1073,9 +836,8 @@ model AuditLog {
   oldData   String?
   newData   String?
   createdAt DateTime @default(now())
-
-  entity Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entity    Entity   @relation(fields: [entityId], references: [id], onDelete: Cascade)
 
   @@index([entityId])
   @@index([userId])
@@ -1083,28 +845,22 @@ model AuditLog {
   @@map("audit_logs")
 }
 
-// =========================================
-// 18. TOOL DEFINITIONS (NEW ✨)
-// تعريف أدوات التحليل الاستراتيجي
-// =========================================
-
 /// تعريف الأدوات — كتالوج الـ 13 أداة
 model ToolDefinition {
-  id            String   @id @default(cuid())
-  code          String   @unique // SWOT, PESTEL, PORTER, VRIO, etc.
-  nameAr        String // الاسم بالعربي
-  nameEn        String // الاسم بالإنجليزي
-  descriptionAr String? // الوصف بالعربي
-  descriptionEn String? // الوصف بالإنجليزي
-  category      String // DIAGNOSIS, CHOICE, EXECUTION, ADAPTATION
-  isPrimary     Boolean  @default(false) // أساسية (8) أو متقدمة (5)
-  order         Int      @default(0) // ترتيب العرض
-  icon          String? // أيقونة (Bootstrap Icons class)
-  color         String? // لون البطاقة (hex)
-  configSchema  String? // JSON Schema للـ validation
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-
+  id              String            @id @default(cuid())
+  code            String            @unique
+  nameAr          String
+  nameEn          String
+  descriptionAr   String?
+  descriptionEn   String?
+  category        String
+  isPrimary       Boolean           @default(false)
+  order           Int               @default(0)
+  icon            String?
+  color           String?
+  configSchema    String?
+  isActive        Boolean           @default(true)
+  createdAt       DateTime          @default(now())
   companyAnalyses CompanyAnalysis[]
 
   @@index([category])
@@ -1112,19 +868,14 @@ model ToolDefinition {
   @@map("tool_definitions")
 }
 
-// =========================================
-// 19. COMPANY ANALYSIS
-// =========================================
 model CompanyAnalysis {
   id          String          @id @default(cuid())
   versionId   String
-  version     StrategyVersion @relation(fields: [versionId], references: [id])
   toolId      String
-  tool        ToolDefinition  @relation(fields: [toolId], references: [id])
   toolCode    String
-  data        String? // JSON data for the analysis
+  data        String?
   summary     String?
-  status      String          @default("DRAFT") // DRAFT, IN_PROGRESS, COMPLETED
+  status      String          @default("DRAFT")
   progress    Int             @default(0)
   score       Float?
   createdBy   String?
@@ -1132,6 +883,8 @@ model CompanyAnalysis {
   completedAt DateTime?
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
+  tool        ToolDefinition  @relation(fields: [toolId], references: [id])
+  version     StrategyVersion @relation(fields: [versionId], references: [id])
 
   @@unique([versionId, toolCode])
   @@index([versionId])
@@ -1140,46 +893,29 @@ model CompanyAnalysis {
   @@map("company_analyses")
 }
 
-// =========================================
-// 20. PATH JOURNEY — DISABLED
-// =========================================
-// PathSession, PathAnswer, PathResult models removed for simplification
-
-// =========================================
-// 21. SCENARIO PLANNING (NEW ✨)
-// محاكاة السيناريوهات — ماذا لو؟
-// =========================================
-
 /// سيناريو استراتيجي — متفائل / متشائم / أساسي
 model Scenario {
-  id          String  @id @default(cuid())
-  versionId   String
-  name        String // "السيناريو المتفائل"
-  nameEn      String?
-  type        String  @default("CUSTOM") // OPTIMISTIC, PESSIMISTIC, BASELINE, CUSTOM
-  description String?
-  probability Float?  @default(50) // احتمالية حدوث السيناريو (0-100)
-  impact      String? @default("MEDIUM") // HIGH, MEDIUM, LOW
-  status      String  @default("DRAFT") // DRAFT, ACTIVE, ARCHIVED
-
-  // ✨ التأثير المالي الإجمالي
-  totalBudgetChange  Float? @default(0) // التغيير في الميزانية الكلية (%)
-  totalRevenueChange Float? @default(0) // التغيير في الإيرادات (%)
-  overallImpactScore Float? @default(0) // درجة التأثير الكلي (0-100)
-
-  // ✨ توزيع الميزانية حسب الآفاق
-  h1BudgetPct Float? @default(70) // % ميزانية الأفق 1
-  h2BudgetPct Float? @default(20) // % ميزانية الأفق 2
-  h3BudgetPct Float? @default(10) // % ميزانية الأفق 3
-
-  notes String?
-
-  createdBy String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  version   StrategyVersion    @relation(fields: [versionId], references: [id], onDelete: Cascade)
-  variables ScenarioVariable[]
+  id                 String             @id @default(cuid())
+  versionId          String
+  name               String
+  nameEn             String?
+  type               String             @default("CUSTOM")
+  description        String?
+  probability        Float?             @default(50)
+  impact             String?            @default("MEDIUM")
+  status             String             @default("DRAFT")
+  totalBudgetChange  Float?             @default(0)
+  totalRevenueChange Float?             @default(0)
+  overallImpactScore Float?             @default(0)
+  h1BudgetPct        Float?             @default(70)
+  h2BudgetPct        Float?             @default(20)
+  h3BudgetPct        Float?             @default(10)
+  notes              String?
+  createdBy          String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  variables          ScenarioVariable[]
+  version            StrategyVersion    @relation(fields: [versionId], references: [id], onDelete: Cascade)
 
   @@index([versionId])
   @@index([type])
@@ -1189,64 +925,42 @@ model Scenario {
 
 /// متغيرات السيناريو — تعديل KPIs والمبادرات
 model ScenarioVariable {
-  id         String @id @default(cuid())
-  scenarioId String
-
-  // ✨ ما الذي يتغير؟
-  variableType  String // KPI, INITIATIVE, BUDGET, REVENUE, COST, CUSTOM
-  referenceId   String? // ID المؤشر أو المبادرة المرتبطة
-  referenceName String? // اسم العنصر (للعرض)
-
-  // ✨ مقدار التغيير
-  baselineValue Float? // القيمة الأصلية
-  adjustedValue Float? // القيمة المعدّلة
-  changePercent Float? @default(0) // نسبة التغيير (%)
-  changeType    String @default("PERCENT") // PERCENT, ABSOLUTE
-
-  // ✨ التأثير
-  impactArea  String? // FINANCIAL, OPERATIONAL, CUSTOMER, GROWTH
-  impactScore Float?  @default(0) // تأثير هذا المتغير (0-100)
-  notes       String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  scenario Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  id            String   @id @default(cuid())
+  scenarioId    String
+  variableType  String
+  referenceId   String?
+  referenceName String?
+  baselineValue Float?
+  adjustedValue Float?
+  changePercent Float?   @default(0)
+  changeType    String   @default("PERCENT")
+  impactArea    String?
+  impactScore   Float?   @default(0)
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  scenario      Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
 
   @@index([scenarioId])
   @@index([variableType])
   @@map("scenario_variables")
 }
 
-// =========================================
-// PHASE 2: COLLABORATION & COMMUNICATION
-// =========================================
-
 /// تعليق — يمكن ربطه بأي عنصر (هدف، مبادرة، KPI...)
 model Comment {
-  id      String @id @default(cuid())
-  content String
-
-  // الربط البوليمورفي — نوع + ID العنصر
-  targetType String // OBJECTIVE, INITIATIVE, PROJECT, TASK, KPI, REVIEW, ASSESSMENT
-  targetId   String // ID العنصر المستهدف
-  targetName String? // اسم العنصر (للعرض)
-
-  // المستخدم
+  id         String   @id @default(cuid())
+  content    String
+  targetType String
+  targetId   String
+  targetName String?
   userId     String
-  userName   String // اسم المعلّق (للعرض السريع)
+  userName   String
   userAvatar String?
-
-  // @mention
-  mentions String? // قائمة IDs المذكورين مفصولة بفواصل
-
-  // ردود
-  parentId String? // تعليق أب (للردود)
-
-  entityId String? // الكيان المرتبط
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  mentions   String?
+  parentId   String?
+  entityId   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([targetType, targetId])
   @@index([userId])
@@ -1257,27 +971,17 @@ model Comment {
 
 /// سجل النشاطات — يتتبع كل الأحداث
 model Activity {
-  id String @id @default(cuid())
-
-  // نوع النشاط
-  action String // CREATED, UPDATED, DELETED, COMPLETED, COMMENTED, APPROVED, REJECTED
-
-  // العنصر المتأثر
-  targetType String // OBJECTIVE, INITIATIVE, PROJECT, TASK, KPI, REVIEW, ASSESSMENT, COMMENT
+  id         String   @id @default(cuid())
+  action     String
+  targetType String
   targetId   String
-  targetName String? // اسم العنصر (للعرض)
-
-  // تفاصيل إضافية
-  details String? // JSON string — تفاصيل التغيير
-
-  // المستخدم
+  targetName String?
+  details    String?
   userId     String
   userName   String
   userAvatar String?
-
-  entityId String? // الكيان المرتبط
-
-  createdAt DateTime @default(now())
+  entityId   String?
+  createdAt  DateTime @default(now())
 
   @@index([entityId])
   @@index([userId])
@@ -1286,37 +990,24 @@ model Activity {
   @@map("activities")
 }
 
-// =========================================
-// 22. STATISTICAL DATA (بيانات إحصائية)
-// =========================================
-
 /// مجموعة بيانات إحصائية — مثل "بيانات السوق الصحي 2025"
 model StatisticalDataset {
-  id          String  @id @default(cuid())
-  name        String // اسم المجموعة
-  nameAr      String? // اسم عربي
-  description String? // وصف المجموعة
-
-  // التصنيف
-  category  String // MARKET, DEMOGRAPHIC, FINANCIAL, OPERATIONAL, INDUSTRY, COMPETITIVE, REGULATORY, CUSTOM
-  source    String? // المصدر (هيئة الإحصاء، وزارة الصحة...)
-  sourceUrl String? // رابط المصدر
-  year      Int? // السنة المرجعية
-
-  // ملف الرفع الأصلي
-  fileName String?
-  fileType String? // xlsx, csv
-
-  // الربط
-  entityId   String?
-  uploadedBy String? // user ID
-
-  status String @default("ACTIVE") // ACTIVE, ARCHIVED
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  records StatisticalRecord[]
+  id          String              @id @default(cuid())
+  name        String
+  nameAr      String?
+  description String?
+  category    String
+  source      String?
+  sourceUrl   String?
+  year        Int?
+  fileName    String?
+  fileType    String?
+  entityId    String?
+  uploadedBy  String?
+  status      String              @default("ACTIVE")
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  records     StatisticalRecord[]
 
   @@index([entityId])
   @@index([category])
@@ -1324,50 +1015,37 @@ model StatisticalDataset {
   @@map("statistical_datasets")
 }
 
-// =========================================
-// 23. COMPANY PATTERN (نمط الشركة)
-// =========================================
-
 /// نمط الشركة المبني على الألم والطموح
 model CompanyPattern {
-  id        String  @id @default(cuid())
-  companyId String  @unique
-  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-
-  pain     String // نوع الألم (growth-stopped, team-chaos, etc.)
-  ambition String // الطموح (rapid-growth, stability, etc.)
-  budget   Float  @default(20000)
-  pattern  String // النمط المحسوب (ناشئة متعثرة, نامية فوضوية, etc.)
-
+  id        String   @id @default(cuid())
+  companyId String   @unique
+  pain      String
+  ambition  String
+  budget    Float    @default(20000)
+  pattern   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@map("company_patterns")
 }
 
 /// سجل بيانات إحصائية فردي — صف واحد
 model StatisticalRecord {
-  id        String             @id @default(cuid())
-  datasetId String
-  dataset   StatisticalDataset @relation(fields: [datasetId], references: [id], onDelete: Cascade)
-
-  // البيانات
-  indicator   String // اسم المؤشر/البند
-  indicatorAr String? // الاسم العربي
-  value       Float? // القيمة الرقمية
-  textValue   String? // قيمة نصية (للبيانات غير الرقمية)
-  unit        String? // الوحدة
-
-  // سياق إضافي
-  period      String? // الفترة (Q1 2025, يناير 2025)
-  region      String? // المنطقة الجغرافية
-  subCategory String? // تصنيف فرعي
-  notes       String? // ملاحظات
-
-  // ترتيب
-  sortOrder Int @default(0)
-
-  createdAt DateTime @default(now())
+  id          String             @id @default(cuid())
+  datasetId   String
+  indicator   String
+  indicatorAr String?
+  value       Float?
+  textValue   String?
+  unit        String?
+  period      String?
+  region      String?
+  subCategory String?
+  notes       String?
+  sortOrder   Int                @default(0)
+  createdAt   DateTime           @default(now())
+  dataset     StatisticalDataset @relation(fields: [datasetId], references: [id], onDelete: Cascade)
 
   @@index([datasetId])
   @@index([indicator])
@@ -1376,27 +1054,26 @@ model StatisticalRecord {
 
 /// FinancialDecision model - القرارات المالية
 model FinancialDecision {
-  id          String    @id @default(cuid())
+  id          String           @id @default(cuid())
   entityId    String?
   versionId   String?
   title       String
-  type        String    @default("INVESTMENT") // INVESTMENT, COST_REDUCTION, BUDGET_ALLOCATION, REVENUE_TARGET
+  type        String           @default("INVESTMENT")
   amount      Float?
-  currency    String    @default("SAR")
-  status      String    @default("PENDING") // PENDING, APPROVED, IN_PROGRESS, COMPLETED, REJECTED
-  priority    String    @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  currency    String           @default("SAR")
+  status      String           @default("PENDING")
+  priority    String           @default("MEDIUM")
   description String?
-  impact      String? // وصف التأثير المتوقع
+  impact      String?
   approvedBy  String?
   approvedAt  DateTime?
   dueDate     DateTime?
   notes       String?
   createdBy   String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  entity  Entity?          @relation(fields: [entityId], references: [id], onDelete: SetNull)
-  version StrategyVersion? @relation(fields: [versionId], references: [id], onDelete: SetNull)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  version     StrategyVersion? @relation(fields: [versionId], references: [id])
+  entity      Entity?          @relation(fields: [entityId], references: [id])
 
   @@index([entityId])
   @@index([versionId])
@@ -1409,12 +1086,12 @@ model Integration {
   id          String    @id @default(cuid())
   entityId    String?
   name        String
-  type        String    @default("WEBHOOK") // WEBHOOK, API, BITRIX24, ZAPIER, CUSTOM
-  provider    String? // اسم المزود
-  webhookUrl  String? // رابط الويب هوك
-  apiKey      String? // مفتاح API
-  config      String? // إعدادات التكامل (JSON string)
-  status      String    @default("INACTIVE") // ACTIVE, INACTIVE, ERROR
+  type        String    @default("WEBHOOK")
+  provider    String?
+  webhookUrl  String?
+  apiKey      String?
+  config      String?
+  status      String    @default("INACTIVE")
   isActive    Boolean   @default(false)
   lastSyncAt  DateTime?
   syncCount   Int       @default(0)
@@ -1423,30 +1100,23 @@ model Integration {
   createdBy   String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-
-  entity Entity? @relation(fields: [entityId], references: [id], onDelete: SetNull)
+  entity      Entity?   @relation(fields: [entityId], references: [id])
 
   @@index([entityId])
   @@index([type])
   @@map("integrations")
 }
 
-// =========================================
-// CFO BOARD PITCH — الفحص المالي + الخطة الآلية
-// =========================================
-
 /// المعايير المرجعية لكل قطاع
 model FinancialBenchmark {
   id               String   @id @default(cuid())
   sectorId         String   @unique
   sectorName       String
-
   collectionDays   Int      @default(45)
   profitMargin     Float    @default(0.15)
   cashRunwayMonths Int      @default(3)
   debtToEquity     Float    @default(0.5)
   currentRatio     Float    @default(1.5)
-
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -1455,28 +1125,22 @@ model FinancialBenchmark {
 
 /// إدخالات الفحص المالي — 3 أرقام + 5 نوعية
 model FinancialAudit {
-  id               String   @id @default(cuid())
+  id               String             @id @default(cuid())
   departmentId     String
   userId           String
-
-  // الأرقام الثلاثة
   netMargin        Float
   collectionDays   Int
   cashRunwayMonths Float
-
-  // الاستبيان النوعي
-  automationLevel  String   // high / medium / low
-  dataSpeed        String   // instant / days / weeks
-  strategicRole    String   // full / limited / recorder
-  teamSkill        String   // advanced / basic
-  executionBarrier String   // authority / culture / resources
-
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  department       Department         @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  automationLevel  String
+  dataSpeed        String
+  strategicRole    String
+  teamSkill        String
+  executionBarrier String
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
   strategicPlan    AutoStrategicPlan?
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department       Department         @relation(fields: [departmentId], references: [id], onDelete: Cascade)
 
   @@index([departmentId])
   @@index([userId])
@@ -1485,96 +1149,70 @@ model FinancialAudit {
 
 /// الخطة الاستراتيجية المولّدة آلياً من محرك الاستنتاج
 model AutoStrategicPlan {
-  id                    String    @id @default(cuid())
+  id                    String         @id @default(cuid())
   departmentId          String
-  auditId               String    @unique
-
-  // SWOT (JSON strings — متوافق مع SQLite)
-  strengths             String    // JSON array
-  weaknesses            String    // JSON array
-  opportunities         String    // JSON array
-  threats               String    // JSON array
-
-  // الأهداف المقترحة
-  suggestedGoals        String    // JSON array of objects
-
-  // خطاب مجلس الإدارة
+  auditId               String         @unique
+  strengths             String
+  weaknesses            String
+  opportunities         String
+  threats               String
+  suggestedGoals        String
   boardPitchText        String
-
-  // الأرقام المحسوبة فعلياً
   calculatedRisk        String
   calculatedSaving      Float
   calculatedImprovement Float
-
-  maturityLevel         String    // Operational / Tactical / Strategic
-  score                 Int       // 0-100
-
-  isApproved            Boolean   @default(false)
+  maturityLevel         String
+  score                 Int
+  isApproved            Boolean        @default(false)
   approvedAt            DateTime?
-
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
   audit                 FinancialAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
-
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
 
   @@index([departmentId])
   @@map("auto_strategic_plans")
 }
 
-// =========================================
-// LEADS — صدمة الواقع (Ambition Gap)
-// =========================================
 model Lead {
-  id            String   @id @default(cuid())
-  email         String   @unique
-  sector        String               // القطاع (retail, fnb, tech, services)
-  pains         String   @default("") // JSON array of pain types
-  currentSales  Float?               // المبيعات الحالية (اختياري)
-  targetSales   Float?               // المبيعات المستهدفة (اختياري)
-  gapPercent    Int?                 // نسبة الفجوة (اختياري)
-  details       String?              // JSON object with pain-specific details
-  pdplConsent   Boolean  @default(false)  // موافقة PDPL
-  source        String   @default("ambition_gap")  // مصدر الـ lead
-  status        String   @default("new")  // new, contacted, converted, archived
-  notes         String?              // ملاحظات إدارية
-
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(cuid())
+  email        String   @unique
+  sector       String
+  pains        String   @default("")
+  currentSales Float?
+  targetSales  Float?
+  gapPercent   Int?
+  details      String?
+  pdplConsent  Boolean  @default(false)
+  source       String   @default("ambition_gap")
+  status       String   @default("new")
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([sector])
   @@index([status])
   @@map("leads")
 }
 
-// =========================================
-// PHASE: FINANCIAL TOOLS (الأدوات المالية)
-// DuPont, Break-even, ABC Costing
-// =========================================
-
 /// تحليل DuPont — تفكيك العائد على حقوق الملكية
 model DupontAnalysis {
-  id            String @id @default(cuid())
-  entityId      String
-  versionId     String?
-  fiscalYear    Int
-  fiscalQuarter Int?   // 1-4 (اختياري)
-
-  // المدخلات الأساسية
-  revenue       Float  // الإيرادات
-  netIncome     Float  // صافي الربح
-  totalAssets   Float  // إجمالي الأصول
-  totalEquity   Float  // إجمالي حقوق الملكية
-
-  // النتائج المحسوبة (يُحسب في Backend)
-  profitMargin     Float? // هامش الربح = netIncome / revenue
-  assetTurnover    Float? // دوران الأصول = revenue / totalAssets
-  equityMultiplier Float? // مضاعف حقوق الملكية = totalAssets / totalEquity
-  roe              Float? // العائد على حقوق الملكية = profitMargin × assetTurnover × equityMultiplier
-
-  notes     String?
-  createdBy String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String   @id @default(cuid())
+  entityId         String
+  versionId        String?
+  fiscalYear       Int
+  fiscalQuarter    Int?
+  revenue          Float
+  netIncome        Float
+  totalAssets      Float
+  totalEquity      Float
+  profitMargin     Float?
+  assetTurnover    Float?
+  equityMultiplier Float?
+  roe              Float?
+  notes            String?
+  createdBy        String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   @@unique([entityId, fiscalYear, fiscalQuarter])
   @@index([entityId])
@@ -1584,27 +1222,22 @@ model DupontAnalysis {
 
 /// تحليل نقطة التعادل — Break-even Analysis
 model BreakevenAnalysis {
-  id            String @id @default(cuid())
-  entityId      String
-  versionId     String?
-  productName   String // اسم المنتج أو الخدمة
-
-  // المدخلات
-  fixedCosts    Float  // التكاليف الثابتة
-  variableCost  Float  // التكلفة المتغيرة للوحدة
-  sellingPrice  Float  // سعر البيع للوحدة
-
-  // النتائج المحسوبة (Backend)
-  breakevenUnits   Float? // وحدات التعادل = fixedCosts / (sellingPrice - variableCost)
-  breakevenRevenue Float? // إيرادات التعادل = breakevenUnits × sellingPrice
-  contributionMargin Float? // هامش المساهمة = (sellingPrice - variableCost) / sellingPrice
-  marginOfSafety   Float? // هامش الأمان (%) — اختياري
-
-  actualUnits  Float? // الوحدات الفعلية المباعة (للمقارنة)
-  notes        String?
-  createdBy    String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  entityId           String
+  versionId          String?
+  productName        String
+  fixedCosts         Float
+  variableCost       Float
+  sellingPrice       Float
+  breakevenUnits     Float?
+  breakevenRevenue   Float?
+  contributionMargin Float?
+  marginOfSafety     Float?
+  actualUnits        Float?
+  notes              String?
+  createdBy          String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   @@index([entityId])
   @@map("breakeven_analyses")
@@ -1612,21 +1245,19 @@ model BreakevenAnalysis {
 
 /// أنشطة ABC Costing — تحديد محركات التكلفة
 model AbcActivity {
-  id            String @id @default(cuid())
-  entityId      String
-  versionId     String?
-  nameAr        String // اسم النشاط بالعربي
-  nameEn        String? // اسم النشاط بالإنجليزي
-  costDriver    String // محرك التكلفة (ساعات عمل، عدد طلبات...)
-  totalCost     Float  // إجمالي تكلفة النشاط
-  driverQuantity Float // إجمالي كمية المحرك
-  ratePerDriver Float? // معدل التكلفة لكل وحدة محرك (محسوب)
-
-  createdBy     String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  productCosts  AbcProductCost[]
+  id             String           @id @default(cuid())
+  entityId       String
+  versionId      String?
+  nameAr         String
+  nameEn         String?
+  costDriver     String
+  totalCost      Float
+  driverQuantity Float
+  ratePerDriver  Float?
+  createdBy      String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  productCosts   AbcProductCost[]
 
   @@index([entityId])
   @@map("abc_activities")
@@ -1634,38 +1265,29 @@ model AbcActivity {
 
 /// توزيع تكاليف ABC على المنتجات
 model AbcProductCost {
-  id           String @id @default(cuid())
-  activityId   String
-  productName  String // اسم المنتج
-  driverUsage  Float  // استخدام المنتج لمحرك التكلفة
-  allocatedCost Float? // التكلفة المخصصة (محسوب)
-
-  createdAt    DateTime @default(now())
-
-  activity AbcActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  id            String      @id @default(cuid())
+  activityId    String
+  productName   String
+  driverUsage   Float
+  allocatedCost Float?
+  createdAt     DateTime    @default(now())
+  activity      AbcActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
 
   @@index([activityId])
   @@map("abc_product_costs")
 }
 
-// =========================================
-// PHASE: INTELLIGENCE TOOLS (أدوات الذكاء)
-// Monte Carlo, Process Mining
-// =========================================
-
 /// محاكاة Monte Carlo — تحليل احتمالي
 model MonteCarloRun {
-  id          String @id @default(cuid())
+  id          String   @id @default(cuid())
   entityId    String
   versionId   String?
-  name        String // اسم المحاكاة
+  name        String
   description String?
-
-  iterations  Int    @default(10000) // عدد التكرارات
-  variables   String // JSON: [{name, min, max, distribution, mostLikely}]
-  results     String? // JSON: {mean, median, p5, p25, p75, p95, stdDev, histogram}
-
-  status      String @default("PENDING") // PENDING, RUNNING, COMPLETED, FAILED
+  iterations  Int      @default(10000)
+  variables   String
+  results     String?
+  status      String   @default("PENDING")
   createdBy   String?
   createdAt   DateTime @default(now())
 
@@ -1676,19 +1298,18 @@ model MonteCarloRun {
 
 /// سجلات العمليات — Process Mining Event Log
 model ProcessLog {
-  id            String   @id @default(cuid())
-  entityId      String
-  processName   String   // اسم العملية
-  caseId        String   // معرف الحالة/الطلب
-  activity      String   // النشاط (مثال: "تقديم الطلب"، "المراجعة")
-  startedAt     DateTime // وقت البداية
-  completedAt   DateTime? // وقت الانتهاء
-  durationMins  Float?   // المدة بالدقائق
-  performerId   String?  // المنفذ (user ID)
-  departmentId  String?  // القسم
-  metadata      String?  // JSON — بيانات إضافية
-
-  createdAt     DateTime @default(now())
+  id           String    @id @default(cuid())
+  entityId     String
+  processName  String
+  caseId       String
+  activity     String
+  startedAt    DateTime
+  completedAt  DateTime?
+  durationMins Float?
+  performerId  String?
+  departmentId String?
+  metadata     String?
+  createdAt    DateTime  @default(now())
 
   @@index([entityId, processName])
   @@index([caseId])
@@ -1698,15 +1319,14 @@ model ProcessLog {
 
 /// اختناقات العمليات — نتائج تحليل Process Mining
 model ProcessBottleneck {
-  id              String @id @default(cuid())
+  id              String   @id @default(cuid())
   entityId        String
   processName     String
-  activity        String   // النشاط المتسبب في الاختناق
-  avgDuration     Float?   // متوسط المدة (دقائق)
-  caseCount       Int?     // عدد الحالات المتأثرة
-  bottleneckScore Float?   // درجة الاختناق (0-100)
-  recommendation  String?  // توصية التحسين
-
+  activity        String
+  avgDuration     Float?
+  caseCount       Int?
+  bottleneckScore Float?
+  recommendation  String?
   detectedAt      DateTime @default(now())
 
   @@index([entityId])
@@ -1714,29 +1334,22 @@ model ProcessBottleneck {
   @@map("process_bottlenecks")
 }
 
-// =========================================
-// PHASE: EXECUTION TOOLS (أدوات التنفيذ)
-// Milestones (Gantt), RACI Matrix
-// =========================================
-
 /// معالم المبادرة — لمخطط جانت
 model Milestone {
-  id            String   @id @default(cuid())
-  initiativeId  String
-  title         String
-  startDate     DateTime
-  endDate       DateTime
-  progress      Float    @default(0) // 0-100
-  dependsOnId   String?  // معلم سابق يعتمد عليه
-  sortOrder     Int      @default(0)
-  color         String?  // لون شريط جانت
-
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  initiative StrategicInitiative @relation(fields: [initiativeId], references: [id], onDelete: Cascade)
-  dependsOn  Milestone?          @relation("MilestoneDep", fields: [dependsOnId], references: [id])
-  dependents Milestone[]         @relation("MilestoneDep")
+  id           String              @id @default(cuid())
+  initiativeId String
+  title        String
+  startDate    DateTime
+  endDate      DateTime
+  progress     Float               @default(0)
+  dependsOnId  String?
+  sortOrder    Int                 @default(0)
+  color        String?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  dependsOn    Milestone?          @relation("MilestoneDep", fields: [dependsOnId], references: [id])
+  dependents   Milestone[]         @relation("MilestoneDep")
+  initiative   StrategicInitiative @relation(fields: [initiativeId], references: [id], onDelete: Cascade)
 
   @@index([initiativeId])
   @@map("milestones")
@@ -1744,42 +1357,34 @@ model Milestone {
 
 /// مصفوفة RACI — تحديد المسؤوليات
 model RaciEntry {
-  id            String @id @default(cuid())
+  id            String              @id @default(cuid())
   initiativeId  String
-  activity      String // النشاط/المهمة
-  responsibleId String? // المسؤول عن التنفيذ (R)
-  accountableId String? // المعتمد/المحاسب (A)
-  consulted     String? // المستشارون — JSON array of user IDs (C)
-  informed      String? // المُطّلعون — JSON array of user IDs (I)
+  activity      String
+  responsibleId String?
+  accountableId String?
+  consulted     String?
+  informed      String?
   notes         String?
-
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  initiative StrategicInitiative @relation(fields: [initiativeId], references: [id], onDelete: Cascade)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  initiative    StrategicInitiative @relation(fields: [initiativeId], references: [id], onDelete: Cascade)
 
   @@index([initiativeId])
   @@map("raci_entries")
 }
 
-// =========================================
-// PHASE: OKR KEY RESULTS
-// النتائج الرئيسية لأهداف OKR
-// =========================================
-
 /// النتائج الرئيسية — Key Results لكل OKR Objective
 model OkrKeyResult {
-  id           String @id @default(cuid())
-  objectiveId  String // ربط بـ StrategicObjective (framework='OKR')
+  id           String   @id @default(cuid())
+  objectiveId  String
   title        String
-  metricType   String @default("PERCENTAGE") // NUMBER, PERCENTAGE, CURRENCY, BOOLEAN
-  startValue   Float  @default(0)
+  metricType   String   @default("PERCENTAGE")
+  startValue   Float    @default(0)
   targetValue  Float
-  currentValue Float  @default(0)
-  progress     Float? @default(0) // محسوب: ((current - start) / (target - start)) × 100
-  ownerId      String? // مسؤول النتيجة
-  status       String @default("NOT_STARTED") // NOT_STARTED, IN_PROGRESS, AT_RISK, ACHIEVED
-
+  currentValue Float    @default(0)
+  progress     Float?   @default(0)
+  ownerId      String?
+  status       String   @default("NOT_STARTED")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -1787,26 +1392,20 @@ model OkrKeyResult {
   @@map("okr_key_results")
 }
 
-// =========================================
-// PHASE: AI RECOMMENDATIONS
-// توصيات الذكاء الاصطناعي
-// =========================================
-
 /// توصيات AI — جاهزة للترقية من rule-based إلى ML
 model AiRecommendation {
-  id             String  @id @default(cuid())
+  id             String   @id @default(cuid())
   entityId       String
-  kpiId          String? // KPI المرتبط (اختياري)
-  departmentId   String? // القسم المرتبط (اختياري)
-  recommendation String  // نص التوصية
-  reasoning      String? // سبب التوصية
-  confidence     Float?  @default(0.75) // 0-1 مستوى الثقة
-  sourceType     String  @default("RULE_BASED") // RULE_BASED, ML_MODEL, HYBRID
-  category       String? // FINANCIAL, OPERATIONAL, STRATEGIC, HR
-  priority       String  @default("MEDIUM") // HIGH, MEDIUM, LOW
-  isDismissed    Boolean @default(false)
-  isImplemented  Boolean @default(false)
-
+  kpiId          String?
+  departmentId   String?
+  recommendation String
+  reasoning      String?
+  confidence     Float?   @default(0.75)
+  sourceType     String   @default("RULE_BASED")
+  category       String?
+  priority       String   @default("MEDIUM")
+  isDismissed    Boolean  @default(false)
+  isImplemented  Boolean  @default(false)
   createdAt      DateTime @default(now())
 
   @@index([entityId])
@@ -1815,45 +1414,30 @@ model AiRecommendation {
   @@map("ai_recommendations")
 }
 
-// =========================================
-// PHASE: DEPT-DEEP DATA (المرحلة 3)
-// نقل بيانات الفحص العميق من localStorage لـ DB
-// =========================================
-
 /// بيانات الفحص العميق — كل إدارة لكل entity
 model DeptDeepData {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   entityId    String
-  deptKey     String   // compliance, finance, sales, hr, marketing, operations, support
-
-  // البيانات (JSON blob — نفس هيكل localStorage)
-  payload     String   // JSON: { answers, extraStrengths, extraWeaknesses, challenges, goals, goalOkrLinks, priority, model, manager, managerName, managerSatisfied, notes, vrioScores, completed }
-
-  // حالة الاكتمال
-  completed   Boolean  @default(false)
+  deptKey     String
+  payload     String
+  completed   Boolean   @default(false)
   completedAt DateTime?
-
-  // من أجرى الفحص
   userId      String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@unique([entityId, deptKey]) // إدارة واحدة لكل entity
+  @@unique([entityId, deptKey])
   @@index([entityId])
   @@index([deptKey])
   @@map("dept_deep_data")
 }
 
-// =========================================
-// Department Analysis (SWOT, PESTEL, etc per dept)
-// =========================================
 model DepartmentAnalysis {
   id         String   @id @default(cuid())
   entityId   String
-  department String   // HR, FINANCE, MARKETING, etc
-  type       String   // SWOT, PESTEL, AUDIT, etc
-  data       String   // JSON blob
+  department String
+  type       String
+  data       String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -1862,64 +1446,42 @@ model DepartmentAnalysis {
   @@map("department_analysis")
 }
 
-// =========================================
-// PHASE: HR & GOV AUDIT (23 Approved Points)
-// فحص الموارد البشرية والمنصات الحكومية
-// 4 نقاط HR + 19 نقطة منصات حكومية
-// =========================================
-
 /// الموظفين — بيانات HR الأساسية للفحص
 model Employee {
-  id       String @id @default(cuid())
-  entityId String
-
-  // البيانات الأساسية
-  employeeNo  String  // رقم الموظف
-  nameAr      String  // الاسم بالعربي
-  nameEn      String? // الاسم بالإنجليزي
-  nationality String  // الجنسية (سعودي / غير سعودي)
-  gender      String? // MALE / FEMALE
-
-  // ── hr-audit نقطة 1: تصنيف مهن الإقامة ──
-  jobTitle       String? // المسمى الوظيفي الفعلي
-  iqamaProfession String? // المهنة في الإقامة
-  // المقارنة: IF jobTitle != iqamaProfession → مخالفة محتملة
-
-  // ── hr-audit نقطة 2: صرف مدد بالموعد ──
-  iban           String? // IBAN البنكي
-  basicSalary    Float?  // الراتب الأساسي
-  lastPayDate    DateTime? // آخر تاريخ صرف
-  wpsStatus      String?   // COMPLIANT / DELAYED / NOT_REGISTERED
-
-  // ── gov-audit: بيانات الإقامة والتأشيرات ──
-  iqamaNumber    String?   // رقم الإقامة
-  iqamaExpiry    DateTime? // تاريخ انتهاء الإقامة
-  passportExpiry DateTime? // تاريخ انتهاء الجواز
-  visaStatus     String?   // ACTIVE / EXPIRED / PENDING / CANCELLED
-  visaNumber     String?   // رقم التأشيرة
-
-  // ── gov-audit: بيانات العمل والتسجيل ──
-  workPermitNo     String?   // رقم رخصة العمل (نافذ)
-  workPermitExpiry DateTime? // تاريخ انتهاء رخصة العمل
-  contractStatus   String?   // REGISTERED / PENDING / NOT_REGISTERED — حالة العقد في قوى
-  gosiNumber       String?   // رقم التأمينات الاجتماعية
-  gosiRegistered   Boolean   @default(false) // مسجل في التأمينات؟
-  joinDate         DateTime? // تاريخ بداية العمل
-  exitDate         DateTime? // تاريخ نهاية العمل (إن وجد)
-  exitReported     Boolean   @default(false) // هل تم الإبلاغ عن نهاية العمل؟
-
-  // ── بيانات السلامة ──
-  isSafetyRep    Boolean @default(false) // هل ممثل سلامة؟
-  safetyTraining DateTime? // آخر تدريب سلامة
-
-  // حالة الموظف
-  status    String   @default("ACTIVE") // ACTIVE / TERMINATED / ON_LEAVE / FINAL_EXIT
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  entity    Entity       @relation(fields: [entityId], references: [id], onDelete: Cascade)
-  housingId String?
-  housing   HousingUnit? @relation(fields: [housingId], references: [id], onDelete: SetNull)
+  id               String       @id @default(cuid())
+  entityId         String
+  employeeNo       String
+  nameAr           String
+  nameEn           String?
+  nationality      String
+  gender           String?
+  jobTitle         String?
+  iqamaProfession  String?
+  iban             String?
+  basicSalary      Float?
+  lastPayDate      DateTime?
+  wpsStatus        String?
+  iqamaNumber      String?
+  iqamaExpiry      DateTime?
+  passportExpiry   DateTime?
+  visaStatus       String?
+  visaNumber       String?
+  workPermitNo     String?
+  workPermitExpiry DateTime?
+  contractStatus   String?
+  gosiNumber       String?
+  gosiRegistered   Boolean      @default(false)
+  joinDate         DateTime?
+  exitDate         DateTime?
+  exitReported     Boolean      @default(false)
+  isSafetyRep      Boolean      @default(false)
+  safetyTraining   DateTime?
+  status           String       @default("ACTIVE")
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  housingId        String?
+  housing          HousingUnit? @relation(fields: [housingId], references: [id])
+  entity           Entity       @relation(fields: [entityId], references: [id], onDelete: Cascade)
 
   @@unique([entityId, employeeNo])
   @@index([entityId])
@@ -1932,47 +1494,32 @@ model Employee {
 
 /// وحدات السكن — hr-audit نقطة 3: ملائمة السكن
 model HousingUnit {
-  id       String @id @default(cuid())
-  entityId String
-
-  // بيانات السكن
-  unitName    String  // اسم/رقم الوحدة
-  address     String? // العنوان
-  unitType    String  @default("RESIDENTIAL") // RESIDENTIAL / COMMERCIAL
-
-  // عقد الإيجار (إيجار)
-  ejarContractNo String?   // رقم عقد إيجار
-  rentStartDate  DateTime? // بداية العقد
-  rentEndDate    DateTime? // نهاية العقد
-  monthlyRent    Float?    // الإيجار الشهري
-
-  // شهادات السلامة
-  municipalityCert     Boolean   @default(false) // شهادة البلدية
-  municipalityCertDate DateTime? // تاريخ شهادة البلدية
-  civilDefenseCert     Boolean   @default(false) // شهادة الدفاع المدني
-  civilDefenseCertDate DateTime? // تاريخ شهادة الدفاع المدني
-
-  // المساحة والسعة
-  totalArea      Float? // المساحة الكلية (م²)
-  maxOccupants   Int?   // السعة القصوى
-  currentOccupants Int  @default(0) // العدد الحالي
-  // المعيار: totalArea / currentOccupants >= 4 م²
-
-  // الخدمات الأساسية
-  hasElectricity Boolean @default(true)
-  hasWater       Boolean @default(true)
-  hasCooling     Boolean @default(true)
-  hasKitchen     Boolean @default(false)
-  hasLaundry     Boolean @default(false)
-
-  // فصل الجنسين
-  genderSeparation Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  entity    Entity     @relation(fields: [entityId], references: [id], onDelete: Cascade)
-  employees Employee[]
+  id                   String     @id @default(cuid())
+  entityId             String
+  unitName             String
+  address              String?
+  unitType             String     @default("RESIDENTIAL")
+  ejarContractNo       String?
+  rentStartDate        DateTime?
+  rentEndDate          DateTime?
+  monthlyRent          Float?
+  municipalityCert     Boolean    @default(false)
+  municipalityCertDate DateTime?
+  civilDefenseCert     Boolean    @default(false)
+  civilDefenseCertDate DateTime?
+  totalArea            Float?
+  maxOccupants         Int?
+  currentOccupants     Int        @default(0)
+  hasElectricity       Boolean    @default(true)
+  hasWater             Boolean    @default(true)
+  hasCooling           Boolean    @default(true)
+  hasKitchen           Boolean    @default(false)
+  hasLaundry           Boolean    @default(false)
+  genderSeparation     Boolean    @default(true)
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+  employees            Employee[]
+  entity               Entity     @relation(fields: [entityId], references: [id], onDelete: Cascade)
 
   @@index([entityId])
   @@map("housing_units")
@@ -1980,31 +1527,22 @@ model HousingUnit {
 
 /// حالة تسجيل المنصات الحكومية — gov-audit
 model GovPlatformStatus {
-  id       String @id @default(cuid())
-  entityId String
-
-  // المنصة
-  platform String // QIWA, MUQEEM, ABSHER, NAFATH, EJAR, SALAMA, GOSI, ZATCA, BALADY, MUDAD
-
-  // بيانات التسجيل
-  registrationNo  String?   // رقم التسجيل
-  isRegistered    Boolean   @default(false)
-  registeredDate  DateTime?
-  lastUpdated     DateTime? // آخر تحديث للبيانات
-  expiryDate      DateTime? // تاريخ انتهاء التسجيل
-
-  // الحالة
-  status          String    @default("UNKNOWN") // ACTIVE, EXPIRED, SUSPENDED, NOT_REGISTERED, UNKNOWN
-  hasViolations   Boolean   @default(false) // مخالفات قائمة؟
-  violationCount  Int       @default(0)
-  pendingFees     Float     @default(0) // رسوم متأخرة
-
-  // ملاحظات
-  notes     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  entity Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  id             String    @id @default(cuid())
+  entityId       String
+  platform       String
+  registrationNo String?
+  isRegistered   Boolean   @default(false)
+  registeredDate DateTime?
+  lastUpdated    DateTime?
+  expiryDate     DateTime?
+  status         String    @default("UNKNOWN")
+  hasViolations  Boolean   @default(false)
+  violationCount Int       @default(0)
+  pendingFees    Float     @default(0)
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  entity         Entity    @relation(fields: [entityId], references: [id], onDelete: Cascade)
 
   @@unique([entityId, platform])
   @@index([entityId])
@@ -2015,33 +1553,23 @@ model GovPlatformStatus {
 
 /// جلسة الفحص — تتبع عملية الفحص الكاملة
 model AuditSession {
-  id       String @id @default(cuid())
-  entityId String
-  auditedBy String // Member ID — المستشار الذي يجري الفحص
-
-  // نوع الفحص
-  auditType String // HR_AUDIT, GOV_AUDIT, FULL_AUDIT
-
-  // النتيجة الإجمالية
-  overallScore   Float?  // 0-100
-  overallStatus  String  @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED, NEEDS_ACTION
-  totalPoints    Int     @default(0) // عدد النقاط الإجمالي
-  passedPoints   Int     @default(0) // عدد النقاط الناجحة
-  warningPoints  Int     @default(0) // عدد التحذيرات
-  failedPoints   Int     @default(0) // عدد الراسبة
-
-  // تواريخ
-  startedAt   DateTime  @default(now())
-  completedAt DateTime?
-
-  // ملاحظات
-  summary String? // ملخص تنفيذي
-  notes   String? // ملاحظات المستشار
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  checkpoints AuditCheckpoint[]
+  id            String            @id @default(cuid())
+  entityId      String
+  auditedBy     String
+  auditType     String
+  overallScore  Float?
+  overallStatus String            @default("IN_PROGRESS")
+  totalPoints   Int               @default(0)
+  passedPoints  Int               @default(0)
+  warningPoints Int               @default(0)
+  failedPoints  Int               @default(0)
+  startedAt     DateTime          @default(now())
+  completedAt   DateTime?
+  summary       String?
+  notes         String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  checkpoints   AuditCheckpoint[]
 
   @@index([entityId])
   @@index([auditType])
@@ -2051,35 +1579,25 @@ model AuditSession {
 
 /// نقطة فحص فردية — نتيجة كل نقطة
 model AuditCheckpoint {
-  id        String @id @default(cuid())
-  sessionId String
-
-  // تعريف النقطة
-  checkpointCode String // مثال: HR_01, HR_02, GOV_QIWA_01, GOV_EJAR_02
-  category       String // HR_AUDIT, GOV_QIWA, GOV_MUQEEM, GOV_NAFATH, GOV_EJAR, GOV_SALAMA, GOV_OTHER
-  title          String // عنوان النقطة
-  description    String? // وصف تفصيلي
-
-  // النتيجة
-  status     String  @default("NOT_CHECKED") // PASS, WARNING, FAIL, NOT_CHECKED, NOT_APPLICABLE
-  score      Float?  // 0-100
-  weight     Float   @default(10) // الوزن (10% لكل نقطة)
-
-  // التفاصيل
-  checkMethod  String? // AUTO_DB, MANUAL, FIELD_CHECK — طريقة الفحص
-  actualValue  String? // القيمة الفعلية (مثال: "3 إقامات منتهية")
-  expectedValue String? // القيمة المتوقعة (مثال: "0 إقامات منتهية")
-  evidence     String? // رابط أو وصف الدليل
-  recommendation String? // التوصية للمعالجة
-
-  // تواريخ
-  checkedAt  DateTime?
-  resolvedAt DateTime? // تاريخ المعالجة
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  session AuditSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  id             String       @id @default(cuid())
+  sessionId      String
+  checkpointCode String
+  category       String
+  title          String
+  description    String?
+  status         String       @default("NOT_CHECKED")
+  score          Float?
+  weight         Float        @default(10)
+  checkMethod    String?
+  actualValue    String?
+  expectedValue  String?
+  evidence       String?
+  recommendation String?
+  checkedAt      DateTime?
+  resolvedAt     DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  session        AuditSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@unique([sessionId, checkpointCode])
   @@index([sessionId])
@@ -2088,59 +1606,36 @@ model AuditCheckpoint {
   @@map("audit_checkpoints")
 }
 
-// =========================================
-// INVESTMENT DEAL PIPELINE (NEW ✨)
-// نظام إدارة الفرص الاستثمارية
-// =========================================
-
 /// الفرصة الاستثمارية — دورة حياة كاملة من التقديم للقرار
 model InvestmentDeal {
-  id       String  @id @default(cuid())
-  entityId String? // ربط بالكيان (اختياري — بعد الموافقة)
-
-  // بيانات الفرصة
-  companyName String  // اسم الشركة المستهدفة
-  sector      String  // القطاع
-  description String  // وصف الفرصة
-  stage       String  @default("SEED") // SEED, SERIES_A, SERIES_B, GROWTH, MATURE
-  askAmount   Float?  // المبلغ المطلوب
-  valuation   Float?  // التقييم
-  equity      Float?  // النسبة المعروضة
-  location    String? // الموقع
-  website     String? // الموقع الإلكتروني
-  pitchSummary String? // ملخص العرض
-
-  // حالة الفرصة (State Machine)
-  status String @default("SUBMITTED")
-  // SUBMITTED → UNDER_REVIEW → ANALYZING →
-  // INFO_REQUIRED → DECISION_READY →
-  // APPROVED / REJECTED / NEGOTIATING → INVESTED / CLOSED
-
-  // مقدم الفرصة
-  submittedById String  // User ID — مقدم الفرصة
-  submittedAt   DateTime @default(now())
-
-  // قائد فريق التحليل
-  leadAnalystId String?   // User ID — قائد الفريق
-  assignedAt    DateTime? // تاريخ التعيين
-
-  // قرار المستثمر
-  decisionById    String?   // User ID — صاحب القرار
-  decisionAt      DateTime? // تاريخ القرار
-  decisionNotes   String?   // ملاحظات القرار
-  rejectionReason String?   // سبب الرفض
-
-  // Metadata
-  tags     String? // JSON — تصنيفات إضافية
-  priority String  @default("MEDIUM") // HIGH, MEDIUM, LOW
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // العلاقات
-  documents DealDocument[]
-  reports   DealAnalysisReport[]
-  portfolio PortfolioCompany?
+  id              String               @id @default(cuid())
+  entityId        String?
+  companyName     String
+  sector          String
+  description     String
+  stage           String               @default("SEED")
+  askAmount       Float?
+  valuation       Float?
+  equity          Float?
+  location        String?
+  website         String?
+  pitchSummary    String?
+  status          String               @default("SUBMITTED")
+  submittedById   String
+  submittedAt     DateTime             @default(now())
+  leadAnalystId   String?
+  assignedAt      DateTime?
+  decisionById    String?
+  decisionAt      DateTime?
+  decisionNotes   String?
+  rejectionReason String?
+  tags            String?
+  priority        String               @default("MEDIUM")
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  reports         DealAnalysisReport[]
+  documents       DealDocument[]
+  portfolio       PortfolioCompany?
 
   @@index([status])
   @@index([submittedById])
@@ -2152,19 +1647,16 @@ model InvestmentDeal {
 
 /// مستندات الفرصة — ملفات مرفقة (PDF, صور, ...)
 model DealDocument {
-  id     String @id @default(cuid())
-  dealId String
-
-  fileName   String // اسم الملف الأصلي
-  fileUrl    String // رابط الملف المخزّن
-  fileType   String @default("OTHER") // FINANCIAL, LEGAL, MARKET, PITCH_DECK, COMMERCIAL_REG, OTHER
-  fileSize   Int?   // الحجم بالبايت
-  mimeType   String? // application/pdf, image/png, etc.
-  uploadedBy String  // User ID
-
-  createdAt DateTime @default(now())
-
-  deal InvestmentDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  id         String         @id @default(cuid())
+  dealId     String
+  fileName   String
+  fileUrl    String
+  fileType   String         @default("OTHER")
+  fileSize   Int?
+  mimeType   String?
+  uploadedBy String
+  createdAt  DateTime       @default(now())
+  deal       InvestmentDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
 
   @@index([dealId])
   @@index([fileType])
@@ -2173,26 +1665,19 @@ model DealDocument {
 
 /// تقارير تحليل الفرصة — مالي، سوقي، قانوني، موحد
 model DealAnalysisReport {
-  id     String @id @default(cuid())
-  dealId String
-
-  type      String // FINANCIAL, MARKET, LEGAL, TECHNICAL, UNIFIED
-  analystId String // User ID — المحلل
-
-  // محتوى التقرير
-  summary        String? // ملخص التقرير
-  score          Float?  // 0-100 — الدرجة الإجمالية
-  riskLevel      String? // HIGH, MEDIUM, LOW
-  findings       String? // JSON — النتائج التفصيلية
-  recommendation String? // INVEST, PASS, NEED_INFO
-
-  // حالة التقرير
-  status String @default("DRAFT") // DRAFT, SUBMITTED, REVIEWED
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  deal InvestmentDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  id             String         @id @default(cuid())
+  dealId         String
+  type           String
+  analystId      String
+  summary        String?
+  score          Float?
+  riskLevel      String?
+  findings       String?
+  recommendation String?
+  status         String         @default("DRAFT")
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  deal           InvestmentDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
 
   @@index([dealId])
   @@index([analystId])
@@ -2202,37 +1687,26 @@ model DealAnalysisReport {
 
 /// شركة في المحفظة — بعد الموافقة على الاستثمار
 model PortfolioCompany {
-  id     String @id @default(cuid())
-  dealId String @unique // ربط بالفرصة الأصلية
-
-  // بيانات الشركة
-  companyName    String
-  investedAmount Float    // المبلغ المستثمر
-  equityPercent  Float    // نسبة الملكية
-  investedAt     DateTime // تاريخ الاستثمار
-
-  // الحالة
-  status    String    @default("ACTIVE") // ACTIVE, EXITED, WRITTEN_OFF
-  exitedAt  DateTime? // تاريخ التخارج
-  exitValue Float?    // قيمة التخارج
-  exitType  String?   // IPO, ACQUISITION, BUYBACK, WRITE_OFF
-
-  // محلل المتابعة
-  assignedAnalystId String? // User ID
-  reportFrequency   String  @default("QUARTERLY") // MONTHLY, QUARTERLY, SEMI_ANNUAL, ANNUAL
-  nextReportDue     DateTime? // تاريخ التقرير القادم
-
-  // أداء
-  lastRevenue    Float? // آخر إيراد
-  lastNetProfit  Float? // آخر صافي ربح
-  currentHealth  String @default("HEALTHY") // HEALTHY, WARNING, CRITICAL
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // العلاقات
-  deal    InvestmentDeal    @relation(fields: [dealId], references: [id], onDelete: Cascade)
-  reports PortfolioReport[]
+  id                String            @id @default(cuid())
+  dealId            String            @unique
+  companyName       String
+  investedAmount    Float
+  equityPercent     Float
+  investedAt        DateTime
+  status            String            @default("ACTIVE")
+  exitedAt          DateTime?
+  exitValue         Float?
+  exitType          String?
+  assignedAnalystId String?
+  reportFrequency   String            @default("QUARTERLY")
+  nextReportDue     DateTime?
+  lastRevenue       Float?
+  lastNetProfit     Float?
+  currentHealth     String            @default("HEALTHY")
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  deal              InvestmentDeal    @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  reports           PortfolioReport[]
 
   @@index([status])
   @@index([assignedAnalystId])
@@ -2241,39 +1715,27 @@ model PortfolioCompany {
 
 /// تقارير المتابعة الدورية — شهرية/ربعية
 model PortfolioReport {
-  id                 String @id @default(cuid())
+  id                 String           @id @default(cuid())
   portfolioCompanyId String
-
-  // الفترة
-  period     String // "2026-Q1", "2026-03"
-  periodType String @default("QUARTERLY") // MONTHLY, QUARTERLY, ANNUAL
-
-  // المالية
-  revenue    Float? // الإيرادات
-  expenses   Float? // المصروفات
-  netProfit  Float? // صافي الربح
-  cashFlow   Float? // التدفق النقدي
-  burnRate   Float? // معدل الحرق (للشركات الناشئة)
-
-  // التشغيل
-  kpis        String? // JSON — مؤشرات الأداء
-  headcount   Int?    // عدد الموظفين
-  customers   Int?    // عدد العملاء
-
-  // الملخص
-  highlights  String? // إنجازات الفترة
-  challenges  String? // تحديات
-  risks       String? // مخاطر جديدة
-  nextSteps   String? // الخطوات القادمة
-
-  // حالة التقرير
-  status    String @default("DRAFT") // DRAFT, SUBMITTED, REVIEWED
-  createdBy String // User ID
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  portfolioCompany PortfolioCompany @relation(fields: [portfolioCompanyId], references: [id], onDelete: Cascade)
+  period             String
+  periodType         String           @default("QUARTERLY")
+  revenue            Float?
+  expenses           Float?
+  netProfit          Float?
+  cashFlow           Float?
+  burnRate           Float?
+  kpis               String?
+  headcount          Int?
+  customers          Int?
+  highlights         String?
+  challenges         String?
+  risks              String?
+  nextSteps          String?
+  status             String           @default("DRAFT")
+  createdBy          String
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  portfolioCompany   PortfolioCompany @relation(fields: [portfolioCompanyId], references: [id], onDelete: Cascade)
 
   @@index([portfolioCompanyId])
   @@index([period])
@@ -2282,27 +1744,18 @@ model PortfolioReport {
 
 /// الإشعارات — نظام إشعارات موحد للنظام بالكامل
 model Notification {
-  id     String @id @default(cuid())
-  userId String // المستخدم المستهدف
-
-  // محتوى الإشعار
-  type    String // DEAL_SUBMITTED, DEAL_ASSIGNED, INFO_REQUIRED, ANALYSIS_COMPLETE,
-                 // DECISION_READY, DEAL_APPROVED, DEAL_REJECTED, REPORT_READY,
-                 // REPORT_DUE, SYSTEM
-  title   String
-  message String
-  link    String? // رابط الإجراء المطلوب
-  icon    String? // أيقونة مخصصة
-
-  // القراءة
-  isRead  Boolean   @default(false)
-  readAt  DateTime?
-
-  // المصدر
-  sourceType String? // DEAL, PORTFOLIO, SYSTEM
-  sourceId   String? // ID المصدر (dealId, portfolioId, etc.)
-
-  createdAt DateTime @default(now())
+  id         String    @id @default(cuid())
+  userId     String
+  type       String
+  title      String
+  message    String
+  link       String?
+  icon       String?
+  isRead     Boolean   @default(false)
+  readAt     DateTime?
+  sourceType String?
+  sourceId   String?
+  createdAt  DateTime  @default(now())
 
   @@index([userId, isRead])
   @@index([userId, createdAt])
@@ -2310,30 +1763,23 @@ model Notification {
   @@map("notifications")
 }
 
-// =========================================
-// 30. COMPANY HEALTH REPORTS (NEW ✨)
-// لوحة أم — كل إدارة تغذي جزء معين
-// =========================================
-
 /// تقارير صحة الشركة — مؤشرات حية من كل إدارة
 model CompanyHealthReport {
   id             String   @id @default(cuid())
   entityId       String
-  dimension      String   // financial, operational, cultural, marketing, hr
-  indicatorName  String   // اسم المؤشر (صافي الربح, رضا العملاء...)
-  indicatorValue Float    // القيمة الفعلية
-  targetValue    Float    // القيمة المستهدفة
-  unit           String   // percent, currency, number, hours, days
-  department     String   // finance, operations, hr, marketing, executive
-  reportDate     DateTime // تاريخ التقرير
-  notes          String?  // ملاحظات إضافية
-  reporterId     String   // المستخدم اللي أدخل التقرير
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  entity   Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
-  reporter User   @relation("HealthReporter", fields: [reporterId], references: [id], onDelete: Restrict)
+  dimension      String
+  indicatorName  String
+  indicatorValue Float
+  targetValue    Float
+  unit           String
+  department     String
+  reportDate     DateTime
+  notes          String?
+  reporterId     String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  reporter       User     @relation("HealthReporter", fields: [reporterId], references: [id])
+  entity         Entity   @relation(fields: [entityId], references: [id], onDelete: Cascade)
 
   @@index([entityId, reportDate])
   @@index([entityId, dimension])
@@ -2341,77 +1787,54 @@ model CompanyHealthReport {
   @@map("company_health_reports")
 }
 
-// =========================================
-// 31. COMPANY DIMENSIONS (PHASE 1 MVP) ✨
-// الأبعاد الثلاثة للبيانات الفعلية للشركات التجريبية
-// =========================================
-
 /// أبعاد التقييم (المالي، الإداري، التوطين)
 model CompanyDimension {
-  id       String @id @default(cuid())
-  entityId String @unique
-
-  // 1. البعد المالي (Financial)
-  financialScore   Float?  // المجموع (0-100)
-  revenueStreams   String? // هيكل الإيرادات
-  costStructure    String? // هيكل التكاليف
-  profitMargins    String? // الهوامش الربحية
-  financialNotes   String? // تفاصيل أخرى
-
-  // 2. البعد الإداري (Administrative)
-  adminScore       Float?  // المجموع (0-100)
-  orgStructure     String? // الهيكل التنظيمي
-  governance       String? // الحوكمة
-  processEffciency String? // كفاءة العمليات
-  adminNotes       String? // تفاصيل أخرى
-
-  // 3. بعد التوطين والامتثال (Localization)
-  localizationScore Float?  // المجموع (0-100)
-  nitaqatLevel      String? // أحمر، أخضر، بلاتيني، إلخ
-  saudizationRate   Float?  // نسبة الكوادر السعودية
-  laborCompliance   String? // التوافق مع وزارة الموارد
-  localNotes        String? // تفاصيل أخرى
-
-  evaluatedBy String?   // مقيم الحالة (المستشار)
-  evaluatedAt DateTime? // تاريخ التقييم الأخير
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  entity Entity @relation("EntityDimensions", fields: [entityId], references: [id], onDelete: Cascade)
+  id                String    @id @default(cuid())
+  entityId          String    @unique
+  financialScore    Float?
+  revenueStreams    String?
+  costStructure     String?
+  profitMargins     String?
+  financialNotes    String?
+  adminScore        Float?
+  orgStructure      String?
+  governance        String?
+  processEffciency  String?
+  adminNotes        String?
+  localizationScore Float?
+  nitaqatLevel      String?
+  saudizationRate   Float?
+  laborCompliance   String?
+  localNotes        String?
+  evaluatedBy       String?
+  evaluatedAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  entity            Entity    @relation("EntityDimensions", fields: [entityId], references: [id], onDelete: Cascade)
 
   @@map("company_dimensions")
 }
 
-// =========================================
-// WEBHOOKS & INTEGRATIONS
-// =========================================
-
 /// إعدادات الـ Webhook الخارجي (Slack, Teams, Zapier, ...)
 model Webhook {
-  id          String   @id @default(cuid())
-  entityId    String
-
-  name        String           // "إشعارات Slack"
-  url         String           // https://hooks.slack.com/...
-  platform    String           // slack | teams | zapier | custom
-  icon        String?          // emoji أو اسم
-  color       String?          // لون للعرض
-
-  events      String           // JSON array of event names
-  active      Boolean  @default(true)
-  secret      String?          // HMAC signing secret (اختياري)
-
-  calls       Int      @default(0)
-  successRate Float?   @default(100)
+  id           String       @id @default(cuid())
+  entityId     String
+  name         String
+  url          String
+  platform     String
+  icon         String?
+  color        String?
+  events       String
+  active       Boolean      @default(true)
+  secret       String?
+  calls        Int          @default(0)
+  successRate  Float?       @default(100)
   lastCalledAt DateTime?
-
-  createdBy   String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  entity      Entity   @relation("EntityWebhooks", fields: [entityId], references: [id], onDelete: Cascade)
-  logs        WebhookLog[]
+  createdBy    String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  logs         WebhookLog[]
+  entity       Entity       @relation("EntityWebhooks", fields: [entityId], references: [id], onDelete: Cascade)
 
   @@map("webhooks")
 }
@@ -2420,36 +1843,29 @@ model Webhook {
 model WebhookLog {
   id         String   @id @default(cuid())
   webhookId  String
-  event      String           // kpi.threshold
-  statusCode Int              // 200, 500, ...
+  event      String
+  statusCode Int
   ok         Boolean
-  durationMs Int?             // مدة الاستجابة بالمللي ثانية
-  error      String?          // رسالة الخطأ إن وُجدت
-  payload    String?          // JSON المُرسل (لأغراض الـ debugging)
+  durationMs Int?
+  error      String?
+  payload    String?
   createdAt  DateTime @default(now())
-
   webhook    Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
 
   @@map("webhook_logs")
 }
 
-// ─────────────────────────────────────────────────────────────────
-// PERMISSION SERVICE — صلاحيات صريحة على مستوى المورد
-// يُستخدم للـ viewer-level access control
-// ─────────────────────────────────────────────────────────────────
-
 /// صلاحيات صريحة تربط المستخدم بمورد محدد (للـ viewers والحالات الخاصة)
 model ResourceAccess {
   id           String    @id @default(cuid())
-  resourceType String    // 'objective', 'kpi', 'initiative', 'report', etc.
-  resourceId   String    // id المورد
-  userId       String    // المستخدم المُمنَح الصلاحية
-  permission   String    // 'read', 'write', 'admin'
-  grantedBy    String    // id من منح الصلاحية
+  resourceType String
+  resourceId   String
+  userId       String
+  permission   String
+  grantedBy    String
   grantedAt    DateTime  @default(now())
-  expiresAt    DateTime? // اختياري — للصلاحيات المؤقتة
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt    DateTime?
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([resourceType, resourceId, userId, permission])
   @@index([userId])
@@ -2457,38 +1873,27 @@ model ResourceAccess {
   @@map("resource_access")
 }
 
-// ─────────────────────────────────────────────────────────────────
-// ISSUES & TICKETING — متتبع التحديات والقضايا
-// ─────────────────────────────────────────────────────────────────
-
 /// متتبع المشاكل الاستراتيجية والتشغيلية
 model Issue {
-  id          String    @id @default(cuid())
-  title       String    // عنوان المشكلة/التحدي
-  description String?   // وصف تفصيلي
-  type        String    @default("STRATEGIC") // ADMINISTRATIVE, FINANCIAL, STRATEGIC, GROWTH
-  status      String    @default("OPEN")      // OPEN, IN_PROGRESS, RESOLVED, CLOSED
-  priority    String?   @default("MEDIUM")    // LOW, MEDIUM, HIGH, CRITICAL
-
-  // الربط
-  companyId   String?   // الشركة التابعة لها المشكلة
-  investorId  String?   // المستثمر المرتبط بالمشكلة (خيار لربطه بمحفظة)
-  department  String?   // الإدارة المعنية (hr, finance, etc.)
-  
-  assignedTo  String?   // المستخدم المسؤول عن الحل
-  createdById String    // من قام بإنشاء التحدي
-
-  // التتبع
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  resolvedAt  DateTime? // تاريخ الحل
-  resolution  String?   // وصف خطة الحل
-  source      String    @default("MANUAL")    // SWOT, PESTEL, DEPT_DEEP, MANUAL
-  
-  // Relations
-  company      Entity? @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  assignedUser User?   @relation("assignedIssues", fields: [assignedTo], references: [id], onDelete: SetNull)
-  createdBy    User    @relation("createdIssues", fields: [createdById], references: [id], onDelete: Cascade)
+  id           String    @id @default(cuid())
+  title        String
+  description  String?
+  type         String    @default("STRATEGIC")
+  status       String    @default("OPEN")
+  priority     String?   @default("MEDIUM")
+  companyId    String?
+  investorId   String?
+  department   String?
+  assignedTo   String?
+  createdById  String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  resolvedAt   DateTime?
+  resolution   String?
+  source       String    @default("MANUAL")
+  createdBy    User      @relation("createdIssues", fields: [createdById], references: [id], onDelete: Cascade)
+  assignedUser User?     @relation("assignedIssues", fields: [assignedTo], references: [id])
+  company      Entity?   @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@index([companyId])
   @@index([investorId])
