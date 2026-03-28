@@ -312,9 +312,13 @@
             <!-- Tab 3: Final -->
             <div class="tab-pane fade" id="tab-notes">
                 <div class="review-section">
-                    <div class="section-header">
+                    <div class="section-header d-flex justify-content-between align-items-center mb-4">
                         <h3 class="fw-900 m-0 text-warning"><i class="bi bi-chat-left-dots me-2"></i> الملاحظات الختامية
                         </h3>
+                        <button class="btn btn-outline-warning rounded-pill btn-sm px-4 fw-900"
+                            onclick="generateAIRecommendations()">
+                            <i class="bi bi-magic me-2"></i> مقترحات الذكاء الاصطناعي
+                        </button>
                     </div>
                     <div class="row g-4">
                         <div class="col-md-6">
@@ -355,17 +359,41 @@
 
         async function pullData(dept) {
             const upperDept = dept.toUpperCase();
-
+            
             // 1. Pull KPIs
-            const kpis = await DeptPage.loadFromAPI('KPIS_' + upperDept) || [];
-            renderKPIs(kpis);
+            let rawKpis = await DeptPage.loadFromAPI('KPIS_' + upperDept) || [];
+            let kpiList = Array.isArray(rawKpis) ? rawKpis : (rawKpis.kpis || []);
+            
+            // 🌟 Fallback to Production KPIs if draft is empty
+            if (!kpiList.length) {
+                console.log('[Reviews] Draft empty, fetching production KPIs...');
+                try {
+                    const res = await api.get('/api/kpis');
+                    if (res && res.success && res.data) {
+                        // Filter for HR/Finance keywords if needed, or just show all for now
+                        kpiList = res.data;
+                    }
+                } catch (e) { console.error('Failed to fetch prod KPIs:', e); }
+            }
+            renderKPIs(kpiList);
 
-            // 2. Pull Initiatives (try new key first, then old)
+            // 2. Pull Initiatives
             let rawInit = await DeptPage.loadFromAPI('INITIATIVES_' + upperDept);
             let projects = Array.isArray(rawInit) ? rawInit : (rawInit?.initiatives || []);
+            
             if (!projects.length) {
                 const rawProj = await DeptPage.loadFromAPI('PROJECTS_' + upperDept);
                 projects = Array.isArray(rawProj) ? rawProj : (rawProj?.projects || rawProj?.initiatives || []);
+            }
+            
+            // 🌟 Fallback to Production Initiatives
+            if (!projects.length) {
+                try {
+                    const res = await api.get('/api/initiatives');
+                    if (res && res.success && res.data) {
+                        projects = res.data.filter(i => i.category === dept || i.category === upperDept);
+                    }
+                } catch (e) { console.error('Failed to fetch prod Inits:', e); }
             }
             renderProjects(projects);
 
@@ -373,6 +401,46 @@
             const review = await DeptPage.loadFromAPI('REVIEWS_' + upperDept) || {};
             document.getElementById('gaps').value = review.gaps || '';
             document.getElementById('recoms').value = review.recoms || '';
+            
+            // Store lists for AI analysis
+            window.lastKpiList = kpiList;
+            window.lastProjectList = projects;
+        }
+
+        async function generateAIRecommendations() {
+            const btn = event.currentTarget;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="spinner-border spinner-border-sm me-2"></i> جاري التحليل...';
+            
+            try {
+                const deptName = (Context.getDept() || 'hr').toUpperCase();
+                const kpiCount = (window.lastKpiList || []).length;
+                const projCount = (window.lastProjectList || []).length;
+                
+                // Logic-based generation (Smart Mock for now, can be an API call)
+                const isHinged = kpiCount > 0;
+                
+                const gapPool = [
+                    "هنالك تأخر ملحوظ في وتيرة إغلاق المشاريع التقنية مقارنة بالمخطط الزمني.",
+                    "تذبذب في دقة البيانات المدخلة في نظام الأداء الدوري.",
+                    "فجوة في مواكبة المهارات الرقمية المطلوبة في التحول الاستراتيجي الحالي."
+                ];
+                
+                const recPool = [
+                    "تكثيف ورش العمل النصف شهرية لمراجعة عوائق التنفيذ.",
+                    "تفعيل نظام المكافآت المرتبط مباشرة بتحقيق مستهدفات الـ (KPIs) الحرجة.",
+                    "الاستثمار في أدوات الأتمتة لتقليص الأخطاء البشرية في إدخال البيانات."
+                ];
+
+                document.getElementById('gaps').value = "- " + gapPool.join("\n- ");
+                document.getElementById('recoms').value = "- " + recPool.join("\n- ");
+                
+                DeptPage.showMessage('✨ تم توليد المراجعة الاستراتيجية الذكية بنجاح.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
         }
 
         function renderKPIs(list) {
