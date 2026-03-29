@@ -68,6 +68,8 @@ try {
 // ============ Step 4: Seed if needed ============
 console.log('');
 console.log('🌱 [Step 4/4] Checking if seed is needed...');
+const forceSeed = process.env.FORCE_SEED === 'true' || process.env.RESEED === 'true';
+
 try {
     const checkScript = `
         const prisma = require('./lib/prisma');
@@ -81,12 +83,14 @@ try {
         timeout: 15000
     }).trim();
 
-    if (result.includes('NEEDS_SEED')) {
-        console.log('   🌱 First deploy — running seed...');
+    if (result.includes('NEEDS_SEED') || forceSeed) {
+        if (forceSeed) console.log('   🌱 FORCE_SEED (Re-seeding now)...');
+        else console.log('   🌱 First deploy — running seed...');
+
         execSync('node scripts/seed.js', { stdio: 'inherit', cwd: rootDir, timeout: 120000 });
         console.log('   ✅ Seed completed');
     } else {
-        console.log('   ℹ️ Data exists — skipping seed');
+        console.log('   ℹ️ Data exists — skipping seed (Use FORCE_SEED=true to re-seed)');
     }
 } catch (err) {
     console.warn('   ⚠️ Seed check skipped (non-critical):', err.message?.substring(0, 100));
