@@ -111,10 +111,28 @@ async function seed() {
     const hashedViewer = await bcrypt.hash('V!ew@Str4tix2026', 10);
 
     const adminUser = await prisma.user.create({
-      data: { email: 'admin@stratix.com', password: hashedAdmin, name: 'مدير النظام' },
+      data: {
+        email: 'admin@stratix.com',
+        password: hashedAdmin,
+        name: 'مدير النظام',
+        userCategory: 'COMPANY_MANAGER'
+      },
     });
     const managerUser = await prisma.user.create({
-      data: { email: 'manager@stratix.com', password: hashedManager, name: 'مدير الاستراتيجية' },
+      data: {
+        email: 'manager@stratix.com',
+        password: hashedManager,
+        name: 'مدير الاستراتيجية',
+        userCategory: 'COMPANY_MANAGER'
+      },
+    });
+    const hrUser = await prisma.user.create({
+      data: {
+        email: 'hr@stratix.com',
+        password: hashedManager,
+        name: 'مدير الموارد البشرية',
+        userCategory: 'DEPT_HR'
+      },
     });
     const editorUser = await prisma.user.create({
       data: { email: 'editor@stratix.com', password: hashedEditor, name: 'محرر المحتوى' },
@@ -122,7 +140,7 @@ async function seed() {
     const viewerUser = await prisma.user.create({
       data: { email: 'viewer@stratix.com', password: hashedViewer, name: 'مستخدم عادي' },
     });
-    console.log('✅ Created 4 Users');
+    console.log('✅ Created 5 Users (including HR Manager)');
 
     // =========================================
     // 3. ENTITIES
@@ -158,11 +176,12 @@ async function seed() {
     // 4. MEMBERS
     // =========================================
     console.log('🔗 Creating Member relationships...');
-    await prisma.member.create({ data: { userId: adminUser.id, entityId: entity1.id, role: 'OWNER' } });
-    await prisma.member.create({ data: { userId: managerUser.id, entityId: entity1.id, role: 'ADMIN' } });
-    await prisma.member.create({ data: { userId: editorUser.id, entityId: entity1.id, role: 'EDITOR' } });
-    await prisma.member.create({ data: { userId: viewerUser.id, entityId: entity1.id, role: 'VIEWER' } });
-    console.log('✅ Created 4 Members');
+    await prisma.member.create({ data: { userId: adminUser.id, entityId: entity1.id, role: 'OWNER', userType: 'COMPANY_MANAGER' } });
+    await prisma.member.create({ data: { userId: managerUser.id, entityId: entity1.id, role: 'ADMIN', userType: 'COMPANY_MANAGER' } });
+    await prisma.member.create({ data: { userId: hrUser.id, entityId: entity1.id, role: 'EDITOR', userType: 'DEPT_MANAGER' } });
+    await prisma.member.create({ data: { userId: editorUser.id, entityId: entity1.id, role: 'EDITOR', userType: 'COMPANY_MANAGER' } });
+    await prisma.member.create({ data: { userId: viewerUser.id, entityId: entity1.id, role: 'VIEWER', userType: 'EXPLORER' } });
+    console.log('✅ Created 5 Members');
 
     // =========================================
     // 5. STRATEGY VERSION
