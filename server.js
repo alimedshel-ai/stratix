@@ -64,6 +64,7 @@ const initiativesRoutes = require('./routes/initiatives');
 const deptHealthRoutes = require('./routes/dept-health');
 const progressRoutes = require('./routes/progress');
 const deptAnalysisRoutes = require('./routes/dept-analysis');
+const diagnosticApiRoutes = require('./routes/diagnostic-api');
 
 
 
@@ -308,6 +309,7 @@ app.get('/api/user/me', verifyToken, async (req, res) => {
 
 // 🔓 Path — المسار الاستراتيجي
 app.use('/api/path', pathRoutes);
+app.use('/api/diagnostic', diagnosticApiRoutes);
 
 // 🧠 Financial Engine — محرك الترجمة المالية (Guest-accessible — بدون login)
 app.use('/api/financial-engine', engineLimiter, financialEngineRoutes);

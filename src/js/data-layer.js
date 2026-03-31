@@ -1,13 +1,13 @@
 /**
- * 📊 data-layer.js — Stratix Unified Data Access Layer
+ * 📊 data-layer.js — Startix Unified Data Access Layer
  * 
  * طبقة موحّدة لقراءة/كتابة البيانات.
  * DB أولاً → localStorage كـ fallback → خطأ واضح إذا لا يوجد بيانات.
  * 
  * الاستخدام:
- *   const data = await StratixData.getDeptDeep(entityId);
- *   const swot = await StratixData.getDeptDeep(entityId, 'hr');
- *   await StratixData.saveDeptDeep(entityId, allData);
+ *   const data = await StartixData.getDeptDeep(entityId);
+ *   const swot = await StartixData.getDeptDeep(entityId, 'hr');
+ *   await StartixData.saveDeptDeep(entityId, allData);
  * 
  * يدعم: ES modules + plain scripts (IIFE)
  */
@@ -261,7 +261,7 @@
     //  EXPORT
     // ═══════════════════════════════════
 
-    const StratixData = {
+    const StartixData = {
         // Auth
         getEntityId,
         getUserId,
@@ -286,10 +286,10 @@
 
     // ES modules
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = StratixData;
+        module.exports = StartixData;
     }
 
     // Global for plain scripts
-    global.StratixData = StratixData;
+    global.StartixData = StartixData;
 
 })(typeof window !== 'undefined' ? window : globalThis);

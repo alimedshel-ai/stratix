@@ -1,5 +1,5 @@
 /**
- * Stratix — Sidebar v2 (الخيط الذهبي)
+ * Startix — Sidebar v2 (الخيط الذهبي)
  * الهيكل الجديد — 6 مراحل (RBV):
  *   🏢 تشخيص الداخل → 🔍 تشخيص الخارج → 🎯 التركيب
  *   📌 الاختيار → 🏆 البناء → 🚀 التنفيذ → 📊 المتابعة
@@ -942,8 +942,8 @@ async function initSidebar(sidebarContainer) {
   // ═══ المراحل — تُقرأ من الملف المركزي ═══
   const journeyPhases = (userType === 'DEPT_MANAGER' && _deptJourneyOverride)
     ? _deptJourneyOverride
-    : (window.StratixJourney && window.StratixJourney.phases)
-      ? window.StratixJourney.phases
+    : (window.StartixJourney && window.StartixJourney.phases)
+      ? window.StartixJourney.phases
       : [
         {
           id: 'DIAGNOSIS_INTERNAL', nameAr: 'تشخيص — الداخل', icon: 'bi-building-gear', emoji: '🏢', color: '#0d9488',
@@ -1428,8 +1428,8 @@ async function initSidebar(sidebarContainer) {
       }
 
       // مدير الإدارة: مراحل مخصصة | المستثمر: مراحل مفلترة | غيره: كل المراحل
-      var roleFilteredPhases = (window.StratixJourney && window.StratixJourney.filterForRole)
-        ? window.StratixJourney.filterForRole(userType)
+      var roleFilteredPhases = (window.StartixJourney && window.StartixJourney.filterForRole)
+        ? window.StartixJourney.filterForRole(userType)
         : journeyPhases;
 
       const displayPhases = (currentRules.limitedJourney && _deptJourneyOverride)
@@ -1767,7 +1767,7 @@ async function initSidebar(sidebarContainer) {
   // === تحميل محرك التقدم (ديناميكي) ===
   function loadProgressEngine() {
     return new Promise((resolve) => {
-      if (window.StratixProgress) { resolve(); return; }
+      if (window.StartixProgress) { resolve(); return; }
       const script = document.createElement('script');
       script.src = '/assets/js/progress-engine.js?v=6';
       script.onload = () => resolve();

@@ -1,5 +1,5 @@
 /**
- * Stratix UI Helpers
+ * Startix UI Helpers
  * Common UI functions for loading states, error handling, and notifications
  */
 

@@ -4,456 +4,513 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ستارتكس — تشخيص إدارتك</title>
-    <meta name="description" content="5 أسئلة لتحديد مسار تحسين إدارتك">
+    <title>ستارتكس — تشخيص مدير الإدارة</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
         rel="stylesheet">
     <link href="/assets/css/diagnostic.css" rel="stylesheet">
+    <style>
+        .diag-options.custom-grid {
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        /* صينية الأنشطة المتصلة مباشرة بداخل البطاقة */
+        .card-sub-options {
+            width: 100%;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed var(--border);
+            display: none;
+            cursor: default;
+        }
+
+        .diag-option.selected .card-sub-options {
+            display: block;
+        }
+
+        .chips-grid-mini {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 8px;
+        }
+
+        .diag-option {
+            flex-direction: column !important;
+            height: auto !important;
+            padding: 20px !important;
+            align-items: flex-start !important;
+            text-align: right !important;
+        }
+
+        .diag-option-icon {
+            margin-bottom: 8px;
+        }
+
+        .diag-option-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+        }
+
+        .chip-option {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            padding: 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+
+        .chip-option:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: var(--primary);
+        }
+
+        .chip-option.selected {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        @media (max-width: 600px) {
+            .diag-options.custom-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
 </head>
 
 <body class="diagnostic-page">
 
     <div class="diag-header">
         <a href="/" class="diag-logo"><i class="bi bi-activity"></i> Startix</a>
-        <div class="diag-subtitle">تشخيص إدارتك — 5 أسئلة سريعة</div>
+        <div class="diag-subtitle">تحليل النضج الاستراتيجي للأقسام والإدارات</div>
     </div>
 
     <div class="diag-container narrow">
-
-        <!-- شريط التقدم -->
         <div class="diag-progress" id="progressBar">
             <div class="diag-progress-step active" id="prog-1"></div>
             <div class="diag-progress-step" id="prog-2"></div>
             <div class="diag-progress-step" id="prog-3"></div>
             <div class="diag-progress-step" id="prog-4"></div>
             <div class="diag-progress-step" id="prog-5"></div>
-            <span class="diag-progress-label" id="progressLabel">1 / 5</span>
+            <div class="diag-progress-step" id="prog-6"></div>
+            <div class="diag-progress-step" id="prog-7"></div>
+            <div class="diag-progress-step" id="prog-8"></div>
+            <div class="diag-progress-step" id="prog-9"></div>
+            <div class="diag-progress-step" id="prog-10"></div>
+            <span class="diag-progress-label" id="progressLabel">1 / 10</span>
         </div>
 
-        <!-- Q1: القطاع -->
+        <!-- Q1: القطاعات الستة -->
         <div class="diag-question active" id="q1">
-            <div class="diag-q-label">السؤال 1 من 5</div>
-            <div class="diag-q-title">ما قطاع المنشأة؟</div>
-            <div class="diag-options">
-
-                <!-- ══ قطاع خاص ══ -->
-                <div class="diag-option" onclick="togglePrivateSubsMgr(this)" id="privateSectorCardMgr"
-                    style="flex-direction:column;align-items:stretch;">
-                    <div style="display:flex;align-items:center;gap:14px;">
-                        <div class="diag-option-icon" style="background:rgba(102,126,234,0.12); color:#667eea;">🏢</div>
-                        <div class="diag-option-text">
-                            <div class="diag-option-title">قطاع خاص</div>
-                            <div class="diag-option-desc">شركات ومؤسسات خاصة — ربحية</div>
-                        </div>
-                        <i class="bi bi-chevron-down" id="privateSectorChevronMgr"
-                            style="margin-right:auto;color:#667eea;transition:transform 0.3s;font-size:18px;"></i>
-                    </div>
-                    <!-- التفريعات -->
-                    <div id="privateSubsMgr"
-                        style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid rgba(102,126,234,0.15);">
-                        <div style="font-size:12px;color:#94a3b8;font-weight:600;margin-bottom:10px;padding-right:4px;">
-                            حدد نوع النشاط:</div>
-                        <div style="display:flex;flex-direction:column;gap:8px;">
-                            <div class="diag-sub-option"
-                                onclick="event.stopPropagation(); answer('activity', 'private_services', this)"
-                                style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;border:1px solid rgba(139,92,246,0.15);background:rgba(139,92,246,0.04);cursor:pointer;transition:all 0.3s;">
-                                <span style="font-size:20px;">💼</span>
-                                <div>
-                                    <div style="font-weight:700;font-size:14px;color:#1e293b;">خدمي</div>
-                                    <div style="font-size:11px;color:#94a3b8;">استشارات — خدمات مهنية — ضيافة — نقل —
-                                        صحة — تعليم</div>
-                                </div>
-                            </div>
-                            <div class="diag-sub-option"
-                                onclick="event.stopPropagation(); answer('activity', 'private_commercial', this)"
-                                style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;border:1px solid rgba(59,130,246,0.15);background:rgba(59,130,246,0.04);cursor:pointer;transition:all 0.3s;">
-                                <span style="font-size:20px;">🏪</span>
-                                <div>
-                                    <div style="font-weight:700;font-size:14px;color:#1e293b;">تجاري</div>
-                                    <div style="font-size:11px;color:#94a3b8;">بيع منتجات — استيراد وتصدير — متاجر —
-                                        تجزئة — تقنية</div>
-                                </div>
-                            </div>
-                            <div class="diag-sub-option"
-                                onclick="event.stopPropagation(); answer('activity', 'private_industrial', this)"
-                                style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;border:1px solid rgba(245,158,11,0.15);background:rgba(245,158,11,0.04);cursor:pointer;transition:all 0.3s;">
-                                <span style="font-size:20px;">🏭</span>
-                                <div>
-                                    <div style="font-weight:700;font-size:14px;color:#1e293b;">صناعي</div>
-                                    <div style="font-size:11px;color:#94a3b8;">تصنيع — إنتاج — تعبئة — مقاولات — بناء —
-                                        طاقة</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ══ قطاع عام ══ -->
-                <div class="diag-option" onclick="answer('activity', 'public_sector', this)">
-                    <div class="diag-option-icon" style="background:rgba(16,185,129,0.12); color:#10b981;">🏛️</div>
+            <div class="diag-q-label">الخطوة ١: الميدان</div>
+            <div class="diag-q-title">ما هو تصنيف نشاط منشأة القسم العريض؟</div>
+            <div class="diag-options custom-grid">
+                <div class="diag-option" data-val="service" onclick="DiagnosticUI.selectSector('service', this)">
+                    <div class="diag-option-icon">💼</div>
                     <div class="diag-option-text">
-                        <div class="diag-option-title">قطاع عام</div>
-                        <div class="diag-option-desc">جهات حكومية — هيئات — مؤسسات عامة</div>
+                        <div class="diag-option-title">القطاع الخدمي</div>
                     </div>
+                    <div class="card-sub-options" id="tray-service"></div>
                 </div>
-
-                <!-- ══ قطاع مختلط ══ -->
-                <div class="diag-option" onclick="answer('activity', 'mixed_sector', this)">
-                    <div class="diag-option-icon" style="background:rgba(245,158,11,0.12); color:#f59e0b;">🤝</div>
+                <div class="diag-option" data-val="commercial" onclick="DiagnosticUI.selectSector('commercial', this)">
+                    <div class="diag-option-icon">🏪</div>
                     <div class="diag-option-text">
-                        <div class="diag-option-title">قطاع مختلط</div>
-                        <div class="diag-option-desc">شراكة بين القطاعين العام والخاص — شركات شبه حكومية</div>
+                        <div class="diag-option-title">القطاع التجاري</div>
                     </div>
+                    <div class="card-sub-options" id="tray-commercial"></div>
+                </div>
+                <div class="diag-option" data-val="industrial" onclick="DiagnosticUI.selectSector('industrial', this)">
+                    <div class="diag-option-icon">🏭</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">القطاع الصناعي</div>
+                    </div>
+                    <div class="card-sub-options" id="tray-industrial"></div>
+                </div>
+                <div class="diag-option" data-val="gov" onclick="DiagnosticUI.selectSector('gov', this)">
+                    <div class="diag-option-icon">🏛️</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">القطاع الحكومي</div>
+                    </div>
+                    <div class="card-sub-options" id="tray-gov"></div>
+                </div>
+                <div class="diag-option" data-val="sectoral" onclick="DiagnosticUI.selectSector('sectoral', this)">
+                    <div class="diag-option-icon">🤝</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">القطاعي/ المهني</div>
+                    </div>
+                    <div class="card-sub-options" id="tray-sectoral"></div>
+                </div>
+                <div class="diag-option" data-val="non_profit" onclick="DiagnosticUI.selectSector('non_profit', this)">
+                    <div class="diag-option-icon">🤲</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">قطاع غير ربحي</div>
+                    </div>
+                    <div class="card-sub-options" id="tray-non_profit"></div>
                 </div>
             </div>
         </div>
 
-        <script>
-            function togglePrivateSubsMgr(card) {
-                var subs = document.getElementById('privateSubsMgr');
-                var chevron = document.getElementById('privateSectorChevronMgr');
-                var isOpen = subs.style.display === 'block';
-                if (isOpen) {
-                    subs.style.display = 'none';
-                    chevron.style.transform = 'rotate(0deg)';
-                    card.classList.remove('selected');
-                } else {
-                    subs.style.display = 'block';
-                    chevron.style.transform = 'rotate(180deg)';
-                    card.classList.add('selected');
-                    card.style.borderColor = 'rgba(102,126,234,0.4)';
-                    card.style.background = 'rgba(102,126,234,0.06)';
-                }
-            }
-        </script>
+        <!-- Q2: (Hidden/Skipped) -->
+        <div class="diag-question" id="q2" style="display:none !important;"></div>
 
-        <!-- Q2: الإدارة -->
-        <div class="diag-question" id="q2">
-            <div class="diag-q-label">السؤال 2 من 5</div>
-            <div class="diag-q-title">ما هي الإدارة التي تديرها؟</div>
-            <div class="diag-options">
-                <div class="diag-option" onclick="answer('department', 'hr', this)">
-                    <div class="diag-option-icon" style="background:rgba(139,92,246,0.12); color:#8b5cf6;">👥</div>
-                    <div class="diag-option-text">
-                        <div class="diag-option-title">الموارد البشرية</div>
-                        <div class="diag-option-desc">التوظيف، تقييم الأداء، التطوير، الرواتب</div>
-                    </div>
-                </div>
-                <div class="diag-option" onclick="answer('department', 'finance', this)">
-                    <div class="diag-option-icon" style="background:rgba(16,185,129,0.12); color:#10b981;">💰</div>
-                    <div class="diag-option-text">
-                        <div class="diag-option-title">المالية</div>
-                        <div class="diag-option-desc">الميزانيات، التقارير المالية، التدفقات النقدية</div>
-                    </div>
-                </div>
-                <div class="diag-option" onclick="answer('department', 'marketing', this)">
-                    <div class="diag-option-icon" style="background:rgba(245,158,11,0.12); color:#f59e0b;">📢</div>
-                    <div class="diag-option-text">
-                        <div class="diag-option-title">التسويق</div>
-                        <div class="diag-option-desc">الحملات، العلامة التجارية، تحليل السوق</div>
-                    </div>
-                </div>
-                <div class="diag-option" onclick="answer('department', 'operations', this)">
-                    <div class="diag-option-icon" style="background:rgba(107,114,128,0.12); color:#9ca3af;">⚙️</div>
-                    <div class="diag-option-text">
-                        <div class="diag-option-title">العمليات</div>
-                        <div class="diag-option-desc">الإنتاج، سلسلة التوريد، الجودة</div>
-                    </div>
-                </div>
-                <div class="diag-option" onclick="answer('department', 'it', this)">
-                    <div class="diag-option-icon" style="background:rgba(59,130,246,0.12); color:#3b82f6;">💻</div>
-                    <div class="diag-option-text">
-                        <div class="diag-option-title">التقنية</div>
-                        <div class="diag-option-desc">البنية التحتية، المشاريع التقنية، التحول الرقمي</div>
-                    </div>
-                </div>
-                <div class="diag-option" onclick="answer('department', 'compliance', this)">
-                    <div class="diag-option-icon" style="background:rgba(239,68,68,0.12); color:#ef4444;">✅</div>
-                    <div class="diag-option-text">
-                        <div class="diag-option-title">الامتثال والحوكمة</div>
-                        <div class="diag-option-desc">اللوائح، المخاطر، التدقيق، الحوكمة</div>
-                    </div>
-                </div>
-                <div class="diag-option" onclick="answer('department', 'sales', this)">
-                    <div class="diag-option-icon" style="background:rgba(16,185,129,0.12); color:#10b981;">🤝</div>
-                    <div class="diag-option-text">
-                        <div class="diag-option-title">المبيعات</div>
-                        <div class="diag-option-desc">الصفقات، العملاء، الإيرادات المستهدفة</div>
-                    </div>
-                </div>
-                <div class="diag-option" onclick="answer('department', 'cs', this)">
-                    <div class="diag-option-icon" style="background:rgba(59,130,246,0.12); color:#3b82f6;">🎧</div>
-                    <div class="diag-option-text">
-                        <div class="diag-option-title">خدمة العملاء</div>
-                        <div class="diag-option-desc">الدعم الفني، التذاكر، رضا العملاء</div>
-                    </div>
-                </div>
-                <div class="diag-option" onclick="answer('department', 'quality', this)">
-                    <div class="diag-option-icon" style="background:rgba(139,92,246,0.12); color:#8b5cf6;">🏆</div>
-                    <div class="diag-option-text">
-                        <div class="diag-option-title">الجودة</div>
-                        <div class="diag-option-desc">الآيزو، المعايير، التفتيش والتحسين</div>
-                    </div>
-                </div>
-                <div class="diag-option" onclick="answer('department', 'projects', this)">
-                    <div class="diag-option-icon" style="background:rgba(245,158,11,0.12); color:#f59e0b;">🏗️</div>
-                    <div class="diag-option-text">
-                        <div class="diag-option-title">المشاريع</div>
-                        <div class="diag-option-desc">PMO، تنفيذ المشاريع، الجدول الزمني</div>
-                    </div>
-                </div>
-                <div class="diag-option" onclick="answer('department', 'governance', this)">
-                    <div class="diag-option-icon" style="background:rgba(107,114,128,0.12); color:#6b7280;">⚖️</div>
-                    <div class="diag-option-text">
-                        <div class="diag-option-title">الحوكمة</div>
-                        <div class="diag-option-desc">السياسات، الصلاحيات، الإشراف العام</div>
-                    </div>
-                </div>
-                <div class="diag-option" onclick="answer('department', 'support', this)">
-                    <div class="diag-option-icon" style="background:rgba(239,68,68,0.12); color:#ef4444;">🔧</div>
-                    <div class="diag-option-text">
-                        <div class="diag-option-title">الخدمات المساندة</div>
-                        <div class="diag-option-desc">المشتريات، الشؤون الإدارية، المرافق</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Q3: حجم الفريق -->
+        <!-- Q3: الأقسام -->
         <div class="diag-question" id="q3">
-            <div class="diag-q-label">السؤال 3 من 5</div>
-            <div class="diag-q-title">كم عدد أفراد فريقك؟</div>
+            <div class="diag-q-label">الخطوة ٣: نطاق العمل</div>
+            <div class="diag-q-title">أي قسم تتبع له إدارة هذا التشخيص؟</div>
             <div class="diag-options">
-                <div class="diag-option" onclick="answer('teamSize', '1-5', this)">
-                    <div class="diag-option-icon">👤</div>
+                <div class="diag-option" data-val="finance"
+                    onclick="DiagnosticUI.answer('department', 'finance', this)">
+                    <div class="diag-option-icon">💰</div>
                     <div class="diag-option-text">
-                        <div class="diag-option-title">1 — 5 أشخاص</div>
+                        <div class="diag-option-title">المالية والحسابات</div>
                     </div>
                 </div>
-                <div class="diag-option" onclick="answer('teamSize', '6-15', this)">
+                <div class="diag-option" data-val="hr" onclick="DiagnosticUI.answer('department', 'hr', this)">
                     <div class="diag-option-icon">👥</div>
                     <div class="diag-option-text">
-                        <div class="diag-option-title">6 — 15 شخص</div>
+                        <div class="diag-option-title">الموارد البشرية</div>
                     </div>
                 </div>
-                <div class="diag-option" onclick="answer('teamSize', '16-50', this)">
-                    <div class="diag-option-icon">🏬</div>
+                <div class="diag-option" data-val="sales" onclick="DiagnosticUI.answer('department', 'sales', this)">
+                    <div class="diag-option-icon">🎯</div>
                     <div class="diag-option-text">
-                        <div class="diag-option-title">16 — 50 شخص</div>
+                        <div class="diag-option-title">المبيعات</div>
                     </div>
                 </div>
-                <div class="diag-option" onclick="answer('teamSize', '50+', this)">
-                    <div class="diag-option-icon">🏢</div>
+                <div class="diag-option" data-val="marketing"
+                    onclick="DiagnosticUI.answer('department', 'marketing', this)">
+                    <div class="diag-option-icon">📢</div>
                     <div class="diag-option-text">
-                        <div class="diag-option-title">أكثر من 50 شخص</div>
+                        <div class="diag-option-title">التسويق</div>
+                    </div>
+                </div>
+                <div class="diag-option" data-val="operations"
+                    onclick="DiagnosticUI.answer('department', 'operations', this)">
+                    <div class="diag-option-icon">⚙️</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">العمليات</div>
+                    </div>
+                </div>
+                <div class="diag-option" data-val="logistics"
+                    onclick="DiagnosticUI.answer('department', 'logistics', this)">
+                    <div class="diag-option-icon">🚚</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">اللوجستيات</div>
+                    </div>
+                </div>
+                <div class="diag-option" data-val="governance"
+                    onclick="DiagnosticUI.answer('department', 'governance', this)">
+                    <div class="diag-option-icon">🏛️</div>
+                    <div class="diag-option-text">
+                        <div class="diag-option-title">الامتثال والحوكمة</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Q4: التحدي -->
+        <!-- Q4: حجم الفريق -->
         <div class="diag-question" id="q4">
-            <div class="diag-q-label">السؤال 4 من 5</div>
-            <div class="diag-q-title">ما التحدي الأكبر في إدارتك الآن؟</div>
+            <div class="diag-q-label">الخطوة ٤: الطاقم</div>
+            <div class="diag-q-title">حجم القوى العاملة داخل قسمك؟</div>
             <div class="diag-options">
-                <div class="diag-option" onclick="answer('challenge', 'performance', this)">
-                    <div class="diag-option-icon">📉</div>
-                    <div class="diag-option-text">
-                        <div class="diag-option-title">ضعف أداء الفريق</div>
-                        <div class="diag-option-desc">إنتاجية منخفضة — غياب مؤشرات قياس</div>
-                    </div>
+                <div class="diag-option" data-val="micro" onclick="DiagnosticUI.answer('teamSize', 'micro', this)">
+                    <div class="diag-option-title">أقل من ٣</div>
                 </div>
-                <div class="diag-option" onclick="answer('challenge', 'processes', this)">
-                    <div class="diag-option-icon">🔄</div>
-                    <div class="diag-option-text">
-                        <div class="diag-option-title">فوضى الإجراءات</div>
-                        <div class="diag-option-desc">عمليات غير موثقة — تكرار أخطاء</div>
-                    </div>
+                <div class="diag-option" data-val="small" onclick="DiagnosticUI.answer('teamSize', 'small', this)">
+                    <div class="diag-option-title">٣ - ١٠</div>
                 </div>
-                <div class="diag-option" onclick="answer('challenge', 'metrics', this)">
-                    <div class="diag-option-icon">📊</div>
-                    <div class="diag-option-text">
-                        <div class="diag-option-title">غياب مقاييس واضحة</div>
-                        <div class="diag-option-desc">لا أعرف أين نحن بالأرقام</div>
-                    </div>
+                <div class="diag-option" data-val="medium" onclick="DiagnosticUI.answer('teamSize', 'medium', this)">
+                    <div class="diag-option-title">١٠ - ٣٠</div>
                 </div>
-                <div class="diag-option" onclick="answer('challenge', 'alignment', this)">
-                    <div class="diag-option-icon">🎯</div>
-                    <div class="diag-option-text">
-                        <div class="diag-option-title">عدم توافق مع الاستراتيجية</div>
-                        <div class="diag-option-desc">إدارتي لا تتماشى مع أهداف الشركة</div>
-                    </div>
+                <div class="diag-option" data-val="large" onclick="DiagnosticUI.answer('teamSize', 'large', this)">
+                    <div class="diag-option-title">أكثر من ٣٠</div>
                 </div>
             </div>
         </div>
 
-        <!-- Q5: الأولوية -->
+        <!-- Q5: الحوكمة -->
         <div class="diag-question" id="q5">
-            <div class="diag-q-label">السؤال 5 من 5</div>
-            <div class="diag-q-title">ما الأولوية لديك الآن؟</div>
+            <div class="diag-q-label">الخطوة ٥: الحوكمة</div>
+            <div class="diag-q-title">نضج "توثيق الإجراءات" في القسم؟</div>
             <div class="diag-options">
-                <div class="diag-option" onclick="answer('priority', 'improve_performance', this)">
-                    <div class="diag-option-icon">🎯</div>
-                    <div class="diag-option-text">
-                        <div class="diag-option-title">تحسين الأداء</div>
-                        <div class="diag-option-desc">رفع إنتاجية الفريق وجودة المخرجات</div>
-                    </div>
+                <div class="diag-option" data-val="high" onclick="DiagnosticUI.answer('gov', 'high', this)">
+                    <div class="diag-option-title">أدلة موثقة (SOPs)</div>
                 </div>
-                <div class="diag-option" onclick="answer('priority', 'automate', this)">
-                    <div class="diag-option-icon">🤖</div>
-                    <div class="diag-option-text">
-                        <div class="diag-option-title">أتمتة العمليات</div>
-                        <div class="diag-option-desc">تقليل العمل اليدوي وتسريع الإجراءات</div>
-                    </div>
+                <div class="diag-option" data-val="partial" onclick="DiagnosticUI.answer('gov', 'partial', this)">
+                    <div class="diag-option-title">توثيق جزئي</div>
                 </div>
-                <div class="diag-option" onclick="answer('priority', 'develop_team', this)">
-                    <div class="diag-option-icon">🌟</div>
-                    <div class="diag-option-text">
-                        <div class="diag-option-title">تطوير الفريق</div>
-                        <div class="diag-option-desc">رفع مهارات الفريق وبناء قدرات جديدة</div>
-                    </div>
-                </div>
-                <div class="diag-option" onclick="answer('priority', 'measure', this)">
-                    <div class="diag-option-icon">📏</div>
-                    <div class="diag-option-text">
-                        <div class="diag-option-title">قياس ومتابعة</div>
-                        <div class="diag-option-desc">وضع مؤشرات أداء ومتابعة يومية</div>
-                    </div>
+                <div class="diag-option" data-val="none" onclick="DiagnosticUI.answer('gov', 'none', this)">
+                    <div class="diag-option-title">عشوائية كاملة</div>
                 </div>
             </div>
         </div>
 
-        <!-- زر الرجوع -->
+        <!-- Q6: البيانات -->
+        <div class="diag-question" id="q6">
+            <div class="diag-q-label">الخطوة ٦: البيانات</div>
+            <div class="diag-q-title">كيف يتم رصد وتحليل أداء القسم؟</div>
+            <div class="diag-options">
+                <div class="diag-option" data-val="advanced" onclick="DiagnosticUI.answer('data', 'advanced', this)">
+                    <div class="diag-option-title">لوحات بيانات (Power BI)</div>
+                </div>
+                <div class="diag-option" data-val="good" onclick="DiagnosticUI.answer('data', 'good', this)">
+                    <div class="diag-option-title">تقارير إكسيل منظمة</div>
+                </div>
+                <div class="diag-option" data-val="none" onclick="DiagnosticUI.answer('data', 'none', this)">
+                    <div class="diag-option-title">لا نملك نظام رصد</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Q7: الرقمية -->
+        <div class="diag-question" id="q7">
+            <div class="diag-q-label">الخطوة ٧: الرقمية</div>
+            <div class="diag-q-title">ما مدى اعتماد القسم على البرمجيات؟</div>
+            <div class="diag-options">
+                <div class="diag-option" data-val="full" onclick="DiagnosticUI.answer('digital', 'full', this)">
+                    <div class="diag-option-title">أتمتة شاملة</div>
+                </div>
+                <div class="diag-option" data-val="cloud" onclick="DiagnosticUI.answer('digital', 'cloud', this)">
+                    <div class="diag-option-title">حلول سحابية</div>
+                </div>
+                <div class="diag-option" data-val="none" onclick="DiagnosticUI.answer('digital', 'none', this)">
+                    <div class="diag-option-title">عمل يدوي بحت</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Q8-10: ديناميكية -->
+        <div class="diag-question" id="q8">
+            <div class="diag-q-label">الخطوة ٨: التخصص</div>
+            <div class="diag-q-title" id="q8Title">...</div>
+            <div class="diag-options" id="q8Options"></div>
+        </div>
+        <div class="diag-question" id="q9">
+            <div class="diag-q-label">الخطوة ٩: التوسع</div>
+            <div class="diag-q-title" id="q9Title">...</div>
+            <div class="diag-options" id="q9Options"></div>
+        </div>
+        <div class="diag-question" id="q10">
+            <div class="diag-q-label">الخطوة ١٠: التميز</div>
+            <div class="diag-q-title" id="q10Title">...</div>
+            <div class="diag-options" id="q10Options"></div>
+        </div>
+
         <div class="diag-nav">
-            <button class="diag-btn diag-btn-ghost" id="backBtn" onclick="goBack()">
-                <i class="bi bi-arrow-right"></i> رجوع
-            </button>
-            <div></div>
+            <button class="diag-btn diag-btn-secondary" onclick="DiagnosticUI.goBack()"><i
+                    class="bi bi-arrow-right"></i>
+                رجوع</button>
+            <div class="diag-progress-label">Startix Intelligence</div>
         </div>
     </div>
 
+    <script src="/js/path-engine.js"></script>
     <script src="/js/diagnostic-engine.js"></script>
-    <script>
-        const answers = {};
-        let currentQ = 1;
-        let totalQ = 5;
-        let skipToQ = 1;
+    <script type="module">
+        import { ACTIVITIES, DEPT_LOGIC } from '/js/dept-config.js';
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const isAddEntity = new URLSearchParams(window.location.search).get('from') === 'add-entity';
-            if (isAddEntity) {
-                // استخراج المعلومات المحفوظة مسبقاً من إضافة المنشأة وحساب المستخدم
-                const pendingStr = sessionStorage.getItem('pendingEntityPayload');
-                const pending = pendingStr ? JSON.parse(pendingStr) : {};
-                const u = JSON.parse(localStorage.getItem('user') || '{}');
+        window.DiagnosticUI = {
+            currentQ: 1,
+            totalQ: 10,
+            answers: { type: 'manager', timestamp: new Date().toISOString() },
+            backendTempId: null,
+            questionKeyToId: {},
 
-                // تعيين القطاع تلقائياً
-                const sectorMap = {
-                    'services': 'private_services', 'manufacturing': 'private_industrial',
-                    'retail': 'private_commercial', 'technology': 'private_commercial',
-                    'healthcare': 'private_services', 'education': 'private_services',
-                    'construction': 'private_industrial', 'finance': 'private_commercial',
-                    'logistics': 'private_services', 'government': 'public_sector',
-                    'other': 'private_services'
-                };
-                answers['activity'] = sectorMap[pending.sector || 'services'] || 'private_services';
+            async startBackendSession() {
+                try {
+                    const res = await fetch('/api/session/start', { method: 'POST' });
+                    const data = await res.json();
+                    this.backendTempId = data.data.tempSessionId;
+                    await this.loadQuestionsMap();
+                } catch (e) { console.warn('Backend init failed', e); }
+            },
 
-                // تعيين الإدارة تلقائياً
-                const deptKey = (u.department?.key || u.userCategory?.replace('DEPT_', '') || 'hr').toLowerCase();
-                const validDepts = ['hr', 'finance', 'marketing', 'operations', 'it', 'compliance'];
-                answers['department'] = validDepts.includes(deptKey) ? deptKey : 'operations';
+            async loadQuestionsMap() {
+                const res = await fetch('/api/session/questions?levels=screening,diagnostic');
+                const questions = await res.json();
+                questions.forEach(q => { this.questionKeyToId[q.questionKey] = q.id; });
+            },
 
-                // إخفاء الأسئلة المتخطاة وتنظيم الواجهة لتبدو وكأنها ٣ أسئلة فقط
-                document.getElementById('q1').style.display = 'none';
-                document.getElementById('q2').style.display = 'none';
+            async syncAnswer(key, value) {
+                if (!this.backendTempId) return;
+                const qId = this.questionKeyToId[key];
+                if (!qId) return;
+                try {
+                    await fetch('/api/session/answer', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ tempSessionId: this.backendTempId, questionId: qId, answerValue: value })
+                    });
+                } catch (e) { console.warn('Answer sync failed', e); }
+            },
 
-                document.querySelector('#q3 .diag-q-label').textContent = 'السؤال 1 من 3';
-                document.querySelector('#q4 .diag-q-label').textContent = 'السؤال 2 من 3';
-                document.querySelector('#q5 .diag-q-label').textContent = 'السؤال 3 من 3';
+            initBackend() { this.startBackendSession(); },
+
+            selectSector(val, el) {
+                this.answers.sector = val;
+
+                // تحديث واجهة الاختيار
+                document.querySelectorAll('.diag-option').forEach(o => o.classList.remove('selected'));
+                el.classList.add('selected');
+
+                if (!this.backendTempId) this.initBackend();
+                this.renderSubSectors(val);
+            },
+
+            renderSubSectors(sector) {
+                // تنظيف كل الصواني الأخرى أولاً
+                document.querySelectorAll('.card-sub-options').forEach(t => t.innerHTML = '');
+
+                const container = document.getElementById('tray-' + sector);
+                const items = ACTIVITIES[sector] || [];
+                if (!container) return;
+
+                container.innerHTML = '<div class="chips-grid-mini"></div>';
+                const grid = container.querySelector('.chips-grid-mini');
+
+                items.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'chip-option';
+                    div.dataset.val = item.v;
+                    if (this.answers.activity === item.v) div.classList.add('selected');
+                    div.onclick = (e) => {
+                        e.stopPropagation(); // منع إغلاق البطاقة عند اختيار النشاط
+                        this.answers.activity = item.v;
+                        this.syncAnswer('activity', item.v);
+
+                        grid.querySelectorAll('.chip-option').forEach(c => c.classList.remove('selected'));
+                        div.classList.add('selected');
+
+                        this.currentQ = 2;
+                        setTimeout(() => this.nextStep(), 400);
+                    };
+                    div.innerHTML = `<span>${item.i}</span> <span>${item.n}</span>`;
+                    grid.appendChild(div);
+                });
+            },
+
+            answer(key, val, el) {
+                this.answers[key] = val;
+                this.syncAnswer(key, val);
+                if (el) {
+                    el.parentElement.querySelectorAll('.diag-option').forEach(o => o.classList.remove('selected'));
+                    el.classList.add('selected');
+                }
+                setTimeout(() => this.nextStep(), 300);
+            },
+
+            nextStep() {
+                if (this.currentQ < this.totalQ) {
+                    this.currentQ++;
+                    if (this.currentQ === 8) this.renderDynamicSteps();
+                    this.showQuestion();
+                } else {
+                    this.finish();
+                }
+            },
+
+            renderDynamicSteps() {
+                const dept = this.answers.department || 'finance';
+                const cfg = DEPT_LOGIC[dept];
+                if (!cfg) return;
+                [8, 9, 10].forEach(num => {
+                    const qd = cfg['q' + num];
+                    if (!qd) return;
+                    document.getElementById('q' + num + 'Title').textContent = qd.t;
+                    const optBox = document.getElementById('q' + num + 'Options');
+                    optBox.innerHTML = '';
+                    qd.o.forEach(o => {
+                        const div = document.createElement('div');
+                        div.className = 'diag-option';
+                        div.dataset.val = o.v;
+                        if (this.answers[qd.k] === o.v) div.classList.add('selected');
+                        div.onclick = () => this.answer(qd.k, o.v, div);
+                        div.innerHTML = `<div class="diag-option-icon">${o.i}</div><div class="diag-option-text"><div class="diag-option-title">${o.n}</div></div>`;
+                        optBox.appendChild(div);
+                    });
+                });
+            },
+
+            showQuestion() {
+                document.querySelectorAll('.diag-question').forEach(q => q.classList.remove('active'));
+                const qBox = document.getElementById('q' + this.currentQ);
+                if (qBox) qBox.classList.add('active');
+
+                // استعادة الاختيارات المحفوظة
+                if (this.currentQ === 1) {
+                    const savedSector = this.answers.sector;
+                    if (savedSector) {
+                        const selectedOption = qBox.querySelector(`.diag-option[data-val="${savedSector}"]`);
+                        if (selectedOption) selectedOption.classList.add('selected');
+                    }
+                } else if (this.currentQ === 2) {
+                    const labels = { service: 'الخدمي', commercial: 'التجاري', industrial: 'الصناعي', gov: 'الحكومي', sectoral: 'القطاعي/المهني', non_profit: 'غير الربحي' };
+                    const sector = this.answers.sector;
+                    if (sector) {
+                        const titleEl = document.getElementById('q2Title');
+                        if (titleEl) titleEl.textContent = `حدد النشاط ${labels[sector]} الدقيق لمنشأتك:`;
+                    }
+                    const savedActivity = this.answers.activity;
+                    if (savedActivity && this.answers.sector) {
+                        this.renderSubSectors(this.answers.sector); // يعيد رسم الخيارات ثم يحدد
+                        setTimeout(() => {
+                            const container = document.getElementById('subSectorOptions');
+                            const selectedOption = container?.querySelector(`.diag-option[data-val="${savedActivity}"]`);
+                            if (selectedOption) selectedOption.classList.add('selected');
+                        }, 0);
+                    }
+                } else if (this.currentQ >= 3 && this.currentQ <= 7) {
+                    const keyMap = { 3: 'department', 4: 'teamSize', 5: 'gov', 6: 'data', 7: 'digital' };
+                    const answerKey = keyMap[this.currentQ];
+                    const savedValue = this.answers[answerKey];
+                    if (savedValue) {
+                        const selectedOption = qBox.querySelector(`.diag-option[data-val="${savedValue}"]`);
+                        if (selectedOption) selectedOption.classList.add('selected');
+                    }
+                }
 
                 // تحديث شريط التقدم
-                const pb = document.getElementById('progressBar');
-                document.getElementById('prog-1').remove();
-                document.getElementById('prog-2').remove();
-
-                // إعادة تسمية الآي دي للثلاثة المتبقية لتعمل مع نظام التقدم الخاص بنا
-                const steps = pb.querySelectorAll('.diag-progress-step');
-                steps[0].id = 'prog-1';
-                steps[1].id = 'prog-2';
-                steps[2].id = 'prog-3';
-
-                totalQ = 3;
-                skipToQ = 3;
-
-                // بدء الأسئلة من هنا (لاحظ أن currentQ في المنطق يبقى ١ ولكن للـ DOM نستخدم تخطيط ذكي)
-                // سنقوم بإعادة توجيه currentQ والخطوات
-                document.querySelectorAll('.diag-question').forEach(q => q.classList.remove('active'));
-
-                // لنقم بتغيير معرفات الـ DOM لتتوافق مع currentQ المستحدث
-                const q3 = document.getElementById('q3'); q3.id = 'q1_actual';
-                const q4 = document.getElementById('q4'); q4.id = 'q2_actual';
-                const q5 = document.getElementById('q5'); q5.id = 'q3_actual';
-
-                // إظهار السؤال الأول الفعلي
-                document.getElementById('q1_actual').classList.add('active');
-            }
-        });
-
-        function answer(key, value, el) {
-            answers[key] = value;
-            const parent = el.closest('.diag-question');
-            parent.querySelectorAll('.diag-option').forEach(o => o.classList.remove('selected'));
-            el.classList.add('selected');
-
-            setTimeout(() => {
-                if (currentQ < totalQ) {
-                    goToQuestion(currentQ + 1);
-                } else {
-                    calculateResult();
+                document.getElementById('progressLabel').innerText = this.currentQ + ' / ' + this.totalQ;
+                for (let i = 1; i <= this.totalQ; i++) {
+                    const step = document.getElementById('prog-' + i);
+                    if (!step) continue;
+                    if (i < this.currentQ) step.classList.add('done');
+                    else if (i === this.currentQ) step.classList.add('active');
+                    else step.classList.remove('active', 'done');
                 }
-            }, 350);
-        }
+            },
 
-        function goToQuestion(num) {
-            const isAddEntity = new URLSearchParams(window.location.search).get('from') === 'add-entity';
-            const prevId = isAddEntity ? 'q' + currentQ + '_actual' : 'q' + currentQ;
-            const nextId = isAddEntity ? 'q' + num + '_actual' : 'q' + num;
+            goBack() {
+                if (this.currentQ > 1) {
+                    if (this.currentQ === 3) this.currentQ = 1; // تخطي q2 الوهمية عند الرجوع
+                    else this.currentQ--;
+                    this.showQuestion();
+                }
+            },
 
-            document.getElementById(prevId).classList.remove('active');
-            currentQ = num;
-            document.getElementById(nextId).classList.add('active');
-            updateProgress();
-        }
-
-        function updateProgress() {
-            for (let i = 1; i <= totalQ; i++) {
-                const step = document.getElementById('prog-' + i);
-                step.classList.remove('done', 'active');
-                if (i < currentQ) step.classList.add('done');
-                if (i === currentQ) step.classList.add('active');
+            finish() {
+                sessionStorage.setItem('diagnosticResult', JSON.stringify(this.answers));
+                if (this.backendTempId) {
+                    sessionStorage.setItem('diagnostic_tempId', this.backendTempId);
+                }
+                window.location.href = '/diagnostic-result.html';
             }
-            document.getElementById('progressLabel').textContent = currentQ + ' / ' + totalQ;
-        }
+        };
 
-        function goBack() {
-            if (currentQ > 1) {
-                goToQuestion(currentQ - 1);
-            } else {
-                window.location.href = '/select-type';
-            }
-        }
-
-        function calculateResult() {
-            const result = DiagnosticEngine.determineManagerPath(answers);
-            DiagnosticEngine.saveToSession(result);
-            // الانتقال لشاشة النتيجة مع حفظ المتغيرات
-            const urlParams = new URLSearchParams(window.location.search);
-            const fromQuery = urlParams.get('from') ? `?from=${urlParams.get('from')}` : '';
-            window.location.href = '/diagnostic-result' + fromQuery;
+        // تهيئة شريط التقدم
+        for (let i = 1; i <= 10; i++) {
+            const step = document.getElementById('prog-' + i);
+            if (i === 1) step.classList.add('active');
         }
     </script>
-
 </body>
 
 </html>

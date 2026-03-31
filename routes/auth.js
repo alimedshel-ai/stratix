@@ -210,20 +210,25 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// ═══ التحقق من رقم الجوال (هل موجود؟) ═══
-router.post('/check-phone', async (req, res) => {
+// ═══ التحقق من وجود المستخدم (إيميل) ═══
+router.post('/check-user', async (req, res) => {
   try {
-    const { phone } = req.body;
-    if (!phone) return res.status(400).json({ error: 'رقم الجوال مطلوب' });
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'البريد الإلكتروني مطلوب' });
 
-    const cleanPhone = phone.replace(/\s+/g, '').replace(/[^\d+]/g, '');
-    const existing = await prisma.user.findFirst({ where: { phone: cleanPhone } });
+    const user = await prisma.user.findUnique({
+      where: { email: email.trim().toLowerCase() },
+      select: { id: true, name: true }
+    });
 
-    res.json({ exists: !!existing });
+    res.json({ exists: !!user, name: user?.name });
   } catch (error) {
-    res.status(500).json({ error: 'فشل التحقق' });
+    res.status(500).json({ error: 'فشل التحقق من البريد' });
   }
 });
+
+// ═══ التحقق من رقم الجوال (هل موجود؟) ═══
+
 
 // ═══ إرسال كود التحقق SMS ═══
 router.post('/send-code', async (req, res) => {

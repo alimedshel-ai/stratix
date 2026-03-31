@@ -1,5 +1,5 @@
 /**
- * Stratix — Progress Engine v1.0
+ * Startix — Progress Engine v1.0
  * ═══════════════════════════════════════════════════════════
  * محرك التقدم الموحّد
  * مصدر حقيقة واحد (Single Source of Truth) لحالة تقدم المستخدم.
@@ -8,7 +8,7 @@
  * الاحتياطي: localStorage (مع تحذير — بيانات قد تكون غير دقيقة)
  *
  * الاستخدام:
- *   const progress = await StratixProgress.fetch();
+ *   const progress = await StartixProgress.fetch();
  *   console.log(progress.currentPhase);   // 2
  *   console.log(progress.overall);        // 42
  *   console.log(progress.phases.DIAGNOSIS.percent); // 65
@@ -268,7 +268,7 @@
     // ═══════════════════════════════════════════
     // 8. EXPOSE AS GLOBAL
     // ═══════════════════════════════════════════
-    window.StratixProgress = {
+    window.StartixProgress = {
         fetch: fetchProgress,
         getCached: getCached,
         clearCache: clearCache,

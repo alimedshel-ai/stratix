@@ -414,7 +414,7 @@
     // ═══════════════════════════════════════════
     // Export
     // ═══════════════════════════════════════════
-    window.StratixJourney = {
+    window.StartixJourney = {
         phases: phases,
         dashboardSteps: dashboardSteps,
         freeTools: freeTools,

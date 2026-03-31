@@ -423,15 +423,16 @@
         </div>
     </div>
 
-    <!-- ربط السكربتات المحدثة الجديدة -->
+    <!-- ربط السكربتات المحدثة الجديدة (نظام تقليدي + نظام Modules) -->
     <script src="/js/api.js"></script>
-    <script src="/js/diagnostic-engine.js"></script>
     <script src="/js/context-manager.js"></script>
     <script src="/js/auth-handler.js"></script>
 
-    <script>
+    <script type="module">
+        import { DiagnosticEngine } from './js/diagnostic-engine.js';
+
         // ============================================================
-        // دوال مساعدة
+        // دوال مساعدة (داخلياً ضمن ملف الـ Module)
         // ============================================================
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
@@ -474,29 +475,35 @@
             try {
                 const raw = sessionStorage.getItem('diagnosticResult');
                 if (!raw) return;
-                const result = JSON.parse(raw);
+                const ans = JSON.parse(raw);
                 const banner = document.getElementById('diagPathBanner');
                 const nameEl = document.getElementById('diagPathName');
                 const subEl = document.getElementById('diagPathSub');
+                const companyInput = document.getElementById('signup-company');
+
                 if (!banner || !nameEl) return;
 
-                if (result.category === 'manager') {
-                    nameEl.textContent = (result.emoji || '🎯') + ' مسار إدارة ' + (result.name || '');
-                } else if (result.category === 'investor') {
-                    nameEl.textContent = (result.emoji || '👁️') + ' ' + (result.name || '');
-                } else {
-                    nameEl.textContent = (result.emoji || '✨') + ' ' + (result.pathName || result.patternKey || '');
-                    if (result.variant && result.variant.subtitle) {
-                        subEl.textContent = result.variant.subtitle;
-                    }
+                // استنباط المسار من المحرك
+                const cat = ans.type || 'owner';
+                const result = cat === 'manager' ?
+                    DiagnosticEngine.determineManagerPath(ans) :
+                    DiagnosticEngine.determineOwnerPath(ans);
+
+                nameEl.textContent = (result.emoji || '🎯') + ' ' + (result.name || 'مسار استراتيجي');
+                if (result.reason) subEl.textContent = result.reason;
+
+                // تعبئة اسم المنشأة آلياً
+                if (ans.company_name && companyInput) {
+                    companyInput.value = ans.company_name;
                 }
+
                 banner.style.display = 'block';
 
                 const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.get('from') === 'diagnostic') {
+                if (urlParams.get('from') === 'diagnostic' || urlParams.get('tempId')) {
                     switchTab('signup');
                 }
-            } catch (e) { }
+            } catch (e) { console.error('Banner Logic Err:', e); }
         }
 
         // ============================================================
@@ -540,11 +547,14 @@
         // تسجيل الدخول
         // ============================================================
         async function handleLogin(email, password) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tempId = urlParams.get('tempId');
+
             try {
                 const res = await window.fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ email, password, tempSessionId: tempId })
                 });
                 const data = await res.json();
                 if (res.ok && data.user) {
@@ -588,7 +598,6 @@
             if (loginForm) {
                 loginForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
-
                     const btn = loginForm.querySelector('button[type="submit"]');
                     const originalText = btn.innerHTML;
                     btn.disabled = true;
@@ -603,7 +612,6 @@
                         return;
                     }
                     await handleLogin(email, password);
-
                     btn.disabled = false;
                     btn.innerHTML = originalText;
                 });
@@ -613,7 +621,6 @@
             if (signupForm) {
                 signupForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
-
                     const btn = signupForm.querySelector('button[type="submit"]');
                     const originalText = btn.innerHTML;
                     btn.disabled = true;
@@ -622,7 +629,6 @@
                     const name = document.getElementById('signup-name').value.trim();
                     const email = document.getElementById('signup-email').value.trim();
                     const companyName = document.getElementById('signup-company').value.trim();
-                    const phone = document.getElementById('signup-phone').value.trim();
                     const password = document.getElementById('signup-password').value;
 
                     if (!name || !email || !companyName || !password) {
@@ -632,39 +638,44 @@
                         return;
                     }
 
-                    // ✅ استخدام sessionStorage فقط للبيانات المؤقتة
-                    let diagnosticData = null;
-                    let uCategory = 'EXPLORER';
-                    let uType = 'COMPANY_MANAGER';
-                    try {
-                        const sessionDiag = sessionStorage.getItem('diagnosticResult');
-                        if (sessionDiag) {
-                            diagnosticData = JSON.parse(sessionDiag);
-                            if (diagnosticData.category === 'owner') {
-                                uCategory = diagnosticData.patternKey || 'EXPLORER';
-                                uType = 'COMPANY_MANAGER';
-                            } else if (diagnosticData.category === 'manager') {
-                                uCategory = 'DEPT_' + (diagnosticData.department || '').toUpperCase();
-                                uType = 'DEPT_MANAGER';
-                            } else if (diagnosticData.category === 'investor') {
-                                uCategory = 'INVESTOR_BOARD';
-                                uType = 'BOARD_VIEWER';
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const tempId = urlParams.get('tempId');
+
+                    if (tempId) {
+                        try {
+                            const res = await fetch('/api/diagnostic/save', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    tempSessionId: tempId,
+                                    email,
+                                    orgData: { userName: name, password, orgName: companyName }
+                                })
+                            });
+                            const data = await res.json();
+                            if (res.ok && data.token) {
+                                handleAuthResponse(data);
+                                return;
+                            } else {
+                                showToast(data.message || 'فشل حفظ البيانات', 'error');
                             }
+                        } catch (err) {
+                            showToast('خطأ في الاتصال بالسيرفر', 'error');
                         }
-                    } catch (e) { }
+                    } else {
+                        // التقليدي
+                        let diagnosticData = null;
+                        try {
+                            const sd = sessionStorage.getItem('diagnosticResult');
+                            if (sd) diagnosticData = JSON.parse(sd);
+                        } catch (e) { }
 
-                    if (companyName) {
-                        localStorage.setItem('stratix_temp_company_name', companyName);
+                        await handleSignup({
+                            name, email, password, companyName,
+                            userCategory: 'EXPLORER', userType: 'COMPANY_MANAGER',
+                            diagnosticData
+                        });
                     }
-
-                    await handleSignup({
-                        name, email, password,
-                        phone: phone || undefined,
-                        companyName,
-                        userCategory: uCategory,
-                        userType: uType,
-                        diagnosticData
-                    });
 
                     btn.disabled = false;
                     btn.innerHTML = originalText;
@@ -672,9 +683,6 @@
             }
         }
 
-        // ============================================================
-        // التهيئة
-        // ============================================================
         function init() {
             if (!document.getElementById('toastContainer')) {
                 const toastDiv = document.createElement('div');
@@ -684,14 +692,25 @@
             }
 
             const urlParams = new URLSearchParams(window.location.search);
-            const defaultTab = urlParams.get('tab') === 'login' ? 'login' : 'signup';
-            switchTab(defaultTab);
+            const tempId = urlParams.get('tempId');
+            const requestedTab = urlParams.get('tab');
+            const defaultTab = requestedTab || (tempId ? 'signup' : 'login');
+
+            if (tempId && !requestedTab) {
+                switchTab('signup');
+                const sub = document.getElementById('headerSub');
+                if (sub) sub.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill"></i> مبروك! التشخيص اكتمل.</span><br>احفظ نتائجك الآن بإنشاء حسابك.';
+            } else {
+                switchTab(defaultTab);
+            }
 
             attachEventHandlers();
             attachPasswordRules();
             attachFormHandlers();
             showDiagBanner();
         }
+
+
 
         document.addEventListener('DOMContentLoaded', init);
     </script>

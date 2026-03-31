@@ -1,5 +1,5 @@
 /**
- * Stratix — Sidebar v2 (الخيط الذهبي)
+ * Startix — Sidebar v2 (الخيط الذهبي)
  * الهيكل الجديد — 6 مراحل (RBV):
  *   🏢 تشخيص الداخل → 🔍 تشخيص الخارج → 🎯 التركيب
  *   📌 الاختيار → 🏆 البناء → 🚀 التنفيذ → 📊 المتابعة
@@ -40,14 +40,19 @@ const ROLE_LABELS = {
 const DEPT_LABELS = {
   hr: 'الموارد البشرية',
   finance: 'المالية',
+  fin: 'المالية',
   marketing: 'التسويق',
   operations: 'العمليات',
+  ops: 'العمليات',
   sales: 'المبيعات',
   it: 'تقنية المعلومات',
   cs: 'خدمة العملاء',
-  compliance: 'الامتثال',
+  service: 'خدمة العملاء',
+  compliance: 'الامتثال والحوكمة',
+  legal: 'الامتثال والحوكمة',
   quality: 'الجودة',
   projects: 'المشاريع',
+  pmo: 'المشاريع',
   support: 'الخدمات المساندة'
 };
 
@@ -69,12 +74,13 @@ function getUserRoleLabel(userData) {
   if (!userData) return '';
   const isPrivileged = userData.role === 'OWNER' || userData.role === 'ADMIN' || userData.role === 'COMPANY_MANAGER';
   let deptKey = userData.department?.key || '';
-  if (!isPrivileged && !deptKey && userData.userCategory && userData.userCategory.startsWith('DEPT_')) {
+  if (!isPrivileged && userData.userCategory && userData.userCategory.startsWith('DEPT_')) {
     const catDept = userData.userCategory.replace('DEPT_', '').toLowerCase();
-    const MAP = { hr: 'hr', finance: 'finance', marketing: 'marketing', ops: 'operations', service: 'cs', sales: 'sales', it: 'it', legal: 'compliance', quality: 'quality', pmo: 'projects' };
-    deptKey = MAP[catDept] || catDept;
+    const MAP = { hr: 'hr', finance: 'finance', fin: 'finance', marketing: 'marketing', ops: 'operations', service: 'cs', sales: 'sales', it: 'it', legal: 'compliance', quality: 'quality', pmo: 'projects' };
+    const mapped = MAP[catDept] || catDept;
+    if (!deptKey) deptKey = mapped;
   }
-  const deptName = userData.department?.name || DEPT_LABELS[deptKey] || (typeof getDeptName !== 'undefined' ? getDeptName(deptKey) : '');
+  const deptName = userData.department?.name || (deptKey ? DEPT_LABELS[deptKey.toLowerCase()] : '') || (typeof getDeptName !== 'undefined' ? getDeptName(deptKey) : '');
 
   if (userData.role === 'DATA_ENTRY') return deptName ? `${ROLE_LABELS.DATA_ENTRY} — ${deptName}` : ROLE_LABELS.DATA_ENTRY;
   if (!isPrivileged && (userData.userType === 'DEPT_MANAGER' || (userData.userCategory && userData.userCategory.startsWith('DEPT_')))) {
@@ -129,13 +135,11 @@ function isDeptStepDone(labelOrId, deptKey) {
 async function initSidebar(sidebarContainer) {
   console.log('🚀 [Sidebar] Starting initialization...');
 
-  // 1. حماية ضد عطل الـ Load Order
   if (!window.api || !window.api.getCurrentUser) {
     console.warn('⚠️ [Sidebar] api.js not found! Waiting for window.api...');
     return;
   }
 
-  // 2. الجلب الموثوق لبيانات المستخدم
   let userData = null;
   try {
     userData = await window.api.getCurrentUser();
@@ -150,54 +154,49 @@ async function initSidebar(sidebarContainer) {
   }
 
   const currentPath = window.location.pathname;
-  const fullPath = currentPath + window.location.search;
   const currentSearch = window.location.search;
+  const fullPath = currentPath + currentSearch;
 
-  // 🧱 العثور على حاوية السايدبار مبكراً لضمان توفرها
-  const mainTarget = sidebarContainer || document.getElementById('stx-sidebar') || document.getElementById('sidebar') || document.querySelector('.stx-sidebar-container, .stx-sidebar, .sidebar');
-  if (mainTarget) console.log('🏗️ [Sidebar] Primary target detected:', mainTarget.id || mainTarget.className);
-
-  // ✅ النظام يعتمد على HttpOnly Cookie — نعرف أن المستخدم موثّق إذا رجع userData
-  const token = localStorage.getItem('token') || ''; // backward compat فقط
-  const isAuthenticated = !!userData; // المصدر الحقيقي: نتيجة API
-  const _urlDeptParam = new URLSearchParams(currentSearch).get('dept') || '';
-  let _v10Dept = userData.department?.key || _urlDeptParam || localStorage.getItem('stratix_v10_dept') || '';
-
-  // === قراءة الدور من السيرفر مباشرة ===
+  // === ١. قراءة الدور من السيرفر مباشرة (المصدر الموثوق) ===
   let userRole = userData.role || 'VIEWER';
   let systemRole = userData.systemRole || 'USER';
   let userType = userData.userType || 'COMPANY_MANAGER';
-  let entityId = userData.entity?.id || '';
   let isSuperAdmin = systemRole === 'SUPER_ADMIN';
 
+  // 🛡️ [CORE FIX] تصحيح رتبة مدير الإدارة إذا لم تكن مسجلة في userType
+  if (userData.userCategory && userData.userCategory.startsWith('DEPT_')) {
+    userType = 'DEPT_MANAGER';
+  }
+
+  // === ٢. تحديد القسم الاستراتيجي (_v10Dept) ===
+  let _v10Dept = userData.department?.key || '';
   if (!_v10Dept && userData.userCategory && userData.userCategory.startsWith('DEPT_')) {
     const catDept = userData.userCategory.replace('DEPT_', '').toLowerCase();
-    const MAP = { hr: 'hr', finance: 'finance', marketing: 'marketing', ops: 'operations', service: 'cs', sales: 'sales', it: 'it', legal: 'compliance', quality: 'quality', pmo: 'projects' };
+    const MAP = { hr: 'hr', finance: 'finance', fin: 'finance', marketing: 'marketing', ops: 'operations', service: 'cs', sales: 'sales', it: 'it', legal: 'compliance', quality: 'quality', pmo: 'projects' };
     _v10Dept = MAP[catDept] || catDept;
+  }
+  if (!_v10Dept) {
+    const _urlDeptParam = new URLSearchParams(currentSearch).get('dept') || '';
+    _v10Dept = _urlDeptParam || localStorage.getItem('stratix_v10_dept') || '';
   }
   if (_v10Dept) {
     _v10Dept = _v10Dept.toLowerCase();
     localStorage.setItem('stratix_v10_dept', _v10Dept);
   }
 
-  // تحديد الصلاحيات والمسار الرئيسي (تم رفعه ليصبح متاحاً على مستوى الملف بالكامل)
+  // === ٣. تحديد الصلاحيات والمسار الرئيسي ===
   const isViewerOrDE = ['VIEWER', 'DATA_ENTRY'].includes(userRole) && systemRole !== 'SUPER_ADMIN';
   const _diagRole = (() => { try { return JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || '{}').role || ''; } catch (e) { return ''; } })();
-  // ⚠️ الأولوية: نقرأ userCategory من userData (API) — لا من localStorage
-  const _uCat = (() => { try { return userData?.userCategory || JSON.parse(localStorage.getItem('user') || '{}').userCategory || ''; } catch (e) { return ''; } })();
+  const _uCat = userData?.userCategory || '';
   const isInvestorUser = _diagRole === 'investor' || _uCat === 'INVESTOR' || _uCat.startsWith('INVESTOR_');
 
   const homeHref = isViewerOrDE ? '/viewer-hub.html'
     : (userType === 'BOARD_VIEWER' && isInvestorUser) ? '/investor-dashboard.html'
       : userType === 'BOARD_VIEWER' ? '/board-dashboard.html'
-        : userType === 'DEPT_MANAGER' ? '/dept-dashboard.html'
+        : userType === 'DEPT_MANAGER' ? `/dept-dashboard.html${_v10Dept ? '?dept=' + _v10Dept : ''}`
           : '/dashboard.html';
 
   // === قواعد الرؤية حسب نوع المستخدم ===
-  // EXPLORER:        المسار ١ — رحلة مبسطة (مالية + AI بسيط)
-  // COMPANY_MANAGER:  المسار ٢ — كل الأدوات الاستراتيجية
-  // DEPT_MANAGER:     المسار ٣ — أدوات الإدارة فقط
-  // CONSULTANT:       المسار ٣ — كل شيء + multi-entity
   const typeRules = {
     EXPLORER: { showJourney: true, showVision: false, showAdvanced: false, limitedDiagnosis: true, limitedJourney: false },
     COMPANY_MANAGER: { showJourney: true, showVision: true, showAdvanced: true, limitedDiagnosis: false, limitedJourney: false },
@@ -206,11 +205,7 @@ async function initSidebar(sidebarContainer) {
     CONSULTANT: { showJourney: true, showVision: true, showAdvanced: true, limitedDiagnosis: false, limitedJourney: false },
   };
   const currentRules = typeRules[userType] || typeRules.COMPANY_MANAGER;
-  // ==========================================
-  // NOTE: Unification - All roles use buildSidebar() for v2 shell consistency
-  // ==========================================
 
-  // SUPER_ADMIN و OWNER يشوفون كل شي (لأننا ألغينا الفوضى القديمة Storage Storage)
   if (isSuperAdmin || (userRole === 'OWNER' && userType !== 'DEPT_MANAGER')) {
     currentRules.showJourney = true;
     currentRules.showVision = true;
@@ -218,30 +213,20 @@ async function initSidebar(sidebarContainer) {
     currentRules.limitedDiagnosis = false;
   }
 
-  // === قراءة نمط الشركة من السيرفر ===
+  // === قراءة نمط الشركة من السيرفر كمرجع ===
   let patternKey = userData.entity?.patternKey || userData.entity?.path || 'default';
 
-  // === كشف نوع المستخدم: 5 مستويات ===
-  // INDIVIDUAL = فرد | FOUNDER = مؤسس (0-10) | SMALL = صغيرة (11-50) | MEDIUM = متوسطة (51-200) | LARGE = كبيرة (200+)
-  let _sidebarIsIndividual = false; // [SIMPLIFIED] لا وضع شخصي حالياً
-  let _sidebarCompanyLevel = 'MEDIUM'; // افتراضي آمن — كل الأدوات ظاهرة
+  // === كشف نوع المستخدم: 5 مستويات (مبسط) ===
+  let _sidebarIsIndividual = false;
+  let _sidebarCompanyLevel = 'MEDIUM';
 
   function _detectLevelFromCategory(cat) {
-    // Individual categories → لا يُفعّل وضع الفرد (الأدوار المبسّطة أُلغيت)
-    if (cat.startsWith('INDIVIDUAL_') || cat === 'CONSULTANT_SOLO') { _sidebarIsIndividual = false; return; }
-    if (cat === 'NEW_PROJECT') _sidebarCompanyLevel = 'FOUNDER';
-    else if (cat === 'COMPANY_MICRO') _sidebarCompanyLevel = 'FOUNDER';
+    if (!cat) return;
+    if (cat === 'NEW_PROJECT' || cat === 'COMPANY_MICRO') _sidebarCompanyLevel = 'FOUNDER';
     else if (cat === 'COMPANY_SMALL') _sidebarCompanyLevel = 'SMALL';
     else if (cat === 'COMPANY_MEDIUM') _sidebarCompanyLevel = 'MEDIUM';
-    else if (cat === 'COMPANY_LARGE') _sidebarCompanyLevel = 'LARGE';
-    else if (cat === 'COMPANY_ENTERPRISE') _sidebarCompanyLevel = 'LARGE';
+    else if (cat === 'COMPANY_LARGE' || cat === 'COMPANY_ENTERPRISE') _sidebarCompanyLevel = 'LARGE';
     else if (cat === 'CEO' || cat.startsWith('DEPT_')) _sidebarCompanyLevel = 'LARGE';
-    else if (cat === 'CONSULTANT_AGENCY') _sidebarCompanyLevel = 'MEDIUM';
-  }
-
-  try {
-    // 1. من بيانات Smart Guide
-    const sgRaw = localStorage.getItem('stratix_smart_guide');
     if (sgRaw) {
       const sgParsed = JSON.parse(sgRaw);
       _detectLevelFromCategory(sgParsed.category || '');
@@ -942,8 +927,8 @@ async function initSidebar(sidebarContainer) {
   // ═══ المراحل — تُقرأ من الملف المركزي ═══
   const journeyPhases = (userType === 'DEPT_MANAGER' && _deptJourneyOverride)
     ? _deptJourneyOverride
-    : (window.StratixJourney && window.StratixJourney.phases)
-      ? window.StratixJourney.phases
+    : (window.StartixJourney && window.StartixJourney.phases)
+      ? window.StartixJourney.phases
       : [
         {
           id: 'DIAGNOSIS_INTERNAL', nameAr: 'تشخيص — الداخل', icon: 'bi-building-gear', emoji: '🏢', color: '#0d9488',
@@ -1130,7 +1115,17 @@ async function initSidebar(sidebarContainer) {
 
     let html = '';
 
-    // --- بادج اليوزر + الجهة ---
+    // === قراءة الدور من السيرفر مباشرة ===
+    let userRole = userData.role || 'VIEWER';
+    let systemRole = userData.systemRole || 'USER';
+    let userType = userData.userType || 'COMPANY_MANAGER';
+    let entityId = userData.entity?.id || '';
+    let isSuperAdmin = systemRole === 'SUPER_ADMIN';
+
+    // 🛡️ [CORE FIX] تصحيح رتبة مدير الإدارة إذا لم تكن مسجلة في userType
+    if (userData.userCategory && userData.userCategory.startsWith('DEPT_')) {
+      userType = 'DEPT_MANAGER';
+    }
     let userName = userData.name || '';
     let userEmail = userData.email || '';
     let entityLegalName = userData.entity?.legalName || userData.entity?.displayName || '';
@@ -1428,8 +1423,8 @@ async function initSidebar(sidebarContainer) {
       }
 
       // مدير الإدارة: مراحل مخصصة | المستثمر: مراحل مفلترة | غيره: كل المراحل
-      var roleFilteredPhases = (window.StratixJourney && window.StratixJourney.filterForRole)
-        ? window.StratixJourney.filterForRole(userType)
+      var roleFilteredPhases = (window.StartixJourney && window.StartixJourney.filterForRole)
+        ? window.StartixJourney.filterForRole(userType)
         : journeyPhases;
 
       const displayPhases = (currentRules.limitedJourney && _deptJourneyOverride)
@@ -1767,7 +1762,7 @@ async function initSidebar(sidebarContainer) {
   // === تحميل محرك التقدم (ديناميكي) ===
   function loadProgressEngine() {
     return new Promise((resolve) => {
-      if (window.StratixProgress) { resolve(); return; }
+      if (window.StartixProgress) { resolve(); return; }
       const script = document.createElement('script');
       script.src = '/assets/js/progress-engine.js?v=6';
       script.onload = () => resolve();

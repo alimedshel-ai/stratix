@@ -1,5 +1,5 @@
 /**
- * Stratix — Smart Guide Card (بطاقة الإرشاد الذكي)
+ * Startix — Smart Guide Card (بطاقة الإرشاد الذكي)
  * يكشف حالة المستخدم تلقائياً ويوجّهه للخطوة التالية
  * يُستخدم في: dashboard.html, ceo-dashboard.html, board-dashboard.html
  *

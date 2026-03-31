@@ -1,5 +1,5 @@
 /**
- * Stratix — Impersonation Bar
+ * Startix — Impersonation Bar
  * يُضاف تلقائياً لكل الصفحات
  * لو SUPER_ADMIN يتصفح كشركة، يظهر شريط أحمر في الأعلى
  */

@@ -1,6 +1,6 @@
 // js/context-manager.js
 /**
- * 🛠️ Stratix Context Manager – النسخة النهائية
+ * 🛠️ Startix Context Manager – النسخة النهائية
  * يدير السياق بين الأدوار مع عزل بيانات الشركات (entityId) لمدير الإدارة
  * ويوفر قراءة متزامنة + استعلام API للتقدم
  */
@@ -47,7 +47,9 @@
             if (ownerRoles.includes(role)) return 'owner';
             if (role === 'INVESTOR') return 'investor';
             if (user.userType === 'CONSULTANT') return 'consultant';
-            return 'owner';
+            if (user.userType === 'INDIVIDUAL') return 'individual';
+            if (user.userType === 'EXPLORER') return 'explorer';
+            return 'explorer';
         }
         // زائر: من sessionStorage
         return sessionStorage.getItem('stratix_guest_diagnosis') ? 'guest' : 'guest';

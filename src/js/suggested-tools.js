@@ -1,5 +1,5 @@
 /**
- * Stratix — Suggested Tools Engine
+ * Startix — Suggested Tools Engine
  * يقترح 2-3 أدوات ذكية حسب مرحلة المستخدم والتقدم الحالي
  * 
  * المنطق:

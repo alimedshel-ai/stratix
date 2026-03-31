@@ -1,5 +1,5 @@
 /**
- * Stratix — Dashboard Path Filter v1.0
+ * Startix — Dashboard Path Filter v1.0
  * ────────────────────────────────────
  * يقرأ patternKey + size من localStorage ويتحكم في إظهار/إخفاء أقسام الداشبورد.
  * 

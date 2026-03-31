@@ -468,7 +468,7 @@ async function addUser() {
         const res = await fetch('/api/admin/users', {
             method: 'POST',
             headers: getHeaders(),
-            body: JSON.stringify({ name, email, password: password || 'Stratix@2026', role })
+            body: JSON.stringify({ name, email, password: password || 'Startix@2026', role })
         });
 
         const data = await res.json();

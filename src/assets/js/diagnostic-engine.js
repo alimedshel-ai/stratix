@@ -1,5 +1,5 @@
 /**
- * Stratix — Diagnostic Engine v1.0
+ * Startix — Diagnostic Engine v1.0
  * المحرك المركزي لتحديد المسار الاستراتيجي بناءً على إجابات المستخدم
  * 
  * يستخدم من:

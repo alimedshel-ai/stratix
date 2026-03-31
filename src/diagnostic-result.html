@@ -4,26 +4,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ستارتكس — التقرير التشخيصي التفاعلي</title>
+    <title>ستارتكس — مركز الذكاء الاستراتيجي</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap"
         rel="stylesheet">
     <link href="/assets/css/diagnostic.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
     <style>
-        .interactive-report {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 20px;
-            padding: 32px;
-            margin-bottom: 24px;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
-            animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) both;
+        :root {
+            --bg: #050507;
+            --glass: rgba(15, 15, 20, 0.75);
+            --border: rgba(255, 255, 255, 0.08);
+            --primary: #6366f1;
+            --accent: #10b981;
+            --danger: #ef4444;
+            --theme-glow: rgba(99, 102, 241, 0.1);
         }
 
-        @keyframes slideUp {
+        body.diagnostic-page {
+            background-color: var(--bg) !important;
+            background-image:
+                radial-gradient(circle at 0% 0%, var(--theme-glow) 0%, transparent 40%),
+                radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
+            color: #fff;
+            padding: 1.5rem;
+            min-height: 100vh;
+            font-family: 'Tajawal', sans-serif;
+            transition: background 1s ease;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr 340px;
+            grid-template-rows: auto 1fr auto;
+            gap: 1.25rem;
+            max-width: 1700px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto;
+            }
+        }
+
+        .glass-panel {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            animation: panelFadeIn 0.6s ease-out both;
+        }
+
+        @keyframes panelFadeIn {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(15px);
             }
 
             to {
@@ -32,626 +71,540 @@
             }
         }
 
-        .maturity-box {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 24px;
-        }
-
-        .maturity-header {
+        /* 🕸️ Radar Centerpiece */
+        .radar-container {
+            position: relative;
+            height: 320px;
+            margin: 1.5rem 0;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 1.1rem;
-            margin-bottom: 16px;
-            color: var(--text);
+            justify-content: center;
         }
 
-        .maturity-header .score-value {
-            font-size: 1.5rem;
+        /* 📈 High-Density Modules */
+        .stat-card {
+            text-align: center;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-value {
+            font-size: 3.8rem;
             font-weight: 900;
+            line-height: 1;
+            letter-spacing: -2px;
         }
 
-        .diag-stx-progress-bg {
-            height: 12px;
-            background: rgba(255, 255, 255, 0.06);
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 12px;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        .mini-gauge-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 1.5rem;
         }
 
-        .diag-stx-progress-fill {
-            height: 100%;
-            width: 0%;
-            border-radius: 10px;
-            transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1), background 0.5s ease;
+        .mini-gauge {
+            font-size: 0.72rem;
+            color: #9ca3af;
+            text-align: center;
         }
 
-        .maturity-label {
-            font-size: 0.9rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .forensic-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 1.25rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .ai-insight-box {
-            background: rgba(102, 126, 234, 0.05);
-            border-left: 4px solid #667eea;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 32px;
-            position: relative;
+        .forensic-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--primary);
+            transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(99, 102, 241, 0.2);
         }
 
-        .ai-icon {
+        .btn-premium {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            border: none;
+            color: #fff;
+            padding: 0.8rem 2rem;
+            border-radius: 3rem;
             font-weight: 800;
-            color: #667eea;
-            margin-bottom: 10px;
+            cursor: pointer;
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 1.05rem;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            transition: 0.3s;
         }
 
-        .ai-text {
-            color: rgba(255, 255, 255, 0.85);
-            font-size: 0.95rem;
-            line-height: 1.7;
-            margin: 0;
+        .btn-premium:hover {
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.6);
+            transform: translateY(-2px);
         }
 
-        .hooks-section {
-            position: relative;
-            background: rgba(255, 255, 255, 0.01);
-            border-radius: 16px;
-            padding: 24px;
-            border: 1px dashed rgba(255, 255, 255, 0.1);
-            overflow: hidden;
+        .stress-badge {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            padding: 5px 20px;
+            border-radius: 2rem;
+            font-weight: 900;
+            font-size: 0.85rem;
         }
 
-        .hooks-title {
-            font-size: 1.1rem;
-            font-weight: 800;
-            margin-bottom: 16px;
-            color: #fca5a5;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        /* 🚀 Professional Bridge Styling */
+        .methodology-bridge {
+            grid-column: 1 / -1;
+            margin-top: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 1.5rem;
         }
 
-        .tools-showcase {
+        @media (max-width: 1000px) {
+            .methodology-bridge {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .methodology-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 2rem;
+            padding: 2rem;
+        }
+
+        .scenario-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            filter: blur(4px) opacity(0.5);
-            pointer-events: none;
-            user-select: none;
-            transition: filter 0.3s;
+            gap: 1rem;
         }
 
-        .mock-tool-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 14px;
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        .scenario-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            border-radius: 1.5rem;
+            transition: 0.3s;
         }
 
-        .mock-tool-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
+        .scenario-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
         }
 
-        .mock-tool-name {
-            font-weight: 700;
-            font-size: 0.95rem;
-            color: white;
+        .scenario-card.growth {
+            border-left: 4px solid var(--accent);
         }
 
-        .register-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(to top, var(--bg) 10%, transparent);
-            z-index: 2;
+        .scenario-card.dev {
+            border-left: 4px solid var(--primary);
+        }
+
+        .maturity-breakdown {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 1.5rem 0;
+        }
+
+        .mb-item {
             text-align: center;
-            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1rem;
+            border-radius: 1rem;
+            border: 1px solid var(--border);
         }
 
-        .register-overlay i.bi-lock-fill {
-            font-size: 2rem;
-            color: #fca5a5;
-            margin-bottom: 12px;
-            text-shadow: 0 4px 15px rgba(248, 113, 113, 0.5);
+        .mb-value {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--primary);
+            display: block;
         }
 
-        .register-overlay p {
-            font-size: 1rem;
-            font-weight: 700;
-            color: white;
-            margin-bottom: 16px;
+        .mb-label {
+            font-size: 0.7rem;
+            opacity: 0.6;
+        }
+
+        .re-diag-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 0.8rem 1.5rem;
+            border-radius: 3rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .re-diag-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: #fff;
+        }
+
+        /* 🌑 Scrollbar Custom */
+        .glass-panel::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .glass-panel::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
         }
     </style>
 </head>
 
 <body class="diagnostic-page">
-    <div class="diag-header">
-        <a href="/" class="diag-logo"><i class="bi bi-activity"></i> Startix</a>
-        <div class="diag-subtitle">التقرير التشخيصي</div>
+
+    <div class="dashboard-grid">
+        <!-- 🟢 Header Area -->
+        <div
+            style="grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; padding: 1rem 0;">
+            <div>
+                <h1 style="margin:0; font-weight: 900; font-size: 1.6rem; letter-spacing: -0.5px;">
+                    <i class="bi bi-cpu" style="color: var(--primary)"></i> مركز الذكاء الاستراتيجي
+                </h1>
+                <div style="font-size: 0.8rem; color: #9ca3af; margin-top: 3px;">Diagnostic Engine v3.2 | تحليل جنائي
+                    عالي الدقة</div>
+            </div>
+            <div id="sectorBranding"
+                style="display: flex; gap: 12px; align-items: center; background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 6px 18px; border-radius: 3rem;">
+                <span id="sectorEmoji" style="font-size: 1.2rem;">✨</span>
+                <span id="sectorName" style="font-weight: 800; font-size: 0.9rem;">نشاط استراتيجي</span>
+            </div>
+        </div>
+
+        <!-- 📍 Left Module: Core Metrics -->
+        <div class="left-panel" style="display: flex; flex-direction: column; gap: 1.25rem;">
+            <div class="glass-panel stat-card">
+                <span style="font-size: 0.85rem; opacity: 0.6;">نسبة نضج المؤسسة</span>
+                <div id="totalScoreCount" class="stat-value">0%</div>
+                <div id="stressBadge" class="stress-badge" style="margin-top: 0.5rem;">تحليل الحالة...</div>
+
+                <div class="mini-gauge-row">
+                    <div class="mini-gauge"><canvas id="c-gov"></canvas><br>حوكمة</div>
+                    <div class="mini-gauge"><canvas id="c-fin"></canvas><br>مالية</div>
+                    <div class="mini-gauge"><canvas id="c-sys"></canvas><br>تقنية</div>
+                </div>
+            </div>
+
+            <div class="glass-panel" style="flex: 1;">
+                <h3 style="font-size: 1.05rem; margin-bottom: 1.25rem;"><i class="bi bi-lightning-charge"
+                        style="color: #fbbf24;"></i> خارطة الطريق العاجلة</h3>
+                <div id="roadmapList"></div>
+            </div>
+        </div>
+
+        <!-- 📍 Center Module: Radar & AI -->
+        <div class="center-panel" style="display: flex; flex-direction: column; gap: 1.25rem;">
+            <div class="glass-panel" style="flex: 1;">
+                <h3 style="font-size: 1.1rem; text-align: center;"><i class="bi bi-radar"></i> توازن البنية الجوهرية
+                    (Strategic Radar)</h3>
+                <div class="radar-container">
+                    <canvas id="radarChart"></canvas>
+                </div>
+                <div
+                    style="background: rgba(99, 102, 241, 0.05); padding: 1rem; border-radius: 1rem; border: 1px solid rgba(99, 102, 241, 0.2);">
+                    <p id="aiInsight" style="font-size: 0.88rem; line-height: 1.6; margin: 0; text-align: center;"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 📍 Right Module: Forensic & Scenarios -->
+        <div class="right-panel" style="display: flex; flex-direction: column; gap: 1.25rem;">
+            <div class="glass-panel" style="max-height: 380px;">
+                <h3 style="font-size: 1rem; margin-bottom: 1rem;"><i class="bi bi-shield-exclamation"></i> بصمات الضعف
+                    (Forensic)</h3>
+                <div id="forensicList" style="display: flex; flex-direction: column;"></div>
+            </div>
+
+            <div class="glass-panel" style="flex: 1;">
+                <h3 style="font-size: 1rem; margin-bottom: 1rem;"><i class="bi bi-graph-up"></i> السيناريوهات المتوقعة
+                </h3>
+                <div id="scenariosList"></div>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-premium" id="saveResultsBtn" style="flex: 1;"><i class="bi bi-send-check"></i> حفظ
+                    التقرير</button>
+                <button class="diag-btn diag-btn-secondary" style="border-radius: 3rem;"
+                    onclick="window.location.href='/select-type.html'"><i class="bi bi-arrow-repeat"></i></button>
+            </div>
+        </div>
+
+        <!-- 🔗 Methodology Bridge & Planning Section -->
+        <div class="methodology-bridge">
+            <!-- Part A: The Promotional Intro -->
+            <div class="methodology-card">
+                <h2 style="font-weight: 900; font-size: 1.8rem; margin-bottom: 1rem;">التحول من التشخيص إلى التخطيط</h2>
+                <div style="font-size: 0.95rem; opacity: 0.8; line-height: 1.7; margin-bottom: 2rem;">
+                    استكمال المنهجية الاستراتيجية الاحترافية: يجب عليك التسجيل للاستفادة من <b>أدوات التحليل المنهجي
+                        الاحترافي</b> و <b>أدوات التخطيط الكاملة</b> داخل المنصة، والتي تساعدك في بناء المنهجية الصحيحة
+                    لتطوير منشأتك.
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+                    <div class="forensic-item" style="margin:0;">
+                        <i class="bi bi-shield-check" style="color: var(--accent)"></i>
+                        <div style="font-weight:800; font-size:0.9rem;">أدوات التحليل المنهجي</div>
+                        <div style="font-size:0.75rem; opacity:0.6;">تشخيص ١٨ نقطة حرجة جنائية في هيكلية الإدارة والسوق.
+                        </div>
+                    </div>
+                    <div class="forensic-item" style="margin:0;">
+                        <i class="bi bi-columns-gap" style="color: var(--primary)"></i>
+                        <div style="font-weight:800; font-size:0.9rem;">أدوات التخطيط الكاملة</div>
+                        <div style="font-size:0.75rem; opacity:0.6;">بناء مصفوفات SWOT و OKRs و PESTEL ومحركات التوجه.
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <button class="btn-premium" onclick="location.href='/login.html?tab=signup'">ابدأ بناء المنهجية
+                        الصحيحة الآن</button>
+                    <button class="re-diag-btn" onclick="location.href='/select-type'">إعادة التشخيص</button>
+                </div>
+            </div>
+
+            <!-- Part B: Maturity Breakdown & Scenarios -->
+            <div class="glass-panel">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin:0; font-weight: 800;">منهجية الحساب الاستشارية (للمؤسس)</h3>
+                    <div class="stress-badge"
+                        style="background: var(--theme-glow); color: var(--primary); border-color: var(--primary);">مؤشر
+                        النضج: <span id="idxScore">0%</span></div>
+                </div>
+
+                <div class="maturity-breakdown">
+                    <div class="mb-item"><span class="mb-value">٣٠٪</span><span class="mb-label">الحوكمة</span></div>
+                    <div class="mb-item"><span class="mb-value">٣٠٪</span><span class="mb-label">الاستقرار المالي</span>
+                    </div>
+                    <div class="mb-item"><span class="mb-value">٢٠٪</span><span class="mb-label">كفاءة الفريق</span>
+                    </div>
+                    <div class="mb-item"><span class="mb-value">٢٠٪</span><span class="mb-label">المرونة الرقمية</span>
+                    </div>
+                </div>
+
+                <div id="statusMsg"
+                    style="background: rgba(16, 185, 129, 0.1); border-radius: 1rem; padding: 12px 20px; font-size: 0.85rem; color: #10b981; margin-bottom: 1.5rem; font-weight: 700; text-align: center;">
+                    وضع مستقر استراتيجياً: المنشأة مهيأة للتحول إلى "النمو الذكي" عبر الأدوات الاحترافية.
+                </div>
+
+                <div class="scenario-grid">
+                    <div class="scenario-card dev">
+                        <div style="font-weight: 900; margin-bottom: 5px;">التطوير التدريجي</div>
+                        <div id="devRec" style="font-size: 0.75rem; opacity: 0.7; line-height: 1.6;">بناءً على نتائجك
+                            الحالية، يمكنك تحسين الأداء عبر التركيز على الأولويات الأضعف.</div>
+                    </div>
+                    <div class="scenario-card growth">
+                        <div style="font-weight: 900; margin-bottom: 5px;">النمو المتسارع</div>
+                        <div id="growthRec" style="font-size: 0.75rem; opacity: 0.7; line-height: 1.6;">إمكانية نمو
+                            قوية. هذه نتيجة تقديرية تعتمد على تحليلنا الأولي.</div>
+                    </div>
+                </div>
+
+                <div
+                    style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; opacity: 0.5;">
+                    <a href="/select-type" style="color: inherit; text-decoration: none;">غيّر المسار يدوياً</a>
+                    <span>المسار الشامل <i class="bi bi-chevron-left"></i></span>
+                </div>
+            </div>
+        </div>
+
+        <div style="grid-column: 1/-1; text-align: center; padding: 3rem 0; opacity: 0.4; font-size: 0.8rem;">
+            تفعيل الدخول الاحترافي يمنحك التقرير الاستراتيجي الكامل بعد انتهاء الجولة. <br>
+            Startix Intelligence © 2026
+        </div>
     </div>
-    <div class="diag-container">
-        <!-- التقرير التفاعلي الذكي -->
-        <div class="interactive-report" id="interactiveReport">
-            <div style="text-align:center; margin-bottom: 24px;">
-                <div class="diag-result-emoji" id="resultEmoji">✨</div>
-                <div class="diag-result-name" id="resultName" style="font-size: 1.5rem;">جاري تحليل البيانات...</div>
-                <div class="diag-result-subtitle" id="resultSubtitle" style="color:var(--text-muted); margin-top:8px;">
-                </div>
+
+    <div id="saveModal" class="modal">
+        <div class="glass-panel" style="max-width: 420px; text-align: center; border-color: var(--primary);">
+            <i class="bi bi-magic" style="font-size: 3rem; color: var(--primary);"></i>
+            <h2 style="margin-top: 1rem;">الرابط السحري</h2>
+            <p style="font-size: 0.9rem; opacity: 0.7;">أدخل بريدك الإلكتروني لربط هذا التشخيص ومنشأتك بحسابك الدائم في
+                ستارتكس.</p>
+            <input type="email" id="saveEmail"
+                style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 0.8rem; border-radius: 0.75rem; color: #fff; margin: 1.25rem 0;">
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-premium" id="modalSaveBtn" style="flex: 1; justify-content: center;">إرسال
+                    الرابط</button>
+                <button class="diag-btn diag-btn-secondary" id="modalCloseBtn"
+                    style="border-radius: 3rem;">إلغاء</button>
             </div>
-
-            <!-- 1. مؤشر النضج -->
-            <div class="maturity-box" id="maturitySection" style="display: none;">
-                <div class="maturity-header">
-                    <span>مؤشر الاستقرار والجاهزية</span>
-                    <span id="maturityPercent" class="score-value">0%</span>
-                </div>
-                <div class="diag-stx-progress-bg">
-                    <div id="maturityBar" class="diag-stx-progress-fill"></div>
-                </div>
-                <div class="maturity-label" id="maturityLabelContainer">
-                    <i id="maturityIcon" class="bi"></i>
-                    <span id="maturityText" style="margin-right: 6px;">جاري الحساب...</span>
-                </div>
+            <div
+                style="margin-top: 1.25rem; font-size: 0.85rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+                <span style="opacity: 0.6;">لديك حساب بالفعل؟</span>
+                <a href="/login.html?tab=login" id="modalLoginLink"
+                    style="color: var(--primary); font-weight: 800; text-decoration: none; margin-right: 5px;">سجل دخولك
+                    من هنا</a>
             </div>
-
-            <!-- 2. تقرير الخبير -->
-            <div class="ai-insight-box" id="aiSection" style="display: none;">
-                <div class="ai-icon"><i class="bi bi-magic"></i> المشخّص الاستراتيجي:</div>
-                <p class="ai-text" id="aiInsightText"></p>
-            </div>
-
-            <!-- 3. المنهجيات المقترحة (The Hook) -->
-            <div class="hooks-section" id="hookSection" style="display: none;">
-                <h4 class="hooks-title"><i class="bi bi-prescription2"></i> روشتة العلاج المعلقة:</h4>
-                <div class="tools-showcase" id="recommendedToolsGrid"></div>
-
-                <div class="register-overlay">
-                    <i class="bi bi-lock-fill"></i>
-                    <p>هذا التقرير هو البداية فقط. احفظ تقريرك وافتح أدوات العلاج لشركتك الآن.</p>
-                    <button class="diag-btn diag-btn-primary action-btn" data-action="accept-path"
-                        style="width: auto; padding: 12px 32px; box-shadow: 0 8px 25px rgba(102,126,234,0.4);">
-                        <i class="bi bi-rocket-takeoff"></i> أنشئ حسابك مجاناً
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div style="display:flex; gap:12px; margin-top:20px; flex-wrap:wrap; justify-content:center;">
-            <button class="diag-btn diag-btn-secondary action-btn" data-action="change-path"><i
-                    class="bi bi-arrow-repeat"></i> غيّر المسار يدوياً</button>
-            <button class="diag-btn diag-btn-secondary action-btn" data-action="select-comprehensive"><i
-                    class="bi bi-compass"></i> المسار الشامل</button>
-            <button class="diag-btn diag-btn-ghost action-btn" data-action="go-back"><i class="bi bi-arrow-right"></i>
-                إعادة التشخيص</button>
-        </div>
-
-        <!-- قسم تغيير المسار (مخفي) -->
-        <div id="changePathSection" style="display:none; margin-top:32px;">
-            <h3 style="color:#fff; font-size:1.2rem; font-weight:700; margin-bottom:20px; text-align:center;">اختر
-                المسار الذي تريده:</h3>
-            <div class="diag-cards" id="allPathsGrid"
-                style="grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));"></div>
+            <div id="saveStatus" style="margin-top: 1rem; font-weight: 700;"></div>
         </div>
     </div>
 
-    <script src="/js/path-engine.js"></script>
-    <script src="/js/diagnostic-engine.js"></script>
-    <script>
-        let currentResult = null;
+    <script type="module">
+        import { AuditEngine } from './js/audit-engine.js';
+        import { DiagnosticEngine } from './js/diagnostic-engine.js';
 
-        document.addEventListener('DOMContentLoaded', function () {
-            currentResult = DiagnosticEngine.getFromSession();
-            if (!currentResult) {
-                window.location.href = '/select-type';
-                return;
-            }
-            renderInteractiveReport(currentResult);
-            setupActionListeners();
+        const localAnswers = JSON.parse(sessionStorage.getItem('diagnosticResult') || 'null');
+        const tempSessionId = sessionStorage.getItem('diagnostic_tempId');
 
-            // Check if we are in the 'add-entity' flow
-            const isAddEntity = new URLSearchParams(window.location.search).get('from') === 'add-entity';
-            if (isAddEntity) {
-                const btn = document.querySelector('[data-action="accept-path"]');
-                if (btn) btn.innerHTML = '<i class="bi bi-rocket-takeoff"></i> تأكيد وحفظ المنشأة';
-
-                const registerOverlay = document.querySelector('.register-overlay');
-                if (registerOverlay) {
-                    const p = registerOverlay.querySelector('p');
-                    if (p) p.textContent = 'لقد اكتمل التشخيص، يمكنك الآن حفظ المنشأة وبدء العمل.';
-                    const i = registerOverlay.querySelector('i');
-                    if (i) {
-                        i.className = 'bi bi-check-circle-fill';
-                        i.style.color = '#10b981';
-                        i.style.textShadow = 'none';
-                    }
-                }
-            }
-        });
-
-        // 🛡️ ترياق الـ XSS
-        function escapeHtml(unsafe) {
-            if (!unsafe) return '';
-            return String(unsafe)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
-
-        const SECTORS = { tech: 'تقنية وبرمجيات', consulting: 'استشارات', admin: 'إداري', ecommerce: 'تجارة إلكترونية', retail: 'تجزئة', food: 'مطاعم', realestate: 'عقارات', manufacturing: 'صناعة', construction: 'مقاولات', logistics: 'لوجستيات', gov_services: 'خدمات حكومية', npo_charity: 'جمعيات خيرية' };
-        const SIZES = { '1-5': 'صغير جداً (1-5)', '6-30': 'صغير (6-30)', '31-200': 'متوسط (31-200)', '200+': 'كبير (200+)' };
-        const CHALLENGES = { organizational: 'الفوضى التنظيمية', financial: 'الضغوط المالية', competitive: 'المنافسة الشرسة', operational: 'هدر العمليات', crisis: 'الأزمات الطارئة' };
-
-        function setupActionListeners() {
-            document.querySelectorAll('.action-btn').forEach(btn => {
-                btn.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const action = this.getAttribute('data-action');
-                    switch (action) {
-                        case 'accept-path': acceptPath(); break;
-                        case 'change-path': changePath(); break;
-                        case 'select-comprehensive': selectComprehensive(); break;
-                        case 'go-back': goBackToDiag(); break;
-                    }
-                });
-            });
-
-            document.getElementById('allPathsGrid').addEventListener('click', function (e) {
-                const card = e.target.closest('.diag-card');
-                if (card) {
-                    const pathKey = card.getAttribute('data-path');
-                    if (pathKey) selectPath(pathKey);
-                }
+        async function ensureChart() {
+            if (window.Chart) return true;
+            return new Promise(r => {
+                const i = setInterval(() => { if (window.Chart) { clearInterval(i); r(true); } }, 50);
+                setTimeout(() => { clearInterval(i); r(false); }, 3000);
             });
         }
 
-        function renderInteractiveReport(result) {
-            const ans = result.answers || {};
+        async function initial() {
+            if (!localAnswers) return window.location.href = '/select-type.html';
 
-            // تحديث العناوين الأساسية
-            if (result.category === 'owner') {
-                const pathDef = (typeof PathEngine !== 'undefined' && PathEngine.PATH_DEFINITIONS) ? PathEngine.PATH_DEFINITIONS[result.patternKey] : null;
-                document.getElementById('resultEmoji').textContent = pathDef ? pathDef.emoji : '✨';
-                document.getElementById('resultName').textContent = pathDef ? pathDef.name : result.patternKey;
-                const variant = result.variant || DiagnosticEngine.getSizeVariant(result.patternKey, result.sizeCategory);
-                document.getElementById('resultSubtitle').textContent = variant.subtitle || result.reason;
+            const cat = localAnswers.type || 'owner';
+            const engineRes = cat === 'manager' ?
+                DiagnosticEngine.determineManagerPath(localAnswers) :
+                DiagnosticEngine.determineOwnerPath(localAnswers);
+
+            document.getElementById('sectorEmoji').textContent = engineRes.emoji || '💼';
+            document.getElementById('sectorName').textContent = engineRes.name || 'نشاط تجاري';
+            document.getElementById('aiInsight').textContent = engineRes.reason || 'تحليل كلي لمركز الثقل الاستراتيجي.';
+
+            const audit = AuditEngine.calculate(localAnswers, cat);
+            const total = audit.maxScore > 0 ? Math.round((audit.total / audit.maxScore) * 100) : 0;
+
+            // Dynamic Animation for Total Core
+            animateValue('totalScoreCount', 0, total, 1500);
+
+            // Responsive Body Glow
+            const stressBadge = document.getElementById('stressBadge');
+            if (total <= 35) {
+                document.body.style.setProperty('--theme-glow', 'rgba(239, 68, 68, 0.15)');
+                stressBadge.textContent = 'خطر استراتيجي (حرج)';
+                stressBadge.style.borderColor = 'var(--danger)'; stressBadge.style.color = 'var(--danger)';
+            } else if (total <= 55) {
+                document.body.style.setProperty('--theme-glow', 'rgba(245, 158, 11, 0.1)');
+                stressBadge.textContent = 'ضغط تشغيلي (متوسط)';
+                stressBadge.style.borderColor = '#f59e0b'; stressBadge.style.color = '#f59e0b';
             } else {
-                document.getElementById('resultEmoji').textContent = result.emoji || '🎯';
-                document.getElementById('resultName').textContent = result.name || 'مسار مهني';
-                document.getElementById('resultSubtitle').textContent = result.reason || '';
+                document.body.style.setProperty('--theme-glow', 'rgba(16, 185, 129, 0.1)');
+                stressBadge.textContent = 'وضع مستقر وآمن';
+                stressBadge.style.borderColor = 'var(--accent)'; stressBadge.style.color = 'var(--accent)';
             }
 
-            document.getElementById('maturitySection').style.display = 'block';
-            document.getElementById('aiSection').style.display = 'block';
-            document.getElementById('hookSection').style.display = 'block';
-
-            // حوسبة المؤشر
-            let score = 50;
-            if (ans.maturity === 'nascent') score -= 15;
-            if (ans.maturity === 'mature') score += 20;
-            if (ans.organization === 'none') score -= 25;
-            if (ans.organization === 'advanced') score += 25;
-
-            const challengesArr = Array.isArray(ans.challenge) ? ans.challenge : [ans.challenge];
-            if (challengesArr.includes('financial')) score -= 20;
-            if (challengesArr.includes('crisis')) score -= 30;
-
-            score = Math.max(15, Math.min(score, 98));
-
-            setTimeout(() => {
-                const bar = document.getElementById('maturityBar');
-                const mText = document.getElementById('maturityText');
-                const mIcon = document.getElementById('maturityIcon');
-                document.getElementById('maturityPercent').textContent = score + '%';
-
-                bar.style.width = score + '%';
-
-                if (score < 40) {
-                    bar.style.background = 'linear-gradient(90deg, #ef4444, #fca5a5)';
-                    mIcon.className = 'bi bi-exclamation-triangle-fill';
-                    mText.textContent = ' منطقة خطر — الشركة بحاجة لتدخل إنقاذي عاجل للحد من التدهور.';
-                    mText.style.color = '#fca5a5'; mIcon.style.color = '#fca5a5';
-                    bar.style.boxShadow = '0 0 15px rgba(239,68,68,0.5)';
-                } else if (score < 75) {
-                    bar.style.background = 'linear-gradient(90deg, #f59e0b, #fcd34d)';
-                    mIcon.className = 'bi bi-info-circle-fill';
-                    mText.textContent = ' وضع مستقر نسبياً — ولكن ينقصه التنظيم المؤسسي الصلب لمنع التخبط.';
-                    mText.style.color = '#fcd34d'; mIcon.style.color = '#fcd34d';
-                    bar.style.boxShadow = '0 0 15px rgba(245,158,11,0.5)';
-                } else {
-                    bar.style.background = 'linear-gradient(90deg, #10b981, #6ee7b7)';
-                    mIcon.className = 'bi bi-check-circle-fill';
-                    mText.textContent = ' نضج مؤسسي عالي — حان وقت التوسع واقتناص الفرص البديلة والابتكار.';
-                    mText.style.color = '#6ee7b7'; mIcon.style.color = '#6ee7b7';
-                    bar.style.boxShadow = '0 0 15px rgba(16,185,129,0.5)';
-                }
-            }, 300);
-
-            // 🛡️ توليد الجملة بالاعتماد حصراً على TextNode و CreateElement 
-            const primaryChallengeRaw = challengesArr[0] || 'organizational';
-            const sectorStr = escapeHtml(SECTORS[ans.activity] || 'القطاع الخاص');
-            const sizeStr = escapeHtml(SIZES[ans.size] || 'المكون من ' + (ans.size || ''));
-            const chalStr = escapeHtml(CHALLENGES[primaryChallengeRaw] || 'التحدي الإداري');
-
-            let customAdvice = "تحتاج لخطط استراتيجية مستقبلية.";
-            let tools = [];
-
-            if (primaryChallengeRaw === 'financial' || primaryChallengeRaw === 'crisis') {
-                customAdvice = " سترتكس ترى أن الاستمرار بهذا النزيف سيؤدي لخسائر كارثية قريباً. ننصحك بإجراء اختبار ضغط فوري وإعادة هندسة سلسلة القيمة لديك لإيقاف الهدر المالي كخطوة أولى.";
-                tools = [{ icon: '⚡', name: 'اختبار الضغط الاستراتيجي', color: '#ef4444' }, { icon: '🔗', name: 'تحليل سلسلة القيمة', color: '#0891b2' }];
-            } else if (primaryChallengeRaw === 'organizational' || primaryChallengeRaw === 'operational') {
-                customAdvice = " غياب التنظيم يخنق إنتاجية فريقك. لا تقم بالتوظيف العشوائي الآن، بل استخدم المصفوفات الإدارية لتوضيح الأهداف وقياس أداء كل قسم بدقة من خلال لوحة أهداف شفافة.";
-                tools = [{ icon: '🎯', name: 'مصفوفة بناء الأهداف OKRs', color: '#ec4899' }, { icon: '🟩', name: 'تحليل الفجوات SWOT', color: '#22c55e' }];
-            } else {
-                customAdvice = " لديك فرصة عظيمة للسيطرة على السوق لو قمت بإعادة توجيه استراتيجيتك ومراقبة تحركات المنافسين ومخاطرهم بعمق، قبل ضخ ميزانيات إضافية.";
-                tools = [{ icon: '⚔️', name: 'قوى بورتر للمنافسة', color: '#f59e0b' }, { icon: '🗺️', name: 'الخريطة الاستراتيجية', color: '#8b5cf6' }];
+            const chartLoad = await ensureChart();
+            if (chartLoad) {
+                renderSpider(audit.scores, audit.weights);
+                renderMini('c-gov', Math.round((audit.scores.gov / audit.weights.gov) * 100), '#6366f1');
+                renderMini('c-fin', Math.round((audit.scores.financial / audit.weights.financial) * 100), '#10b981');
+                renderMini('c-sys', Math.round((audit.scores.digital / audit.weights.digital) * 100), '#fbbf24');
             }
 
-            const pInsight = document.getElementById('aiInsightText');
-            pInsight.innerHTML = '';
-
-            pInsight.appendChild(document.createTextNode("بصفتك تدير مشروعاً في نشاط "));
-            const s1 = document.createElement('strong'); s1.textContent = sectorStr; pInsight.appendChild(s1);
-
-            pInsight.appendChild(document.createTextNode(" بفريق "));
-            const s2 = document.createElement('strong'); s2.textContent = sizeStr; pInsight.appendChild(s2);
-
-            pInsight.appendChild(document.createTextNode("، فإن ما تواجهه من "));
-            const s3 = document.createElement('strong'); s3.textContent = chalStr; pInsight.appendChild(s3);
-
-            pInsight.appendChild(document.createTextNode(" هو أمر مقلق لكنه قابل للحل." + customAdvice));
-
-            // 🛡️ إنشاء الـ Tools Grid بطريقة آمنة تماماً ولا تستخدم إلا DOM API
-            const toolsGrid = document.getElementById('recommendedToolsGrid');
-            toolsGrid.innerHTML = '';
-            tools.forEach(t => {
-                const card = document.createElement('div');
-                card.className = 'mock-tool-card';
-                card.style.borderLeft = `3px solid ${escapeHtml(t.color)}`;
-
-                const iconSpan = document.createElement('span');
-                iconSpan.className = 'mock-tool-icon';
-                iconSpan.style.color = escapeHtml(t.color);
-                iconSpan.style.background = `${escapeHtml(t.color)}15`;
-                iconSpan.textContent = escapeHtml(t.icon);
-
-                const nameSpan = document.createElement('span');
-                nameSpan.className = 'mock-tool-name';
-                nameSpan.textContent = escapeHtml(t.name);
-
-                card.appendChild(iconSpan);
-                card.appendChild(nameSpan);
-                toolsGrid.appendChild(card);
-            });
+            renderForensic(localAnswers, cat);
+            renderRoadmap(audit.reasons);
+            renderScenarios(audit.scenarios, total);
         }
 
-        async function acceptPath() {
-            if (currentResult) DiagnosticEngine.saveToSession(currentResult);
-
-            const isAddEntity = new URLSearchParams(window.location.search).get('from') === 'add-entity';
-            const isLoggedIn = localStorage.getItem('token') && localStorage.getItem('user');
-
-            if (isAddEntity) {
-                const payloadStr = sessionStorage.getItem('pendingEntityPayload');
-                if (!payloadStr) {
-                    alert('انتهت الجلسة. يرجى إعادة المحاولة.');
-                    return window.location.href = '/add-entity';
-                }
-                const payload = JSON.parse(payloadStr);
-                payload.diagnosticData = currentResult; // Inject diagnostic data
-
-                const btn = document.querySelector('[data-action="accept-path"]');
-                if (btn) {
-                    btn.innerHTML = '<div class="spinner" style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;margin-left:8px;"></div> جاري تجهيز المنشأة...';
-                    btn.disabled = true;
-                }
-
-                try {
-                    const res = await fetch('/api/auth/add-entity', {
-                        method: 'POST',
-                        credentials: 'include',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload),
-                    });
-                    const data = await res.json();
-                    if (!res.ok) {
-                        alert(data.error || 'فشل إضافة المنشأة');
-                        if (btn) {
-                            btn.innerHTML = '<i class="bi bi-rocket-takeoff"></i> تأكيد وحفظ المنشأة';
-                            btn.disabled = false;
-                        }
-                        return;
-                    }
-
-                    // Cleanup and redirect
-                    sessionStorage.removeItem('pendingEntityPayload');
-                    if (data.user && data.user.deptCode) {
-                        window.location.href = '/dept-dashboard?dept=' + data.user.deptCode;
-                    } else {
-                        window.location.href = '/dashboard';
-                    }
-                } catch (err) {
-                    alert('خطأ في الاتصال');
-                    if (btn) {
-                        btn.innerHTML = '<i class="bi bi-rocket-takeoff"></i> تأكيد وحفظ المنشأة';
-                        btn.disabled = false;
-                    }
-                }
-            } else if (isLoggedIn) {
-                // User is already logged in, sync to current entity
-                const btn = document.querySelector('[data-action="accept-path"]');
-                if (btn) {
-                    btn.innerHTML = '<div class="spinner" style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;margin-left:8px;"></div> جاري حفظ التقرير...';
-                    btn.disabled = true;
-                }
-
-                try {
-                    const user = JSON.parse(localStorage.getItem('user'));
-                    const companyId = user.companyId || user.activeEntityId || user.entityId;
-
-                    if (!companyId) {
-                        alert('فشل العثور على المنشأة النشطة');
-                        window.location.href = '/dashboard';
-                        return;
-                    }
-
-                    // Sync to CompanyPattern
-                    const syncRes = await fetch('/api/company-pattern', {
-                        method: 'POST',
-                        credentials: 'include',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            pain: currentResult.answers?.challenge || 'organizational',
-                            ambition: currentResult.answers?.ambition || 'stability',
-                            companyId: companyId
-                        })
-                    });
-
-                    if (syncRes.ok) {
-                        // Success! Update local storage and redirect
-                        DiagnosticEngine.promoteToLocalStorage();
-                        window.location.href = '/dashboard';
-                    } else {
-                        const data = await syncRes.json();
-                        alert(data.message || 'فشل مزامنة البيانات');
-                        window.location.href = '/dashboard';
-                    }
-                } catch (err) {
-                    console.error('Sync error:', err);
-                    window.location.href = '/dashboard';
-                }
-            } else {
-                window.location.href = '/login?tab=signup&from=diagnostic';
-            }
-        }
-
-        function changePath() {
-            const section = document.getElementById('changePathSection');
-            if (section.style.display === 'none') {
-                section.style.display = 'block';
-                renderAllPaths();
-                section.scrollIntoView({ behavior: 'smooth' });
-            } else {
-                section.style.display = 'none';
-            }
-        }
-
-        // 100/100: DocumentFragment + createElement بالكامل
-        function renderAllPaths() {
-            const grid = document.getElementById('allPathsGrid');
-            grid.innerHTML = '';
-            if (typeof PathEngine === 'undefined' || !PathEngine.PATH_DEFINITIONS) return;
-
-            const defs = PathEngine.PATH_DEFINITIONS;
-            const fragment = document.createDocumentFragment();
-
-            Object.entries(defs).forEach(([key, def]) => {
-                const isActive = currentResult && currentResult.patternKey === key;
-
-                const card = document.createElement('div');
-                card.className = `diag-card ${isActive ? 'selected' : ''}`;
-                card.setAttribute('data-path', key);
-                card.style.padding = '24px 16px';
-                card.style.cursor = 'pointer';
-
-                const emoji = document.createElement('span');
-                emoji.className = 'diag-card-emoji';
-                emoji.style.fontSize = '2rem';
-                emoji.textContent = def.emoji || '';
-
-                const title = document.createElement('div');
-                title.className = 'diag-card-title';
-                title.style.fontSize = '1rem';
-                title.textContent = def.name || '';
-
-                const desc = document.createElement('div');
-                desc.className = 'diag-card-desc';
-                desc.style.fontSize = '0.8rem';
-                desc.textContent = def.description || '';
-
-                const badgeContainer = document.createElement('div');
-                badgeContainer.style.marginTop = '8px';
-
-                const badge = document.createElement('span');
-                badge.className = 'diag-step-badge';
-                badge.style.fontSize = '0.75rem';
-
-                const clockIcon = document.createElement('i');
-                clockIcon.className = 'bi bi-clock';
-                badge.appendChild(clockIcon);
-                badge.appendChild(document.createTextNode(' ' + (def.estimatedTime || '')));
-
-                badgeContainer.appendChild(badge);
-
-                card.appendChild(emoji);
-                card.appendChild(title);
-                card.appendChild(desc);
-                card.appendChild(badgeContainer);
-
-                fragment.appendChild(card);
-            });
-
-            grid.appendChild(fragment);
-        }
-
-        function selectPath(patternKey) {
-            const pathDef = PathEngine.PATH_DEFINITIONS[patternKey];
-            if (!pathDef) return;
-
-            currentResult = {
-                ...currentResult,
-                patternKey,
-                reason: 'اخترت مساراً مخصصاً ليتوافق بدقة مع تطلعاتك الشخصية.',
-                variant: DiagnosticEngine.getSizeVariant(patternKey, currentResult?.sizeCategory || 'medium'),
+        function animateValue(id, start, end, duration) {
+            const obj = document.getElementById(id);
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start) + "%";
+                if (progress < 1) window.requestAnimationFrame(step);
             };
-
-            DiagnosticEngine.saveToSession(currentResult);
-            document.getElementById('changePathSection').style.display = 'none';
-            renderInteractiveReport(currentResult);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.requestAnimationFrame(step);
         }
 
-        function selectComprehensive() {
-            selectPath('default_strategic');
+        function renderSpider(s, w) {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['حوكمة', 'مالية', 'فريق', 'تقنية'],
+                    datasets: [{
+                        label: 'نسبة النضج',
+                        data: [s.gov, s.financial, s.team, s.digital],
+                        fill: true, backgroundColor: 'rgba(99, 102, 241, 0.2)', borderColor: '#6366f1', pointBackgroundColor: '#fff', borderWeight: 3
+                    }]
+                },
+                options: {
+                    scales: {
+                        r: { grid: { color: 'rgba(255,255,255,0.05)' }, angleLines: { color: 'rgba(255,255,255,0.1)' }, suggestMin: 0, ticks: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
         }
 
-        function goBackToDiag() {
-            const cat = currentResult?.category || sessionStorage.getItem('diagnosticCategory') || 'owner';
-            switch (cat) {
-                case 'owner': window.location.href = '/diagnostic-owner'; break;
-                case 'manager': window.location.href = '/diagnostic-manager'; break;
-                case 'investor': window.location.href = '/diagnostic-investor'; break;
-                default: window.location.href = '/select-type';
+        function renderMini(id, v, c) {
+            new Chart(document.getElementById(id).getContext('2d'), {
+                type: 'doughnut',
+                data: { datasets: [{ data: [v, 100 - v], backgroundColor: [c, 'rgba(255,255,255,0.05)'], borderWidth: 0 }] },
+                options: { cutout: '80%', plugins: { legend: { display: false } } }
+            });
+        }
+
+        function renderForensic(ans, cat) {
+            const box = document.getElementById('forensicList');
+            const items = [];
+            if (ans.gov === 'none') items.push({ t: 'فخ المؤسس', d: 'القرار الفردي يقتل فرص التوسع.' });
+            if (ans.res === 'critical' || ans.cash === 'low') items.push({ t: 'هشاشة السيولة', d: 'فجوة التدفق النقدي تهدد البقاء.' });
+            if (ans.digital === 'none' || ans.data === 'none') items.push({ t: 'عمى البيانات', d: 'العمليات تعمل بالبركة لا بالأرقام.' });
+
+            if (items.length === 0) items.push({ t: 'نضج أولي', d: 'توازن مقبول في الهيكل التشغيلي.' });
+
+            box.innerHTML = '';
+            items.forEach(it => {
+                const div = document.createElement('div');
+                div.className = 'forensic-item';
+                div.innerHTML = `<div style="font-weight:900; color:var(--primary); font-size:0.9rem;">${it.t}</div><div style="font-size:0.75rem; opacity:0.7; margin-top:3px;">${it.d}</div>`;
+                box.appendChild(div);
+            });
+        }
+
+        function renderRoadmap(r) {
+            const box = document.getElementById('roadmapList');
+            box.innerHTML = '';
+            Object.values(r).filter(v => v).slice(0, 4).forEach((v, i) => {
+                const div = document.createElement('div');
+                div.style.background = 'rgba(255,255,255,0.03)';
+                div.style.padding = '10px'; div.style.borderRadius = '10px'; div.style.marginBottom = '8px';
+                div.style.fontSize = '0.85rem'; div.style.display = 'flex'; div.style.gap = '10px';
+                div.innerHTML = `<span style="color:var(--primary); font-weight:900;">#${i + 1}</span> <span style="opacity:0.8;">${v}</span>`;
+                box.appendChild(div);
+            });
+        }
+
+        function renderScenarios(s, total) {
+            const box = document.getElementById('scenariosList');
+            box.innerHTML = '';
+            let list = s || [];
+            if (list.length === 0) {
+                if (total < 40) list = [{ type: 'pessimistic', title: 'خطر الاستمرارية', description: 'يجب خفض التكاليف بنسبة ٣٠٪ فوراً.' }];
+                else list = [{ type: 'realistic', title: 'نمو حذر', description: 'تحسين الكفاءة المالية قبل التوسع.' }];
             }
+            list.forEach(item => {
+                const div = document.createElement('div');
+                div.style.background = 'rgba(255,255,255,0.02)';
+                div.style.padding = '10px'; div.style.borderRight = '3px solid var(--primary)';
+                div.style.borderRadius = '5px'; div.style.marginBottom = '8px';
+                div.innerHTML = `<div style="font-weight:800; font-size:0.85rem;">${item.title}</div><div style="font-size:0.72rem; opacity:0.7;">${item.description}</div>`;
+                box.appendChild(div);
+            });
         }
+
+        document.getElementById('saveResultsBtn').onclick = () => document.getElementById('saveModal').style.display = 'flex';
+        document.getElementById('modalCloseBtn').onclick = () => document.getElementById('saveModal').style.display = 'none';
+
+        // ربط رابط الدخول بالـ tempId الحالي إن وجد
+        const modalLoginLink = document.getElementById('modalLoginLink');
+        if (modalLoginLink && tempSessionId) {
+            modalLoginLink.href = `/login.html?tab=login&tempId=${tempSessionId}`;
+        }
+
+        window.onload = initial;
     </script>
 </body>
 

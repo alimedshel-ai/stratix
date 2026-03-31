@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════
- * Stratix Path Tracker — جمع بيانات المسارات بدون تغيير UX
+ * Startix Path Tracker — جمع بيانات المسارات بدون تغيير UX
  * ═══════════════════════════════════════════════════════
  *
  * يتتبع:
@@ -294,7 +294,7 @@
             });
         });
 
-        console.log('═══ Stratix Path Tracking Report ═══');
+        console.log('═══ Startix Path Tracking Report ═══');
         console.table(report);
         Object.keys(report).forEach(k => {
             console.log('\n📊 ' + report[k].name);

@@ -96,44 +96,49 @@ try {
     console.warn('   ⚠️ Seed check skipped (non-critical):', err.message?.substring(0, 100));
 }
 
-// ============ Step 5: Ensure HR test user exists ============
+// ============ Step 5: Ensure department test users exist ============
 console.log('');
-console.log('👤 [Step 5] Ensuring HR manager user...');
+console.log('👤 [Step 5] Ensuring department manager users...');
 try {
-    const createUserScript = `
+    const createUsersScript = `
         const prisma = require('./lib/prisma');
         const bcrypt = require('bcryptjs');
         (async () => {
             try {
-                const email = 'hrtest2@startix.com';
-                let user = await prisma.user.findUnique({ where: { email } });
-                if (!user) {
-                    const hashed = await bcrypt.hash('11223344', 10);
-                    user = await prisma.user.create({ data: { email, password: hashed, name: 'مدير الموارد البشرية', userCategory: 'DEPT_HR', role: 'EDITOR' } });
-                    console.log('CREATED_USER');
-                } else {
-                    await prisma.user.update({ where: { id: user.id }, data: { userCategory: 'DEPT_HR' } });
-                    console.log('USER_EXISTS');
-                }
+                const users = [
+                    { email: 'hrtest2@startix.com', name: 'مدير الموارد البشرية', userCategory: 'DEPT_HR', departmentRole: 'CHRO' },
+                    { email: 'fintest1@startix.com', name: 'مدير الإدارة المالية', userCategory: 'DEPT_FINANCE', departmentRole: 'CFO' },
+                ];
+                const hashed = await bcrypt.hash('11223344', 10);
                 const entity = await prisma.entity.findFirst({ orderBy: { createdAt: 'asc' } });
-                if (entity) {
-                    const mem = await prisma.member.findFirst({ where: { userId: user.id, entityId: entity.id } });
-                    if (!mem) {
-                        await prisma.member.create({ data: { userId: user.id, entityId: entity.id, role: 'EDITOR', userType: 'DEPT_MANAGER' } });
-                        console.log('CREATED_MEMBER');
-                    } else { console.log('MEMBER_EXISTS'); }
+                for (const u of users) {
+                    let user = await prisma.user.findUnique({ where: { email: u.email } });
+                    if (!user) {
+                        user = await prisma.user.create({ data: { email: u.email, password: hashed, name: u.name, userCategory: u.userCategory } });
+                        console.log('CREATED:' + u.email);
+                    } else {
+                        await prisma.user.update({ where: { id: user.id }, data: { userCategory: u.userCategory } });
+                        console.log('EXISTS:' + u.email);
+                    }
+                    if (entity) {
+                        const mem = await prisma.member.findFirst({ where: { userId: user.id, entityId: entity.id } });
+                        if (!mem) {
+                            await prisma.member.create({ data: { userId: user.id, entityId: entity.id, role: 'EDITOR', userType: 'DEPT_MANAGER', departmentRole: u.departmentRole } });
+                            console.log('MEMBER:' + u.email);
+                        }
+                    }
                 }
                 await prisma.$disconnect();
             } catch(e) { console.error(e.message); await prisma.$disconnect(); }
         })();
     `;
-    const userResult = execSync(`node -e "${createUserScript.replace(/"/g, '\\"').replace(/\n/g, ' ')}"`, {
-        cwd: rootDir, encoding: 'utf-8', timeout: 15000
+    const userResult = execSync(`node -e "${createUsersScript.replace(/"/g, '\\"').replace(/\n/g, ' ')}"`, {
+        cwd: rootDir, encoding: 'utf-8', timeout: 20000
     }).trim();
-    if (userResult.includes('CREATED_USER')) console.log('   ✅ HR user created: hrtest2@startix.com');
-    else console.log('   ℹ️ HR user already exists');
+    console.log('   ' + userResult.split('\\n').join('\\n   '));
+    console.log('   ✅ Department users ready');
 } catch (err) {
-    console.warn('   ⚠️ HR user creation skipped:', err.message?.substring(0, 100));
+    console.warn('   ⚠️ User creation skipped:', err.message?.substring(0, 100));
 }
 
 // ============ Step 6: Start the server ============
