@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/index.css">
+  <link rel="stylesheet" href="/css/guide-bar.css?v=2">
   <style>
     :root {
       --stx-bg: #0b0d12;
@@ -25,7 +26,7 @@
       color: #f8fafc;
       font-family: 'Tajawal', sans-serif;
       min-height: 100vh;
-      overflow-x: hidden;
+      overflow-x: auto;
     }
 
     main {
@@ -90,20 +91,40 @@
       color: #fff;
     }
 
-    /* Quarterly Roadmap Styles */
+    /* Quarterly Roadmap Styles - Kanban Layout */
     .quarter-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 20px;
-      margin-top: 30px;
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 15px;
+      margin-top: 20px;
+      overflow-x: auto;
+      padding-bottom: 15px;
+    }
+
+    /* Scrollbar styling for the grid */
+    .quarter-grid::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .quarter-grid::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 10px;
+    }
+
+    .quarter-grid::-webkit-scrollbar-thumb {
+      background: rgba(129, 140, 248, 0.5);
+      border-radius: 10px;
     }
 
     .quarter-column {
+      flex: 1;
+      min-width: 270px;
+      /* Ensures it never squishes too much */
       background: rgba(255, 255, 255, 0.02);
-      border-radius: 28px;
-      padding: 20px;
+      border-radius: 20px;
+      padding: 15px;
       border: 1px solid var(--stx-border);
-      min-height: 600px;
+      min-height: 250px;
       position: relative;
     }
 
@@ -111,22 +132,22 @@
       display: flex;
       flex-direction: column;
       gap: 5px;
-      margin-bottom: 20px;
-      padding-bottom: 15px;
+      margin-bottom: 15px;
+      padding-bottom: 12px;
       border-bottom: 1px solid var(--stx-border);
     }
 
     .q-title {
       font-weight: 900;
-      font-size: 1.1rem;
+      font-size: 1rem;
       color: #fff;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     .q-subtitle {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       color: #94a3b8;
       font-weight: 700;
     }
@@ -134,9 +155,9 @@
     .kpi-item {
       background: var(--stx-glass);
       border: 1px solid var(--stx-border);
-      border-radius: 18px;
-      padding: 18px;
-      margin-bottom: 15px;
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
       cursor: pointer;
       transition: 0.2s;
       position: relative;
@@ -229,30 +250,37 @@
 
 <body>
   <!-- Top Navigation -->
-  <nav class="top-nav d-flex justify-content-between align-items-center">
-    <div class="d-flex align-items-center gap-4">
-      <a href="/okrs.html" class="nav-link-btn"><i class="bi bi-arrow-right"></i> السابق: OKRs</a>
+  <nav class="top-nav d-flex align-items-center px-4">
+    <!-- قسم الرجوع والتبديل -->
+    <div class="d-flex align-items-center gap-3 flex-shrink-0" style="min-width: 300px;">
+      <a href="/okrs.html" class="nav-link-btn"><i class="bi bi-arrow-right"></i> السابق</a>
       <div class="mx-2 opacity-10">|</div>
-      <a href="/dept-dashboard.html" class="nav-link-btn"><i class="bi bi-house-door"></i> الرئيسية</a>
-      <div class="mx-2 opacity-10">|</div>
+      <div id="dept-switcher-placeholder"></div>
+    </div>
+
+    <!-- قسم المتتبع (في المنتصف) -->
+    <div class="flex-grow-1 d-flex justify-content-center">
       <div class="phase-tracker">
         <div class="phase-step completed">
-          <div class="phase-dot"></div> التشخيص
+          <i class="bi bi-check-circle-fill"></i> التشخيص
         </div>
         <div class="phase-step completed">
-          <div class="phase-dot"></div> التخطيط
+          <i class="bi bi-check-circle-fill"></i> التخطيط
         </div>
         <div class="phase-step completed">
-          <div class="phase-dot"></div> التنفيذ (1/3): OKRs
+          <i class="bi bi-check-circle-fill"></i> OKRs
         </div>
+        <div class="bi bi-chevron-left small opacity-20 mx-3"></div>
         <div class="phase-step active">
-          <div class="phase-dot"></div> الجدولة (Roadmap 2026)
+          <div class="phase-dot"></div> الجدولة (KPIs)
         </div>
       </div>
     </div>
-    <div class="d-flex align-items-center gap-3">
+
+    <!-- قسم الأوامر (يسار) -->
+    <div class="d-flex align-items-center gap-3 flex-shrink-0" style="min-width: 300px; justify-content: flex-end;">
       <button class="btn btn-success rounded-pill px-5 py-2 fw-900 border-0 shadow-lg" onclick="saveJourney()">
-        حفظ والانتقال للمشاريع <i class="bi bi-rocket-takeoff ms-2"></i>
+        حفظ الانتقال <i class="bi bi-rocket-takeoff ms-2"></i>
       </button>
     </div>
   </nav>
@@ -268,7 +296,21 @@
         <button class="btn btn-smart btn-lg" onclick="distributeKPIsSmartly()">
           <i class="bi bi-stars"></i> توزيع ذكي حسب الأولوية
         </button>
+        <button class="btn btn-outline-danger btn-sm rounded-pill border-0 opacity-40 px-3" onclick="purgeKpiData()">
+          <i class="bi bi-trash"></i> تصفية خارطة الطريق
+        </button>
         <div class="text-muted small fw-600">سيقوم النظام بترتيب المؤشرات حسب (التأسيس -> التوسع -> الأثر)</div>
+      </div>
+    </div>
+
+    <!-- شريط الإرشاد -->
+    <div class="guide-bar">
+      <div class="guide-item"><i class="bi bi-clock text-info"></i> الوقت المتوقع: <strong>15–20 دقيقة</strong></div>
+      <div class="guide-item"><i class="bi bi-calendar-range text-warning"></i> <strong>4 أرباع سنوية</strong> — وزّع
+        بالتدريج</div>
+      <div class="guide-item"><i class="bi bi-speedometer text-success"></i> <strong>1–2 مؤشر</strong> لكل نتيجة رئيسية
+      </div>
+      <div class="guide-item"><i class="bi bi-star text-primary"></i> الأهمية: <strong>مهم</strong> — يضمن متابعة مستمرة
       </div>
     </div>
 
@@ -276,7 +318,7 @@
       <!-- Q1 -->
       <div class="quarter-column" data-q="Q1">
         <div class="q-header">
-          <span class="q-title"><i class="bi bi-1-circle text-primary"></i> الربع الأول (يوليو - سبتمبر)</span>
+          <span class="q-title"><i class="bi bi-1-circle text-primary"></i> الربع الأول (يناير - مارس)</span>
           <span class="q-subtitle text-uppercase">مرحلة التأسيس والحوكمة</span>
         </div>
         <div class="kpi-list" id="list-Q1"></div>
@@ -284,7 +326,7 @@
       <!-- Q2 -->
       <div class="quarter-column" data-q="Q2">
         <div class="q-header">
-          <span class="q-title"><i class="bi bi-2-circle text-warning"></i> الربع الثاني (أكتوبر - ديسمبر)</span>
+          <span class="q-title"><i class="bi bi-2-circle text-warning"></i> الربع الثاني (أبريل - يونيو)</span>
           <span class="q-subtitle text-uppercase">مرحلة التنفيذ والأتمتة</span>
         </div>
         <div class="kpi-list" id="list-Q2"></div>
@@ -292,7 +334,7 @@
       <!-- Q3 -->
       <div class="quarter-column" data-q="Q3">
         <div class="q-header">
-          <span class="q-title"><i class="bi bi-3-circle text-info"></i> الربع الثالث (يناير - مارس)</span>
+          <span class="q-title"><i class="bi bi-3-circle text-info"></i> الربع الثالث (يوليو - سبتمبر)</span>
           <span class="q-subtitle text-uppercase">مرحلة التطوير وبناء القدرات</span>
         </div>
         <div class="kpi-list" id="list-Q3"></div>
@@ -300,7 +342,7 @@
       <!-- Q4 -->
       <div class="quarter-column" data-q="Q4">
         <div class="q-header">
-          <span class="q-title"><i class="bi bi-4-circle text-success"></i> الربع الرابع (أبريل - يونيو)</span>
+          <span class="q-title"><i class="bi bi-4-circle text-success"></i> الربع الرابع (أكتوبر - ديسمبر)</span>
           <span class="q-subtitle text-uppercase">مرحلة القياس وتعظيم الأثر</span>
         </div>
         <div class="kpi-list" id="list-Q4"></div>
@@ -309,10 +351,14 @@
 
     <div class="action-bar mt-5">
       <a href="/okrs.html" class="nav-link-btn"><i class="bi bi-arrow-right"></i> العودة لنظام OKRs</a>
-      <button type="button" onclick="saveJourney()"
-        class="btn btn-modern btn-success px-5 py-3 rounded-pill fw-900 border-0 shadow-lg">
-        حفظ واعتماد خارطة الطريق <i class="bi bi-check-all ms-2"></i>
-      </button>
+      <div class="d-flex gap-3">
+        <button type="button" onclick="exitToDashboard()" class="btn btn-outline-light rounded-pill px-4 fw-800">خروج
+          لمركز القيادة</button>
+        <button type="button" onclick="saveJourney()"
+          class="btn btn-modern btn-success px-5 py-3 rounded-pill fw-900 border-0 shadow-lg">
+          حفظ واعتماد خارطة الطريق <i class="bi bi-check-all ms-2"></i>
+        </button>
+      </div>
     </div>
   </main>
 
@@ -336,6 +382,10 @@
             <option value="Q3">الربع الثالث</option>
             <option value="Q4">الربع الرابع</option>
           </select>
+          <label class="text-muted small fw-800">الارتباط بالهدف الاستراتيجي</label>
+          <select id="kpiParentLink" class="stx-input">
+            <option value="">-- مؤشر مستقل (غير مرتبط) --</option>
+          </select>
         </div>
         <div class="modal-footer border-0">
           <button type="button" class="btn btn-link text-muted text-decoration-none"
@@ -347,13 +397,20 @@
     </div>
   </div>
 
-  <script src="/js/api.js"></script>
-  <script src="/js/utils.js"></script>
-  <script src="/js/context-manager.js"></script>
-  <script src="/js/steps-config.js"></script>
-  <script src="/js/sidebar.js"></script>
-  <script src="/js/dept-page.js"></script>
+  <script src="/js/report-engine.js?v=2"></script>
+  <script src="/js/api.js?v=3"></script>
+  <script src="/js/utils.js?v=3"></script>
+  <script src="/js/context-manager.js?v=3"></script>
+  <script src="/js/page-guard.js?v=3"></script>
+  <script src="/js/steps-config.js?v=3"></script>
+  <script src="/js/sidebar.js?v=3"></script>
+  <script src="/js/dept-page.js?v=3"></script>
   <script src="/assets/js/hr-handlers.js"></script>
+  <script src="/assets/js/finance-handlers.js"></script>
+  <script src="/assets/js/sales-handlers.js"></script>
+  <script src="/assets/js/marketing-handlers.js"></script>
+  <script src="/assets/js/operations-handlers.js"></script>
+  <script src="/assets/js/it-handlers.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
@@ -361,31 +418,145 @@
     let activeKpiIdx = -1;
 
     (async function () {
-      // 🛡️ تهيئة الصفحة (تضمن تحميل المستخدم والقسم)
-      const dept = await window.initDeptPage();
-      if (!dept) return;
+      // 🛡️ تهيئة الصفحة (مستوى الشركة)
+      await window.initDeptPage(); // للتحقق من المستخدم فقط
+      const dept = 'company';
+      if (window.DeptPage) DeptPage.dept = 'company';
 
-      document.getElementById('dept-context').textContent = `إدارة ${dept.toUpperCase()} | خارطة الطريق الاستراتيجية 2026`;
+      document.getElementById('dept-context').textContent = 'خارطة الطريق الاستراتيجية (المنظمة)';
+
+      // Define exit logic
+      window.exitToDashboard = () => {
+        window.location.href = '/ceo-dashboard.html';
+      };
 
       // تهيئة DeptPage (مهم جداً للحفظ)
-      await DeptPage.init(dept);
+      await DeptPage.init('company');
+
+      // dept switcher removed — company-level page
+
+      if (window.ReportEngine) {
+        ReportEngine.init({
+          pageId: 'kpis',
+          pageTitle: 'خارطة طريق مؤشرات الأداء',
+          pageIcon: '📈',
+          collectData: () => {
+            const sections = [];
+            const qCounts = {};
+            let totalKPIs = 0;
+            ['Q1', 'Q2', 'Q3', 'Q4'].forEach(q => {
+              const list = document.getElementById('list-' + q);
+              if (!list) return;
+              const items = [];
+              list.querySelectorAll('.kpi-card, .kpi-item, [data-kpi]').forEach(el => {
+                const name = el.querySelector('.kpi-name, .fw-700, h6')?.textContent || '';
+                const target = el.querySelector('.kpi-target, .badge, small')?.textContent || '';
+                if (name) items.push(`${name}${target ? ' — ' + target : ''}`);
+              });
+              qCounts[q] = items.length;
+              totalKPIs += items.length;
+              const qLabels = { Q1: 'الربع الأول', Q2: 'الربع الثاني', Q3: 'الربع الثالث', Q4: 'الربع الرابع' };
+              sections.push({
+                title: qLabels[q] + ` (${items.length} مؤشرات)`,
+                icon: q === 'Q1' ? '1️⃣' : q === 'Q2' ? '2️⃣' : q === 'Q3' ? '3️⃣' : '4️⃣',
+                color: items.length > 0 ? '#6366f1' : '#94a3b8',
+                content: items.length > 0 ? ReportEngine.textToList(items.join('\n'), '#6366f1') : '<p style="color:#94a3b8;">لا توجد مؤشرات</p>'
+              });
+            });
+            const filledQ = Object.values(qCounts).filter(c => c > 0).length;
+            const score = totalKPIs > 0 ? Math.min(100, Math.round(filledQ * 20 + totalKPIs * 5)) : 0;
+
+            const kpis = [
+              { label: 'الربع الأول', value: qCounts.Q1 || 0, color: '#0891b2', bg: '#ecfeff' },
+              { label: 'الربع الثاني', value: qCounts.Q2 || 0, color: '#2563eb', bg: '#eff6ff' },
+              { label: 'الربع الثالث', value: qCounts.Q3 || 0, color: '#7c3aed', bg: '#f5f3ff' },
+              { label: 'الربع الرابع', value: qCounts.Q4 || 0, color: '#16a34a', bg: '#f0fdf4' }
+            ];
+
+            const highlights = [];
+            highlights.push({ icon: '📈', text: `${totalKPIs} مؤشر أداء موزعة على ${filledQ} من 4 أرباع`, color: '#6366f1' });
+            const emptyQ = ['Q1', 'Q2', 'Q3', 'Q4'].filter(q => !qCounts[q]);
+            if (emptyQ.length > 0) highlights.push({ icon: '⚠️', text: `أرباع بدون مؤشرات: ${emptyQ.join('، ')}`, color: '#ca8a04' });
+            if (filledQ === 4) highlights.push({ icon: '✅', text: 'تغطية كاملة لجميع الأرباع', color: '#16a34a' });
+
+            const recommendations = [];
+            emptyQ.forEach(q => recommendations.push(`أضف مؤشرات للـ ${q} لتغطية السنة كاملة`));
+            if (totalKPIs > 0 && totalKPIs < 8) recommendations.push('يُنصح بـ 2-4 مؤشرات لكل ربع على الأقل');
+            if (recommendations.length === 0) recommendations.push('توزيع جيد — تابع قياس المؤشرات بشكل دوري');
+
+            return {
+              sections,
+              meta: {
+                dept, deptName: dept.toUpperCase(),
+                kpis, highlights, recommendations,
+                qualityScore: Math.min(100, score),
+                qualityLabel: score >= 70 ? 'تغطية جيدة' : score >= 30 ? 'تحتاج إضافة' : 'غير مكتملة',
+                qualityAdvice: `${totalKPIs} مؤشر في ${filledQ}/4 أرباع`
+              }
+            };
+          }
+        });
+      }
 
       await loadData(dept);
+
+      // تحميل الأهداف للربط (Objectives -> KPIs)
+      loadObjectivesForLinking(dept);
     })();
 
+    // ─── حفظ تلقائي محلي ───
+    const LS_KPIS = () => `stratix_kpis_company`;
+    function saveKpisLocal() {
+      try { localStorage.setItem(LS_KPIS(), JSON.stringify(allKpis)); } catch (e) { }
+    }
+
     async function loadData(dept) {
-      let saved = await DeptPage.loadFromAPI('KPIS_' + dept.toUpperCase()) || [];
-      if (saved.length === 0) {
+      let saved = null;
+      try { saved = await DeptPage.loadFromAPI('KPIS_' + dept.toUpperCase()) || []; } catch (e) { saved = []; }
+
+      // fallback: localStorage
+      if (!saved || saved.length === 0) {
+        try { saved = JSON.parse(localStorage.getItem(LS_KPIS())) || []; } catch (e) { saved = []; }
+      }
+
+      // 🛡️ فحص قسري للتداخل: منع تسرب بيانات الموارد البشرية للمسار المالي
+      const isFinance = (dept || '').toLowerCase() === 'finance';
+      const hrKeywords = ['توظيف', 'بشرية', 'موظف', 'توطين', 'دوران', 'تعيين', 'التعيين', 'قيادات', 'القيادات', 'استبقاء', 'إداري'];
+      const hasHRLeak = (str) => isFinance && hrKeywords.some(key => (str || '').includes(key));
+
+      const cleanData = (data) => data.filter(k => !hasHRLeak(k.name) && !hasHRLeak(k.parent || ''));
+
+      if (saved.length > 0) {
+        const leaked = saved.some(k => hasHRLeak(k.name));
+        if (leaked) {
+          console.warn('[KPIs] Detected HR leak in Finance KPIs. Filtering...');
+          allKpis = cleanData(saved);
+        } else {
+          allKpis = saved;
+        }
+      }
+
+      if (allKpis.length === 0) {
         // Ingest from OKRs
         const okrs = await DeptPage.loadFromAPI('OKRS_' + dept.toUpperCase()) || [];
         okrs.forEach(o => {
-          o.krs.forEach(kr => {
-            saved.push({ name: kr.text, target: kr.target || '100%', parent: o.objective, quarter: 'Q1' });
-          });
+          if (!hasHRLeak(o.objective)) {
+            (o.krs || []).forEach(kr => {
+              if (!hasHRLeak(kr.text)) {
+                allKpis.push({ name: kr.text, target: kr.target || '100%', parent: o.objective, quarter: 'Q1' });
+              }
+            });
+          }
         });
       }
-      allKpis = saved;
+      if (allKpis.length > 0) saveKpisLocal(); // مزامنة محلية
       renderRoadmap();
+    }
+
+    async function purgeKpiData() {
+      if (!confirm('سيتم مسح خارطة الطريق الحالية للبدء ببيانات نظيفة. هل أنت متأكد؟')) return;
+      await DeptPage.saveToAPI('KPIS_COMPANY', []);
+      window.location.reload();
     }
 
     function renderRoadmap() {
@@ -416,6 +587,7 @@
       document.getElementById('kpiName').value = k.name;
       document.getElementById('kpiTarget').value = k.target;
       document.getElementById('kpiQuarter').value = k.quarter || 'Q1';
+      document.getElementById('kpiParentLink').value = k.parent || '';
       new bootstrap.Modal(document.getElementById('kpiModal')).show();
     }
 
@@ -424,6 +596,7 @@
       k.name = document.getElementById('kpiName').value;
       k.target = document.getElementById('kpiTarget').value;
       k.quarter = document.getElementById('kpiQuarter').value;
+      k.parent = document.getElementById('kpiParentLink').value;
       bootstrap.Modal.getInstance(document.getElementById('kpiModal')).hide();
       renderRoadmap();
       persist();
@@ -431,20 +604,38 @@
 
     function distributeKPIsSmartly() {
       allKpis.forEach(k => {
-        const name = k.name.toLowerCase();
-        if (name.includes('حوكمة') || name.includes('توظيف') || name.includes('توطين') || name.includes('امتثال')) k.quarter = 'Q1';
-        else if (name.includes('أتمتة') || name.includes('أداء') || name.includes('تقنية') || name.includes('تدريب')) k.quarter = 'Q2';
-        else if (name.includes('رضا') || name.includes('استبقاء') || name.includes('ثقافة')) k.quarter = 'Q3';
-        else if (name.includes('أثر') || name.includes('تحقيق') || name.includes('تقييم')) k.quarter = 'Q4';
-        else k.quarter = ['Q1', 'Q2', 'Q3', 'Q4'][Math.floor(Math.random() * 4)];
+        const name = (k.name || '').toLowerCase();
+
+        // 🧪 المنهجية العلمية لتوزيع المالية: 
+        // 1. التأسيس والحوكمة (Q1)
+        if (name.includes('حوكمة') || name.includes('سياسات') || name.includes('امتثال') || name.includes('يدوي') || name.includes('تنظيف') || name.includes('قواعد')) {
+          k.quarter = 'Q1';
+        }
+        // 2. الرقمنة والأتمتة (Q2)
+        else if (name.includes('أتمتة') || name.includes('رقمنة') || name.includes('نظام') || name.includes('erp') || name.includes('تحصيل') || name.includes('فاتورة') || name.includes('فوترة')) {
+          k.quarter = 'Q2';
+        }
+        // 3. القدرات والتحليل (Q3)
+        else if (name.includes('تحليل') || name.includes('لوحة') || name.includes('بيانات') || name.includes('تدريب') || name.includes('مهارة') || name.includes('تطوير') || name.includes('تنبؤ')) {
+          k.quarter = 'Q3';
+        }
+        // 4. الأثر والنتائج الختامية (Q4)
+        else if (name.includes('أرباح') || name.includes('عائد') || name.includes('أثر') || name.includes('تدقيق') || name.includes('إقفال') || name.includes('ختامي') || name.includes('ميزانية العام')) {
+          k.quarter = 'Q4';
+        }
+        // Fallback — التوزيع التلقائي
+        else {
+          k.quarter = ['Q1', 'Q2', 'Q3', 'Q4'][Math.floor(Math.random() * 4)];
+        }
       });
       renderRoadmap();
       persist();
+      if (window.DeptPage?.showMessage) DeptPage.showMessage('✅ تمت إعادة الجدولة بناءً على المنهجية العلمية (تأسيس -> رقمي -> تطوير -> أثر)');
     }
 
     async function persist() {
-      const dept = Context.getDept() || 'hr';
-      await DeptPage.saveToAPI('KPIS_' + dept.toUpperCase(), allKpis);
+      saveKpisLocal();
+      await DeptPage.saveToAPI('KPIS_COMPANY', allKpis);
     }
 
     async function saveJourney() {
@@ -461,8 +652,7 @@
         await persist();
 
         // 2. اعتماد الخطة (Approve) — مزامنة المسودة مع الجداول الحقيقية
-        const dept = Context.getDept() || 'hr';
-        const res = await window.api.post(`/api/kpis/approve/${dept}`);
+        const res = await window.api.post(`/api/kpis/approve/company`);
 
         if (res.error) throw new Error(res.error);
 
@@ -475,7 +665,7 @@
         }
 
         setTimeout(() => {
-          window.location.href = `/initiatives.html?dept=${dept}`;
+          window.location.href = `/initiatives.html`;
         }, 1500);
 
       } catch (e) {
@@ -485,6 +675,24 @@
           btn.disabled = false;
           btn.innerHTML = originalText;
         }
+      }
+    }
+
+    async function loadObjectivesForLinking(dept) {
+      try {
+        const res = await DeptPage.loadFromAPI('OBJECTIVES_' + dept.toUpperCase()) || [];
+        const objectives = Array.isArray(res) ? res : (res?.objectives || []);
+        const select = document.getElementById('kpiParentLink');
+        if (!select) return;
+
+        objectives.forEach(obj => {
+          const opt = document.createElement('option');
+          opt.value = obj.title;
+          opt.textContent = obj.title;
+          select.appendChild(opt);
+        });
+      } catch (e) {
+        console.warn('[KPIs] Failed to load objectives for linking', e);
       }
     }
   </script>

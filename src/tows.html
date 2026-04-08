@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/css/shared.css">
+    <link rel="stylesheet" href="/css/guide-bar.css?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
         rel="stylesheet">
     <style>
@@ -224,6 +225,41 @@
 </head>
 
 <body>
+    <!-- Top Navigation with Phase Tracker (Standardized) -->
+    <nav class="top-nav px-4 py-2 border-bottom d-flex align-items-center justify-content-between"
+        style="background: rgba(15,23,42,0.8); backdrop-filter: blur(15px); position: sticky; top: 0; z-index: 1000;">
+        <div class="d-flex align-items-center gap-3" style="width: 30%;">
+            <button onclick="window.exitToDashboard()" class="btn btn-link text-muted p-0 text-decoration-none fw-800">
+                <i class="bi bi-arrow-right-circle fs-5"></i>
+                <span class="ms-2">لوحة القيادة</span>
+            </button>
+            <div id="dept-switcher-placeholder"></div>
+        </div>
+
+        <div class="d-none d-lg-flex justify-content-center" style="width: 40%;">
+            <div class="phase-tracker">
+                <div class="phase-step completed">تشخيص (تم)</div>
+                <div class="bi bi-chevron-left small opacity-20 mx-3"></div>
+                <div class="phase-step active">التشخيص: TOWS</div>
+                <div class="bi bi-chevron-left small opacity-20 mx-3"></div>
+                <div class="phase-step opacity-20">التحليل الاستراتيجي</div>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-end" style="width: 30%;">
+            <button class="btn btn-primary rounded-pill px-4 py-2 fw-800 border-0"
+                onclick="document.getElementById('btnSave').click()">
+                حفظ ومتابعة للسيناريوهات <i class="bi bi-arrow-left ms-2"></i>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        window.exitToDashboard = function () {
+            window.location.href = '/ceo-dashboard.html';
+        };
+    </script>
+
     <div class="stx-wrapper">
         <aside class="stx-sidebar-container" id="sidebar"></aside>
 
@@ -237,6 +273,32 @@
                     <i class="bi bi-stars"></i> توليد استراتيجيات مقترحة
                 </button>
             </div>
+
+            <!-- شريط الإرشاد -->
+            <div class="guide-bar">
+                <div id="dept-switcher-placeholder"></div>
+                <div class="guide-item"><i class="bi bi-clock text-info"></i> الوقت المتوقع: <strong>20–30
+                        دقيقة</strong></div>
+                <div class="guide-item"><i class="bi bi-grid-3x2 text-warning"></i> <strong>4 خلايا</strong> استراتيجية
+                </div>
+                <div class="guide-item"><i class="bi bi-list-ol text-success"></i> <strong>2–4 استراتيجيات</strong> لكل
+                    خلية</div>
+                <div class="guide-item"><i class="bi bi-star-fill text-danger"></i> الأهمية: <strong>حرج</strong> —
+                    يُحدد الخيارات الاستراتيجية</div>
+                <div class="guide-item" id="swotScoreChip" style="display:none"></div>
+            </div>
+            <script>
+                // عرض درجة SWOT السابقة
+                setTimeout(function () {
+                    if (!window.StratScore) return;
+                    const up = StratScore.getUpstreamScores('company');
+                    if (up.swot) {
+                        const el = document.getElementById('swotScoreChip');
+                        el.style.display = 'flex';
+                        el.innerHTML = `<i class="bi bi-shield-check" style="color:${up.swot.color}"></i> جاهزية SWOT: <strong style="color:${up.swot.color}">${up.swot.overall}% — ${up.swot.label}</strong>`;
+                    }
+                }, 500);
+            </script>
 
             <form id="tows-form">
                 <div class="tows-matrix">
@@ -325,26 +387,411 @@
         </main>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/strategic-score.js?v=2"></script>
+    <script src="/js/report-engine.js?v=2"></script>
     <script src="/js/api.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/context-manager.js"></script>
+    <script src="/js/page-guard.js"></script>
     <script src="/js/steps-config.js"></script>
     <script src="/js/sidebar.js"></script>
-    <script src="/js/dept-page.js"></script>
+    <script src="/js/dept-page.js?v=2"></script>
     <script src="/assets/js/hr-handlers.js"></script>
+    <script src="/assets/js/finance-handlers.js"></script>
+    <script src="/assets/js/sales-handlers.js"></script>
+    <script src="/assets/js/marketing-handlers.js"></script>
+    <script src="/assets/js/it-handlers.js"></script>
+    <script src="/assets/js/operations-handlers.js"></script>
+    <script src="/assets/js/projects-handlers.js"></script>
+    <script src="/assets/js/compliance-handlers.js"></script>
 
     <script>
         let swotData = { s: [], w: [], o: [], t: [] };
 
         (async function () {
-            // 🛡️ تهيئة الصفحة (تضمن تحميل المستخدم والقسم)
-            const dept = await window.initDeptPage();
-            if (!dept) return;
+            // 🛡️ تهيئة الصفحة (مستوى الشركة)
+            await window.initDeptPage(); // للتحقق من المستخدم فقط
+            const dept = 'company';
+            if (window.DeptPage) DeptPage.dept = 'company';
+            window.exitToDashboard = () => {
+                window.location.href = '/ceo-dashboard.html';
+            };
 
             // تهيئة DeptPage (مهم جداً للحفظ)
-            await DeptPage.init(dept);
+            await DeptPage.init('company');
+
+            // dept switcher removed — company-level page
 
             if (window.initSidebar) window.initSidebar();
+
+            if (window.ReportEngine) {
+                ReportEngine.init({
+                    pageId: 'tows',
+                    pageTitle: 'مصفوفة TOWS الاستراتيجية',
+                    pageIcon: '♟️',
+                    collectData: () => {
+                        const strats = [
+                            { key: 'so', label: 'استراتيجيات الهجوم (SO)', color: '#16a34a', icon: '⚔️', desc: 'استثمار القوة + الفرص', priority: 'هجوم وتوسع' },
+                            { key: 'wo', label: 'استراتيجيات التحسين (WO)', color: '#2563eb', icon: '🔧', desc: 'معالجة الضعف بالفرص', priority: 'تحسين وبناء قدرات' },
+                            { key: 'st', label: 'استراتيجيات الدفاع (ST)', color: '#d97706', icon: '🛡️', desc: 'استخدام القوة ضد التهديدات', priority: 'حماية المكتسبات' },
+                            { key: 'wt', label: 'استراتيجيات الانكماش (WT)', color: '#dc2626', icon: '🔻', desc: 'تقليل الضعف والتهديدات', priority: 'إدارة أزمات وتقليل خسائر' }
+                        ];
+
+                        // ─── CONSULT: تحليل استشاري لكل خلية فارغة ───
+                        const CELL_RISK = {
+                            so: { risk: 'بدون استراتيجيات هجومية تضيع فرص النمو رغم امتلاك القدرات اللازمة', guide: 'اسأل: كيف نستخدم قوتنا الداخلية لاقتناص كل فرصة؟ ما المشاريع الجديدة التي تجمع القوة بالفرصة؟' },
+                            wo: { risk: 'الفرص ستمر دون استغلال لأن نقاط الضعف تعيق الوصول إليها', guide: 'اسأل: أي نقاط ضعف لو عالجناها نستطيع اقتناص فرصة محددة؟ ما الشراكات التي تعوّض ضعفنا؟' },
+                            st: { risk: 'التهديدات ستضرب المنظمة رغم وجود قدرات كافية للتصدي لها', guide: 'اسأل: كيف نحوّل قوتنا إلى درع ضد كل تهديد؟ ما الخطط الوقائية الممكنة؟' },
+                            wt: { risk: 'أسوأ سيناريو: ضعف داخلي يتقاطع مع تهديد خارجي بدون خطة طوارئ', guide: 'اسأل: ما أسوأ ما يمكن أن يحدث؟ كيف نقلل الخسائر المحتملة؟ هل نحتاج خطة انسحاب من أنشطة معينة؟' }
+                        };
+
+                        const counts = {};
+                        const allItems = {};
+                        const sections = [];
+                        const deptVal = 'company';
+
+                        strats.forEach(s => {
+                            const el = document.getElementById(s.key);
+                            const val = el?.value || '';
+                            const lines = val.trim() ? val.split('\n').filter(l => l.trim().length > 2).map(l => l.trim()) : [];
+                            counts[s.key] = lines.length;
+                            allItems[s.key] = lines;
+                            if (lines.length > 0) {
+                                const itemsHTML = lines.map((l, i) => `<div style="display:flex;gap:8px;margin-bottom:6px;font-size:0.84rem;line-height:1.6;">
+                                    <span style="background:${s.color};color:#fff;border-radius:50%;min-width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;flex-shrink:0;margin-top:2px;">${i + 1}</span>
+                                    <span style="flex:1;color:#334155;">${l}</span>
+                                </div>`).join('');
+                                sections.push({ title: `${s.label} (${lines.length})`, icon: s.icon, color: s.color, content: itemsHTML });
+                            }
+                        });
+
+                        const total = Object.values(counts).reduce((a, b) => a + b, 0);
+                        const emptyStrats = strats.filter(s => counts[s.key] === 0);
+                        const filledStrats = strats.filter(s => counts[s.key] > 0);
+
+                        // ─── 1) تقييم التوجه الاستراتيجي ───
+                        if (total > 0) {
+                            const offensiveCount = counts.so + counts.wo;
+                            const defensiveCount = counts.st + counts.wt;
+                            const totalStrat = offensiveCount + defensiveCount;
+                            const offPct = Math.round((offensiveCount / totalStrat) * 100);
+                            const defPct = 100 - offPct;
+
+                            let orientLabel, orientColor, orientIcon, orientAdvice;
+                            if (offPct >= 65) {
+                                orientLabel = 'توجه هجومي'; orientColor = '#16a34a'; orientIcon = '⚔️';
+                                orientAdvice = 'غالبية الاستراتيجيات هجومية/تحسينية — مناسب إذا كانت البيئة الخارجية مواتية. تأكد من وجود خطط دفاعية كافية.';
+                            } else if (defPct >= 65) {
+                                orientLabel = 'توجه دفاعي'; orientColor = '#d97706'; orientIcon = '🛡️';
+                                orientAdvice = 'غالبية الاستراتيجيات دفاعية/انكماشية — قد يشير لبيئة ضاغطة. لا تنسَ استغلال الفرص المتاحة.';
+                            } else {
+                                orientLabel = 'توجه متوازن'; orientColor = '#6366f1'; orientIcon = '⚖️';
+                                orientAdvice = 'توزيع متوازن بين الهجوم والدفاع — يعكس تخطيطاً شاملاً يغطي السيناريوهات المختلفة.';
+                            }
+
+                            let orientHTML = `<div style="text-align:center;padding:10px 14px;">
+                                <div style="font-size:1.8rem;">${orientIcon}</div>
+                                <div style="font-size:1.05rem;font-weight:800;color:${orientColor};margin:4px 0;">${orientLabel}</div>
+                                <div style="font-size:0.8rem;color:#475569;line-height:1.6;">${orientAdvice}</div>
+                            </div>`;
+
+                            // شريط التوزيع الهجومي/الدفاعي
+                            orientHTML += `<div style="background:#f8fafc;border-radius:10px;padding:10px 12px;margin-top:10px;">
+                                <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:#64748b;margin-bottom:4px;">
+                                    <span>⚔️ هجومي/تحسيني (${offensiveCount})</span>
+                                    <span>🛡️ دفاعي/انكماشي (${defensiveCount})</span>
+                                </div>
+                                <div style="display:flex;height:10px;border-radius:6px;overflow:hidden;background:#e2e8f0;">
+                                    <div style="width:${offPct}%;background:linear-gradient(90deg,#16a34a,#2563eb);"></div>
+                                    <div style="width:${defPct}%;background:linear-gradient(90deg,#d97706,#dc2626);"></div>
+                                </div>
+                                <div style="display:flex;justify-content:space-between;font-size:0.7rem;margin-top:3px;">
+                                    <span style="color:#16a34a;font-weight:600;">${offPct}%</span>
+                                    <span style="color:#d97706;font-weight:600;">${defPct}%</span>
+                                </div>
+                            </div>`;
+
+                            // عمق التغطية لكل خلية
+                            orientHTML += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">`;
+                            strats.forEach(s => {
+                                const cnt = counts[s.key];
+                                const depth = cnt >= 3 ? 'عميق' : cnt >= 1 ? 'مبدئي' : 'فارغ';
+                                const dClr = cnt >= 3 ? '#16a34a' : cnt >= 1 ? '#ca8a04' : '#94a3b8';
+                                orientHTML += `<div style="background:#f8fafc;border-radius:8px;padding:8px;text-align:center;border-top:3px solid ${s.color};">
+                                    <div style="font-size:0.68rem;color:#64748b;">${s.icon} ${s.key.toUpperCase()}</div>
+                                    <div style="font-size:1rem;font-weight:800;color:${s.color};">${cnt}</div>
+                                    <div style="font-size:0.65rem;color:${dClr};font-weight:600;">${depth}</div>
+                                </div>`;
+                            });
+                            orientHTML += `</div>`;
+
+                            sections.unshift({ title: 'تقييم التوجه الاستراتيجي', icon: '🧭', color: orientColor, content: orientHTML });
+                        }
+
+                        // ─── 2) فجوات استراتيجية (خلايا فارغة) ───
+                        if (emptyStrats.length > 0 && total > 0) {
+                            const gapHTML = emptyStrats.map(s => {
+                                const cr = CELL_RISK[s.key];
+                                return `<div style="background:#fef2f2;border-radius:10px;padding:10px 12px;margin:8px 0;border-right:4px solid ${s.color};">
+                                    <div style="font-weight:700;color:${s.color};font-size:0.85rem;margin-bottom:4px;">${s.icon} ${s.key.toUpperCase()} — ${s.priority}</div>
+                                    <div style="font-size:0.78rem;color:#991b1b;margin-bottom:3px;"><span style="font-weight:700;">المخاطر:</span> ${cr.risk}</div>
+                                    <div style="font-size:0.78rem;color:#1e40af;"><span style="font-weight:700;">دليل التعبئة:</span> ${cr.guide}</div>
+                                </div>`;
+                            }).join('');
+                            sections.push({ title: `فجوات استراتيجية (${emptyStrats.length} خلايا فارغة)`, icon: '🚨', color: '#dc2626', content: gapHTML });
+                        }
+
+                        // ─── إذا TOWS فاضي: تحليل استشاري مبني على SWOT ───
+                        const swotTotal = swotData.s.length + swotData.w.length + swotData.o.length + swotData.t.length;
+                        if (total === 0 && swotTotal > 0) {
+                            // 1) تقييم الموقف الاستراتيجي من SWOT
+                            const sCount = swotData.s.length;
+                            const wCount = swotData.w.length;
+                            const oCount = swotData.o.length;
+                            const tCount = swotData.t.length;
+                            const sRatio = sCount / (sCount + wCount || 1);
+                            const oRatio = oCount / (oCount + tCount || 1);
+
+                            let posLabel, posColor, posIcon, posAdvice, priorityCell;
+                            if (sRatio >= 0.6 && oRatio >= 0.6) {
+                                posLabel = 'موقف هجومي (Aggressive)'; posColor = '#16a34a'; posIcon = '⚔️';
+                                posAdvice = 'نقاط القوة تفوق الضعف والفرص تفوق التهديدات — البيئة مواتية للتوسع والنمو';
+                                priorityCell = 'SO';
+                            } else if (sRatio >= 0.6 && oRatio < 0.4) {
+                                posLabel = 'موقف تنافسي (Competitive)'; posColor = '#d97706'; posIcon = '🛡️';
+                                posAdvice = 'قدرات داخلية قوية لكن التهديدات تفوق الفرص — تحتاج حماية المكتسبات';
+                                priorityCell = 'ST';
+                            } else if (sRatio < 0.4 && oRatio >= 0.6) {
+                                posLabel = 'موقف تحسيني (Conservative)'; posColor = '#2563eb'; posIcon = '🔧';
+                                posAdvice = 'فرص متاحة لكن نقاط الضعف تعيق استغلالها — ركز على سد الفجوات';
+                                priorityCell = 'WO';
+                            } else if (sRatio < 0.4 && oRatio < 0.4) {
+                                posLabel = 'موقف حرج (Defensive)'; posColor = '#dc2626'; posIcon = '🚨';
+                                posAdvice = 'ضعف داخلي + تهديدات خارجية = وضع حرج يتطلب إدارة أزمات فورية';
+                                priorityCell = 'WT';
+                            } else {
+                                posLabel = 'موقف متوازن'; posColor = '#6366f1'; posIcon = '⚖️';
+                                posAdvice = 'لا يوجد ميل واضح — تحتاج تغطية كل الخلايا الأربع بتوازن';
+                                priorityCell = 'SO';
+                            }
+
+                            const sBar = Math.round(sRatio * 100);
+                            const oBar = Math.round(oRatio * 100);
+
+                            let posHTML = `<div style="text-align:center;padding:14px;">
+                                <div style="font-size:1.8rem;">${posIcon}</div>
+                                <div style="font-size:1.1rem;font-weight:800;color:${posColor};margin:6px 0;">${posLabel}</div>
+                                <div style="font-size:0.82rem;color:#475569;line-height:1.6;">${posAdvice}</div>
+                                <div style="margin-top:8px;background:${posColor}15;border:1px solid ${posColor}40;border-radius:8px;padding:8px 12px;font-size:0.8rem;color:${posColor};font-weight:700;">
+                                    ← ابدأ بخلية ${priorityCell} كأولوية
+                                </div>
+                            </div>`;
+
+                            posHTML += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;">
+                                <div style="background:#f8fafc;border-radius:10px;padding:10px;">
+                                    <div style="font-size:0.72rem;color:#64748b;margin-bottom:6px;">⚖️ البيئة الداخلية (${sCount + wCount} عنصر)</div>
+                                    <div style="display:flex;align-items:center;gap:6px;">
+                                        <span style="font-size:0.7rem;color:#16a34a;min-width:28px;">قوة ${sCount}</span>
+                                        <div style="flex:1;background:#e2e8f0;border-radius:6px;height:8px;overflow:hidden;">
+                                            <div style="width:${sBar}%;background:#16a34a;height:100%;border-radius:6px;"></div>
+                                        </div>
+                                        <span style="font-size:0.7rem;color:#64748b;">${sBar}%</span>
+                                    </div>
+                                    <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+                                        <span style="font-size:0.7rem;color:#dc2626;min-width:28px;">ضعف ${wCount}</span>
+                                        <div style="flex:1;background:#e2e8f0;border-radius:6px;height:8px;overflow:hidden;">
+                                            <div style="width:${100 - sBar}%;background:#dc2626;height:100%;border-radius:6px;"></div>
+                                        </div>
+                                        <span style="font-size:0.7rem;color:#64748b;">${100 - sBar}%</span>
+                                    </div>
+                                </div>
+                                <div style="background:#f8fafc;border-radius:10px;padding:10px;">
+                                    <div style="font-size:0.72rem;color:#64748b;margin-bottom:6px;">🌍 البيئة الخارجية (${oCount + tCount} عنصر)</div>
+                                    <div style="display:flex;align-items:center;gap:6px;">
+                                        <span style="font-size:0.7rem;color:#0891b2;min-width:28px;">فرص ${oCount}</span>
+                                        <div style="flex:1;background:#e2e8f0;border-radius:6px;height:8px;overflow:hidden;">
+                                            <div style="width:${oBar}%;background:#0891b2;height:100%;border-radius:6px;"></div>
+                                        </div>
+                                        <span style="font-size:0.7rem;color:#64748b;">${oBar}%</span>
+                                    </div>
+                                    <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+                                        <span style="font-size:0.7rem;color:#ea580c;min-width:28px;">تهديد ${tCount}</span>
+                                        <div style="flex:1;background:#e2e8f0;border-radius:6px;height:8px;overflow:hidden;">
+                                            <div style="width:${100 - oBar}%;background:#ea580c;height:100%;border-radius:6px;"></div>
+                                        </div>
+                                        <span style="font-size:0.7rem;color:#64748b;">${100 - oBar}%</span>
+                                    </div>
+                                </div>
+                            </div>`;
+
+                            sections.push({ title: 'تحليل الموقف الاستراتيجي (من بيانات SWOT)', icon: '🧭', color: posColor, content: posHTML });
+
+                            // 2) ملخص مدخلات SWOT مع أمثلة
+                            const quadData = [
+                                { label: 'نقاط القوة', items: swotData.s, color: '#16a34a', icon: '✅' },
+                                { label: 'نقاط الضعف', items: swotData.w, color: '#dc2626', icon: '⚠️' },
+                                { label: 'الفرص', items: swotData.o, color: '#0891b2', icon: '🚀' },
+                                { label: 'التهديدات', items: swotData.t, color: '#ea580c', icon: '🔴' }
+                            ];
+
+                            let swotHTML = '';
+                            quadData.forEach(q => {
+                                if (q.items.length > 0) {
+                                    swotHTML += `<div style="margin-bottom:12px;">
+                                        <div style="font-weight:700;color:${q.color};font-size:0.82rem;margin-bottom:4px;">${q.icon} ${q.label} (${q.items.length})</div>`;
+                                    q.items.slice(0, 5).forEach(item => {
+                                        swotHTML += `<div style="display:flex;gap:6px;margin-bottom:3px;font-size:0.78rem;line-height:1.5;">
+                                            <span style="color:${q.color};font-size:0.5rem;margin-top:5px;flex-shrink:0;">⬤</span>
+                                            <span style="color:#334155;">${item}</span>
+                                        </div>`;
+                                    });
+                                    if (q.items.length > 5) swotHTML += `<div style="font-size:0.72rem;color:#94a3b8;margin-top:2px;">+ ${q.items.length - 5} عنصر آخر...</div>`;
+                                    swotHTML += `</div>`;
+                                }
+                            });
+
+                            sections.push({ title: `مدخلات SWOT المتاحة (${swotTotal} عنصر)`, icon: '📋', color: '#6366f1', content: swotHTML });
+
+                            // 3) خريطة الأولويات — أي خلية TOWS تبدأ فيها
+                            const cellPriority = [
+                                { key: 'SO', icon: '⚔️', color: '#16a34a', label: 'هجوم', inputs: `${sCount} قوة × ${oCount} فرصة`, potential: sCount * oCount, advice: 'كيف تستخدم قوتك لاقتناص الفرص؟' },
+                                { key: 'WO', icon: '🔧', color: '#2563eb', label: 'تحسين', inputs: `${wCount} ضعف × ${oCount} فرصة`, potential: wCount * oCount, advice: 'أي نقاط ضعف لو عالجتها تفتح لك فرصة؟' },
+                                { key: 'ST', icon: '🛡️', color: '#d97706', label: 'دفاع', inputs: `${sCount} قوة × ${tCount} تهديد`, potential: sCount * tCount, advice: 'كيف توظف قوتك لصد التهديدات؟' },
+                                { key: 'WT', icon: '🔻', color: '#dc2626', label: 'طوارئ', inputs: `${wCount} ضعف × ${tCount} تهديد`, potential: wCount * tCount, advice: 'ما أسوأ سيناريو وكيف تستعد له؟' }
+                            ].sort((a, b) => b.potential - a.potential);
+
+                            let prioHTML = `<div style="font-size:0.78rem;color:#475569;margin-bottom:10px;">ترتيب الخلايا حسب عدد التقاطعات المحتملة بين عناصر SWOT:</div>`;
+                            cellPriority.forEach((c, i) => {
+                                const isTop = c.key === priorityCell;
+                                const bg = isTop ? `${c.color}10` : '#f8fafc';
+                                const border = isTop ? `2px solid ${c.color}` : '1px solid #e2e8f0';
+                                prioHTML += `<div style="background:${bg};border:${border};border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;">
+                                    <div style="background:${c.color};color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:800;flex-shrink:0;">${i + 1}</div>
+                                    <div style="flex:1;">
+                                        <div style="font-weight:700;color:${c.color};font-size:0.83rem;">${c.icon} ${c.key} — ${c.label}</div>
+                                        <div style="font-size:0.75rem;color:#64748b;">${c.inputs} = ${c.potential} تقاطع محتمل</div>
+                                        <div style="font-size:0.75rem;color:#334155;font-style:italic;margin-top:2px;">${c.advice}</div>
+                                    </div>
+                                    ${isTop ? '<span style="font-size:0.7rem;font-weight:700;color:' + c.color + ';background:' + c.color + '20;padding:3px 8px;border-radius:6px;">الأولوية</span>' : ''}
+                                </div>`;
+                            });
+
+                            sections.push({ title: 'خريطة أولويات بناء الاستراتيجيات', icon: '🎯', color: '#6366f1', content: prioHTML });
+
+                            // 4) دليل سريع لكل خلية
+                            let guideHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">`;
+                            strats.forEach(s => {
+                                const cr = CELL_RISK[s.key];
+                                guideHTML += `<div style="background:#f8fafc;border-radius:10px;padding:12px;border-top:3px solid ${s.color};">
+                                    <div style="font-weight:700;color:${s.color};font-size:0.83rem;margin-bottom:6px;">${s.icon} ${s.key.toUpperCase()}</div>
+                                    <div style="font-size:0.75rem;color:#475569;margin-bottom:6px;">${s.desc}</div>
+                                    <div style="font-size:0.72rem;color:#991b1b;margin-bottom:4px;"><strong>بدون خطة:</strong> ${cr.risk}</div>
+                                    <div style="font-size:0.72rem;color:#1e40af;"><strong>ابدأ بسؤال:</strong> ${cr.guide.replace('اسأل: ', '')}</div>
+                                </div>`;
+                            });
+                            guideHTML += `</div>
+                            <div style="background:#f0fdf4;border-radius:8px;padding:10px 14px;margin-top:12px;font-size:0.8rem;color:#166534;text-align:center;">
+                                💡 اضغط <strong>"توليد استراتيجيات مقترحة"</strong> في الصفحة لملء المصفوفة تلقائياً من بيانات SWOT
+                            </div>`;
+
+                            sections.push({ title: 'دليل بناء مصفوفة TOWS', icon: '📖', color: '#8b5cf6', content: guideHTML });
+                        }
+
+                        // ─── Score & KPIs حسب حالة البيانات ───
+                        const swReady = swotData.s.length + swotData.w.length + swotData.o.length + swotData.t.length;
+                        let score;
+                        let kpis;
+
+                        if (total > 0) {
+                            // TOWS معبّأ
+                            score = total >= 8 && emptyStrats.length === 0 ? Math.min(100, 50 + total * 4) : Math.round((total / 12) * 60 + ((4 - emptyStrats.length) / 4) * 40);
+                            kpis = [
+                                { label: 'هجوم SO', value: counts.so, color: counts.so > 0 ? '#16a34a' : '#94a3b8', bg: counts.so > 0 ? '#f0fdf4' : '#f8fafc' },
+                                { label: 'تحسين WO', value: counts.wo, color: counts.wo > 0 ? '#2563eb' : '#94a3b8', bg: counts.wo > 0 ? '#eff6ff' : '#f8fafc' },
+                                { label: 'دفاع ST', value: counts.st, color: counts.st > 0 ? '#d97706' : '#94a3b8', bg: counts.st > 0 ? '#fffbeb' : '#f8fafc' },
+                                { label: 'انكماش WT', value: counts.wt, color: counts.wt > 0 ? '#dc2626' : '#94a3b8', bg: counts.wt > 0 ? '#fef2f2' : '#f8fafc' }
+                            ];
+                        } else if (swReady > 0) {
+                            // TOWS فاضي لكن SWOT جاهز — عرض بيانات SWOT
+                            const filledQuads = [swotData.s.length, swotData.w.length, swotData.o.length, swotData.t.length].filter(v => v > 0).length;
+                            score = Math.round((filledQuads / 4) * 20 + Math.min(swReady, 20));
+                            kpis = [
+                                { label: 'نقاط القوة', value: swotData.s.length, color: swotData.s.length > 0 ? '#16a34a' : '#94a3b8', bg: swotData.s.length > 0 ? '#f0fdf4' : '#f8fafc' },
+                                { label: 'نقاط الضعف', value: swotData.w.length, color: swotData.w.length > 0 ? '#dc2626' : '#94a3b8', bg: swotData.w.length > 0 ? '#fef2f2' : '#f8fafc' },
+                                { label: 'الفرص', value: swotData.o.length, color: swotData.o.length > 0 ? '#0891b2' : '#94a3b8', bg: swotData.o.length > 0 ? '#ecfeff' : '#f8fafc' },
+                                { label: 'التهديدات', value: swotData.t.length, color: swotData.t.length > 0 ? '#ea580c' : '#94a3b8', bg: swotData.t.length > 0 ? '#fff7ed' : '#f8fafc' }
+                            ];
+                        } else {
+                            // لا TOWS ولا SWOT
+                            score = 0;
+                            kpis = [
+                                { label: 'هجوم SO', value: 0, color: '#94a3b8', bg: '#f8fafc' },
+                                { label: 'تحسين WO', value: 0, color: '#94a3b8', bg: '#f8fafc' },
+                                { label: 'دفاع ST', value: 0, color: '#94a3b8', bg: '#f8fafc' },
+                                { label: 'انكماش WT', value: 0, color: '#94a3b8', bg: '#f8fafc' }
+                            ];
+                        }
+
+                        const highlights = [];
+                        if (total > 0) {
+                            highlights.push({ icon: '♟️', text: `${total} استراتيجية في ${filledStrats.length} أرباع من 4`, color: '#6366f1' });
+                            if (counts.so > 0) highlights.push({ icon: '⚔️', text: `${counts.so} استراتيجيات هجومية تستثمر القوة والفرص`, color: '#16a34a' });
+                            if (counts.wt > 0 && emptyStrats.length === 0) highlights.push({ icon: '✅', text: 'تغطية كاملة — المصفوفة تشمل كل السيناريوهات', color: '#16a34a' });
+                            else if (emptyStrats.length > 0) highlights.push({ icon: '⚠️', text: `فجوات: ${emptyStrats.map(s => s.key.toUpperCase()).join('، ')} — ${emptyStrats.length === 1 ? 'سيناريو واحد غير مغطى' : emptyStrats.length + ' سيناريوهات غير مغطاة'}`, color: '#ca8a04' });
+                            if (counts.so + counts.wo > counts.st + counts.wt && total > 4) highlights.push({ icon: '📈', text: 'التوجه العام نحو النمو والتحسين أكثر من الدفاع', color: '#0891b2' });
+                        } else {
+                            const swT = swotData.s.length + swotData.w.length + swotData.o.length + swotData.t.length;
+                            if (swT > 0) {
+                                const sR = swotData.s.length / (swotData.s.length + swotData.w.length || 1);
+                                const oR = swotData.o.length / (swotData.o.length + swotData.t.length || 1);
+                                highlights.push({ icon: '📊', text: `${swT} عنصر من SWOT جاهز — قوة ${swotData.s.length}، ضعف ${swotData.w.length}، فرص ${swotData.o.length}، تهديدات ${swotData.t.length}`, color: '#6366f1' });
+                                if (sR >= 0.6 && oR >= 0.6) highlights.push({ icon: '⚔️', text: 'البيئة مواتية للهجوم — القوة والفرص تتفوق', color: '#16a34a' });
+                                else if (sR < 0.4 && oR < 0.4) highlights.push({ icon: '🚨', text: 'وضع حرج — الضعف والتهديدات تسيطر، تحتاج خطة طوارئ', color: '#dc2626' });
+                                else if (sR >= 0.6) highlights.push({ icon: '🛡️', text: 'قدرات داخلية قوية لكن البيئة الخارجية ضاغطة', color: '#d97706' });
+                                else if (oR >= 0.6) highlights.push({ icon: '🔧', text: 'فرص متاحة لكن الضعف الداخلي يعيق الاستغلال', color: '#2563eb' });
+                                highlights.push({ icon: '💡', text: 'المصفوفة لم تُعبّأ بعد — التحليل أعلاه مبني على بيانات SWOT المتاحة', color: '#8b5cf6' });
+                            } else {
+                                highlights.push({ icon: '⏳', text: 'لم يتم تحديد استراتيجيات TOWS بعد', color: '#94a3b8' });
+                                highlights.push({ icon: '🔴', text: 'أكمل تحليل SWOT أولاً قبل بناء مصفوفة TOWS', color: '#dc2626' });
+                            }
+                        }
+
+                        const recommendations = [];
+                        if (total === 0) {
+                            const swT2 = swotData.s.length + swotData.w.length + swotData.o.length + swotData.t.length;
+                            if (swT2 > 0) {
+                                recommendations.push('اضغط "توليد استراتيجيات مقترحة" لإنشاء خيارات من بيانات SWOT تلقائياً');
+                                const maxCell = [{ k: 'SO', v: swotData.s.length * swotData.o.length }, { k: 'WO', v: swotData.w.length * swotData.o.length }, { k: 'ST', v: swotData.s.length * swotData.t.length }, { k: 'WT', v: swotData.w.length * swotData.t.length }].sort((a, b) => b.v - a.v)[0];
+                                recommendations.push(`ابدأ بخلية ${maxCell.k} — أعلى عدد تقاطعات (${maxCell.v} تقاطع بين عناصر SWOT)`);
+                                recommendations.push('حدد 2-3 استراتيجيات لكل خلية كحد أدنى لضمان تغطية كافية');
+                            } else {
+                                recommendations.push('ارجع لصفحة SWOT وأكمل التحليل أولاً — TOWS يعتمد على مخرجات SWOT');
+                            }
+                        } else {
+                            if (emptyStrats.length > 0 && emptyStrats.length <= 2) emptyStrats.forEach(s => recommendations.push(`أضف استراتيجيات "${s.label}" — ${CELL_RISK[s.key].risk.slice(0, 50)}...`));
+                            else if (emptyStrats.length > 2) recommendations.push(`أكمل ${emptyStrats.length} خلايا فارغة — كل خلية تمثل سيناريو مختلف يحتاج خطة`);
+                            const minFilled = filledStrats.length > 0 ? Math.min(...filledStrats.map(s => counts[s.key])) : 0;
+                            if (minFilled < 2 && filledStrats.length > 0) recommendations.push('أضف على الأقل 2-3 استراتيجيات لكل خلية لضمان عمق كافٍ');
+                            if (total < 8 && emptyStrats.length === 0) recommendations.push('أضف المزيد (يُنصح بـ 2-3 لكل خلية لتغطية كاملة)');
+                            if (emptyStrats.length === 0 && total >= 8) recommendations.push('تغطية جيدة — انتقل لتحديد الأهداف الاستراتيجية وترتيب الأولويات');
+                        }
+                        recommendations.splice(3);
+
+                        return {
+                            sections,
+                            meta: {
+                                dept: deptVal,
+                                deptName: deptVal.toUpperCase(),
+                                kpis, highlights, recommendations,
+                                qualityScore: Math.min(100, score),
+                                qualityLabel: total > 0 ? (score >= 70 ? 'تغطية جيدة' : 'تحتاج تطوير') : swReady > 0 ? 'بيانات SWOT جاهزة' : 'لم تبدأ',
+                                qualityAdvice: total > 0 ? `${total} استراتيجية في ${filledStrats.length}/4 خلايا — ${emptyStrats.length === 0 ? 'تغطية شاملة' : emptyStrats.length + ' فجوات تحتاج معالجة'}` : swReady > 0 ? `${swReady} عنصر SWOT جاهز (قوة ${swotData.s.length}، ضعف ${swotData.w.length}، فرص ${swotData.o.length}، تهديدات ${swotData.t.length}) — عبّئ المصفوفة` : 'أكمل SWOT أولاً ثم عبّئ مصفوفة TOWS'
+                            }
+                        };
+                    }
+                });
+            }
 
             await loadSwotSummary(dept);
             await loadTowsData(dept);
@@ -352,23 +799,26 @@
             // هندلة النموذج
             document.getElementById('tows-form').onsubmit = async (e) => {
                 e.preventDefault();
+                await saveJourney();
+            };
+
+            async function saveJourney() {
                 const btn = document.getElementById('btnSave');
                 btn.disabled = true;
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> جاري الحفظ...';
-
-                const payload = {
+                const data = {
                     so: document.getElementById('so').value,
                     wo: document.getElementById('wo').value,
                     st: document.getElementById('st').value,
                     wt: document.getElementById('wt').value
                 };
-
-                const success = await DeptPage.saveToAPI('TOWS_' + dept.toUpperCase(), payload);
+                saveTowsLocal();
+                const success = await DeptPage.saveToAPI('TOWS_COMPANY', data);
                 if (success) {
                     if (window.Context && Context.markStepCompleted) await Context.markStepCompleted('tows');
                     DeptPage.showMessage('تم حفظ مصفوفة TOWS بنجاح');
                     setTimeout(() => {
-                        window.location.href = `/scenarios.html?dept=${dept}`;
+                        window.location.href = `/scenarios.html`;
                     }, 1500);
                 } else {
                     btn.disabled = false;
@@ -403,13 +853,59 @@
             btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> جاري التحليل...';
 
             setTimeout(() => {
-                const results = window.generateHRStrategies ? generateHRStrategies(swotData.s, swotData.w, swotData.o, swotData.t) : { so: [], wo: [], st: [], wt: [] };
+                const dept = 'company';
+                let results = null;
+
+                if (window.StrategicSynthesis) {
+                    console.log('[TOWS] Generating Corporate Strategic Synthesis...');
+                    results = StrategicSynthesis.generateCorporateStrategies(swotData.s, swotData.w, swotData.o, swotData.t);
+                } else if (dept === 'hr') {
+                    results = window.generateHRStrategies ? generateHRStrategies(swotData.s, swotData.w, swotData.o, swotData.t) : null;
+                } else if (dept === 'finance' && window.generateFinanceStrategies) {
+                    results = generateFinanceStrategies(swotData.s, swotData.w, swotData.o, swotData.t);
+                } else if (dept === 'sales' && window.generateSalesStrategies) {
+                    results = generateSalesStrategies(swotData.s, swotData.w, swotData.o, swotData.t);
+                }
+
+                if (!results) {
+                    results = (window.generateHRStrategies ? generateHRStrategies(swotData.s, swotData.w, swotData.o, swotData.t) : { so: [], wo: [], st: [], wt: [] });
+                }
+
+                // تعبئة الـ textareas مباشرة (مع الحفاظ على المحتوى الموجود)
+                ['so', 'wo', 'st', 'wt'].forEach(key => {
+                    const area = document.getElementById(key);
+                    if (!area || !results[key] || results[key].length === 0) return;
+                    const current = area.value.trim();
+                    const newItems = results[key]
+                        .filter(item => !current.includes(item))
+                        .map(item => `- ${item}`);
+                    if (newItems.length > 0) {
+                        area.value = current ? current + '\n' + newItems.join('\n') : newItems.join('\n');
+                    }
+                });
+
+                // حفظ فوري في localStorage
+                saveTowsLocal();
+
+                // عرض الاقتراحات كـ chips أيضاً (للتعديل الاختياري)
                 renderSuggestions('so', results.so);
                 renderSuggestions('wo', results.wo);
                 renderSuggestions('st', results.st);
                 renderSuggestions('wt', results.wt);
+
+                // تحديث الـ chips — علّم المُطبّقة
+                ['so', 'wo', 'st', 'wt'].forEach(key => {
+                    const area = document.getElementById(key);
+                    const container = document.getElementById(`${key}-suggestions`);
+                    if (!container || !area) return;
+                    container.querySelectorAll('.suggestion-chip').forEach(chip => {
+                        if (area.value.includes(chip.textContent)) chip.classList.add('applied');
+                    });
+                });
+
                 btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-stars"></i> تحديث المقترحات';
+                btn.innerHTML = '<i class="bi bi-check2 me-1"></i> تم التوليد والحفظ';
+                setTimeout(() => { btn.innerHTML = '<i class="bi bi-stars"></i> تحديث المقترحات'; }, 3000);
             }, 800);
         }
 
@@ -430,17 +926,51 @@
             if (current.includes(text)) return;
             area.value = current ? current + '\n' + bullet : bullet;
             chip.classList.add('applied');
+            saveTowsLocal(); // حفظ فوري
         }
+
+        // ─── حفظ تلقائي محلي عند أي تغيير ───
+        const LS_KEY_TOWS = () => `stratix_tows_company`;
+
+        function saveTowsLocal() {
+            const payload = {
+                so: document.getElementById('so')?.value || '',
+                wo: document.getElementById('wo')?.value || '',
+                st: document.getElementById('st')?.value || '',
+                wt: document.getElementById('wt')?.value || '',
+                _ts: Date.now()
+            };
+            try { localStorage.setItem(LS_KEY_TOWS(), JSON.stringify(payload)); } catch (e) { }
+        }
+
+        // ربط الحفظ التلقائي على كل textarea
+        ['so', 'wo', 'st', 'wt'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', saveTowsLocal);
+        });
 
         async function loadTowsData(dept) {
             try {
+                // 1) محاولة التحميل من API
                 const data = await DeptPage.loadFromAPI('TOWS_' + dept.toUpperCase());
-                if (data) {
+                if (data && (data.so || data.wo || data.st || data.wt)) {
                     ['so', 'wo', 'st', 'wt'].forEach(k => document.getElementById(k).value = data[k] || '');
+                    saveTowsLocal(); // مزامنة مع localStorage
+                    return;
+                }
+            } catch (e) { }
+
+            // 2) fallback: تحميل من localStorage
+            try {
+                const local = JSON.parse(localStorage.getItem(LS_KEY_TOWS()));
+                if (local && (local.so || local.wo || local.st || local.wt)) {
+                    ['so', 'wo', 'st', 'wt'].forEach(k => document.getElementById(k).value = local[k] || '');
                 }
             } catch (e) { }
         }
     </script>
+    </main>
+    </div>
 </body>
 
 </html>

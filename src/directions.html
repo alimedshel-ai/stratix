@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="/css/index.css">
+    <link rel="stylesheet" href="/css/guide-bar.css?v=2">
     <style>
         :root {
             --stx-bg: #0b0d12;
@@ -184,10 +185,44 @@
 </head>
 
 <body>
+    <!-- Top Navigation with Phase Tracker (Standardized) -->
+    <nav class="top-nav px-4 py-2 border-bottom d-flex align-items-center justify-content-between"
+        style="background: rgba(15,23,42,0.8); backdrop-filter: blur(15px); position: sticky; top: 0; z-index: 1000;">
+        <div class="d-flex align-items-center gap-3" style="width: 30%;">
+            <button onclick="window.exitToDashboard()" class="btn btn-link text-muted p-0 text-decoration-none fw-800">
+                <i class="bi bi-arrow-right-circle fs-5"></i>
+                <span class="ms-2">لوحة القيادة</span>
+            </button>
+            <div id="dept-switcher-placeholder"></div>
+        </div>
+
+        <div class="d-none d-lg-flex justify-content-center" style="width: 40%;">
+            <div class="phase-tracker">
+                <div class="phase-step completed">تشخيص (تم)</div>
+                <div class="bi bi-chevron-left small opacity-20 mx-3"></div>
+                <div class="phase-step active">التخطيط: التوجهات</div>
+                <div class="bi bi-chevron-left small opacity-20 mx-3"></div>
+                <div class="phase-step opacity-20">الأهداف والمسارات</div>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-end" style="width: 30%;">
+            <button class="btn btn-primary rounded-pill px-4 py-2 fw-800 border-0" onclick="saveJourney()">
+                حفظ وتحديد الأهداف <i class="bi bi-bullseye ms-2"></i>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        window.exitToDashboard = function () {
+            window.location.href = '/ceo-dashboard.html';
+        };
+    </script>
+
     <div class="stx-wrapper">
         <aside class="stx-sidebar-container" id="sidebar"></aside>
 
-        <main class="flex-grow-1">
+        <main class="flex-grow-1 p-4">
             <div class="d-flex justify-content-between align-items-end mb-5">
                 <div>
                     <div class="d-flex align-items-center gap-3 mb-2">
@@ -202,6 +237,19 @@
                 <button type="button" onclick="loadTemplates()" class="btn-magic" id="btnMagic">
                     <i class="bi bi-robot"></i> تعزيز الخيارات ذكياً
                 </button>
+            </div>
+
+            <!-- شريط الإرشاد -->
+            <div class="guide-bar">
+                <div id="dept-switcher-placeholder"></div>
+                <div class="guide-item"><i class="bi bi-clock text-info"></i> الوقت المتوقع: <strong>10–15
+                        دقيقة</strong></div>
+                <div class="guide-item"><i class="bi bi-compass text-warning"></i> <strong>3 عناصر</strong>: رؤية +
+                    رسالة + قيم</div>
+                <div class="guide-item"><i class="bi bi-pencil text-success"></i> جملة واحدة <strong>واضحة
+                        وملهمة</strong> لكل عنصر</div>
+                <div class="guide-item"><i class="bi bi-star-fill text-danger"></i> الأهمية: <strong>حرج</strong> —
+                    بوصلة كل الأهداف القادمة</div>
             </div>
 
             <div class="row g-4">
@@ -286,46 +334,135 @@
         </div>
     </div>
 
+    <script src="/js/report-engine.js?v=2"></script>
     <script src="/js/api.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/context-manager.js"></script>
+    <script src="/js/page-guard.js"></script>
     <script src="/js/steps-config.js"></script>
     <script src="/js/sidebar.js"></script>
     <script src="/js/dept-page.js"></script>
     <script src="/assets/js/hr-handlers.js"></script>
+    <script src="/assets/js/finance-handlers.js"></script>
+    <script src="/assets/js/sales-handlers.js"></script>
+    <script src="/assets/js/marketing-handlers.js"></script>
+    <script src="/assets/js/operations-handlers.js"></script>
+    <script src="/assets/js/it-handlers.js"></script>
+    <script src="/assets/js/compliance-handlers.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         (async function () {
-            // 🛡️ تهيئة الصفحة (تضمن تحميل المستخدم والقسم)
-            const dept = await window.initDeptPage();
-            if (!dept) return;
+            // 🛡️ تهيئة الصفحة (مستوى الشركة)
+            await window.initDeptPage(); // للتحقق من المستخدم فقط
+            const dept = 'company';
+            if (window.DeptPage) DeptPage.dept = 'company';
 
             const badge = document.getElementById('dept-badge');
-            badge.textContent = `إدارة ${window.getDeptName ? window.getDeptName(dept) : dept.toUpperCase()}`;
+            badge.textContent = 'الشركة';
+            window.exitToDashboard = () => {
+                window.location.href = '/ceo-dashboard.html';
+            };
 
             // تهيئة DeptPage (مهم جداً للحفظ)
-            await DeptPage.init(dept);
+            await DeptPage.init('company');
+
+            // dept switcher removed — company-level page
 
             if (window.initSidebar) window.initSidebar();
 
+            if (window.ReportEngine) {
+                ReportEngine.init({
+                    pageId: 'directions',
+                    pageTitle: 'التوجهات الاستراتيجية',
+                    pageIcon: '🧭',
+                    collectData: () => {
+                        const dirs = [
+                            { id: 'vision', label: 'الرؤية (Vision)', color: '#7c3aed', icon: '👁️' },
+                            { id: 'mission', label: 'الرسالة (Mission)', color: '#0d9488', icon: '🎯' },
+                            { id: 'values', label: 'القيم (Values)', color: '#d97706', icon: '💎' }
+                        ];
+                        let filled = 0;
+                        const sections = dirs.map(d => {
+                            const el = document.getElementById(d.id);
+                            const val = el?.value?.trim() || '';
+                            if (val) filled++;
+                            const wordCount = val ? val.split(/\s+/).length : 0;
+                            return {
+                                title: d.label + (val ? ` — ${wordCount} كلمة` : ''),
+                                icon: d.icon,
+                                color: d.color,
+                                content: val ? `<p style="font-size:0.95rem;font-weight:600;line-height:1.8;color:#1e293b;">${val}</p>` : '<p style="color:#94a3b8;font-style:italic;">لم يتم الإدخال</p>'
+                            };
+                        });
+                        const dept = 'company';
+                        const score = Math.round((filled / 3) * 100);
+
+                        const visionVal = document.getElementById('vision')?.value?.trim() || '';
+                        const missionVal = document.getElementById('mission')?.value?.trim() || '';
+                        const valuesVal = document.getElementById('values')?.value?.trim() || '';
+
+                        const kpis = [
+                            { label: 'الرؤية', value: visionVal ? '✅' : '—', color: visionVal ? '#16a34a' : '#94a3b8', bg: visionVal ? '#f0fdf4' : '#f8fafc' },
+                            { label: 'الرسالة', value: missionVal ? '✅' : '—', color: missionVal ? '#16a34a' : '#94a3b8', bg: missionVal ? '#f0fdf4' : '#f8fafc' },
+                            { label: 'القيم', value: valuesVal ? '✅' : '—', color: valuesVal ? '#16a34a' : '#94a3b8', bg: valuesVal ? '#f0fdf4' : '#f8fafc' },
+                            { label: 'الاكتمال', value: score + '%', color: score === 100 ? '#16a34a' : '#ca8a04', bg: score === 100 ? '#f0fdf4' : '#fefce8' }
+                        ];
+
+                        const highlights = [];
+                        highlights.push({ icon: '🧭', text: `${filled} من 3 توجهات مكتملة`, color: '#6366f1' });
+                        if (filled === 3) highlights.push({ icon: '✅', text: 'الهوية الاستراتيجية مكتملة — الرؤية والرسالة والقيم محددة', color: '#16a34a' });
+                        if (!visionVal) highlights.push({ icon: '⚠️', text: 'الرؤية غير محددة — أساس التخطيط الاستراتيجي', color: '#dc2626' });
+
+                        const recommendations = [];
+                        if (!visionVal) recommendations.push('حدد الرؤية أولاً — توجّه جميع القرارات الاستراتيجية');
+                        if (!missionVal) recommendations.push('اكتب الرسالة — تصف "لماذا نحن موجودون" و"ماذا نقدم"');
+                        if (!valuesVal) recommendations.push('حدد القيم المؤسسية — تشكل ثقافة العمل والسلوك');
+                        if (filled === 3) recommendations.push('توجهات مكتملة — شاركها مع الفريق وانتقل للتحليل الاستراتيجي');
+
+                        return {
+                            sections,
+                            meta: {
+                                dept, deptName: dept.toUpperCase(),
+                                kpis, highlights, recommendations,
+                                qualityScore: score,
+                                qualityLabel: score === 100 ? 'مكتملة' : score >= 50 ? 'جزئية' : 'غير مكتملة',
+                                qualityAdvice: score === 100 ? 'الهوية الاستراتيجية مكتملة وجاهزة للتوزيع' : `${3 - filled} توجهات تحتاج إكمال`
+                            }
+                        };
+                    }
+                });
+            }
+
             await loadData(dept);
-            loadTemplates(); // Load them by default
+            loadTemplates(dept); // Load them by default
         })();
 
-        function loadTemplates() {
+        function loadTemplates(providedDept) {
             const btn = document.getElementById('btnMagic');
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> جاري التحميل...';
+            if (btn) btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> جاري التحميل...';
 
             setTimeout(() => {
-                const dept = Context.getDept() || 'hr';
-                const s = window.generateHRVisionMission ? generateHRVisionMission(dept) : { vision: [], mission: [], values: [] };
+                const dept = providedDept || (window.DeptPage && DeptPage.dept) || Context.getDept() || 'hr';
+                let s = { vision: [], mission: [], values: [] };
+
+                // هندلة ذكية بناءً على القسم
+                if (dept === 'strategy' && window.StrategicSynthesis) {
+                    s = StrategicSynthesis.generateCorporateVisionMission();
+                } else {
+                    const handlerName = `generate${dept.charAt(0).toUpperCase() + dept.slice(1)}VisionMission`;
+                    if (window[handlerName]) {
+                        s = window[handlerName]();
+                    } else if (window.generateHRVisionMission) {
+                        s = window.generateHRVisionMission(dept);
+                    }
+                }
 
                 renderTemplates('vision', s.vision);
                 renderTemplates('mission', s.mission);
                 renderTemplates('values', s.values);
 
-                btn.innerHTML = '<i class="bi bi-robot"></i> تعزيز خيارات الهوية';
+                if (btn) btn.innerHTML = '<i class="bi bi-robot"></i> تعزيز خيارات الهوية';
             }, 600);
         }
 
@@ -353,17 +490,46 @@
             el.classList.add('active');
         }
 
+        // ─── حفظ تلقائي محلي ───
+        const LS_DIR = () => `stratix_directions_company`;
+        function saveDirLocal() {
+            try {
+                localStorage.setItem(LS_DIR(), JSON.stringify({
+                    vision: document.getElementById('vision')?.value || '',
+                    mission: document.getElementById('mission')?.value || '',
+                    values: document.getElementById('values')?.value || '',
+                    _ts: Date.now()
+                }));
+            } catch (e) { }
+        }
+        ['vision', 'mission', 'values'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', saveDirLocal);
+        });
+
         async function loadData(dept) {
-            const data = await DeptPage.loadFromAPI('DIRECTIONS_' + dept.toUpperCase());
-            if (data) {
-                if (data.vision) document.getElementById('vision').value = data.vision;
-                if (data.mission) document.getElementById('mission').value = data.mission;
-                if (data.values) document.getElementById('values').value = data.values;
-            }
+            try {
+                const data = await DeptPage.loadFromAPI('DIRECTIONS_' + dept.toUpperCase());
+                if (data && (data.vision || data.mission || data.values)) {
+                    if (data.vision) document.getElementById('vision').value = data.vision;
+                    if (data.mission) document.getElementById('mission').value = data.mission;
+                    if (data.values) document.getElementById('values').value = data.values;
+                    saveDirLocal();
+                    return;
+                }
+            } catch (e) { }
+            try {
+                const local = JSON.parse(localStorage.getItem(LS_DIR()));
+                if (local && (local.vision || local.mission || local.values)) {
+                    document.getElementById('vision').value = local.vision || '';
+                    document.getElementById('mission').value = local.mission || '';
+                    document.getElementById('values').value = local.values || '';
+                }
+            } catch (e) { }
         }
 
         async function saveDirections() {
-            const dept = Context.getDept() || 'hr';
+            const dept = 'company';
             const btn = document.getElementById('btnSave');
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري الحفظ...';
@@ -373,7 +539,7 @@
                 mission: document.getElementById('mission').value,
                 values: document.getElementById('values').value
             };
-
+            saveDirLocal();
             const success = await DeptPage.saveToAPI('DIRECTIONS_' + dept.toUpperCase(), payload);
             if (success) {
                 if (window.Context && Context.markStepCompleted) await Context.markStepCompleted('directions');
@@ -386,10 +552,11 @@
         }
 
         function goToObjectives() {
-            const dept = Context.getDept() || 'hr';
-            window.location.href = `/objectives.html?dept=${dept}`;
+            window.location.href = `/objectives.html`;
         }
     </script>
+    </main>
+    </div>
 </body>
 
 </html>

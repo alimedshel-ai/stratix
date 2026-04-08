@@ -13,6 +13,7 @@
 
     <!-- Custom Styles -->
     <link rel="stylesheet" href="/css/shared.css">
+    <link rel="stylesheet" href="/css/guide-bar.css?v=2">
     <link rel="stylesheet" href="/css/dept-pages.css">
 
     <style>
@@ -294,6 +295,8 @@
 </head>
 
 <body>
+    <script>window.__REQUIRED_DEPT = 'HR';</script>
+    <script src="/js/dept-guard.js"></script>
     <div class="stx-wrapper">
         <aside class="stx-sidebar-container"></aside>
 
@@ -307,10 +310,15 @@
                         <p class="small text-muted m-0" id="dept-context">جاري التحميل...</p>
                     </div>
                 </div>
-                <div class="d-flex align-items-center gap-4">
+                <div class="d-flex align-items-center gap-2">
+                    <a href="/hr-kpis.html?dept=hr" class="btn btn-outline-stx btn-sm d-flex align-items-center gap-2"
+                        style="border: 1px solid var(--stx-primary); color: var(--stx-primary); border-radius: 10px; padding: 6px 15px; font-weight: 700; text-decoration: none; transition: all 0.3s;">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>لوحة المؤشرات (KPIs)</span>
+                    </a>
                     <div class="text-end d-none d-md-block">
                         <div class="small text-muted">الخطوة التالية</div>
-                        <div class="fw-bold" style="color:#3b82f6">تحليل PESTEL <i class="bi bi-arrow-left"></i></div>
+                        <div class="fw-bold" style="color:#3b82f6">تحليل SWOT <i class="bi bi-arrow-left"></i></div>
                     </div>
                 </div>
             </header>
@@ -355,7 +363,7 @@
                         </div>
                     </div>
                     <button type="submit" class="btn-stx-primary" id="btnSave">
-                        حفظ ومتابعة لتحليل PESTEL <i class="bi bi-arrow-left"></i>
+                        حفظ ومتابعة للميزانية والتحديات <i class="bi bi-arrow-left"></i>
                     </button>
                 </div>
             </form>
@@ -364,8 +372,10 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/report-engine.js?v=2"></script>
     <script src="/js/api.js"></script>
     <script src="/js/context-manager.js"></script>
+    <script src="/js/page-guard.js"></script>
     <script src="/js/dept-page.js"></script>
     <script src="/js/steps-config.js"></script>
     <script src="/js/sidebar.js"></script>
@@ -427,7 +437,8 @@
         let auditState = {};
         const urlParams = new URLSearchParams(window.location.search);
         const dept = urlParams.get('dept') || (typeof Context !== 'undefined' ? Context.getDept() : null) || 'hr';
-        const DEPT_NAMES = { hr: 'الموارد البشرية', finance: 'المالية', marketing: 'التسويق', operations: 'العمليات' };
+        if (window.DeptPage) DeptPage.dept = dept;
+        const DEPT_NAMES = { hr: 'الموارد البشرية', finance: 'المالية', marketing: 'التسويق', operations: 'العمليات', sales: 'المبيعات', compliance: 'الامتثال', it: 'تقنية المعلومات', support: 'الخدمات المساندة', governance: 'الحوكمة', quality: 'الجودة', cs: 'خدمة العملاء' };
 
         function initAudit() {
             document.getElementById('dept-context').textContent = `${DEPT_NAMES[dept] || dept} | المرحلة 1: التشخيص والاستكشاف`;
@@ -490,7 +501,7 @@
         async function loadData() {
             const apiType = `AUDIT_${dept.toUpperCase()}`;
             const savedFromAPI = await DeptPage.loadFromAPI(apiType).catch(() => null);
-            const savedLocal = JSON.parse(localStorage.getItem(`stratix_${dept}_audit_v2`) || '{}');
+            const savedLocal = DeptPage.safeGetLocal(`stratix_${dept}_audit_v2`, {});
             const saved = savedFromAPI || savedLocal;
 
             auditState = saved;
@@ -553,25 +564,228 @@
 
             Context.setItem(`${dept}_strengths`, strengths);
             Context.setItem(`${dept}_weaknesses`, weaknesses);
-            localStorage.setItem(`stratix_${dept}_audit_v2`, JSON.stringify(auditState));
+            DeptPage.safeSetLocal(`stratix_${dept}_audit_v2`, auditState);
 
             try {
                 await DeptPage.saveToAPI(`AUDIT_${dept.toUpperCase()}`, auditState);
                 if (window.Context && Context.markStepCompleted) await Context.markStepCompleted('audit');
 
-                DeptPage.showMessage('✅ تم حفظ التقييم بنجاح! جاري الانتقال...', false);
+                DeptPage.showMessage('✅ تم حفظ التقييم بنجاح! جاري الانتقال للميزانية والتحديات', false);
 
                 setTimeout(() => {
-                    window.location.href = `/pestel.html?dept=${dept}&t=` + Date.now();
+                    window.location.href = `/dept-report.html?dept=${dept}&t=` + Date.now();
                 }, 1500);
             } catch (err) {
                 DeptPage.showMessage('❌ فشل الحفظ على السيرفر، تم الحفظ محلياً.', true);
                 btn.disabled = false;
-                btn.innerHTML = 'حفظ ومتابعة لتحليل PESTEL <i class="bi bi-arrow-left"></i>';
+                btn.innerHTML = 'حفظ ومتابعة للميزانية والتحديات <i class="bi bi-arrow-left"></i>';
             }
         });
 
-        document.addEventListener('DOMContentLoaded', initAudit);
+        document.addEventListener('DOMContentLoaded', () => {
+            initAudit();
+
+            // ═══ محرك التقارير ═══
+            if (window.ReportEngine) {
+                const GROUPS = [
+                    { name: 'التنظيم والقيادة', color: '#6366f1', icon: '🏛️', ids: ['management_style','org_chart','span_control','hr_planning','succession_plan'] },
+                    { name: 'الاستقطاب والمواهب', color: '#2563eb', icon: '🎯', ids: ['job_descriptions','competency_framework','recruitment_strategy','onboarding_process','selection_criteria'] },
+                    { name: 'التعويضات والرواتب', color: '#16a34a', icon: '💰', ids: ['payroll_accuracy','incentive_schemes','allowances_benchmarking','mudad_compliance'] },
+                    { name: 'إدارة الأداء', color: '#7c3aed', icon: '📊', ids: ['performance_management','kpi_alignment','feedback_culture'] },
+                    { name: 'التدريب والتطوير', color: '#0891b2', icon: '📚', ids: ['training_needs_analysis','training_roi','digital_learning','internal_promotion','career_pathing'] },
+                    { name: 'الامتثال والقانون', color: '#dc2626', icon: '⚖️', ids: ['employment_contracts','labor_law_compliance','medical_insurance','gosi_status','safety_committee','grievance_policy','disciplinary_code'] },
+                    { name: 'العمليات والأدوات', color: '#d97706', icon: '⚙️', ids: ['attendance_tracking','overtime_policy','vacation_management','hr_dashboard','cost_per_employee','hiring_cost','internal_communication','office_tools'] },
+                    { name: 'الثقافة والابتكار', color: '#ec4899', icon: '💡', ids: ['work_environment','employee_engagement','innovation_culture','diversity_inclusion','women_empowerment','employer_branding','mental_health','remote_work_readiness'] },
+                    { name: 'الاستبقاء والخروج', color: '#ea580c', icon: '🚪', ids: ['exit_interviews','future_skills_gap','employee_handbook','hr_budget_control','expats_management'] }
+                ];
+
+                // ═══ الخارطة الاستشارية — 51 سؤال ═══
+                const C = {
+                    management_style:     { risk: 'أسلوب إدارة فوضوي يسبب فقدان الاتجاه وتسرب الكفاءات', action: 'تبنّي أسلوب قيادة تحويلي أو ديمقراطي مع تدريب المديرين', phase: 2 },
+                    org_chart:            { risk: 'تداخل المسؤوليات وازدواجية القرارات بدون هيكل واضح', action: 'تصميم هيكل تنظيمي محدّث ومعتمد خلال 30 يوم', phase: 1 },
+                    span_control:         { risk: 'نطاق إشراف واسع يضعف الرقابة وجودة التوجيه', action: 'تحديد نطاق إشراف 5-8 موظفين لكل مدير وإعادة توزيع الفرق', phase: 2 },
+                    hr_planning:          { risk: 'توظيف عشوائي — فائض في تخصصات ونقص في أخرى', action: 'إعداد خطة موارد بشرية سنوية مرتبطة بخطة النمو', phase: 1 },
+                    succession_plan:      { risk: 'توقف العمل عند مغادرة أي شخص في منصب حرج', action: 'تحديد المناصب الحرجة وتدريب بديل لكل منصب', phase: 2 },
+                    job_descriptions:     { risk: 'غموض المهام يسبب نزاعات وصعوبة في تقييم الأداء', action: 'إعداد بطاقة وصف وظيفي لكل دور خلال 60 يوم', phase: 1 },
+                    competency_framework: { risk: 'لا معيار لقياس الكفاءة — ترقيات وتوظيف بدون أساس', action: 'بناء إطار جدارات بسيط للوظائف الرئيسية', phase: 2 },
+                    recruitment_strategy: { risk: 'استقطاب بدائي — جودة مرشحين ضعيفة ووقت طويل للتعبئة', action: 'تصميم عملية استقطاب ممنهجة مع قنوات متنوعة', phase: 2 },
+                    onboarding_process:   { risk: 'موظف جديد ضائع — انخفاض الإنتاجية واستقالة مبكرة', action: 'بناء برنامج تهيئة مهيكل (أول 90 يوم) لكل موظف جديد', phase: 1 },
+                    selection_criteria:   { risk: 'اختيار بالواسطة أو الانطباع — توظيف غير مناسب', action: 'اعتماد معايير اختيار مبنية على الجدارات مع مقابلات منظمة', phase: 2 },
+                    employment_contracts: { risk: 'عقود غير موثقة = لا حماية قانونية عند النزاع', action: 'توثيق جميع العقود في منصة قوى خلال أسبوعين', phase: 1 },
+                    mudad_compliance:     { risk: 'غرامات حماية أجور + تصنيف أحمر في نطاقات', action: 'مراجعة صرف الرواتب عبر مدد والتأكد من الالتزام 100%', phase: 1 },
+                    payroll_accuracy:     { risk: 'أخطاء الرواتب تهدم الثقة وتسبب شكاوى عمالية', action: 'مراجعة دقة الرواتب شهرياً مع تدقيق من شخصين', phase: 1 },
+                    incentive_schemes:    { risk: 'حوافز لا تحفز — لا فرق بين المجتهد والمقصّر', action: 'تصميم نظام حوافز شفاف مرتبط بنتائج الأداء', phase: 2 },
+                    allowances_benchmarking: { risk: 'بدلات أقل من السوق = تسرب الكفاءات للمنافسين', action: 'مسح رواتب سنوي ومقارنة مع 3-5 منافسين', phase: 3 },
+                    performance_management: { risk: 'لا تقييم = لا ترقيات عادلة ولا تحسين', action: 'تطبيق دورة تقييم أداء نصف سنوية بنموذج واضح', phase: 1 },
+                    kpi_alignment:        { risk: 'موظفون يعملون بدون اتجاه — إنتاجية منخفضة', action: 'ربط أهداف كل موظف بأهداف القسم والشركة (OKRs)', phase: 1 },
+                    feedback_culture:     { risk: 'مشاكل تتراكم بصمت حتى تنفجر كاستقالات جماعية', action: 'اجتماع 1-on-1 شهري بين كل مدير وموظفيه', phase: 1 },
+                    training_needs_analysis: { risk: 'تدريب عشوائي — هدر ميزانية بدون سد فجوات حقيقية', action: 'تحليل احتياجات تدريبية سنوي بناءً على تقييم الأداء', phase: 2 },
+                    training_roi:         { risk: 'إنفاق على تدريب بدون قياس أثره — لا تعرف إن نفع', action: 'قياس أثر كل برنامج تدريبي بعد 90 يوم على KPIs', phase: 3 },
+                    digital_learning:     { risk: 'اعتماد على تدريب تقليدي مكلف وبطيء التوسع', action: 'تفعيل منصة تعلم إلكتروني (دروب، كورسيرا، LinkedIn Learning)', phase: 2 },
+                    internal_promotion:   { risk: 'ترقيات عشوائية تسبب إحباط وتسرب المتميزين', action: 'اعتماد سياسة ترقية شفافة بمعايير واضحة ومعلنة', phase: 2 },
+                    career_pathing:       { risk: 'طريق مسدود = موظف محبط يبحث عن فرصة خارجية', action: 'تصميم مسار وظيفي واضح لكل عائلة وظيفية', phase: 2 },
+                    labor_law_compliance: { risk: 'خروقات نظامية = غرامات + دعاوى + إيقاف خدمات', action: 'مراجعة شاملة للامتثال مع نظام العمل السعودي', phase: 1 },
+                    medical_insurance:    { risk: 'تغطية ضعيفة = استياء الموظفين وصعوبة الاستقطاب', action: 'مراجعة فئة التأمين ومقارنتها بمعايير السوق', phase: 2 },
+                    gosi_status:          { risk: 'بيانات خاطئة في التأمينات = مشاكل قانونية وغرامات', action: 'تدقيق سجلات GOSI وتصحيح أي اختلافات فوراً', phase: 1 },
+                    safety_committee:     { risk: 'غياب لجنة السلامة = مخالفة نظامية + حوادث عمل', action: 'تشكيل لجنة سلامة مع تدريبات دورية كل 3 أشهر', phase: 1 },
+                    grievance_policy:     { risk: 'موظفون يخافون من التظلم = مشاكل تتراكم وتتحول لدعاوى', action: 'اعتماد سياسة تظلم واضحة تحمي الموظف وتضمن السرية', phase: 1 },
+                    disciplinary_code:    { risk: 'جزاءات انتقائية تسبب فقدان العدالة والثقة', action: 'تحديث لائحة الجزاءات وتطبيقها بعدالة على الجميع', phase: 1 },
+                    attendance_tracking:  { risk: 'غياب الرقابة = تلاعب بالحضور ونزاعات على الساعات', action: 'تركيب نظام حضور إلكتروني (بصمة/تطبيق) خلال 30 يوم', phase: 1 },
+                    overtime_policy:      { risk: 'عمل إضافي عشوائي = تكاليف مخفية ومخالفات نظامية', action: 'تنظيم سياسة العمل الإضافي مع اعتماد مسبق وحد أقصى', phase: 1 },
+                    vacation_management:  { risk: 'تراكم إجازات = التزام مالي ضخم عند نهاية الخدمة', action: 'نظام إدارة إجازات آلي مع سياسة استخدام سنوي إلزامي', phase: 1 },
+                    hr_dashboard:         { risk: 'قرارات بدون بيانات = أخطاء استراتيجية مكلفة', action: 'بناء لوحة بيانات HR بسيطة (Excel أو Power BI) لأهم 10 مؤشرات', phase: 2 },
+                    cost_per_employee:    { risk: 'لا تعرف التكلفة الحقيقية للموظف — صعوبة التخطيط المالي', action: 'حساب TCO لكل موظف (راتب + بدلات + تأمين + تدريب)', phase: 2 },
+                    hiring_cost:          { risk: 'تكلفة توظيف مرتفعة بدون وعي — هدر في الاستقطاب', action: 'تتبع تكلفة التوظيف لكل شاغر ومقارنتها بالمعيار', phase: 3 },
+                    internal_communication: { risk: 'انقطاع التواصل = سوء فهم وازدواجية العمل', action: 'اعتماد قناة تواصل رسمية واحدة (Teams/Slack) للقسم', phase: 1 },
+                    office_tools:         { risk: 'أدوات قديمة تعيق الإنتاجية وتسبب إحباط الفريق', action: 'تقييم احتياجات الأدوات والبرمجيات وتحديثها', phase: 2 },
+                    work_environment:     { risk: 'بيئة عمل طاردة = صعوبة استقطاب واحتفاظ بالكفاءات', action: 'تحسين بيئة العمل المادية (إضاءة، مساحة، تهوية)', phase: 2 },
+                    employee_engagement:  { risk: 'عدم مبالاة الموظفين = إنتاجية منخفضة ودوران مرتفع', action: 'إطلاق استبيان ارتباط سنوي والاستجابة لأهم 3 نقاط', phase: 2 },
+                    innovation_culture:   { risk: 'قتل الابتكار = جمود مؤسسي وفقدان الميزة التنافسية', action: 'إنشاء برنامج بسيط لتحفيز الأفكار مع مكافأة شهرية', phase: 3 },
+                    diversity_inclusion:  { risk: 'تحيز في التوظيف = فرق متجانسة بأفكار محدودة', action: 'مراجعة معايير التوظيف لضمان التنوع والشمول', phase: 3 },
+                    women_empowerment:    { risk: 'تمثيل ضعيف للمرأة = فقدان 50% من مجموع المواهب', action: 'وضع هدف لتمكين المرأة في المناصب القيادية (20% خلال سنة)', phase: 3 },
+                    employer_branding:    { risk: 'سمعة ضعيفة = صعوبة استقطاب أفضل الكفاءات', action: 'بناء هوية جهة عمل جاذبة (LinkedIn + Glassdoor + محتوى)', phase: 3 },
+                    mental_health:        { risk: 'بيئة مرهقة = إجازات مرضية متكررة وإنتاجية منخفضة', action: 'توفير برنامج دعم نفسي (EAP) ومبادرات رفاهية بسيطة', phase: 2 },
+                    remote_work_readiness:{ risk: 'عدم جاهزية = شلل في حالات الطوارئ (أوبئة/كوارث)', action: 'إعداد خطة عمل عن بعد مع بنية تقنية جاهزة', phase: 3 },
+                    exit_interviews:      { risk: 'لا تعرف لماذا يغادرون = تكرار نفس الأخطاء', action: 'مقابلة خروج إلزامية لكل مستقيل مع تحليل ربع سنوي', phase: 1 },
+                    future_skills_gap:    { risk: 'اعتماد على مهارات قديمة = تقادم تنافسي', action: 'تحليل فجوة مهارات المستقبل سنوياً مع خطة تطوير', phase: 2 },
+                    employee_handbook:    { risk: 'لا مرجع للموظف = أسئلة متكررة وتفسيرات مختلفة', action: 'إعداد دليل موظف شامل وسهل الوصول (رقمي + مطبوع)', phase: 1 },
+                    hr_budget_control:    { risk: 'صرف غير مراقب = تجاوزات مالية وهدر', action: 'وضع ميزانية HR سنوية مع مراجعة شهرية للصرف', phase: 1 },
+                    expats_management:    { risk: 'تأخير في التجديد = مخالفات جوازات وترحيل عمالة', action: 'نظام تنبيهات لتجديد الإقامات والتأشيرات قبل 60 يوم', phase: 1 }
+                };
+
+                ReportEngine.init({
+                    pageId: 'hr-audit',
+                    pageTitle: 'التقييم الوصفي — الموارد البشرية',
+                    pageIcon: '🛡️',
+                    collectData: () => {
+                        const sections = [];
+                        const groupScores = [];
+                        let totalAnswered = 0, totalScore = 0, totalMax = 0;
+                        let allStrengths = 0, allWeaknesses = 0;
+                        const allActions = [];
+
+                        GROUPS.forEach(g => {
+                            let gAnswered = 0, gScore = 0, gMax = 0;
+                            let contentHTML = '';
+                            g.ids.forEach(id => {
+                                const q = QUESTIONS.find(x => x.id === id);
+                                const state = auditState[id];
+                                if (!q || !state || state.val === '') return;
+                                gAnswered++; totalAnswered++;
+                                const idx = parseInt(state.val);
+                                const pts = 3 - idx;
+                                gScore += pts; gMax += 3;
+                                totalScore += pts; totalMax += 3;
+                                if (idx <= 1) allStrengths++;
+                                if (idx >= 2) allWeaknesses++;
+
+                                const c = C[id];
+                                if (idx <= 1) {
+                                    // ✅ قوة — سطر مختصر أخضر
+                                    const icon = idx === 0 ? '🟢' : '🟡';
+                                    contentHTML += `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:0.82rem;border-bottom:1px solid #f1f5f9;">
+                                        <span style="font-size:0.85rem;">${icon}</span>
+                                        <span style="color:#334155;flex:1;">${q.label}</span>
+                                        <span style="color:#16a34a;font-size:0.68rem;font-weight:600;white-space:nowrap;">${state.label}</span>
+                                    </div>`;
+                                } else {
+                                    // 🟠🔴 ضعف — عرض استشاري كامل
+                                    const icon = idx === 2 ? '🟠' : '🔴';
+                                    const clr = idx === 2 ? '#ca8a04' : '#dc2626';
+                                    const bg = idx === 2 ? '#fefce8' : '#fef2f2';
+                                    contentHTML += `<div style="background:${bg};border-radius:10px;padding:10px 12px;margin:6px 0;border-right:4px solid ${clr};">
+                                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+                                            <span style="font-size:0.85rem;">${icon}</span>
+                                            <span style="font-size:0.82rem;font-weight:700;color:#0f172a;flex:1;">${q.label}</span>
+                                            <span style="font-size:0.65rem;font-weight:700;color:${clr};background:white;padding:2px 8px;border-radius:6px;">${state.label}</span>
+                                        </div>
+                                        ${c ? `<div style="font-size:0.76rem;color:#64748b;margin-right:24px;">
+                                            <div style="margin-bottom:2px;"><span style="color:#dc2626;font-weight:700;">المخاطر:</span> ${c.risk}</div>
+                                            <div><span style="color:#16a34a;font-weight:700;">الإجراء:</span> ${c.action}</div>
+                                        </div>` : ''}
+                                    </div>`;
+                                    if (c) allActions.push({ phase: c.phase, action: c.action, cat: g.name, priority: idx === 3 ? 1 : 2 });
+                                }
+                            });
+
+                            if (gAnswered === 0) return;
+                            const gPct = Math.round((gScore / gMax) * 100);
+                            const gColor = gPct >= 70 ? '#16a34a' : gPct >= 40 ? '#ca8a04' : '#dc2626';
+                            groupScores.push({ name: g.name, score: gPct, color: gColor, answered: gAnswered, total: g.ids.length });
+
+                            sections.push({
+                                title: `${g.name} — ${gPct}%`,
+                                icon: gPct >= 70 ? '🟢' : gPct >= 40 ? '🟡' : '🔴',
+                                color: gColor,
+                                content: contentHTML
+                            });
+                        });
+
+                        // ─── خطة العمل المرحلية ───
+                        if (allActions.length > 0) {
+                            allActions.sort((a, b) => a.phase - b.phase || a.priority - b.priority);
+                            const phases = [
+                                { id: 1, name: 'طوارئ — أول 30 يوم', color: '#dc2626', bg: '#fef2f2', icon: '🚨' },
+                                { id: 2, name: 'بناء الأساس — 30-90 يوم', color: '#ca8a04', bg: '#fefce8', icon: '🔧' },
+                                { id: 3, name: 'التطوير — 90-180 يوم', color: '#0891b2', bg: '#ecfeff', icon: '🚀' }
+                            ];
+                            let planHTML = '';
+                            phases.forEach(ph => {
+                                const items = allActions.filter(a => a.phase === ph.id);
+                                if (items.length === 0) return;
+                                planHTML += `<div style="background:${ph.bg};border-radius:10px;padding:10px 14px;margin-bottom:10px;">
+                                    <div style="font-weight:800;color:${ph.color};font-size:0.85rem;margin-bottom:8px;">${ph.icon} ${ph.name}</div>
+                                    ${items.slice(0, 8).map((it, i) => `<div style="display:flex;gap:8px;margin-bottom:4px;font-size:0.78rem;">
+                                        <span style="color:${ph.color};font-weight:800;min-width:18px;">${i + 1}.</span>
+                                        <span style="color:#334155;">${it.action}</span>
+                                    </div>`).join('')}
+                                    ${items.length > 8 ? `<div style="font-size:0.72rem;color:#94a3b8;margin-top:4px;">+ ${items.length - 8} إجراءات إضافية</div>` : ''}
+                                </div>`;
+                            });
+                            sections.push({ title: `خطة العمل (${allActions.length} إجراء)`, icon: '📋', color: '#6366f1', content: planHTML });
+                        }
+
+                        const overallPct = totalMax > 0 ? Math.round((totalScore / totalMax) * 100) : 0;
+                        const weakGroups = groupScores.filter(g => g.score < 40).sort((a, b) => a.score - b.score);
+                        const strongGroups = groupScores.filter(g => g.score >= 70).sort((a, b) => b.score - a.score);
+
+                        const kpis = [
+                            { label: 'النتيجة الإجمالية', value: overallPct + '%', color: overallPct >= 70 ? '#16a34a' : overallPct >= 40 ? '#ca8a04' : '#dc2626', bg: overallPct >= 70 ? '#f0fdf4' : overallPct >= 40 ? '#fefce8' : '#fef2f2' },
+                            { label: 'نقاط القوة', value: allStrengths, color: '#16a34a', bg: '#f0fdf4' },
+                            { label: 'نقاط الضعف', value: allWeaknesses, color: '#dc2626', bg: '#fef2f2' },
+                            { label: 'مُقيّم / إجمالي', value: `${totalAnswered}/${QUESTIONS.length}`, color: '#6366f1', bg: '#f5f3ff' }
+                        ];
+
+                        const highlights = [];
+                        highlights.push({ icon: '🛡️', text: `تقييم ${totalAnswered} من ${QUESTIONS.length} نقطة — النتيجة الإجمالية ${overallPct}%`, color: '#6366f1' });
+                        if (strongGroups.length > 0) highlights.push({ icon: '✅', text: `مجالات قوة: ${strongGroups.slice(0, 3).map(g => g.name).join('، ')}`, color: '#16a34a' });
+                        if (weakGroups.length > 0) highlights.push({ icon: '🔴', text: `فجوات حرجة: ${weakGroups.slice(0, 3).map(g => g.name + ' (' + g.score + '%)').join('، ')}`, color: '#dc2626' });
+                        if (allActions.length > 0) {
+                            const urgent = allActions.filter(a => a.phase === 1).length;
+                            if (urgent > 0) highlights.push({ icon: '🚨', text: `${urgent} إجراء عاجل يحتاج تنفيذ خلال 30 يوم`, color: '#dc2626' });
+                        }
+
+                        const recommendations = [];
+                        if (weakGroups.length > 0) recommendations.push(`أولوية قصوى: "${weakGroups[0].name}" (${weakGroups[0].score}%) — أضعف مجال`);
+                        if (allWeaknesses > allStrengths) recommendations.push(`${allWeaknesses} نقطة ضعف مقابل ${allStrengths} قوة — راجع خطة العمل المرحلية`);
+                        if (totalAnswered < QUESTIONS.length) recommendations.push(`أكمل ${QUESTIONS.length - totalAnswered} نقطة متبقية لتقييم شامل`);
+                        if (recommendations.length === 0) recommendations.push('تقييم ممتاز — شارك النتائج مع الإدارة العليا');
+                        recommendations.splice(3);
+
+                        return {
+                            sections,
+                            meta: {
+                                dept, deptName: (DEPT_NAMES[dept] || dept),
+                                kpis, highlights, recommendations,
+                                qualityScore: overallPct,
+                                qualityLabel: overallPct >= 70 ? 'نضج مؤسسي جيد' : overallPct >= 40 ? 'يحتاج تحسين' : 'فجوات جوهرية',
+                                qualityAdvice: overallPct >= 70 ? 'مستوى نضج جيد في ممارسات الموارد البشرية' : overallPct >= 40 ? 'هناك فرص تحسين واضحة يمكن تحقيقها' : 'فجوات كبيرة تحتاج خطة تحسين عاجلة'
+                            }
+                        };
+                    }
+                });
+            }
+        });
     </script>
 </body>
 

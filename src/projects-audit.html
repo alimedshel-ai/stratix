@@ -6,10 +6,13 @@
     <title>ستارتكس | التقييم الوصفي - المشاريع</title>
     <link rel="stylesheet" href="/css/dept-pages.css">
     <script src="/js/context-manager.js"></script>
+    <script src="/js/page-guard.js"></script>
     <script src="/js/dept-page.js"></script>
 </head>
 
 <body>
+    <script>window.__REQUIRED_DEPT = 'PROJECTS';</script>
+    <script src="/js/dept-guard.js"></script>
     <div class="container">
         <h1>📋 التقييم الوصفي – المشاريع</h1>
         <div class="sub">أجب عن الأسئلة التالية لتحديد نقاط القوة والضعف في قسم إدارة المشاريع</div>
@@ -34,7 +37,7 @@
                     rows="3" placeholder="افصل بين النقاط بفاصلة أو سطر جديد"></textarea></div>
             <div class="question"><label>ما هي نقاط الضعف التي تحتاج تحسيناً؟</label><textarea name="weaknesses_comment"
                     rows="3" placeholder="افصل بين النقاط بفاصلة أو سطر جديد"></textarea></div>
-            <button type="submit">حفظ التحليل والمتابعة إلى SWOT</button>
+            <button type="submit">حفظ ومتابعة للميزانية والتحديات <i class="bi bi-arrow-left"></i></button>
         </form>
     </div>
     <script>
@@ -70,8 +73,15 @@
                 Context.setItem(`${dept}_strengths`, strengths);
                 Context.setItem(`${dept}_weaknesses`, weaknesses);
                 const saved = await DeptPage.saveToAPI('AUDIT', answers);
-                DeptPage.showMessage(saved ? 'تم حفظ التقييم الوصفي بنجاح' : 'فشل الحفظ في الخادم، لكن البيانات محفوظة محلياً', !saved);
-                setTimeout(() => window.location.href = `/swot.html?dept=${dept}`, 1500);
+                // حفظ إضافي بمفتاح الإدارة لـ company-health
+                try {
+                    const auditForHealth = {};
+                    Object.keys(answers).forEach(k => { auditForHealth[k] = { val: answers[k], label: answers[k] }; });
+                    localStorage.setItem('AUDIT_' + dept.toUpperCase(), JSON.stringify(auditForHealth));
+                    DeptPage.safeSetLocal('stratix_' + dept + '_audit_v2', auditForHealth);
+                } catch(e) {}
+                DeptPage.showMessage(saved ? '✅ تم حفظ التقييم بنجاح! جاري الانتقال للميزانية والتحديات' : 'فشل الحفظ في الخادم، لكن البيانات محفوظة محلياً', !saved);
+                setTimeout(() => window.location.href = `/dept-report.html?dept=${dept}`, 1500);
             });
         });
     </script>

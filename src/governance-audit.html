@@ -3,77 +3,516 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>ستارتكس | التقييم الوصفي - الحوكمة</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس | التقييم الوصفي الجنائي - الحوكمة المؤسسية</title>
+    <!-- Frameworks -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="/css/shared.css">
+    <link rel="stylesheet" href="/css/guide-bar.css?v=2">
     <link rel="stylesheet" href="/css/dept-pages.css">
-    <script src="/js/context-manager.js"></script>
-    <script src="/js/dept-page.js"></script>
+
+    <style>
+        :root {
+            --stx-bg: #0b0d12;
+            --stx-card: rgba(22, 27, 34, 0.7);
+            --stx-border: rgba(255, 255, 255, 0.08);
+            --stx-primary: #6366f1;
+            --stx-success: #10b981;
+            --stx-warn: #f59e0b;
+            --stx-danger: #ef4444;
+            --stx-sidebar-width: 260px;
+        }
+
+        body {
+            background-color: var(--stx-bg);
+            color: #f8fafc;
+            font-family: 'Tajawal', sans-serif;
+            overflow: hidden;
+            margin: 0;
+        }
+
+        .stx-wrapper {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .stx-sidebar-container {
+            width: var(--stx-sidebar-width);
+            flex-shrink: 0;
+            border-left: 1px solid var(--stx-border);
+            background: rgba(11, 13, 18, 0.95);
+        }
+
+        .stx-main-content {
+            flex: 1;
+            overflow-y: auto;
+            height: 100vh;
+            background: linear-gradient(135deg, #0b0d12 0%, #161b22 100%);
+            padding-bottom: 120px;
+        }
+
+        /* Glass Header */
+        .stx-header {
+            background: rgba(11, 13, 18, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--stx-border);
+            padding: 15px 30px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.1) 0%, rgba(11, 13, 18, 0) 100%);
+            border: 1px solid var(--stx-border);
+            border-radius: 20px;
+            padding: 20px 30px;
+            margin: 24px 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        /* Audit Grid */
+        .audit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+            gap: 24px;
+            padding: 0 30px 40px;
+        }
+
+        .audit-card {
+            background: var(--stx-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--stx-border);
+            border-radius: 24px;
+            padding: 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .audit-card:hover {
+            border-color: var(--stx-primary);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .audit-card.unanswered {
+            border-color: var(--stx-danger) !important;
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .card-header-stx {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card-icon {
+            width: 42px;
+            height: 42px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--stx-primary);
+            font-size: 1.25rem;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin: 0;
+            color: #f1f5f9;
+            line-height: 1.4;
+        }
+
+        /* Options */
+        .option-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .opt-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .opt-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+
+        .opt-btn.active.success {
+            background: var(--stx-success);
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .opt-btn.active.warning {
+            background: var(--stx-warn);
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .opt-btn.active.danger {
+            background: var(--stx-danger);
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .audit-textarea {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--stx-border);
+            border-radius: 14px;
+            padding: 12px 16px;
+            color: #e2e8f0;
+            font-size: 0.85rem;
+            resize: none;
+            height: 60px;
+            transition: all 0.2s;
+        }
+
+        .audit-textarea:focus {
+            outline: none;
+            border-color: var(--stx-primary);
+            background: rgba(0, 0, 0, 0.3);
+            height: 100px;
+        }
+
+        /* Footer */
+        .action-footer {
+            position: fixed;
+            bottom: 0;
+            right: 260px;
+            left: 0;
+            background: rgba(11, 13, 18, 0.9);
+            backdrop-filter: blur(15px);
+            border-top: 1px solid var(--stx-border);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1100;
+            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-stx-primary {
+            background: linear-gradient(135deg, var(--stx-primary), #4f46e5);
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 14px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+            transition: all 0.3s;
+        }
+
+        .btn-stx-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 22px rgba(99, 102, 241, 0.5);
+        }
+
+        @media (max-width: 991px) {
+            .stx-sidebar-container {
+                display: none;
+            }
+
+            .action-footer {
+                right: 0;
+            }
+
+            .audit-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 
 <body>
-    <div class="container">
-        <h1>📋 التقييم الوصفي – الحوكمة</h1>
-        <div class="sub">أجب عن الأسئلة التالية لتحديد نقاط القوة والضعف في الحوكمة المؤسسية</div>
-        <div id="deepSummary" class="deep-summary-box"></div>
-        <form id="auditForm">
-            <div class="question"><label>فعالية مجلس الإدارة في اتخاذ القرار</label><select name="board_effectiveness"
-                    required>
-                    <option value="">اختر</option>
-                    <option value="ضعيفة">ضعيفة</option>
-                    <option value="متوسطة">متوسطة</option>
-                    <option value="عالية">عالية</option>
-                </select></div>
-            <div class="question"><label>مستوى الشفافية والإفصاح المؤسسي</label><select name="transparency" required>
-                    <option value="">اختر</option>
-                    <option value="منخفض">منخفض</option>
-                    <option value="متوسط">متوسط</option>
-                    <option value="مرتفع">مرتفع</option>
-                </select></div>
-            <div class="question"><label>أبرز تحديات الحوكمة الحالية</label><textarea name="governance_challenges"
-                    rows="3" placeholder="مثال: تعارض الأدوار بين الإدارة التنفيذية والمجلس..."></textarea></div>
-            <div class="question"><label>ما هي نقاط القوة في منظومة الحوكمة؟</label><textarea name="strengths_comment"
-                    rows="3" placeholder="افصل بين النقاط بفاصلة أو سطر جديد"></textarea></div>
-            <div class="question"><label>ما هي نقاط الضعف التي تحتاج تحسيناً؟</label><textarea name="weaknesses_comment"
-                    rows="3" placeholder="افصل بين النقاط بفاصلة أو سطر جديد"></textarea></div>
-            <button type="submit">حفظ التحليل والمتابعة إلى SWOT</button>
-        </form>
+    <script>window.__REQUIRED_DEPT = 'GOVERNANCE';</script>
+    <script src="/js/dept-guard.js"></script>
+    <div class="stx-wrapper">
+        <aside class="stx-sidebar-container" id="sidebarContainer"></aside>
+
+        <main class="stx-main-content">
+            <header class="stx-header">
+                <div class="d-flex align-items-center gap-3">
+                    <div
+                        style="width: 38px; height: 38px; border-radius: 12px; background: rgba(139, 92, 246, 0.15); display: flex; align-items: center; justify-content: center; color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3);">
+                        <i class="bi bi-diagram-3-fill fs-5"></i>
+                    </div>
+                    <div>
+                        <h1 class="h5 fw-bold m-0 text-white">التقييم الوصفي - الحوكمة المؤسسية</h1>
+                        <p class="small text-muted m-0" id="dept-context">جاري التحميل...</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="text-end d-none d-md-block">
+                        <div class="small text-muted">الخطوة التالية</div>
+                        <div class="fw-bold" style="color:var(--stx-primary)">تحليل SWOT <i
+                                class="bi bi-arrow-left"></i></div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="stats-bar shadow-sm">
+                <div class="stat-item">
+                    <span class="stat-label">مؤشر النضج</span>
+                    <span class="stat-value" id="maturityVal">0%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">نقاط القوة</span>
+                    <span class="stat-value text-success" id="strengthsCount">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">فجوات المخاطر</span>
+                    <span class="stat-value text-danger" id="weaknessesCount">0</span>
+                </div>
+                <div class="ms-auto d-none d-lg-block">
+                    <div class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 border border-primary-subtle"
+                        style="font-size: 0.85rem;">
+                        <i class="bi bi-diagram-3-fill me-1"></i> فحص 8 محاور حوكمة مؤسسية
+                    </div>
+                </div>
+            </div>
+
+            <form id="governanceAuditForm">
+                <div class="audit-grid" id="auditQuestions"></div>
+
+                <div class="action-footer">
+                    <div id="saveProgress" class="text-muted small fw-bold">
+                        <i class="bi bi-info-circle"></i> يرجى تقييم جميع المحاور الرقابية للمتابعة
+                    </div>
+                    <button type="submit" class="btn-stx-primary" id="btnSave">
+                        حفظ ومتابعة للميزانية والتحديات <i class="bi bi-arrow-left"></i>
+                    </button>
+                </div>
+            </form>
+        </main>
     </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/context-manager.js"></script>
+    <script src="/js/page-guard.js"></script>
+    <script src="/js/dept-page.js"></script>
+    <script src="/js/steps-config.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script src="/js/report-engine.js?v=2"></script>
+
     <script>
+        const QUESTIONS = [
+            { id: 'board_effectiveness', label: 'فعالية مجلس الإدارة في اتخاذ القرارات الاستراتيجية', icon: 'bi-people-fill', opts: ['فعال ومؤثر', 'فعال جزئياً', 'محدود الصلاحيات', 'غير فعال'] },
+            { id: 'transparency', label: 'مستوى الشفافية والإفصاح في التقارير المالية والتشغيلية', icon: 'bi-eye-fill', opts: ['شفافية عالية ومنتظمة', 'شفافية جزئية', 'إفصاح محدود', 'غياب الإفصاح'] },
+            { id: 'conflict_of_interest', label: 'وجود سياسات واضحة لمنع تضارب المصالح', icon: 'bi-shield-exclamation', opts: ['سياسات صارمة ومطبقة', 'سياسات موجودة جزئياً', 'ضعيفة وغير مفعّلة', 'لا توجد سياسات'] },
+            { id: 'governance_structure', label: 'وضوح هيكل الحوكمة والأدوار والمسؤوليات', icon: 'bi-diagram-3', opts: ['هيكل واضح ومحدد', 'هيكل معقول', 'أدوار متداخلة', 'غياب الهيكل'] },
+            { id: 'committees', label: 'فعالية لجان الحوكمة (التدقيق والمخاطر والترشيح)', icon: 'bi-person-lines-fill', opts: ['لجان فعالة ومنتظمة', 'تعمل أحياناً', 'شكلية فقط', 'لا توجد لجان'] },
+            { id: 'risk_governance', label: 'جودة منظومة إدارة المخاطر المؤسسية', icon: 'bi-graph-down-arrow', opts: ['منظومة متكاملة', 'جزئية وانتقائية', 'تفاعلية فقط', 'غير موجودة'] },
+            { id: 'stakeholder_rights', label: 'آليات حماية حقوق المساهمين وأصحاب المصلحة', icon: 'bi-award', opts: ['حماية قوية ومؤسسية', 'حماية مقبولة', 'حماية ضعيفة', 'غياب الحماية'] },
+            { id: 'governance_culture', label: 'ثقافة الحوكمة الرشيدة والمساءلة على مستوى المنظمة', icon: 'bi-building', opts: ['ثقافة راسخة وقوية', 'مستوى جيد', 'ضعيفة نسبياً', 'غياب الثقافة'] }
+        ];
+
+        let auditState = {};
         const dept = 'governance';
-        function extractStrengthsWeaknesses(a) {
-            const s = [], w = [];
-            if (a.board_effectiveness === 'عالية') s.push('مجلس إدارة عالي الفعالية والحوكمة');
-            else if (a.board_effectiveness === 'ضعيفة') w.push('ضعف فعالية مجلس الإدارة في القرارات');
-            if (a.transparency === 'مرتفع') s.push('مستوى عالٍ من الشفافية والإفصاح');
-            else if (a.transparency === 'منخفض') w.push('انخفاض مستوى الشفافية المؤسسية');
-            if (a.strengths_comment) a.strengths_comment.split(/[،,\n]/).forEach(l => { if (l.trim()) s.push(l.trim()); });
-            if (a.weaknesses_comment) a.weaknesses_comment.split(/[،,\n]/).forEach(l => { if (l.trim()) w.push(l.trim()); });
-            return { strengths: s, weaknesses: w };
+        if (window.DeptPage) DeptPage.dept = dept;
+
+        function initAudit() {
+            document.getElementById('dept-context').textContent = 'قسم الحوكمة | التقييم الوصفي والاستكشافي';
+            const container = document.getElementById('auditQuestions');
+            container.innerHTML = QUESTIONS.map(q => `
+                <div class="audit-card" data-id="${q.id}">
+                    <div class="card-header-stx">
+                        <div class="card-icon"><i class="bi ${q.icon}"></i></div>
+                        <h3 class="card-title">${q.label}</h3>
+                    </div>
+                    <div class="option-group">
+                        ${q.opts.map((opt, idx) => `
+                            <div class="opt-btn" data-val="${idx}" onclick="setVal('${q.id}', '${idx}', this)">${opt}</div>
+                        `).join('')}
+                    </div>
+                    <textarea class="audit-textarea" placeholder="أضف أي ملاحظات أو تحديات مرتبطة بهذا المحور (اختياري)..." oninput="setNote('${q.id}', this.value)"></textarea>
+                </div>
+            `).join('');
+            loadData();
         }
-        document.addEventListener('DOMContentLoaded', async () => {
-            const ok = await DeptPage.init(dept);
-            if (!ok) return;
-            await DeptPage.loadDeepSummary('deepSummary');
-            let saved = await DeptPage.loadFromAPI('AUDIT') || Context.getTemp('audit_data') || DeptPage.migrateFromLocalStorage(`stratix_${dept}_audit`);
-            DeptPage.fillForm(saved);
-            document.getElementById('auditForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const answers = Object.fromEntries(new FormData(e.target));
-                let missing = false;
-                document.querySelectorAll('[required]').forEach(f => {
-                    if (!answers[f.name]) { missing = true; f.style.borderColor = '#ef4444'; }
-                    else f.style.borderColor = '';
+
+        function setVal(id, val, btn) {
+            if (!auditState[id]) auditState[id] = { val: '', note: '', label: '' };
+            auditState[id].val = val;
+            const q = QUESTIONS.find(x => x.id === id);
+            auditState[id].label = q.opts[parseInt(val)];
+
+            const parent = btn.parentElement;
+            parent.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active', 'success', 'warning', 'danger'));
+
+            const idx = parseInt(val);
+            btn.classList.add('active');
+            if (idx === 0) btn.classList.add('success');
+            else if (idx === 3) btn.classList.add('danger');
+            else btn.classList.add('warning');
+
+            btn.closest('.audit-card').classList.remove('unanswered');
+            updateProgress();
+        }
+
+        function setNote(id, note) {
+            if (!auditState[id]) auditState[id] = { val: '', note: '', label: (auditState[id]?.label || '') };
+            auditState[id].note = note;
+        }
+
+        function updateProgress() {
+            const answeredCount = Object.keys(auditState).filter(k => auditState[k] && auditState[k].val !== '').length;
+            const prog = document.getElementById('saveProgress');
+
+            document.getElementById('strengthsCount').textContent = Object.values(auditState).filter(v => v.val === '0').length;
+            document.getElementById('weaknessesCount').textContent = Object.values(auditState).filter(v => v.val === '2' || v.val === '3').length;
+
+            const score = Object.values(auditState).reduce((acc, curr) => acc + (3 - parseInt(curr.val || 3)), 0);
+            const quality = Math.round((score / (QUESTIONS.length * 3)) * 100);
+            document.getElementById('maturityVal').textContent = quality + '%';
+
+            if (answeredCount === QUESTIONS.length) {
+                prog.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> تم تقييم جميع المحاور — جاهز للمتابعة';
+                prog.className = 'small fw-bold text-success';
+            } else {
+                prog.innerHTML = `<i class="bi bi-info-circle"></i> تم تقييم ${answeredCount} من أصل ${QUESTIONS.length} نقاط رقابية`;
+            }
+        }
+
+        async function loadData() {
+            const saved = await DeptPage.loadFromAPI('AUDIT_GOVERNANCE').catch(() => null);
+            if (saved) {
+                auditState = saved;
+                Object.keys(saved).forEach(id => {
+                    const card = document.querySelector(`.audit-card[data-id="${id}"]`);
+                    if (card) {
+                        const btn = card.querySelector(`.opt-btn[data-val="${saved[id].val}"]`);
+                        if (btn) setVal(id, saved[id].val, btn);
+                        const area = card.querySelector('textarea');
+                        if (area) area.value = saved[id].note || '';
+                    }
                 });
-                if (missing) { DeptPage.showMessage('يرجى الإجابة على جميع الأسئلة المطلوبة', true); return; }
-                Context.setTemp('audit_data', answers);
-                Context.setTemp('audit_completed', true);
-                const { strengths, weaknesses } = extractStrengthsWeaknesses(answers);
-                Context.setItem(`${dept}_strengths`, strengths);
-                Context.setItem(`${dept}_weaknesses`, weaknesses);
-                const saved = await DeptPage.saveToAPI('AUDIT', answers);
-                DeptPage.showMessage(saved ? 'تم حفظ التقييم الوصفي بنجاح' : 'فشل الحفظ في الخادم، لكن البيانات محفوظة محلياً', !saved);
-                setTimeout(() => window.location.href = `/swot.html?dept=${dept}`, 1500);
+            }
+            updateProgress();
+        }
+
+        document.getElementById('governanceAuditForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const unanswered = QUESTIONS.filter(q => !auditState[q.id] || auditState[q.id].val === '');
+
+            if (unanswered.length > 0) {
+                DeptPage.showMessage(`⚠️ يرجى تقييم المحاور المتبقية (${unanswered.length} محور)`, true);
+                unanswered.forEach(q => {
+                    document.querySelector(`.audit-card[data-id="${q.id}"]`).classList.add('unanswered');
+                });
+                return;
+            }
+
+            const btn = document.getElementById('btnSave');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري الحفظ...';
+
+            const strengths = [];
+            const weaknesses = [];
+            QUESTIONS.forEach(q => {
+                const item = auditState[q.id];
+                if (item) {
+                    const idx = parseInt(item.val);
+                    if (idx <= 1) strengths.push(`${q.label}: ${item.label} ${item.note ? '(' + item.note + ')' : ''}`);
+                    if (idx >= 2) weaknesses.push(`${q.label}: ${item.label} ${item.note ? '(' + item.note + ')' : ''}`);
+                }
             });
+
+            Context.setItem('governance_strengths', strengths);
+            Context.setItem('governance_weaknesses', weaknesses);
+
+            try {
+                try { localStorage.setItem('AUDIT_GOVERNANCE', JSON.stringify(auditState)); DeptPage.safeSetLocal('stratix_governance_audit_v2', auditState); } catch(e) {}
+                await DeptPage.saveToAPI('AUDIT_GOVERNANCE', auditState);
+                DeptPage.showMessage('✅ تم حفظ التقييم بنجاح! جاري الانتقال للميزانية والتحديات');
+                setTimeout(() => window.location.href = `/dept-report.html?dept=governance`, 1500);
+            } catch (err) {
+                DeptPage.showMessage('❌ فشل الحفظ في السيرفر', true);
+                btn.disabled = false;
+                btn.innerHTML = 'حفظ ومتابعة للميزانية والتحديات <i class="bi bi-arrow-left"></i>';
+            }
         });
+
+        document.addEventListener('DOMContentLoaded', initAudit);
+
+        // Report Engine
+        if (window.ReportEngine) {
+            ReportEngine.init({
+                pageId: 'governance-audit', pageTitle: 'التقييم الوصفي - الحوكمة', pageIcon: '🏛️',
+                collectData: () => {
+                    const sections = [];
+                    const score = Object.values(auditState).reduce((acc, curr) => acc + (3 - parseInt(curr.val || 3)), 0);
+                    const quality = Math.round((score / (QUESTIONS.length * 3)) * 100);
+
+                    sections.push({
+                        title: 'مؤشر النضج الحوكمي', color: '#8b5cf6', icon: '🏛️',
+                        content: `<div style="text-align:center; padding:20px; background:rgba(139,92,246,0.05); border-radius:16px; border:1px solid rgba(139,92,246,0.15);">
+                            <div style="font-size:2.5rem; font-weight:900; color:#8b5cf6;">${quality}%</div>
+                            <div style="font-size:0.9rem; color:#94a3b8; margin-top:5px;">درجة الحوكمة المؤسسية والرشادة</div>
+                        </div>`
+                    });
+
+                    return { sections, meta: { qualityScore: quality, qualityLabel: quality >= 70 ? 'حوكمة جيدة' : quality >= 40 ? 'يحتاج تحسين' : 'مخاطر حوكمة عالية' } };
+                }
+            });
+        }
     </script>
 </body>
 

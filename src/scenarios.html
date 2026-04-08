@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="/css/index.css">
+    <link rel="stylesheet" href="/css/guide-bar.css?v=2">
     <style>
         :root {
             --stx-bg: #0b0d12;
@@ -168,161 +169,358 @@
             justify-content: space-between;
             align-items: center;
         }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        @media (max-width: 992px) {
+            .stx-sidebar-container {
+                position: fixed;
+                right: -240px;
+                top: 0;
+                bottom: 0;
+                height: 100vh;
+                z-index: 1001;
+                transition: transform 0.3s ease;
+            }
+
+            .stx-sidebar-container.mobile-open {
+                transform: translateX(-240px);
+            }
+        }
     </style>
 </head>
 
 <body>
     <!-- Top Navigation with Phase Tracker -->
-    <nav class="top-nav d-flex justify-content-between align-items-center">
-        <div class="d-flex align-items-center gap-4">
-            <a href="/tows.html" class="nav-link-btn"><i class="bi bi-arrow-right"></i> السابق: مصفوفة TOWS</a>
-            <div class="mx-2 opacity-10">|</div>
-            <a href="/dept-dashboard.html" class="nav-link-btn"><i class="bi bi-house-door"></i> الرئيسية</a>
-            <div class="mx-2 opacity-10">|</div>
-            <div class="phase-tracker">
+    <nav class="top-nav">
+        <div class="container-fluid d-flex align-items-center justify-content-between p-0">
+            <!-- اليمين: العودة ومبدل القسم -->
+            <div class="d-flex align-items-center gap-3" style="width: 30%;">
+                <button onclick="window.exitToDashboard()" class="nav-link-btn border-0 bg-transparent">
+                    <i class="bi bi-arrow-right-circle fs-5"></i>
+                    <span>لوحة القيادة</span>
+                </button>
+                <div id="dept-switcher-placeholder"></div>
+            </div>
+
+            <!-- المنتصف: متتبع المراحل (بدون تداخل) -->
+            <div class="phase-tracker d-none d-lg-flex justify-content-center" style="width: 40%;">
                 <div class="phase-step completed">
-                    <div class="phase-dot"></div> التشخيص (15/15)
+                    <div class="phase-dot"></div> التشخيص (تم)
                 </div>
-                <div class="bi bi-chevron-left small opacity-20"></div>
                 <div class="phase-step active">
-                    <div class="phase-dot"></div> التخطيط (1/3): سيناريوهات
+                    <div class="phase-dot"></div> التخطيط: السيناريوهات
                 </div>
                 <div class="phase-step opacity-20">
-                    <div class="phase-dot"></div> التخطيط (2/3): توجهات
-                </div>
-                <div class="phase-step opacity-20">
-                    <div class="phase-dot"></div> التخطيط (3/3): أهداف BSC
+                    <div class="phase-dot"></div> الأهداف والمسارات
                 </div>
             </div>
-        </div>
-        <div class="d-flex align-items-center gap-3">
-            <button class="btn btn-primary rounded-pill px-5 py-2 fw-900 border-0 shadow-lg" onclick="saveJourney()">
-                حفظ والانتقال للتوجهات الاستراتيجية <i class="bi bi-compass ms-2"></i>
-            </button>
-        </div>
-    </nav>
 
-    <main>
-        <div class="d-flex justify-content-between align-items-end mb-5">
-            <div>
-                <h1 class="fw-900 m-0"><i class="bi bi-layers text-primary me-2"></i> السيناريوهات الاستراتيجية</h1>
-                <p id="dept-context" class="text-muted fs-5 mt-2">توقع المسارات المستقبلية للإدارة بناءً على متغيرات
-                    السوق والإمكانيات المتاحة.</p>
-            </div>
-            <button class="btn btn-magic-gradient rounded-pill px-4 py-3 fw-800 border-0 text-white"
-                style="background: linear-gradient(135deg, #6366f1, #a855f7);" onclick="generateSmartScenarios()">
-                <i class="bi bi-robot"></i> صياغة ذكية بالذكاء الاصطناعي
-            </button>
-        </div>
-
-        <div class="row g-4" id="scenarios-container">
-            <!-- Scenario Cards (Pessimistic, Realistic, Optimistic) -->
-            <div class="col-lg-4">
-                <div class="scenario-card glass-panel">
-                    <span class="scenario-tag tag-pess">السيناريو المتشائم</span>
-                    <h3 class="fw-800 text-white">تحديات وضغوط</h3>
-                    <p class="text-muted small">ماذا يحدث في حال انخفاض الميزانية أو تسرب الكفاءات؟</p>
-                    <textarea id="sc-pessimistic" class="stx-input flex-grow-1" rows="8"
-                        placeholder="توقع التحديات وخطط الطوارئ..."></textarea>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="scenario-card glass-panel"
-                    style="border-width: 2px; border-color: rgba(99, 102, 241, 0.3);">
-                    <span class="scenario-tag tag-real">السيناريو الواقعي</span>
-                    <h3 class="fw-800 text-white">الاستقرار والنمو المتزن</h3>
-                    <p class="text-muted small">المسار المتوقع بناءً على الأداء الحالي والموارد المتوفرة.</p>
-                    <textarea id="sc-realistic" class="stx-input flex-grow-1" rows="8"
-                        placeholder="الخطة الأساسية للإدارة..."></textarea>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="scenario-card glass-panel">
-                    <span class="scenario-tag tag-opt">السيناريو المتفائل</span>
-                    <h3 class="fw-800 text-white">الريادة والتحول</h3>
-                    <p class="text-muted small">ماذا لو توفرت كافة الإمكانيات؟ طموحات الإدارة القصوى.</p>
-                    <textarea id="sc-optimistic" class="stx-input flex-grow-1" rows="8"
-                        placeholder="الفرص الاستباقية والنمو السريع..."></textarea>
-                </div>
-            </div>
-        </div>
-
-        <div class="action-bar mt-5">
-            <a href="/tows.html" class="nav-link-btn"><i class="bi bi-arrow-right"></i> العودة لمصفوفة TOWS</a>
-            <div class="d-flex gap-3">
-                <button type="button" onclick="window.location.href='/dept-dashboard.html'"
-                    class="btn btn-outline-light rounded-pill px-4 fw-800">العودة للوحة القيادة</button>
-                <button type="button" onclick="saveJourney()"
-                    class="btn btn-modern btn-primary px-5 py-3 rounded-pill fw-900 border-0 shadow-lg">
-                    حفظ ومتابعة للتوجهات <i class="bi bi-arrow-left ms-2"></i>
+            <!-- اليسار: زر الحفظ والانتقال -->
+            <div class="d-flex align-items-center justify-content-end" style="width: 30%;">
+                <button
+                    class="btn btn-primary rounded-pill px-4 py-2 fw-800 border-0 shadow-sm d-none d-md-inline-block"
+                    onclick="saveJourney()">
+                    <span>حفظ وتحديد التوجهات</span> <i class="bi bi-compass ms-2"></i>
+                </button>
+                <button class="btn btn-outline-light rounded-pill p-2 d-lg-none ms-2" onclick="toggleSidebar()"
+                    style="width:40px; height:40px; display:flex; align-items:center; justify-content:center;">
+                    <i class="bi bi-list fs-4"></i>
                 </button>
             </div>
         </div>
-    </main>
-
-    <script src="/js/api.js"></script>
-    <script src="/js/utils.js"></script>
-    <script src="/js/context-manager.js"></script>
-    <script src="/js/steps-config.js"></script>
-    <script src="/js/sidebar.js"></script>
-    <script src="/js/dept-page.js"></script>
-    <script src="/assets/js/hr-handlers.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </nav>
 
     <script>
-        (async function () {
-            // 🛡️ تهيئة الصفحة (تضمن تحميل المستخدم والقسم)
-            const dept = await window.initDeptPage();
-            if (!dept) return;
+        // دالة العودة الذكية حسب الدور
+        window.exitToDashboard = function () {
+            window.location.href = '/ceo-dashboard.html';
+        };
 
-            document.getElementById('dept-context').textContent = `إدارة ${dept.toUpperCase()} | بناء السيناريوهات (Planning Section 1)`;
-
-            // تهيئة DeptPage (مهم جداً للحفظ)
-            await DeptPage.init(dept);
-
-            await loadData(dept);
-        })();
-
-        async function loadData(dept) {
-            const data = await DeptPage.loadFromAPI('SCENARIOS_' + dept.toUpperCase());
-            if (data) {
-                document.getElementById('sc-pessimistic').value = data.pessimistic || '';
-                document.getElementById('sc-realistic').value = data.realistic || '';
-                document.getElementById('sc-optimistic').value = data.optimistic || '';
+        window.toggleSidebar = function () {
+            const sidebar = document.getElementById('stx-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            if (sidebar) sidebar.classList.toggle('mobile-open');
+            if (overlay) overlay.classList.toggle('active');
+            if (sidebar && sidebar.classList.contains('mobile-open')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
             }
-        }
-
-        async function generateSmartScenarios() {
-            const dept = Context.getDept() || 'hr';
-            const btn = event.currentTarget;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري المحاكاة...';
-
-            // Artificial delay for effect
-            setTimeout(() => {
-                const s = window.generateHRScenarios ? generateHRScenarios() : { pessimistic: '', realistic: '', optimistic: '' };
-                document.getElementById('sc-pessimistic').value = s.pessimistic;
-                document.getElementById('sc-realistic').value = s.realistic;
-                document.getElementById('sc-optimistic').value = s.optimistic;
-                btn.innerHTML = '<i class="bi bi-check2"></i> تم التوليد بنجاح';
-                setTimeout(() => btn.innerHTML = '<i class="bi bi-robot"></i> صياغة ذكية بالذكاء الاصطناعي', 3000);
-            }, 1000);
-        }
-
-        async function saveJourney() {
-            const dept = Context.getDept() || 'hr';
-            const data = {
-                pessimistic: document.getElementById('sc-pessimistic').value,
-                realistic: document.getElementById('sc-realistic').value,
-                optimistic: document.getElementById('sc-optimistic').value
-            };
-
-            const success = await DeptPage.saveToAPI('SCENARIOS_' + dept.toUpperCase(), data);
-            if (success) {
-                if (window.Context && Context.markStepCompleted) await Context.markStepCompleted('scenarios');
-                window.location.href = `/directions.html?dept=${dept}`;
-            }
-        }
+        };
     </script>
+
+    <div class="stx-wrapper">
+        <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+        <aside class="stx-sidebar-container" id="stx-sidebar"></aside>
+
+        <main class="flex-grow-1 p-4">
+            <div class="d-flex justify-content-between align-items-end mb-5">
+                <div>
+                    <h1 class="fw-900 m-0"><i class="bi bi-layers text-primary me-2"></i> السيناريوهات الاستراتيجية</h1>
+                    <p id="dept-context" class="text-muted fs-5 mt-2">توقع المسارات المستقبلية للإدارة بناءً على متغيرات
+                        السوق والإمكانيات المتاحة.</p>
+                </div>
+                <button class="btn btn-magic-gradient rounded-pill px-4 py-3 fw-800 border-0 text-white"
+                    style="background: linear-gradient(135deg, #6366f1, #a855f7);" onclick="generateSmartScenarios()">
+                    <i class="bi bi-robot"></i> صياغة ذكية بالذكاء الاصطناعي
+                </button>
+            </div>
+
+            <!-- شريط الإرشاد -->
+            <div class="guide-bar">
+                <div class="guide-item"><i class="bi bi-clock text-info"></i> الوقت المتوقع: <strong>15–20
+                        دقيقة</strong>
+                </div>
+                <div class="guide-item"><i class="bi bi-layers text-warning"></i> <strong>3 سيناريوهات</strong> (متشائم
+                    /
+                    واقعي / متفائل)</div>
+                <div class="guide-item"><i class="bi bi-list-ol text-success"></i> <strong>3–5 نقاط</strong> لكل سيناريو
+                </div>
+                <div class="guide-item"><i class="bi bi-star text-primary"></i> الأهمية: <strong>مهم</strong> — يبني
+                    جاهزية
+                    للمستقبل</div>
+            </div>
+
+            <div class="row g-4" id="scenarios-container">
+                <!-- Scenario Cards (Pessimistic, Realistic, Optimistic) -->
+                <div class="col-lg-4">
+                    <div class="scenario-card glass-panel">
+                        <span class="scenario-tag tag-pess">السيناريو المتشائم</span>
+                        <h3 class="fw-800 text-white">تحديات وضغوط</h3>
+                        <p class="text-muted small">ماذا يحدث في حال انخفاض الميزانية أو تسرب الكفاءات؟</p>
+                        <textarea id="sc-pessimistic" class="stx-input flex-grow-1" rows="8"
+                            placeholder="توقع التحديات وخطط الطوارئ..."></textarea>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="scenario-card glass-panel"
+                        style="border-width: 2px; border-color: rgba(99, 102, 241, 0.3);">
+                        <span class="scenario-tag tag-real">السيناريو الواقعي</span>
+                        <h3 class="fw-800 text-white">الاستقرار والنمو المتزن</h3>
+                        <p class="text-muted small">المسار المتوقع بناءً على الأداء الحالي والموارد المتوفرة.</p>
+                        <textarea id="sc-realistic" class="stx-input flex-grow-1" rows="8"
+                            placeholder="الخطة الأساسية للإدارة..."></textarea>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="scenario-card glass-panel">
+                        <span class="scenario-tag tag-opt">السيناريو المتفائل</span>
+                        <h3 class="fw-800 text-white">الريادة والتحول</h3>
+                        <p class="text-muted small">ماذا لو توفرت كافة الإمكانيات؟ طموحات الإدارة القصوى.</p>
+                        <textarea id="sc-optimistic" class="stx-input flex-grow-1" rows="8"
+                            placeholder="الفرص الاستباقية والنمو السريع..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-bar mt-5">
+                <a href="/tows.html" class="nav-link-btn"><i class="bi bi-arrow-right"></i> العودة لمصفوفة TOWS</a>
+                <div class="d-flex gap-3">
+                    <button type="button" onclick="window.location.href='/dept-dashboard.html'"
+                        class="btn btn-outline-light rounded-pill px-4 fw-800">العودة للوحة القيادة</button>
+                    <button type="button" onclick="saveJourney()"
+                        class="btn btn-modern btn-primary px-5 py-3 rounded-pill fw-900 border-0 shadow-lg">
+                        حفظ ومتابعة للتوجهات <i class="bi bi-arrow-left ms-2"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <script src="/js/report-engine.js?v=2"></script>
+        <script src="/js/api.js"></script>
+        <script src="/js/utils.js"></script>
+        <script src="/js/context-manager.js"></script>
+        <script src="/js/page-guard.js"></script>
+        <script src="/js/steps-config.js"></script>
+        <script src="/js/sidebar.js"></script>
+        <script src="/js/dept-page.js"></script>
+        <script src="/assets/js/hr-handlers.js"></script>
+        <script src="/assets/js/finance-handlers.js"></script>
+        <script src="/assets/js/sales-handlers.js"></script>
+        <script src="/assets/js/marketing-handlers.js"></script>
+        <script src="/assets/js/operations-handlers.js"></script>
+        <script src="/assets/js/it-handlers.js"></script>
+        <script src="/assets/js/compliance-handlers.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+        <script>
+            (async function () {
+                // 🛡️ تهيئة الصفحة (مستوى الشركة)
+                await window.initDeptPage(); // للتحقق من المستخدم فقط
+                const dept = 'company';
+                if (window.DeptPage) DeptPage.dept = 'company';
+
+                document.getElementById('dept-context').textContent = 'السيناريوهات الاستراتيجية للمنظمة';
+
+                window.exitToDashboard = () => {
+                    window.location.href = '/ceo-dashboard.html';
+                };
+
+                // تهيئة DeptPage (مهم جداً للحفظ)
+                await DeptPage.init('company');
+
+                // dept switcher removed — company-level page
+
+                if (window.ReportEngine) {
+                    ReportEngine.init({
+                        pageId: 'scenarios',
+                        pageTitle: 'السيناريوهات الاستراتيجية',
+                        pageIcon: '🔮',
+                        collectData: () => {
+                            const scens = [
+                                { id: 'sc-pessimistic', label: 'السيناريو المتشائم', color: '#dc2626', icon: '⚠️' },
+                                { id: 'sc-realistic', label: 'السيناريو الواقعي', color: '#2563eb', icon: '📊' },
+                                { id: 'sc-optimistic', label: 'السيناريو المتفائل', color: '#16a34a', icon: '🚀' }
+                            ];
+                            const counts = {};
+                            const sections = scens.map(s => {
+                                const el = document.getElementById(s.id);
+                                const val = el?.value || '';
+                                counts[s.id] = val.trim() ? val.split('\n').filter(l => l.trim().length > 2).length : 0;
+                                return { title: `${s.label} (${counts[s.id]})`, icon: s.icon, color: s.color, content: ReportEngine.textToList(val, s.color) };
+                            });
+                            const total = Object.values(counts).reduce((a, b) => a + b, 0);
+                            const filledScens = scens.filter(s => counts[s.id] > 0);
+                            const emptyScens = scens.filter(s => counts[s.id] === 0);
+                            const score = Math.round((filledScens.length / 3) * 60 + Math.min(total / 9, 1) * 40);
+
+                            const kpis = [
+                                { label: 'متشائم', value: counts['sc-pessimistic'], color: '#dc2626', bg: '#fef2f2' },
+                                { label: 'واقعي', value: counts['sc-realistic'], color: '#2563eb', bg: '#eff6ff' },
+                                { label: 'متفائل', value: counts['sc-optimistic'], color: '#16a34a', bg: '#f0fdf4' },
+                                { label: 'إجمالي النقاط', value: total, color: '#6366f1', bg: '#f5f3ff' }
+                            ];
+
+                            const highlights = [];
+                            highlights.push({ icon: '🔮', text: `${filledScens.length} من 3 سيناريوهات مكتملة بإجمالي ${total} نقطة`, color: '#6366f1' });
+                            if (emptyScens.length > 0) highlights.push({ icon: '⚠️', text: `سيناريوهات فارغة: ${emptyScens.map(s => s.label).join('، ')}`, color: '#ca8a04' });
+                            if (filledScens.length === 3) highlights.push({ icon: '✅', text: 'تغطية كاملة — المنظمة مستعدة لجميع الاحتمالات', color: '#16a34a' });
+
+                            const recommendations = [];
+                            emptyScens.forEach(s => recommendations.push(`أكمل "${s.label}" للاستعداد لكل الاحتمالات`));
+                            if (counts['sc-realistic'] === 0) recommendations.push('السيناريو الواقعي أهم سيناريو — ابدأ به أولاً');
+                            if (total > 0 && total < 6) recommendations.push('أضف تفاصيل أكثر (يُنصح بـ 3+ نقاط لكل سيناريو)');
+                            if (recommendations.length === 0) recommendations.push('سيناريوهات جيدة — استخدمها لبناء خطط الطوارئ');
+
+                            return {
+                                sections,
+                                meta: {
+                                    dept, deptName: dept.toUpperCase(),
+                                    kpis, highlights, recommendations,
+                                    qualityScore: score,
+                                    qualityLabel: score >= 70 ? 'تغطية جيدة' : score >= 40 ? 'تحتاج إكمال' : 'غير مكتملة',
+                                    qualityAdvice: `${filledScens.length}/3 سيناريوهات — ${total} نقطة تفصيلية`
+                                }
+                            };
+                        }
+                    });
+                }
+
+                await loadData(dept);
+            })();
+
+            // ─── حفظ تلقائي محلي ───
+            const LS_SCEN = () => `stratix_scenarios_${(window.DeptPage && DeptPage.dept) || 'company'}`;
+            function saveScenLocal() {
+                try {
+                    localStorage.setItem(LS_SCEN(), JSON.stringify({
+                        pessimistic: document.getElementById('sc-pessimistic')?.value || '',
+                        realistic: document.getElementById('sc-realistic')?.value || '',
+                        optimistic: document.getElementById('sc-optimistic')?.value || '',
+                        _ts: Date.now()
+                    }));
+                } catch (e) { }
+            }
+            ['sc-pessimistic', 'sc-realistic', 'sc-optimistic'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('input', saveScenLocal);
+            });
+
+            async function loadData(dept) {
+                try {
+                    const data = await DeptPage.loadFromAPI('SCENARIOS_' + dept.toUpperCase());
+                    if (data && (data.pessimistic || data.realistic || data.optimistic)) {
+                        document.getElementById('sc-pessimistic').value = data.pessimistic || '';
+                        document.getElementById('sc-realistic').value = data.realistic || '';
+                        document.getElementById('sc-optimistic').value = data.optimistic || '';
+                        saveScenLocal();
+                        return;
+                    }
+                } catch (e) { }
+                // fallback: localStorage
+                try {
+                    const local = JSON.parse(localStorage.getItem(LS_SCEN()));
+                    if (local && (local.pessimistic || local.realistic || local.optimistic)) {
+                        document.getElementById('sc-pessimistic').value = local.pessimistic || '';
+                        document.getElementById('sc-realistic').value = local.realistic || '';
+                        document.getElementById('sc-optimistic').value = local.optimistic || '';
+                    }
+                } catch (e) { }
+            }
+
+            async function generateSmartScenarios() {
+                const btn = event.currentTarget;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري المحاكاة...';
+
+                setTimeout(() => {
+                    let s = null;
+                    const dept = (window.DeptPage && DeptPage.dept) || 'company';
+
+                    if (dept === 'strategy' && window.StrategicSynthesis) s = StrategicSynthesis.generateCorporateScenarios();
+                    // 🧠 الديناميكية الذكية: استدعاء المعالج بناءً على اسم القسم
+                    const handlerName = `generate${dept.charAt(0).toUpperCase() + dept.slice(1)}Scenarios`;
+                    if (window[handlerName]) {
+                        s = window[handlerName]();
+                    } else if (window.generateHRScenarios) {
+                        s = generateHRScenarios();
+                    }
+
+                    if (!s) s = { pessimistic: '', realistic: '', optimistic: '' };
+
+                    const formatVal = (val) => Array.isArray(val) ? val.join('\n') : (val || '');
+
+                    document.getElementById('sc-pessimistic').value = formatVal(s.pessimistic);
+                    document.getElementById('sc-realistic').value = formatVal(s.realistic);
+                    document.getElementById('sc-optimistic').value = formatVal(s.optimistic);
+
+                    saveScenLocal(); // حفظ فوري
+                    btn.innerHTML = '<i class="bi bi-check2"></i> تم التوليد والحفظ';
+                    setTimeout(() => btn.innerHTML = '<i class="bi bi-robot"></i> صياغة ذكية بالذكاء الاصطناعي', 3000);
+                }, 1000);
+            }
+
+            async function saveJourney() {
+                const data = {
+                    pessimistic: document.getElementById('sc-pessimistic').value,
+                    realistic: document.getElementById('sc-realistic').value,
+                    optimistic: document.getElementById('sc-optimistic').value
+                };
+                saveScenLocal();
+                const dept = (window.DeptPage && DeptPage.dept) || 'company';
+                const success = await DeptPage.saveToAPI('SCENARIOS_' + dept.toUpperCase(), data);
+                if (success) {
+                    if (window.Context && Context.markStepCompleted) await Context.markStepCompleted('scenarios');
+                    window.location.href = `/directions.html`;
+                }
+            }
+        </script>
+        </main>
+    </div>
 </body>
 
 </html>

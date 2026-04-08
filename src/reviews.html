@@ -210,6 +210,8 @@
         <div class="d-flex align-items-center gap-4">
             <a href="/projects.html" class="nav-link-btn"><i class="bi bi-arrow-right"></i> السابق: المشاريع</a>
             <div class="mx-2 opacity-10">|</div>
+            <div id="dept-switcher-placeholder"></div>
+            <div class="mx-2 opacity-10">|</div>
             <a href="/dept-dashboard.html" class="nav-link-btn"><i class="bi bi-house-door"></i> الرئيسية</a>
             <div class="mx-2 opacity-10">|</div>
             <div class="phase-tracker">
@@ -346,14 +348,23 @@
     <script src="/js/api.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/context-manager.js"></script>
+    <script src="/js/page-guard.js"></script>
     <script src="/js/dept-page.js"></script>
+    <script src="/js/steps-config.js"></script>
     <script src="/js/sidebar.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         async function initPage() {
-            const dept = Context.getDept() || 'hr';
-            document.getElementById('dept-context').textContent = `إدارة ${dept.toUpperCase()} | المراجعة الشاملة لعام 2026`;
+            const dept = 'company';
+            if (window.DeptPage) DeptPage.dept = 'company';
+            document.getElementById('dept-context').textContent = 'التقرير الاستراتيجي للمنظمة';
+            window.exitToDashboard = () => {
+                window.location.href = '/ceo-dashboard.html';
+            };
+
+            // dept switcher removed — company-level page
+
             await pullData(dept);
         }
 
@@ -414,7 +425,7 @@
             btn.innerHTML = '<i class="spinner-border spinner-border-sm me-2"></i> جاري التحليل...';
             
             try {
-                const deptName = (Context.getDept() || 'hr').toUpperCase();
+                const deptName = 'COMPANY';
                 const kpiCount = (window.lastKpiList || []).length;
                 const projCount = (window.lastProjectList || []).length;
                 
@@ -512,18 +523,17 @@
         }
 
         async function saveData() {
-            const dept = Context.getDept() || 'hr';
             const payload = {
                 gaps: document.getElementById('gaps').value,
                 recoms: document.getElementById('recoms').value,
                 timestamp: new Date().toISOString()
             };
 
-            await DeptPage.saveToAPI('REVIEWS_' + dept.toUpperCase(), payload);
+            await DeptPage.saveToAPI('REVIEWS_COMPANY', payload);
             if (window.Context && Context.markStepCompleted) await Context.markStepCompleted('reviews');
 
             showGlobalToast ? showGlobalToast('✅ تم اعتماد مراجعة الأداء') : null;
-            setTimeout(() => window.location.href = `/reports.html?dept=${dept}`, 1500);
+            setTimeout(() => window.location.href = `/reports.html`, 1500);
         }
 
         function exportToDePower() {

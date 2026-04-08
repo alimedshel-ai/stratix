@@ -188,6 +188,8 @@
         <div class="d-flex align-items-center gap-4">
             <a href="/initiatives.html" class="nav-link-btn"><i class="bi bi-arrow-right"></i> السابق: المبادرات</a>
             <div class="mx-2 opacity-10">|</div>
+            <div id="dept-switcher-placeholder"></div>
+            <div class="mx-2 opacity-10">|</div>
             <a href="/dept-dashboard.html" class="nav-link-btn"><i class="bi bi-house-door"></i> الرئيسية</a>
             <div class="mx-2 opacity-10">|</div>
             <div class="phase-tracker">
@@ -298,20 +300,38 @@
     <script src="/js/api.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/context-manager.js"></script>
+    <script src="/js/page-guard.js"></script>
+    <script src="/js/steps-config.js"></script>
+    <script src="/js/sidebar.js"></script>
     <script src="/js/dept-page.js"></script>
     <script src="/assets/js/hr-handlers.js"></script>
+    <script src="/assets/js/finance-handlers.js"></script>
+    <script src="/assets/js/sales-handlers.js"></script>
+    <script src="/assets/js/marketing-handlers.js"></script>
+    <script src="/assets/js/operations-handlers.js"></script>
+    <script src="/assets/js/it-handlers.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         let allProjects = [];
         let editingIndex = -1;
 
-        async function initPage() {
-            const dept = Context.getDept() || 'hr';
-            document.getElementById('dept-context').textContent = `إدارة ${dept.toUpperCase()} | التنفيذ التنظيمي للمشاريع`;
+        (async function () {
+            // 🛡️ تهيئة الصفحة (مستوى الشركة)
+            await window.initDeptPage(); // للتحقق من المستخدم فقط
+            const dept = 'company';
+            if (window.DeptPage) DeptPage.dept = 'company';
+
+            document.getElementById('dept-context').textContent = 'التنفيذ التنظيمي للمشاريع (المنظمة)';
+
+            // تهيئة DeptPage (مهم جداً للحفظ)
+            await DeptPage.init('company');
+
+            // dept switcher removed — company-level page
+
             await loadData(dept);
             await populateInits(dept);
-        }
+        })();
 
         async function loadData(dept) {
             allProjects = await DeptPage.loadFromAPI('PROJECTS_' + dept.toUpperCase()) || [];
@@ -389,8 +409,7 @@
         }
 
         async function persist() {
-            const dept = Context.getDept() || 'hr';
-            await DeptPage.saveToAPI('PROJECTS_' + dept.toUpperCase(), allProjects);
+            await DeptPage.saveToAPI('PROJECTS_COMPANY', allProjects);
             renderProjects();
         }
 
@@ -409,7 +428,7 @@
             new bootstrap.Modal(document.getElementById('successModal')).show();
         }
 
-        window.onload = initPage;
+
     </script>
 </body>
 

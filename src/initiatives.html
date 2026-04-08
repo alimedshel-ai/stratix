@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="/css/index.css">
+    <link rel="stylesheet" href="/css/guide-bar.css?v=2">
     <style>
         :root {
             --stx-bg: #0b0d12;
@@ -246,9 +247,9 @@
     <!-- Top Navigation -->
     <nav class="top-nav d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center gap-4">
-            <a href="/kpis.html" class="nav-link-btn"><i class="bi bi-arrow-right"></i> السابق: مؤشرات الأداء</a>
+            <a href="/kpis.html" class="nav-link-btn"><i class="bi bi-arrow-right"></i> السابق: المؤشرات</a>
             <div class="mx-2 opacity-10">|</div>
-            <a href="/dept-dashboard.html" class="nav-link-btn"><i class="bi bi-house-door"></i> الرئيسية</a>
+            <div id="dept-switcher-placeholder"></div>
             <div class="mx-2 opacity-10">|</div>
             <div class="phase-tracker">
                 <div class="phase-step completed">
@@ -266,6 +267,12 @@
             </div>
         </div>
         <div class="d-flex align-items-center gap-3">
+            <button class="btn btn-outline-light rounded-pill px-4 py-2 fw-800 border-1" onclick="exitToDashboard()">
+                <i class="bi bi-x-circle me-1"></i> خروج
+            </button>
+            <button class="btn btn-outline-info rounded-pill px-4 py-2 fw-900 border-1" onclick="showIntegrityReport()">
+                <i class="bi bi-shield-check me-2"></i> فحص التناغم الاستراتيجي
+            </button>
             <button class="btn btn-success rounded-pill px-5 py-2 fw-900 border-0 shadow-lg" onclick="saveJourney()">
                 حفظ والانتقال للمشاريع <i class="bi bi-arrow-left ms-2"></i>
             </button>
@@ -275,17 +282,35 @@
     <main>
         <div class="d-flex justify-content-between align-items-start mb-4">
             <div>
-                <h1 class="fw-900 m-0"><i class="bi bi-stack text-success me-2"></i> المبادرات الاستراتيجية (Roadmap)
+                <h1 class="fw-900 m-0"><i class="bi bi-stack text-success me-2"></i> خارطة طريق المبادرات (Initiatives
+                    Roadmap)
                 </h1>
-                <p id="dept-context" class="text-muted fs-5 mt-2">تأطير المورد البشري ضمن خارطة زمنية واضحة تسبق مرحلة
-                    تفصيل المشاريع.</p>
+                <p id="dept-context" class="text-muted fs-5 mt-2">تأطير المبادرات الاستراتيجية ضمن خارطة زمنية واضحة
+                    تسبق مرحلة
+                    تفصيل المشاريع التنفيذية.</p>
             </div>
             <div class="d-flex flex-column align-items-end gap-3">
                 <button class="btn btn-smart-init btn-lg" onclick="syncInitiativesWithKpis()">
                     <i class="bi bi-arrow-repeat"></i> المزامنة الذكية مع المؤشرات
                 </button>
-                <div class="text-muted small fw-800">سيتم توليد مشاريع وجدولتها حسب توقيت المؤشر الرقمي المرتبط.</div>
+                <button class="btn btn-outline-danger btn-sm rounded-pill border-0 opacity-40 px-3"
+                    onclick="purgeInitiativeData()">
+                    <i class="bi bi-trash"></i> تصفية المبادرات
+                </button>
+                <div class="text-muted small fw-800">سيتم توليد مبادرات وجدولتها حسب توقيت المؤشر الرقمي المرتبط.</div>
             </div>
+        </div>
+
+        <!-- شريط الإرشاد -->
+        <div class="guide-bar">
+            <div class="guide-item"><i class="bi bi-clock text-info"></i> الوقت المتوقع: <strong>15–20 دقيقة</strong>
+            </div>
+            <div class="guide-item"><i class="bi bi-stack text-warning"></i> <strong>1–3 مبادرات</strong> لكل ربع سنوي
+            </div>
+            <div class="guide-item"><i class="bi bi-link-45deg text-success"></i> كل مبادرة <strong>مرتبطة بمؤشر
+                    KPI</strong></div>
+            <div class="guide-item"><i class="bi bi-star text-primary"></i> الأهمية: <strong>مهم</strong> — خطوة ما قبل
+                المشاريع التنفيذية</div>
         </div>
 
         <div class="quarter-grid">
@@ -293,41 +318,41 @@
             <div class="quarter-column" id="col-Q1">
                 <div class="q-header">
                     <span class="q-title"><i class="bi bi-calendar2-week"></i> الربع الأول</span>
-                    <span class="q-subtitle">إطلاق المشاريع التأسيسية</span>
+                    <span class="q-subtitle">إطلاق العمليات التأسيسية</span>
                 </div>
                 <div class="init-list" id="list-Q1"></div>
                 <button class="btn btn-outline-light border-0 opacity-40 small mt-3" onclick="openCreateModal('Q1')"><i
-                        class="bi bi-plus"></i> إضافة مشروع</button>
+                        class="bi bi-plus"></i> إضافة مبادرة</button>
             </div>
             <!-- Q2 -->
             <div class="quarter-column" id="col-Q2">
                 <div class="q-header">
                     <span class="q-title"><i class="bi bi-gear-wide-connected"></i> الربع الثاني</span>
-                    <span class="q-subtitle">الأتمتة والعمليات الرقمية</span>
+                    <span class="q-subtitle">الأتمتة والتحسين الرقمي</span>
                 </div>
                 <div class="init-list" id="list-Q2"></div>
                 <button class="btn btn-outline-light border-0 opacity-40 small mt-3" onclick="openCreateModal('Q2')"><i
-                        class="bi bi-plus"></i> إضافة مشروع</button>
+                        class="bi bi-plus"></i> إضافة مبادرة</button>
             </div>
             <!-- Q3 -->
             <div class="quarter-column" id="col-Q3">
                 <div class="q-header">
-                    <span class="q-title"><i class="bi bi-people"></i> الربع الثالث</span>
-                    <span class="q-subtitle">بناء الثقافة والقدرات</span>
+                    <span class="q-title"><i class="bi bi-diagram-3"></i> الربع الثالث</span>
+                    <span class="q-subtitle">تطوير النظم والقدرات</span>
                 </div>
                 <div class="init-list" id="list-Q3"></div>
                 <button class="btn btn-outline-light border-0 opacity-40 small mt-3" onclick="openCreateModal('Q3')"><i
-                        class="bi bi-plus"></i> إضافة مشروع</button>
+                        class="bi bi-plus"></i> إضافة مبادرة</button>
             </div>
             <!-- Q4 -->
             <div class="quarter-column" id="col-Q4">
                 <div class="q-header">
                     <span class="q-title"><i class="bi bi-graph-up-arrow"></i> الربع الرابع</span>
-                    <span class="q-subtitle">تعظيم الأداء والريادة</span>
+                    <span class="q-subtitle">قياس الأداء وتعظيم الأثر</span>
                 </div>
                 <div class="init-list" id="list-Q4"></div>
                 <button class="btn btn-outline-light border-0 opacity-40 small mt-3" onclick="openCreateModal('Q4')"><i
-                        class="bi bi-plus"></i> إضافة مشروع</button>
+                        class="bi bi-plus"></i> إضافة مبادرة</button>
             </div>
         </div>
 
@@ -372,6 +397,10 @@
                             </select>
                         </div>
                     </div>
+                    <label class="text-muted small fw-800">الارتباط بالهدف الاستراتيجي</label>
+                    <select id="initParentLink" class="stx-input">
+                        <option value="">-- مبادرة مستقلة (غير مرتبطة) --</option>
+                    </select>
                 </div>
                 <div class="modal-footer border-0">
                     <button type="button" class="btn btn-link text-muted text-decoration-none"
@@ -393,7 +422,7 @@
                     <p class="text-muted mb-5 fs-5">لقد أنجزت خارطة المبادرات بنجاح. الخطوة التالية هي تحويل هذه
                         المبادرات إلى مشاريع تفصيلية لتجهيزها للمتابعة عبر منصة **dPower**.</p>
                     <button type="button"
-                        onclick="window.location.href='/projects.html?dept=' + (Context.getDept() || 'hr')"
+                        onclick="window.location.href='/projects.html'"
                         class="btn btn-modern btn-primary w-100 py-4 border-0 fw-900 rounded-pill fs-4 shadow-lg">الانتقال
                         لتفصيل المشاريع <i class="bi bi-folder2-open ms-2"></i></button>
                 </div>
@@ -401,13 +430,19 @@
         </div>
     </div>
 
-    <script src="/js/api.js"></script>
-    <script src="/js/utils.js"></script>
-    <script src="/js/context-manager.js"></script>
-    <script src="/js/steps-config.js"></script>
-    <script src="/js/sidebar.js"></script>
-    <script src="/js/dept-page.js"></script>
+    <script src="/js/report-engine.js?v=2"></script>
+    <script src="/js/api.js?v=3"></script>
+    <script src="/js/utils.js?v=3"></script>
+    <script src="/js/context-manager.js?v=3"></script>
+    <script src="/js/page-guard.js?v=3"></script>
+    <script src="/js/steps-config.js?v=3"></script>
+    <script src="/js/path-engine.js?v=3"></script>
+    <script src="/js/journey-ui.js?v=3"></script>
+    <script src="/js/sidebar.js?v=3"></script>
+    <script src="/js/dept-page.js?v=3"></script>
+    <script src="/js/synthesis-engine.js"></script>
     <script src="/assets/js/hr-handlers.js"></script>
+    <script src="/assets/js/finance-handlers.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
@@ -415,19 +450,94 @@
         let editingIndex = -1;
 
         (async function () {
-            // 🛡️ تهيئة الصفحة (تضمن تحميل المستخدم والقسم)
-            const dept = await window.initDeptPage();
-            if (!dept) return;
+            // 🛡️ تهيئة الصفحة (مستوى الشركة)
+            await window.initDeptPage(); // للتحقق من المستخدم فقط
+            const dept = 'company';
+            if (window.DeptPage) DeptPage.dept = 'company';
 
-            document.getElementById('dept-context').textContent = `إدارة ${dept.toUpperCase()} | خارطة طريق المشاريع 2026`;
+            document.getElementById('dept-context').textContent = 'المبادرات الاستراتيجية (المنظمة)';
+
+            // Define exit logic
+            window.exitToDashboard = () => {
+                window.location.href = '/ceo-dashboard.html';
+            };
 
             // تهيئة DeptPage (مهم جداً للحفظ)
-            await DeptPage.init(dept);
+            await DeptPage.init('company');
+
+            // dept switcher removed — company-level page
+
+            if (window.ReportEngine) {
+                ReportEngine.init({
+                    pageId: 'initiatives',
+                    pageTitle: 'خارطة طريق المبادرات',
+                    pageIcon: '📋',
+                    collectData: () => {
+                        const sections = [];
+                        const qCounts = {};
+                        let totalInits = 0;
+                        ['Q1', 'Q2', 'Q3', 'Q4'].forEach(q => {
+                            const col = document.getElementById('col-' + q);
+                            if (!col) return;
+                            const items = [];
+                            col.querySelectorAll('.init-card, .initiative-item, [data-init]').forEach(el => {
+                                const name = el.querySelector('.init-name, .fw-700, h6')?.textContent || '';
+                                const kpi = el.querySelector('.init-kpi, .text-muted, small')?.textContent || '';
+                                if (name) items.push(`${name}${kpi ? ' — ' + kpi : ''}`);
+                            });
+                            qCounts[q] = items.length;
+                            totalInits += items.length;
+                            const qLabels = { Q1: 'الربع الأول', Q2: 'الربع الثاني', Q3: 'الربع الثالث', Q4: 'الربع الرابع' };
+                            sections.push({
+                                title: qLabels[q] + ` (${items.length} مبادرات)`,
+                                icon: q === 'Q1' ? '1️⃣' : q === 'Q2' ? '2️⃣' : q === 'Q3' ? '3️⃣' : '4️⃣',
+                                color: items.length > 0 ? '#10b981' : '#94a3b8',
+                                content: items.length > 0 ? ReportEngine.textToList(items.join('\n'), '#10b981') : '<p style="color:#94a3b8;">لا توجد مبادرات</p>'
+                            });
+                        });
+                        const filledQ = Object.values(qCounts).filter(c => c > 0).length;
+                        const score = totalInits > 0 ? Math.min(100, Math.round(filledQ * 20 + totalInits * 5)) : 0;
+
+                        const kpis = [
+                            { label: 'إجمالي المبادرات', value: totalInits, color: '#10b981', bg: '#f0fdf4' },
+                            { label: 'Q1', value: qCounts.Q1 || 0, color: '#0891b2', bg: '#ecfeff' },
+                            { label: 'Q2', value: qCounts.Q2 || 0, color: '#2563eb', bg: '#eff6ff' },
+                            { label: 'Q3+Q4', value: (qCounts.Q3 || 0) + (qCounts.Q4 || 0), color: '#7c3aed', bg: '#f5f3ff' }
+                        ];
+
+                        const highlights = [];
+                        highlights.push({ icon: '📋', text: `${totalInits} مبادرة موزعة على ${filledQ} من 4 أرباع`, color: '#10b981' });
+                        const emptyQ = ['Q1', 'Q2', 'Q3', 'Q4'].filter(q => !qCounts[q]);
+                        if (emptyQ.length > 0) highlights.push({ icon: '⚠️', text: `أرباع بدون مبادرات: ${emptyQ.join('، ')}`, color: '#ca8a04' });
+                        if (qCounts.Q1 > 0 && filledQ >= 3) highlights.push({ icon: '✅', text: 'خارطة طريق تنفيذية جيدة مع بداية قوية في Q1', color: '#16a34a' });
+
+                        const recommendations = [];
+                        emptyQ.forEach(q => recommendations.push(`أضف مبادرات للـ ${q} لضمان الاستمرارية`));
+                        if (totalInits > 0 && totalInits < 8) recommendations.push('يُنصح بـ 2-3 مبادرات لكل ربع على الأقل');
+                        if (qCounts.Q1 === 0 && totalInits > 0) recommendations.push('ابدأ بمبادرات Q1 — النتائج المبكرة تبني الزخم');
+                        if (recommendations.length === 0) recommendations.push('توزيع جيد — تابع تنفيذ المبادرات وقِس الأثر');
+
+                        return {
+                            sections,
+                            meta: {
+                                dept, deptName: dept.toUpperCase(),
+                                kpis, highlights, recommendations,
+                                qualityScore: Math.min(100, score),
+                                qualityLabel: score >= 70 ? 'خطة قوية' : score >= 30 ? 'تحتاج إضافة' : 'غير مكتملة',
+                                qualityAdvice: `${totalInits} مبادرة في ${filledQ}/4 أرباع`
+                            }
+                        };
+                    }
+                });
+            }
 
             // إصلاح تلقائي لمسار الرحلة (Self-Healing Journey)
             await autoRepairJourney(dept);
 
             await loadData(dept);
+
+            // تحميل الأهداف للربط (Objectives -> Initiatives)
+            loadObjectivesForLinking(dept);
         })();
 
         async function autoRepairJourney(dept) {
@@ -448,14 +558,42 @@
 
         async function loadData(dept) {
             const res = await DeptPage.loadFromAPI('INITIATIVES_' + dept.toUpperCase()) || [];
-            if (Array.isArray(res)) {
-                allInitiatives = res;
-            } else if (res && Array.isArray(res.initiatives)) {
-                allInitiatives = res.initiatives;
+
+            // 🛡️ فحص قسري للتداخل: منع تسرب بيانات الموارد البشرية للمسار المالي
+            const isFinance = (dept || '').toLowerCase() === 'finance';
+            const hrKeywords = ['توظيف', 'بشرية', 'موظف', 'توطين', 'دوران', 'تعيين', 'التعيين', 'قيادات', 'القيادات', 'استبقاء', 'إداري'];
+            const hasHRLeak = (str) => isFinance && hrKeywords.some(key => (str || '').includes(key));
+
+            let loaded = [];
+            if (Array.isArray(res)) loaded = res;
+            else if (res && Array.isArray(res.initiatives)) loaded = res.initiatives;
+
+            // تصفية البيانات في حال وجود تسريب
+            if (loaded.length > 0 && isFinance) {
+                const leaked = loaded.some(i => hasHRLeak(i.title));
+                if (leaked) {
+                    console.warn('[Initiatives] Filtering HR leaked initiatives in Finance...');
+                    allInitiatives = loaded.filter(i => !hasHRLeak(i.title));
+                } else {
+                    allInitiatives = loaded;
+                }
             } else {
-                allInitiatives = [];
+                allInitiatives = loaded;
             }
+
+            // ⚡ مزامنة تلقائية إذا كانت الصفحة فارغة لأول مرة
+            if (allInitiatives.length === 0) {
+                console.log('[Initiatives] Roadmap empty, triggering initial smart sync...');
+                await syncInitiativesWithKpis(null, true);
+            }
+
             renderRoadmap();
+        }
+
+        async function purgeInitiativeData() {
+            if (!confirm('سيتم مسح كافة المبادرات الحالية للبدء ببيانات نظيفة. هل أنت متأكد؟')) return;
+            await DeptPage.saveToAPI('INITIATIVES_COMPANY', []);
+            window.location.reload();
         }
 
         function renderRoadmap() {
@@ -476,6 +614,7 @@
                     <div class="init-meta">
                         <span><i class="bi bi-cash me-1"></i> ${init.budget || '0 ر.س'}</span>
                     </div>
+                    ${init.parent ? `<div class="init-parent"><i class="bi bi-link-45deg"></i> دعم: ${init.parent}</div>` : ''}
                 `;
                 card.onclick = () => openEditModal(idx);
                 list.appendChild(card);
@@ -494,6 +633,7 @@
             document.getElementById('initBudget').value = '';
             document.getElementById('initQuarter').value = q;
             document.getElementById('initStatus').value = 'planned';
+            document.getElementById('initParentLink').value = '';
             new bootstrap.Modal(document.getElementById('initModal')).show();
         }
 
@@ -505,48 +645,46 @@
             document.getElementById('initBudget').value = i.budget;
             document.getElementById('initQuarter').value = i.quarter || 'Q1';
             document.getElementById('initStatus').value = i.status || 'planned';
+            document.getElementById('initParentLink').value = i.parent || '';
             new bootstrap.Modal(document.getElementById('initModal')).show();
         }
 
         function estimateBudget(kpiName) {
             const name = (kpiName || '').toLowerCase();
 
-            // 🏢 الموارد البشرية والتدريب
-            if (name.includes('تدريب') || name.includes('تطوير') || name.includes('دورات') || name.includes('مهارات')) return '15,000 - 45,000 ر.س';
-            if (name.includes('توظيف') || name.includes('استقطاب') || name.includes('headhunt') || name.includes('مواهب')) return '25,000 - 60,000 ر.س';
-            if (name.includes('دوران') || name.includes('استبقاء') || name.includes('ثقافة') || name.includes('ارتباط')) return '20,000 - 40,000 ر.س';
+            // 💰 المالية والنمو والرقابة (أولوية للمدير المالي)
+            if (name.includes('مالي') || name.includes('تدقيق') || name.includes('تحصيل') || name.includes('تكاليف') || name.includes('أرباح') || name.includes('نمو')) return '20,000 - 55,000 ر.س';
+            if (name.includes('إيراد') || name.includes('تحصيلات') || name.includes('فوترة') || name.includes('ميزانية')) return '15,000 - 40,000 ر.س';
 
-            // 💻 التقنية والتحول الرقمي
-            if (name.includes('نظام') || name.includes('أتمتة') || name.includes('تقني') || name.includes('تطبيق') || name.includes('موقع')) return '50,000 - 120,000 ر.س';
-            if (name.includes('تكنولوجيا') || name.includes('برمج') || name.includes('تحديث') || name.includes('سحابة')) return '40,000 - 90,000 ر.س';
-
-            // 📈 التسويق والمبيعات
-            if (name.includes('تسويق') || name.includes('حملة') || name.includes('إعلان') || name.includes('هوية')) return '30,000 - 75,000 ر.س';
-            if (name.includes('مبيعات') || name.includes('عملاء') || name.includes('حصة') || name.includes('سوق')) return '25,000 - 55,000 ر.س';
+            // 💻 التقنية والتحول الرقمي (ERP / Systems)
+            if (name.includes('نظام') || name.includes('أتمتة') || name.includes('تقني') || name.includes('تطبيق') || name.includes('erp')) return '60,000 - 150,000 ر.س';
+            if (name.includes('تكنولوجيا') || name.includes('سحابة') || name.includes('تحديث بيانات')) return '40,000 - 95,000 ر.س';
 
             // ⚙️ العمليات والجودة
             if (name.includes('عمليات') || name.includes('تشغيل') || name.includes('جودة') || name.includes('كفاءة')) return '35,000 - 80,000 ر.س';
-            if (name.includes('تحسين') || name.includes('هيكلة') || name.includes('سياس') || name.includes('إجراء')) return '15,000 - 35,000 ر.س';
+            if (name.includes('تحسين') || name.includes('هيكلة') || name.includes('سياسات') || name.includes('إجراءات')) return '20,000 - 45,000 ر.س';
 
-            // 💰 المالية والنمو
-            if (name.includes('مالي') || name.includes('تكاليف') || name.includes('أرباح') || name.includes('نمو')) return '20,000 - 50,000 ر.س';
+            // 🏢 الموارد البشرية (أولوية أقل هنا)
+            if (name.includes('تدريب') || name.includes('تطوير') || name.includes('مهارات فريق')) return '15,000 - 35,000 ر.س';
+            if (name.includes('توظيف') || name.includes('استقطاب') || name.includes('توطين')) return '25,000 - 50,000 ر.س';
 
             // 🔍 الجودة والاستبيانات
-            if (name.includes('رضا') || name.includes('استبيان') || name.includes('تقييم') || name.includes('مسح')) return '5,000 - 12,000 ر.س';
+            if (name.includes('رضا') || name.includes('استبيان') || name.includes('تقييم')) return '5,000 - 15,000 ر.س';
 
-            return '10,000 - 25,000 ر.س'; // Default average range instead of 'Under Study'
+            return '15,000 - 30,000 ر.س';
         }
 
-        async function syncInitiativesWithKpis() {
+        async function syncInitiativesWithKpis(event, silent = false) {
             const btn = event?.target.closest('button');
             if (btn) btn.disabled = true;
 
             try {
-                const dept = Context.getDept() || 'hr';
-                const kpis = await DeptPage.loadFromAPI('KPIS_' + dept.toUpperCase()) || [];
+                const dept = 'company';
+                const isFinance = false;
+                const kpis = await DeptPage.loadFromAPI('KPIS_COMPANY') || [];
 
                 // الحصول على العناوين الموجودة حالياً لمنع التكرار
-                const existingTitles = new Set(allInitiatives.map(i => (i.title || i.name || '').trim()));
+                const existingTitles = new Set(allInitiatives.map(i => (i.title || i.name || i.text || '').trim()));
                 const newInits = [];
 
                 kpis.forEach(k => {
@@ -563,13 +701,54 @@
                     }
                 });
 
+                // 🎯 "حزمة التأسيس" لـ HR - إضافة مبادرات حتمية للربع الأول إذا كان خالياً
+                if (dept === 'hr') {
+                    const foundationalPack = [
+                        { title: 'مبادرة تحقيق: أتمتة 5 عمليات يدوية رئيسية في شؤون الموظفين', quarter: 'Q1', budget: '60,000 - 150,000 ر.س' },
+                        { title: 'مبادرة تحقيق: نشر دليل سياسات وإجراءات التوظيف المحدث بنسبة 100%', quarter: 'Q1', budget: '20,000 - 45,000 ر.س' }
+                    ];
+                    foundationalPack.forEach(p => {
+                        if (!existingTitles.has(p.title.trim())) {
+                            newInits.push({
+                                title: p.title,
+                                budget: p.budget,
+                                quarter: p.quarter,
+                                status: 'planned',
+                                parent: 'التأسيس والحوكمة'
+                            });
+                            existingTitles.add(p.title.trim());
+                        }
+                    });
+                }
+
+                // 🎯 "حزمة الغلق السنوي" لـ Finance - إضافة مبادرات مالية حتمية للربع الرابع
+                if (isFinance) {
+                    const yearEndPack = [
+                        { title: 'إتمام التدقيق المالي السنوي والإقفال الختامي', quarter: 'Q4', budget: '45,000 ر.س' },
+                        { title: 'إعداد ميزانية العام القادم (Budgeting 2027)', quarter: 'Q4', budget: '25,000 ر.س' },
+                        { title: 'إصدار التقرير السنوي للأثر المالي والاستدامة', quarter: 'Q4', budget: '15,000 ر.س' }
+                    ];
+                    yearEndPack.forEach(p => {
+                        if (!existingTitles.has(p.title.trim())) {
+                            newInits.push({
+                                title: p.title,
+                                budget: p.budget,
+                                quarter: p.quarter,
+                                status: 'planned',
+                                parent: 'الأداء السنوي الحتمي'
+                            });
+                            existingTitles.add(p.title.trim());
+                        }
+                    });
+                }
+
                 if (newInits.length > 0) {
                     allInitiatives = [...allInitiatives, ...newInits];
                     renderRoadmap();
                     await persist();
-                    if (window.DeptPage?.showMessage) DeptPage.showMessage(`✅ تمت إضافة ${newInits.length} مبادرة جديدة بنجاح!`);
+                    if (!silent && window.DeptPage?.showMessage) DeptPage.showMessage(`✅ تمت إضافة ${newInits.length} مبادرة جديدة (بما فيها عمليات الغلق والتأسيس)!`);
                 } else {
-                    if (window.DeptPage?.showMessage) DeptPage.showMessage('جميع المبادرات متزامنة مع المؤشرات حالياً.');
+                    if (!silent && window.DeptPage?.showMessage) DeptPage.showMessage('جميع المبادرات متزامنة مع المؤشرات والعمليات السنوية حالياً.');
                 }
             } catch (err) {
                 console.error('Sync failed', err);
@@ -583,7 +762,8 @@
                 title: document.getElementById('initTitle').value,
                 budget: document.getElementById('initBudget').value,
                 quarter: document.getElementById('initQuarter').value,
-                status: document.getElementById('initStatus').value
+                status: document.getElementById('initStatus').value,
+                parent: document.getElementById('initParentLink').value
             };
             if (editingIndex >= 0) allInitiatives[editingIndex] = init;
             else allInitiatives.push(init);
@@ -592,20 +772,31 @@
         }
 
         async function persist() {
-            const dept = Context.getDept() || 'hr';
-            await DeptPage.saveToAPI('INITIATIVES_' + dept.toUpperCase(), allInitiatives);
+            await DeptPage.saveToAPI('INITIATIVES_COMPANY', allInitiatives);
             renderRoadmap();
         }
 
         async function saveJourney() {
             const btn = event?.target.closest('button');
             const originalText = btn ? btn.innerHTML : '';
-            const dept = (window.Context && Context.getDept()) || 'hr';
+            const dept = 'company';
 
             try {
                 if (btn) {
                     btn.disabled = true;
                     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري الحفظ وتوليد المشاريع...';
+                }
+
+                // 0. فحص التناغم قبل الحفظ النهائي (Synthesis Check)
+                const deptCode = dept;
+                const analysis = await window.SynthesisEngine.analyzeAlignment(deptCode);
+                if (analysis && analysis.score < 60) {
+                    const confirmProceed = confirm(`تنبيه: مؤشر جودة التخطيط لديك هو ${analysis.score}% فقط بسبب وجود فجوات ارتباط. هل تريد الاستمرار رغم ذلك؟`);
+                    if (!confirmProceed) {
+                        window.SynthesisEngine.renderSynthesisModal(analysis);
+                        if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
+                        return;
+                    }
                 }
 
                 // 1. حفظ المسودة (Persist JSON)
@@ -636,6 +827,29 @@
                     btn.innerHTML = originalText;
                 }
             }
+        }
+
+        async function loadObjectivesForLinking(dept) {
+            try {
+                const res = await DeptPage.loadFromAPI('OBJECTIVES_' + dept.toUpperCase()) || [];
+                const objectives = Array.isArray(res) ? res : (res?.objectives || []);
+                const select = document.getElementById('initParentLink');
+                if (!select) return;
+
+                objectives.forEach(obj => {
+                    const opt = document.createElement('option');
+                    opt.value = obj.title;
+                    opt.textContent = obj.title;
+                    select.appendChild(opt);
+                });
+            } catch (e) {
+                console.warn('[Initiatives] Failed to load objectives for linking', e);
+            }
+        }
+
+        async function showIntegrityReport() {
+            const analysis = await window.SynthesisEngine.analyzeAlignment('company');
+            window.SynthesisEngine.renderSynthesisModal(analysis);
         }
     </script>
 </body>
