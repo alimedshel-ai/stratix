@@ -737,13 +737,26 @@
                     </div>
 
                     ${hasMember ? dept.members.map(m => `
-                        <div class="dept-member">
+                        <div class="dept-member" style="position:relative">
                             <div class="dept-member-avatar" style="background:${color}">
                                 ${(m.user?.name || '?')[0]}
                             </div>
-                            <div>
+                            <div style="flex:1;min-width:0">
                                 <div class="dept-member-name">${m.user?.name || 'غير معروف'}</div>
                                 <div class="dept-member-email">${m.user?.email || ''}</div>
+                                <div style="font-size:10px;color:var(--muted);margin-top:2px">
+                                    ${m.role === 'ADMIN' ? '🔑 مدير' : m.role === 'EDITOR' ? '✏️ محرر' : m.role === 'VIEWER' ? '👁️ مشاهد' : '👤 ' + (m.role || '')}
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:4px;flex-shrink:0">
+                                <button onclick="changeRole('${m.userId}','${m.id}','${m.role}')" title="تغيير الدور"
+                                    style="width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:rgba(102,126,234,0.08);color:var(--primary);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </button>
+                                <button onclick="removeMember('${m.userId}','${m.id}','${m.user?.name || ''}')" title="إزالة العضو"
+                                    style="width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:rgba(239,68,68,0.08);color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
                             </div>
                         </div>
                     `).join('') : `
@@ -988,6 +1001,68 @@
             t.textContent = msg;
             t.style.display = 'block';
             setTimeout(() => t.style.display = 'none', 3000);
+        }
+
+        // ========== Remove Member ==========
+        async function removeMember(userId, membershipId, name) {
+            if (!confirm(`هل تريد إزالة "${name || 'هذا العضو'}" من الفريق؟\nسيفقد الوصول لبيانات المنشأة.`)) return;
+            try {
+                const res = await fetch(`/api/users/${userId}/memberships/${membershipId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    showToast('✅ تم إزالة العضو');
+                    loadTeam();
+                } else {
+                    const data = await res.json();
+                    showToast('❌ ' + (data.error || 'فشل في الإزالة'));
+                }
+            } catch (e) {
+                showToast('❌ خطأ في الاتصال');
+            }
+        }
+
+        // ========== Change Role ==========
+        async function changeRole(userId, membershipId, currentRole) {
+            const ROLES = { ADMIN: 'مدير — يرى ويعدّل كل الأقسام', EDITOR: 'محرر — يملأ بيانات قسمه', VIEWER: 'مشاهد — يرى فقط' };
+            const options = Object.entries(ROLES)
+                .filter(([k]) => k !== currentRole)
+                .map(([k, v]) => `${k}: ${v}`)
+                .join('\n');
+
+            const choice = prompt(`اختر الدور الجديد:\n\n${options}\n\nالدور الحالي: ${ROLES[currentRole] || currentRole}\n\nاكتب: ADMIN أو EDITOR أو VIEWER`);
+            if (!choice) return;
+
+            const newRole = choice.trim().toUpperCase();
+            if (!['ADMIN', 'EDITOR', 'VIEWER'].includes(newRole)) {
+                showToast('❌ دور غير صالح');
+                return;
+            }
+            if (newRole === currentRole) {
+                showToast('⚠️ نفس الدور الحالي');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/users/${userId}/memberships/${membershipId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ role: newRole })
+                });
+                if (res.ok) {
+                    showToast(`✅ تم تغيير الدور إلى ${ROLES[newRole]}`);
+                    loadTeam();
+                } else {
+                    const data = await res.json();
+                    showToast('❌ ' + (data.error || 'فشل في التغيير'));
+                }
+            } catch (e) {
+                showToast('❌ خطأ في الاتصال');
+            }
         }
 
         // ========== Init ==========

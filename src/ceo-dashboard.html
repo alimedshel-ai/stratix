@@ -2708,12 +2708,60 @@
                 // 🗺️ تحديث شريط تقدم مسار التشخيص
                 updateDiagProgress();
 
+                // 👥 بانر الفريق الذكي — يظهر لـ 31+ موظف فقط
+                showTeamBannerIfNeeded();
+
                 // 📊 تشغيل الشارت
                 if (typeof renderChart === 'function') renderChart();
 
             } catch (err) {
                 console.error("خطأ حرج في تهيئة مركز القيادة الاستراتيجية التنفيذية:", err);
             }
+        }
+
+        function showTeamBannerIfNeeded() {
+            try {
+                // تحقق من الحجم — نعرض البانر فقط لـ 31+ موظف
+                const pkg = window.PathEngine ? PathEngine.getPackage() : 'basic';
+                if (pkg === 'basic') return; // ≤30 موظف — لا نعرض
+
+                // تحقق إذا المالك أخفاه سابقاً
+                if (localStorage.getItem('team_banner_dismissed') === 'true') return;
+
+                // تحقق إذا عنده فريق بالفعل
+                const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || '{}');
+                const hasTeam = diag.entity_size === 'large' || diag.entity_size === 'medium';
+
+                const banner = document.createElement('div');
+                banner.id = 'teamBanner';
+                banner.style.cssText = 'margin:16px 24px;padding:18px 24px;background:linear-gradient(135deg,rgba(102,126,234,0.08),rgba(124,58,237,0.08));border:1px solid rgba(102,126,234,0.2);border-radius:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;animation:slideUp 0.3s ease';
+
+                banner.innerHTML = `
+                    <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">👥</div>
+                    <div style="flex:1;min-width:200px">
+                        <div style="font-size:15px;font-weight:800;color:var(--text)">ادعُ فريقك لبناء الخطة معاً</div>
+                        <div style="font-size:12px;color:var(--muted);margin-top:3px">كل مدير يملأ بيانات قسمه — وأنت تشوف الصورة الكاملة في تقرير واحد</div>
+                    </div>
+                    <a href="/team.html" style="padding:10px 20px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;gap:6px">
+                        <i class="bi bi-people-fill"></i> إدارة الفريق
+                    </a>
+                    <button onclick="dismissTeamBanner()" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,0.06);color:var(--muted);cursor:pointer;font-size:14px;flex-shrink:0" title="إخفاء">✕</button>
+                `;
+
+                // أضف البانر بعد أول section
+                const firstSection = document.querySelector('.main-content > div, .main-content > section');
+                if (firstSection && firstSection.nextSibling) {
+                    firstSection.parentNode.insertBefore(banner, firstSection.nextSibling);
+                }
+            } catch (e) {
+                console.warn('[TeamBanner]', e);
+            }
+        }
+
+        function dismissTeamBanner() {
+            localStorage.setItem('team_banner_dismissed', 'true');
+            const banner = document.getElementById('teamBanner');
+            if (banner) banner.remove();
         }
 
         function updateDiagProgress() {

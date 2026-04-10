@@ -1411,7 +1411,7 @@ async function initSidebar(sidebarContainer) {
     // ║  🧭 رحلتي الاستراتيجية                     ║
     // ╚═══════════════════════════════════════════╝
     if (!isViewerOrDE && currentRules.showJourney && !isSmartPath) {
-      // === المسار الكلاسيكي: عرض المراحل ===
+      // === المسار الكلاسيكي: عرض المراحل (مكتبة الأدوات) ===
       html += '<div class="stx-divider"></div>';
 
       // مدير الإدارة: عنوان مخصص
@@ -1419,7 +1419,12 @@ async function initSidebar(sidebarContainer) {
         const _dn = { hr: 'الموارد البشرية', finance: 'المالية', operations: 'العمليات', marketing: 'التسويق', sales: 'المبيعات', compliance: 'الامتثال والحوكمة', support: 'الخدمات المساندة' };
         html += `<div class="stx-section-label"><i class="bi bi-building-fill-gear" style="color:#3b82f6;margin-left:4px"></i> أدوات إدارة ${_dn[_v10Dept] || _v10Dept}</div>`;
       } else {
-        html += '<div class="stx-section-label"><i class="bi bi-compass-fill" style="color:#667eea;margin-left:4px"></i> رحلتي الاستراتيجية</div>';
+        html += '<div class="stx-section-label"><i class="bi bi-grid-3x3-gap-fill" style="color:#667eea;margin-left:4px"></i> مكتبة الأدوات</div>';
+      }
+
+      // زر التبديل: العودة للمسار الذكي (إذا عنده مسار محدد)
+      if (PE && PE.buildClassicToggleHTML) {
+        html += PE.buildClassicToggleHTML();
       }
 
       // مدير الإدارة: مراحل مخصصة | المستثمر: مراحل مفلترة | غيره: كل المراحل
