@@ -106,7 +106,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://cdn.tailwindcss.com", "https://unpkg.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://cdn.tailwindcss.com", "https://unpkg.com"],
       scriptSrcAttr: ["'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com", "https://cdn.tailwindcss.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
@@ -381,7 +381,7 @@ app.use('/api/directions', directionsRoutes);
 app.use('/api/external-analysis', externalAnalysisRoutes);
 app.use('/api/tools', toolsRoutes.router);
 app.use('/api/company-analysis', companyAnalysisRoutes);
-app.use('/api/user-progress', userProgressRoutes);
+// user-progress already registered above (line 331)
 // TODO: [DEFERRED] causal-links — يُفعّل مع Strategy Map
 // app.use('/api/causal-links', causalLinksRoutes);
 // tows handled via root consolidate section
