@@ -1,20 +1,33 @@
 // js/path-tracker.js
+// ═══════════════════════════════════════════════════════════
+// الترتيب الموحّد: خارج → داخل → تركيب → اختيار → بناء → تنفيذ → متابعة
+// ═══════════════════════════════════════════════════════════
 (function () {
-    // تعريف الخطوات حسب الدور
+    // تعريف الخطوات حسب الدور — موحّد مع journey-steps.js
     const STEPS = {
         owner: [
+            { id: 'pestel', name: 'PESTEL', path: '/tool-detail.html?code=PESTEL' },
+            { id: 'company-health', name: 'صحة الشركة', path: '/company-health.html' },
             { id: 'swot', name: 'تحليل SWOT', path: '/swot.html' },
+            { id: 'tows', name: 'مصفوفة TOWS', path: '/tows.html' },
             { id: 'directions', name: 'التوجهات', path: '/directions.html' },
             { id: 'objectives', name: 'الأهداف', path: '/objectives.html' },
+            { id: 'kpis', name: 'مؤشرات الأداء', path: '/kpis.html' },
+            { id: 'okrs', name: 'OKRs', path: '/okrs.html' },
             { id: 'initiatives', name: 'المبادرات', path: '/initiatives.html' },
-            { id: 'kpis', name: 'مؤشرات الأداء', path: '/kpis.html' }
+            { id: 'projects', name: 'المشاريع', path: '/projects.html' },
+            { id: 'reviews', name: 'المراجعات', path: '/reviews.html' }
         ],
         dept_manager: [
             { id: 'deep', name: 'التحليل الرقمي', path: null },
             { id: 'audit', name: 'التقييم الوصفي', path: null },
             { id: 'swot', name: 'تحليل SWOT', path: '/swot.html' },
+            { id: 'tows', name: 'مصفوفة TOWS', path: '/tows.html' },
             { id: 'directions', name: 'توجهات القسم', path: '/directions.html' },
-            { id: 'objectives', name: 'أهداف القسم', path: '/objectives.html' }
+            { id: 'objectives', name: 'أهداف القسم', path: '/objectives.html' },
+            { id: 'kpis', name: 'مؤشرات الأداء', path: '/kpis.html' },
+            { id: 'okrs', name: 'OKRs', path: '/okrs.html' },
+            { id: 'initiatives', name: 'المبادرات', path: '/initiatives.html' }
         ]
     };
 
@@ -86,11 +99,17 @@
 
     function getCurrentStepId() {
         const path = window.location.pathname;
+        if (path.includes('pestel') || path.includes('code=PESTEL')) return 'pestel';
+        if (path.includes('company-health')) return 'company-health';
         if (path.includes('swot')) return 'swot';
+        if (path.includes('tows')) return 'tows';
         if (path.includes('directions')) return 'directions';
         if (path.includes('objectives')) return 'objectives';
-        if (path.includes('initiatives')) return 'initiatives';
         if (path.includes('kpis')) return 'kpis';
+        if (path.includes('okrs')) return 'okrs';
+        if (path.includes('initiatives')) return 'initiatives';
+        if (path.includes('projects')) return 'projects';
+        if (path.includes('reviews')) return 'reviews';
         if (path.includes('-deep')) return 'deep';
         if (path.includes('-audit')) return 'audit';
         return '';
@@ -137,7 +156,7 @@
                 href = `/${safeDept}-${step.id}.html?dept=${safeDept}`;
             } else if (step.path) {
                 const safeDept = dept ? encodeURIComponent(dept) : '';
-                href = safeDept ? `${step.path}?dept=${safeDept}` : step.path;
+                href = safeDept ? `${step.path}${step.path.includes('?') ? '&' : '?'}dept=${safeDept}` : step.path;
             }
 
             // إنشاء عنصر الخطوة

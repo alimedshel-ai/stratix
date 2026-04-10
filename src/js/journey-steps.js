@@ -17,11 +17,39 @@
     'use strict';
 
     // ═══════════════════════════════════════════
-    // المراحل السبع (للسايدبار)
+    // المراحل السبع (للسايدبار) — الخارج أولاً ثم الداخل
     // ═══════════════════════════════════════════
 
     var phases = [
-        // ── المرحلة 1: تشخيص الداخل 🏢 (أولاً — اعرف منظمتك) ──
+        // ── المرحلة 1: تشخيص الخارج 🔍 (أولاً — اعرف السوق) ──
+        {
+            id: 'DIAGNOSIS_EXTERNAL',
+            nameAr: 'تشخيص — الخارج',
+            icon: 'bi-globe2',
+            emoji: '🔍',
+            color: '#ef4444',
+            visibleTo: null,
+            items: [
+                {
+                    label: 'PESTEL (بيئة كلية)', href: '/tool-detail.html?code=PESTEL', icon: 'bi-binoculars-fill',
+                    visibleTo: null, permission: { INVESTOR: 'read', DEPT_MANAGER: 'hidden' }
+                },
+                {
+                    label: 'قوى بورتر', href: '/tool-detail.html?code=PORTER', icon: 'bi-shield-exclamation',
+                    visibleTo: null, permission: { INVESTOR: 'read', DEPT_MANAGER: 'hidden' }
+                },
+                {
+                    label: 'المقارنة المعيارية', href: '/benchmarking.html', icon: 'bi-bar-chart-line-fill',
+                    visibleTo: null, permission: { INVESTOR: 'read' }
+                },
+                {
+                    label: 'أصحاب المصلحة', href: '/stakeholders.html', icon: 'bi-people-fill',
+                    visibleTo: null, permission: { INVESTOR: 'read', DEPT_MANAGER: 'hidden' }
+                },
+            ]
+        },
+
+        // ── المرحلة 2: تشخيص الداخل 🏢 (ثانياً — اعرف منظمتك) ──
         {
             id: 'DIAGNOSIS_INTERNAL',
             nameAr: 'تشخيص — الداخل',
@@ -53,34 +81,6 @@
                 {
                     label: 'رحلة العميل', href: '/tool-detail.html?code=CUSTOMER_JOURNEY', icon: 'bi-person-walking',
                     visibleTo: ['OWNER', 'COMPANY_MANAGER', 'CONSULTANT']
-                },
-            ]
-        },
-
-        // ── المرحلة 2: تشخيص الخارج 🔍 (ثانياً — فهم السوق) ──
-        {
-            id: 'DIAGNOSIS_EXTERNAL',
-            nameAr: 'تشخيص — الخارج',
-            icon: 'bi-globe2',
-            emoji: '🔍',
-            color: '#ef4444',
-            visibleTo: null, // الكل
-            items: [
-                {
-                    label: 'PESTEL (بيئة كلية)', href: '/tool-detail.html?code=PESTEL', icon: 'bi-binoculars-fill',
-                    visibleTo: null, permission: { INVESTOR: 'read', DEPT_MANAGER: 'hidden' }
-                },
-                {
-                    label: 'قوى بورتر', href: '/tool-detail.html?code=PORTER', icon: 'bi-shield-exclamation',
-                    visibleTo: null, permission: { INVESTOR: 'read', DEPT_MANAGER: 'hidden' }
-                },
-                {
-                    label: 'المقارنة المعيارية', href: '/benchmarking.html', icon: 'bi-bar-chart-line-fill',
-                    visibleTo: null, permission: { INVESTOR: 'read' }
-                },
-                {
-                    label: 'أصحاب المصلحة', href: '/stakeholders.html', icon: 'bi-people-fill',
-                    visibleTo: null, permission: { INVESTOR: 'read', DEPT_MANAGER: 'hidden' }
                 },
             ]
         },
@@ -163,7 +163,7 @@
             ]
         },
 
-        // ── المرحلة 5: البناء 🏆 ──
+        // ── المرحلة 5: البناء 🏆 (أهداف → KPIs → OKRs) ──
         {
             id: 'PLANNING',
             nameAr: 'البناء',
@@ -199,7 +199,7 @@
             ]
         },
 
-        // ── المرحلة 6: التنفيذ 🚀 ──
+        // ── المرحلة 6: التنفيذ 🚀 (+ المشاريع) ──
         {
             id: 'EXECUTION',
             nameAr: 'التنفيذ',
@@ -210,6 +210,10 @@
             items: [
                 {
                     label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban-fill',
+                    visibleTo: null, permission: { INVESTOR: 'read' }
+                },
+                {
+                    label: 'المشاريع', href: '/projects.html', icon: 'bi-folder2-open',
                     visibleTo: null, permission: { INVESTOR: 'read' }
                 },
                 {
@@ -258,18 +262,35 @@
     ];
 
     // ═══════════════════════════════════════════
-    // خطوات الداشبورد ("خطواتك القادمة")
+    // خطوات الداشبورد ("خطواتك القادمة") — الخارج أولاً
     // ═══════════════════════════════════════════
 
     var dashboardSteps = [
-        // ── 1. تشخيص الداخل أولاً ──
+        // ── 1. تشخيص الخارج أولاً ──
+        {
+            key: 'pestel_completed',
+            check: function () { return localStorage.getItem('pestel_completed') === 'true'; },
+            icon: 'bi-binoculars-fill', iconBg: '#fef2f2', iconColor: '#ef4444',
+            title: 'PESTEL (بيئة كلية)',
+            desc: 'ادرس البيئة الخارجية: سياسية، اقتصادية، اجتماعية، تقنية',
+            link: '/tool-detail.html?code=PESTEL', priority: 1
+        },
+        {
+            key: 'porter_completed',
+            check: function () { return localStorage.getItem('porter_completed') === 'true'; },
+            icon: 'bi-shield-exclamation', iconBg: '#fff7ed', iconColor: '#ea580c',
+            title: 'قوى بورتر',
+            desc: 'حلّل القوى التنافسية الخمس في سوقك',
+            link: '/tool-detail.html?code=PORTER', priority: 2
+        },
+        // ── 2. تشخيص الداخل ثانياً ──
         {
             key: 'internal_env_completed',
             check: function () { return localStorage.getItem('internal_env_completed') === 'true'; },
             icon: 'bi-building-fill-check', iconBg: '#f0fdfa', iconColor: '#0d9488',
             title: 'صحة الشركة',
             desc: 'قيّم الموارد والقدرات الداخلية للمنشأة — تقييم شامل',
-            link: '/company-health.html', priority: 1
+            link: '/company-health.html', priority: 3
         },
         {
             key: 'value_chain_completed',
@@ -277,7 +298,7 @@
             icon: 'bi-link-45deg', iconBg: '#ecfdf5', iconColor: '#059669',
             title: 'سلسلة القيمة',
             desc: 'حلل أنشطتك الأساسية والمساندة — أين تخلق القيمة؟',
-            link: '/tool-detail.html?code=VALUE_CHAIN', priority: 2
+            link: '/tool-detail.html?code=VALUE_CHAIN', priority: 4
         },
         {
             key: 'stratix_dept_deep_payload',
@@ -288,24 +309,7 @@
             icon: 'bi-diagram-3-fill', iconBg: '#eef2ff', iconColor: '#667eea',
             title: 'استكشاف الإدارات',
             desc: 'حلّل كل إدارة بالتفصيل — البيئة الداخلية للمنشأة',
-            link: '/dept-deep.html', priority: 3
-        },
-        // ── 2. تشخيص الخارج ثانياً ──
-        {
-            key: 'pestel_completed',
-            check: function () { return localStorage.getItem('pestel_completed') === 'true'; },
-            icon: 'bi-binoculars-fill', iconBg: '#fef2f2', iconColor: '#ef4444',
-            title: 'PESTEL (بيئة كلية)',
-            desc: 'ادرس البيئة الخارجية: سياسية، اقتصادية، اجتماعية، تقنية',
-            link: '/tool-detail.html?code=PESTEL', priority: 4
-        },
-        {
-            key: 'porter_completed',
-            check: function () { return localStorage.getItem('porter_completed') === 'true'; },
-            icon: 'bi-shield-exclamation', iconBg: '#fff7ed', iconColor: '#ea580c',
-            title: 'قوى بورتر',
-            desc: 'حلّل القوى التنافسية الخمس في سوقك',
-            link: '/tool-detail.html?code=PORTER', priority: 5
+            link: '/dept-deep.html', priority: 5
         },
         // ── 3. التركيب ──
         {
@@ -325,7 +329,7 @@
             desc: 'حدد الرؤية والرسالة والتوجهات المؤسسية',
             link: '/directions.html', priority: 7
         },
-        // ── 5. البناء ──
+        // ── 5. البناء (أهداف → KPIs → OKRs) ──
         {
             key: 'objectives_saved',
             check: function () { return localStorage.getItem('objectives_saved') === 'true'; },
