@@ -3,6 +3,7 @@ const prisma = require('../lib/prisma');
 const bcrypt = require('bcryptjs');
 const { verifyToken } = require('../middleware/auth');
 const { checkPermission } = require('../middleware/permission');
+const { entityGuard } = require('../middleware/entity-guard');
 const { sendMail, invitationEmail } = require('../lib/mailer');
 
 const router = express.Router();
@@ -126,7 +127,7 @@ router.post('/', verifyToken, checkPermission('ADMIN'), async (req, res) => {
 });
 
 // ========== GET invitations for entity ==========
-router.get('/entity/:entityId', verifyToken, async (req, res) => {
+router.get('/entity/:entityId', verifyToken, entityGuard('entityId'), async (req, res) => {
     try {
         const { entityId } = req.params;
         const { status } = req.query;
@@ -306,7 +307,9 @@ router.post('/accept/:token', async (req, res) => {
             user: { id: user.id, name: user.name, email: user.email },
             membership,
             token: jwtToken,
-            redirectTo: '/dashboard.html'
+            redirectTo: invitation.departmentRole && DEPARTMENT_ROLES[invitation.departmentRole]?.deptCode
+                ? `/dept-dashboard.html?dept=${DEPARTMENT_ROLES[invitation.departmentRole].deptCode.toLowerCase()}`
+                : '/dashboard.html'
         });
     } catch (error) {
         console.error('Error accepting invitation:', error);

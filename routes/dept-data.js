@@ -1,6 +1,7 @@
 const express = require('express');
 const prisma = require('../lib/prisma');
 const { verifyToken } = require('../middleware/auth');
+const { entityGuard, deptGuard } = require('../middleware/entity-guard');
 
 const router = express.Router();
 
@@ -171,7 +172,7 @@ router.get('/questionnaire/:role', verifyToken, async (req, res) => {
 });
 
 // ========== GET saved data for a department ==========
-router.get('/:departmentId', verifyToken, async (req, res) => {
+router.get('/:departmentId', verifyToken, deptGuard('departmentId'), async (req, res) => {
     try {
         const { departmentId } = req.params;
 
@@ -208,7 +209,7 @@ router.get('/:departmentId', verifyToken, async (req, res) => {
 });
 
 // ========== SAVE department questionnaire data ==========
-router.post('/:departmentId', verifyToken, async (req, res) => {
+router.post('/:departmentId', verifyToken, deptGuard('departmentId'), async (req, res) => {
     try {
         const { departmentId } = req.params;
         const { answers } = req.body; // { revenue_growth: '15', operating_margin: '22', ... }
@@ -302,7 +303,7 @@ router.post('/:departmentId', verifyToken, async (req, res) => {
 });
 
 // ========== GET all department data for entity (for rules engine) ==========
-router.get('/entity/:entityId/all', verifyToken, async (req, res) => {
+router.get('/entity/:entityId/all', verifyToken, entityGuard('entityId'), async (req, res) => {
     try {
         const { entityId } = req.params;
 

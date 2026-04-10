@@ -1,6 +1,7 @@
 const express = require('express');
 const prisma = require('../lib/prisma');
 const { verifyToken } = require('../middleware/auth');
+const { entityGuard, deptGuard } = require('../middleware/entity-guard');
 
 const router = express.Router();
 
@@ -31,7 +32,7 @@ const DEPT_ROLE_MAP = {
 };
 
 // ========== GET departments for entity ==========
-router.get('/:entityId', verifyToken, async (req, res) => {
+router.get('/:entityId', verifyToken, entityGuard('entityId'), async (req, res) => {
     try {
         const { entityId } = req.params;
 
@@ -72,7 +73,7 @@ router.get('/:entityId', verifyToken, async (req, res) => {
 });
 
 // ========== GET team overview (for CEO) ==========
-router.get('/:entityId/team-overview', verifyToken, async (req, res) => {
+router.get('/:entityId/team-overview', verifyToken, entityGuard('entityId'), async (req, res) => {
     try {
         const { entityId } = req.params;
 
@@ -136,7 +137,7 @@ router.get('/:entityId/team-overview', verifyToken, async (req, res) => {
 });
 
 // ========== UPDATE department data status ==========
-router.patch('/:departmentId/data', verifyToken, async (req, res) => {
+router.patch('/:departmentId/data', verifyToken, deptGuard('departmentId'), async (req, res) => {
     try {
         const { departmentId } = req.params;
         const { dataStatus, dataPercent, dataSummary } = req.body;
