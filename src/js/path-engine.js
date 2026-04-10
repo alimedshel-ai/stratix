@@ -1,67 +1,142 @@
 /**
- * Startix — Smart Path Engine 🚀
- * ================================
- * يربط الـ 8 أنماط من pain-ambition بمسارات مخصصة.
- * كل نمط يحدد: الصفحات المطلوبة + الخطوات + الوقت المتوقع.
+ * Startix — Smart Path Engine v2 🚀
+ * ══════════════════════════════════
+ * نظام الحزم + المسارات الذكية
  *
- * الاستخدام:
- *   const engine = window.PathEngine;
- *   const path = engine.getPath(); // يرجع المسار المناسب
- *   const filtered = engine.filterItems(items); // يفلتر روابط الـ sidebar
- *   engine.isPathMode(); // هل المسار الذكي مفعّل؟
- *   engine.toggleMode(); // تبديل بين ذكي ↔ كلاسيكي
+ * الهيكل:
+ *   الحزمة = حجم المنشأة (أساسي / احترافي / مؤسسي)
+ *   المسار = 3 عوامل (حجم + سيولة + طموح)
+ *   الأداة = موجودة فعلاً بالمنصة (لا نسخ مبتورة)
+ *
+ * المسارات الفعّالة: 5 فقط
+ *   emergency_risk    → سيولة حرجة أو متعثرة
+ *   nascent_cautious  → ناشئة / صغيرة
+ *   growing_chaotic   → نمو سريع + حوكمة ضعيفة
+ *   mature_competitive→ ناضجة + مستقرة مالياً
+ *   default_strategic → الافتراضي (كل الأدوات)
  */
 
 (function () {
   'use strict';
 
   // ═══════════════════════════════════════════════
-  // 1. تعريف المسارات لكل نمط من الـ 8 أنماط
+  // 1. تعريف الحزم حسب الحجم
+  // ═══════════════════════════════════════════════
+
+  const PACKAGES = {
+    basic: {
+      name: 'أساسي',
+      emoji: '🌱',
+      color: '#22c55e',
+      maxEmployees: 30,
+      toolCount: 12,
+      // الأدوات المسموحة للحزمة الأساسية
+      allowedPages: [
+        // تشخيص
+        '/tool-detail.html', '/company-health.html', '/pestel.html',
+        // تركيب
+        '/swot.html', '/risk-map.html',
+        // اختيار
+        '/directions.html',
+        // بناء
+        '/objectives.html', '/kpis.html',
+        // تنفيذ
+        '/initiatives.html', '/projects.html',
+        // متابعة
+        '/reviews.html',
+        // نظام
+        '/dashboard.html', '/settings.html', '/settings-data.html',
+        '/entities.html', '/tools.html', '/onboarding.html',
+        '/kpi-entries.html', '/tasks.html',
+      ],
+    },
+    professional: {
+      name: 'احترافي',
+      emoji: '🚀',
+      color: '#3b82f6',
+      maxEmployees: 150,
+      toolCount: 25,
+      allowedPages: [
+        // تشخيص خارجي
+        '/tool-detail.html', '/pestel.html', '/benchmarking.html', '/stakeholders.html',
+        // تشخيص داخلي
+        '/company-health.html', '/dept-deep.html', '/org-dna.html',
+        // تركيب
+        '/swot.html', '/tows.html', '/risk-map.html', '/gap-analysis.html',
+        // اختيار
+        '/directions.html', '/scenarios.html', '/choices.html', '/bcg-matrix.html',
+        // بناء
+        '/objectives.html', '/kpis.html', '/okrs.html', '/ogsm.html', '/priority-matrix.html',
+        // تنفيذ
+        '/initiatives.html', '/projects.html', '/finance-audit.html',
+        // متابعة
+        '/reviews.html', '/corrections.html', '/reports.html',
+        // نظام
+        '/dashboard.html', '/ceo-dashboard.html', '/settings.html',
+        '/settings-data.html', '/entities.html', '/tools.html',
+        '/onboarding.html', '/kpi-entries.html', '/tasks.html',
+        '/strategic-calendar.html',
+      ],
+    },
+    enterprise: {
+      name: 'مؤسسي',
+      emoji: '🏢',
+      color: '#8b5cf6',
+      maxEmployees: Infinity,
+      toolCount: 38,
+      allowedPages: null, // كل شي مفتوح
+    },
+  };
+
+  // ═══════════════════════════════════════════════
+  // 2. تعريف المسارات — 5 فقط (لا كود ميّت)
   // ═══════════════════════════════════════════════
 
   const PATH_DEFINITIONS = {
 
-    // ─── 1. ناشئة متعثرة ───
-    nascent_struggling: {
-      name: 'مسار الإنقاذ السريع',
-      nameEn: 'Quick Rescue Path',
+    // ─── 1. مسار إدارة الأزمات 🆘 ───
+    emergency_risk: {
+      name: 'مسار الإنقاذ',
+      nameEn: 'Crisis & Rescue Path',
       emoji: '🆘',
       color: '#ef4444',
-      description: 'خطة بقاء 90 يوم — وقف النزيف وتثبيت الأساس',
+      description: 'وقف النزيف + تقييم المخاطر + خطة بقاء 90 يوم',
       estimatedTime: '2-3 ساعات',
       steps: [
         { label: 'PESTEL', href: '/tool-detail.html?code=PESTEL', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
         { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-heart-pulse', phase: 'DIAGNOSIS' },
         { label: 'خريطة المخاطر', href: '/risk-map.html', icon: 'bi-exclamation-triangle', phase: 'DIAGNOSIS' },
         { label: 'تحليل SWOT', href: '/swot.html', icon: 'bi-grid-3x3-gap', phase: 'DIAGNOSIS' },
-        { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass', phase: 'PLANNING' },
+        { label: 'التوجهات', href: '/directions.html', icon: 'bi-compass', phase: 'PLANNING' },
         { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye', phase: 'PLANNING' },
         { label: 'مؤشرات الأداء', href: '/kpis.html', icon: 'bi-graph-up-arrow', phase: 'PLANNING' },
         { label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban', phase: 'EXECUTION' },
+        { label: 'التصحيحات', href: '/corrections.html', icon: 'bi-arrow-repeat', phase: 'ADAPTATION' },
       ],
-      // الصفحات المسموح بها (تشمل الخطوات + صفحات مساعدة)
       allowedPages: [
-        '/onboarding.html', '/select-type', '/company-health.html', '/internal-env.html', '/pestel.html', '/swot.html', '/risk-map.html',
-        '/directions.html', '/objectives.html', '/kpis.html', '/initiatives.html',
-        '/kpi-entries.html', '/dashboard.html', '/tools.html', '/tool-detail.html',
+        '/onboarding.html', '/company-health.html', '/pestel.html', '/swot.html',
+        '/risk-map.html', '/directions.html', '/objectives.html', '/kpis.html',
+        '/initiatives.html', '/corrections.html', '/kpi-entries.html',
+        '/break-even-result.html',
+        '/dashboard.html', '/tools.html', '/tool-detail.html',
         '/settings.html', '/settings-data.html', '/entities.html',
       ],
     },
 
-    // ─── 2. ناشئة حذرة ───
+    // ─── 2. مسار التأسيس 🌱 ───
     nascent_cautious: {
-      name: 'مسار البناء المستدام',
-      nameEn: 'Sustainable Build Path',
+      name: 'مسار التأسيس',
+      nameEn: 'Foundation Path',
       emoji: '🌱',
       color: '#22c55e',
-      description: 'أساس متين + خطة مرحلية + مؤشرات قياس',
+      description: 'أساس متين + خطة نمو مرحلية + مؤشرات قياس',
       estimatedTime: '3-4 ساعات',
       steps: [
         { label: 'PESTEL', href: '/tool-detail.html?code=PESTEL', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
-        { label: '🧬 هوية المنظمة', href: '/org-dna.html', icon: 'bi-fingerprint', phase: 'DIAGNOSIS' },
+        { label: 'DNA المنظمة', href: '/org-dna.html', icon: 'bi-fingerprint', phase: 'DIAGNOSIS' },
         { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-heart-pulse', phase: 'DIAGNOSIS' },
         { label: 'تحليل SWOT', href: '/swot.html', icon: 'bi-grid-3x3-gap', phase: 'DIAGNOSIS' },
-        { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass', phase: 'PLANNING' },
+        { label: 'التوجهات', href: '/directions.html', icon: 'bi-compass', phase: 'PLANNING' },
         { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye', phase: 'PLANNING' },
         { label: 'مؤشرات الأداء', href: '/kpis.html', icon: 'bi-graph-up-arrow', phase: 'PLANNING' },
         { label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban', phase: 'EXECUTION' },
@@ -69,7 +144,7 @@
         { label: 'إدخال المؤشرات', href: '/kpi-entries.html', icon: 'bi-pencil-square', phase: 'EXECUTION' },
       ],
       allowedPages: [
-        '/onboarding.html', '/select-type', '/org-dna.html', '/company-health.html', '/internal-env.html', '/swot.html',
+        '/onboarding.html', '/org-dna.html', '/company-health.html', '/swot.html',
         '/directions.html', '/objectives.html', '/kpis.html',
         '/initiatives.html', '/tasks.html', '/kpi-entries.html',
         '/dashboard.html', '/tools.html', '/tool-detail.html',
@@ -77,138 +152,48 @@
       ],
     },
 
-    // ─── 3. نامية فوضوية ───
+    // ─── 3. مسار النمو والتنظيم 🌪️ ───
     growing_chaotic: {
-      name: 'مسار الهيكلة والتنظيم',
-      nameEn: 'Structure & Organize Path',
-      emoji: '🌪️',
+      name: 'مسار النمو',
+      nameEn: 'Growth & Structure Path',
+      emoji: '🚀',
       color: '#f59e0b',
-      description: 'هيكلة العمليات + مؤشرات أداء مركزية + محاذاة الفرق',
-      estimatedTime: '4-5 ساعات',
+      description: 'هيكلة العمليات + تحليل تنافسي + مؤشرات مركزية',
+      estimatedTime: '4-6 ساعات',
       steps: [
         { label: 'PESTEL', href: '/tool-detail.html?code=PESTEL', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
-        { label: 'أصحاب المصلحة', href: '/stakeholders.html', icon: 'bi-people-fill', phase: 'DIAGNOSIS' },
+        { label: 'قوى بورتر', href: '/tool-detail.html?code=PORTER', icon: 'bi-shield-check', phase: 'DIAGNOSIS' },
         { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-heart-pulse', phase: 'DIAGNOSIS' },
+        { label: 'سلسلة القيمة', href: '/tool-detail.html?code=VALUE_CHAIN', icon: 'bi-link-45deg', phase: 'DIAGNOSIS' },
         { label: 'تحليل SWOT', href: '/swot.html', icon: 'bi-grid-3x3-gap', phase: 'DIAGNOSIS' },
-        { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass', phase: 'PLANNING' },
+        { label: 'مصفوفة TOWS', href: '/tows.html', icon: 'bi-arrows-fullscreen', phase: 'PLANNING' },
+        { label: 'التوجهات', href: '/directions.html', icon: 'bi-compass', phase: 'PLANNING' },
         { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye', phase: 'PLANNING' },
         { label: 'مؤشرات الأداء', href: '/kpis.html', icon: 'bi-graph-up-arrow', phase: 'PLANNING' },
+        { label: 'OKRs', href: '/okrs.html', icon: 'bi-layers', phase: 'PLANNING' },
         { label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban', phase: 'EXECUTION' },
-        { label: 'المهام', href: '/tasks.html', icon: 'bi-check2-square', phase: 'EXECUTION' },
-        { label: 'المراجعات الدورية', href: '/reviews.html', icon: 'bi-journal-check', phase: 'ADAPTATION' },
+        { label: 'المراجعات', href: '/reviews.html', icon: 'bi-journal-check', phase: 'ADAPTATION' },
       ],
       allowedPages: [
-        '/onboarding.html', '/select-type', '/internal-env.html', '/dept-deep.html', '/company-health.html', '/swot.html', '/stakeholders.html',
-        '/directions.html', '/objectives.html', '/kpis.html',
+        '/onboarding.html', '/company-health.html', '/swot.html', '/tows.html',
+        '/stakeholders.html', '/dept-deep.html', '/benchmarking.html',
+        '/directions.html', '/objectives.html', '/kpis.html', '/okrs.html',
         '/initiatives.html', '/tasks.html', '/kpi-entries.html', '/reviews.html',
         '/dashboard.html', '/tools.html', '/tool-detail.html',
         '/settings.html', '/settings-data.html', '/entities.html',
       ],
     },
 
-    // ─── 4. نامية طموحة ───
-    growing_ambitious: {
-      name: 'مسار التميز التنافسي',
-      nameEn: 'Competitive Edge Path',
-      emoji: '🚀',
-      color: '#3b82f6',
-      description: 'تحليل تنافسي + تخطيط التميز + تنفيذ سريع',
-      estimatedTime: '4-6 ساعات',
-      steps: [
-        { label: 'PESTEL', href: '/pestel.html', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
-        { label: 'قوى بورتر', href: '/tool-detail.html?code=PORTER', icon: 'bi-shield-check', phase: 'DIAGNOSIS' },
-        { label: 'المقارنة المعيارية', href: '/benchmarking.html', icon: 'bi-bar-chart-line', phase: 'DIAGNOSIS' },
-        { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-heart-pulse', phase: 'DIAGNOSIS' },
-        { label: 'سلسلة القيمة', href: '/tool-detail.html?code=VALUE_CHAIN', icon: 'bi-link-45deg', phase: 'DIAGNOSIS' },
-        { label: 'تحليل SWOT', href: '/swot.html', icon: 'bi-grid-3x3-gap', phase: 'DIAGNOSIS' },
-        { label: 'مصفوفة TOWS', href: '/tows.html', icon: 'bi-arrows-fullscreen', phase: 'PLANNING' },
-        { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass', phase: 'PLANNING' },
-        { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye', phase: 'PLANNING' },
-        { label: 'مؤشرات الأداء', href: '/kpis.html', icon: 'bi-graph-up-arrow', phase: 'PLANNING' },
-        { label: 'OKRs', href: '/okrs.html', icon: 'bi-layers', phase: 'PLANNING' },
-        { label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban', phase: 'EXECUTION' },
-      ],
-      allowedPages: [
-        '/onboarding.html', '/select-type', '/internal-env.html', '/swot.html', '/dept-deep.html', '/company-health.html', '/tool-detail.html?code=PESTEL', '/tows.html',
-        '/directions.html', '/objectives.html', '/kpis.html', '/okrs.html',
-        '/initiatives.html', '/tasks.html', '/kpi-entries.html', '/benchmarking.html',
-        '/dashboard.html', '/tools.html', '/tool-detail.html',
-        '/settings.html', '/settings-data.html', '/entities.html',
-      ],
-    },
-
-    // ─── 5. متعثرة مالياً ───
-    financial_struggling: {
-      name: 'مسار الإنقاذ المالي',
-      nameEn: 'Financial Rescue Path',
-      emoji: '💰',
-      color: '#dc2626',
-      description: 'وقف النزيف المالي + خفض تكاليف + تنويع إيرادات',
-      estimatedTime: '3-4 ساعات',
-      steps: [
-        { label: 'PESTEL', href: '/pestel.html', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
-        { label: 'قوى بورتر', href: '/tool-detail.html?code=PORTER', icon: 'bi-shield-check', phase: 'DIAGNOSIS' },
-        { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-heart-pulse', phase: 'DIAGNOSIS' },
-        { label: 'سلسلة القيمة', href: '/tool-detail.html?code=VALUE_CHAIN', icon: 'bi-link-45deg', phase: 'DIAGNOSIS' },
-        { label: 'خريطة المخاطر', href: '/risk-map.html', icon: 'bi-exclamation-triangle', phase: 'DIAGNOSIS' },
-        { label: 'تحليل SWOT', href: '/swot.html', icon: 'bi-grid-3x3-gap', phase: 'DIAGNOSIS' },
-        { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass', phase: 'PLANNING' },
-        { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye', phase: 'PLANNING' },
-        { label: 'مؤشرات الأداء', href: '/kpis.html', icon: 'bi-graph-up-arrow', phase: 'PLANNING' },
-        { label: 'القرارات المالية', href: '/financial.html', icon: 'bi-cash-stack', phase: 'EXECUTION' },
-        { label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban', phase: 'EXECUTION' },
-        { label: 'التصحيحات', href: '/corrections.html', icon: 'bi-arrow-repeat', phase: 'ADAPTATION' },
-      ],
-      allowedPages: [
-        '/onboarding.html', '/select-type', '/company-health.html', '/internal-env.html', '/swot.html', '/tool-detail.html?code=PESTEL', '/risk-map.html',
-        '/directions.html', '/objectives.html', '/kpis.html', '/financial.html',
-        '/initiatives.html', '/kpi-entries.html', '/corrections.html',
-        '/dashboard.html', '/tools.html', '/tool-detail.html',
-        '/settings.html', '/settings-data.html', '/entities.html',
-      ],
-    },
-
-    // ─── 6. ناضجة تحتاج تجديد ───
-    mature_renewing: {
-      name: 'مسار التجديد الاستراتيجي',
-      nameEn: 'Strategic Renewal Path',
-      emoji: '🏢',
-      color: '#8b5cf6',
-      description: 'تشخيص فجوات + تخطيط تحوّلي + ابتكار',
-      estimatedTime: '5-7 ساعات',
-      steps: [
-        { label: 'PESTEL', href: '/pestel.html', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
-        { label: 'التقييمات', href: '/assessments.html', icon: 'bi-clipboard-check', phase: 'DIAGNOSIS' },
-        { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-heart-pulse', phase: 'DIAGNOSIS' },
-        { label: 'سلسلة القيمة', href: '/tool-detail.html?code=VALUE_CHAIN', icon: 'bi-link-45deg', phase: 'DIAGNOSIS' },
-        { label: 'القدرات الجوهرية', href: '/tool-detail.html?code=CORE_COMPETENCY', icon: 'bi-trophy', phase: 'DIAGNOSIS' },
-        { label: 'تحليل SWOT', href: '/swot.html', icon: 'bi-grid-3x3-gap', phase: 'DIAGNOSIS' },
-        { label: 'مصفوفة TOWS', href: '/tows.html', icon: 'bi-arrows-fullscreen', phase: 'PLANNING' },
-        { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass', phase: 'PLANNING' },
-        { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye', phase: 'PLANNING' },
-        { label: 'مؤشرات الأداء', href: '/kpis.html', icon: 'bi-graph-up-arrow', phase: 'PLANNING' },
-        { label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban', phase: 'EXECUTION' },
-        { label: 'السيناريوهات', href: '/scenarios.html', icon: 'bi-bezier2', phase: 'ADAPTATION' },
-      ],
-      allowedPages: [
-        '/onboarding.html', '/select-type', '/assessments.html', '/internal-env.html', '/dept-deep.html', '/company-health.html', '/swot.html',
-        '/tool-detail.html?code=PESTEL', '/tows.html', '/directions.html', '/objectives.html', '/kpis.html',
-        '/initiatives.html', '/tasks.html', '/kpi-entries.html', '/scenarios.html', '/reviews.html',
-        '/dashboard.html', '/tools.html', '/tool-detail.html',
-        '/settings.html', '/settings-data.html', '/entities.html',
-      ],
-    },
-
-    // ─── 7. ناضجة تنافسية ───
+    // ─── 4. مسار التميز 🏆 ───
     mature_competitive: {
-      name: 'مسار قيادة السوق',
+      name: 'مسار التميز',
       nameEn: 'Market Leadership Path',
       emoji: '🏆',
       color: '#6366f1',
-      description: 'تحليل تنافسي شامل + توسع مدروس + ذكاء تنافسي',
-      estimatedTime: '6-8 ساعات',
+      description: 'تحليل تنافسي شامل + سيناريوهات + ذكاء استراتيجي',
+      estimatedTime: '6-10 ساعات',
       steps: [
-        { label: 'PESTEL', href: '/pestel.html', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
+        { label: 'PESTEL', href: '/tool-detail.html?code=PESTEL', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
         { label: 'قوى بورتر', href: '/tool-detail.html?code=PORTER', icon: 'bi-shield-check', phase: 'DIAGNOSIS' },
         { label: 'المقارنة المعيارية', href: '/benchmarking.html', icon: 'bi-bar-chart-line', phase: 'DIAGNOSIS' },
         { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-heart-pulse', phase: 'DIAGNOSIS' },
@@ -216,152 +201,83 @@
         { label: 'القدرات الجوهرية', href: '/tool-detail.html?code=CORE_COMPETENCY', icon: 'bi-trophy', phase: 'DIAGNOSIS' },
         { label: 'تحليل SWOT', href: '/swot.html', icon: 'bi-grid-3x3-gap', phase: 'DIAGNOSIS' },
         { label: 'مصفوفة TOWS', href: '/tows.html', icon: 'bi-arrows-fullscreen', phase: 'PLANNING' },
-        { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass', phase: 'PLANNING' },
+        { label: 'التوجهات', href: '/directions.html', icon: 'bi-compass', phase: 'PLANNING' },
         { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye', phase: 'PLANNING' },
         { label: 'مؤشرات الأداء', href: '/kpis.html', icon: 'bi-graph-up-arrow', phase: 'PLANNING' },
         { label: 'OKRs', href: '/okrs.html', icon: 'bi-layers', phase: 'PLANNING' },
         { label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban', phase: 'EXECUTION' },
         { label: 'السيناريوهات', href: '/scenarios.html', icon: 'bi-bezier2', phase: 'ADAPTATION' },
-        { label: 'المراجعات الدورية', href: '/reviews.html', icon: 'bi-journal-check', phase: 'ADAPTATION' },
+        { label: 'المراجعات', href: '/reviews.html', icon: 'bi-journal-check', phase: 'ADAPTATION' },
       ],
-      allowedPages: [
-        '/onboarding.html', '/select-type', '/internal-env.html', '/dept-deep.html', '/company-health.html', '/swot.html', '/pestel.html', '/benchmarking.html',
-        '/tows.html', '/directions.html', '/objectives.html', '/kpis.html', '/okrs.html',
-        '/initiatives.html', '/tasks.html', '/kpi-entries.html', '/scenarios.html', '/reviews.html',
-        '/dashboard.html', '/tools.html', '/tool-detail.html', '/intelligence.html',
-        '/settings.html', '/settings-data.html', '/entities.html',
-      ],
+      allowedPages: null, // كل شي مفتوح
     },
 
-    // ─── 8. المسار الاحترافي الشامل (كل الأدوات مفتوحة) ───
+    // ─── 5. المسار الاحترافي الشامل (الافتراضي) ───
     default_strategic: {
-      name: 'المسار الاحترافي الشامل',
+      name: 'المسار الشامل',
       nameEn: 'Professional Comprehensive Path',
       emoji: '🧭',
       color: '#667eea',
       description: 'كل الأدوات والتحليلات متاحة — للمحترفين والاستشاريين',
       estimatedTime: '6-10 ساعات',
       steps: [
-        { label: 'PESTEL', href: '/pestel.html', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
+        { label: 'PESTEL', href: '/tool-detail.html?code=PESTEL', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
         { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-heart-pulse', phase: 'DIAGNOSIS' },
         { label: 'استكشاف الإدارات', href: '/dept-deep.html', icon: 'bi-building-fill-gear', phase: 'DIAGNOSIS' },
         { label: 'سلسلة القيمة', href: '/tool-detail.html?code=VALUE_CHAIN', icon: 'bi-link-45deg', phase: 'DIAGNOSIS' },
         { label: 'تحليل SWOT', href: '/swot.html', icon: 'bi-grid-3x3-gap', phase: 'DIAGNOSIS' },
         { label: 'مصفوفة TOWS', href: '/tows.html', icon: 'bi-arrows-fullscreen', phase: 'PLANNING' },
-        { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass', phase: 'PLANNING' },
+        { label: 'التوجهات', href: '/directions.html', icon: 'bi-compass', phase: 'PLANNING' },
         { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye', phase: 'PLANNING' },
         { label: 'مؤشرات الأداء', href: '/kpis.html', icon: 'bi-graph-up-arrow', phase: 'PLANNING' },
         { label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban', phase: 'EXECUTION' },
         { label: 'المهام', href: '/tasks.html', icon: 'bi-check2-square', phase: 'EXECUTION' },
         { label: 'إدخال المؤشرات', href: '/kpi-entries.html', icon: 'bi-pencil-square', phase: 'EXECUTION' },
-        { label: 'المراجعات الدورية', href: '/reviews.html', icon: 'bi-journal-check', phase: 'ADAPTATION' },
+        { label: 'المراجعات', href: '/reviews.html', icon: 'bi-journal-check', phase: 'ADAPTATION' },
       ],
-      allowedPages: null, // null = كل الصفحات مسموحة (المسار الكلاسيكي)
+      allowedPages: null, // كل شي مفتوح
     },
-
-    // ─── 9. المسار الذهبي (خيط ذهبي — 6 مراحل متكاملة) ───
-    golden_express: {
-      name: 'المسار الذهبي',
-      nameEn: 'Golden Path',
-      emoji: '✨',
-      color: '#f59e0b',
-      description: '6 مراحل متكاملة: البنية → التشخيص → التحليل → الخيارات → التنفيذ → المتابعة',
-      estimatedTime: '4-6 ساعات',
-      steps: [
-        { label: '🏗️ بنيتنا', href: '/onboarding.html', icon: 'bi-building-gear', phase: 'FOUNDATION' },
-        { label: '🔍 تشخيصي', href: '/pestel.html', icon: 'bi-search-heart', phase: 'DIAGNOSIS' },
-        { label: '🎯 خياراتي', href: '/tows.html', icon: 'bi-signpost-split', phase: 'PLANNING' },
-        { label: '🚀 تنفيذي', href: '/initiatives.html', icon: 'bi-rocket-takeoff', phase: 'EXECUTION' },
-        { label: '📊 متابعتي', href: '/reviews.html', icon: 'bi-bar-chart-line', phase: 'ADAPTATION' },
-      ],
-      allowedPages: [
-        // بنيتنا
-        '/onboarding.html', '/entities.html', '/sectors.html', '/settings-data.html',
-        // تشخيصي
-        '/pestel.html', '/assessments.html', '/company-health.html', '/internal-env.html',
-        '/stakeholders.html', '/risk-map.html', '/statistical-data.html',
-        // خياراتي
-        '/tows.html', '/directions.html', '/objectives.html', '/kpis.html', '/okrs.html',
-        // تنفيذي
-        '/initiatives.html', '/projects.html', '/tasks.html', '/kpi-entries.html',
-        // متابعتي
-        '/reviews.html', '/intelligence.html', '/corrections.html', '/strategic-calendar.html',
-        // نظامية دائمة
-        '/dashboard.html', '/settings.html', '/tools.html', '/tool-detail.html',
-      ],
-    },
-
-    // ─── 10. مسار التحسين التشغيلي 🆕 ───
-    operational_tactical: {
-      name: 'مسار التحسين التشغيلي',
-      nameEn: 'Operational Improvement Path',
-      emoji: '⚙️',
-      color: '#6b7280',
-      description: 'تحسين العمليات + رفع الكفاءة + مؤشرات تشغيلية',
-      estimatedTime: '3-5 أيام',
-      steps: [
-        { label: 'PESTEL', href: '/tool-detail.html?code=PESTEL', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
-        { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-heart-pulse', phase: 'DIAGNOSIS' },
-        { label: 'سلسلة القيمة', href: '/tool-detail.html?code=VALUE_CHAIN', icon: 'bi-link-45deg', phase: 'DIAGNOSIS' },
-        { label: 'تحليل SWOT', href: '/swot.html', icon: 'bi-grid-3x3-gap', phase: 'DIAGNOSIS' },
-        { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass', phase: 'PLANNING' },
-        { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye', phase: 'PLANNING' },
-        { label: 'مؤشرات الأداء', href: '/kpis.html', icon: 'bi-graph-up-arrow', phase: 'PLANNING' },
-        { label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban', phase: 'EXECUTION' },
-        { label: 'المهام', href: '/tasks.html', icon: 'bi-check2-square', phase: 'EXECUTION' },
-      ],
-      allowedPages: [
-        '/onboarding.html', '/select-type', '/internal-env.html', '/dept-deep.html', '/company-health.html',
-        '/directions.html', '/objectives.html', '/kpis.html',
-        '/initiatives.html', '/tasks.html', '/kpi-entries.html',
-        '/dashboard.html', '/tools.html', '/tool-detail.html',
-        '/settings.html', '/settings-data.html', '/entities.html',
-      ],
-    },
-
-    // ─── 11. مسار إدارة الأزمات والمخاطر 🆕 ───
-    emergency_risk: {
-      name: 'مسار إدارة الأزمات والمخاطر',
-      nameEn: 'Crisis & Risk Management Path',
-      emoji: '🛡️',
-      color: '#b91c1c',
-      description: 'تقييم المخاطر + سيناريوهات بديلة + خطة طوارئ',
-      estimatedTime: '1-2 يوم',
-      steps: [
-        { label: 'PESTEL', href: '/tool-detail.html?code=PESTEL', icon: 'bi-globe2', phase: 'DIAGNOSIS' },
-        { label: 'خريطة المخاطر', href: '/risk-map.html', icon: 'bi-exclamation-triangle', phase: 'DIAGNOSIS' },
-        { label: 'صحة الشركة', href: '/company-health.html', icon: 'bi-heart-pulse', phase: 'DIAGNOSIS' },
-        { label: 'تحليل SWOT', href: '/swot.html', icon: 'bi-grid-3x3-gap', phase: 'DIAGNOSIS' },
-        { label: 'السيناريوهات', href: '/scenarios.html', icon: 'bi-bezier2', phase: 'PLANNING' },
-        { label: 'التوجهات الاستراتيجية', href: '/directions.html', icon: 'bi-compass', phase: 'PLANNING' },
-        { label: 'الأهداف', href: '/objectives.html', icon: 'bi-bullseye', phase: 'PLANNING' },
-        { label: 'المبادرات', href: '/initiatives.html', icon: 'bi-kanban', phase: 'EXECUTION' },
-        { label: 'التصحيحات', href: '/corrections.html', icon: 'bi-arrow-repeat', phase: 'ADAPTATION' },
-      ],
-      allowedPages: [
-        '/onboarding.html', '/select-type', '/risk-map.html', '/company-health.html', '/internal-env.html', '/pestel.html', '/swot.html',
-        '/scenarios.html', '/directions.html', '/objectives.html', '/kpis.html',
-        '/initiatives.html', '/corrections.html', '/kpi-entries.html',
-        '/dashboard.html', '/tools.html', '/tool-detail.html',
-        '/settings.html', '/settings-data.html', '/entities.html',
-      ],
-    },
-
   };
 
   // ═══════════════════════════════════════════════
-  // 2. الدوال الأساسية
+  // 3. الدوال الأساسية
   // ═══════════════════════════════════════════════
 
   /**
-   * قراءة نمط الشركة من localStorage
+   * تحديد الحزمة من حجم المنشأة
+   */
+  function getPackage() {
+    let size = 0;
+    try {
+      // من بيانات التشخيص
+      const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || '{}');
+      const sizeMap = { micro: 5, small: 15, medium: 60, large: 200 };
+      size = sizeMap[diag.entity_size] || sizeMap[diag.teamSize] || 0;
+
+      // من بيانات onboarding
+      if (!size) {
+        const ob = JSON.parse(localStorage.getItem('onboarding_data') || '{}');
+        const obMap = { '1-10': 10, '1_10': 10, '11-50': 30, '11_50': 30, '51-200': 100, '51_200': 100, '200+': 250, '201-500': 350, '500+': 500 };
+        size = obMap[ob.orgSize] || 0;
+      }
+    } catch (e) { /* ignore */ }
+
+    if (size <= 30) return 'basic';
+    if (size <= 150) return 'professional';
+    return 'enterprise';
+  }
+
+  /**
+   * قراءة نمط المسار من localStorage أو التشخيص
    */
   function getPatternKey() {
     try {
       const pa = window.Context ? JSON.stringify(Context.getItem('pain_ambition', {})) : localStorage.getItem('painAmbition');
       if (pa) {
         const parsed = JSON.parse(pa);
-        return parsed.patternKey || 'default_strategic';
+        const key = parsed.patternKey || 'default_strategic';
+        // تأكد إن المسار موجود (لا نرجع مسار محذوف)
+        return PATH_DEFINITIONS[key] ? key : 'default_strategic';
       }
     } catch (e) { /* ignore */ }
     return 'default_strategic';
@@ -372,10 +288,8 @@
    */
   function isPathMode() {
     const mode = localStorage.getItem('pathMode');
-    // افتراضياً مفعّل إذا عنده نمط محدد
     if (mode === 'classic') return false;
     if (mode === 'smart') return true;
-    // إذا ما اختار — مفعّل تلقائياً إذا عنده patternKey
     return getPatternKey() !== 'default_strategic';
   }
 
@@ -385,7 +299,6 @@
   function toggleMode() {
     const current = isPathMode();
     localStorage.setItem('pathMode', current ? 'classic' : 'smart');
-    // إعادة تحميل الصفحة لتحديث الـ Sidebar
     window.location.reload();
   }
 
@@ -393,56 +306,75 @@
    * إرجاع تعريف المسار الحالي
    */
   function getPath() {
-    if (!isPathMode()) return null; // الوضع الكلاسيكي
+    if (!isPathMode()) return null;
     const key = getPatternKey();
     return PATH_DEFINITIONS[key] || PATH_DEFINITIONS.default_strategic;
   }
 
   /**
-   * هل هذه الصفحة مسموح بها في المسار الحالي؟
+   * هل هذه الصفحة مسموح بها؟ (يجمع بين الحزمة والمسار)
    */
   function isPageAllowed(href) {
-    if (!isPathMode()) return true; // الكلاسيكي = كل شي مسموح
-    const path = getPath();
-    if (!path || !path.allowedPages) return true; // null = كل شي مسموح
-    // نتحقق من الصفحة (بدون query string)
     const clean = href.split('?')[0];
+
+    // فحص الحزمة أولاً
+    const pkg = PACKAGES[getPackage()];
+    if (pkg && pkg.allowedPages && !pkg.allowedPages.includes(clean)) {
+      return false;
+    }
+
+    // فحص المسار الذكي
+    if (!isPathMode()) return true;
+    const path = getPath();
+    if (!path || !path.allowedPages) return true;
     return path.allowedPages.includes(clean);
   }
 
   /**
-   * دالة مساعدة لتصفية العناصر بناءً على الصفحات المسموحة (تطبيق مبدأ DRY)
+   * دالة مساعدة لتصفية العناصر
    */
-  function filterByAllowedPages(items, path) {
-    if (!path || !path.allowedPages) return items;
+  function filterByAllowedPages(items, allowedPages) {
+    if (!allowedPages) return items;
     return items.filter(item => {
       const clean = item.href.split('?')[0];
-      return path.allowedPages.includes(clean);
+      return allowedPages.includes(clean);
     });
   }
 
   /**
-   * فلترة عناصر phase بناءً على المسار
+   * فلترة عناصر phase بناءً على الحزمة + المسار
    */
   function filterPhaseItems(items) {
-    if (!isPathMode()) return items;
-    return filterByAllowedPages(items, getPath());
+    let filtered = items;
+
+    // فلتر الحزمة
+    const pkg = PACKAGES[getPackage()];
+    if (pkg && pkg.allowedPages) {
+      filtered = filterByAllowedPages(filtered, pkg.allowedPages);
+    }
+
+    // فلتر المسار الذكي
+    if (isPathMode()) {
+      const path = getPath();
+      if (path && path.allowedPages) {
+        filtered = filterByAllowedPages(filtered, path.allowedPages);
+      }
+    }
+
+    return filtered;
   }
 
   /**
    * فلترة مراحل الرحلة — إخفاء المراحل الفارغة
    */
   function filterPhases(phases) {
-    if (!isPathMode()) return phases;
-    const path = getPath();
     return phases.map(phase => {
-      return { ...phase, items: filterByAllowedPages(phase.items, path) };
+      return { ...phase, items: filterPhaseItems(phase.items) };
     }).filter(phase => phase.items.length > 0);
   }
 
   /**
    * حساب تقدم المسار الذكي
-   * يعتمد على localStorage لتتبع الصفحات المزارة
    */
   function getSmartProgress() {
     const path = getPath();
@@ -471,31 +403,29 @@
     const visited = getVisitedPages();
     if (!visited.includes(page)) {
       visited.push(page);
-      if (visited.length > 50) visited.shift(); // حماية الذاكرة: الاحتفاظ بآخر 50 زيارة فقط
+      if (visited.length > 50) visited.shift();
       localStorage.setItem('pathVisited', JSON.stringify(visited));
     }
   }
 
-  /**
-   * إرجاع الصفحات المزارة
-   */
   function getVisitedPages() {
     try {
       return JSON.parse(localStorage.getItem('pathVisited') || '[]');
     } catch (e) { return []; }
   }
 
-  /**
-   * بناء HTML شريط التقدم الذكي
-   */
+  // ═══════════════════════════════════════════════
+  // 4. واجهة المستخدم — شريط التقدم
+  // ═══════════════════════════════════════════════
+
   function buildProgressHTML() {
     const path = getPath();
     if (!path) return '';
 
     const progress = getSmartProgress();
+    const pkg = PACKAGES[getPackage()];
     const phaseGroups = {};
 
-    // تجميع الخطوات حسب المرحلة
     progress.steps.forEach(step => {
       if (!phaseGroups[step.phase]) phaseGroups[step.phase] = [];
       phaseGroups[step.phase].push(step);
@@ -532,6 +462,7 @@
           <div class="spe-path-meta">
             <span>⏱️ ${path.estimatedTime}</span>
             <span>📊 ${progress.completed}/${progress.total}</span>
+            <span style="color:${pkg.color}">${pkg.emoji} ${pkg.name}</span>
           </div>
         </div>
 
@@ -554,9 +485,6 @@
     `;
   }
 
-  /**
-   * بناء HTML زر التبديل في الوضع الكلاسيكي
-   */
   function buildClassicToggleHTML() {
     const key = getPatternKey();
     if (key === 'default_strategic') return '';
@@ -575,7 +503,7 @@
   }
 
   // ═══════════════════════════════════════════════
-  // 3. CSS
+  // 5. CSS
   // ═══════════════════════════════════════════════
 
   function injectStyles() {
@@ -583,7 +511,6 @@
     const style = document.createElement('style');
     style.id = 'spe-styles';
     style.textContent = `
-      /* Smart Path Engine */
       .spe-container {
         margin: 6px 10px;
         padding: 12px;
@@ -591,143 +518,37 @@
         background: rgba(102, 126, 234, 0.06);
         border: 1px solid rgba(102, 126, 234, 0.15);
       }
-      .spe-header {
-        margin-bottom: 8px;
-      }
-      .spe-path-name {
-        font-size: 13px;
-        font-weight: 800;
-        margin-bottom: 4px;
-      }
-      .spe-path-meta {
-        display: flex;
-        gap: 12px;
-        font-size: 10.5px;
-        color: var(--text-muted, #94a3b8);
-      }
-      .spe-progress-bar {
-        height: 6px;
-        background: rgba(255,255,255,0.08);
-        border-radius: 3px;
-        overflow: hidden;
-        margin: 8px 0 4px;
-      }
-      .spe-progress-fill {
-        height: 100%;
-        border-radius: 3px;
-        transition: width 0.5s ease;
-      }
-      .spe-progress-text {
-        font-size: 10px;
-        color: var(--text-muted, #94a3b8);
-        text-align: center;
-        margin-bottom: 8px;
-      }
-      .spe-phase-label {
-        font-size: 10px;
-        font-weight: 700;
-        color: var(--text-muted, #94a3b8);
-        margin: 8px 0 4px;
-        padding-right: 4px;
-      }
-      .spe-step {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 6px 8px;
-        border-radius: 8px;
-        text-decoration: none;
-        color: var(--text, #e2e8f0);
-        font-size: 12px;
-        transition: all 0.2s;
-        opacity: 0.7;
-      }
-      .spe-step:hover {
-        background: rgba(255,255,255,0.06);
-        opacity: 1;
-      }
-      .spe-step.done {
-        opacity: 0.5;
-      }
-      .spe-step.current {
-        background: rgba(102, 126, 234, 0.15);
-        opacity: 1;
-        font-weight: 700;
-        border-right: 3px solid var(--primary, #667eea);
-      }
-      .spe-step-num {
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.08);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 10px;
-        font-weight: 700;
-        flex-shrink: 0;
-      }
-      .spe-step.done .spe-step-num {
-        background: none;
-        font-size: 14px;
-      }
-      .spe-step-label {
-        flex: 1;
-      }
-      .spe-toggle {
-        margin-top: 10px;
-        padding-top: 8px;
-        border-top: 1px solid rgba(255,255,255,0.06);
-      }
-      .spe-toggle-btn {
-        width: 100%;
-        padding: 7px 12px;
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 8px;
-        background: rgba(255,255,255,0.04);
-        color: var(--text-muted, #94a3b8);
-        font-size: 11px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        justify-content: center;
-        transition: all 0.2s;
-        font-family: inherit;
-      }
-      .spe-toggle-btn:hover {
-        background: rgba(255,255,255,0.08);
-        color: var(--text, #e2e8f0);
-      }
-      .spe-toggle-smart {
-        background: rgba(102, 126, 234, 0.08);
-        border-color: rgba(102, 126, 234, 0.2);
-        color: #667eea;
-      }
-      .spe-toggle-smart:hover {
-        background: rgba(102, 126, 234, 0.15);
-      }
-      .spe-classic-toggle {
-        margin: 6px 10px;
-      }
+      .spe-header { margin-bottom: 8px; }
+      .spe-path-name { font-size: 13px; font-weight: 800; margin-bottom: 4px; }
+      .spe-path-meta { display: flex; gap: 12px; font-size: 10.5px; color: var(--text-muted, #94a3b8); }
+      .spe-progress-bar { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; margin: 8px 0 4px; }
+      .spe-progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+      .spe-progress-text { font-size: 10px; color: var(--text-muted, #94a3b8); text-align: center; margin-bottom: 8px; }
+      .spe-phase-label { font-size: 10px; font-weight: 700; color: var(--text-muted, #94a3b8); margin: 8px 0 4px; padding-right: 4px; }
+      .spe-step { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 8px; text-decoration: none; color: var(--text, #e2e8f0); font-size: 12px; transition: all 0.2s; opacity: 0.7; }
+      .spe-step:hover { background: rgba(255,255,255,0.06); opacity: 1; }
+      .spe-step.done { opacity: 0.5; }
+      .spe-step.current { background: rgba(102, 126, 234, 0.15); opacity: 1; font-weight: 700; border-right: 3px solid var(--primary, #667eea); }
+      .spe-step-num { width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+      .spe-step.done .spe-step-num { background: none; font-size: 14px; }
+      .spe-step-label { flex: 1; }
+      .spe-toggle { margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06); }
+      .spe-toggle-btn { width: 100%; padding: 7px 12px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; background: rgba(255,255,255,0.04); color: var(--text-muted, #94a3b8); font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 6px; justify-content: center; transition: all 0.2s; font-family: inherit; }
+      .spe-toggle-btn:hover { background: rgba(255,255,255,0.08); color: var(--text, #e2e8f0); }
+      .spe-toggle-smart { background: rgba(102, 126, 234, 0.08); border-color: rgba(102, 126, 234, 0.2); color: #667eea; }
+      .spe-toggle-smart:hover { background: rgba(102, 126, 234, 0.15); }
+      .spe-classic-toggle { margin: 6px 10px; }
     `;
     document.head.appendChild(style);
   }
 
   // ═══════════════════════════════════════════════
-  // 4. Dept-Deep Gating — قفل SWOT حتى تكتمل 3 إدارات
+  // 6. Dept-Deep Gating
   // ═══════════════════════════════════════════════
 
-  /** الحد الأدنى من الإدارات المكتملة لفتح البوابة */
   const DEPT_GATE_MIN = 1;
+  const GATED_PAGES = ['/pestel.html'];
 
-  /** الصفحات المقفلة خلف بوابة الإدارات */
-  const GATED_PAGES = ['/pestel.html']; // تم إزالة swot و tows لمنع الحظر الخاطئ أثناء جلب البيانات
-
-  /**
-   * قراءة حالة الإدارات المكتملة في dept-deep
-   * @returns {{ completed: string[], pending: string[], total: number }}
-   */
   function getDeptDeepStatus() {
     const ALL_DEPT_KEYS = ['compliance', 'finance', 'hr', 'sales', 'marketing', 'operations', 'support'];
     var completed = [], pending = [];
@@ -746,35 +567,32 @@
     return { completed: completed, pending: pending, total: ALL_DEPT_KEYS.length };
   }
 
-  /**
-   * هل بوابة الإدارات مفتوحة؟ (إدارة واحدة مكتملة على الأقل)
-   */
   function isDeptDeepGateOpen() {
     return getDeptDeepStatus().completed.length >= DEPT_GATE_MIN;
   }
 
-  /**
-   * هل هذه الصفحة مقفلة خلف بوابة الإدارات؟
-   */
   function isPageGated(href) {
     var clean = (href || '').split('?')[0];
     return GATED_PAGES.indexOf(clean) >= 0;
   }
 
   // ═══════════════════════════════════════════════
-  // 5. تهيئة تلقائية
+  // 7. تهيئة تلقائية
   // ═══════════════════════════════════════════════
 
   injectStyles();
   trackPageVisit();
 
-  // ✅ تم إزالة Gating الإجباري الذي كان يمنع عرض الصفحة ويعتمد على localStorage، لمنع أي تضارب
-
   // ═══════════════════════════════════════════════
-  // 6. تصدير API عام
+  // 8. تصدير API عام
   // ═══════════════════════════════════════════════
 
   window.PathEngine = {
+    // الحزم
+    PACKAGES,
+    getPackage,
+
+    // المسارات
     getPath,
     getPatternKey,
     isPathMode,
@@ -787,18 +605,12 @@
     buildClassicToggleHTML,
     PATH_DEFINITIONS,
 
-    // ═══ Dept-Deep Gating API ═══
+    // Dept-Deep Gating
     getDeptDeepStatus,
     isDeptDeepGateOpen,
     isPageGated,
     DEPT_GATE_MIN,
 
-    /**
-     * حساب الخطوات مع Gating — مثل Manager Journey
-     * كل خطوة: completed | available | locked
-     * يُطبّق أيضاً بوابة الإدارات على صفحات SWOT
-     * @returns {Array|null} خطوات مع status، أو null لو مو في المسار الذكي
-     */
     calculateAllowedSteps: function () {
       var path = getPath();
       if (!path || !path.steps) return null;
@@ -810,7 +622,6 @@
         var clean = step.href.split('?')[0];
         var isDone = visited.indexOf(clean) >= 0;
         var isCurrent = currentPage === clean;
-        // الخطوة الأولى دائماً متاحة، الباقي يعتمد على اللي قبلها
         var prevClean = idx > 0 ? path.steps[idx - 1].href.split('?')[0] : null;
         var prevDone = idx === 0 || visited.indexOf(prevClean) >= 0;
 
@@ -819,7 +630,6 @@
         else if (isCurrent) status = 'current';
         else if (prevDone) status = 'available';
 
-        // ═══ بوابة الإدارات: أقفل SWOT/Analysis/TOWS إذا ما كملت 3 إدارات ═══
         if (isPageGated(clean) && !gateOpen && status !== 'completed') {
           status = 'locked';
         }
@@ -832,7 +642,7 @@
           index: idx + 1,
           status: status,
           clickable: status !== 'locked',
-          gated: isPageGated(clean) && !gateOpen // علامة إضافية للـ UI
+          gated: isPageGated(clean) && !gateOpen
         };
       });
     },

@@ -1,47 +1,113 @@
 /**
- * Startix — Diagnostic Engine v2.4 (Bulletproof Edition)
- * المحرك المركزي لتحديد المسار الاستراتيجي — الربط بين UI والمنطق الاستشاري.
+ * Startix — Diagnostic Engine v3.0
+ * المحرك المركزي لتحديد المسار الاستراتيجي + الحزمة
+ *
+ * المبدأ:
+ *   الحزمة = حجم المنشأة (سؤال Q4)
+ *   المسار = كل الأسئلة التسعة مجتمعة (scoring system)
+ *
+ * المسارات المتاحة (5 فقط — لا كود ميّت):
+ *   emergency_risk    → أزمة / سيولة حرجة
+ *   nascent_cautious  → ناشئة / تأسيس
+ *   growing_chaotic   → نمو سريع / تنظيم
+ *   mature_competitive→ ناضجة / تميز
+ *   default_strategic → شامل (الافتراضي)
  */
 
 export const DiagnosticEngine = (function () {
     'use strict';
 
-    // ═══════════════════════════════════════════
+    // ═══════════════════════════════════════════════
     // 1. خريطة تحديد المسار — صاحب مشروع (Owner)
-    // ═══════════════════════════════════════════
+    //    يستخدم كل الـ 9 أسئلة عبر نظام نقاط
+    // ═══════════════════════════════════════════════
 
     function determineOwnerPath(answers) {
-        const { stage, entity_size, sector, fin, res, gov, scale, exit } = answers;
+        const { stage, entity_size, sector, fin, res, gov, scale, exit, dep } = answers;
 
-        // ١. تصنيف الحجم (تطابق مع UI)
         const sizeCategory = classifySize(entity_size);
 
-        // ٢. قواعد التوجيه الاستراتيجي (Forensic Logic)
+        // ═══ نظام النقاط — كل سؤال يأثر على المسار ═══
+        const scores = {
+            emergency_risk: 0,
+            nascent_cautious: 0,
+            growing_chaotic: 0,
+            mature_competitive: 0,
+            default_strategic: 0,
+        };
+
+        // ── Q3: مرحلة المنشأة (stage) — أقوى مؤشر ──
+        if (stage === 'struggle') scores.emergency_risk += 40;
+        else if (stage === 'startup') scores.nascent_cautious += 35;
+        else if (stage === 'scaling') scores.growing_chaotic += 30;
+        else if (stage === 'stable') scores.mature_competitive += 25;
+
+        // ── Q4: حجم الفريق (entity_size) ──
+        if (entity_size === 'micro') scores.nascent_cautious += 15;
+        else if (entity_size === 'small') scores.nascent_cautious += 10;
+        else if (entity_size === 'medium') scores.growing_chaotic += 10;
+        else if (entity_size === 'large') scores.mature_competitive += 10;
+
+        // ── Q5: اعتمادية المالك (dep) ──
+        if (dep === 'total') { scores.nascent_cautious += 10; scores.emergency_risk += 5; }
+        else if (dep === 'high') scores.growing_chaotic += 5;
+        else if (dep === 'low') scores.mature_competitive += 10;
+
+        // ── Q6: تتبع مالي (fin) ──
+        if (fin === 'none') { scores.emergency_risk += 15; scores.nascent_cautious += 5; }
+        else if (fin === 'manual') scores.growing_chaotic += 5;
+        else if (fin === 'good') scores.growing_chaotic += 5;
+        else if (fin === 'perfect') scores.mature_competitive += 15;
+
+        // ── Q7: السيولة (res) — مؤشر أزمة حاسم ──
+        if (res === 'critical') scores.emergency_risk += 40;
+        else if (res === 'low') scores.emergency_risk += 20;
+        else if (res === 'mid') scores.growing_chaotic += 5;
+        else if (res === 'high') scores.mature_competitive += 15;
+
+        // ── Q8: الحوكمة (gov) ──
+        if (gov === 'none') { scores.growing_chaotic += 15; scores.nascent_cautious += 5; }
+        else if (gov === 'partial') scores.growing_chaotic += 10;
+        else if (gov === 'system') scores.mature_competitive += 5;
+        else if (gov === 'board') scores.mature_competitive += 15;
+
+        // ── Q9: قابلية التكرار (scale) ──
+        if (scale === 'none') scores.nascent_cautious += 5;
+        else if (scale === 'mid') scores.growing_chaotic += 5;
+        else if (scale === 'easy') scores.mature_competitive += 10;
+
+        // ── Q10: استراتيجية الخروج (exit) ──
+        if (exit === 'none') scores.nascent_cautious += 5;
+        else if (exit === 'ipo' || exit === 'm_a') scores.mature_competitive += 10;
+        else if (exit === 'family') scores.default_strategic += 5;
+
+        // ═══ اختيار المسار الأعلى نقاطاً ═══
         let patternKey = 'default_strategic';
-        let reason = 'مسار تطوير استراتيجي شامل يغطي الجوانب المالية، التنظيمية والحوكمة في المنشأة.';
+        let maxScore = scores.default_strategic;
 
-        // أولوية ١: مسار الطوارئ (Emergency)
-        if (res === 'critical' || stage === 'struggle') {
-            patternKey = 'emergency_risk';
-            reason = 'تنبيه: المنشأة تمر بمرحلة حرجة (نقص سيولة/تعثر). الأولوية القصوى لتأمين الوضع المالي وإدارة الأزمات.';
-        }
-        // أولوية ٢: مسار الفوضى (Ordered Chaos)
-        else if (stage === 'scaling' && (gov === 'none' || gov === 'partial')) {
-            patternKey = 'growing_chaotic';
-            reason = 'النمو سريع لكن النظام غائب. المسار يركز على بناء الهياكل واللوائح (SOPs) لدعم التوسع الآمن.';
-        }
-        // أولوية ٣: مسار التميز (Market Leader)
-        else if (scale === 'easy' && fin === 'perfect' && stage === 'stable') {
-            patternKey = 'mature_competitive';
-            reason = 'المعطيات تشير لفرصة ريادة حقيقية. المسار يركز على الابتكار، التوسع الدولي، وتعزيز التميز التنافسي.';
-        }
-        // أولوية ٤: التأسيس (Startup)
-        else if (stage === 'startup') {
-            patternKey = 'nascent_cautious';
-            reason = 'المرحلة تتطلب بناء أساسات صلبة من البداية. المسار يوفر خارطة طريق للتأسيس المستدام وتفادي أخطاء البدايات.';
+        for (const [key, score] of Object.entries(scores)) {
+            if (score > maxScore) {
+                maxScore = score;
+                patternKey = key;
+            }
         }
 
-        // ٣. حقن بيانات القطاع (Sector Identity)
+        // ═══ حالة خاصة: إذا النقاط متقاربة جداً → الشامل أأمن ═══
+        const sortedScores = Object.values(scores).sort((a, b) => b - a);
+        if (sortedScores[0] - sortedScores[1] < 5 && patternKey !== 'emergency_risk') {
+            patternKey = 'default_strategic';
+        }
+
+        // ═══ سبب الاختيار ═══
+        const REASONS = {
+            emergency_risk: 'تنبيه: المنشأة تمر بمرحلة حرجة. الأولوية القصوى لتأمين الوضع المالي وإدارة الأزمات.',
+            nascent_cautious: 'المرحلة تتطلب بناء أساسات صلبة. المسار يوفر خارطة طريق للتأسيس المستدام.',
+            growing_chaotic: 'النمو سريع لكن الأنظمة تحتاج تطوير. المسار يركز على الهيكلة والتنظيم.',
+            mature_competitive: 'المنشأة ناضجة ومستقرة. المسار يركز على الابتكار والتميز التنافسي.',
+            default_strategic: 'مسار تطوير استراتيجي شامل يغطي كل جوانب المنشأة.',
+        };
+
+        // ═══ بيانات القطاع ═══
         const SECTOR_DATA = {
             service: { name: 'القطاع الخدمي', emoji: '💼', color: '#3b82f6' },
             commercial: { name: 'القطاع التجاري', emoji: '🏪', color: '#f59e0b' },
@@ -56,8 +122,9 @@ export const DiagnosticEngine = (function () {
         return {
             category: 'owner',
             patternKey,
-            reason,
+            reason: REASONS[patternKey],
             sizeCategory,
+            scores, // نرجع النقاط للشفافية
             userType: 'OWNER',
             name: sd.name,
             emoji: sd.emoji,
@@ -67,9 +134,9 @@ export const DiagnosticEngine = (function () {
         };
     }
 
-    // ═══════════════════════════════════════════
+    // ═══════════════════════════════════════════════
     // 2. خريطة تحديد المسار — مدير إدارة (Manager)
-    // ═══════════════════════════════════════════
+    // ═══════════════════════════════════════════════
 
     function determineManagerPath(answers) {
         const {
@@ -90,7 +157,6 @@ export const DiagnosticEngine = (function () {
 
         let dept = DEPT_MAP[department] || DEPT_MAP.hr;
 
-        // Custom Reasoning for Departments
         let reason = `مسار متخصص لتحليل نضج إدارة ${dept.name} ورفع كفاءتها الاستراتيجية.`;
         if (dept_governance === 'none') reason = `تفتقد إدارة ${dept.name} للتوثيق الإجرائي؛ مما يسبب هدر الاستمرارية بدوران الكوادر.`;
         else if (dept_kpi_tracking === 'none' || dept_kpi_tracking === 'vague') reason = `تدار إدارة ${dept.name} بدون لوحة مؤشرات واضحة؛ المسار سيبني لك نظام قياس للأداء.`;
@@ -111,14 +177,13 @@ export const DiagnosticEngine = (function () {
         };
     }
 
-    // ═══════════════════════════════════════════
-    // 3. دوال مساعدة (Storage & Helpers)
-    // ═══════════════════════════════════════════
+    // ═══════════════════════════════════════════════
+    // 3. دوال مساعدة
+    // ═══════════════════════════════════════════════
 
     function classifySize(size) {
         if (!size) return 'medium';
         const s = String(size).toLowerCase();
-        // دعم المسميات الجديدة والقديمة
         if (['micro', 'pico', 'small', 'أقل من ٥', 'أقل من ٣'].includes(s)) return 'small';
         if (['medium', '٢١-١٠٠ شخص', '١٠ - ٣٠', '٥-٢٠ شخص', '٣ - ١٠'].includes(s)) return 'medium';
         if (['large', 'أكثر من ١٠٠ شخص', 'أكثر من ٣٠'].includes(s)) return 'large';
@@ -137,11 +202,8 @@ export const DiagnosticEngine = (function () {
             const raw = sessionStorage.getItem('diagnosticResult');
             if (!raw) return null;
             const res = JSON.parse(raw);
-
-            // تحقق من الصلاحية (24 ساعة)
             const ts = sessionStorage.getItem('diagnosticTimestamp');
             if (ts && (new Date() - new Date(ts)) > 24 * 60 * 60 * 1000) return null;
-
             return res;
         } catch (e) { return null; }
     }
@@ -156,7 +218,6 @@ export const DiagnosticEngine = (function () {
             const res = getFromSession();
             if (!res) return false;
 
-            // Dual-write Patterns
             if (res.patternKey) {
                 localStorage.setItem('painAmbition', JSON.stringify({
                     patternKey: res.patternKey,
@@ -169,7 +230,6 @@ export const DiagnosticEngine = (function () {
 
             localStorage.setItem('stratix_diagnostic_payload', JSON.stringify(res));
 
-            // Sync for Login/Sidebar
             if (res.category === 'manager') {
                 localStorage.setItem('stratix_user_type', 'DEPT_MANAGER');
                 localStorage.setItem('stratix_dept', res.department);
@@ -189,7 +249,7 @@ export const DiagnosticEngine = (function () {
         promoteToLocalStorage,
         clearSession,
         classifySize,
-        VERSION: '2.4.0'
+        VERSION: '3.0.0'
     };
 })();
 
