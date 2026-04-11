@@ -18,7 +18,7 @@ window.TOOL_FIELDS = {
             { id: 'legal', label: 'العوامل القانونية (Legal)', icon: 'bi-shield-check', placeholder: 'قوانين العمل، حماية المستهلك، الملكية الفكرية، الضرائب...' },
         ],
         saveKey: 'PESTEL',
-        nextUrl: '/swot.html'
+        nextUrl: '/tool-detail.html?code=PORTER'
     },
     PORTER: {
         title: 'تحليل القوى الخمس (Porter)',
@@ -34,7 +34,7 @@ window.TOOL_FIELDS = {
             { id: 'rivalry', label: 'شدة المنافسة الحالية', icon: 'bi-fire', placeholder: 'كيف هي المنافسة الحالية؟ كم عدد المنافسين وما قوتهم؟', fullWidth: true },
         ],
         saveKey: 'PORTER',
-        nextUrl: '/swot.html'
+        nextUrl: '/benchmarking.html'
     },
     VALUE_CHAIN: {
         title: 'سلسلة القيمة',
@@ -51,7 +51,7 @@ window.TOOL_FIELDS = {
             { id: 'support', label: 'الأنشطة المساندة', icon: 'bi-building', placeholder: 'البنية التحتية، الموارد البشرية، التقنية، المشتريات...', fullWidth: true },
         ],
         saveKey: 'VALUE_CHAIN',
-        nextUrl: '/swot.html'
+        nextUrl: '/dept-deep.html'
     },
     CUSTOMER_JOURNEY: {
         title: 'خريطة رحلة العميل',
@@ -67,7 +67,7 @@ window.TOOL_FIELDS = {
             { id: 'loyalty', label: 'مرحلة الولاء (Loyalty)', icon: 'bi-heart', placeholder: 'هل يعود العميل؟ هل يوصي بك؟ برامج الولاء...', fullWidth: true },
         ],
         saveKey: 'CUSTOMER_JOURNEY',
-        nextUrl: '/swot.html'
+        nextUrl: '/swot.html'  // آخر أداة تشخيص داخلي → التركيب
     },
     EISENHOWER: {
         title: 'مصفوفة أيزنهاور',
