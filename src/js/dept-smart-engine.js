@@ -96,33 +96,30 @@ window.DeptSmartEngine = (function() {
         }
 
         // ── RENDER PROBLEMS + RESOURCES ───────────────────────
-        function renderProblems() {
-            document.getElementById('problemsGrid').innerHTML = PROBLEMS_CONFIG.map(p => `
+        function renderOptionField(item, stateKey) {
+            const opts = item.options || [];
+            const hasCustom = item.allowCustom !== false;
+            return `
         <div class="field-card">
-            <div class="field-label"><i class="bi ${p.icon}" style="color:var(--danger)"></i> ${p.label}</div>
-            <div class="field-question">${p.question}</div>
-            <textarea class="field-textarea" placeholder="${p.placeholder || ''}"
-                oninput="state.problems['${p.id}']=this.value; updateProgress()"></textarea>
-            <div class="field-tip"><i class="bi bi-lightbulb-fill" style="color:var(--warn)"></i> ${p.tip}</div>
-        </div>
-    `).join('');
+            <div class="field-label"><i class="bi ${item.icon}" style="color:${stateKey === 'problems' ? 'var(--danger)' : 'var(--success)'}"></i> ${item.label}</div>
+            <div class="field-question">${item.question}</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0" id="opts_${item.id}">
+                ${opts.map((opt, i) => `
+                    <button type="button" class="opt-chip" data-field="${item.id}" data-value="${opt}"
+                        onclick="selectOption('${item.id}','${stateKey}',this,'${opt.replace(/'/g, "\\'")}')"
+                        style="padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:12px;font-family:Tajawal;cursor:pointer;transition:all 0.2s">${opt}</button>
+                `).join('')}
+            </div>
+            ${hasCustom ? `<input type="text" class="field-input" id="custom_${item.id}" placeholder="${item.customPlaceholder || 'أو اكتب إجابتك...'}"
+                style="width:100%;padding:10px 14px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-family:Tajawal;margin-top:4px"
+                oninput="state.${stateKey}['${item.id}']=this.value; clearChips('${item.id}'); updateProgress()">` : ''}
+            <div class="field-tip"><i class="bi bi-lightbulb-fill" style="color:var(--warn)"></i> ${item.tip}</div>
+        </div>`;
+        }
 
-            document.getElementById('resourcesGrid').innerHTML = RESOURCES_CONFIG.map(r => `
-        <div class="field-card">
-            <div class="field-label"><i class="bi ${r.icon}" style="color:var(--success)"></i> ${r.label}</div>
-            <div class="field-question">${r.question}</div>
-            ${r.type === 'number'
-                    ? `<div style="display:flex;gap:8px;align-items:center">
-                       <input class="field-input" type="number" min="0" placeholder="0"
-                           oninput="state.resources['${r.id}']=+this.value; updateProgress()">
-                       <span style="font-size:13px;color:var(--muted);white-space:nowrap">${r.suffix || ''}</span>
-                   </div>`
-                    : `<textarea class="field-textarea" rows="2"
-                       oninput="state.resources['${r.id}']=this.value; updateProgress()"></textarea>`
-                }
-            <div class="field-tip"><i class="bi bi-lightbulb-fill" style="color:var(--warn)"></i> ${r.tip}</div>
-        </div>
-    `).join('');
+        function renderProblems() {
+            document.getElementById('problemsGrid').innerHTML = PROBLEMS_CONFIG.map(p => renderOptionField(p, 'problems')).join('');
+            document.getElementById('resourcesGrid').innerHTML = RESOURCES_CONFIG.map(r => renderOptionField(r, 'resources')).join('');
         }
 
         // ── KPI CHANGE ─────────────────────────────────────────
@@ -589,8 +586,32 @@ window.DeptSmartEngine = (function() {
             updateProgress();
         });
 
+    // ── Option chips select/clear ──
+    function selectOption(fieldId, stateKey, el, value) {
+        // Deselect all chips for this field
+        const chips = document.querySelectorAll(`[data-field="${fieldId}"]`);
+        chips.forEach(c => { c.style.background = 'var(--card)'; c.style.borderColor = 'var(--border)'; c.style.color = 'var(--text)'; });
+        // Select this one
+        el.style.background = 'rgba(102,126,234,0.2)';
+        el.style.borderColor = '#667eea';
+        el.style.color = '#a5b4fc';
+        // Set state
+        state[stateKey][fieldId] = value;
+        // Clear custom input
+        const custom = document.getElementById('custom_' + fieldId);
+        if (custom) custom.value = '';
+        updateProgress();
+    }
+
+    function clearChips(fieldId) {
+        const chips = document.querySelectorAll(`[data-field="${fieldId}"]`);
+        chips.forEach(c => { c.style.background = 'var(--card)'; c.style.borderColor = 'var(--border)'; c.style.color = 'var(--text)'; });
+    }
+
     // Export functions called from HTML onclick/oninput
     window.selectAxis = selectAxis;
+    window.selectOption = selectOption;
+    window.clearChips = clearChips;
     window.onKpiChange = onKpiChange;
     window.scrollToSection = scrollToSection;
     window.showToast = showToast;
