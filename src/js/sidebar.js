@@ -230,6 +230,7 @@ async function initSidebar(sidebarContainer) {
   }
 
   try {
+    const sgRaw = localStorage.getItem('stratix_smart_guide');
     if (sgRaw) {
       const sgParsed = JSON.parse(sgRaw);
       _detectLevelFromCategory(sgParsed.category || '');
