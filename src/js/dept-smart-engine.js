@@ -588,24 +588,43 @@ window.DeptSmartEngine = (function() {
 
     // ── Option chips select/clear ──
     function selectOption(fieldId, stateKey, el, value) {
-        // Deselect all chips for this field
+        // Multi-select: toggle this chip
+        const isSelected = el.dataset.selected === 'true';
+
+        if (isSelected) {
+            // Deselect
+            el.style.background = 'var(--card)';
+            el.style.borderColor = 'var(--border)';
+            el.style.color = 'var(--text)';
+            el.dataset.selected = 'false';
+        } else {
+            // Select
+            el.style.background = 'rgba(102,126,234,0.2)';
+            el.style.borderColor = '#667eea';
+            el.style.color = '#a5b4fc';
+            el.dataset.selected = 'true';
+        }
+
+        // Collect all selected values for this field
         const chips = document.querySelectorAll(`[data-field="${fieldId}"]`);
-        chips.forEach(c => { c.style.background = 'var(--card)'; c.style.borderColor = 'var(--border)'; c.style.color = 'var(--text)'; });
-        // Select this one
-        el.style.background = 'rgba(102,126,234,0.2)';
-        el.style.borderColor = '#667eea';
-        el.style.color = '#a5b4fc';
-        // Set state
-        state[stateKey][fieldId] = value;
-        // Clear custom input
+        const selected = [];
+        chips.forEach(c => {
+            if (c.dataset.selected === 'true') selected.push(c.dataset.value);
+        });
+
+        // Add custom text if exists
         const custom = document.getElementById('custom_' + fieldId);
-        if (custom) custom.value = '';
+        if (custom && custom.value.trim()) {
+            selected.push(custom.value.trim());
+        }
+
+        // Save as array or joined string
+        state[stateKey][fieldId] = selected.length > 0 ? selected.join(' | ') : '';
         updateProgress();
     }
 
     function clearChips(fieldId) {
-        const chips = document.querySelectorAll(`[data-field="${fieldId}"]`);
-        chips.forEach(c => { c.style.background = 'var(--card)'; c.style.borderColor = 'var(--border)'; c.style.color = 'var(--text)'; });
+        // Don't clear chips when typing custom — allow both
     }
 
     // Export functions called from HTML onclick/oninput
