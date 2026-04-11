@@ -272,8 +272,21 @@
             var DEPT_ORDER = ['compliance','hr','finance','sales','marketing','operations','it','quality','cs','projects','governance','support'];
             var DEPT_NAMES = {compliance:'الامتثال',hr:'الموارد البشرية',finance:'المالية',sales:'المبيعات',marketing:'التسويق',operations:'العمليات',it:'تقنية المعلومات',quality:'الجودة',cs:'خدمة العملاء',projects:'المشاريع',governance:'الحوكمة',support:'الخدمات المساندة'};
 
-            // رابط الرجوع
-            if (dept) {
+            // رابط الرجوع — حسب الدور
+            var isOwner = false;
+            try {
+                var diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || '{}');
+                isOwner = diag.category === 'owner' || diag.userType === 'OWNER';
+                if (!isOwner) {
+                    var pa = JSON.parse(localStorage.getItem('painAmbition') || '{}');
+                    isOwner = pa.category === 'owner';
+                }
+            } catch(e) {}
+
+            if (isOwner) {
+                back.href = '/company-health.html';
+                document.getElementById('navBackLabel').textContent = 'صحة الشركة';
+            } else if (dept) {
                 back.href = '/dept-dashboard.html?dept=' + dept;
                 document.getElementById('navBackLabel').textContent = 'لوحة الإدارة';
             }
