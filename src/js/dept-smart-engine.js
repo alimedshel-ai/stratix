@@ -42,6 +42,82 @@ window.DeptSmartEngine = (function() {
         const deptNameEl = document.getElementById('deptName');
         if (deptNameEl) deptNameEl.textContent = meta.icon + ' ' + meta.name;
 
+        // ── COMPLIANCE FINES — صدمة الواقع ────────────────────
+        async function loadAndRenderFines() {
+            if (dept !== 'compliance') return;
+
+            // قراءة النشاط الفرعي من التشخيص
+            let activity = '';
+            try {
+                const diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || '{}');
+                activity = diag.activity || diag.answers?.activity || '';
+            } catch(e) {}
+
+            if (!activity) {
+                // عرض رسالة بسيطة
+                const container = document.getElementById('finesSection');
+                if (container) container.innerHTML = `
+                    <div style="text-align:center;padding:16px;color:#94a3b8;font-size:13px">
+                        <i class="bi bi-info-circle" style="color:#667eea"></i>
+                        أكمل التشخيص أولاً لعرض الغرامات الخاصة بنشاطك
+                    </div>`;
+                return;
+            }
+
+            try {
+                const response = await fetch('/assets/data/compliance-fines.json');
+                if (!response.ok) throw new Error('File not found');
+                const data = await response.json();
+                const fines = data.fines[activity];
+
+                if (!fines || fines.length === 0) {
+                    console.log('No fines for activity:', activity);
+                    return;
+                }
+
+                const totalCost = fines.reduce((s, f) => s + (f.cost || 0), 0);
+                const totalRisk = fines.reduce((s, f) => s + (f.risk || 0), 0);
+
+                // حقن القسم أعلى العقبات
+                const container = document.getElementById('finesSection');
+                if (!container) return;
+
+                container.innerHTML = `
+                    <div style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+                        <div style="font-size:15px;font-weight:800;color:#ef4444;display:flex;align-items:center;gap:8px">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            تحذيرات قانونية — ${activity.replace(/_/g,' ').replace(/^(comm|serv|ind|const|mix|npo|gov)\s/,'')}
+                        </div>
+                        <div style="display:flex;gap:12px">
+                            <span style="font-size:12px;padding:4px 12px;border-radius:8px;background:rgba(239,68,68,0.1);color:#ef4444;font-weight:700">
+                                تكلفة الامتثال: ${totalCost.toLocaleString()} ريال
+                            </span>
+                            <span style="font-size:12px;padding:4px 12px;border-radius:8px;background:rgba(239,68,68,0.2);color:#fca5a5;font-weight:700">
+                                مخاطر المخالفة: ${totalRisk.toLocaleString()} ريال
+                            </span>
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">
+                        ${fines.map(f => `
+                            <div style="padding:14px;background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.15);border-radius:12px;border-right:3px solid #ef4444">
+                                <div style="font-size:13px;font-weight:800;color:#fca5a5;margin-bottom:4px">
+                                    ⚠️ ${f.label}
+                                </div>
+                                <div style="font-size:12px;color:#94a3b8;margin-bottom:8px">${f.desc}</div>
+                                <div style="display:flex;gap:16px;font-size:11px">
+                                    <span style="color:#f59e0b">💰 تكلفة: ${(f.cost || 0).toLocaleString()} ريال</span>
+                                    <span style="color:#ef4444">🔴 مخاطرة: ${(f.risk || 0).toLocaleString()} ريال</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } catch (error) {
+                console.warn('Fines data unavailable:', error.message);
+                // الصفحة تكمل بدون قسم الغرامات
+            }
+        }
+
         // ── RENDER KPIs ────────────────────────────────────────
         function renderKpis() {
             document.getElementById('kpiGrid').innerHTML = deptKpis.map(k => `
@@ -675,5 +751,5 @@ window.DeptSmartEngine = (function() {
     window.autoResize = autoResize;
     window.saveAll = typeof saveAll !== 'undefined' ? saveAll : saveReport;
 
-    return { renderKpis, renderAxes, renderProblems, restoreState, updateProgress, updateReport };
+    return { renderKpis, renderAxes, renderProblems, restoreState, updateProgress, updateReport, loadAndRenderFines };
 })();
