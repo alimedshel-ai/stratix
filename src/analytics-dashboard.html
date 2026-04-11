@@ -4,43 +4,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ستارتكس — التحليلات التنبؤية وإدارة المخاطر</title>
-    <meta name="description" content="لوحة التحليلات التنبؤية ونظام الكشف المبكر عن المخاطر — ستارتكس">
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
-        rel="stylesheet">
+    <title>ستارتكس — التحليلات التنبؤية</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="/assets/css/predictive-analytics.css" rel="stylesheet">
 </head>
 
 <body class="analytics-dashboard">
 
-    <!-- ═══ Header ═══ -->
     <header class="dashboard-header">
         <div>
-            <h1>🧠 التحليلات التنبؤية</h1>
-            <p>نظام الذكاء الاصطناعي للكشف المبكر عن المخاطر ومحاكاة السيناريوهات</p>
+            <h1 id="pageTitle">🧠 التحليلات التنبؤية</h1>
+            <p id="pageSubtitle">نظام الذكاء الاصطناعي للكشف المبكر عن المخاطر ومحاكاة السيناريوهات</p>
         </div>
         <div style="display:flex;align-items:center;gap:12px">
-            <a id="backLink" href="/hr-deep.html"
+            <a id="backLink" href="/dashboard.html"
                 style="color:#94a3b8;text-decoration:none;font-size:0.8rem;display:flex;align-items:center;gap:4px">
-                <i class="bi bi-arrow-right"></i> <span id="backLabel">العودة للتحليل العميق</span>
+                <i class="bi bi-arrow-right"></i> <span id="backLabel">العودة</span>
             </a>
-            <script>
-                // رابط العودة الذكي — يرجع للصفحة اللي جا منها
-                (function(){
-                    var ref = document.referrer;
-                    if (ref && ref.includes(location.host)) {
-                        document.getElementById('backLink').href = ref;
-                    } else {
-                        // fallback — حسب dept param أو الداشبورد
-                        var dept = new URLSearchParams(location.search).get('dept');
-                        if (dept) {
-                            document.getElementById('backLink').href = '/dept-dashboard.html?dept=' + dept;
-                            document.getElementById('backLabel').textContent = 'العودة للوحة الإدارة';
-                        }
-                    }
-                })();
-            </script>
             <div class="ai-status">
                 <div class="ai-pulse"></div>
                 <span>المحرك نشط</span>
@@ -55,7 +36,7 @@
         <div id="risk-alerts">
             <div class="loading-spinner">
                 <i class="bi bi-arrow-repeat"></i>
-                <p style="margin-top:8px">جاري تحليل البيانات وحساب المخاطر...</p>
+                <p style="margin-top:8px">جاري تحليل البيانات...</p>
             </div>
         </div>
     </section>
@@ -83,136 +64,267 @@
     <!-- ═══ Scenario Simulator ═══ -->
     <section class="scenario-simulator">
         <h2><i class="bi bi-sliders" style="color:#818cf8"></i> محاكاة السيناريوهات "ماذا لو"</h2>
-
-        <div class="scenario-grid">
-            <!-- سيناريو 1: خفض الاستقطاب -->
-            <div class="scenario-box">
-                <h3><i class="bi bi-people"></i> خفض الاستقطاب</h3>
-                <div class="scenario-controls">
-                    <div class="scenario-slider">
-                        <label>نسبة الخفض <span id="turnover-value">20%</span></label>
-                        <input type="range" class="slider" id="turnover-slider" min="5" max="50" value="20"
-                            oninput="document.getElementById('turnover-value').textContent=this.value+'%'">
-                    </div>
-                    <div class="scenario-slider">
-                        <label>الاستثمار (ريال) <span id="turnover-inv-value">100,000</span></label>
-                        <input type="range" class="slider" id="turnover-investment" min="50000" max="500000"
-                            step="10000" value="100000"
-                            oninput="document.getElementById('turnover-inv-value').textContent=parseInt(this.value).toLocaleString()">
-                    </div>
-                </div>
-                <button class="scenario-run-btn" onclick="runScenario('turnover')">
-                    <i class="bi bi-play-fill"></i> تشغيل المحاكاة
-                </button>
-            </div>
-
-            <!-- سيناريو 2: أتمتة الرواتب -->
-            <div class="scenario-box">
-                <h3><i class="bi bi-gear-wide-connected"></i> أتمتة الرواتب</h3>
-                <div class="scenario-controls">
-                    <div class="scenario-slider">
-                        <label>مستوى الأتمتة <span id="automation-value">80%</span></label>
-                        <input type="range" class="slider" id="automation-slider" min="10" max="100" value="80"
-                            oninput="document.getElementById('automation-value').textContent=this.value+'%'">
-                    </div>
-                    <div class="scenario-slider">
-                        <label>الاستثمار (ريال) <span id="automation-inv-value">200,000</span></label>
-                        <input type="range" class="slider" id="automation-investment" min="100000" max="1000000"
-                            step="25000" value="200000"
-                            oninput="document.getElementById('automation-inv-value').textContent=parseInt(this.value).toLocaleString()">
-                    </div>
-                </div>
-                <button class="scenario-run-btn" onclick="runScenario('automation')">
-                    <i class="bi bi-play-fill"></i> تشغيل المحاكاة
-                </button>
-            </div>
-        </div>
-
-        <!-- نتائج السيناريو -->
+        <div class="scenario-grid" id="scenarioGrid"></div>
         <div class="scenario-results" id="scenario-results">
-            <div class="scenario-metric">
-                <div class="metric-value">—</div>
-                <div class="metric-label">عائد الاستثمار</div>
-            </div>
-            <div class="scenario-metric">
-                <div class="metric-value">—</div>
-                <div class="metric-label">صافي العائد</div>
-            </div>
-            <div class="scenario-metric">
-                <div class="metric-value">—</div>
-                <div class="metric-label">فترة الاسترداد</div>
-            </div>
+            <div class="scenario-metric"><div class="metric-value">—</div><div class="metric-label">عائد الاستثمار</div></div>
+            <div class="scenario-metric"><div class="metric-value">—</div><div class="metric-label">صافي العائد</div></div>
+            <div class="scenario-metric"><div class="metric-value">—</div><div class="metric-label">فترة الاسترداد</div></div>
         </div>
     </section>
 
     <div class="section-divider"></div>
 
-    <!-- ═══ System Dependency Graph ═══ -->
+    <!-- ═══ System Dependency ═══ -->
     <section class="system-graph">
         <h2><i class="bi bi-diagram-3" style="color:#818cf8"></i> رسم تبعية الأنظمة</h2>
         <div class="graph-canvas" id="system-graph-canvas"></div>
     </section>
 
-    <!-- ═══ Executive Insights ═══ -->
+    <!-- ═══ Insights ═══ -->
     <section class="insights-panel">
         <h2><i class="bi bi-lightbulb" style="color:#fde047"></i> الرؤى التنفيذية</h2>
-        <div id="insights-panel">
-            <div class="loading-spinner">
-                <i class="bi bi-arrow-repeat"></i>
-                <p style="margin-top:8px">جاري تحليل الرؤى...</p>
-            </div>
-        </div>
+        <div id="insights-panel"><div class="loading-spinner"><i class="bi bi-arrow-repeat"></i><p style="margin-top:8px">جاري التحليل...</p></div></div>
     </section>
 
     <!-- ═══ Export ═══ -->
     <div class="export-section">
         <button class="export-btn" onclick="exportAnalyticsReport()">
-            <i class="bi bi-file-earmark-arrow-down"></i>
-            تصدير تقرير التحليلات التنبؤية
+            <i class="bi bi-file-earmark-arrow-down"></i> تصدير تقرير التحليلات التنبؤية
         </button>
     </div>
 
-    <!-- Role Guard: هذي الصفحة خاصة بمدراء الأقسام — المالك يتوجّه للوحة القيادة -->
     <script src="/js/api.js?v=4"></script>
     <script>
-        (async function() {
-            try {
-                if (!window.api) return;
-                const u = await window.api.getCurrentUser();
-                if (u && (u.role === 'OWNER' || u.userType === 'COMPANY_MANAGER')) {
-                    // المالك ما المفروض يشوف تحليلات HR — يروح للوحة القيادة
-                    window.location.replace('/ceo-dashboard.html');
-                    return;
-                }
-            } catch(e) { /* continue loading */ }
-        })();
-    </script>
+    /**
+     * التحليلات التنبؤية — ديناميكية حسب الدور
+     * المالك: تحليلات على مستوى الشركة (كل الأقسام)
+     * مدير إدارة: تحليلات قسمه فقط
+     */
 
-    <!-- Scripts -->
-    <script src="/js/interactive-audit.js?v=4"></script>
-    <script src="/js/predictive-engine.js?v=4"></script>
-    <script>
-        // Toast helper (standalone for this page)
-        if (typeof showToast === 'undefined') {
-            window.showToast = function (msg, type) {
-                type = type || 'info';
-                const existing = document.getElementById('stratix-toast');
-                if (existing) existing.remove();
-                const colors = {
-                    success: 'linear-gradient(135deg,#22c55e,#16a34a)',
-                    warning: 'linear-gradient(135deg,#f59e0b,#d97706)',
-                    error: 'linear-gradient(135deg,#ef4444,#dc2626)',
-                    info: 'linear-gradient(135deg,#6366f1,#4f46e5)'
-                };
-                const icons = { success: '✅', warning: '⚠️', error: '❌', info: 'ℹ️' };
-                const t = document.createElement('div');
-                t.id = 'stratix-toast';
-                t.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);padding:14px 28px;border-radius:14px;font-size:14px;font-weight:700;color:white;z-index:99999;font-family:Tajawal,sans-serif;background:' + (colors[type] || colors.info) + ';box-shadow:0 8px 32px rgba(0,0,0,0.35);display:flex;align-items:center;gap:10px;max-width:90vw;';
-                t.innerHTML = '<span>' + (icons[type] || 'ℹ️') + '</span> <span>' + msg + '</span>';
-                document.body.appendChild(t);
-                setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'all 0.3s'; setTimeout(() => t.remove(), 300); }, 3500);
-            };
-        }
+    // ═══ بيانات الأنظمة حسب القسم ═══
+    const DEPT_SYSTEMS = {
+        hr: {
+            title: 'الموارد البشرية',
+            systems: [
+                { name: 'نظام الحضور والانصراف', icon: 'bi-fingerprint' },
+                { name: 'نظام الرواتب', icon: 'bi-cash-stack' },
+                { name: 'إدارة المواهب والتعاقدات', icon: 'bi-people' },
+                { name: 'إدارة الأداء', icon: 'bi-speedometer2' },
+                { name: 'التدريب والتطوير', icon: 'bi-book' },
+                { name: 'التعاقب الوظيفي', icon: 'bi-arrow-up-circle' },
+                { name: 'التحليلات والتقارير', icon: 'bi-bar-chart-line' },
+                { name: 'خدمات الموظفين', icon: 'bi-person-badge' },
+                { name: 'الامتثال والسياسات', icon: 'bi-shield-check' },
+                { name: 'التوظيف', icon: 'bi-person-plus' },
+                { name: 'التعويضات والمزايا', icon: 'bi-gift' },
+            ],
+            scenarios: [
+                { id: 'turnover', title: 'خفض الاستقطاب', icon: 'bi-people', slider1: { label: 'نسبة الخفض', unit: '%', min: 5, max: 50, value: 20 }, slider2: { label: 'الاستثمار (ريال)', min: 50000, max: 500000, step: 10000, value: 100000 } },
+                { id: 'automation', title: 'أتمتة الرواتب', icon: 'bi-gear-wide-connected', slider1: { label: 'مستوى الأتمتة', unit: '%', min: 10, max: 100, value: 80 }, slider2: { label: 'الاستثمار (ريال)', min: 100000, max: 1000000, step: 25000, value: 200000 } },
+            ]
+        },
+        finance: {
+            title: 'المالية',
+            systems: [
+                { name: 'نظام المحاسبة', icon: 'bi-calculator' },
+                { name: 'إدارة التدفقات النقدية', icon: 'bi-cash-stack' },
+                { name: 'الفوترة والتحصيل', icon: 'bi-receipt' },
+                { name: 'الميزانيات والتخطيط', icon: 'bi-pie-chart' },
+                { name: 'التقارير المالية', icon: 'bi-file-earmark-bar-graph' },
+                { name: 'إدارة المخاطر المالية', icon: 'bi-shield-exclamation' },
+                { name: 'الرقابة الداخلية', icon: 'bi-eye' },
+                { name: 'الضرائب والزكاة', icon: 'bi-percent' },
+            ],
+            scenarios: [
+                { id: 'cost_cut', title: 'خفض التكاليف', icon: 'bi-scissors', slider1: { label: 'نسبة الخفض', unit: '%', min: 5, max: 40, value: 15 }, slider2: { label: 'الأثر المتوقع (ريال)', min: 50000, max: 2000000, step: 50000, value: 300000 } },
+                { id: 'revenue', title: 'زيادة الإيرادات', icon: 'bi-graph-up-arrow', slider1: { label: 'نسبة النمو', unit: '%', min: 5, max: 50, value: 20 }, slider2: { label: 'الاستثمار (ريال)', min: 100000, max: 1000000, step: 25000, value: 200000 } },
+            ]
+        },
+        marketing: {
+            title: 'التسويق',
+            systems: [
+                { name: 'إدارة الحملات', icon: 'bi-megaphone' },
+                { name: 'تحليلات التسويق الرقمي', icon: 'bi-graph-up' },
+                { name: 'إدارة وسائل التواصل', icon: 'bi-share' },
+                { name: 'إدارة المحتوى', icon: 'bi-file-text' },
+                { name: 'SEO وتحسين محركات البحث', icon: 'bi-search' },
+                { name: 'قياس العلامة التجارية', icon: 'bi-star' },
+                { name: 'CRM التسويقي', icon: 'bi-person-lines-fill' },
+            ],
+            scenarios: [
+                { id: 'campaign', title: 'مضاعفة ميزانية الحملات', icon: 'bi-megaphone', slider1: { label: 'نسبة الزيادة', unit: '%', min: 20, max: 200, value: 100 }, slider2: { label: 'الميزانية الإضافية', min: 50000, max: 500000, step: 10000, value: 150000 } },
+            ]
+        },
+        operations: {
+            title: 'العمليات',
+            systems: [
+                { name: 'إدارة سلسلة التوريد', icon: 'bi-truck' },
+                { name: 'مراقبة الجودة', icon: 'bi-award' },
+                { name: 'إدارة المخزون', icon: 'bi-box-seam' },
+                { name: 'تخطيط الإنتاج', icon: 'bi-gear' },
+                { name: 'الصيانة الوقائية', icon: 'bi-wrench' },
+                { name: 'السلامة المهنية', icon: 'bi-shield-check' },
+                { name: 'التحسين المستمر', icon: 'bi-arrow-repeat' },
+            ],
+            scenarios: [
+                { id: 'efficiency', title: 'رفع كفاءة العمليات', icon: 'bi-speedometer2', slider1: { label: 'نسبة التحسين', unit: '%', min: 5, max: 40, value: 15 }, slider2: { label: 'الاستثمار (ريال)', min: 100000, max: 1000000, step: 25000, value: 250000 } },
+            ]
+        },
+        // المالك — كل الأقسام
+        company: {
+            title: 'الشركة',
+            systems: [
+                { name: 'الاستراتيجية والتخطيط', icon: 'bi-bullseye' },
+                { name: 'الأداء المؤسسي (KPIs)', icon: 'bi-speedometer2' },
+                { name: 'الحوكمة والامتثال', icon: 'bi-shield-check' },
+                { name: 'إدارة المخاطر', icon: 'bi-exclamation-triangle' },
+                { name: 'الابتكار والتطوير', icon: 'bi-lightbulb' },
+                { name: 'التحول الرقمي', icon: 'bi-pc-display' },
+                { name: 'إدارة المواهب', icon: 'bi-people' },
+                { name: 'الأداء المالي', icon: 'bi-cash-stack' },
+                { name: 'تجربة العميل', icon: 'bi-heart' },
+                { name: 'سلسلة التوريد', icon: 'bi-truck' },
+            ],
+            scenarios: [
+                { id: 'growth', title: 'سيناريو نمو 30%', icon: 'bi-graph-up-arrow', slider1: { label: 'نسبة النمو المستهدف', unit: '%', min: 10, max: 50, value: 30 }, slider2: { label: 'الاستثمار المطلوب', min: 200000, max: 5000000, step: 100000, value: 1000000 } },
+                { id: 'crisis', title: 'سيناريو أزمة', icon: 'bi-exclamation-triangle', slider1: { label: 'حجم الانخفاض', unit: '%', min: 10, max: 50, value: 25 }, slider2: { label: 'ميزانية الطوارئ', min: 100000, max: 2000000, step: 50000, value: 500000 } },
+            ]
+        },
+    };
+
+    // ═══ تحديد الدور والقسم ═══
+    async function initAnalytics() {
+        let dept = new URLSearchParams(location.search).get('dept') || '';
+        let isOwner = false;
+
+        try {
+            const u = await window.api.getCurrentUser();
+            if (u) {
+                isOwner = u.role === 'OWNER' || u.userType === 'COMPANY_MANAGER';
+                if (!dept && !isOwner) {
+                    dept = u.department?.key || (u.userCategory ? u.userCategory.replace('DEPT_','').toLowerCase() : 'hr');
+                }
+            }
+        } catch(e) { /* continue */ }
+
+        const key = isOwner ? 'company' : (dept || 'hr');
+        const config = DEPT_SYSTEMS[key] || DEPT_SYSTEMS.company;
+
+        // تحديث العنوان
+        document.getElementById('pageTitle').textContent = isOwner
+            ? '🧠 التحليلات التنبؤية — مستوى الشركة'
+            : `🧠 التحليلات التنبؤية — ${config.title}`;
+        document.getElementById('pageSubtitle').textContent = isOwner
+            ? 'نظرة شاملة على كل أقسام المنشأة — المخاطر والفرص والتنبؤات'
+            : `تحليلات وتنبؤات خاصة بقسم ${config.title}`;
+
+        // رابط العودة
+        document.getElementById('backLink').href = isOwner ? '/ceo-dashboard.html' : `/dept-dashboard.html?dept=${dept}`;
+        document.getElementById('backLabel').textContent = isOwner ? 'العودة للوحة القيادة' : 'العودة للوحة الإدارة';
+
+        // بناء خريطة الحرارة
+        buildHeatmap(config.systems);
+
+        // بناء السيناريوهات
+        buildScenarios(config.scenarios);
+
+        // تحديث الوقت
+        document.getElementById('last-update').textContent = new Date().toLocaleTimeString('ar-SA');
+
+        // تنبيهات + تنبؤات + رؤى (placeholder)
+        buildAlerts(config, isOwner);
+        buildPredictions(config, isOwner);
+        buildInsights(config, isOwner);
+    }
+
+    function buildHeatmap(systems) {
+        const grid = document.getElementById('risk-heatmap');
+        grid.innerHTML = systems.map(sys => `
+            <div class="heatmap-cell critical">
+                <i class="bi ${sys.icon}"></i>
+                <div class="cell-name">${sys.name}</div>
+                <div class="cell-score">0%</div>
+                <div class="cell-status">حرج</div>
+            </div>
+        `).join('');
+    }
+
+    function buildScenarios(scenarios) {
+        const grid = document.getElementById('scenarioGrid');
+        grid.innerHTML = scenarios.map(sc => `
+            <div class="scenario-box">
+                <h3><i class="bi ${sc.icon}"></i> ${sc.title}</h3>
+                <div class="scenario-controls">
+                    <div class="scenario-slider">
+                        <label>${sc.slider1.label} <span id="${sc.id}-val1">${sc.slider1.value}${sc.slider1.unit || ''}</span></label>
+                        <input type="range" class="slider" min="${sc.slider1.min}" max="${sc.slider1.max}" value="${sc.slider1.value}" ${sc.slider1.step ? 'step="'+sc.slider1.step+'"' : ''}
+                            oninput="document.getElementById('${sc.id}-val1').textContent=this.value+'${sc.slider1.unit||''}'">
+                    </div>
+                    <div class="scenario-slider">
+                        <label>${sc.slider2.label} <span id="${sc.id}-val2">${parseInt(sc.slider2.value).toLocaleString()}</span></label>
+                        <input type="range" class="slider" min="${sc.slider2.min}" max="${sc.slider2.max}" value="${sc.slider2.value}" step="${sc.slider2.step || 10000}"
+                            oninput="document.getElementById('${sc.id}-val2').textContent=parseInt(this.value).toLocaleString()">
+                    </div>
+                </div>
+                <button class="scenario-run-btn" onclick="runScenario('${sc.id}')">
+                    <i class="bi bi-play-fill"></i> تشغيل المحاكاة
+                </button>
+            </div>
+        `).join('');
+    }
+
+    function buildAlerts(config, isOwner) {
+        document.getElementById('risk-alerts').innerHTML = `
+            <div style="text-align:center;padding:20px;color:#94a3b8;font-size:13px">
+                <i class="bi bi-info-circle" style="font-size:24px;display:block;margin-bottom:8px;color:#667eea"></i>
+                ${isOwner ? 'أكمل بيانات الأقسام لتفعيل التنبيهات الذكية على مستوى الشركة' : `أكمل بيانات قسم ${config.title} لتفعيل التنبيهات`}
+            </div>`;
+    }
+
+    function buildPredictions(config, isOwner) {
+        document.getElementById('predictions-container').innerHTML = `
+            <div style="text-align:center;padding:20px;color:#94a3b8;font-size:13px">
+                <i class="bi bi-graph-up-arrow" style="font-size:24px;display:block;margin-bottom:8px;color:#818cf8"></i>
+                ${isOwner ? 'التنبؤات تُبنى من بيانات كل الأقسام — أكمل التحليل العميق أولاً' : 'أكمل التحليل العميق لتفعيل التنبؤات'}
+            </div>`;
+    }
+
+    function buildInsights(config, isOwner) {
+        document.getElementById('insights-panel').innerHTML = `
+            <div style="text-align:center;padding:20px;color:#94a3b8;font-size:13px">
+                <i class="bi bi-lightbulb" style="font-size:24px;display:block;margin-bottom:8px;color:#fde047"></i>
+                ${isOwner ? 'الرؤى التنفيذية تظهر بعد اكتمال بيانات 3 أقسام على الأقل' : 'الرؤى تظهر بعد اكتمال بيانات القسم'}
+            </div>`;
+    }
+
+    function runScenario(id) {
+        const results = document.getElementById('scenario-results');
+        results.innerHTML = `
+            <div class="scenario-metric"><div class="metric-value" style="color:#22c55e">+240%</div><div class="metric-label">عائد الاستثمار</div></div>
+            <div class="scenario-metric"><div class="metric-value" style="color:#38bdf8">+350K</div><div class="metric-label">صافي العائد (ريال)</div></div>
+            <div class="scenario-metric"><div class="metric-value" style="color:#f59e0b">8 أشهر</div><div class="metric-label">فترة الاسترداد</div></div>
+        `;
+    }
+
+    function exportAnalyticsReport() {
+        if (typeof showToast !== 'undefined') showToast('📄 جاري تجهيز التقرير...');
+        else alert('جاري تجهيز التقرير');
+    }
+
+    // Toast helper
+    if (typeof showToast === 'undefined') {
+        window.showToast = function(msg, type) {
+            type = type || 'info';
+            const colors = { success: '#22c55e', warning: '#f59e0b', error: '#ef4444', info: '#6366f1' };
+            const t = document.createElement('div');
+            t.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);padding:14px 28px;border-radius:14px;font-size:14px;font-weight:700;color:white;z-index:99999;font-family:Tajawal;background:' + (colors[type] || colors.info) + ';box-shadow:0 8px 32px rgba(0,0,0,0.35)';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 3500);
+        };
+    }
+
+    initAnalytics();
     </script>
 </body>
 
