@@ -498,25 +498,21 @@ window.DeptSmartEngine = (function() {
                 localStorage.setItem(`stratix_smart_${dept}`, JSON.stringify(payload));
             }
 
-            // 2. Try API via window.api
+            // 2. Try saving via DeptPage API (existing route)
+            let apiSaved = false;
             try {
-                if (window.api?.post) {
-                    await window.api.post('/api/dept-smart', payload);
-                } else if (window.apiRequest) {
-                    const token = localStorage.getItem('authToken');
-                    if (token) {
-                        await window.apiRequest('/api/dept-smart', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                            body: JSON.stringify(payload)
-                        });
-                    }
+                if (window.DeptPage) {
+                    await DeptPage.init(dept);
+                    apiSaved = await DeptPage.saveToAPI('SMART_' + dept.toUpperCase(), payload);
+                } else if (window.api?.post) {
+                    await window.api.post('/api/dept/analysis', { dept, type: 'SMART', data: JSON.stringify(payload) });
+                    apiSaved = true;
                 }
             } catch (e) {
-                console.warn('Sync failed, saved locally:', e);
+                console.warn('API sync failed, saved locally:', e);
             }
 
-            showToast('✅ تم الحفظ وإرساله للمالك بنجاح', 'success');
+            showToast(apiSaved ? '✅ تم الحفظ بنجاح' : '✅ تم الحفظ محلياً', 'success');
         }
 
         // ── HELPERS ────────────────────────────────────────────
