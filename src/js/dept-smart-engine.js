@@ -495,6 +495,43 @@ window.DeptSmartEngine = (function() {
                 localStorage.setItem(`stratix_smart_${dept}`, JSON.stringify(payload));
             }
 
+            // 1b. ربط مع صحة الشركة (company-health)
+            try {
+                const healthRaw = localStorage.getItem('stratix_company_health');
+                let health = healthRaw ? JSON.parse(healthRaw) : {
+                    sizeCategory: 'medium', overallScore: null, completedTabs: [],
+                    departments: {}, valueChain: { completed: false }, deepAnalysis: {}
+                };
+
+                if (!health.departments) health.departments = {};
+                if (!health.departments[dept]) health.departments[dept] = {};
+
+                health.departments[dept].smartScore = payload.health;
+                health.departments[dept].smartCompleted = true;
+                health.departments[dept].smartDate = payload.savedAt;
+                health.departments[dept].completed = true;
+                health.departments[dept].score = health.departments[dept].score || payload.health;
+
+                // تحديث النقاط الشاملة
+                const deptScores = Object.values(health.departments).filter(d => d.smartScore > 0).map(d => d.smartScore);
+                if (deptScores.length > 0) {
+                    health.overallScore = Math.round(deptScores.reduce((a, b) => a + b, 0) / deptScores.length);
+                }
+
+                localStorage.setItem('stratix_company_health', JSON.stringify(health));
+
+                // ربط مع dept_deep_payload أيضاً
+                const deepRaw = localStorage.getItem('stratix_dept_deep_payload');
+                let deep = deepRaw ? JSON.parse(deepRaw) : {};
+                if (!deep[dept]) deep[dept] = {};
+                deep[dept].completed = true;
+                deep[dept].smartScore = payload.health;
+                deep[dept].smartDate = payload.savedAt;
+                localStorage.setItem('stratix_dept_deep_payload', JSON.stringify(deep));
+            } catch (e) {
+                console.warn('Health sync error:', e);
+            }
+
             // 2. Try saving via DeptPage API (existing route)
             let apiSaved = false;
             try {
