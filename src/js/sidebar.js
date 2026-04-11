@@ -227,6 +227,9 @@ async function initSidebar(sidebarContainer) {
     else if (cat === 'COMPANY_MEDIUM') _sidebarCompanyLevel = 'MEDIUM';
     else if (cat === 'COMPANY_LARGE' || cat === 'COMPANY_ENTERPRISE') _sidebarCompanyLevel = 'LARGE';
     else if (cat === 'CEO' || cat.startsWith('DEPT_')) _sidebarCompanyLevel = 'LARGE';
+  }
+
+  try {
     if (sgRaw) {
       const sgParsed = JSON.parse(sgRaw);
       _detectLevelFromCategory(sgParsed.category || '');
@@ -1272,54 +1275,13 @@ async function initSidebar(sidebarContainer) {
     // ╔═══════════════════════════════════════════╗
     // ║  ⚡ مساري — القسم الأول                     ║
     // ╚═══════════════════════════════════════════╝
-    html += '<div class="stx-section-label"><i class="bi bi-lightning-charge-fill" style="color:#667eea;margin-left:4px"></i> مساري</div>';
-
-    // === لوحة القيادة — حسب نوع المستخدم ===
-    if (userType === 'DEPT_MANAGER') {
-      // مدير إدارة ← لوحة الإدارة
-      const isDeptActive = isActive('/dept-dashboard.html');
-      html += `
-        <a href="/dept-dashboard.html" class="stx-item stx-mypath ${isDeptActive ? 'active' : ''}">
-        <i class="bi bi-building-fill-gear" style="color:#f59e0b"></i>
-        <span>لوحة إدارتي</span>
-      </a>
-        `;
-    } else if (userType === 'BOARD_VIEWER') {
-      // مستثمر / عضو مجلس ← لوحة المجلس
-      const isBoardActive = isActive('/board-dashboard.html');
-      html += `
-        <a href="/board-dashboard.html" class="stx-item stx-mypath ${isBoardActive ? 'active' : ''}">
-        <i class="bi bi-eye-fill" style="color:#a78bfa"></i>
-        <span>لوحة المجلس</span>
-      </a>
-        `;
-    } else if (userType === 'CONSULTANT') {
-      // مستشار ← لوحة الاستشاري
-      const isConsActive = isActive('/consultant-dashboard.html');
-      html += `
-        <a href="/consultant-dashboard.html" class="stx-item stx-mypath ${isConsActive ? 'active' : ''}">
-        <i class="bi bi-briefcase-fill" style="color:#10b981"></i>
-        <span>لوحة الاستشاري</span>
-      </a>
-        `;
-    } else if (hasAccess(['OWNER', 'ADMIN', 'COMPANY_MANAGER'])) {
-      // CEO / مؤسس / مدير عام ← لوحة القيادة
+    // === لوحة القيادة — رابط واحد فقط (بدون تكرار) ===
+    if (hasAccess(['OWNER', 'ADMIN', 'COMPANY_MANAGER'])) {
       const isCeoActive = isActive('/ceo-dashboard.html');
       html += `
-        <a href="/ceo-dashboard.html" class="stx-item stx-mypath ${isCeoActive ? 'active' : ''}">
-        <i class="bi bi-gem" style="color:#a78bfa"></i>
+        <a href="/ceo-dashboard.html" class="stx-item ${isCeoActive ? 'active' : ''}" style="padding:10px 14px">
+        <i class="bi bi-gem" style="color:#a78bfa;font-size:15px"></i>
         <span>لوحة القيادة</span>
-      </a>
-        `;
-    }
-
-    // اللوحة التنفيذية (LARGE + OWNER/ADMIN/COMPANY_MANAGER)
-    if (_lvl >= 4 && hasAccess(['OWNER', 'ADMIN', 'COMPANY_MANAGER'])) {
-      const isExecActive = isActive('/exec-dashboard.html');
-      html += `
-        <a href="/exec-dashboard.html" class="stx-item stx-mypath ${isExecActive ? 'active' : ''}">
-        <i class="bi bi-bar-chart-fill" style="color:#6366f1"></i>
-        <span>اللوحة التنفيذية</span>
       </a>
         `;
     }
@@ -1583,50 +1545,7 @@ async function initSidebar(sidebarContainer) {
         `;
     }
 
-    // ╔═══════════════════════════════════════════╗
-    // ║  ⚡ مركز القيادة — مخصص حسب الدور          ║
-    // ╚═══════════════════════════════════════════╝
-    if (!isViewerOrDE) {
-      html += '<div class="stx-divider"></div>';
-
-      const ccItems = getCommandCenterItems(userType, _v10Dept);
-      const ccFiltered = ccItems.filter(item => item.type === 'header' || hasAccess(item.roles || []));
-      // حذف headers بدون عناصر بعدها
-      const ccClean = ccFiltered.filter((item, idx) => {
-        if (item.type !== 'header') return true;
-        // تحقق إن فيه عنصر غير header بعده
-        return ccFiltered.slice(idx + 1).some(next => next.type !== 'header');
-      });
-      const ccHasActive = ccClean.some(item => item.href && isActive(item.href));
-
-      // عنوان مركز القيادة مخصص حسب الدور
-      var ccTitle = 'مركز القيادة';
-      if (userType === 'BOARD_VIEWER') ccTitle = 'لوحة المستثمر';
-      else if (userType === 'DEPT_MANAGER') ccTitle = 'أدواتي السريعة';
-      else if (userType === 'CONSULTANT') ccTitle = 'مركز الاستشارات';
-
-      html += `
-        <div class="stx-section ${ccHasActive ? 'open' : ''}" data-section="command-center">
-          <div class="stx-section-header" onclick="toggleSection('command-center')">
-            <span><i class="bi bi-lightning-charge-fill" style="color:#f59e0b"></i> ${ccTitle}</span>
-            <i class="bi bi-chevron-down stx-chevron"></i>
-          </div>
-          <div class="stx-section-items" ${ccHasActive ? 'style="max-height:800px"' : ''}>
-            ${ccClean.map(item => {
-        if (item.type === 'header') {
-          return `<div style="font-size:10px;font-weight:700;color:var(--text-muted,#94a3b8);padding:10px 14px 4px;letter-spacing:0.3px">${item.label}</div>`;
-        }
-        return `
-                <a href="${item.href}" class="stx-item ${isActive(item.href) ? 'active' : ''}">
-                  <i class="bi ${item.icon}"></i>
-                  <span class="stx-item-label">${item.label}</span>
-                </a>
-              `;
-      }).join('')}
-          </div>
-        </div>
-        `;
-    }
+    // مركز القيادة — تم دمجه مع "لوحة القيادة" أعلاه (لا تكرار)
 
     // ╔═══════════════════════════════════════════╗
     // ║  🛠️ أدوات مساندة                           ║
