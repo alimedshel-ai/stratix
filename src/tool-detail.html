@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ستارتكس | تحليل القوى الخمس (بورتر)</title>
+    <title>ستارتكس | أداة استراتيجية</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -14,253 +14,236 @@
             --bg-dark: #0f1117;
             --card-bg: rgba(30, 41, 59, 0.7);
             --border: rgba(255, 255, 255, 0.1);
-            --primary: #818cf8;
-            --secondary: #2dd4bf;
-            --accent-p5f: #f472b6;
+            --tool-color: #818cf8;
         }
 
         body {
             background-color: var(--bg-dark);
             color: #e2e8f0;
             font-family: 'Tajawal', sans-serif;
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
         }
 
-        .stx-wrapper {
-            display: flex;
-            min-height: 100vh;
-            width: 100%;
+        .stx-wrapper { display: flex; min-height: 100vh; }
+        .stx-sidebar-container { width: 260px; flex-shrink: 0; background: #1a1d2e; border-left: 1px solid var(--border); }
+        .stx-main-content { flex: 1; padding: 0 !important; }
+
+        .tool-banner {
+            background: linear-gradient(90deg, rgba(var(--tool-rgb), 0.1) 0%, rgba(var(--tool-rgb), 0.05) 100%);
+            border-bottom: 1px solid rgba(var(--tool-rgb), 0.2);
+            padding: 14px 24px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .phase-badge {
+            padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;
+            background: rgba(var(--tool-rgb), 0.15); color: var(--tool-color);
+            border: 1px solid rgba(var(--tool-rgb), 0.25);
         }
 
-        .stx-sidebar-container {
-            width: 260px;
-            flex-shrink: 0;
-            background: #1a1d2e;
-            border-left: 1px solid var(--border);
+        .tool-header { padding: 24px 24px 8px; }
+        .tool-title { font-size: 22px; font-weight: 900; margin-bottom: 4px; }
+        .tool-subtitle { font-size: 13px; color: #94a3b8; }
+
+        .fields-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+            padding: 16px 24px;
+        }
+        .field-card {
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 14px; padding: 18px; transition: border-color 0.2s;
+        }
+        .field-card:hover { border-color: rgba(var(--tool-rgb), 0.3); }
+        .field-card.full-width { grid-column: 1 / span 2; }
+
+        .field-label {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 14px; font-weight: 700; margin-bottom: 10px; color: var(--tool-color);
+        }
+        .field-label i { font-size: 16px; }
+
+        .field-textarea {
+            width: 100%; min-height: 90px; padding: 12px;
+            background: rgba(0,0,0,0.2); border: 1px solid var(--border);
+            border-radius: 10px; color: #e2e8f0; font-family: 'Tajawal', sans-serif;
+            font-size: 13px; resize: vertical; transition: border-color 0.2s;
+        }
+        .field-textarea:focus { outline: none; border-color: var(--tool-color); }
+
+        .action-bar {
+            padding: 16px 24px; border-top: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .btn-back { color: #94a3b8; text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+        .btn-save {
+            padding: 10px 32px; border: none; border-radius: 20px;
+            background: var(--tool-color); color: white; font-size: 14px;
+            font-weight: 700; font-family: 'Tajawal'; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-save:hover { filter: brightness(1.15); transform: translateY(-1px); }
+
+        .toast-msg {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            padding: 12px 24px; border-radius: 12px; background: rgba(34,197,94,0.9);
+            color: white; font-weight: 700; font-size: 13px; z-index: 9999; display: none;
         }
 
-        .stx-main-content {
-            flex: 1;
-            padding: 0 !important;
-        }
-
-        .stx-journey-banner {
-            background: linear-gradient(90deg, rgba(244, 114, 182, 0.1) 0%, rgba(129, 140, 248, 0.1) 100%);
-            border-bottom: 1px solid var(--border);
-            padding: 8px 24px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 1.5rem;
-            backdrop-filter: blur(10px);
-        }
-
-        /* Porter's Visual Structure */
-        .porter-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            padding: 0 24px 24px;
-        }
-
-        .force-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .force-card:hover {
-            border-color: var(--accent-p5f);
-            transform: translateY(-2px);
-        }
-
-        .force-label {
-            font-weight: 800;
-            font-size: 1.1rem;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--accent-p5f);
-        }
-
-        textarea {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--border);
-            color: white;
-            border-radius: 12px;
-            padding: 12px;
-            width: 100%;
-            outline: none;
-            transition: border-color 0.3s;
-            font-size: 0.9rem;
-        }
-
-        textarea:focus {
-            border-color: var(--accent-p5f);
+        @media(max-width:768px) {
+            .fields-grid { grid-template-columns: 1fr; }
+            .field-card.full-width { grid-column: 1; }
+            .stx-sidebar-container { display: none; }
         }
     </style>
 </head>
 
 <body>
     <div class="stx-wrapper">
-        <aside class="stx-sidebar-container"></aside>
+        <aside class="stx-sidebar-container" id="stx-sidebar"></aside>
 
         <main class="stx-main-content">
-            <!-- Journey Banner -->
-            <div class="stx-journey-banner">
-                <div class="phase-badge"
-                    style="background:rgba(244, 114, 182, 0.2); color:#f472b6; border-color:rgba(244, 114, 182, 0.3)">
-                    محطة التشخيص: بورتر</div>
+            <div class="tool-banner">
+                <div class="phase-badge" id="phaseBadge">محطة التشخيص</div>
                 <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-shield-lock text-accent"></i>
-                    <span class="fw-bold">تحليل القوى الخمس (Porter's 5 Forces)</span>
+                    <i class="bi bi-shield-lock" id="toolIcon"></i>
+                    <span class="fw-bold" id="toolBannerTitle">أداة استراتيجية</span>
                 </div>
             </div>
 
-            <div class="p-4 pt-1">
-                <div class="mb-4 d-flex justify-content-between align-items-center">
-                    <div>
-                        <h1 class="fw-bold h4 mb-1">تحليل قوى المنافسة لقسم <span id="dept-name"
-                                class="text-accent fw-bold">...</span></h1>
-                        <p class="text-muted small mb-0">افهم توازنات القوى في سوق العمل والبيئة التنافسية المحيطة
-                            بإدارتك.
-                        </p>
-                    </div>
-                    <button class="btn btn-outline-accent rounded-pill px-4 btn-sm fw-bold"
-                        style="border-color:#f472b6; color:#f472b6;" onclick="autoFillPorter()">
-                        <i class="bi bi-magic me-1"></i> توليد إجابات مثالية
-                    </button>
-                </div>
+            <div class="tool-header">
+                <h1 class="tool-title" id="toolTitle">أداة استراتيجية</h1>
+                <p class="tool-subtitle" id="toolSubtitle">وصف الأداة</p>
+            </div>
 
-                <div class="porter-container">
-                    <!-- New Entrants -->
-                    <div class="force-card">
-                        <div class="force-label"><i class="bi bi-box-arrow-in-right"></i> تهديد الداخلين الجدد</div>
-                        <textarea id="force_new_entrants" rows="3"
-                            placeholder="ما هي سهولة دخول منافسين جدد لمجال عمل القسم؟"></textarea>
-                    </div>
+            <div class="fields-grid" id="fieldsGrid">
+                <!-- Built by JS -->
+            </div>
 
-                    <!-- Buyers -->
-                    <div class="force-card">
-                        <div class="force-label"><i class="bi bi-people"></i> قوة المشترين (العملاء)</div>
-                        <textarea id="force_buyers" rows="3"
-                            placeholder="ما مدى تأثير العملاء الداخليين أو الخارجيين على قرارات القسم؟"></textarea>
-                    </div>
-
-                    <!-- Suppliers -->
-                    <div class="force-card">
-                        <div class="force-label"><i class="bi bi-truck"></i> قوة الموردين</div>
-                        <textarea id="force_suppliers" rows="3"
-                            placeholder="ما مدى سيطرة مزودي الخدمة أو المواد على مدخلات القسم؟"></textarea>
-                    </div>
-
-                    <!-- Substitutes -->
-                    <div class="force-card">
-                        <div class="force-label"><i class="bi bi-arrow-repeat"></i> تهديد البدلاء</div>
-                        <textarea id="force_substitutes" rows="3"
-                            placeholder="هل هناك تقنيات أو طرق بديلة قد تلغي الحاجة لمهام القسم؟"></textarea>
-                    </div>
-
-                    <!-- Rivalry (Full Width) -->
-                    <div class="force-card" style="grid-column: 1 / span 2;">
-                        <div class="force-label"><i class="bi bi-fire"></i> شدة المنافسة الحالية</div>
-                        <textarea id="force_rivalry" rows="4"
-                            placeholder="كيف هي المنافسة الحالية على الكفاءات والموارد والنتائج؟"></textarea>
-                    </div>
-                </div>
-
-                <div
-                    class="mt-4 pt-3 border-top border-secondary border-opacity-10 d-flex justify-content-between align-items-center p-3">
-                    <button type="button" onclick="history.back()" class="btn btn-link text-muted text-decoration-none">
-                        <i class="bi bi-arrow-right me-1"></i> العودة للخلف
-                    </button>
-                    <button type="button" onclick="savePorter()" class="btn btn-primary rounded-pill px-5 py-2 fw-bold"
-                        style="background:#f472b6; border:none;">
-                        <i class="bi bi-cloud-check-fill me-2"></i> حفظ نتائج تحليل القوى
-                    </button>
-                </div>
+            <div class="action-bar">
+                <a href="javascript:history.back()" class="btn-back">
+                    <i class="bi bi-arrow-right"></i> العودة
+                </a>
+                <button class="btn-save" id="saveBtn" onclick="saveTool()">
+                    <i class="bi bi-cloud-check-fill me-2"></i> حفظ
+                </button>
             </div>
         </main>
     </div>
 
-    <!-- Scripts -->
+    <div class="toast-msg" id="toastMsg"></div>
+
     <script src="/js/api.js?v=4"></script>
     <script src="/js/context-manager.js?v=4"></script>
     <script src="/js/dept-page.js?v=4"></script>
-    <script src="/js/steps-config.js?v=4"></script>
+    <script src="/js/journey-steps.js?v=4"></script>
+    <script src="/js/path-engine.js?v=4"></script>
     <script src="/js/sidebar.js?v=4"></script>
+    <script src="/js/tool-fields-config.js?v=4"></script>
     <script>
-        const code = new URLSearchParams(window.location.search).get('code') || 'PORTER';
-        const dept = new URLSearchParams(window.location.search).get('dept') || 'hr';
-        const DEPT_LABELS = { hr: 'الموارد البشرية', finance: 'المالية', marketing: 'التسويق', operations: 'العمليات' };
+        const code = (new URLSearchParams(window.location.search).get('code') || '').toUpperCase();
+        const dept = new URLSearchParams(window.location.search).get('dept') || '';
+        const config = window.TOOL_FIELDS[code];
 
-        async function initPorter() {
-            // 🚀 تحويل ذكي لـ SWOT إذا تم طلبه
-            if (code.toUpperCase() === 'SWOT') {
-                window.location.replace(`/swot.html?dept=${dept}&v=${new URLSearchParams(window.location.search).get('v') || ''}`);
+        // Redirect to dedicated pages
+        const REDIRECTS = { SWOT: '/swot.html', TOWS: '/tows.html' };
+        if (REDIRECTS[code]) {
+            window.location.replace(REDIRECTS[code] + (dept ? '?dept=' + dept : ''));
+        }
+
+        function hexToRgb(hex) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `${r},${g},${b}`;
+        }
+
+        async function initTool() {
+            if (!config) {
+                document.querySelector('.stx-main-content').innerHTML = `
+                    <div style="text-align:center;padding:60px;color:#94a3b8">
+                        <i class="bi bi-exclamation-triangle" style="font-size:48px;display:block;margin-bottom:16px;color:#f59e0b"></i>
+                        <h2>أداة غير معروفة: ${code}</h2>
+                        <p>تأكد من الرابط أو ارجع <a href="/dashboard.html" style="color:#667eea">للمركز الاستراتيجي</a></p>
+                    </div>`;
                 return;
             }
 
-            document.getElementById('dept-name').textContent = DEPT_LABELS[dept] || dept.toUpperCase();
-            if (window.Sidebar) window.Sidebar.init();
+            // Set colors
+            const rgb = hexToRgb(config.color);
+            document.documentElement.style.setProperty('--tool-color', config.color);
+            document.documentElement.style.setProperty('--tool-rgb', rgb);
 
-            // Load saved data for Porter
-            const saved = await DeptPage.loadFromAPI('PORTER_' + dept.toUpperCase());
-            if (saved) {
-                document.getElementById('force_new_entrants').value = saved.new_entrants || '';
-                document.getElementById('force_buyers').value = saved.buyers || '';
-                document.getElementById('force_suppliers').value = saved.suppliers || '';
-                document.getElementById('force_substitutes').value = saved.substitutes || '';
-                document.getElementById('force_rivalry').value = saved.rivalry || '';
-            }
-        }
+            // Set title & meta
+            document.title = 'ستارتكس | ' + config.title;
+            document.getElementById('phaseBadge').textContent = config.phaseLabel;
+            document.getElementById('toolIcon').className = 'bi ' + config.icon;
+            document.getElementById('toolBannerTitle').textContent = config.title;
+            document.getElementById('toolTitle').textContent = config.title + (dept ? ' — ' + getDeptName(dept) : '');
+            document.getElementById('toolSubtitle').textContent = config.subtitle;
+            document.getElementById('saveBtn').innerHTML = '<i class="bi bi-cloud-check-fill me-2"></i> حفظ ' + config.title;
 
-        async function autoFillPorter() {
-            DeptPage.showMessage('🔄 جاري توليد إجابات تنافسية مثالية لقسمك...');
+            // Build fields
+            const grid = document.getElementById('fieldsGrid');
+            config.fields.forEach(f => {
+                const card = document.createElement('div');
+                card.className = 'field-card' + (f.fullWidth ? ' full-width' : '');
+                card.innerHTML = `
+                    <div class="field-label">
+                        <i class="bi ${f.icon}"></i>
+                        ${f.label}
+                    </div>
+                    <textarea class="field-textarea" id="field_${f.id}" rows="${f.fullWidth ? 4 : 3}" placeholder="${f.placeholder}"></textarea>
+                `;
+                grid.appendChild(card);
+            });
 
-            const IDEAL_PORTER = {
-                hr: {
-                    new_entrants: "تهديد متوسط: دخول شركات تقنية ناشئة تعتمد ثقافة العمل المرن بالكامل وتجذب المواهب بنظام العمل عن بُعد العابر للحدود.",
-                    buyers: "قوة عالية للموظفين: الكفاءات النادرة تملك قوة تفاوضية مرتفعة حالياً نظراً لزيادة الطلب على المهارات الرقمية المتخصصة.",
-                    suppliers: "قوة متوسطة للموردين: شركات التوظيف ومنصات (LinkedIn) تملك بيانات ضخمة لكنها تعاني من شح في الكفاءات النوعية.",
-                    substitutes: "تهديد متزايد: تقنيات الأتمتة والذكاء الاصطناعي بدأت تحل محل بعض المهام الإدارية والتشغيلية في الموارد البشرية.",
-                    rivalry: "منافسة شرسة: الصراع على استقطاب الـ (Top 1% Talent) يتزايد بين القطاعات المختلفة وليس فقط المنافسين المباشرين."
+            // Load saved data
+            try {
+                const saveKey = config.saveKey + (dept ? '_' + dept.toUpperCase() : '');
+                if (window.DeptPage) {
+                    const ok = await DeptPage.init(dept || 'company');
+                    const saved = await DeptPage.loadFromAPI(saveKey);
+                    if (saved) {
+                        config.fields.forEach(f => {
+                            const el = document.getElementById('field_' + f.id);
+                            if (el && saved[f.id]) el.value = saved[f.id];
+                        });
+                    }
                 }
-            };
-
-            const data = IDEAL_PORTER[dept] || IDEAL_PORTER.hr;
-
-            document.getElementById('force_new_entrants').value = data.new_entrants;
-            document.getElementById('force_buyers').value = data.buyers;
-            document.getElementById('force_suppliers').value = data.suppliers;
-            document.getElementById('force_substitutes').value = data.substitutes;
-            document.getElementById('force_rivalry').value = data.rivalry;
-
-            DeptPage.showMessage('✨ تم توليد "القوى الخمس" المثالية لقسمك بنجاح.');
+            } catch (e) { console.warn('Load error:', e); }
         }
 
-        async function savePorter() {
-            const data = {
-                new_entrants: document.getElementById('force_new_entrants').value,
-                buyers: document.getElementById('force_buyers').value,
-                suppliers: document.getElementById('force_suppliers').value,
-                substitutes: document.getElementById('force_substitutes').value,
-                rivalry: document.getElementById('force_rivalry').value
-            };
+        async function saveTool() {
+            const data = {};
+            config.fields.forEach(f => {
+                data[f.id] = document.getElementById('field_' + f.id)?.value || '';
+            });
 
-            const success = await DeptPage.saveToAPI('PORTER_' + dept.toUpperCase(), data);
-            if (success) {
-                DeptPage.showMessage('✅ تم حفظ تحليل بورتر بنجاح.');
-                setTimeout(() => window.location.href = `/dept-health.html?dept=${dept}&t=${Date.now()}`, 1200);
+            try {
+                const saveKey = config.saveKey + (dept ? '_' + dept.toUpperCase() : '');
+                const ok = await DeptPage.saveToAPI(saveKey, data);
+                showToast(ok ? '✅ تم حفظ ' + config.title + ' بنجاح' : '⚠️ تم حفظ محلياً');
+                if (config.nextUrl) {
+                    setTimeout(() => {
+                        window.location.href = config.nextUrl + (dept ? (config.nextUrl.includes('?') ? '&' : '?') + 'dept=' + dept : '');
+                    }, 1200);
+                }
+            } catch (e) {
+                showToast('❌ خطأ في الحفظ');
+                console.error(e);
             }
         }
 
-        document.addEventListener('DOMContentLoaded', initPorter);
+        function getDeptName(d) {
+            const map = { hr: 'الموارد البشرية', finance: 'المالية', marketing: 'التسويق', operations: 'العمليات', sales: 'المبيعات', it: 'تقنية المعلومات', cs: 'خدمة العملاء', compliance: 'الامتثال', quality: 'الجودة', projects: 'المشاريع', support: 'الخدمات المساندة' };
+            return map[d] || d || '';
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toastMsg');
+            t.textContent = msg;
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', initTool);
     </script>
 </body>
 
