@@ -262,20 +262,35 @@
     <div style="height:60px"></div>
 
     <script>
-        // Smart navigation — حسب الدور
+        // Smart navigation — بعد الحفظ يروح للقسم التالي
         (function() {
             var dept = new URLSearchParams(location.search).get('dept') || '';
             var back = document.getElementById('navBack');
             var next = document.getElementById('navNext');
+
+            // ترتيب الأقسام
+            var DEPT_ORDER = ['compliance','hr','finance','sales','marketing','operations','it','quality','cs','projects','governance','support'];
+            var DEPT_NAMES = {compliance:'الامتثال',hr:'الموارد البشرية',finance:'المالية',sales:'المبيعات',marketing:'التسويق',operations:'العمليات',it:'تقنية المعلومات',quality:'الجودة',cs:'خدمة العملاء',projects:'المشاريع',governance:'الحوكمة',support:'الخدمات المساندة'};
+
             // رابط الرجوع
             if (dept) {
                 back.href = '/dept-dashboard.html?dept=' + dept;
                 document.getElementById('navBackLabel').textContent = 'لوحة الإدارة';
             }
-            // رابط التالي — التحليل الرقمي ثم التقييم الوصفي ثم SWOT
+
+            // رابط التالي — القسم التالي (مو نفس القسم)
             if (dept) {
-                next.href = '/' + dept + '-deep.html?dept=' + dept;
-                document.getElementById('navNextLabel').textContent = 'التالي: التحليل الرقمي';
+                var idx = DEPT_ORDER.indexOf(dept);
+                var nextDept = idx >= 0 && idx < DEPT_ORDER.length - 1 ? DEPT_ORDER[idx + 1] : null;
+
+                if (nextDept) {
+                    next.href = '/dept-smart.html?dept=' + nextDept;
+                    document.getElementById('navNextLabel').textContent = 'التالي: تقييم ' + (DEPT_NAMES[nextDept] || nextDept);
+                } else {
+                    // آخر قسم — يروح لصحة الشركة
+                    next.href = '/company-health.html';
+                    document.getElementById('navNextLabel').textContent = 'التالي: صحة الشركة';
+                }
             }
         })();
     </script>
