@@ -210,6 +210,16 @@ window.DeptSmartEngine = (function() {
 
         // ── UPDATE PROGRESS ────────────────────────────────────
         function updateProgress() {
+            // Auto-save to localStorage on every change
+            try {
+                const autoSave = {
+                    dept, kpis: state.kpis, axes: state.axes,
+                    notes: state.notes, problems: state.problems,
+                    resources: state.resources, savedAt: new Date().toISOString()
+                };
+                localStorage.setItem(`stratix_smart_${dept}`, JSON.stringify(autoSave));
+            } catch(e) {}
+
             const totalItems = deptKpis.length + axes.length + PROBLEMS_CONFIG.length + RESOURCES_CONFIG.length;
             const kpiDone = Object.values(state.kpis).filter(v => v !== null && v !== undefined && v !== '').length;
             const axesDone = Object.keys(state.axes).length;
@@ -679,11 +689,49 @@ window.DeptSmartEngine = (function() {
                     const card = document.getElementById('axcard_' + axId);
                     if (card) { const ta = card.querySelector('.axis-note'); if (ta) ta.value = note; }
                 });
-                // Restore problems
+                // Restore problems (chips + custom text)
                 Object.entries(d.problems || {}).forEach(([pid, val]) => {
                     state.problems[pid] = val;
-                    const el = document.querySelector(`[oninput*="'${pid}'"]`);
-                    if (el) el.value = val;
+                    if (!val) return;
+                    const selectedValues = String(val).split(' | ');
+                    // Re-select matching chips
+                    const chips = document.querySelectorAll(`[data-field="${pid}"]`);
+                    chips.forEach(c => {
+                        if (selectedValues.includes(c.dataset.value)) {
+                            c.style.background = 'rgba(102,126,234,0.2)';
+                            c.style.borderColor = '#667eea';
+                            c.style.color = '#a5b4fc';
+                            c.dataset.selected = 'true';
+                        }
+                    });
+                    // Check for custom text (values not in any chip)
+                    const chipValues = Array.from(chips).map(c => c.dataset.value);
+                    const customVals = selectedValues.filter(v => !chipValues.includes(v));
+                    if (customVals.length > 0) {
+                        const customInput = document.getElementById('custom_' + pid);
+                        if (customInput) customInput.value = customVals.join(', ');
+                    }
+                });
+                // Restore resources (same format)
+                Object.entries(d.resources || {}).forEach(([rid, val]) => {
+                    state.resources[rid] = val;
+                    if (!val) return;
+                    const selectedValues = String(val).split(' | ');
+                    const chips = document.querySelectorAll(`[data-field="${rid}"]`);
+                    chips.forEach(c => {
+                        if (selectedValues.includes(c.dataset.value)) {
+                            c.style.background = 'rgba(102,126,234,0.2)';
+                            c.style.borderColor = '#667eea';
+                            c.style.color = '#a5b4fc';
+                            c.dataset.selected = 'true';
+                        }
+                    });
+                    const chipValues = Array.from(chips).map(c => c.dataset.value);
+                    const customVals = selectedValues.filter(v => !chipValues.includes(v));
+                    if (customVals.length > 0) {
+                        const customInput = document.getElementById('custom_' + rid);
+                        if (customInput) customInput.value = customVals.join(', ');
+                    }
                 });
                 updateReport();
                 updateProgress();
