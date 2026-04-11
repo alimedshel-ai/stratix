@@ -1093,13 +1093,13 @@
       if (!pa) {
         tips.push({
           id: 'setup-company',
-          type: 'START',
-          priority: 80,
-          icon: '🚀',
-          title: 'أعد شركتك للبدء',
-          message: 'حدد ألمك وطموحك وأنا أبني لك مسار استراتيجي مخصص',
-          action: { label: 'ابدأ الآن', href: '/select-type' },
-          estimatedTime: '5 دقائق',
+          type: 'TIP',
+          priority: 40,
+          icon: '💡',
+          title: 'تلميح: خصّص مسارك',
+          message: 'يمكنك تخصيص الأدوات المقترحة حسب نوع منشأتك عبر التشخيص السريع.',
+          action: { label: 'تشخيص سريع', href: '/diagnostic-owner.html' },
+          estimatedTime: '3 دقائق',
         });
       } else {
         tips.push({
