@@ -276,14 +276,35 @@
             var DEPT_ORDER = ['compliance','hr','finance','sales','marketing','operations','it','quality','cs','projects','governance','support'];
             var DEPT_NAMES = {compliance:'الامتثال',hr:'الموارد البشرية',finance:'المالية',sales:'المبيعات',marketing:'التسويق',operations:'العمليات',it:'تقنية المعلومات',quality:'الجودة',cs:'خدمة العملاء',projects:'المشاريع',governance:'الحوكمة',support:'الخدمات المساندة'};
 
-            // رابط الرجوع — حسب الدور
+            // رابط الرجوع — حسب الدور (فحص شامل)
             var isOwner = false;
             try {
-                var diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || '{}');
-                isOwner = diag.category === 'owner' || diag.userType === 'OWNER';
+                // 1. من SmartNav (الأدق)
+                if (window.SmartNav && SmartNav.isOwner()) { isOwner = true; }
+                // 2. من التشخيص
+                if (!isOwner) {
+                    var diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || '{}');
+                    isOwner = diag.category === 'owner' || diag.userType === 'OWNER';
+                }
+                // 3. من painAmbition
                 if (!isOwner) {
                     var pa = JSON.parse(localStorage.getItem('painAmbition') || '{}');
                     isOwner = pa.category === 'owner';
+                }
+                // 4. من user type المخزّن
+                if (!isOwner) {
+                    var ut = localStorage.getItem('stratix_user_type');
+                    isOwner = ut === 'BUSINESS';
+                }
+                // 5. من token (JWT role)
+                if (!isOwner) {
+                    var token = localStorage.getItem('token');
+                    if (token) {
+                        try {
+                            var payload = JSON.parse(atob(token.split('.')[1]));
+                            isOwner = payload.role === 'OWNER' || payload.userType === 'COMPANY_MANAGER';
+                        } catch(e2) {}
+                    }
                 }
             } catch(e) {}
 
