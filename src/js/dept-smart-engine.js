@@ -3,8 +3,46 @@
  * منطق التقييم والتقرير
  */
 window.DeptSmartEngine = (function() {
-    const { KPIS_CONFIG, FIXED_KPIS, DEPT_META, AXES_CONFIG, PROBLEMS_CONFIG, RESOURCES_CONFIG } = window.DeptSmartConfig;
+    const { KPIS_CONFIG, FIXED_KPIS, DEPT_META, AXES_CONFIG, DEFAULT_AXES, PROBLEMS_CONFIG, RESOURCES_CONFIG } = window.DeptSmartConfig;
 
+        // ── STATE ─────────────────────────────────────────────
+        const _params = new URLSearchParams(location.search);
+        let dept = _params.get('dept');
+        if (!dept && window.StateManager) {
+            dept = window.StateManager.get(window.StateManager.KEYS.DEPT);
+        }
+        if (!dept) {
+            console.warn('No department specified, falling back to compliance');
+            dept = 'compliance';
+        }
+
+        const meta = DEPT_META[dept] || DEPT_META.compliance;
+        const axes = AXES_CONFIG[dept] || DEFAULT_AXES;
+        const deptKpis = [...(KPIS_CONFIG[dept] || KPIS_CONFIG.compliance), ...FIXED_KPIS];
+
+        if (window.StateManager) window.StateManager.set(window.StateManager.KEYS.DEPT, dept);
+
+        const state = {
+            kpis: {},
+            axes: {},
+            notes: {},
+            problems: {},
+            resources: {}
+        };
+
+        if (window.StateManager) {
+            const cached = window.StateManager.get(`stratix_smart_${dept}`);
+            if (cached) {
+                Object.assign(state, cached);
+            }
+        }
+
+        // Apply dept color
+        document.documentElement.style.setProperty('--dept-color', meta.color);
+        const deptNameEl = document.getElementById('deptName');
+        if (deptNameEl) deptNameEl.textContent = meta.icon + ' ' + meta.name;
+
+        // ── RENDER KPIs ────────────────────────────────────────
         function renderKpis() {
             document.getElementById('kpiGrid').innerHTML = deptKpis.map(k => `
         <div class="kpi-card${k.isbudget ? ' budget' : ''}">
@@ -555,5 +593,14 @@ window.DeptSmartEngine = (function() {
             updateProgress();
         });
 
-    return { renderKpis, renderAxes, renderProblems, restoreState, updateProgress, updateReport, saveAll };
+    // Export functions called from HTML onclick/oninput
+    window.selectAxis = selectAxis;
+    window.onKpiChange = onKpiChange;
+    window.scrollToSection = scrollToSection;
+    window.showToast = showToast;
+    window.saveReport = saveReport;
+    window.autoResize = autoResize;
+    window.saveAll = typeof saveAll !== 'undefined' ? saveAll : saveReport;
+
+    return { renderKpis, renderAxes, renderProblems, restoreState, updateProgress, updateReport };
 })();

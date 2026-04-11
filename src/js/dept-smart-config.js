@@ -522,46 +522,5 @@ window.DeptSmartConfig = (function() {
             { id: 'decision_scope', icon: 'bi-key', label: 'نطاق الصلاحيات', question: 'ما أعلى قرار تستطيع اتخاذه بدون رجوع للمالك؟', type: 'text', tip: 'الصلاحيات المحدودة تُبطئ التنفيذ. حدد نطاقك لنعرف أين يكمن عنق الزجاجة.' },
         ];
 
-        // ── STATE ─────────────────────────────────────────────
-        const _params = new URLSearchParams(location.search);
-        let dept = _params.get('dept');
-        if (!dept && window.StateManager) {
-            dept = window.StateManager.get(window.StateManager.KEYS.DEPT);
-        }
-        if (!dept) {
-            console.warn('No department specified, falling back to compliance');
-            dept = 'compliance';
-        }
-
-        const meta = DEPT_META[dept] || DEPT_META.compliance;
-        const axes = AXES_CONFIG[dept] || DEFAULT_AXES;
-        const deptKpis = [...(KPIS_CONFIG[dept] || KPIS_CONFIG.compliance), ...FIXED_KPIS];
-
-        // Ensure StateManager knows the active dept
-        if (window.StateManager) window.StateManager.set(window.StateManager.KEYS.DEPT, dept);
-
-        const state = {
-            kpis: {},
-            axes: {},     // { id: score 0-3 }
-            notes: {},    // axis notes
-            problems: {}, // text fields
-            resources: {}
-        };
-
-        // Try load from StateManager cache
-        if (window.StateManager) {
-            const cached = window.StateManager.get(`stratix_smart_${dept}`);
-            if (cached) {
-                Object.assign(state, cached);
-                console.log('Restored state from StateManager:', dept);
-            }
-        }
-
-        // Apply dept color
-        document.documentElement.style.setProperty('--dept-color', meta.color);
-        document.getElementById('deptName').textContent = meta.icon + ' ' + meta.name;
-
-        // ── RENDER KPIs ────────────────────────────────────────
-
-    return { KPIS_CONFIG, FIXED_KPIS, DEPT_META, AXES_CONFIG, PROBLEMS_CONFIG, RESOURCES_CONFIG };
+    return { KPIS_CONFIG, FIXED_KPIS, DEPT_META, AXES_CONFIG, DEFAULT_AXES, PROBLEMS_CONFIG, RESOURCES_CONFIG };
 })();
