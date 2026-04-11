@@ -1,48 +1,58 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-
 <head>
     <meta charset="UTF-8">
-    <title>ستارتكس | التحليل الرقمي - تقنية المعلومات</title>
+    <title>ستارتكس | التحليل الرقمي</title>
     <link rel="stylesheet" href="/css/dept-pages.css">
     <script src="/js/context-manager.js?v=4"></script>
     <script src="/js/dept-page.js?v=4"></script>
+    <script src="/js/dept-deep-config.js?v=4"></script>
 </head>
-
 <body>
     <div class="container">
-        <h1>📊 التحليل الرقمي – تقنية المعلومات</h1>
-        <div class="sub">أدخل الأرقام والمؤشرات الرئيسية لقسم تقنية المعلومات</div>
-        <form id="deepForm">
-            <div class="question"><label>ميزانية تقنية المعلومات السنوية (ريال)</label><input type="number"
-                    name="it_budget" placeholder="مثال: 200000" required></div>
-            <div class="question"><label>نسبة توفر وجاهزية الأنظمة Uptime (%)</label><input type="number"
-                    name="system_uptime" placeholder="مثال: 99.5" step="0.1" required></div>
-            <div class="question"><label>عدد التذاكر التقنية المحلولة شهرياً</label><input type="number"
-                    name="tickets_resolved" placeholder="مثال: 150" required></div>
-            <div class="question"><label>رضا المستخدمين عن الخدمات التقنية (%)</label><input type="number"
-                    name="user_satisfaction" placeholder="مثال: 85" required></div>
-            <div class="question"><label>عدد الحوادث الأمنية المسجلة سنوياً</label><input type="number"
-                    name="security_incidents" placeholder="مثال: 2" required></div>
-            <button type="submit">حفظ ومتابعة للتقييم الوصفي</button>
-        </form>
+        <h1 id="pageTitle">📊 التحليل الرقمي</h1>
+        <div class="sub" id="pageSub">أدخل الأرقام والمؤشرات الرئيسية</div>
+        <form id="deepForm"></form>
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            const ok = await DeptPage.init('it');
+            const DEPT_KEY = 'it';
+            const config = window.DEPT_DEEP_CONFIG[DEPT_KEY];
+            if (!config) { document.querySelector('.container').innerHTML = '<h1>قسم غير معروف</h1>'; return; }
+
+            // set title
+            document.getElementById('pageTitle').textContent = (config.emoji || '📊') + ' ' + config.title;
+            document.getElementById('pageSub').textContent = 'أدخل الأرقام والمؤشرات الرئيسية لـ' + config.title.split('–')[1];
+            document.title = 'ستارتكس | ' + config.title;
+
+            // build form
+            const form = document.getElementById('deepForm');
+            config.fields.forEach(f => {
+                const div = document.createElement('div');
+                div.className = 'question';
+                div.innerHTML = `<label>${f.label}</label><input type="number" name="${f.name}" placeholder="${f.placeholder}" ${f.step ? 'step="'+f.step+'"' : ''} required>`;
+                form.appendChild(div);
+            });
+            const btn = document.createElement('button');
+            btn.type = 'submit';
+            btn.textContent = 'حفظ ومتابعة للتقييم الوصفي';
+            form.appendChild(btn);
+
+            // init dept page
+            const ok = await DeptPage.init(DEPT_KEY);
             if (!ok) return;
-            let saved = await DeptPage.loadFromAPI('DEEP') || Context.getTemp('deep_results') || DeptPage.migrateFromLocalStorage('stratix_it_deep_results');
+            let saved = await DeptPage.loadFromAPI('DEEP') || Context.getTemp('deep_results') || DeptPage.migrateFromLocalStorage('stratix_' + DEPT_KEY + '_deep_results');
             DeptPage.fillForm(saved);
-            document.getElementById('deepForm').addEventListener('submit', async (e) => {
+
+            form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const results = Object.fromEntries(new FormData(e.target));
                 Context.setTemp('deep_results', results);
                 const ok = await DeptPage.saveToAPI('DEEP', results);
                 DeptPage.showMessage(ok ? 'تم حفظ التحليل الرقمي بنجاح' : 'تم حفظ التحليل محلياً', !ok);
-                setTimeout(() => window.location.href = `/it-audit.html?dept=it`, 1500);
+                setTimeout(() => window.location.href = config.redirect, 1500);
             });
         });
     </script>
 </body>
-
 </html>
