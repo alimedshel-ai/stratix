@@ -246,8 +246,16 @@
                     return getItem('RISK_MAP_' + deptId) !== null;
                 default: {
                     try {
-                        const journey = JSON.parse(localStorage.getItem('stratix_mgr_journey') || '{}');
-                        return journey.completedIds?.includes(stepName);
+                        // 🛡️ مفتاح معزول بـ entityId لمنع تسرب التقدم بين العملاء
+                        const _eid = user?.activeEntityId || user?.entityId || user?.entity?.id || '';
+                        const _jKey = _eid ? `stratix_mgr_journey_${_eid}` : 'stratix_mgr_journey';
+                        const journey = JSON.parse(localStorage.getItem(_jKey) || '{}');
+                        // fallback: المفتاح القديم (للتوافق)
+                        if (!journey.completedIds?.includes(stepName)) {
+                            const oldJ = JSON.parse(localStorage.getItem('stratix_mgr_journey') || '{}');
+                            return oldJ.completedIds?.includes(stepName) || false;
+                        }
+                        return true;
                     } catch { return false; }
                 }
             }
@@ -284,12 +292,15 @@
     async function markStepCompleted(stepId) {
         const dept = getDept();
 
-        // 1. حفظ محلي فوري (لضمان استجابة فورية)
+        // 1. حفظ محلي فوري (لضمان استجابة فورية) — معزول بـ entityId
         try {
-            let journey = JSON.parse(localStorage.getItem('stratix_mgr_journey') || '{}');
+            const _user = getUser();
+            const _eid = _user?.activeEntityId || _user?.entityId || _user?.entity?.id || '';
+            const _jKey = _eid ? `stratix_mgr_journey_${_eid}` : 'stratix_mgr_journey';
+            let journey = JSON.parse(localStorage.getItem(_jKey) || '{}');
             if (!journey.completedIds) journey.completedIds = [];
             if (!journey.completedIds.includes(stepId)) journey.completedIds.push(stepId);
-            localStorage.setItem('stratix_mgr_journey', JSON.stringify(journey));
+            localStorage.setItem(_jKey, JSON.stringify(journey));
         } catch (e) { console.warn('[Context] markStepCompleted local save failed:', e); }
 
         // 2. محاولة API (باستخدام callApiWithTimeout الموحدة)
@@ -365,9 +376,13 @@
             return;
         }
         if (role === 'dept_manager') {
+            const hasEntity = !!user?.entity || !!user?.companyId || !!user?.entityId;
+            if (!hasEntity) {
+                window.location.href = '/pro-dashboard.html';
+                return;
+            }
             const dept = getDept() || user?.department?.key || user?.deptCode;
-            if (dept) window.location.href = `/${dept}-deep.html?dept=${dept}`;
-            else window.location.href = '/dashboard.html';
+            window.location.href = dept ? `/dept-dashboard.html?dept=${dept}` : '/dept-dashboard.html';
             return;
         }
         if (role === 'investor') {

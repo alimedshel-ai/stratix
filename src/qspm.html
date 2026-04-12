@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مصفوفة QSPM - ستارتكس</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/shared.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <script src="/js/state-manager.js"></script>
+    <style>
+        :root {
+            --stx-bg: #0b0d12;
+            --stx-card: #161a23;
+            --stx-accent: #10b981;
+            --stx-border: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            background-color: var(--stx-bg);
+            color: #e2e8f0;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .main-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .form-control-stx {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--stx-border);
+            color: #fff;
+            border-radius: 12px;
+            padding: 12px 15px;
+        }
+
+        .form-control-stx:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--stx-accent);
+            outline: none;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+        }
+
+        .qspm-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+            margin-top: 20px;
+        }
+
+        .qspm-table th {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            font-weight: 800;
+            color: #94a3b8;
+            border-bottom: 2px solid var(--stx-border);
+        }
+
+        .qspm-table td {
+            background: var(--stx-card);
+            padding: 15px;
+            border-top: 1px solid var(--stx-border);
+            border-bottom: 1px solid var(--stx-border);
+        }
+
+        .qspm-table tr td:first-child {
+            border-right: 1px solid var(--stx-border);
+            border-radius: 0 12px 12px 0;
+        }
+
+        .qspm-table tr td:last-child {
+            border-left: 1px solid var(--stx-border);
+            border-radius: 12px 0 0 12px;
+        }
+
+        .weight-input {
+            width: 80px;
+            text-align: center;
+        }
+
+        .as-input {
+            width: 70px;
+            text-align: center;
+            background: rgba(16, 185, 129, 0.05) !important;
+            color: var(--stx-accent) !important;
+            font-weight: 800;
+        }
+
+        .tas-val {
+            font-weight: 800;
+            color: #94a3b8;
+            width: 80px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .winner-cell {
+            background: rgba(16, 185, 129, 0.1) !important;
+            border: 1px solid var(--stx-accent) !important;
+        }
+
+        .strategy-header {
+            background: linear-gradient(135deg, #065f46, #064e3b);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .total-row td {
+            background: #0b0d12 !important;
+            font-weight: 900;
+            font-size: 1.1rem;
+            border: none !important;
+        }
+
+        .guide-banner {
+            background: rgba(16, 185, 129, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px dashed rgba(16, 185, 129, 0.3);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Nav -->
+    <nav class="navbar navbar-dark bg-dark border-bottom px-4" style="height: 70px;">
+        <div class="d-flex align-items-center gap-3">
+            <a href="/owner-journey.html" class="btn btn-outline-light btn-sm rounded-pill px-3">
+                <i class="bi bi-arrow-right me-1"></i> العودة للرحلة
+            </a>
+            <h5 class="m-0 fw-800">مصفوفة QSPM <span class="badge bg-success ms-2 small" style="font-size: 0.6rem;">جديد
+                    v2.0</span></h5>
+        </div>
+        <button class="btn btn-success fw-800 px-4 rounded-pill" onclick="saveQSPM()">حفظ التحليل <i
+                class="bi bi-check2-circle ms-1"></i></button>
+    </nav>
+
+    <div class="main-container">
+        <aside class="sidebar-space" id="sidebar"></aside>
+
+        <main class="content-area">
+            <div class="guide-banner">
+                <div class="fs-1 text-success"><i class="bi bi-clipboard-data"></i></div>
+                <div>
+                    <h5 class="fw-800 mb-1">المفاضلة الاستراتيجية الكمية (QSPM)</h5>
+                    <p class="m-0 small opacity-75">قم بالمفاضلة بين خيارين استراتيجيين بناءً على عوامل SWOT. حدد جاذبية
+                        كل خيار (AS) من 1 (غير جذاب) إلى 4 (جذاب جداً).</p>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="p-3 bg-dark bg-opacity-50 rounded-4 border border-white border-opacity-10">
+                        <label class="small text-muted mb-2 fw-800">الاستراتيجية الأولى (A)</label>
+                        <input type="text" id="strat-a-title" class="form-control form-control-stx"
+                            placeholder="مثلاً: التوسع في السوق الخليجي" value="خيار أ">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-3 bg-dark bg-opacity-50 rounded-4 border border-white border-opacity-10">
+                        <label class="small text-muted mb-2 fw-800">الاستراتيجية الثانية (B)</label>
+                        <input type="text" id="strat-b-title" class="form-control form-control-stx"
+                            placeholder="مثلاً: تطوير منتجات رقمية جديدة" value="خيار ب">
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="qspm-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40%;">العامل الاستراتيجي (SWOT)</th>
+                            <th style="width: 10%;">الوزن</th>
+                            <th style="width: 10%;">AS (A)</th>
+                            <th style="width: 15%;">TAS (A)</th>
+                            <th style="width: 10%;">AS (B)</th>
+                            <th style="width: 15%;">TAS (B)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="qspm-body">
+                        <!-- Factors will be loaded here -->
+                    </tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td class="text-start">إجمالي نقاط الجاذبية (Total Score)</td>
+                            <td id="total-weight">0.00</td>
+                            <td></td>
+                            <td id="total-tas-a" class="text-center text-info">0.00</td>
+                            <td></td>
+                            <td id="total-tas-b" class="text-center text-info">0.00</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div id="qspm-result" class="mt-4 p-4 rounded-4 border border-opacity-25" style="display:none">
+                <div class="row align-items-center">
+                    <div class="col-auto"><i class="bi bi-trophy-fill fs-1 text-warning"></i></div>
+                    <div class="col">
+                        <h4 class="fw-900 mb-1">الخيار الفائز: <span id="winner-name" class="text-success"></span></h4>
+                        <p class="m-0 text-muted" id="winner-advice"></p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script src="/js/page-guard.js"></script>
+    <script>
+        const FACTORS = [];
+
+        async function loadFactors() {
+            let swot = null;
+            if (window.StateManager) {
+                // Try strategy-specific smart diagnostic first
+                swot = window.StateManager.get('stratix_smart_strategy')?.axes ||
+                    window.StateManager.get('stratix_owner_diagnostic')?.swot;
+            }
+
+            // Fallback hardcoded if SWOT is empty
+            const items = [];
+            if (swot) {
+                // Process swot object (s: [], w: [], o: [], t: [])
+                ['s', 'w', 'o', 't'].forEach(key => {
+                    if (Array.isArray(swot[key])) {
+                        swot[key].forEach(txt => items.push({ type: key.toUpperCase(), text: txt }));
+                    }
+                });
+            }
+
+            if (items.length === 0) {
+                // Placeholder factors
+                items.push({ type: 'S', text: 'امتلاك حصة سوقية جيدة' });
+                items.push({ type: 'O', text: 'فرص نمو في قطاع الخدمات' });
+                items.push({ type: 'W', text: 'نقص في الكفاءات التقنية' });
+                items.push({ type: 'T', text: 'دخول منافسين دوليين' });
+            }
+
+            const body = document.getElementById('qspm-body');
+            body.innerHTML = '';
+
+            const count = items.length;
+            const weight = (1.0 / count).toFixed(2);
+
+            items.forEach((item, i) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="text-start">
+                        <span class="badge ${item.type === 'S' ? 'bg-success' : item.type === 'O' ? 'bg-info' : item.type === 'W' ? 'bg-danger' : 'bg-warning'} me-2">${item.type}</span>
+                        ${item.text}
+                    </td>
+                    <td><input type="number" class="form-control form-control-sm weight-input" value="${weight}" step="0.05" onchange="calc()"></td>
+                    <td><input type="number" class="form-control form-control-sm as-input as-a" value="0" min="0" max="4" onchange="calc()"></td>
+                    <td class="tas-val tas-a">0.00</td>
+                    <td><input type="number" class="form-control form-control-sm as-input as-b" value="0" min="0" max="4" onchange="calc()"></td>
+                    <td class="tas-val tas-b">0.00</td>
+                `;
+                body.appendChild(tr);
+                FACTORS.push(item);
+            });
+
+            calc();
+        }
+
+        function calc() {
+            const weights = document.querySelectorAll('.weight-input');
+            const asA = document.querySelectorAll('.as-a');
+            const asB = document.querySelectorAll('.as-b');
+            const tasA = document.querySelectorAll('.tas-a');
+            const tasB = document.querySelectorAll('.tas-b');
+
+            let totalW = 0, totalA = 0, totalB = 0;
+
+            weights.forEach((wInput, i) => {
+                const w = parseFloat(wInput.value) || 0;
+                const a = parseFloat(asA[i].value) || 0;
+                const b = parseFloat(asB[i].value) || 0;
+
+                const resA = w * a;
+                const resB = w * b;
+
+                tasA[i].textContent = resA.toFixed(2);
+                tasB[i].textContent = resB.toFixed(2);
+
+                totalW += w;
+                totalA += resA;
+                totalB += resB;
+            });
+
+            document.getElementById('total-weight').textContent = totalW.toFixed(2);
+            document.getElementById('total-tas-a').textContent = totalA.toFixed(2);
+            document.getElementById('total-tas-b').textContent = totalB.toFixed(2);
+
+            const resultDiv = document.getElementById('qspm-result');
+            const winnerName = document.getElementById('winner-name');
+            const winnerAdvice = document.getElementById('winner-advice');
+
+            if (totalA > 0 || totalB > 0) {
+                resultDiv.style.display = 'block';
+                const winA = totalA >= totalB;
+                const name = winA ? document.getElementById('strat-a-title').value : document.getElementById('strat-b-title').value;
+                const diff = Math.abs(totalA - totalB).toFixed(2);
+
+                winnerName.textContent = name;
+                resultDiv.className = 'mt-4 p-4 rounded-4 border ' + (winA ? 'border-success' : 'border-primary');
+                winnerAdvice.textContent = `يتفوق هذا الخيار بفارق ${diff} نقطة. يُنصح بالمضي قدماً في تخطيط المبادرات لهذا المسار كونه الأكثر مواءمة مع عوامل القوة والفرص المتاحة.`;
+
+                window._winner = name;
+            }
+        }
+
+        async function saveQSPM() {
+            const items = [];
+            const weights = document.querySelectorAll('.weight-input');
+            const asA = document.querySelectorAll('.as-a');
+            const asB = document.querySelectorAll('.as-b');
+
+            FACTORS.forEach((item, i) => {
+                items.push({
+                    factor: item.text,
+                    type: item.type,
+                    weight: parseFloat(weights[i].value),
+                    asA: parseFloat(asA[i].value),
+                    asB: parseFloat(asB[i].value)
+                });
+            });
+
+            const payload = {
+                titleA: document.getElementById('strat-a-title').value,
+                titleB: document.getElementById('strat-b-title').value,
+                totalA: parseFloat(document.getElementById('total-tas-a').textContent),
+                totalB: parseFloat(document.getElementById('total-tas-b').textContent),
+                winner: window._winner,
+                factors: items,
+                savedAt: new Date().toISOString()
+            };
+
+            if (window.StateManager) {
+                window.StateManager.set('qspm_analysis', payload);
+                window.StateManager.markStepDone('qspm');
+                window.StateManager.updatePayload('QSPM', {
+                    winner: payload.winner,
+                    details: payload
+                });
+            }
+
+            if (window.api?.post) {
+                await window.api.post('/api/dept/analysis', {
+                    dept: 'strategy',
+                    type: 'QSPM',
+                    data: payload
+                });
+            }
+
+            alert('✅ تم حفظ مصفوفة QSPM بنجاح');
+            window.location.href = '/owner-journey.html';
+        }
+
+        window.onload = () => {
+            if (window.initSidebar) window.initSidebar();
+            loadFactors();
+        };
+    </script>
+</body>
+
+</html>

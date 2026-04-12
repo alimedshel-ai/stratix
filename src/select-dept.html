@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ستارتكس | اختر قسمك</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root { --stx-primary: #6366f1; --stx-bg: #0b0d12;             --bs-body-color: #e2e8f0;
+            --bs-body-color-rgb: 226, 232, 240;
+            --bs-card-color: #e2e8f0;
+}
+    body { background: var(--stx-bg); color: #f8fafc; font-family: 'Tajawal', sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .picker-card { background: #111827; border: 1px solid rgba(255,255,255,0.08); border-radius: 32px; padding: 48px 40px; max-width: 600px; width: 100%; text-align: center; }
+    .dept-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 28px; }
+    .dept-btn { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px 12px; cursor: pointer; transition: all 0.2s; color: #f8fafc; text-align: center; }
+    .dept-btn:hover { border-color: var(--stx-primary); background: rgba(99,102,241,0.1); transform: translateY(-3px); }
+    .dept-btn.selected { border-color: var(--stx-primary); background: rgba(99,102,241,0.15); box-shadow: 0 0 0 2px rgba(99,102,241,0.3); }
+    .dept-btn i { font-size: 1.8rem; display: block; margin-bottom: 8px; color: var(--stx-primary); }
+    .dept-btn span { font-size: 0.85rem; font-weight: 600; }
+    .btn-confirm { background: var(--stx-primary); border: none; color: #fff; padding: 14px 40px; border-radius: 14px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 28px; width: 100%; }
+    .btn-confirm:hover { background: #4f46e5; transform: translateY(-2px); }
+    .btn-confirm:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    @media (max-width: 480px) { .dept-grid { grid-template-columns: repeat(2,1fr); } }
+  </style>
+</head>
+<body>
+  <div class="picker-card">
+    <div style="font-size:3rem; margin-bottom:16px">🏢</div>
+    <h2 style="font-weight:900; font-size:1.6rem; margin-bottom:8px">اختر الإدارة التي تشرف عليها</h2>
+    <p class="text-muted">هذا الإعداد سيُحفظ ولن يُطلب منك مرة أخرى</p>
+
+    <div class="dept-grid" id="dept-grid">
+      <!-- يتم تعبئتها ديناميكياً -->
+    </div>
+
+    <button class="btn-confirm" id="btn-confirm" disabled onclick="confirmSelection()">
+      <i class="bi bi-check2-circle me-2"></i> تأكيد وانتقل للوحة التحكم
+    </button>
+    <div id="error-msg" class="text-danger mt-3 small" style="display:none"></div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    const DEPTS = [
+      { code: 'hr',         label: 'الموارد البشرية',      icon: 'bi-people-fill' },
+      { code: 'finance',    label: 'المالية',               icon: 'bi-cash-coin' },
+      { code: 'marketing',  label: 'التسويق',               icon: 'bi-megaphone-fill' },
+      { code: 'operations', label: 'العمليات',              icon: 'bi-gear-fill' },
+      { code: 'sales',      label: 'المبيعات',              icon: 'bi-cart3' },
+      { code: 'it',         label: 'تقنية المعلومات',       icon: 'bi-cpu-fill' },
+      { code: 'cs',         label: 'تجربة العميل',          icon: 'bi-headset' },
+      { code: 'logistics',  label: 'سلاسل الإمداد',         icon: 'bi-truck' },
+      { code: 'legal',      label: 'الشؤون القانونية',      icon: 'bi-shield-lock-fill' },
+      { code: 'governance',  label: 'الحوكمة والمخاطر',      icon: 'bi-diagram-3-fill' },
+      { code: 'projects',   label: 'إدارة المشاريع',        icon: 'bi-kanban-fill' },
+      { code: 'compliance', label: 'الامتثال',              icon: 'bi-shield-check-fill' },
+      { code: 'quality',    label: 'الجودة',               icon: 'bi-patch-check-fill' },
+      { code: 'support',    label: 'الخدمات المساندة',     icon: 'bi-tools' },
+    ];
+
+    let selectedDept = null;
+
+    // رسم الشبكة
+    const grid = document.getElementById('dept-grid');
+    DEPTS.forEach(d => {
+      const btn = document.createElement('div');
+      btn.className = 'dept-btn';
+      btn.dataset.code = d.code;
+      btn.innerHTML = `<i class="bi ${d.icon}"></i><span>${d.label}</span>`;
+      btn.onclick = () => selectDept(d.code);
+      grid.appendChild(btn);
+    });
+
+    function selectDept(code) {
+      selectedDept = code;
+      document.querySelectorAll('.dept-btn').forEach(b => b.classList.remove('selected'));
+      document.querySelector(`[data-code="${code}"]`)?.classList.add('selected');
+      document.getElementById('btn-confirm').disabled = false;
+    }
+
+    async function confirmSelection() {
+      if (!selectedDept) return;
+      const btn = document.getElementById('btn-confirm');
+      const errEl = document.getElementById('error-msg');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري الحفظ...';
+      errEl.style.display = 'none';
+
+      try {
+        // حفظ deptCode في قاعدة البيانات عبر API
+        const params = new URLSearchParams(window.location.search);
+        const entityId = params.get('entityId');
+
+        await window.api.post('/api/auth/set-dept', { deptCode: selectedDept, entityId });
+
+        // توجيه للوحة القسم المختار
+        window.location.href = `/dept-dashboard.html?dept=${selectedDept}`;
+      } catch (err) {
+        errEl.textContent = 'حدث خطأ أثناء الحفظ. حاول مرة أخرى.';
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check2-circle me-2"></i> تأكيد وانتقل للوحة التحكم';
+      }
+    }
+  </script>
+</body>
+</html>

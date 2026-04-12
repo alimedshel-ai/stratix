@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مؤشرات أداء المبيعات - Startix</title>
+
+    <!-- Bootstrap RTL -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <!-- Google Fonts - Tajawal Arabic -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+
+    <!-- Shared CSS -->
+    <link rel="stylesheet" href="/css/shared.css">
+    <link rel="stylesheet" href="/css/dept-pages.css">
+
+    <style>
+        :root {
+            --stx-bg: #0b0d12;
+            --stx-card: rgba(22,27,34,0.7);
+            --stx-border: rgba(255,255,255,0.08);
+            --stx-primary: #6366f1;
+            --stx-success: #10b981;
+            --stx-warn: #f59e0b;
+            --stx-danger: #ef4444;
+            --stx-sidebar-top: 0px;
+                    --bs-body-color: #e2e8f0;
+            --bs-body-color-rgb: 226, 232, 240;
+            --bs-card-color: #e2e8f0;
+}
+
+        * {
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        body {
+            background-color: var(--stx-bg);
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .stx-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .stx-sidebar {
+            width: 260px;
+            background-color: var(--stx-card);
+            border-left: 1px solid var(--stx-border);
+            position: fixed;
+            height: 100vh;
+            right: 0;
+            top: var(--stx-sidebar-top);
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .stx-main {
+            flex: 1;
+            margin-right: 260px;
+            padding: 40px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+            color: #fff;
+        }
+
+        .header-subtitle {
+            font-size: 0.95rem;
+            color: rgba(255,255,255,0.6);
+            margin-top: 5px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-stx {
+            background: linear-gradient(135deg, var(--stx-primary), #7c3aed);
+            border: none;
+            color: #fff;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-stx:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99,102,241,0.3);
+            color: #fff;
+        }
+
+        .btn-stx:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--stx-border);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline:hover {
+            border-color: var(--stx-primary);
+            color: var(--stx-primary);
+        }
+
+        .kpis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .kpi-card {
+            background: var(--stx-card);
+            border: 1px solid var(--stx-border);
+            border-radius: 20px;
+            padding: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .kpi-card:hover {
+            border-color: var(--stx-primary);
+            box-shadow: 0 10px 30px rgba(99,102,241,0.1);
+        }
+
+        .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .kpi-name {
+            font-size: 1rem;
+            color: rgba(255,255,255,0.7);
+            font-weight: 500;
+        }
+
+        .kpi-unit {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.5);
+            margin-top: 5px;
+        }
+
+        .kpi-status-badge {
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .kpi-status-good {
+            background: rgba(16,185,129,0.2);
+            color: var(--stx-success);
+        }
+
+        .kpi-status-warn {
+            background: rgba(245,158,11,0.2);
+            color: var(--stx-warn);
+        }
+
+        .kpi-status-bad {
+            background: rgba(239,68,68,0.2);
+            color: var(--stx-danger);
+        }
+
+        .kpi-values {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            align-items: flex-end;
+        }
+
+        .kpi-current {
+            flex: 1;
+        }
+
+        .kpi-current-label {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 8px;
+        }
+
+        .kpi-current-input {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--stx-border);
+            border-radius: 10px;
+            padding: 12px;
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .kpi-current-input:focus {
+            outline: none;
+            border-color: var(--stx-primary);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+        }
+
+        .kpi-target {
+            text-align: center;
+        }
+
+        .kpi-target-label {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 8px;
+        }
+
+        .kpi-target-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--stx-primary);
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .progress-section {
+            margin-top: 20px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 8px;
+        }
+
+        .progress {
+            height: 12px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--stx-border);
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, var(--stx-success), #34d399);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-bar-warn {
+            background: linear-gradient(90deg, var(--stx-warn), #fbbf24);
+        }
+
+        .progress-bar-danger {
+            background: linear-gradient(90deg, var(--stx-danger), #f87171);
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 25px;
+            margin-top: 40px;
+            color: #fff;
+        }
+
+        .historical-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .table-container {
+            background: var(--stx-card);
+            border: 1px solid var(--stx-border);
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 40px;
+        }
+
+        .table {
+            margin: 0;
+            color: #fff;
+        }
+
+        .table thead {
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid var(--stx-border);
+        }
+
+        .table th {
+            padding: 20px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.8);
+            border: none;
+        }
+
+        .table td {
+            padding: 15px 20px;
+            border: none;
+            border-bottom: 1px solid var(--stx-border);
+            vertical-align: middle;
+        }
+
+        .table tbody tr:hover {
+            background: rgba(99,102,241,0.05);
+        }
+
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .btn-delete {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: var(--stx-danger);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-delete:hover {
+            background: rgba(239,68,68,0.2);
+            border-color: var(--stx-danger);
+        }
+
+        .chart-container {
+            background: var(--stx-card);
+            border: 1px solid var(--stx-border);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 40px;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+
+        .modal-content {
+            background: var(--stx-card);
+            border: 1px solid var(--stx-border);
+        }
+
+        .modal-header {
+            border-bottom: 1px solid var(--stx-border);
+        }
+
+        .modal-header .btn-close {
+            filter: invert(1);
+        }
+
+        .form-control {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--stx-border);
+            color: #fff;
+            padding: 12px;
+            border-radius: 10px;
+        }
+
+        .form-control:focus {
+            background: rgba(0,0,0,0.3);
+            border-color: var(--stx-primary);
+            color: #fff;
+            box-shadow: 0 0 0 0.25rem rgba(99,102,241,0.25);
+        }
+
+        .form-label {
+            color: rgba(255,255,255,0.8);
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(99,102,241,0.2);
+            border-radius: 50%;
+            border-top-color: var(--stx-primary);
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .stx-sidebar {
+                width: 0;
+                display: none;
+            }
+
+            .stx-main {
+                margin-right: 0;
+                padding: 20px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+            }
+
+            .kpis-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-title {
+                font-size: 1.8rem;
+            }
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stx-wrapper">
+        <!-- Sidebar -->
+        <div class="stx-sidebar" id="sidebar"></div>
+
+        <!-- Main Content -->
+        <div class="stx-main">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="header-left">
+                    <i class="bi bi-speedometer" style="font-size: 2.5rem; color: var(--stx-primary);"></i>
+                    <div>
+                        <h1 class="header-title">مؤشرات أداء المبيعات</h1>
+                        <p class="header-subtitle">Sales KPIs</p>
+                    </div>
+                </div>
+                <div class="header-actions no-print">
+                    <button class="btn-outline" onclick="goBack()">
+                        <i class="bi bi-arrow-left"></i> رجوع
+                    </button>
+                    <button class="btn-stx" id="saveBtn" onclick="saveAll()">
+                        <i class="bi bi-download"></i> حفظ
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div id="kpisContainer" class="kpis-grid"></div>
+
+            <!-- Historical Data Section -->
+            <h2 class="section-title">السجل التاريخي</h2>
+            <div class="historical-controls no-print">
+                <button class="btn-stx" onclick="openAddMonthModal()">
+                    <i class="bi bi-plus-lg"></i> إضافة شهر جديد
+                </button>
+            </div>
+
+            <!-- Historical Data Table -->
+            <div class="table-container">
+                <table class="table" id="historicalTable">
+                    <thead>
+                        <tr>
+                            <th>الشهر</th>
+                            <th>الإيرادات الشهرية</th>
+                            <th>نسبة الإغلاق</th>
+                            <th>متوسط الصفقة</th>
+                            <th>دورة البيع</th>
+                            <th>تكلفة الاكتساب</th>
+                            <th>قيمة الخط</th>
+                            <th>نسبة الفقد</th>
+                            <th>العملاء الجدد</th>
+                            <th class="no-print"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="historicalBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Trend Chart -->
+            <h2 class="section-title">اتجاهات الأداء</h2>
+            <div class="chart-container">
+                <div class="chart-wrapper">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Month Modal -->
+    <div class="modal fade" id="addMonthModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">إضافة بيانات شهر جديد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">الشهر والسنة</label>
+                                <input type="month" class="form-control" id="monthInput">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">الإيرادات الشهرية (ريال)</label>
+                                <input type="number" class="form-control" id="monthlyRevenueInput" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">نسبة الإغلاق (%)</label>
+                                <input type="number" class="form-control" id="winRateInput" min="0" max="100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">متوسط قيمة الصفقة (ريال)</label>
+                                <input type="number" class="form-control" id="avgDealInput" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">متوسط دورة البيع (يوم)</label>
+                                <input type="number" class="form-control" id="salesCycleInput" min="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">تكلفة اكتساب العميل (ريال)</label>
+                                <input type="number" class="form-control" id="cacInput" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">قيمة الخط (ريال)</label>
+                                <input type="number" class="form-control" id="pipelineInput" min="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">نسبة فقد العملاء (%)</label>
+                                <input type="number" class="form-control" id="churnInput" min="0" max="100">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">عدد العملاء الجدد</label>
+                                <input type="number" class="form-control" id="leadsInput" min="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn-stx" onclick="confirmAddMonth()">إضافة</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/utils.js"></script>
+    <script src="/js/context-manager.js"></script>
+    <script src="/js/page-guard.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/steps-config.js"></script>
+    <script src="/js/dept-page.js"></script>
+    <script src="/js/sidebar.js"></script>
+
+    <script>
+        // Configuration
+        const dept = 'sales';
+        const kpis = [
+            { id: "monthly_revenue", name: "الإيرادات الشهرية", unit: "ريال", target: 500000, default: 0, isPercentage: false, lowerIsBetter: false },
+            { id: "win_rate", name: "نسبة إغلاق الصفقات (Win Rate)", unit: "%", target: 30, default: 0, isPercentage: true, lowerIsBetter: false },
+            { id: "avg_deal_size", name: "متوسط قيمة الصفقة", unit: "ريال", target: 15000, default: 0, isPercentage: false, lowerIsBetter: false },
+            { id: "sales_cycle", name: "متوسط دورة البيع", unit: "يوم", target: 30, default: 45, isPercentage: false, lowerIsBetter: true },
+            { id: "customer_acquisition_cost", name: "تكلفة اكتساب العميل (CAC)", unit: "ريال", target: 500, default: 0, isPercentage: false, lowerIsBetter: true },
+            { id: "pipeline_value", name: "قيمة خط الأنابيب (Pipeline)", unit: "ريال", target: 2000000, default: 0, isPercentage: false, lowerIsBetter: false },
+            { id: "churn_rate", name: "نسبة فقد العملاء (Churn)", unit: "%", target: 5, default: 0, isPercentage: true, lowerIsBetter: true },
+            { id: "leads_count", name: "عدد العملاء المحتملين الجدد شهرياً", unit: "عميل", target: 100, default: 0, isPercentage: false, lowerIsBetter: false }
+        ];
+
+        let kpiValues = {};
+        let historicalData = [];
+        let trendChart = null;
+
+        // Load sidebar
+        function initSidebar() {
+            if (window.initSidebar) {
+                window.initSidebar(dept);
+            }
+        }
+
+        // Navigation
+        function goBack() {
+            window.location.href = '/sales-audit.html?dept=sales';
+        }
+
+        // Load diagnostic data
+        async function loadDiagnosticData() {
+            try {
+                const deepResults = await DeptPage.loadFromAPI('DEEP');
+                if (deepResults) return deepResults;
+            } catch (e) {
+                console.log('API load failed, trying Context');
+            }
+
+            try {
+                const deepResults = Context.getTemp('deep_results');
+                if (deepResults) return deepResults;
+            } catch (e) {
+                console.log('Context load failed, trying localStorage');
+            }
+
+            const stored = localStorage.getItem('stratix_sales_deep_results');
+            return stored ? JSON.parse(stored) : null;
+        }
+
+        // Load KPI values
+        function loadKpisData() {
+            const stored = localStorage.getItem('stratix_sales_kpis_values');
+            if (stored) {
+                kpiValues = JSON.parse(stored);
+            } else {
+                kpiValues = {};
+                kpis.forEach(kpi => {
+                    kpiValues[kpi.id] = kpi.default;
+                });
+            }
+        }
+
+        // Load historical data
+        function loadHistoricalData() {
+            const stored = localStorage.getItem('stratix_sales_kpis_history');
+            if (stored) {
+                historicalData = JSON.parse(stored);
+            } else {
+                historicalData = [];
+            }
+        }
+
+        // Save KPI values
+        async function saveKpisValues() {
+            localStorage.setItem('stratix_sales_kpis_values', JSON.stringify(kpiValues));
+
+            try {
+                await DeptPage.saveToAPI('KPIS_VALUES', kpiValues);
+            } catch (e) {
+                console.log('API save failed, data saved to localStorage');
+            }
+        }
+
+        // Save historical data
+        async function saveHistoricalData() {
+            localStorage.setItem('stratix_sales_kpis_history', JSON.stringify(historicalData));
+
+            try {
+                await DeptPage.saveToAPI('KPIS_HISTORY', historicalData);
+            } catch (e) {
+                console.log('API save failed, data saved to localStorage');
+            }
+        }
+
+        // Calculate progress percentage
+        function calculateProgress(value, target, lowerIsBetter) {
+            if (target === 0) return 0;
+
+            if (lowerIsBetter) {
+                const progress = Math.max(0, Math.min(100, ((target - value) / target) * 100));
+                return Math.round(progress);
+            } else {
+                const progress = Math.max(0, Math.min(100, (value / target) * 100));
+                return Math.round(progress);
+            }
+        }
+
+        // Get status class
+        function getStatusClass(progress, lowerIsBetter) {
+            if (lowerIsBetter) {
+                if (progress >= 80) return 'kpi-status-good';
+                if (progress >= 50) return 'kpi-status-warn';
+                return 'kpi-status-bad';
+            } else {
+                if (progress >= 80) return 'kpi-status-good';
+                if (progress >= 50) return 'kpi-status-warn';
+                return 'kpi-status-bad';
+            }
+        }
+
+        // Format number
+        function formatNumber(num, isPercentage = false) {
+            if (typeof num !== 'number') return '0';
+            if (isPercentage) {
+                return num.toFixed(1) + '%';
+            }
+            return num.toLocaleString('ar-SA');
+        }
+
+        // Update single KPI card
+        function updateKpiCard(kpiId, newValue) {
+            const card = document.querySelector(`[data-kpi="${kpiId}"]`);
+            if (!card) return;
+
+            const kpi = kpis.find(k => k.id === kpiId);
+            if (!kpi) return;
+
+            const progress = calculateProgress(newValue, kpi.target, kpi.lowerIsBetter);
+            const statusClass = getStatusClass(progress, kpi.lowerIsBetter);
+
+            card.querySelector('.kpi-status-badge').className = 'kpi-status-badge ' + statusClass;
+            card.querySelector('.kpi-status-badge').textContent = progress + '%';
+
+            const progressBar = card.querySelector('.progress-bar');
+            progressBar.style.width = progress + '%';
+            progressBar.className = 'progress-bar';
+
+            if (progress < 50) {
+                progressBar.classList.add('progress-bar-danger');
+            } else if (progress < 80) {
+                progressBar.classList.add('progress-bar-warn');
+            }
+
+            card.querySelector('.progress-label span:first-child').textContent = `التقدم: ${progress}%`;
+        }
+
+        // Render KPI cards
+        function renderKpis() {
+            const container = document.getElementById('kpisContainer');
+            container.innerHTML = '';
+
+            kpis.forEach(kpi => {
+                const value = kpiValues[kpi.id] || kpi.default;
+                const progress = calculateProgress(value, kpi.target, kpi.lowerIsBetter);
+                const statusClass = getStatusClass(progress, kpi.lowerIsBetter);
+
+                let progressBarClass = 'progress-bar';
+                if (progress < 50) {
+                    progressBarClass += ' progress-bar-danger';
+                } else if (progress < 80) {
+                    progressBarClass += ' progress-bar-warn';
+                }
+
+                const card = document.createElement('div');
+                card.className = 'kpi-card';
+                card.dataset.kpi = kpi.id;
+                card.innerHTML = `
+                    <div class="kpi-header">
+                        <div>
+                            <div class="kpi-name">${kpi.name}</div>
+                            <div class="kpi-unit">${kpi.unit}</div>
+                        </div>
+                        <div class="kpi-status-badge ${statusClass}">${progress}%</div>
+                    </div>
+
+                    <div class="kpi-values">
+                        <div class="kpi-current">
+                            <div class="kpi-current-label">القيمة الحالية</div>
+                            <input
+                                type="number"
+                                class="kpi-current-input"
+                                value="${value}"
+                                data-kpi-id="${kpi.id}"
+                                onchange="handleKpiChange(this)"
+                                onkeyup="handleKpiChange(this)"
+                            >
+                        </div>
+                        <div class="kpi-target">
+                            <div class="kpi-target-label">الهدف</div>
+                            <div class="kpi-target-value">${formatNumber(kpi.target, kpi.isPercentage)}</div>
+                        </div>
+                    </div>
+
+                    <div class="progress-section">
+                        <div class="progress-label">
+                            <span>التقدم: ${progress}%</span>
+                            <span>${formatNumber(value, kpi.isPercentage)}</span>
+                        </div>
+                        <div class="progress">
+                            <div class="${progressBarClass}" style="width: ${progress}%"></div>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        // Handle KPI change
+        function handleKpiChange(input) {
+            const kpiId = input.dataset.kpiId;
+            const newValue = parseFloat(input.value) || 0;
+
+            kpiValues[kpiId] = newValue;
+            updateKpiCard(kpiId, newValue);
+        }
+
+        // Render historical table
+        function renderHistorical() {
+            const tbody = document.getElementById('historicalBody');
+            tbody.innerHTML = '';
+
+            if (historicalData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" style="text-align: center; padding: 30px; color: rgba(255,255,255,0.5);">
+                            لا توجد بيانات تاريخية
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            historicalData.forEach((record, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${record.month}</td>
+                    <td>${formatNumber(record.monthly_revenue)}</td>
+                    <td>${formatNumber(record.win_rate, true)}</td>
+                    <td>${formatNumber(record.avg_deal_size)}</td>
+                    <td>${record.sales_cycle}</td>
+                    <td>${formatNumber(record.customer_acquisition_cost)}</td>
+                    <td>${formatNumber(record.pipeline_value)}</td>
+                    <td>${formatNumber(record.churn_rate, true)}</td>
+                    <td>${record.leads_count}</td>
+                    <td class="no-print">
+                        <button class="btn-delete" onclick="deleteHistoricalRecord(${index})">
+                            <i class="bi bi-trash"></i> حذف
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            updateChart();
+        }
+
+        // Delete historical record
+        function deleteHistoricalRecord(index) {
+            if (confirm('هل تريد حذف هذا السجل؟')) {
+                historicalData.splice(index, 1);
+                saveHistoricalData();
+                renderHistorical();
+            }
+        }
+
+        // Update trend chart
+        function updateChart() {
+            if (historicalData.length === 0) return;
+
+            const months = historicalData.map(r => r.month);
+            const revenues = historicalData.map(r => r.monthly_revenue);
+            const winRates = historicalData.map(r => r.win_rate);
+            const cacs = historicalData.map(r => r.customer_acquisition_cost);
+
+            const ctx = document.getElementById('trendChart').getContext('2d');
+
+            if (trendChart) {
+                trendChart.destroy();
+            }
+
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [
+                        {
+                            label: 'الإيرادات الشهرية (ريال)',
+                            data: revenues,
+                            borderColor: var(--stx-success),
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 6,
+                            pointBackgroundColor: var(--stx-success),
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2
+                        },
+                        {
+                            label: 'نسبة الإغلاق (%)',
+                            data: winRates,
+                            borderColor: var(--stx-primary),
+                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 6,
+                            pointBackgroundColor: var(--stx-primary),
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            yAxisID: 'y1'
+                        },
+                        {
+                            label: 'تكلفة الاكتساب (ريال)',
+                            data: cacs,
+                            borderColor: var(--stx-warn),
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 6,
+                            pointBackgroundColor: var(--stx-warn),
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                font: { size: 12, weight: '500' },
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: 'rgba(255, 255, 255, 0.9)',
+                            borderColor: 'var(--stx-border)',
+                            borderWidth: 1,
+                            padding: 12,
+                            titleFont: { weight: '600' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            position: 'right',
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.5)',
+                                font: { size: 11 }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)',
+                                drawBorder: false
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            position: 'left',
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.5)',
+                                font: { size: 11 }
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.5)',
+                                font: { size: 11 }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)',
+                                drawBorder: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Modal functions
+        function openAddMonthModal() {
+            const today = new Date();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const year = today.getFullYear();
+            document.getElementById('monthInput').value = `${year}-${month}`;
+
+            new bootstrap.Modal(document.getElementById('addMonthModal')).show();
+        }
+
+        function confirmAddMonth() {
+            const month = document.getElementById('monthInput').value;
+            if (!month) {
+                alert('اختر الشهر والسنة');
+                return;
+            }
+
+            const record = {
+                month: month,
+                monthly_revenue: parseFloat(document.getElementById('monthlyRevenueInput').value) || 0,
+                win_rate: parseFloat(document.getElementById('winRateInput').value) || 0,
+                avg_deal_size: parseFloat(document.getElementById('avgDealInput').value) || 0,
+                sales_cycle: parseFloat(document.getElementById('salesCycleInput').value) || 0,
+                customer_acquisition_cost: parseFloat(document.getElementById('cacInput').value) || 0,
+                pipeline_value: parseFloat(document.getElementById('pipelineInput').value) || 0,
+                churn_rate: parseFloat(document.getElementById('churnInput').value) || 0,
+                leads_count: parseInt(document.getElementById('leadsInput').value) || 0
+            };
+
+            // Check if month already exists
+            const existingIndex = historicalData.findIndex(d => d.month === month);
+            if (existingIndex !== -1) {
+                historicalData[existingIndex] = record;
+            } else {
+                historicalData.push(record);
+            }
+
+            // Sort by month
+            historicalData.sort((a, b) => new Date(a.month) - new Date(b.month));
+
+            saveHistoricalData();
+            renderHistorical();
+
+            bootstrap.Modal.getInstance(document.getElementById('addMonthModal')).hide();
+
+            // Clear inputs
+            document.getElementById('monthInput').value = '';
+            document.getElementById('monthlyRevenueInput').value = '';
+            document.getElementById('winRateInput').value = '';
+            document.getElementById('avgDealInput').value = '';
+            document.getElementById('salesCycleInput').value = '';
+            document.getElementById('cacInput').value = '';
+            document.getElementById('pipelineInput').value = '';
+            document.getElementById('churnInput').value = '';
+            document.getElementById('leadsInput').value = '';
+        }
+
+        // Save all
+        async function saveAll() {
+            const saveBtn = document.getElementById('saveBtn');
+            const originalText = saveBtn.innerHTML;
+
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="loading-spinner"></span> جاري الحفظ...';
+
+            try {
+                await saveKpisValues();
+                await saveHistoricalData();
+
+                saveBtn.innerHTML = '<i class="bi bi-check-lg"></i> تم الحفظ';
+                setTimeout(() => {
+                    saveBtn.innerHTML = originalText;
+                    saveBtn.disabled = false;
+                }, 2000);
+            } catch (e) {
+                console.error('Save error:', e);
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+                alert('حدث خطأ في الحفظ');
+            }
+        }
+
+        // Initialize on DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', async function() {
+            initSidebar();
+            loadKpisData();
+            loadHistoricalData();
+            renderKpis();
+            renderHistorical();
+        });
+    </script>
+</body>
+</html>

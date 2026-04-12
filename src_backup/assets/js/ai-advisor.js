@@ -14,28 +14,9 @@
 
   // === إعدادات ===
   const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 دقائق
-  let token = '';
   let entityId = '';
   let currentPage = window.location.pathname + window.location.search;
-
-  try {
-    token = localStorage.getItem('token') || '';
-    const stored = localStorage.getItem('user');
-    if (stored) {
-      const u = JSON.parse(stored);
-      entityId = u.entity?.id || u.activeEntityId || u.entityId || '';
-    }
-    // Fallback: try localStorage directly
-    if (!entityId) {
-      entityId = localStorage.getItem('entityId') || '';
-    }
-  } catch (e) { /* ignore */ }
-
-  console.log('[AI-Advisor] Init:', { currentPage, entityId: entityId || 'NONE', hasToken: !!token });
-
-  // لا تُظهر المستشار في صفحات لا تحتاجه
-  const excludedPages = ['/login.html', '/signup.html', '/landing.html', '/'];
-  if (excludedPages.includes(window.location.pathname) || !token) return;
+  let user = null;
 
   // === حالة المكون ===
   let suggestions = [];
@@ -822,8 +803,6 @@
 
   // === Fetch Suggestions ===
   async function fetchContext() {
-    if (!token) return;
-
     // إذا ما فيه entityId → نعطي نصائح محلية من الفرونتند
     if (!entityId) {
       const localSuggestions = getLocalSuggestions(currentPage);
@@ -846,9 +825,8 @@
 
     try {
       const url = `/api/ai-advisor/context?page=${encodeURIComponent(currentPage)}&entityId=${encodeURIComponent(entityId)}`;
-      const res = await fetch(url, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      // No headers needed, monkey-patched fetch in api.js handles credentials
+      const res = await fetch(url);
       if (!res.ok) return;
 
       const data = await res.json();
@@ -861,6 +839,13 @@
         setTimeout(() => showNudge(nudge), 3000);
       }
 
+      // ✅ [REFACTOR] Expose context for other modules
+      if (window.Startix) {
+        window.Startix.advisorContext = context;
+      } else {
+        window.Startix = { advisorContext: context };
+      }
+
       // Show new badge
       if (suggestions.length > 0 && !isPanelOpen) {
         hasNewSuggestions = true;
@@ -871,6 +856,9 @@
       if (isPanelOpen) {
         renderSuggestions();
       }
+
+      // Fire an event to notify other scripts that context is ready
+      document.dispatchEvent(new CustomEvent('startix:contextUpdated', { detail: context }));
 
     } catch (e) {
       console.warn('AI Advisor fetch error:', e);
@@ -1396,13 +1384,27 @@
     }
   }
 
-  // === Init ===
-  // أول جلب بعد 2 ثانية
-  setTimeout(fetchContext, 2000);
+  // ✅ [REFACTOR] Async initialization to get user from API
+  async function initializeAdvisor() {
+    try {
+      user = await window.api.getCurrentUser();
+      if (!user) {
+        console.log('[AI-Advisor] No authenticated user. Advisor will not run.');
+        return;
+      }
+      entityId = user.entityId || user.entity?.id || user.activeEntityId || '';
+      console.log('[AI-Advisor] Init:', { currentPage, entityId: entityId || 'NONE', hasUser: !!user });
 
-  // تحديث دوري
-  setInterval(fetchContext, REFRESH_INTERVAL);
+      const excludedPages = ['/login.html', '/signup.html', '/landing.html', '/'];
+      if (excludedPages.includes(window.location.pathname)) return;
 
+      document.body.appendChild(fab);
+      document.body.appendChild(overlay);
+      document.body.appendChild(panel);
+      setTimeout(fetchContext, 2000);
+      setInterval(fetchContext, REFRESH_INTERVAL);
+    } catch (e) { /* ignore */ }
+  }
   // === دالة إضافة اقتراح من المستشار للتحليل ===
   function applySuggestion(sectionKey, text, chipEl) {
     if (!text || chipEl.classList.contains('added')) return;
@@ -1503,4 +1505,7 @@
       setTimeout(fetchContext, 1000);
     }
   };
+
+  // Run initialization
+  initializeAdvisor();
 })();

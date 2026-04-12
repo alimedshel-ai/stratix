@@ -24,40 +24,7 @@
     let patternKey = '';
     let size = '';
     let userType = '';
-
-    try {
-        // من نتائج التشخيص
-        const diagRaw = localStorage.getItem('stratix_diagnostic_payload');
-        if (diagRaw) {
-            const diag = JSON.parse(diagRaw);
-            patternKey = diag.patternKey || diag.pattern_key || '';
-            size = diag.size || diag.companySize || '';
-        }
-
-        // من path-engine
-        const pathRaw = localStorage.getItem('stratix_path_result');
-        if (pathRaw) {
-            const path = JSON.parse(pathRaw);
-            patternKey = patternKey || path.patternKey || '';
-            size = size || path.size || '';
-        }
-
-        // من بيانات المستخدم
-        const userRaw = localStorage.getItem('user');
-        if (userRaw) {
-            const user = JSON.parse(userRaw);
-            userType = user.userType || user.type || '';
-        }
-
-        // من الـ sidebar level
-        const sidebarLevel = localStorage.getItem('_sidebarCompanyLevel');
-        if (sidebarLevel && !size) {
-            const levelMap = { 'SMALL': 'small', 'MEDIUM': 'medium', 'LARGE': 'large' };
-            size = levelMap[sidebarLevel] || '';
-        }
-    } catch (e) {
-        console.warn('[DashFilter] Error reading localStorage:', e);
-    }
+    let currentLevel = 'FULL'; // Default level
 
     // ══════════════════════════════════════════
     //  2. تعريف مستويات العرض لكل مسار
@@ -100,8 +67,6 @@
     };
 
     // تحديد المستوى
-    const currentLevel = PATTERN_LEVEL_MAP[patternKey] || LEVELS.FULL;
-
     // ══════════════════════════════════════════
     //  3. تعريف ما يظهر في كل مستوى
     // ══════════════════════════════════════════
@@ -140,7 +105,7 @@
         [LEVELS.FULL]: 3
     };
 
-    const idx = levelIndex[currentLevel];
+    let idx = 3; // Default to FULL
 
     function applyFilter() {
         for (const [sectionId, visibility] of Object.entries(SECTION_VISIBILITY)) {
@@ -268,21 +233,13 @@
     //  6. تخصيص dept-dashboard.html حسب الإدارة
     // ══════════════════════════════════════════
 
-    function customizeDeptDashboard() {
+    async function customizeDeptDashboard() {
         // تحقق إننا في dept-dashboard
         if (!window.location.pathname.includes('dept-dashboard')) return;
 
-        let dept = '';
-        try {
-            dept = localStorage.getItem('stratix_v10_dept') || '';
-            if (!dept) {
-                const diagRaw = localStorage.getItem('stratix_diagnostic_payload');
-                if (diagRaw) {
-                    const diag = JSON.parse(diagRaw);
-                    dept = diag.dept || diag.department || '';
-                }
-            }
-        } catch (e) { /* ignore */ }
+        // ✅ [FIX] التنظيم الجديد: اقرأ القسم من رابط الصفحة مباشرة بدلاً من localStorage
+        const params = new URLSearchParams(window.location.search);
+        const dept = params.get('dept');
 
         if (!dept) return;
 
@@ -396,7 +353,9 @@
         // تحديث الترحيب
         const welcomeTitle = document.getElementById('wbTitle');
         if (welcomeTitle) {
-            const userName = JSON.parse(localStorage.getItem('user') || '{}').name || '';
+            // ✅ [REFACTOR] Use API to get user data, not localStorage
+            const user = await window.api.getCurrentUser();
+            const userName = user?.name || '';
             welcomeTitle.textContent = userName
                 ? `أهلاً ${userName}! 🎉 لوحة ${config.name} جاهزة`
                 : `أهلاً بك في لوحة ${config.name}!`;
@@ -440,22 +399,30 @@
     //  7. تنفيذ الفلترة عند تحميل الصفحة
     // ══════════════════════════════════════════
 
-    function init() {
-        // تطبيق الفلترة فقط في dashboard.html
-        if (window.location.pathname.includes('dashboard.html') &&
-            !window.location.pathname.includes('dept-dashboard') &&
-            !window.location.pathname.includes('ceo-dashboard') &&
-            !window.location.pathname.includes('board-dashboard') &&
-            !window.location.pathname.includes('consultant-dashboard')) {
-            applyFilter();
-            renderLevelBadge();
-        }
+    async function init() {
+        // ✅ [REFACTOR] Listen for context from AI Advisor instead of reading localStorage
+        document.addEventListener('startix:contextUpdated', (e) => {
+            const context = e.detail || {};
+            patternKey = context.patternKey || 'default_strategic';
+            size = context.size || 'medium';
+            userType = context.userType || 'COMPANY_MANAGER';
+            currentLevel = PATTERN_LEVEL_MAP[patternKey] || LEVELS.FULL;
+            idx = levelIndex[currentLevel];
+
+            // تطبيق الفلترة فقط في dashboard.html
+            if (window.location.pathname.includes('dashboard.html') &&
+                !window.location.pathname.includes('dept-dashboard') &&
+                !window.location.pathname.includes('ceo-dashboard') &&
+                !window.location.pathname.includes('board-dashboard') &&
+                !window.location.pathname.includes('consultant-dashboard')) {
+                applyFilter();
+                renderLevelBadge();
+            }
+            console.log(`[DashFilter] Applied with context: patternKey=${patternKey}, level=${currentLevel}`);
+        });
 
         // تخصيص dept-dashboard
-        customizeDeptDashboard();
-
-        // تسجيل معلومات مفيدة
-        console.log(`[DashFilter] patternKey=${patternKey}, size=${size}, level=${currentLevel}`);
+        await customizeDeptDashboard();
     }
 
     // انتظر DOM

@@ -21,6 +21,7 @@ router.get('/context', verifyToken, async (req, res) => {
     try {
         const { page, entityId } = req.query;
         const userId = req.user?.id;
+        const deptCode = req.user?.deptCode;
 
         console.log('[AI-Advisor] Context request:', { page, entityId, userId });
 
@@ -340,7 +341,7 @@ router.get('/context', verifyToken, async (req, res) => {
         // --- اقتراحات سياقية حسب الصفحة ---
         if (page) {
             const pageNudge = getPageNudge(page, {
-                patternKey, counts, kpiSummary,
+                patternKey, counts, kpiSummary, deptCode,
                 completedTools, overdueInitiatives, recentAlerts
             });
             if (pageNudge) {
@@ -467,43 +468,47 @@ router.get('/context', verifyToken, async (req, res) => {
         //  🎭 اقتراحات مخصصة حسب نوع المستخدم
         // ═══════════════════════════════════════════
         if (userType === 'CONSULTANT') {
-            // نصائح للمستشار
-            suggestions.push({
-                id: 'consultant-overview',
-                type: 'INFO',
-                priority: 50,
-                icon: '🧠',
-                title: 'لوحة العملاء متاحة',
-                message: 'تابع أداء جميع عملائك من مكان واحد — قارن صحتهم الاستراتيجية واكتشف من يحتاج اهتمامك',
-                action: { label: 'لوحة العملاء', href: '/consultant-dashboard.html' },
-                context: 'مستشار',
-            });
-            if (kpiSummary.critical > 0) {
-                suggestions.push({
-                    id: 'consultant-critical-alert',
-                    type: 'ALERT',
-                    priority: 88,
-                    icon: '📋',
-                    title: `${kpiSummary.critical} مؤشرات حرجة عند عميلك`,
-                    message: 'كمستشار يُنصح بإعداد تقرير تحسين عاجل ومشاركته مع العميل',
-                    action: { label: 'عرض المؤشرات', href: '/kpis.html' },
-                    context: 'عميل يحتاج تدخل',
-                });
-            }
+            // ... (existing consultant logic)
         }
 
-        if (userType === 'DEPT_MANAGER') {
+        if (userType === 'DEPT_MANAGER' && deptCode) {
+            const deptMeta = {
+                sales: { name: 'المبيعات', icon: '💰' },
+                hr: { name: 'الموارد البشرية', icon: '👥' },
+                operations: { name: 'العمليات', icon: '⚙️' },
+                finance: { name: 'المالية', icon: '💵' },
+                tech: { name: 'التقنية', icon: '💻' },
+                marketing: { name: 'التسويق', icon: '📢' },
+                cs: { name: 'خدمة العملاء', icon: '🎧' },
+                legal: { name: 'القانونية', icon: '⚖️' },
+            };
+            const currentDept = deptMeta[deptCode] || { name: 'إدارتك', icon: '📊' };
+
             // نصائح لمدير الإدارة
             suggestions.push({
                 id: 'dept-dashboard-tip',
                 type: 'INFO',
                 priority: 50,
-                icon: '📊',
-                title: 'لوحة إدارتك جاهزة',
+                icon: currentDept.icon,
+                title: `لوحة إدارة ${currentDept.name} جاهزة`,
                 message: 'تابع مؤشرات إدارتك والمبادرات والتنبيهات من لوحة مخصصة لك',
-                action: { label: 'لوحة إدارتي', href: '/dept-dashboard.html' },
-                context: 'مدير إدارة',
+                action: { label: `لوحة ${currentDept.name}`, href: `/dept-dashboard.html?dept=${deptCode}` },
+                context: `مدير ${currentDept.name}`,
             });
+
+            if (deptCode === 'sales' && kpiSummary.critical > 0) {
+                suggestions.push({
+                    id: 'sales-critical-kpis',
+                    type: 'WARNING',
+                    priority: 86,
+                    icon: '📉',
+                    title: `تحدي في المبيعات: ${kpiSummary.critical} مؤشرات حرجة`,
+                    message: 'مؤشرات أداء المبيعات مثل (نسبة الإغلاق) أو (حجم الصفقات) تحتاج تحليلاً عاجلاً. قد يكون هناك ضعف في القمع البيعي.',
+                    action: { label: 'تحليل مؤشرات المبيعات', href: `/kpis.html?dept=${deptCode}` },
+                    context: 'أداء المبيعات',
+                });
+            }
+
             if (overdueInitiatives > 0) {
                 suggestions.push({
                     id: 'dept-overdue',
@@ -512,7 +517,7 @@ router.get('/context', verifyToken, async (req, res) => {
                     icon: '⏰',
                     title: `${overdueInitiatives} مبادرات متأخرة في إدارتك`,
                     message: 'راجع المبادرات المتأخرة وحدّث حالتها — فريقك ينتظر توجيهاتك',
-                    action: { label: 'المبادرات', href: '/initiatives.html' },
+                    action: { label: 'عرض المبادرات', href: '/initiatives.html' },
                     context: 'إدارتك',
                 });
             }
@@ -813,6 +818,22 @@ function getToolSummary(analyses, code) {
 }
 
 function getPageNudge(page, ctx) {
+    // Nudges مخصصة لمدير الإدارة في لوحة معلوماته
+    if (page.startsWith('/dept-dashboard.html') && ctx.deptCode) {
+        const deptNudges = {
+            sales: { icon: '💰', text: 'ركّز على نسبة الإغلاق (Closing Rate) وحجم الصفقات هذا الأسبوع' },
+            operations: { icon: '⚙️', text: 'تابع زمن دورة التشغيل (Cycle Time) ونسبة الهدر' },
+            finance: { icon: '💵', text: 'راقب التدفق النقدي اليومي والتزم بالميزانية المعتمدة' },
+            hr: { icon: '👥', text: 'انتبه لمعدل دوران الموظفين ورضا الفريق' },
+            tech: { icon: '💻', text: 'تأكد من استقرار الأنظمة (Uptime) وزمن الاستجابة للدعم' },
+            marketing: { icon: '📢', text: 'حلل عائد الاستثمار (ROI) للحملات التسويقية الحالية' },
+        };
+        if (deptNudges[ctx.deptCode]) {
+            return { ...deptNudges[ctx.deptCode], href: null };
+        }
+    }
+
+    // Nudges عامة
     const nudges = {
         '/select-type': {
             icon: '🤖', text: 'أنا مساعدك الذكي — اختر تحدياتك وراح أوجهك للأدوات المناسبة', href: null

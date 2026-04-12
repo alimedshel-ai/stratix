@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس | لوحة المدير المستقل</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b0d12;
+            --card: rgba(22, 27, 34, 0.85);
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #f1f5f9;
+            --muted: #94a3b8;
+            --primary: #6366f1;
+            --success: #10b981;
+            --warn: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body { background: var(--bg); color: var(--text); font-family: 'Tajawal', sans-serif; min-height: 100vh; direction: rtl; }
+
+        /* ─── TOPBAR ─── */
+        .pro-topbar {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(11, 13, 18, 0.96); backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 28px; display: flex; align-items: center; gap: 16px; height: 58px;
+        }
+        .pro-topbar .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 15px; }
+        .pro-topbar .logo i { font-size: 20px; color: var(--primary); }
+
+        /* Company Switcher */
+        .client-switcher {
+            position: relative; margin-right: auto;
+        }
+        .client-btn {
+            display: flex; align-items: center; gap: 8px; padding: 6px 14px;
+            background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+            border-radius: 10px; color: var(--text); font-family: 'Tajawal'; font-size: 13px; font-weight: 700;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .client-btn:hover { border-color: var(--primary); }
+        .client-btn .bi-chevron-down { font-size: 10px; color: var(--muted); transition: transform 0.2s; }
+        .client-dropdown {
+            display: none; position: absolute; top: 100%; left: 0; right: 0; min-width: 260px;
+            margin-top: 6px; background: #1a1f2e; border: 1px solid var(--border);
+            border-radius: 12px; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,0.5); z-index: 200;
+        }
+        .client-dropdown.open { display: block; }
+        .client-item {
+            display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+            cursor: pointer; transition: background 0.15s; font-size: 13px; border-bottom: 1px solid var(--border);
+        }
+        .client-item:last-child { border-bottom: none; }
+        .client-item:hover { background: rgba(255,255,255,0.04); }
+        .client-item.active { background: rgba(99,102,241,0.08); color: var(--primary); }
+        .client-item .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .client-add {
+            display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+            color: var(--primary); font-size: 13px; font-weight: 700; cursor: pointer;
+            border-top: 1px solid var(--border); transition: background 0.15s;
+        }
+        .client-add:hover { background: rgba(99,102,241,0.06); }
+
+        .topbar-actions { display: flex; align-items: center; gap: 10px; }
+
+        .btn-logout {
+            display: flex; align-items: center; gap: 6px; padding: 7px 14px;
+            background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2);
+            border-radius: 8px; font-family: 'Tajawal'; font-size: 12px; font-weight: 700;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-logout:hover { background: rgba(239,68,68,0.2); }
+
+        /* ─── MAIN ─── */
+        .pro-main { max-width: 960px; margin: 0 auto; padding: 32px 24px; }
+
+        .welcome-section { margin-bottom: 32px; }
+        .welcome-section h1 { font-size: 24px; font-weight: 900; margin-bottom: 6px; }
+        .welcome-section h1 span { color: var(--primary); }
+        .welcome-section .context { font-size: 14px; color: var(--muted); display: flex; gap: 16px; flex-wrap: wrap; }
+        .welcome-section .context .badge-ctx {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 700;
+        }
+
+        /* ─── PHASE SECTIONS ─── */
+        .phase-section { margin-bottom: 28px; }
+        .phase-header {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+            font-size: 15px; font-weight: 800; color: var(--muted);
+        }
+        .phase-header .phase-icon { font-size: 16px; }
+
+        .tools-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;
+        }
+
+        .tool-card {
+            background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+            padding: 18px 16px; transition: all 0.25s; cursor: pointer;
+            text-decoration: none; color: var(--text); display: block; position: relative;
+        }
+        .tool-card:hover { border-color: var(--primary); transform: translateY(-3px); color: var(--text); }
+        .tool-card .t-icon { font-size: 20px; margin-bottom: 10px; }
+        .tool-card .t-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+        .tool-card .t-desc { font-size: 11px; color: var(--muted); line-height: 1.6; }
+        .tool-card .t-badge {
+            position: absolute; top: 10px; left: 10px; font-size: 9px; font-weight: 800;
+            padding: 2px 8px; border-radius: 4px;
+        }
+
+        /* ─── ZERO STATE ─── */
+        .zero-state {
+            text-align: center; padding: 80px 24px;
+        }
+        .zero-state .zero-icon { font-size: 64px; margin-bottom: 20px; opacity: 0.3; }
+        .zero-state h2 { font-size: 22px; font-weight: 900; margin-bottom: 12px; }
+        .zero-state p { font-size: 15px; color: var(--muted); margin-bottom: 28px; max-width: 400px; margin-left: auto; margin-right: auto; }
+        .btn-add-first {
+            display: inline-flex; align-items: center; gap: 8px; padding: 14px 36px;
+            background: linear-gradient(135deg, var(--primary), #a855f7); color: #fff;
+            border: none; border-radius: 14px; font-family: 'Tajawal'; font-size: 16px;
+            font-weight: 800; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-add-first:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(99,102,241,0.3); }
+
+        /* ─── ADD CLIENT MODAL ─── */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+            z-index: 500; align-items: center; justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: #1a1f2e; border: 1px solid var(--border); border-radius: 18px;
+            padding: 32px; width: 90%; max-width: 440px;
+        }
+        .modal-box h3 { font-size: 18px; font-weight: 900; margin-bottom: 20px; }
+        .modal-field { margin-bottom: 14px; }
+        .modal-field label { display: block; font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 5px; }
+        .modal-field input, .modal-field select {
+            width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border); border-radius: 10px; color: var(--text);
+            font-family: 'Tajawal'; font-size: 14px;
+        }
+        .modal-field input:focus, .modal-field select:focus { outline: none; border-color: var(--primary); }
+        .modal-field select option { background: #1a1f2e; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .modal-actions button {
+            flex: 1; padding: 10px; border-radius: 10px; font-family: 'Tajawal';
+            font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-modal-primary { background: var(--primary); color: #fff; border: none; }
+        .btn-modal-primary:hover { background: #4f46e5; }
+        .btn-modal-cancel { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 600px) {
+            .pro-main { padding: 20px 14px; }
+            .pro-topbar { padding: 0 14px; gap: 10px; }
+            .tools-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .tool-card { padding: 14px 12px; }
+            .client-btn span { display: none; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- TOPBAR -->
+    <div class="pro-topbar">
+        <div class="logo"><i class="bi bi-gem"></i><span>ستارتكس Pro</span></div>
+
+        <!-- Client Switcher -->
+        <div class="client-switcher" id="clientSwitcher" style="display:none">
+            <button class="client-btn" id="clientBtn">
+                <i class="bi bi-building"></i>
+                <span id="activeClientName">—</span>
+                <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="client-dropdown" id="clientDropdown"></div>
+        </div>
+
+        <div class="topbar-actions">
+            <button class="btn-logout" id="btnLogout"><i class="bi bi-box-arrow-right"></i> خروج</button>
+        </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="pro-main">
+        <div class="welcome-section">
+            <h1>مرحباً <span id="userName">—</span></h1>
+            <div class="context" id="contextInfo"></div>
+        </div>
+
+        <!-- Zero State OR Tools -->
+        <div id="zeroState" style="display:none">
+            <div class="zero-state">
+                <div class="zero-icon">🏢</div>
+                <h2>أضف عميلك الأول</h2>
+                <p>ابدأ بإضافة شركة عميلك لتفتح أدوات التحليل والتخطيط الكاملة لإدارته.</p>
+                <button class="btn-add-first" onclick="ProDash.openAddModal()">
+                    <i class="bi bi-plus-circle"></i> إضافة عميل جديد
+                </button>
+            </div>
+        </div>
+
+        <div id="toolsContainer" style="display:none"></div>
+    </div>
+
+    <!-- ADD CLIENT MODAL -->
+    <div class="modal-overlay" id="addModal">
+        <div class="modal-box">
+            <h3><i class="bi bi-building-add" style="color:var(--primary);margin-left:8px"></i> إضافة عميل جديد</h3>
+            <div class="modal-field">
+                <label>اسم الشركة</label>
+                <input type="text" id="newClientName" placeholder="مثال: شركة النور للتقنية">
+            </div>
+            <div class="modal-field">
+                <label>القطاع</label>
+                <select id="newClientSector">
+                    <option value="">— اختر —</option>
+                    <option value="saas">SaaS / تقنية</option>
+                    <option value="retail">تجزئة</option>
+                    <option value="services">خدمات</option>
+                    <option value="industrial">صناعي</option>
+                    <option value="fnb">مطاعم وأغذية</option>
+                    <option value="real_estate">عقارات</option>
+                    <option value="health">صحة</option>
+                    <option value="education">تعليم</option>
+                </select>
+            </div>
+            <div class="modal-field">
+                <label>حجم الشركة</label>
+                <select id="newClientSize">
+                    <option value="">— اختر —</option>
+                    <option value="small">صغيرة (أقل من 20 موظف)</option>
+                    <option value="medium">متوسطة (20–100 موظف)</option>
+                    <option value="large">كبيرة (أكثر من 100 موظف)</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-modal-primary" onclick="ProDash.saveNewClient()"><i class="bi bi-check-lg"></i> إضافة</button>
+                <button class="btn-modal-cancel" onclick="ProDash.closeAddModal()">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT CLIENT MODAL -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-box">
+            <h3><i class="bi bi-pencil-square" style="color:var(--primary);margin-left:8px"></i> تعديل بيانات العميل</h3>
+            <input type="hidden" id="editClientId">
+            <div class="modal-field">
+                <label>اسم الشركة</label>
+                <input type="text" id="editClientName">
+            </div>
+            <div class="modal-field">
+                <label>القطاع</label>
+                <select id="editClientSector">
+                    <option value="">— اختر —</option>
+                    <option value="saas">SaaS / تقنية</option>
+                    <option value="retail">تجزئة</option>
+                    <option value="services">خدمات</option>
+                    <option value="industrial">صناعي</option>
+                    <option value="fnb">مطاعم وأغذية</option>
+                    <option value="real_estate">عقارات</option>
+                    <option value="health">صحة</option>
+                    <option value="education">تعليم</option>
+                </select>
+            </div>
+            <div class="modal-field">
+                <label>حجم الشركة</label>
+                <select id="editClientSize">
+                    <option value="small">صغيرة (أقل من 20 موظف)</option>
+                    <option value="medium">متوسطة (20–100 موظف)</option>
+                    <option value="large">كبيرة (أكثر من 100 موظف)</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-modal-primary" onclick="ProDash.saveEditClient()"><i class="bi bi-check-lg"></i> حفظ</button>
+                <button class="btn-modal-cancel" onclick="ProDash.closeEditModal()">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="/js/api.js?v=4"></script>
+    <script>
+    window.ProDash = (function() {
+        'use strict';
+
+        const ACTIVE_KEY = 'startix_pro_active';
+        const MAX_CLIENTS = 10;
+
+        // ── الإدارة من التشخيص المجاني ──
+        const DIAG_KEY = 'stratix_manager_diagnostic';
+        const DEPT_NAMES = {
+            sales: 'المبيعات', marketing: 'التسويق', hr: 'الموارد البشرية',
+            finance: 'المالية', operations: 'العمليات', it: 'تقنية المعلومات',
+            logistics: 'اللوجستيات', governance: 'الحوكمة'
+        };
+        const DEPT_COLORS = {
+            sales: '#10b981', marketing: '#6366f1', hr: '#f59e0b',
+            finance: '#06b6d4', operations: '#6b7280', it: '#3b82f6',
+            logistics: '#6b7280', governance: '#ef4444'
+        };
+        const SIZE_LABELS = { small: 'صغيرة', medium: 'متوسطة', large: 'كبيرة' };
+
+        // ── أدوات audit-pro لكل إدارة ──
+        const AUDIT_PRO_MAP = {
+            sales: { name: 'فحص المبيعات الاحترافي', href: '/sales-audit-pro.html', icon: 'bi-graph-up-arrow' },
+            marketing: { name: 'فحص التسويق الاحترافي', href: '/marketing-audit-pro.html', icon: 'bi-clipboard2-pulse' },
+            hr: { name: 'فحص الموارد البشرية الاحترافي', href: '/hr-audit-pro.html', icon: 'bi-people' }
+        };
+
+        // ── الأدوات الـ 17 (نفس steps-config.js) ──
+        const PHASES = [
+            {
+                key: 'diagnostic', title: '🔍 التشخيص', color: '#6f42c1',
+                tools: [
+                    { id: 'deep', name: 'التحليل الرقمي', path: '/{dept}-deep.html', icon: 'bi-search-heart' },
+                    { id: 'audit', name: 'التقييم الوصفي', path: '/{dept}-audit.html', icon: 'bi-clipboard2-pulse-fill' },
+                    { id: 'pestel', name: 'تحليل PESTEL', path: '/pestel.html', icon: 'bi-globe2' },
+                    { id: 'dept-health', name: 'صحة الإدارة', path: '/dept-health.html', icon: 'bi-heart-pulse' },
+                    { id: 'swot', name: 'تحليل SWOT', path: '/swot.html', icon: 'bi-grid-3x3-gap-fill' },
+                    { id: 'tows', name: 'مصفوفة TOWS', path: '/tows.html', icon: 'bi-grid-1x2-fill' }
+                ]
+            },
+            {
+                key: 'planning', title: '🧭 التخطيط', color: '#0dcaf0',
+                tools: [
+                    { id: 'scenarios', name: 'السيناريوهات', path: '/scenarios.html', icon: 'bi-layers' },
+                    { id: 'directions', name: 'التوجهات', path: '/directions.html', icon: 'bi-compass-fill' },
+                    { id: 'objectives', name: 'الأهداف', path: '/objectives.html', icon: 'bi-bullseye' }
+                ]
+            },
+            {
+                key: 'execution', title: '🚀 التنفيذ', color: '#198754',
+                tools: [
+                    { id: 'okrs', name: 'نظام OKRs', path: '/okrs.html', icon: 'bi-award' },
+                    { id: 'kpis', name: 'مؤشرات الأداء', path: '/kpis.html', icon: 'bi-speedometer2' },
+                    { id: 'initiatives', name: 'المبادرات', path: '/initiatives.html', icon: 'bi-rocket-takeoff' },
+                    { id: 'projects', name: 'المشاريع', path: '/projects.html', icon: 'bi-folder2-open' }
+                ]
+            },
+            {
+                key: 'monitoring', title: '📊 المتابعة', color: '#ffc107',
+                tools: [
+                    { id: 'reviews', name: 'المراجعات', path: '/reviews.html', icon: 'bi-card-checklist' },
+                    { id: 'corrections', name: 'التصحيحات', path: '/corrections.html', icon: 'bi-tools' },
+                    { id: 'reports', name: 'التقارير', path: '/reports.html', icon: 'bi-file-earmark-bar-graph' },
+                    { id: 'risk-map', name: 'خريطة المخاطر', path: '/risk-map.html', icon: 'bi-exclamation-triangle' }
+                ]
+            }
+        ];
+
+        // ══════════════════════════════════════════
+        // 🔄 State — مصدر البيانات: API (DB-backed)
+        // ══════════════════════════════════════════
+        let _clients = [];
+        let _activeId = localStorage.getItem(ACTIVE_KEY) || null;
+        let _userDept = 'sales';
+
+        // ── API Helper ──
+        async function apiFetch(url, opts = {}) {
+            const res = await fetch(url, {
+                credentials: 'include',
+                ...opts,
+                headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) }
+            });
+            if (!res.ok && res.status === 401) {
+                window.location.href = '/login.html';
+                throw new Error('Unauthorized');
+            }
+            return res.json();
+        }
+
+        function getDiagDept() {
+            try {
+                const d = JSON.parse(localStorage.getItem(DIAG_KEY) || '{}');
+                return d.department || 'sales';
+            } catch(e) { return 'sales'; }
+        }
+
+        // ── جلب العملاء من الـ API ──
+        async function loadClients() {
+            try {
+                const data = await apiFetch('/api/pro/entities');
+                if (data.success && data.clients) {
+                    _clients = data.clients;
+                }
+            } catch(e) {
+                console.error('[ProDash] loadClients error:', e);
+                _clients = [];
+            }
+            return _clients;
+        }
+
+        // ── أول دخول: إنشاء عميل من التشخيص المجاني عبر API ──
+        async function autoCreateFirstClient() {
+            if (_clients.length > 0) return;
+            try {
+                const diag = JSON.parse(localStorage.getItem(DIAG_KEY) || '{}');
+                if (diag.sector || diag.department) {
+                    const sizeMap = { '<3':'small','3-10':'small','10-30':'medium','30+':'large' };
+                    const data = await apiFetch('/api/pro/entities', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            name: diag.companyName || 'عميل أول',
+                            sector: diag.sector || diag.activity || '',
+                            size: sizeMap[diag.teamSize] || 'medium',
+                            dept: diag.department || 'sales'
+                        })
+                    });
+                    if (data.success && data.entity) {
+                        _clients = [data.entity];
+                        _activeId = data.entity.id;
+                        localStorage.setItem(ACTIVE_KEY, _activeId);
+                        // تبديل JWT للـ entity الجديد
+                        try {
+                            await apiFetch('/api/auth/switch-entity', {
+                                method: 'POST',
+                                body: JSON.stringify({ entityId: data.entity.id })
+                            });
+                            if (window._cachedUser) window._cachedUser = null;
+                        } catch(e) { /* ignore — أول مرة */ }
+                    }
+                }
+            } catch(e) {
+                console.error('[ProDash] autoCreateFirstClient error:', e);
+            }
+        }
+
+        // ══════════════════════════════════════════
+        // 🎨 RENDER — الآن async يجلب من API
+        // ══════════════════════════════════════════
+        async function render() {
+            await loadClients();
+            await autoCreateFirstClient();
+
+            const active = _clients.find(c => c.id === _activeId) || _clients[0] || null;
+            if (active && _activeId !== active.id) {
+                _activeId = active.id;
+                localStorage.setItem(ACTIVE_KEY, _activeId);
+            }
+
+            // User name — من api.js أو fallback
+            try {
+                if (window.api && window.api.getCurrentUser) {
+                    const user = await window.api.getCurrentUser();
+                    document.getElementById('userName').textContent = user?.name || 'مستخدم';
+                } else {
+                    const res = await fetch('/api/user/me', { credentials: 'include' });
+                    const user = await res.json().catch(() => null);
+                    document.getElementById('userName').textContent = user?.name || 'مستخدم';
+                }
+            } catch(e) { document.getElementById('userName').textContent = 'مستخدم'; }
+
+            // Zero state vs tools
+            if (!active) {
+                document.getElementById('zeroState').style.display = '';
+                document.getElementById('toolsContainer').style.display = 'none';
+                document.getElementById('clientSwitcher').style.display = 'none';
+                document.getElementById('contextInfo').innerHTML = '';
+                return;
+            }
+
+            document.getElementById('zeroState').style.display = 'none';
+            document.getElementById('toolsContainer').style.display = '';
+            document.getElementById('clientSwitcher').style.display = '';
+
+            // Client switcher
+            document.getElementById('activeClientName').textContent = active.name;
+            renderDropdown(_clients, active);
+
+            // Context
+            const dept = active.dept || getDiagDept();
+            _userDept = dept;
+            const deptName = DEPT_NAMES[dept] || dept;
+            const deptColor = DEPT_COLORS[dept] || '#6366f1';
+            const sizeLabel = SIZE_LABELS[active.size] || 'متوسطة';
+            document.getElementById('contextInfo').innerHTML = `
+                <span class="badge-ctx" style="background:${deptColor}15;color:${deptColor}"><i class="bi bi-briefcase"></i> ${deptName}</span>
+                <span class="badge-ctx" style="background:rgba(255,255,255,0.04);color:var(--muted)"><i class="bi bi-people"></i> شركة ${sizeLabel}</span>
+            `;
+
+            // حفظ entityId النشط ليستخدمه باقي النظام (context-manager, entity-guard)
+            localStorage.setItem('entityId', active.id);
+
+            // Tools
+            renderTools(dept, deptColor, active);
+        }
+
+        function renderDropdown(clients, active) {
+            const dd = document.getElementById('clientDropdown');
+            let html = clients.map(c => `
+                <div class="client-item ${c.id === active.id ? 'active' : ''}" style="position:relative">
+                    <div class="dot" style="background:${c.id === active.id ? 'var(--primary)' : 'var(--muted)'}"></div>
+                    <span style="flex:1;cursor:pointer" onclick="ProDash.switchClient('${c.id}')">${esc(c.name)}</span>
+                    <span style="font-size:10px;color:var(--muted)">${SIZE_LABELS[c.size] || ''}</span>
+                    <span style="display:flex;gap:4px;margin-right:6px">
+                        <i class="bi bi-pencil" style="font-size:12px;color:var(--muted);cursor:pointer;padding:2px" onclick="event.stopPropagation();ProDash.openEditModal('${c.id}')" title="تعديل"></i>
+                        <i class="bi bi-trash3" style="font-size:12px;color:#ef4444;cursor:pointer;padding:2px;opacity:0.6" onclick="event.stopPropagation();ProDash.confirmDelete('${c.id}','${esc(c.name)}')" title="حذف"></i>
+                    </span>
+                </div>`).join('');
+
+            if (clients.length < MAX_CLIENTS) {
+                html += `<div class="client-add" onclick="ProDash.openAddModal()"><i class="bi bi-plus-circle"></i> إضافة عميل جديد</div>`;
+            }
+            dd.innerHTML = html;
+        }
+
+        function renderTools(dept, deptColor, client) {
+            const container = document.getElementById('toolsContainer');
+            const eid = encodeURIComponent(client.id);
+            let html = '';
+
+            // Audit Pro — أول أداة
+            const auditPro = AUDIT_PRO_MAP[dept];
+            if (auditPro) {
+                html += `
+                <div class="phase-section">
+                    <div class="phase-header"><span class="phase-icon">⭐</span> الفحص الاحترافي</div>
+                    <div class="tools-grid">
+                        <a href="${auditPro.href}?dept=${dept}&entityId=${eid}" class="tool-card" style="border-color:${deptColor}30;grid-column:span 2">
+                            <span class="t-badge" style="background:${deptColor}15;color:${deptColor}">Pro</span>
+                            <div class="t-icon" style="color:${deptColor}"><i class="bi ${auditPro.icon}"></i></div>
+                            <div class="t-name">${auditPro.name}</div>
+                            <div class="t-desc">فحص شامل متعدد المحاور مع تقرير احترافي</div>
+                        </a>
+                    </div>
+                </div>`;
+            }
+
+            // 4 مراحل × أدوات — كل رابط يحمل dept + entityId
+            PHASES.forEach(phase => {
+                html += `
+                <div class="phase-section">
+                    <div class="phase-header"><span class="phase-icon">${phase.title.split(' ')[0]}</span> ${phase.title.split(' ').slice(1).join(' ')}</div>
+                    <div class="tools-grid">
+                        ${phase.tools.map(tool => {
+                            const base = tool.path.replace('{dept}', dept);
+                            const sep = base.includes('?') ? '&' : '?';
+                            const link = base + sep + 'dept=' + dept + '&entityId=' + eid;
+                            return `
+                            <a href="${link}" class="tool-card">
+                                <div class="t-icon" style="color:${phase.color}"><i class="bi ${tool.icon}"></i></div>
+                                <div class="t-name">${tool.name}</div>
+                            </a>`;
+                        }).join('')}
+                    </div>
+                </div>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // ══════════════════════════════════════════
+        // ⚡ ACTIONS — كلها عبر API الآن
+        // ══════════════════════════════════════════
+        async function switchClient(id) {
+            try {
+                // ✅ switch-entity يصدر JWT جديد بـ entityId المحدّث
+                // هذا ضروري لأن أدوات التحليل (SWOT, KPIs...) تقرأ entityId من JWT
+                window._entitySwitching = true; // يمنع page-guard من redirect أثناء التبديل
+                const data = await apiFetch('/api/auth/switch-entity', {
+                    method: 'POST',
+                    body: JSON.stringify({ entityId: id })
+                });
+                window._entitySwitching = false;
+
+                if (data.entity) {
+                    _activeId = data.entity.id || id;
+                    localStorage.setItem(ACTIVE_KEY, _activeId);
+                    localStorage.setItem('entityId', _activeId);
+                    // مسح كاش المستخدم ليُعاد جلبه بالـ JWT الجديد
+                    if (window._cachedUser) window._cachedUser = null;
+                }
+            } catch(e) {
+                window._entitySwitching = false;
+                console.error('[ProDash] switchClient error:', e);
+                _activeId = id;
+                localStorage.setItem(ACTIVE_KEY, id);
+            }
+            closeDropdown();
+            await render();
+        }
+
+        function openAddModal() {
+            closeDropdown();
+            document.getElementById('addModal').classList.add('open');
+            document.getElementById('newClientName').focus();
+        }
+
+        function closeAddModal() {
+            document.getElementById('addModal').classList.remove('open');
+            document.getElementById('newClientName').value = '';
+            document.getElementById('newClientSector').value = '';
+            document.getElementById('newClientSize').value = '';
+        }
+
+        async function saveNewClient() {
+            const name = document.getElementById('newClientName').value.trim();
+            const sector = document.getElementById('newClientSector').value;
+            const size = document.getElementById('newClientSize').value;
+            if (!name) { document.getElementById('newClientName').style.borderColor = 'var(--danger)'; return; }
+
+            if (_clients.length >= MAX_CLIENTS) { alert('الحد الأقصى 10 عملاء'); return; }
+
+            try {
+                const data = await apiFetch('/api/pro/entities', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        name,
+                        sector,
+                        size: size || 'medium',
+                        dept: _userDept || getDiagDept()
+                    })
+                });
+
+                if (data.success && data.entity) {
+                    _activeId = data.entity.id;
+                    localStorage.setItem(ACTIVE_KEY, _activeId);
+                    // تبديل JWT للـ entity الجديد
+                    try {
+                        await apiFetch('/api/auth/switch-entity', {
+                            method: 'POST',
+                            body: JSON.stringify({ entityId: data.entity.id })
+                        });
+                        if (window._cachedUser) window._cachedUser = null;
+                    } catch(e) { console.warn('[ProDash] switch after create failed:', e); }
+                    closeAddModal();
+                    await render();
+                } else {
+                    alert(data.message || 'فشل إنشاء العميل');
+                }
+            } catch(e) {
+                console.error('[ProDash] saveNewClient error:', e);
+                alert('حدث خطأ أثناء إنشاء العميل');
+            }
+        }
+
+        function toggleDropdown() {
+            document.getElementById('clientDropdown').classList.toggle('open');
+        }
+        function closeDropdown() {
+            document.getElementById('clientDropdown').classList.remove('open');
+        }
+
+        // ── EDIT CLIENT — عبر API ──
+        function openEditModal(clientId) {
+            closeDropdown();
+            const client = _clients.find(c => c.id === clientId);
+            if (!client) return;
+            document.getElementById('editClientId').value = clientId;
+            document.getElementById('editClientName').value = client.name || '';
+            document.getElementById('editClientSector').value = client.sector || '';
+            document.getElementById('editClientSize').value = client.size || 'medium';
+            document.getElementById('editModal').classList.add('open');
+            document.getElementById('editClientName').focus();
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('open');
+        }
+
+        async function saveEditClient() {
+            const clientId = document.getElementById('editClientId').value;
+            const name = document.getElementById('editClientName').value.trim();
+            const sector = document.getElementById('editClientSector').value;
+            const size = document.getElementById('editClientSize').value;
+            if (!name) { document.getElementById('editClientName').style.borderColor = 'var(--danger)'; return; }
+
+            try {
+                const data = await apiFetch('/api/pro/entities/' + clientId, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ name, sector, size })
+                });
+
+                if (data.success) {
+                    closeEditModal();
+                    await render();
+                } else {
+                    alert(data.message || 'فشل تحديث العميل');
+                }
+            } catch(e) {
+                console.error('[ProDash] saveEditClient error:', e);
+                alert('حدث خطأ أثناء تحديث العميل');
+            }
+        }
+
+        // ── DELETE CLIENT — عبر API ──
+        async function confirmDelete(clientId, clientName) {
+            closeDropdown();
+            if (!confirm('هل أنت متأكد من حذف "' + clientName + '"?\n\nسيتم حذف جميع البيانات المرتبطة بهذا العميل ولا يمكن التراجع.')) return;
+
+            try {
+                const data = await apiFetch('/api/pro/entities/' + clientId + '?confirm=true', {
+                    method: 'DELETE'
+                });
+
+                if (data.success) {
+                    // إذا حذف العميل النشط → فعّل أول عميل متبقي
+                    if (_activeId === clientId) {
+                        _activeId = '';
+                        localStorage.removeItem(ACTIVE_KEY);
+                    }
+                    await render();
+                } else {
+                    alert(data.message || 'فشل حذف العميل');
+                }
+            } catch(e) {
+                console.error('[ProDash] confirmDelete error:', e);
+                alert('حدث خطأ أثناء حذف العميل');
+            }
+        }
+
+        function esc(s) { return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+        // ── LOGOUT ──
+        document.getElementById('btnLogout').addEventListener('click', () => {
+            ['token','user','stratix_v10_dept','stratix_smart_guide','stratix_category',
+             'onboarding_data','stratix_diagnostic_payload','stratix_return_url',
+             'painAmbition','stratix_user_type','entityId', ACTIVE_KEY
+            ].forEach(k => localStorage.removeItem(k));
+            sessionStorage.removeItem('stratix_return_url');
+            fetch('/api/auth/logout', { method:'POST', credentials:'include' })
+                .finally(() => window.location.href = '/login.html');
+        });
+
+        // ── INIT ──
+        document.getElementById('clientBtn').addEventListener('click', toggleDropdown);
+        document.addEventListener('click', e => {
+            if (!e.target.closest('.client-switcher')) closeDropdown();
+        });
+        document.getElementById('addModal').addEventListener('click', e => {
+            if (e.target === document.getElementById('addModal')) closeAddModal();
+        });
+        document.getElementById('editModal').addEventListener('click', e => {
+            if (e.target === document.getElementById('editModal')) closeEditModal();
+        });
+
+        render();
+
+        return { switchClient, openAddModal, closeAddModal, saveNewClient, openEditModal, closeEditModal, saveEditClient, confirmDelete };
+    })();
+    </script>
+</body>
+
+</html>

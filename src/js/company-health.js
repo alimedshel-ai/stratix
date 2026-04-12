@@ -219,8 +219,8 @@
             strengths: audit?.strengths || [],
             weaknesses: audit?.weaknesses || [],
             completedSteps: [
-                deep       ? 'deep'   : null,
-                audit      ? 'audit'  : null,
+                deep ? 'deep' : null,
+                audit ? 'audit' : null,
                 budgetDone ? 'budget' : null,
             ].filter(Boolean),
         };
@@ -915,8 +915,9 @@
             if (d.model) metrics.push(d.model);
 
             return `
-                    <div class="dept-card" data-action="dept-navigate" data-href="${getDeptDeepLink(dept.key)}" style="--accent:${dept.color}${_deptParam ? ';grid-column:1/-1;max-width:600px;cursor:pointer;margin:0 auto' : ';cursor:pointer'}">
-                        <div style="position:absolute;top:0;right:0;width:100%;height:3px;background:${dept.color};opacity:.6;border-radius:16px 16px 0 0"></div>
+                    <div class="col-12 col-md-6 col-lg-4 col-xl-4 d-flex">
+                        <div class="dept-card" data-action="dept-navigate" data-href="\${getDeptDeepLink(dept.key)}" style="width: 100%; --accent:\${dept.color}\${_deptParam ? ';grid-column:1/-1;max-width:600px;cursor:pointer;margin:0 auto' : ';cursor:pointer'}">
+                            <div style="position:absolute;top:0;right:0;width:100%;height:3px;background:\${dept.color};opacity:.6;border-radius:16px 16px 0 0"></div>
                         <div class="dept-card-header">
                             <div class="dept-icon-box" style="background:${dept.color}22">${dept.icon}</div>
                             <div>
@@ -972,16 +973,19 @@
                             </span>
                             <span style="font-size:11px; color:#22c55e; font-weight:700;">تحليل المالك المباشر <i class="bi bi-arrow-left-short"></i></span>
                         </div>` : ''}
+                    </div>
                     </div>`;
         }).join('');
 
         const addDeptCard = _deptParam ? '' : `
-                    <div class="dept-card" onclick="alert('ميزة إضافة (إدارات مخصصة) غير قياسية ستكون متاحة قريباً في إصدار خطة المؤسسات (Enterprise Plan).')" style="border: 2px dashed var(--border); background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; cursor: pointer; min-height: 180px; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(99,102,241,0.5)'; this.querySelector('.plus-icon').style.background='rgba(99,102,241,0.1)'; this.querySelector('.plus-icon').style.color='#6366f1';" onmouseout="this.style.borderColor='var(--border)'; this.querySelector('.plus-icon').style.background='rgba(255,255,255,0.05)'; this.querySelector('.plus-icon').style.color='var(--text-muted)';">
+                    <div class="col-12 col-md-6 col-lg-4 col-xl-4 d-flex">
+                    <div class="dept-card" onclick="alert('ميزة إضافة (إدارات مخصصة) غير قياسية ستكون متاحة قريباً في إصدار خطة المؤسسات (Enterprise Plan).')" style="width: 100%; border: 2px dashed rgba(255,255,255,0.08); background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; cursor: pointer; min-height: 180px; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(99,102,241,0.5)'; this.querySelector('.plus-icon').style.background='rgba(99,102,241,0.1)'; this.querySelector('.plus-icon').style.color='#6366f1';" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'; this.querySelector('.plus-icon').style.background='rgba(255,255,255,0.05)'; this.querySelector('.plus-icon').style.color='var(--text-muted)';">
                         <div class="plus-icon" style="width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.05); color: var(--text-muted); display: flex; align-items: center; justify-content: center; font-size: 24px; transition: all 0.2s;">
                             <i class="bi bi-plus-lg"></i>
                         </div>
                         <div style="font-weight: 700; color: var(--text-muted); font-size: 14px;">إضافة إدارة جديدة</div>
                         <div style="font-size: 11px; color: var(--text-muted); text-align: center;">إدارات مخصصة، مصانع، أو فروع</div>
+                    </div>
                     </div>
                 `;
 

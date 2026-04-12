@@ -169,8 +169,8 @@ export const DiagnosticEngine = (function () {
             emoji: dept.emoji,
             color: dept.color,
             icon: dept.icon,
-            dashboardPath: '/dept-dashboard.html',
-            deptDeepPath: `/dept-deep.html?dept=${department || 'hr'}&single=1`,
+            dashboardPath: '/pro-dashboard.html',
+            deptDeepPath: '/pro-dashboard.html',
             reason,
             sizeCategory: classifySize(teamSize),
             answers

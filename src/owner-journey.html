@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس — مسار المالك الاستراتيجي</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <script src="/js/api.js?v=4"></script>
+    <script src="/js/utils.js?v=4"></script>
+    <script src="/js/state-manager.js?v=4"></script>
+    <script src="/js/context-manager.js?v=4"></script>
+    <script src="/js/page-guard.js?v=4"></script>
+    <script src="/js/journey-steps.js?v=2"></script>
+    <style>
+        :root {
+            --bg: #0a0b10;
+            --bg2: #12141f;
+            --card: #171a2a;
+            --card-hover: #1e2236;
+            --text: #e2e8f0;
+            --muted: #7a8599;
+            --border: rgba(255, 255, 255, 0.06);
+            --primary: #667eea;
+            --green: #22c55e;
+            --yellow: #facc15;
+            --red: #ef4444;
+            --blue: #38bdf8;
+            --bs-body-color: #e2e8f0;
+            --bs-body-color-rgb: 226, 232, 240;
+            --bs-card-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Tajawal', sans-serif;
+            min-height: 100vh;
+        }
+
+        /* ── HEADER ── */
+        .oj-header {
+            background: linear-gradient(135deg, #0f1117 0%, #1a1d2e 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .oj-header .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .oj-header .brand span {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .oj-header .back-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .oj-header .back-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text);
+        }
+
+        /* ── VERSION BAR ── */
+        .version-bar {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .version-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(102, 126, 234, 0.12);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            color: var(--primary);
+        }
+
+        .version-bar .progress-summary {
+            margin-right: auto;
+            font-size: 0.82rem;
+            color: var(--muted);
+        }
+
+        .new-version-btn {
+            background: linear-gradient(135deg, var(--primary), #764ba2);
+            border: none;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .new-version-btn:hover {
+            opacity: 0.85;
+        }
+
+        /* ── MAIN CONTENT ── */
+        .oj-main {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 24px 16px 60px;
+        }
+
+        /* ── PHASE SECTION ── */
+        .phase-section {
+            margin-bottom: 28px;
+        }
+
+        .phase-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .phase-title .phase-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* ── STEP CARD ── */
+        .step-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 12px;
+        }
+
+        .step-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.2s;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .step-card:hover {
+            background: var(--card-hover);
+            border-color: rgba(102, 126, 234, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .step-card.completed {
+            border-color: rgba(34, 197, 94, 0.25);
+            background: rgba(34, 197, 94, 0.04);
+        }
+
+        .step-card.next-step {
+            border-color: rgba(102, 126, 234, 0.5);
+            background: rgba(102, 126, 234, 0.06);
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.15);
+        }
+
+        .step-card.locked {
+            opacity: 0.45;
+            cursor: default;
+            pointer-events: none;
+        }
+
+        .step-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .step-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .step-name {
+            font-size: 0.92rem;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .step-desc {
+            font-size: 0.75rem;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+
+        .step-status {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 0.75rem;
+        }
+
+        .step-status.done {
+            color: var(--green);
+        }
+
+        .step-status.current {
+            color: var(--primary);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* ── NEXT STEP BANNER ── */
+        .next-banner {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.1));
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .next-banner .nb-icon {
+            font-size: 1.5rem;
+        }
+
+        .next-banner .nb-text {
+            flex: 1;
+        }
+
+        .next-banner .nb-title {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-bottom: 2px;
+        }
+
+        .next-banner .nb-name {
+            font-size: 1rem;
+            font-weight: 800;
+        }
+
+        .next-banner .nb-btn {
+            background: var(--primary);
+            border: none;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        /* ── PROGRESS BAR ── */
+        .oj-progress {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 100px;
+            height: 6px;
+            overflow: hidden;
+            margin-top: 4px;
+            flex: 1;
+        }
+
+        .oj-progress-fill {
+            height: 100%;
+            border-radius: 100px;
+            background: linear-gradient(90deg, var(--primary), var(--green));
+            transition: width 0.6s ease;
+        }
+
+        /* ── VERSION MODAL ── */
+        .oj-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .oj-overlay.active {
+            display: flex;
+        }
+
+        .oj-modal {
+            background: #1a1d2e;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px;
+            width: 100%;
+            max-width: 460px;
+            margin: 16px;
+        }
+
+        .oj-modal h3 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .oj-modal p {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-bottom: 20px;
+        }
+
+        .oj-modal input,
+        .oj-modal select {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+            outline: none;
+        }
+
+        .oj-modal input:focus,
+        .oj-modal select:focus {
+            border-color: var(--primary);
+        }
+
+        .oj-modal select option {
+            background: #1a1d2e;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .modal-btn-primary {
+            flex: 1;
+            background: linear-gradient(135deg, var(--primary), #764ba2);
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .modal-btn-cancel {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        /* ── EMPTY STATE ── */
+        .oj-empty {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .oj-empty .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+
+        .oj-empty h3 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .oj-empty p {
+            font-size: 0.88rem;
+            color: var(--muted);
+            max-width: 340px;
+            margin: 0 auto 20px;
+        }
+
+        /* ── LOADING ── */
+        .oj-loading {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .spin {
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header class="oj-header">
+        <div class="brand">
+            <i class="bi bi-compass-fill" style="color:var(--primary);font-size:1.3rem;"></i>
+            <span>مسار المالك الاستراتيجي</span>
+        </div>
+        <a href="/ceo-dashboard.html" class="back-btn">
+            <i class="bi bi-arrow-right ms-1"></i> لوحة القيادة
+        </a>
+    </header>
+
+    <!-- VERSION BAR -->
+    <div class="version-bar" id="versionBar" style="display:none!important;">
+        <div class="version-badge" id="versionBadge">
+            <i class="bi bi-bookmark-fill"></i>
+            <span id="versionName">جار التحميل...</span>
+        </div>
+        <div class="oj-progress" style="max-width:200px;" id="progressBarWrap">
+            <div class="oj-progress-fill" id="progressBar" style="width:0%"></div>
+        </div>
+        <span class="progress-summary" id="progressText">0 / 0 خطوة مكتملة</span>
+        <button class="new-version-btn" onclick="showVersionModal()">
+            <i class="bi bi-plus-lg ms-1"></i> إصدار جديد
+        </button>
+    </div>
+
+    <!-- MAIN -->
+    <main class="oj-main" id="mainContent">
+        <div class="oj-loading">
+            <i class="bi bi-arrow-repeat spin" style="font-size:1.5rem;margin-bottom:12px;display:block;"></i>
+            جار تهيئة مسار المالك...
+        </div>
+    </main>
+
+    <!-- VERSION MODAL -->
+    <div class="oj-overlay" id="versionOverlay">
+        <div class="oj-modal">
+            <h3>📋 إنشاء إصدار استراتيجي جديد</h3>
+            <p>كل إصدار يمثل دورة تخطيط مستقلة (سنة، نصف سنة، ربع سنوي...)</p>
+            <input type="text" id="versionTitle" placeholder="اسم الإصدار — مثال: الخطة الاستراتيجية 2025" />
+            <select id="versionYear">
+                <option value="2025">2025</option>
+                <option value="2026" selected>2026</option>
+                <option value="2027">2027</option>
+            </select>
+            <select id="versionPeriod">
+                <option value="annual">سنوي (12 شهر)</option>
+                <option value="semi">نصف سنوي (6 أشهر)</option>
+                <option value="quarterly">ربع سنوي (3 أشهر)</option>
+            </select>
+            <div class="modal-actions">
+                <button class="modal-btn-primary" onclick="createVersion()">
+                    <i class="bi bi-check-lg ms-1"></i> إنشاء وبدء المسار
+                </button>
+                <button class="modal-btn-cancel" onclick="closeVersionModal()">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ──────────────────────────────────────────────
+        // JOURNEY STEPS DEFINITION
+        // ──────────────────────────────────────────────
+        const JOURNEY_PHASES = [
+            {
+                id: 'setup',
+                label: 'الإعداد والتهيئة',
+                color: '#a855f7',
+                icon: 'bi-gear-fill',
+                steps: [
+                    { id: 'team-setup',    label: 'إعداد الفريق',     icon: 'bi-people-fill',    desc: 'ادعُ مديري الأقسام وابنِ فريقك',   href: '/team.html',               color: '#a855f7' },
+                    { id: 'advisor-setup', label: 'المستشار الذكي',   icon: 'bi-robot',           desc: 'فعّل المستشار الاستراتيجي الذكي',  href: '/strategic-advisor.html',  color: '#8b5cf6' },
+                ]
+            },
+            {
+                id: 'diagnosis',
+                label: 'مرحلة التشخيص',
+                color: '#ef4444',
+                icon: 'bi-search',
+                steps: [
+                    { id: 'pestel', label: 'تحليل PESTEL', icon: 'bi-globe2', desc: 'المؤثرات الخارجية الكلية', href: '/pestel.html?dept=strategy', color: '#ef4444' },
+                    { id: 'swot', label: 'تحليل SWOT', icon: 'bi-grid-3x3-gap', desc: 'القوة والضعف والفرص والتهديدات', href: '/swot.html?dept=strategy', color: '#f97316' },
+                    { id: 'space-matrix', label: 'مصفوفة SPACE', icon: 'bi-compass-fill', desc: 'الوضع الاستراتيجي وتقييم العمل', href: '/space-matrix.html?dept=strategy', color: '#8b5cf6' },
+                    { id: 'grand-strategy', label: 'المصفوفة الكبرى', icon: 'bi-grid-1x2', desc: 'تحديد الخيار الاستراتيجي الأنسب', href: '/grand-strategy.html?dept=strategy', color: '#3b82f6' },
+                    { id: 'tows', label: 'مصفوفة TOWS', icon: 'bi-grid-1x2-fill', desc: 'توليد الاستراتيجيات من SWOT', href: '/tows.html?dept=strategy', color: '#f59e0b' },
+                    { id: 'scenarios', label: 'السيناريوهات', icon: 'bi-layers', desc: 'السيناريوهات المستقبلية المحتملة', href: '/scenarios.html?dept=strategy', color: '#8b5cf6' },
+                ]
+            },
+            {
+                id: 'planning',
+                label: 'مرحلة التخطيط',
+                color: '#667eea',
+                icon: 'bi-diagram-3',
+                steps: [
+                    { id: 'directions', label: 'التوجهات الاستراتيجية', icon: 'bi-compass', desc: 'الرؤية والرسالة والقيم', href: '/directions.html?dept=strategy', color: '#667eea' },
+                    { id: 'objectives', label: 'الأهداف الاستراتيجية', icon: 'bi-bullseye', desc: 'الأهداف الكبرى للمنظمة', href: '/objectives.html?dept=strategy', color: '#3b82f6' },
+                    { id: 'qspm', label: 'مصفوفة QSPM', icon: 'bi-list-check', desc: 'المفاضلة بين البدائل الاستراتيجية', href: '/qspm.html?dept=strategy', color: '#10b981' },
+                    { id: 'kpis', label: 'مؤشرات الأداء (KPIs)', icon: 'bi-graph-up-arrow', desc: 'مقاييس النجاح وكفاءة الأداء', href: '/kpis.html?dept=strategy', color: '#0ea5e9' },
+                    { id: 'okrs', label: 'الأهداف والنتائج (OKRs)', icon: 'bi-award', desc: 'النتائج المحورية والنمو', href: '/okrs.html?dept=strategy', color: '#06b6d4' },
+                ]
+            },
+            {
+                id: 'execution',
+                label: 'مرحلة التنفيذ',
+                color: '#22c55e',
+                icon: 'bi-rocket-takeoff',
+                steps: [
+                    { id: 'initiatives', label: 'المبادرات الاستراتيجية', icon: 'bi-kanban', desc: 'المشاريع والمبادرات النوعية', href: '/initiatives.html?dept=strategy', color: '#22c55e' },
+                    { id: 'change-management', label: 'إدارة التغيير', icon: 'bi-shuffle', desc: 'خطة التحول والجاهزية المؤسسية', href: '/change-management.html?dept=strategy', color: '#f59e0b' },
+                    { id: 'reviews', label: 'المراجعة الدورية', icon: 'bi-clipboard-check', desc: 'تقييم الإنجاز والدروس المستفادة', href: '/reviews.html?dept=strategy', color: '#14b8a6' },
+                    { id: 'reports', label: 'التقارير الاستراتيجية', icon: 'bi-file-earmark-bar-graph', desc: 'الملخص التنفيذي والتقارير الشاملة', href: '/reports.html?dept=strategy', color: '#10b981' },
+                ]
+            }
+        ];
+
+        // ★ Additive: sync phase color + icon from window.StartixJourney (journey-steps.js)
+        // الـ steps تبقى hardcoded (لها IDs + desc + typeMap keys)
+        // الألوان والـ icons تُحدَّث تلقائياً من المصدر المركزي
+        (function syncPhasesFromJourney() {
+            var sj = window.StartixJourney;
+            if (!sj || !sj.phases || !sj.phases.length) return;
+            // بناء خريطة: aliasId → phase metadata
+            var aliases = sj.PHASE_ALIASES || {};
+            var metaByAlias = {};
+            sj.phases.forEach(function(p) {
+                var aliasId = aliases[p.id] || p.id.toLowerCase();
+                metaByAlias[aliasId] = p;
+            });
+            // تطبيق الـ color + icon من المصدر المركزي
+            JOURNEY_PHASES.forEach(function(phase) {
+                var m = metaByAlias[phase.id];
+                if (!m) return;
+                if (m.color) phase.color = m.color;
+                if (m.icon)  phase.icon  = m.icon;
+            });
+        })();
+
+        // ──────────────────────────────────────────────
+        // STATE
+        // ──────────────────────────────────────────────
+        let _activeVersion = null;
+        let _completedSteps = new Set();
+        let _allSteps = JOURNEY_PHASES.flatMap(p => p.steps);
+
+        // ──────────────────────────────────────────────
+        // INIT
+        // ──────────────────────────────────────────────
+        (async function init() {
+            // 1. تحميل المستخدم من StateManager
+            const user = window.StateManager ? window.StateManager.getUser() : window._cachedUser;
+
+            if (!user) {
+                window.location.href = '/login.html?session_expired=true';
+                return;
+            }
+
+            const role = String(user.role || user.userType || user.userCategory || '').toUpperCase();
+            const isOwner = ['OWNER', 'ADMIN', 'COMPANY_MANAGER', 'EXEC_MANAGER', 'SYSTEM_ADMIN', 'CEO', 'BUSINESS'].includes(role);
+
+            if (!isOwner) {
+                window.location.href = '/dept-dashboard.html';
+                return;
+            }
+
+            // 2. جلب الإصدار النشط
+            await loadActiveVersion();
+
+            // 3. رسم الواجهة
+            render();
+        })();
+
+        async function loadActiveVersion() {
+            // أولاً من StateManager
+            if (window.StateManager) {
+                _activeVersion = window.StateManager.get(window.StateManager.KEYS.VERSION);
+            }
+
+            try {
+                const res = await window.api?.get('/api/versions?active=true');
+                if (res?.data?.length) {
+                    _activeVersion = res.data[0];
+                    if (window.StateManager) {
+                        window.StateManager.set(window.StateManager.KEYS.VERSION, _activeVersion);
+                    }
+                }
+            } catch (e) {
+                console.warn('[OwnerJourney] Failed to load version:', e);
+            }
+
+            // تحميل حالة الإكمال
+            await loadCompletionStatus();
+        }
+
+        async function loadCompletionStatus() {
+            _completedSteps.clear();
+            const dept = 'strategy';
+
+            // Check StateManager first for cached steps
+            if (window.StateManager) {
+                _allSteps.forEach(s => {
+                    if (window.StateManager.isStepDone(s.id)) _completedSteps.add(s.id);
+                });
+            }
+
+            // Also check for the manual initial diagnosis
+            const diagDone = window.StateManager ? window.StateManager.getDiagnosis()?.v2_complete : sessionStorage.getItem('diagnosticResult');
+            if (diagDone) {
+                _completedSteps.add('pestel'); // Mark first step done as a transition gesture
+            }
+
+            // فحص خطوات الإعداد — مُقيَّد بمفتاح الرحلة للمستخدم الحالي
+            const advisorKey = window.StateManager
+                ? window.StateManager.getJourneyKey().replace('stratix_mgr_journey', 'stratix_advisor_visited')
+                : 'stratix_advisor_visited';
+            if (localStorage.getItem(advisorKey) === '1' || window.StateManager?.isStepDone('advisor-setup')) {
+                _completedSteps.add('advisor-setup');
+            }
+
+            // فحص البقية عبر API لضمان المزامنة
+            const typeMap = {
+                pestel: 'PESTEL_STRATEGY',
+                swot: 'SWOT',
+                'space-matrix': 'SPACE_MATRIX',
+                'grand-strategy': 'GRAND_STRATEGY',
+                tows: 'TOWS_STRATEGY',
+                scenarios: 'SCENARIOS_STRATEGY',
+                directions: 'DIRECTIONS_STRATEGY',
+                objectives: 'OBJECTIVES_STRATEGY',
+                qspm: 'QSPM',
+                kpis: 'KPIS_STRATEGY',
+                okrs: 'OKRS_STRATEGY',
+                initiatives: 'INITIATIVES_STRATEGY',
+                'change-management': 'CHANGE_MANAGEMENT',
+                reviews: 'REVIEWS_STRATEGY',
+                reports: 'REPORTS_STRATEGY'
+            };
+
+            const checks = _allSteps.map(async (step) => {
+                const type = typeMap[step.id];
+                if (!type || _completedSteps.has(step.id)) return;
+
+                try {
+                    const vQuery = _activeVersion ? `&versionId=${_activeVersion.id}` : '';
+                    const res = await window.api?.get(`/api/dept/analysis?dept=${dept}&type=${type}${vQuery}`);
+                    if (res?.data) {
+                        _completedSteps.add(step.id);
+                        if (window.StateManager) window.StateManager.markStepDone(step.id);
+                    }
+                } catch (e) { }
+            });
+
+            await Promise.allSettled(checks);
+        }
+
+        // ──────────────────────────────────────────────
+        // RENDER
+        // ──────────────────────────────────────────────
+        function render() {
+            const main = document.getElementById('mainContent');
+            const vBar = document.getElementById('versionBar');
+            const total = _allSteps.length;
+            const done = _completedSteps.size;
+            const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+            // لا يوجد إصدار نشط
+            if (!_activeVersion) {
+                main.innerHTML = `
+            <div class="oj-empty">
+                <div class="empty-icon">🗺️</div>
+                <h3>ابدأ رحلتك الاستراتيجية</h3>
+                <p>أنشئ إصداراً استراتيجياً جديداً لبدء التخطيط وتتبع التقدم عبر جميع المراحل</p>
+                <button class="new-version-btn" style="font-size:0.95rem;padding:10px 28px;" onclick="showVersionModal()">
+                    <i class="bi bi-plus-lg ms-1"></i> إنشاء إصدار استراتيجي
+                </button>
+            </div>`;
+                return;
+            }
+
+            // عرض version bar
+            vBar.style.removeProperty('display');
+            document.getElementById('versionName').textContent = _activeVersion.name || `الخطة ${_activeVersion.year || ''}`;
+            document.getElementById('progressBar').style.width = pct + '%';
+            document.getElementById('progressText').textContent = `${done} / ${total} خطوة مكتملة`;
+
+            // إيجاد الخطوة التالية
+            const nextStep = _allSteps.find(s => !_completedSteps.has(s.id));
+
+            let html = '';
+
+            // بانر الخطوة التالية
+            if (nextStep) {
+                html += `
+        <div class="next-banner">
+            <div class="nb-icon"><i class="bi ${nextStep.icon}"></i></div>
+            <div class="nb-text">
+                <div class="nb-title">الخطوة التالية في مسارك</div>
+                <div class="nb-name">${nextStep.label}</div>
+            </div>
+            <a href="${nextStep.href}" class="nb-btn">
+                ابدأ الآن <i class="bi bi-arrow-left ms-1"></i>
+            </a>
+        </div>`;
+            } else {
+                html += `
+        <div class="next-banner" style="border-color:rgba(34,197,94,0.4);background:rgba(34,197,94,0.06);">
+            <div class="nb-icon">🎉</div>
+            <div class="nb-text">
+                <div class="nb-title" style="color:var(--green)">مبروك!</div>
+                <div class="nb-name">اكتملت جميع خطوات المسار الاستراتيجي</div>
+            </div>
+            <a href="/reports.html?dept=strategy" class="nb-btn" style="background:var(--green)">
+                عرض التقرير <i class="bi bi-arrow-left ms-1"></i>
+            </a>
+        </div>`;
+            }
+
+            // المراحل
+            for (const phase of JOURNEY_PHASES) {
+                const phaseDone = phase.steps.filter(s => _completedSteps.has(s.id)).length;
+                html += `
+        <div class="phase-section">
+            <div class="phase-title">
+                <span class="phase-dot" style="background:${phase.color}"></span>
+                <i class="bi ${phase.icon}" style="color:${phase.color}"></i>
+                ${phase.label}
+                <span style="margin-right:auto;font-weight:400;font-size:0.78rem;">${phaseDone}/${phase.steps.length}</span>
+            </div>
+            <div class="step-grid">`;
+
+                for (const step of phase.steps) {
+                    const isCompleted = _completedSteps.has(step.id);
+                    const isNext = nextStep?.id === step.id;
+                    const cardClass = isCompleted ? 'completed' : isNext ? 'next-step' : '';
+
+                    html += `
+            <a href="${step.href}" class="step-card ${cardClass}" title="${step.label}">
+                <div class="step-icon" style="background:${step.color}22;color:${step.color}">
+                    <i class="bi ${step.icon}"></i>
+                </div>
+                <div class="step-info">
+                    <div class="step-name">${step.label}</div>
+                    <div class="step-desc">${step.desc}</div>
+                </div>
+                <div class="step-status ${isCompleted ? 'done' : isNext ? 'current' : ''}">
+                    ${isCompleted ? '<i class="bi bi-check-circle-fill"></i>' : isNext ? '<i class="bi bi-play-circle-fill"></i>' : ''}
+                </div>
+            </a>`;
+                }
+
+                html += `</div></div>`;
+            }
+
+            main.innerHTML = html;
+
+            // ✅ عند الضغط على أي خطوة — احفظ أن المستخدم قادم من owner-journey
+            // حتى تظهر أزرار "خريطة الرحلة" في صفحات الأدوات تلقائياً
+            main.querySelectorAll('a.step-card').forEach(link => {
+                link.addEventListener('click', () => {
+                    sessionStorage.setItem('_from_journey', '1');
+                });
+            });
+        }
+
+        // ──────────────────────────────────────────────
+        // VERSION MODAL
+        // ──────────────────────────────────────────────
+        function showVersionModal() {
+            document.getElementById('versionOverlay').classList.add('active');
+            const yr = new Date().getFullYear();
+            document.getElementById('versionTitle').value = `الخطة الاستراتيجية ${yr + 1}`;
+            document.getElementById('versionYear').value = String(yr + 1);
+        }
+
+        function closeVersionModal() {
+            document.getElementById('versionOverlay').classList.remove('active');
+        }
+
+        async function createVersion() {
+            const title = document.getElementById('versionTitle').value.trim();
+            const year = document.getElementById('versionYear').value;
+            const period = document.getElementById('versionPeriod').value;
+
+            if (!title) {
+                document.getElementById('versionTitle').style.borderColor = '#ef4444';
+                return;
+            }
+
+            const btn = document.querySelector('.modal-btn-primary');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-arrow-repeat spin ms-1"></i> جار الإنشاء...';
+
+            try {
+                const res = await window.api?.post('/api/versions', {
+                    name: title,
+                    year: parseInt(year),
+                    period,
+                    isActive: true
+                });
+
+                if (res?.data || res?.id) {
+                    _activeVersion = res.data || res;
+                    localStorage.setItem('stratix_active_version', _activeVersion.id);
+                    _completedSteps.clear();
+                    closeVersionModal();
+                    render();
+                    window.showGlobalToast?.('تم إنشاء الإصدار الاستراتيجي بنجاح ✅', 'success');
+                } else {
+                    throw new Error('No data returned');
+                }
+            } catch (e) {
+                console.error('[OwnerJourney] createVersion failed:', e);
+                window.showGlobalToast?.('فشل إنشاء الإصدار — تحقق من الاتصال', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check-lg ms-1"></i> إنشاء وبدء المسار';
+            }
+        }
+
+        // إغلاق الـ modal بالضغط خارجه
+        document.getElementById('versionOverlay').addEventListener('click', function (e) {
+            if (e.target === this) closeVersionModal();
+        });
+    </script>
+</body>
+
+</html>

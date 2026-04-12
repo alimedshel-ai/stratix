@@ -30,6 +30,10 @@ function getRoutingDestination(user) {
 
     // 2. مستخدم جديد لم يكمل التأسيس
     if (!hasEntity || !onboardingDone) {
+        // المدير المستقل: جاي من التشخيص المجاني → pro-dashboard مباشرة
+        const diagCat = sessionStorage.getItem('diagnosticCategory');
+        if (diagCat === 'manager') return '/pro-dashboard.html';
+
         if (uType === 'COMPANY_MANAGER' || uType === 'DEPT_MANAGER' || uType === 'BOARD_VIEWER' || (uCategory && uCategory !== 'EXPLORER')) {
             return '/onboarding.html';
         }
@@ -42,9 +46,13 @@ function getRoutingDestination(user) {
     if (uCategory.startsWith('BOARD_')) return '/board-dashboard.html';
     if (role === 'VIEWER' || role === 'DATA_ENTRY') return '/viewer-hub.html';
 
-    // 4. مدير الإدارة (EDITOR + DEPT_MANAGER)
-    // 🛡️ آمن الآن: server.js يضمن OWNER/ADMIN → COMPANY_MANAGER (لا تعارض)
-    if (uType === 'DEPT_MANAGER') return '/dept-dashboard.html';
+    // 4. مدير الإدارة (DEPT_MANAGER)
+    // 🛡️ المستقل: role=OWNER (أنشأ entities بنفسه) → pro-dashboard دائماً
+    // الداخلي: role≠OWNER (مدعو من المالك) → dept-dashboard
+    if (uType === 'DEPT_MANAGER') {
+      if (role === 'OWNER') return '/pro-dashboard.html'; // مدير مستقل (حتى لو عنده entity)
+      return hasEntity ? '/dept-dashboard.html' : '/pro-dashboard.html';
+    }
 
     // 5. مالك الشركة / مدير عام (OWNER + COMPANY_MANAGER)
     if (uType === 'COMPANY_MANAGER' || role === 'OWNER') return '/ceo-dashboard.html';
@@ -66,16 +74,13 @@ function handleAuthResponse(data) {
         return;
     }
 
-    // 🧹 التنظيف الأمني: شطب آثار التشخيص فقط إذا كان المستخدم قد أكمل التأسيس مسبقاً
-    if (data.user && data.user.onboardingCompleted) {
-        const oldPayload = localStorage.getItem('stratix_diagnostic_payload');
-        if (oldPayload) {
-            console.warn('Authentication Cleanup: Removing old diagnostic payload');
-            localStorage.removeItem('stratix_diagnostic_payload');
-        }
-        localStorage.removeItem('painAmbition');
-    }
-    localStorage.removeItem('onboarding_completed'); // ضروري عند اختبار أكثر من حساب لتجنب تخطي الأونبوردنج
+    // 🧹 التنظيف الأمني: شطب كل آثار الجلسة السابقة لمنع Data Bleed بين الحسابات
+    // ⚠️ لا تمسح stratix_manager_diagnostic — بيانات التشخيص المجاني تُستخدم بعد التسجيل
+    ['stratix_diagnostic_payload', 'painAmbition', 'stratix_user_type',
+     'stratix_category', 'onboarding_completed', 'stratix_v10_dept',
+     'stratix_return_url'].forEach(k => localStorage.removeItem(k));
+    // إزالة كاش المستخدم القديم لمنع getUserRole() من قراءة بيانات الحساب السابق
+    window._cachedUser = null;
 
     // 🔄 ضمان تطابق الجلسات مع الصفحات القديمة (Data Bleed Fix)
     localStorage.setItem('user', JSON.stringify(data.user));

@@ -120,14 +120,28 @@ function isDeptStepDone(labelOrId, deptKey) {
   if (!labelOrId) return false;
   const upperDept = (deptKey || 'hr').toUpperCase();
   const storageMap = {
-    'hr-audit': `AUDIT_${upperDept}`, 'pestel': `PESTEL_${upperDept}`, 'swot': `SWOT_${upperDept}`,
-    'tows': `TOWS_${upperDept}`, 'scenarios': `SCENARIOS_${upperDept}`, 'directions': `DIRECTIONS_${upperDept}`,
-    'objectives': `OBJECTIVES_${upperDept}`, 'okrs': `OKRS_${upperDept}`, 'kpis': `KPIS_${upperDept}`
+    // أدوات التشخيص
+    'deep': `DEEP_${upperDept}`, 'audit': `AUDIT_${upperDept}`, 'hr-audit': `AUDIT_${upperDept}`,
+    'dept-health': `HEALTH_${upperDept}`, 'pestel': `PESTEL_${upperDept}`,
+    'swot': `SWOT_${upperDept}`, 'tows': `TOWS_${upperDept}`,
+    // أدوات التخطيط
+    'scenarios': `SCENARIOS_${upperDept}`, 'directions': `DIRECTIONS_${upperDept}`,
+    'objectives': `OBJECTIVES_${upperDept}`, 'strategic-objectives': `OBJECTIVES_${upperDept}`,
+    // أدوات التنفيذ
+    'okrs': `OKRS_${upperDept}`, 'kpis': `KPIS_${upperDept}`,
+    'initiatives': `INITIATIVES_${upperDept}`, 'projects': `PROJECTS_${upperDept}`,
+    // أدوات المتابعة
+    'reviews': `REVIEWS_${upperDept}`, 'corrections': `CORRECTIONS_${upperDept}`,
+    'reports': `REPORTS_${upperDept}`, 'risk-map': `RISK_MAP_${upperDept}`
   };
   const key = storageMap[labelOrId];
   if (key) {
     const data = localStorage.getItem(key);
     return (data && data !== '[]' && data !== '{}');
+  }
+  // fallback: Context manager (يدعم entity-scoped keys)
+  if (window.Context?.isStepCompletedSync) {
+    return window.Context.isStepCompletedSync(labelOrId);
   }
   return false;
 }
@@ -190,11 +204,14 @@ async function initSidebar(sidebarContainer) {
   const _uCat = userData?.userCategory || '';
   const isInvestorUser = _diagRole === 'investor' || _uCat === 'INVESTOR' || _uCat.startsWith('INVESTOR_');
 
+  // 🛡️ المستقل (DEPT_MANAGER + role=OWNER) → pro-dashboard | الداخلي → dept-dashboard
+  const _isProMgr = userType === 'DEPT_MANAGER' && (userRole === 'OWNER' || userRole === 'ADMIN');
   const homeHref = isViewerOrDE ? '/viewer-hub.html'
     : (userType === 'BOARD_VIEWER' && isInvestorUser) ? '/investor-dashboard.html'
       : userType === 'BOARD_VIEWER' ? '/board-dashboard.html'
-        : userType === 'DEPT_MANAGER' ? `/dept-dashboard.html${_v10Dept ? '?dept=' + _v10Dept : ''}`
-          : '/dashboard.html';
+        : (userType === 'DEPT_MANAGER' && _isProMgr) ? '/pro-dashboard.html'
+          : userType === 'DEPT_MANAGER' ? `/dept-dashboard.html${_v10Dept ? '?dept=' + _v10Dept : ''}`
+            : '/dashboard.html';
 
   // === قواعد الرؤية حسب نوع المستخدم ===
   const typeRules = {
@@ -1208,66 +1225,107 @@ async function initSidebar(sidebarContainer) {
       return html;
     }
 
-    // 🎯 المسار الاستراتيجي لمدير الإدارة (15 أداة)
+    // 🎯 مسار مدير الإدارة (داخلي أو مستقل)
     if (userType === 'DEPT_MANAGER' && !isViewerOrDE) {
       const currentDept = _v10Dept || 'hr';
       const safeDept = encodeURIComponent(currentDept);
 
-      // جلب الأدوات من config
-      const categories = (window.getToolsByCategory) ? window.getToolsByCategory() : null;
-      if (categories) {
-        for (const [catKey, cat] of Object.entries(categories)) {
-          html += `<div class="stx-section-label">${escapeHtml(cat.title)}</div>`;
-          for (const tool of cat.tools) {
-            const link = window.getToolLink ? window.getToolLink(tool, currentDept) : (tool.path.replace('{dept}', currentDept) + '?dept=' + safeDept);
-            const done = isDeptStepDone ? isDeptStepDone(tool.id, currentDept) : false;
-            const isToolActive = isActive(link);
+      // 🛡️ التمييز: المستقل (role=OWNER, أنشأ entities بنفسه) vs الداخلي (مدعو من المالك)
+      const _isProManager = userRole === 'OWNER' || userRole === 'ADMIN';
 
-            html += `
-               <a href="${link}" class="stx-item ${isToolActive ? 'active' : ''}" style="padding:8px 14px" data-tool-id="${tool.id}">
-                 <i class="bi ${done ? 'bi-check-circle-fill' : 'bi-circle'}" style="color:${done ? '#22c55e' : '#cbd5e1'};margin-left:8px"></i>
-                 <span class="stx-item-label" style="font-size:12.5px">${escapeHtml(tool.name)}</span>
-               </a>
-             `;
+      if (_isProManager) {
+        // ═══ المدير المستقل: رابط pro-dashboard + 17 أداة كاملة ═══
+        html += `
+          <a href="/pro-dashboard.html" class="stx-item stx-home-btn ${isActive('/pro-dashboard.html') ? 'active' : ''}">
+            <i class="bi bi-gem" style="color:#6366f1;font-size:16px"></i>
+            <span>لوحة العملاء</span>
+          </a>
+        `;
+
+        // عرض كل الأدوات من steps-config (4 مراحل × 17 أداة)
+        const _proCats = (window.getToolsByCategory) ? window.getToolsByCategory() : null;
+        if (_proCats) {
+          for (const [catKey, cat] of Object.entries(_proCats)) {
+            html += `<div class="stx-section-label">${escapeHtml(cat.title)}</div>`;
+            for (const tool of cat.tools) {
+              const link = window.getToolLink ? window.getToolLink(tool, currentDept) : (tool.path.replace('{dept}', currentDept) + '?dept=' + safeDept);
+              const done = isDeptStepDone ? isDeptStepDone(tool.id, currentDept) : false;
+              const isToolActive = isActive(link);
+              html += `
+                <a href="${link}" class="stx-item ${isToolActive ? 'active' : ''}" style="padding:8px 14px" data-tool-id="${tool.id}">
+                  <i class="bi ${done ? 'bi-check-circle-fill' : tool.icon}" style="color:${done ? '#22c55e' : '#cbd5e1'};margin-left:8px"></i>
+                  <span class="stx-item-label" style="font-size:12.5px">${escapeHtml(tool.name)}</span>
+                </a>
+              `;
+            }
           }
         }
 
         // القسم "عملي"
         html += `<div class="stx-divider"></div><div class="stx-section-label">📋 عملي</div>`;
-        const practicalItems = [
-          { label: 'المراجعات الدورية', href: '/reviews.html?dept=' + safeDept, icon: 'bi-journal-check' },
+        [
           { label: 'إدخال المؤشرات', href: '/kpi-entries.html?dept=' + safeDept, icon: 'bi-pencil-square' },
           { label: 'تقرير إدارتي', href: '/reports.html?dept=' + safeDept, icon: 'bi-file-earmark-bar-graph' },
-        ];
-        practicalItems.forEach(pt => {
+        ].forEach(pt => {
           html += `
             <a href="${pt.href}" class="stx-item ${isActive(pt.href) ? 'active' : ''}" style="padding:8px 14px">
-               <i class="bi ${pt.icon}" style="color:#22c55e"></i>
-               <span class="stx-item-label" style="font-size:12.5px">${pt.label}</span>
+              <i class="bi ${pt.icon}" style="color:#22c55e"></i>
+              <span class="stx-item-label" style="font-size:12.5px">${pt.label}</span>
             </a>
           `;
         });
 
-        // زر تغيير الإدارة
+      } else {
+        // ═══ المدير الداخلي: 3 أدوات تشخيص + عملي ═══
+        html += `<div class="stx-section-label">🔍 التحليل والتشخيص</div>`;
+        const diagTools = [
+          { label: 'التحليل الرقمي', href: '/' + currentDept + '-deep.html?dept=' + safeDept, icon: 'bi-search-heart', id: 'deep' },
+          { label: 'التقييم الوصفي', href: '/' + currentDept + '-audit.html?dept=' + safeDept, icon: 'bi-clipboard2-pulse-fill', id: 'audit' },
+          { label: 'صحة الإدارة', href: '/dept-health.html?dept=' + safeDept, icon: 'bi-heart-pulse', id: 'dept-health' },
+        ];
+        diagTools.forEach(tool => {
+          const done = isDeptStepDone ? isDeptStepDone(tool.id, currentDept) : false;
+          html += `
+            <a href="${tool.href}" class="stx-item ${isActive(tool.href) ? 'active' : ''}" style="padding:8px 14px" data-tool-id="${tool.id}">
+              <i class="bi ${done ? 'bi-check-circle-fill' : tool.icon}" style="color:${done ? '#22c55e' : '#cbd5e1'};margin-left:8px"></i>
+              <span class="stx-item-label" style="font-size:12.5px">${tool.label}</span>
+            </a>`;
+        });
+
+        // القسم "عملي"
+        html += `<div class="stx-divider"></div><div class="stx-section-label">📋 عملي</div>`;
+        [
+          { label: 'إدخال المؤشرات', href: '/kpi-entries.html?dept=' + safeDept, icon: 'bi-pencil-square' },
+          { label: 'تقرير إدارتي', href: '/reports.html?dept=' + safeDept, icon: 'bi-file-earmark-bar-graph' },
+        ].forEach(pt => {
+          html += `
+            <a href="${pt.href}" class="stx-item ${isActive(pt.href) ? 'active' : ''}" style="padding:8px 14px">
+              <i class="bi ${pt.icon}" style="color:#22c55e"></i>
+              <span class="stx-item-label" style="font-size:12.5px">${pt.label}</span>
+            </a>
+          `;
+        });
+
+        // زر تغيير الإدارة (للداخلي فقط)
         html += `
           <div style="padding:15px; margin-top:auto;">
             <button onclick="localStorage.removeItem('stratix_v10_dept'); window.location.href='/select-dept.html';" style="width:100%; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); background:transparent; color:#94a3b8; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
             <i class="bi bi-arrow-left-right"></i> تغيير الإدارة</button>
           </div>
         `;
-
-        // --- تسجيل الخروج (إضافة مفقودة للمدير) ---
-        html += '<div class="stx-divider"></div>';
-        html += `
-          <a href="#" class="stx-item stx-logout" onclick="event.preventDefault(); ['token','user','stratix_v10_dept','stratix_smart_guide','stratix_category','onboarding_data','stratix_diagnostic_payload','stratix_return_url'].forEach(k=>localStorage.removeItem(k)); fetch('/api/auth/logout', {method:'POST', credentials:'include'}).finally(()=>location.href='/login.html');" style="color:#ef4444;margin-top:4px">
-            <i class="bi bi-box-arrow-right" style="color:#ef4444"></i>
-            <span>تسجيل الخروج</span>
-          </a>
-          <div style="height:20px"></div>
-        `;
-
-        return html;
       }
+
+      // --- تسجيل الخروج (مشترك) ---
+      html += '<div class="stx-divider"></div>';
+      html += `
+        <a href="#" class="stx-item stx-logout" onclick="event.preventDefault(); ['token','user','stratix_v10_dept','stratix_smart_guide','stratix_category','onboarding_data','stratix_diagnostic_payload','stratix_return_url'].forEach(k=>localStorage.removeItem(k)); fetch('/api/auth/logout', {method:'POST', credentials:'include'}).finally(()=>location.href='/login.html');" style="color:#ef4444;margin-top:4px">
+          <i class="bi bi-box-arrow-right" style="color:#ef4444"></i>
+          <span>تسجيل الخروج</span>
+        </a>
+        <div style="height:20px"></div>
+      `;
+
+      return html;
     }
     // ╔═════════════════════════════════════════════════════╗
     // ║  ↓ باقي الكود: مسار CEO / ريادي / مستشار (كما هو)  ║

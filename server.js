@@ -65,6 +65,7 @@ const deptHealthRoutes = require('./routes/dept-health');
 const progressRoutes = require('./routes/progress');
 const deptAnalysisRoutes = require('./routes/dept-analysis');
 const diagnosticApiRoutes = require('./routes/diagnostic-api');
+const proEntitiesRoutes = require('./routes/pro-entities'); // 🏢 عملاء المدير المستقل
 
 
 
@@ -454,6 +455,7 @@ const breakEvenRoutes = require('./routes/break-even');
 const cfoAuditRoutes = require('./routes/cfo-audit');
 app.use('/api/invitations', invitationsRoutes);
 app.use('/api/dept-deep', deptDeepRoutes); // 📊 المرحلة 3
+app.use('/api/pro/entities', proEntitiesRoutes); // 🏢 عملاء المدير المستقل
 app.use('/api/rules-engine', rulesEngineRoutes);
 app.use('/api/sector-configs', sectorConfigsRoutes);
 app.use('/api/break-even', breakEvenRoutes);

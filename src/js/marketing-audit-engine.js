@@ -1,0 +1,553 @@
+/**
+ * Startix — Marketing Audit Pro Engine
+ * منطق التقييم + الحفظ التلقائي + عرض المحاور
+ */
+window.MarketingAuditEngine = (function () {
+    const CFG = window.MarketingAuditConfig;
+    const STORAGE_KEY = 'startix_marketing_audit';
+
+    // ── STATE ──
+    let state = {
+        meta: {
+            companyName: '',
+            sector: '',
+            companySize: '',
+            analystName: '',
+            auditDate: '',
+            period: ''
+        },
+        responses: {},   // { itemId: { status: 'yes'|'partial'|'no'|'none', note: '' } }
+        currentAxis: 1,
+        startedAt: null,
+        lastSaved: null
+    };
+
+    // ── PERSISTENCE ──
+    function save() {
+        state.lastSaved = new Date().toISOString();
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            showSaveIndicator();
+        } catch (e) {
+            console.warn('AutoSave failed:', e);
+        }
+    }
+
+    function load() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) {
+                const saved = JSON.parse(raw);
+                Object.assign(state, saved);
+                return true;
+            }
+        } catch (e) {
+            console.warn('Load failed:', e);
+        }
+        return false;
+    }
+
+    function clearData() {
+        localStorage.removeItem(STORAGE_KEY);
+        state = {
+            meta: { companyName: '', sector: '', companySize: '', analystName: '', auditDate: '', period: '' },
+            responses: {},
+            currentAxis: 1,
+            startedAt: null,
+            lastSaved: null
+        };
+    }
+
+    // ── AUTO-SAVE DEBOUNCE ──
+    let _saveTimer = null;
+    function autoSave() {
+        clearTimeout(_saveTimer);
+        _saveTimer = setTimeout(save, 400);
+    }
+
+    function showSaveIndicator() {
+        const el = document.getElementById('saveIndicator');
+        if (!el) return;
+        el.classList.add('visible');
+        setTimeout(() => el.classList.remove('visible'), 1500);
+    }
+
+    // ── SCORING ──
+    function getItemScore(itemId) {
+        const r = state.responses[itemId];
+        if (!r) return 0;
+        if (r.status === 'yes') return 1;
+        if (r.status === 'partial') return 0.5;
+        return 0;
+    }
+
+    function getAxisScore(axisId) {
+        const axis = CFG.getAxisById(axisId);
+        if (!axis || axis.items.length === 0) return { score: 0, max: 0, pct: 0 };
+        const max = axis.items.length;
+        const score = axis.items.reduce((sum, item) => sum + getItemScore(item.id), 0);
+        return { score, max, pct: max > 0 ? Math.round((score / max) * 100) : 0 };
+    }
+
+    function getTotalScore() {
+        const size = state.meta.companySize || 'large';
+        const axes = CFG.getAxesForSize(size);
+        let total = 0, max = 0;
+        axes.forEach(a => {
+            if (a.items.length === 0) return;
+            const s = getAxisScore(a.id);
+            total += s.score;
+            max += s.max;
+        });
+        return { score: total, max, pct: max > 0 ? Math.round((total / max) * 100) : 0 };
+    }
+
+    function getCompletionPct() {
+        const size = state.meta.companySize || 'large';
+        const axes = CFG.getAxesForSize(size);
+        let answered = 0, total = 0;
+        axes.forEach(a => {
+            a.items.forEach(item => {
+                total++;
+                if (state.responses[item.id]?.status && state.responses[item.id].status !== 'none') {
+                    answered++;
+                }
+            });
+        });
+        return total > 0 ? Math.round((answered / total) * 100) : 0;
+    }
+
+    // ── RENDER: META FORM (step 0) ──
+    function renderMetaForm() {
+        const container = document.getElementById('metaSection');
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="audit-card">
+                <div class="card-header">
+                    <i class="bi bi-clipboard2-data"></i>
+                    <h2>معلومات الفحص الأساسية</h2>
+                </div>
+                <div class="meta-grid">
+                    <div class="meta-field">
+                        <label>اسم الشركة</label>
+                        <input type="text" id="metaCompany" placeholder="مثال: شركة النور للتقنية" value="${esc(state.meta.companyName)}">
+                    </div>
+                    <div class="meta-field">
+                        <label>القطاع / الصناعة</label>
+                        <select id="metaSector">
+                            <option value="">— اختر القطاع —</option>
+                        </select>
+                    </div>
+                    <div class="meta-field">
+                        <label>حجم الشركة</label>
+                        <select id="metaSize">
+                            <option value="">— اختر الحجم —</option>
+                            <option value="small" ${state.meta.companySize === 'small' ? 'selected' : ''}>صغيرة (أقل من 20 موظف)</option>
+                            <option value="medium" ${state.meta.companySize === 'medium' ? 'selected' : ''}>متوسطة (20–100 موظف)</option>
+                            <option value="large" ${state.meta.companySize === 'large' ? 'selected' : ''}>كبيرة (أكثر من 100 موظف)</option>
+                        </select>
+                    </div>
+                    <div class="meta-field">
+                        <label>اسم المُحلِّل</label>
+                        <input type="text" id="metaAnalyst" placeholder="اسم المستشار / المحلل" value="${esc(state.meta.analystName)}">
+                    </div>
+                    <div class="meta-field">
+                        <label>تاريخ الفحص</label>
+                        <input type="date" id="metaDate" value="${state.meta.auditDate || new Date().toISOString().split('T')[0]}">
+                    </div>
+                    <div class="meta-field">
+                        <label>الفترة المشمولة</label>
+                        <input type="text" id="metaPeriod" placeholder="مثال: Q1 2026" value="${esc(state.meta.period)}">
+                    </div>
+                </div>
+                <div class="meta-actions">
+                    <button class="btn-audit-primary" id="btnStartAudit">
+                        <i class="bi bi-play-fill"></i>
+                        ابدأ الفحص
+                    </button>
+                </div>
+            </div>
+        `;
+
+        // Fill sector dropdown from benchmarks
+        loadSectors();
+
+        // Bind events
+        bindMetaEvents();
+    }
+
+    async function loadSectors() {
+        const sel = document.getElementById('metaSector');
+        if (!sel) return;
+        try {
+            const res = await fetch('/assets/data/sector-benchmarks.json');
+            const data = await res.json();
+            Object.entries(data.sectors).forEach(([key, s]) => {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = s.label;
+                if (state.meta.sector === key) opt.selected = true;
+                sel.appendChild(opt);
+            });
+        } catch (e) {
+            console.warn('Could not load sectors:', e);
+            // Fallback
+            ['saas:SaaS', 'retail:تجزئة', 'services:خدمات', 'industrial:صناعي', 'fnb:مطاعم'].forEach(s => {
+                const [k, l] = s.split(':');
+                const opt = document.createElement('option');
+                opt.value = k;
+                opt.textContent = l;
+                if (state.meta.sector === k) opt.selected = true;
+                sel.appendChild(opt);
+            });
+        }
+    }
+
+    function bindMetaEvents() {
+        const fields = {
+            metaCompany: 'companyName',
+            metaSector: 'sector',
+            metaSize: 'companySize',
+            metaAnalyst: 'analystName',
+            metaDate: 'auditDate',
+            metaPeriod: 'period'
+        };
+        Object.entries(fields).forEach(([elId, key]) => {
+            const el = document.getElementById(elId);
+            if (el) el.addEventListener('input', () => {
+                state.meta[key] = el.value;
+                autoSave();
+            });
+        });
+
+        document.getElementById('btnStartAudit')?.addEventListener('click', () => {
+            if (!state.meta.sector || !state.meta.companySize) {
+                showToast('اختر القطاع وحجم الشركة أولاً', 'warn');
+                return;
+            }
+            state.startedAt = state.startedAt || new Date().toISOString();
+            save();
+            showAuditView();
+        });
+    }
+
+    // ── RENDER: AUDIT VIEW ──
+    function showAuditView() {
+        document.getElementById('metaSection').style.display = 'none';
+        document.getElementById('auditSection').style.display = 'block';
+        renderAxesNav();
+        renderCurrentAxis();
+        updateProgress();
+    }
+
+    function renderAxesNav() {
+        const nav = document.getElementById('axesNav');
+        if (!nav) return;
+        const axes = CFG.getAxesForSize(state.meta.companySize);
+        nav.innerHTML = axes.map(a => {
+            const s = getAxisScore(a.id);
+            const active = a.id === state.currentAxis ? 'active' : '';
+            const empty = a.items.length === 0 ? 'disabled' : '';
+            return `
+                <div class="axis-nav-item ${active} ${empty}" data-axis="${a.id}" onclick="MarketingAuditEngine.goToAxis(${a.id})">
+                    <div class="axis-nav-icon" style="color:${a.color}"><i class="bi ${a.icon}"></i></div>
+                    <div class="axis-nav-label">${a.name}</div>
+                    ${a.items.length > 0 ? `<div class="axis-nav-score" style="color:${a.color}">${s.pct}%</div>` : '<div class="axis-nav-score" style="color:var(--muted)">قريباً</div>'}
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderCurrentAxis() {
+        const axis = CFG.getAxisById(state.currentAxis);
+        if (!axis) return;
+        const container = document.getElementById('axisContent');
+        if (!container) return;
+
+        if (axis.items.length === 0) {
+            container.innerHTML = `
+                <div class="audit-card" style="text-align:center;padding:60px 20px">
+                    <i class="bi ${axis.icon}" style="font-size:48px;color:${axis.color};opacity:0.5"></i>
+                    <h3 style="margin-top:16px;color:var(--muted)">هذا المحور سيُضاف في التحديث القادم</h3>
+                </div>
+            `;
+            return;
+        }
+
+        let html = `
+            <div class="axis-header" style="--axis-color:${axis.color}">
+                <div class="axis-icon"><i class="bi ${axis.icon}"></i></div>
+                <div>
+                    <h2>المحور ${axis.id}: ${axis.name}</h2>
+                    <span class="axis-count">${axis.items.length} بند</span>
+                </div>
+                <div class="axis-score-badge" id="axisScoreBadge">${getAxisScore(axis.id).pct}%</div>
+            </div>
+        `;
+
+        // Group by subsection if exists
+        if (axis.subsections) {
+            axis.subsections.forEach((sub, idx) => {
+                const subItems = axis.items.filter(i => i.subsection === idx);
+                html += `
+                    <div class="subsection-header">
+                        <i class="bi ${sub.icon}"></i> ${sub.label}
+                    </div>
+                `;
+                subItems.forEach(item => { html += renderItem(item, axis.color); });
+            });
+        } else {
+            axis.items.forEach(item => { html += renderItem(item, axis.color); });
+        }
+
+        // Analyst notes for this axis
+        html += `
+            <div class="audit-card axis-notes">
+                <label><i class="bi bi-pencil-square"></i> ملاحظات المُحلِّل على هذا المحور</label>
+                <textarea id="axisNote_${axis.id}" placeholder="اكتب ملاحظاتك هنا..." rows="3">${esc(state.responses['_note_axis_' + axis.id]?.note || '')}</textarea>
+            </div>
+        `;
+
+        // Navigation buttons
+        const axes = CFG.getAxesForSize(state.meta.companySize);
+        const currentIdx = axes.findIndex(a => a.id === state.currentAxis);
+        html += `
+            <div class="axis-nav-buttons">
+                ${currentIdx > 0 ? `<button class="btn-audit-secondary" onclick="MarketingAuditEngine.goToAxis(${axes[currentIdx - 1].id})"><i class="bi bi-arrow-right"></i> المحور السابق</button>` : '<div></div>'}
+                ${currentIdx < axes.length - 1 ? `<button class="btn-audit-primary" onclick="MarketingAuditEngine.goToAxis(${axes[currentIdx + 1].id})">المحور التالي <i class="bi bi-arrow-left"></i></button>` : `<button class="btn-audit-primary" onclick="MarketingAuditEngine.showSummary()"><i class="bi bi-file-earmark-bar-graph"></i> عرض الملخص</button>`}
+            </div>
+        `;
+
+        container.innerHTML = html;
+
+        // Bind axis note
+        const noteEl = document.getElementById('axisNote_' + axis.id);
+        if (noteEl) {
+            noteEl.addEventListener('input', () => {
+                if (!state.responses['_note_axis_' + axis.id]) {
+                    state.responses['_note_axis_' + axis.id] = { status: 'none', note: '' };
+                }
+                state.responses['_note_axis_' + axis.id].note = noteEl.value;
+                autoSave();
+            });
+        }
+
+        // Bind item events
+        axis.items.forEach(item => bindItemEvents(item.id, axis));
+    }
+
+    function renderItem(item, color) {
+        const r = state.responses[item.id] || { status: 'none', note: '' };
+        return `
+            <div class="audit-item" data-item="${item.id}">
+                <div class="item-main">
+                    <div class="item-label">${item.label}</div>
+                    <div class="item-question">${item.question}</div>
+                    <div class="item-evidence"><i class="bi bi-file-earmark-text"></i> ${item.evidence}</div>
+                </div>
+                <div class="item-choices">
+                    <button class="choice-btn choice-yes ${r.status === 'yes' ? 'active' : ''}" data-item="${item.id}" data-status="yes" title="متوفر بالكامل">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </button>
+                    <button class="choice-btn choice-partial ${r.status === 'partial' ? 'active' : ''}" data-item="${item.id}" data-status="partial" title="متوفر جزئياً">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    </button>
+                    <button class="choice-btn choice-no ${r.status === 'no' ? 'active' : ''}" data-item="${item.id}" data-status="no" title="غير متوفر">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </button>
+                </div>
+                <div class="item-note-toggle" onclick="MarketingAuditEngine.toggleNote('${item.id}')">
+                    <i class="bi bi-chat-dots"></i>
+                </div>
+                <div class="item-note ${r.note ? 'has-note' : ''}" id="note_${item.id}" style="display:${r.note ? 'block' : 'none'}">
+                    <textarea placeholder="ملاحظة..." rows="2">${esc(r.note)}</textarea>
+                </div>
+            </div>
+        `;
+    }
+
+    function bindItemEvents(itemId, axis) {
+        // Choice buttons
+        document.querySelectorAll(`.choice-btn[data-item="${itemId}"]`).forEach(btn => {
+            btn.addEventListener('click', () => {
+                const status = btn.dataset.status;
+                if (!state.responses[itemId]) state.responses[itemId] = { status: 'none', note: '' };
+
+                // Toggle: if same status clicked, reset to none
+                if (state.responses[itemId].status === status) {
+                    state.responses[itemId].status = 'none';
+                } else {
+                    state.responses[itemId].status = status;
+                }
+
+                // Update UI
+                document.querySelectorAll(`.choice-btn[data-item="${itemId}"]`).forEach(b => b.classList.remove('active'));
+                if (state.responses[itemId].status !== 'none') {
+                    btn.classList.add('active');
+                }
+
+                autoSave();
+                updateProgress();
+                updateAxisScoreBadge(axis);
+                renderAxesNav();
+            });
+        });
+
+        // Note textarea
+        const noteArea = document.querySelector(`#note_${itemId} textarea`);
+        if (noteArea) {
+            noteArea.addEventListener('input', () => {
+                if (!state.responses[itemId]) state.responses[itemId] = { status: 'none', note: '' };
+                state.responses[itemId].note = noteArea.value;
+                const noteContainer = document.getElementById('note_' + itemId);
+                if (noteContainer) noteContainer.classList.toggle('has-note', !!noteArea.value);
+                autoSave();
+            });
+        }
+    }
+
+    function toggleNote(itemId) {
+        const el = document.getElementById('note_' + itemId);
+        if (!el) return;
+        const visible = el.style.display !== 'none';
+        el.style.display = visible ? 'none' : 'block';
+        if (!visible) {
+            el.querySelector('textarea')?.focus();
+        }
+    }
+
+    function updateAxisScoreBadge(axis) {
+        const badge = document.getElementById('axisScoreBadge');
+        if (badge) badge.textContent = getAxisScore(axis.id).pct + '%';
+    }
+
+    function updateProgress() {
+        const pct = getCompletionPct();
+        const bar = document.getElementById('progressBar');
+        if (bar) bar.style.width = pct + '%';
+        const txt = document.getElementById('progressText');
+        if (txt) txt.textContent = pct + '%';
+
+        const total = getTotalScore();
+        const scoreNum = document.getElementById('totalScoreNum');
+        if (scoreNum) scoreNum.textContent = Math.round(total.score);
+        const scoreMax = document.getElementById('totalScoreMax');
+        if (scoreMax) scoreMax.textContent = '/ ' + total.max;
+    }
+
+    function goToAxis(axisId) {
+        const axis = CFG.getAxisById(axisId);
+        if (!axis || axis.items.length === 0) {
+            showToast('هذا المحور سيُضاف قريباً', 'info');
+            return;
+        }
+        state.currentAxis = axisId;
+        autoSave();
+        renderAxesNav();
+        renderCurrentAxis();
+        document.getElementById('axisContent')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // ── SUMMARY (placeholder for Session 3) ──
+    function showSummary() {
+        const total = getTotalScore();
+        const level = CFG.getScoreLevel(Math.round(total.score));
+        const container = document.getElementById('axisContent');
+        if (!container) return;
+
+        const axes = CFG.getAxesForSize(state.meta.companySize);
+
+        container.innerHTML = `
+            <div class="audit-card summary-card">
+                <div class="summary-header">
+                    <i class="bi bi-bar-chart-line-fill" style="font-size:32px;color:${level.color}"></i>
+                    <h2>ملخص الفحص</h2>
+                </div>
+                <div class="summary-score-ring" style="--ring-color:${level.color}">
+                    <div class="ring-num">${Math.round(total.score)}</div>
+                    <div class="ring-max">/ ${total.max}</div>
+                </div>
+                <div class="summary-level" style="color:${level.color}">${level.label}</div>
+                <div class="summary-desc">${level.desc}</div>
+
+                <div class="summary-axes-grid">
+                    ${axes.filter(a => a.items.length > 0).map(a => {
+                        const s = getAxisScore(a.id);
+                        return `
+                            <div class="summary-axis-row">
+                                <div class="sa-icon" style="color:${a.color}"><i class="bi ${a.icon}"></i></div>
+                                <div class="sa-name">${a.name}</div>
+                                <div class="sa-bar">
+                                    <div class="sa-bar-fill" style="width:${s.pct}%;background:${a.color}"></div>
+                                </div>
+                                <div class="sa-score">${s.score}/${s.max}</div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+
+                <div class="summary-meta">
+                    <span><i class="bi bi-building"></i> ${esc(state.meta.companyName || '—')}</span>
+                    <span><i class="bi bi-calendar"></i> ${state.meta.auditDate || '—'}</span>
+                    <span><i class="bi bi-person"></i> ${esc(state.meta.analystName || '—')}</span>
+                </div>
+
+                <div class="summary-actions">
+                    <button class="btn-audit-secondary" onclick="MarketingAuditEngine.goToAxis(1)">
+                        <i class="bi bi-arrow-right"></i> العودة للمحاور
+                    </button>
+                    <button class="btn-audit-primary btn-disabled" title="سيتوفر في التحديث القادم">
+                        <i class="bi bi-file-pdf"></i> تصدير PDF (قريباً)
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    // ── TOAST ──
+    function showToast(msg, type) {
+        let toast = document.getElementById('auditToast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'auditToast';
+            toast.className = 'audit-toast';
+            document.body.appendChild(toast);
+        }
+        toast.textContent = msg;
+        toast.className = 'audit-toast ' + (type || 'info');
+        toast.classList.add('visible');
+        setTimeout(() => toast.classList.remove('visible'), 2500);
+    }
+
+    // ── HELPERS ──
+    function esc(s) {
+        if (!s) return '';
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ── INIT ──
+    function init() {
+        const hasData = load();
+
+        if (hasData && state.startedAt && state.meta.sector && state.meta.companySize) {
+            // Restore previous session
+            renderMetaForm();
+            showAuditView();
+        } else {
+            renderMetaForm();
+        }
+    }
+
+    // ── PUBLIC ──
+    return {
+        init,
+        goToAxis,
+        toggleNote,
+        showSummary,
+        clearData,
+        getState: () => state,
+        save
+    };
+
+})();

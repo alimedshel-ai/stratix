@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مصفوفة SPACE - ستارتكس</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/shared.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <script src="/js/state-manager.js"></script>
+    <style>
+        :root {
+            --stx-bg: #0b0d12;
+            --stx-card: #161a23;
+            --stx-accent: #8b5cf6;
+            --stx-border: rgba(255, 255, 255, 0.08);
+            --fs-color: #ef4444;
+            /* Financial Strength */
+            --is-color: #3b82f6;
+            /* Industry Strength */
+            --ca-color: #f59e0b;
+            /* Competitive Advantage */
+            --es-color: #10b981;
+            /* Environmental Stability */
+        }
+
+        body {
+            background-color: var(--stx-bg);
+            color: #e2e8f0;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .main-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar-space {
+            width: 260px;
+            background: #11141d;
+            border-left: 1px solid var(--stx-border);
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .category-card {
+            background: var(--stx-card);
+            border: 1px solid var(--stx-border);
+            border-radius: 20px;
+            padding: 25px;
+            transition: 0.3s;
+        }
+
+        .category-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .cat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .cat-title {
+            font-weight: 800;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .score-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 5px 15px;
+            border-radius: 10px;
+            font-weight: 800;
+            color: var(--stx-accent);
+        }
+
+        .factor-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 18px;
+        }
+
+        .factor-label {
+            flex: 1;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        .factor-input {
+            width: 180px;
+        }
+
+        input[type=range] {
+            accent-color: var(--stx-accent);
+        }
+
+        .chart-container {
+            background: var(--stx-card);
+            border: 1px solid var(--stx-border);
+            border-radius: 24px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: sticky;
+            top: 100px;
+        }
+
+        #spaceCanvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+        }
+
+        .result-badge {
+            margin-top: 25px;
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-weight: 900;
+            font-size: 1.2rem;
+            text-align: center;
+            width: 100%;
+        }
+
+        .quad-aggressive {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .quad-competitive {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .quad-conservative {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .quad-defensive {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .strategy-advice {
+            margin-top: 20px;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: #cbd5e1;
+            text-align: center;
+        }
+
+        .guide-banner {
+            background: linear-gradient(90deg, #1e1b4b, #312e81);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Nav -->
+    <nav class="navbar navbar-dark bg-dark border-bottom px-4" style="height: 70px;">
+        <div class="d-flex align-items-center gap-3">
+            <a href="/owner-journey.html" class="btn btn-outline-light btn-sm rounded-pill px-3">
+                <i class="bi bi-arrow-right me-1"></i> العودة للرحلة
+            </a>
+            <h5 class="m-0 fw-800">مصفوفة SPACE <span class="badge bg-primary ms-2 small"
+                    style="font-size: 0.6rem;">جديد v2.0</span></h5>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary fw-800 px-4 rounded-pill" onclick="saveMatrix()">حفظ النتائج <i
+                    class="bi bi-check2-circle ms-1"></i></button>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <aside class="sidebar-space" id="sidebar"></aside>
+
+        <main class="content-area">
+            <div class="guide-banner">
+                <div class="fs-1">🧭</div>
+                <div>
+                    <h5 class="fw-800 mb-1">تحديد الوضع الاستراتيجي (SPACE)</h5>
+                    <p class="m-0 small opacity-75">مصفوفة تقييم الوضع الاستراتيجي والعمل هي أداة تحليل تساعد في تحديد
+                        نوع الاستراتيجية الأنسب للمنظمة بناءً على أربعة أبعاد أساسية.</p>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <div class="matrix-grid">
+                        <!-- FS: Financial Strength -->
+                        <div class="category-card" style="border-top: 4px solid var(--fs-color);">
+                            <div class="cat-header">
+                                <div class="cat-title"><i class="bi bi-cash-coin text-danger"></i> القوة المالية (FS)
+                                </div>
+                                <div class="score-box" id="fs-avg">0.0</div>
+                            </div>
+                            <div id="fs-factors"></div>
+                        </div>
+
+                        <!-- IS: Industry Strength -->
+                        <div class="category-card" style="border-top: 4px solid var(--is-color);">
+                            <div class="cat-header">
+                                <div class="cat-title"><i class="bi bi-building text-primary"></i> قوة الصناعة (IS)
+                                </div>
+                                <div class="score-box" id="is-avg">0.0</div>
+                            </div>
+                            <div id="is-factors"></div>
+                        </div>
+
+                        <!-- CA: Competitive Advantage -->
+                        <div class="category-card" style="border-top: 4px solid var(--ca-color);">
+                            <div class="cat-header">
+                                <div class="cat-title"><i class="bi bi-trophy text-warning"></i> الميزة التنافسية (CA)
+                                </div>
+                                <div class="score-box" id="ca-avg">0.0</div>
+                            </div>
+                            <div id="ca-factors"></div>
+                        </div>
+
+                        <!-- ES: Environmental Stability -->
+                        <div class="category-card" style="border-top: 4px solid var(--es-color);">
+                            <div class="cat-header">
+                                <div class="cat-title"><i class="bi bi-wind text-success"></i> الاستقرار البيئي (ES)
+                                </div>
+                                <div class="score-box" id="es-avg">0.0</div>
+                            </div>
+                            <div id="es-factors"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="chart-container">
+                        <h6 class="fw-800 mb-4">تمثيل الوضع الاستراتيجي</h6>
+                        <canvas id="spaceCanvas" width="400" height="400"></canvas>
+
+                        <div id="resultBadge" class="result-badge">جاري التحليل...</div>
+                        <div id="strategyAdvice" class="strategy-advice">قم بتحريك المؤشرات للبدء في تحليل وضعك
+                            الاستراتيجي.</div>
+
+                        <div class="mt-4 p-3 bg-white bg-opacity-5 rounded-4 w-100">
+                            <div class="d-flex justify-content-between small mb-2">
+                                <span class="text-muted">نقطة الأصل (X, Y):</span>
+                                <span id="coords-text" class="fw-800">0, 0</span>
+                            </div>
+                            <div class="small text-muted" style="font-size: 0.75rem;">
+                                * FS و IS تُقاس من 1 إلى 6 (إيجابي).<br>
+                                * CA و ES تُقاس من -6 إلى -1 (سلبي).
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script src="/js/page-guard.js"></script>
+    <script>
+        const FACTORS = {
+            fs: [
+                { id: 'roi', label: 'العائد على الاستثمار', val: 3 },
+                { id: 'lev', label: 'الرافعة المالية', val: 3 },
+                { id: 'liq', label: 'السيولة', val: 3 },
+                { id: 'wac', label: 'رأس المال العامل', val: 3 },
+                { id: 'cf', label: 'التدفقات النقدية', val: 3 }
+            ],
+            is: [
+                { id: 'gp', label: 'إمكانيات النمو', val: 3 },
+                { id: 'pp', label: 'إمكانيات الربح', val: 3 },
+                { id: 'fs', label: 'الاستقرار المالي', val: 3 },
+                { id: 'ru', label: 'استغلال الموارد', val: 3 },
+                { id: 'lp', label: 'إنتاجية العمل', val: 3 }
+            ],
+            ca: [
+                { id: 'ms', label: 'الحصة السوقية', val: -3 },
+                { id: 'pq', label: 'جودة المنتج', val: -3 },
+                { id: 'lc', label: 'دورة حياة المنتج', val: -3 },
+                { id: 'cl', label: 'ولاء العملاء', val: -3 },
+                { id: 'tu', label: 'المعرفة التقنية', val: -3 }
+            ],
+            es: [
+                { id: 'tc', label: 'التغيرات التقنية', val: -3 },
+                { id: 'inf', label: 'معدل التضخم', val: -3 },
+                { id: 'dv', label: 'تقلب الطلب', val: -3 },
+                { id: 'pr', label: 'نطاق الأسعار', val: -3 },
+                { id: 'be', label: 'عواق الدخول', val: -3 }
+            ]
+        };
+
+        const QUADRANTS = {
+            aggressive: { label: 'استراتيجية هجومية', class: 'quad-aggressive', advice: 'المنظمة في وضع ممتاز لاستغلال الفرص الخارجية، التوسع، وزيادة الحصة السوقية.' },
+            competitive: { label: 'استراتيجية تنافسية', class: 'quad-competitive', advice: 'المنظمة قوية تنافسياً في صناعة جذابة ولكنها تعاني من نقص في الاستقرار المالي.' },
+            conservative: { label: 'استراتيجية متحفظة', class: 'quad-conservative', advice: 'المنظمة قوية مالياً ولكنها تفتقر لميزات تنافسية واضحة في صناعة مستقرة ولكن غير نموية.' },
+            defensive: { label: 'استراتيجية دفاعية', class: 'quad-defensive', advice: 'المنظمة في وضع حرج، تفتقر للميزات التنافسية وللقوة المالية. يجب التركيز على تقليل الخسائر والانسحاب المدروس.' }
+        };
+
+        function init() {
+            if (window.initSidebar) window.initSidebar();
+
+            // Render Factors
+            renderCategory('fs', 1, 6);
+            renderCategory('is', 1, 6);
+            renderCategory('ca', -6, -1);
+            renderCategory('es', -6, -1);
+
+            // Load saved data
+            if (window.StateManager) {
+                const saved = window.StateManager.get('space_matrix');
+                if (saved) {
+                    Object.keys(FACTORS).forEach(cat => {
+                        FACTORS[cat].forEach(f => {
+                            if (saved[f.id] !== undefined) {
+                                f.val = saved[f.id];
+                                const input = document.getElementById(`input-${f.id}`);
+                                if (input) input.value = f.val;
+                                document.getElementById(`val-${f.id}`).textContent = f.val;
+                            }
+                        });
+                    });
+                }
+            }
+
+            updateCalculations();
+        }
+
+        function renderCategory(cat, min, max) {
+            const container = document.getElementById(`${cat}-factors`);
+            container.innerHTML = FACTORS[cat].map(f => `
+                <div class="factor-row">
+                    <div class="factor-label">${f.label}</div>
+                    <div class="factor-input">
+                        <input type="range" class="form-range" id="input-${f.id}" min="${min}" max="${max}" step="1" value="${f.val}" oninput="updateFactor('${cat}', '${f.id}', this.value)">
+                    </div>
+                    <div class="fw-800 small" id="val-${f.id}" style="width: 25px; text-align: left;">${f.val}</div>
+                </div>
+            `).join('');
+        }
+
+        function updateFactor(cat, id, val) {
+            const factor = FACTORS[cat].find(f => f.id === id);
+            factor.val = parseFloat(val);
+            document.getElementById(`val-${id}`).textContent = val;
+            updateCalculations();
+        }
+
+        function updateCalculations() {
+            const averages = {};
+            Object.keys(FACTORS).forEach(cat => {
+                const sum = FACTORS[cat].reduce((a, b) => a + b.val, 0);
+                averages[cat] = sum / FACTORS[cat].length;
+                document.getElementById(`${cat}-avg`).textContent = averages[cat].toFixed(1);
+            });
+
+            // X axis = ISavg + CAavg
+            const x = averages.is + averages.ca;
+            // Y axis = FSavg + ESavg
+            const y = averages.fs + averages.es;
+
+            document.getElementById('coords-text').textContent = `${x.toFixed(2)}, ${y.toFixed(2)}`;
+
+            determineQuadrant(x, y);
+            drawMatrix(x, y);
+        }
+
+        function determineQuadrant(x, y) {
+            let quad = '';
+            if (x >= 0 && y >= 0) quad = 'aggressive';
+            else if (x >= 0 && y < 0) quad = 'competitive';
+            else if (x < 0 && y >= 0) quad = 'conservative';
+            else quad = 'defensive';
+
+            const res = QUADRANTS[quad];
+            const badge = document.getElementById('resultBadge');
+            badge.textContent = res.label;
+            badge.className = 'result-badge ' + res.class;
+            document.getElementById('strategyAdvice').textContent = res.advice;
+
+            window._currentQuad = quad;
+            window._coords = { x, y };
+        }
+
+        function drawMatrix(targetX, targetY) {
+            const canvas = document.getElementById('spaceCanvas');
+            const ctx = canvas.getContext('2d');
+            const size = canvas.width;
+            const center = size / 2;
+            const scale = (size / 2) / 6.5;
+
+            ctx.clearRect(0, 0, size, size);
+
+            // Quadrants Backgrounds (Subtle)
+            ctx.globalAlpha = 0.05;
+            ctx.fillStyle = '#ef4444'; ctx.fillRect(center, 0, center, center); // Aggressive
+            ctx.fillStyle = '#3b82f6'; ctx.fillRect(center, center, center, center); // Competitive
+            ctx.fillStyle = '#f59e0b'; ctx.fillRect(0, 0, center, center); // Conservative
+            ctx.fillStyle = '#10b981'; ctx.fillRect(0, center, center, center); // Defensive
+            ctx.globalAlpha = 1.0;
+
+            // Axis
+            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, center); ctx.lineTo(size, center);
+            ctx.moveTo(center, 0); ctx.lineTo(center, size);
+            ctx.stroke();
+
+            // Labels
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = 'bold 12px Tajawal';
+            ctx.textAlign = 'center';
+            ctx.fillText('FS (القوة المالية)', center, 20);
+            ctx.fillText('ES (الاستقرار البيئي)', center, size - 10);
+            ctx.textAlign = 'left';
+            ctx.fillText('IS (قوة الصناعة)', size - 80, center - 10);
+            ctx.textAlign = 'right';
+            ctx.fillText('CA (الميزة التنافسية)', 100, center - 10);
+
+            // Vector
+            const vx = center + (targetX * scale);
+            const vy = center - (targetY * scale); // Invert Y for canvas
+
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = 'rgba(139, 92, 246, 0.5)';
+            ctx.strokeStyle = '#8b5cf6';
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(center, center);
+            ctx.lineTo(vx, vy);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // End point
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(vx, vy, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#8b5cf6';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        async function saveMatrix() {
+            const data = {};
+            Object.keys(FACTORS).forEach(cat => {
+                FACTORS[cat].forEach(f => {
+                    data[f.id] = f.val;
+                });
+            });
+            data.quadrant = window._currentQuad;
+            data.coords = window._coords;
+            data.savedAt = new Date().toISOString();
+
+            if (window.StateManager) {
+                window.StateManager.set('space_matrix', data);
+                window.StateManager.markStepDone('space-matrix');
+
+                // Also update generic diagnostic payload for report engine
+                window.StateManager.updatePayload('SPACE_MATRIX', {
+                    result: QUADRANTS[window._currentQuad].label,
+                    scores: data
+                });
+            }
+
+            // Sync with DB
+            if (window.api?.post) {
+                await window.api.post('/api/dept/analysis', {
+                    dept: 'strategy',
+                    type: 'SPACE_MATRIX',
+                    data: data
+                });
+            }
+
+            alert('✅ تم حفظ مصفوفة SPACE بنجاح');
+            window.location.href = '/owner-journey.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+<script>
+// هذه الصفحة انتقلت إلى dept-smart.html — توجيه تلقائي
+(function(){
+  var p = new URLSearchParams(location.search);
+  var d = p.get('dept') || 'compliance';
+  window.location.replace('/dept-smart.html?dept=' + d);
+})();
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تقرير الإدارة السريع - ستارتكس</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/shared.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --stx-bg: #0f172a;
+            --stx-card: rgba(30, 41, 59, 0.7);
+            --stx-accent: #6366f1;
+            --stx-border: rgba(255, 255, 255, 0.1);
+                    --bs-body-color: #e2e8f0;
+            --bs-body-color-rgb: 226, 232, 240;
+            --bs-card-color: #e2e8f0;
+}
+
+        body {
+            background: var(--stx-bg);
+            color: #f1f5f9;
+            font-family: 'Tajawal', sans-serif;
+            min-height: 100vh;
+        }
+
+        .report-wrapper {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .glass-card {
+            background: var(--stx-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--stx-border);
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .step-indicator::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--stx-border);
+            z-index: 1;
+            transform: translateY(-50%);
+        }
+
+        .step-dot {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--stx-bg);
+            border: 2px solid var(--stx-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            z-index: 2;
+            transition: 0.3s;
+            color: #64748b;
+        }
+
+        .step-dot.active {
+            border-color: var(--stx-accent);
+            color: var(--stx-accent);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .step-dot.done {
+            background: var(--stx-accent);
+            border-color: var(--stx-accent);
+            color: white;
+        }
+
+        /* Axis Cards */
+        .axis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .axis-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--stx-border);
+            border-radius: 16px;
+            padding: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .axis-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .axis-card.selected {
+            border-color: var(--stx-accent);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .suggestion-badge {
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            background: #f59e0b;
+            color: black;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 20px;
+            z-index: 10;
+            box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+            animation: bounce 2s infinite;
+        }
+
+        .axis-card.has-suggestion {
+            border: 1px dashed #f59e0b !important;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            20%,
+            50%,
+            80%,
+            100% {
+                transform: translateY(0);
+            }
+
+            40% {
+                transform: translateY(-5px);
+            }
+
+            60% {
+                transform: translateY(-3px);
+            }
+        }
+
+        .smart-panel {
+            background: rgba(245, 158, 11, 0.05);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 25px;
+            display: none;
+        }
+
+        #suggestionList li {
+            font-size: 13px;
+            color: #d1d5db;
+            margin-bottom: 5px;
+        }
+
+        .axis-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: var(--stx-accent);
+        }
+
+        .axis-label {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .axis-val-label {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+
+        /* Forms */
+        .form-label {
+            font-weight: 700;
+            color: #e2e8f0;
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--stx-border);
+            color: white;
+            border-radius: 12px;
+            padding: 12px;
+        }
+
+        .form-control:focus {
+            background: rgba(15, 23, 42, 0.8);
+            border-color: var(--stx-accent);
+            box-shadow: none;
+            color: white;
+        }
+
+        .nav-btns {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 32px;
+        }
+
+        .btn-modern {
+            padding: 12px 28px;
+            border-radius: 14px;
+            font-weight: 800;
+            transition: 0.3s;
+        }
+
+        .btn-primary-modern {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            border: none;
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2);
+        }
+
+        .btn-primary-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Modal-like question area */
+        .question-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .question-card {
+            background: #1e293b;
+            border: 1px solid var(--stx-border);
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .option-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--stx-border);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .option-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(-5px);
+        }
+
+        .option-item.active {
+            border-color: var(--stx-accent);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        /* ========= Red Flag Panel ========= */
+        .red-flag-panel {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            border-radius: 14px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .red-flag-panel .rf-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #f87171;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .red-flag-panel ul {
+            margin: 0;
+            padding-right: 20px;
+        }
+
+        .red-flag-panel li {
+            font-size: 12px;
+            color: #fca5a5;
+            margin-bottom: 4px;
+            line-height: 1.6;
+        }
+
+        /* ========= Resource Modern Cards ========= */
+        .resource-card-modern {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--stx-border);
+            border-radius: 20px;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .resource-card-modern:focus-within {
+            border-color: var(--stx-accent);
+            background: rgba(255, 255, 255, 0.04);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .step-mini-num {
+            width: 24px;
+            height: 24px;
+            background: var(--stx-accent);
+            color: white;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .tactical-tip {
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #fde68a;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .strategic-context {
+            background: rgba(99, 102, 241, 0.05);
+            border: 1px solid rgba(99, 102, 241, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .sc-title {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--stx-accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sc-desc {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #cbd5e1;
+        }
+
+        .sc-impact {
+            margin-top: auto;
+        }
+
+        .fs-7 {
+            font-size: 0.875rem;
+        }
+
+        .fs-8 {
+            font-size: 0.75rem;
+        }
+
+        /* Glassmorphism updates for inputs */
+        .form-control-lg {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="report-wrapper">
+        <div class="text-center mb-5">
+            <h1 class="fw-900 mb-2">المدير الداخلي</h1>
+            <p class="text-muted" style="max-width:500px; margin: 0 auto;">تقييم سريع وعملي للحالة الراهنة لإدارة <span
+                    class="dept-name-slot text-white fw-bold">...</span> لسد الفجوة بين الواقع والرؤية الاستراتيجية.</p>
+
+            <!-- Smart Suggestions Panel -->
+            <div id="smartPanel" class="smart-panel">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center"
+                        style="width:24px; height:24px; font-size:12px; margin-left:10px;">
+                        💡
+                    </div>
+                    <h6 class="mb-0 text-warning" style="font-size: 14px;">اقتراحات ذكية من تشخيص المالك</h6>
+                </div>
+                <ul id="suggestionList" class="mb-0 ps-3">
+                    <!-- سيتم تعبئتها برمجياً -->
+                </ul>
+            </div>
+
+            <div id="deptBadge" class="d-inline-block px-3 py-1 rounded-pill"
+                style="background:rgba(99,102,241,0.1); color:var(--stx-accent); font-weight:700; font-size:12px;">
+                إدارة: <span class="dept-name-slot">...</span>
+            </div>
+        </div>
+
+        <div class="step-indicator">
+            <div class="step-dot active" id="dot-1" title="تقدير الوضع">1</div>
+            <div class="step-dot" id="dot-2" title="العقبات">2</div>
+            <div class="step-dot" id="dot-3" title="الموارد">3</div>
+        </div>
+
+        <div class="glass-card">
+            <!-- Section 1: STATUS -->
+            <div id="section-1" class="report-section">
+                <h3 class="fw-800 mb-4"><i class="bi bi-activity text-accent me-2"></i> القسم الأول: وضع الإدارة الحالي
+                </h3>
+                <p class="text-muted mb-4 fs-7">اختر كل محور لتقييمه (8 ركائز أساسية)</p>
+                <div class="axis-grid" id="statusGrid">
+                    <!-- Cards injected by JS -->
+                </div>
+            </div>
+
+            <!-- Section 2: PROBLEMS -->
+            <div id="section-2" class="report-section d-none">
+                <h3 class="fw-800 mb-4"><i class="bi bi-exclamation-triangle text-warning me-2"></i> القسم الثاني:
+                    المشاكل والعقبات</h3>
+
+                <!-- Red Flag Panel — يظهر تلقائياً عند رصد مشكلة مزمنة أو محور حرج -->
+                <div id="redFlagPanel" class="red-flag-panel">
+                    <div class="rf-title">
+                        <i class="bi bi-exclamation-octagon-fill"></i>
+                        تنبيهات حمراء تحتاج عناية المالك الفورية
+                    </div>
+                    <ul id="redFlagList"></ul>
+                </div>
+
+                <div id="problemsList">
+                    <!-- Inputs injected by JS -->
+                </div>
+            </div>
+
+            <!-- Section 3: RESOURCES -->
+            <div id="section-3" class="report-section d-none">
+                <h3 class="fw-800 mb-4"><i class="bi bi-box-seam text-success me-2"></i> القسم الثالث: الموارد المتاحة
+                </h3>
+                <div id="resourcesList">
+                    <!-- Inputs injected by JS -->
+                </div>
+            </div>
+
+            <div class="nav-btns">
+                <button id="btnPrev" class="btn btn-outline-secondary btn-modern d-none">رجوع</button>
+                <button id="btnNext" class="btn btn-primary btn-primary-modern btn-modern ms-auto">التالي</button>
+                <button id="btnSubmit" class="btn btn-success btn-modern d-none ms-auto"
+                    style="background:#10b981; border:none;">إرسال التقرير للمالك</button>
+            </div>
+        </div>
+
+        <div class="text-center mt-4 text-muted fs-7">
+            ملاحظة: هذا التقرير يُعرض مباشرة للمالك للمساعدة في بناء الخطة الاستراتيجية للمنشأة.
+        </div>
+    </div>
+
+    <!-- Questions Overlay (Modal) -->
+    <div class="question-overlay" id="questionOverlay">
+        <div class="question-card">
+            <h4 id="qTitle" class="fw-800 mb-3">...</h4>
+            <p id="qText" class="text-muted mb-4 fs-7">...</p>
+            <div id="qOptions">
+                <!-- Options injected by JS -->
+            </div>
+            <div class="text-end mt-4">
+                <button class="btn btn-outline-secondary btn-sm" onclick="closeOverlay()">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="stxToast">
+        <i class="bi bi-bell-fill" id="toastIcon"></i>
+        <span class="toast-msg"></span>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/api.js"></script>
+    <script src="/js/fast-report-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/dept-report.js"></script>
+</body>
+
+</html>

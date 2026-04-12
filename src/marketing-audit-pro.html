@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس | فحص التسويق الاحترافي</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/marketing-audit.css?v=1">
+</head>
+
+<body>
+
+    <!-- TOPBAR -->
+    <div class="audit-topbar">
+        <div class="logo">
+            <i class="bi bi-clipboard2-pulse"></i>
+            <span>فحص التسويق الاحترافي</span>
+        </div>
+        <div class="progress-wrap" id="progressWrap" style="display:none">
+            <div class="progress-bar-track">
+                <div class="progress-bar-fill" id="progressBar"></div>
+            </div>
+            <div class="progress-pct" id="progressText">0%</div>
+        </div>
+        <div class="topbar-score" id="topbarScore" style="display:none">
+            <span class="score-num" id="totalScoreNum">0</span>
+            <span class="score-max" id="totalScoreMax">/ 70</span>
+        </div>
+    </div>
+
+    <!-- MAIN LAYOUT -->
+    <div class="audit-layout">
+
+        <!-- SIDEBAR (axes navigation) -->
+        <aside class="audit-sidebar" id="auditSidebar" style="display:none">
+            <div id="axesNav"></div>
+        </aside>
+
+        <!-- CONTENT -->
+        <main class="audit-main">
+
+            <!-- Step 0: Meta info -->
+            <div id="metaSection">
+                <a href="/dept-dashboard.html" class="back-link">
+                    <i class="bi bi-arrow-right"></i>
+                    العودة للوحة الإدارات
+                </a>
+            </div>
+
+            <!-- Audit content -->
+            <div id="auditSection" style="display:none">
+                <div id="axisContent"></div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- SAVE INDICATOR -->
+    <div class="save-indicator" id="saveIndicator">
+        <i class="bi bi-check-circle-fill"></i>
+        تم الحفظ تلقائياً
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="/js/marketing-audit-config.js?v=1"></script>
+    <script src="/js/marketing-audit-engine.js?v=1"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Override showAuditView to also show sidebar/progress
+            const originalShowAudit = MarketingAuditEngine.showSummary;
+
+            // Patch: show progress bar and sidebar when audit starts
+            const _origInit = MarketingAuditEngine.init;
+
+            // Listen for audit start
+            const observer = new MutationObserver(() => {
+                const auditVisible = document.getElementById('auditSection').style.display !== 'none';
+                document.getElementById('progressWrap').style.display = auditVisible ? 'flex' : 'none';
+                document.getElementById('topbarScore').style.display = auditVisible ? 'flex' : 'none';
+                document.getElementById('auditSidebar').style.display = auditVisible ? '' : 'none';
+            });
+            observer.observe(document.getElementById('auditSection'), { attributes: true, attributeFilter: ['style'] });
+
+            MarketingAuditEngine.init();
+        });
+    </script>
+
+</body>
+
+</html>

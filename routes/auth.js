@@ -1110,15 +1110,25 @@ router.post('/switch-entity', verifyToken, async (req, res) => {
     const newUserCategory = membership?.user?.userCategory || req.user.userCategory || null;
 
     // قاعدة ذهبية: OWNER/ADMIN → COMPANY_MANAGER دائماً
-    if (['OWNER', 'ADMIN'].includes(newRole) || isSA) {
+    // 🛡️ استثناء: المدير المستقل (pro_manager) يبقى DEPT_MANAGER حتى لو role=OWNER
+    let metaObj = {};
+    try { metaObj = JSON.parse(targetEntity.metadata || '{}'); } catch(e) {}
+    const isProEntity = metaObj.createdBy === 'pro_manager';
+
+    if (isProEntity && membership?.userType === 'DEPT_MANAGER') {
+      newUserType = 'DEPT_MANAGER'; // المستقل يحتفظ بنوعه
+    } else if (['OWNER', 'ADMIN'].includes(newRole) || isSA) {
       newUserType = 'COMPANY_MANAGER';
     }
 
     // استخراج dept code من departmentRole أو userCategory لـ DEPT_MANAGER
     let deptCode = null;
     if (newUserType === 'DEPT_MANAGER') {
-      // departmentRole: CHRO → hr, CFO → finance, CMO → marketing...
-      const roleToCode = { CHRO: 'hr', CFO: 'finance', CMO: 'marketing', COO: 'operations', CTO: 'tech', CSO: 'sales', CCO: 'cs', CLO: 'legal' };
+      // departmentRole: CHRO/CFO... أو القيم المباشرة: HR, SALES, MARKETING...
+      const roleToCode = {
+        CHRO: 'hr', CFO: 'finance', CMO: 'marketing', COO: 'operations', CTO: 'tech', CSO: 'sales', CCO: 'cs', CLO: 'legal',
+        HR: 'hr', FINANCE: 'finance', MARKETING: 'marketing', OPERATIONS: 'operations', IT: 'it', SALES: 'sales', CS: 'cs', COMPLIANCE: 'compliance', QUALITY: 'quality', PROJECTS: 'projects', SUPPORT: 'support', GOVERNANCE: 'governance'
+      };
       if (membership?.departmentRole && roleToCode[membership.departmentRole]) {
         deptCode = roleToCode[membership.departmentRole];
       } else if (newUserCategory?.startsWith('DEPT_')) {

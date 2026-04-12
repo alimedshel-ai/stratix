@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المصفوفة الكبرى - ستارتكس</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/shared.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <script src="/js/state-manager.js"></script>
+    <style>
+        :root {
+            --stx-bg: #0b0d12;
+            --stx-card: #161a23;
+            --stx-accent: #3b82f6;
+            --stx-border: rgba(255, 255, 255, 0.08);
+            --q1-color: #10b981;
+            --q2-color: #f59e0b;
+            --q3-color: #ef4444;
+            --q4-color: #8b5cf6;
+        }
+
+        body {
+            background-color: var(--stx-bg);
+            color: #e2e8f0;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .main-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .grand-matrix {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 20px;
+            aspect-ratio: 16/10;
+            margin-top: 40px;
+            position: relative;
+        }
+
+        .matrix-quad {
+            background: var(--stx-card);
+            border: 1px solid var(--stx-border);
+            border-radius: 20px;
+            padding: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        .matrix-quad:hover {
+            transform: scale(1.01);
+            border-color: rgba(255, 255, 255, 0.2);
+            z-index: 2;
+        }
+
+        .matrix-quad.active {
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
+            border: 2px solid var(--stx-accent);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .quad-num {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            font-size: 3rem;
+            font-weight: 900;
+            opacity: 0.1;
+            color: #fff;
+        }
+
+        .quad-header {
+            font-weight: 800;
+            font-size: 1.25rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .strategy-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .strategy-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .strategy-item i {
+            color: var(--stx-accent);
+            font-size: 0.8rem;
+        }
+
+        .axis-label {
+            position: absolute;
+            font-weight: 800;
+            font-size: 0.9rem;
+            color: #94a3b8;
+            background: var(--stx-bg);
+            padding: 5px 15px;
+            border: 1px solid var(--stx-border);
+            border-radius: 99px;
+            z-index: 5;
+        }
+
+        .axis-y {
+            top: 50%;
+            right: -60px;
+            transform: rotate(-90deg) translateY(-50%);
+        }
+
+        .axis-x {
+            left: 50%;
+            top: -30px;
+            transform: translateX(-50%);
+        }
+
+        .growth-labels {
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px;
+            font-weight: 800;
+            color: #64748b;
+        }
+
+        .pos-labels {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 10px;
+            font-weight: 800;
+            color: #64748b;
+        }
+
+        .guide-banner {
+            background: linear-gradient(90deg, #1e293b, #0f172a);
+            padding: 24px;
+            border-radius: 20px;
+            border: 1px solid var(--stx-border);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .btn-modern {
+            background: var(--stx-accent);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 14px;
+            font-weight: 800;
+            transition: all 0.3s;
+        }
+
+        .btn-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .selection-indicator {
+            position: absolute;
+            inset: 0;
+            background: rgba(59, 130, 246, 0.1);
+            display: none;
+        }
+
+        .active .selection-indicator {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Nav -->
+    <nav class="navbar navbar-dark bg-dark border-bottom px-4" style="height: 70px;">
+        <div class="d-flex align-items-center gap-3">
+            <a href="/owner-journey.html" class="btn btn-outline-light btn-sm rounded-pill px-3">
+                <i class="bi bi-arrow-right me-1"></i> العودة للرحلة
+            </a>
+            <h5 class="m-0 fw-800">المصفوفة الكبرى <span class="badge bg-primary ms-2 small"
+                    style="font-size: 0.6rem;">جديد v2.0</span></h5>
+        </div>
+        <button class="btn btn-primary fw-800 px-4 rounded-pill" onclick="saveGrand()">حفظ الاختيار <i
+                class="bi bi-check2-circle ms-1"></i></button>
+    </nav>
+
+    <div class="main-container">
+        <aside class="sidebar-space" id="sidebar"></aside>
+
+        <main class="content-area">
+            <div class="guide-banner">
+                <div class="fs-1 text-primary"><i class="bi bi-grid-1x2"></i></div>
+                <div>
+                    <h5 class="fw-800 mb-1">المصفوفة الكبرى (Grand Strategy Matrix)</h5>
+                    <p class="m-0 small opacity-75">أداة قوية لتحديد الخيارات الاستراتيجية بناءً على مركزك التنافسي
+                        ومعدل نمو السوق. اختر المربع الذي يمثل وضعك الحالي.</p>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-center fw-800 text-muted mb-2">نمو السوق</div>
+                    <div class="d-flex">
+                        <div class="pos-labels text-center" style="width: 100px; height: 100%;">
+                            <div class="mb-5 mt-5">مركز تنافسي قوي</div>
+                            <div class="mt-5">مركز تنافسي ضعيف</div>
+                        </div>
+
+                        <div class="flex-grow-1">
+                            <div
+                                class="d-flex justify-content-around fw-800 pb-2 border-bottom border-secondary border-opacity-25">
+                                <span>نمو سريع</span>
+                                <span>نمو بطيء</span>
+                            </div>
+
+                            <div class="grand-matrix">
+                                <!-- Quad II -->
+                                <div id="quad_ii" class="matrix-quad" onclick="setQuad('ii')"
+                                    style="border-right: 2px dashed rgba(255,255,255,0.1); border-bottom: 2px dashed rgba(255,255,255,0.1);">
+                                    <div class="quad-num">II</div>
+                                    <div class="quad-header" style="color: var(--q2-color);">
+                                        <i class="bi bi-lightning-charge"></i> نمو سريع / مركز ضعيف
+                                    </div>
+                                    <ul class="strategy-list">
+                                        <li class="strategy-item"><i class="bi bi-check2"></i> غزو السوق</li>
+                                        <li class="strategy-item"><i class="bi bi-check2"></i> تطوير السوق</li>
+                                        <li class="strategy-item"><i class="bi bi-check2"></i> تطوير المنتج</li>
+                                        <li class="strategy-item"><i class="bi bi-check2"></i> التكامل الأفقي</li>
+                                        <li class="strategy-item"><i class="bi bi-check2"></i> التجريد (بيع جزء)</li>
+                                        <li class="strategy-item"><i class="bi bi-check2"></i> التصفية</li>
+                                    </ul>
+                                </div>
+
+                                <!-- Quad I -->
+                                <div id="quad_i" class="matrix-quad" onclick="setQuad('i')"
+                                    style="border-bottom: 2px dashed rgba(255,255,255,0.1);">
+                                    <div class="quad-num">I</div>
+                                    <div class="quad-header" style="color: var(--q1-color);">
+                                        <i class="bi bi-rocket-takeoff"></i> نمو سريع / مركز قوي
+                                    </div>
+                                    <ul class="strategy-list">
+                                        <li class="strategy-item"><i class="bi bi-check2"></i> تركيز (غزو/تطوير)</li>
+                                        <li class="strategy-item"><i class="bi bi-check2"></i> تكامل أمامي وخلفي</li>
+                                        <li class="strategy-item"><i class="bi bi-check2"></i> تكامل أفقي</li>
+                                        <li class="strategy-item"><i class="bi bi-check2"></i> تنويع مرتبط</li>
+                                    </ul>
+                                </div>
+
+                                <!-- Quad III -->
+                                <div id="quad_iii" class="matrix-quad" onclick="setQuad('iii')"
+                                    style="border-right: 2px dashed rgba(255,255,255,0.1);">
+                                    <div class="quad-num">III</div>
+                                    <div class="quad-header" style="color: var(--q3-color);">
+                                        <i class="bi bi-shield-exclamation"></i> نمو بطيء / مركز ضعيف
+                                    </div>
+                                    <ul class="strategy-list">
+                                        <li class="strategy-item"><i class="bi bi-check2"></i> الانكماش وتخفيض التكاليف
+                                        </li>
+                                        <li class="strategy-item"><i class="bi bi-check2"></i> تنويع غير مرتبط</li>
+                                        <li class="strategy-item"><i class="bi bi-check2"></i> التجريد أو التصفية</li>
+                                    </ul>
+                                </div>
+
+                                <!-- Quad IV -->
+                                <div id="quad_iv" class="matrix-quad" onclick="setQuad('iv')">
+                                    <div class="quad-num">IV</div>
+                                    <div class="quad-header" style="color: var(--q4-color);">
+                                        <i class="bi bi-cash-stack"></i> نمو بطيء / مركز قوي
+                                    </div>
+                                    <ul class="strategy-list">
+                                        <li class="strategy-item"><i class="bi bi-check2"></i> تنويع مرتبط</li>
+                                        <li class="strategy-item"><i class="bi bi-check2"></i> تنويع غير مرتبط</li>
+                                        <li class="strategy-item"><i class="bi bi-check2"></i> المشاريع المشتركة (JV)
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-5 p-4 bg-white bg-opacity-5 rounded-4 border border-white border-opacity-10"
+                id="selection-details" style="display: none;">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <div id="selected-icon" class="fs-1"></div>
+                    </div>
+                    <div class="col">
+                        <h5 class="fw-800 mb-1">الاستراتيجية المختارة: <span id="selected-label"></span></h5>
+                        <p class="m-0 text-muted" id="selected-desc"></p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script src="/js/page-guard.js"></script>
+    <script>
+        let currentQuad = null;
+
+        const QUAD_DATA = {
+            i: { label: 'مربع ممتاز (نمو سريع / مركز قوي)', color: 'var(--q1-color)', icon: '🚀', desc: 'أنت في أفضل وضع ممكن. استمر في تعميق سيطرتك والتوسع أفقياً وعمودياً.' },
+            ii: { label: 'مربع التحدي (نمو سريع / مركز ضعيف)', color: 'var(--q2-color)', icon: '⚡', desc: 'السوق ينمو بسرعة ولكنك لا تواكب. تحتاج إما لتعزيز تنافسيتك بشراسة أو إعادة التموضع.' },
+            iii: { label: 'مربع الإصلاح (نمو بطيء / مركز ضعيف)', color: 'var(--q3-color)', icon: '🚨', desc: 'أصعب وضع استراتيجي. البيئة لا تشجع والقدرات ضعيفة. الحل غالباً في الانكماش أو التصفية.' },
+            iv: { label: 'مربع الحصاد (نمو بطيء / مركز قوي)', color: 'var(--q4-color)', icon: '💰', desc: 'أنت قوي في سوق ناضج. استخدم فوائضك المالية للتنويع في مجالات جديدة واعدة.' }
+        };
+
+        function setQuad(id) {
+            currentQuad = id;
+            document.querySelectorAll('.matrix-quad').forEach(q => q.classList.remove('active'));
+            document.getElementById(`quad_${id}`).classList.add('active');
+
+            const info = QUAD_DATA[id];
+            document.getElementById('selected-label').textContent = info.label;
+            document.getElementById('selected-label').style.color = info.color;
+            document.getElementById('selected-desc').textContent = info.desc;
+            document.getElementById('selected-icon').textContent = info.icon;
+            document.getElementById('selection-details').style.display = 'block';
+        }
+
+        async function saveGrand() {
+            if (!currentQuad) {
+                alert('يرجى اختيار مربع يصف وضعك الاستراتيجي أولاً');
+                return;
+            }
+
+            const payload = {
+                quadrant: currentQuad,
+                data: QUAD_DATA[currentQuad],
+                savedAt: new Date().toISOString()
+            };
+
+            if (window.StateManager) {
+                window.StateManager.set('grand_strategy', payload);
+                window.StateManager.markStepDone('grand-strategy');
+
+                window.StateManager.updatePayload('GRAND_STRATEGY', {
+                    result: QUAD_DATA[currentQuad].label,
+                    details: payload
+                });
+            }
+
+            if (window.api?.post) {
+                await window.api.post('/api/dept/analysis', {
+                    dept: 'strategy',
+                    type: 'GRAND_STRATEGY',
+                    data: payload
+                });
+            }
+
+            alert('✅ تم حفظ اختيار المصفوفة الكبرى');
+            window.location.href = '/owner-journey.html';
+        }
+
+        window.onload = () => {
+            if (window.initSidebar) window.initSidebar();
+
+            if (window.StateManager) {
+                const saved = window.StateManager.get('grand_strategy');
+                if (saved && saved.quadrant) {
+                    setQuad(saved.quadrant);
+                }
+            }
+        };
+    </script>
+</body>
+
+</html>

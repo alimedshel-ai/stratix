@@ -41,7 +41,11 @@ function getRoutingDestination(user) {
     if (uCategory.startsWith('INVESTOR')) return '/investor-dashboard.html';
     if (uType === 'CONSULTANT' || uCategory.startsWith('CONSULTANT')) return '/consultant-dashboard.html';
     if (uCategory.startsWith('BOARD_')) return '/board-dashboard.html';
-    if (uType === 'DEPT_MANAGER' || uCategory.startsWith('DEPT_')) return '/dept-dashboard.html';
+    if (uType === 'DEPT_MANAGER' || uCategory.startsWith('DEPT_')) {
+        // ✅ [FIX] إضافة كود القسم للرابط لضمان تخصيص لوحة المعلومات
+        const dept = user.deptCode || '';
+        return `/dept-dashboard.html?dept=${dept}`;
+    }
     if (['INDIVIDUAL', 'PERSONAL', 'CAREER'].includes(uCategory)) return '/individual-dashboard.html';
     if (role === 'VIEWER' || role === 'DATA_ENTRY') return '/viewer-hub.html';
 
