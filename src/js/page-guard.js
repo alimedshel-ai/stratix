@@ -47,6 +47,7 @@
         'dept-deep': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
         'dept-health': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
         'dept-questionnaire': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
+        'dept-smart': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
         // pestel مشترك: مدير الإدارة في مساره، والمالك في مسار strategy
         'pestel': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: null },
         'hr-audit': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
@@ -111,6 +112,12 @@
         'intelligence': { roles: ['owner', 'system_admin', 'exec_manager', 'supervisor'], phase: null },
         'strategic-advisor': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: null },
 
+        // أدوات المدير المستقل (audit-pro) — بدون phase gating
+        'sales-audit-pro': { roles: ['pro_manager', 'consultant', 'owner', 'system_admin'], phase: null },
+        'marketing-audit-pro': { roles: ['pro_manager', 'consultant', 'owner', 'system_admin'], phase: null },
+        'hr-audit-pro': { roles: ['pro_manager', 'consultant', 'owner', 'system_admin'], phase: null },
+        'pro-dashboard': { roles: ['pro_manager', 'consultant', 'owner', 'system_admin', 'dept_manager'], phase: null },
+
         // صفحات عامة (بدون حماية)
         'login': { roles: null, phase: null },
         'select-type': { roles: null, phase: null },
@@ -152,7 +159,10 @@
         const uType = (user.userType || '').toUpperCase();
         const role = (user.role || '').toUpperCase();
 
-        // مدير إدارة قسم
+        // مدير إدارة مستقل (pro) — يستخدم أدوات audit-pro
+        if (uType === 'DEPT_MANAGER' && user.isProManager) return 'pro_manager';
+
+        // مدير إدارة داخلي (تابع للمالك) — يستخدم dept-smart
         if (uType === 'DEPT_MANAGER' || user.userCategory?.startsWith('DEPT_')) return 'dept_manager';
 
         // مدير تنفيذي / مدير عام
@@ -520,11 +530,14 @@
                 // توجيه للوحة الصحيحة
                 let redirect = '/select-type.html';
                 if (role === 'owner') redirect = '/ceo-dashboard.html';
+                else if (role === 'pro_manager') redirect = '/pro-dashboard.html';
                 else if (role === 'dept_manager') redirect = `/dept-dashboard.html?dept=${dept || ''}`;
+                else if (role === 'consultant') redirect = '/consultant-dashboard.html';
                 else if (role === 'investor') redirect = '/investor-dashboard.html';
 
+                const roleLabels = { owner: 'مالك', dept_manager: 'مدير إدارة', pro_manager: 'مدير مستقل', consultant: 'مستشار', investor: 'مستثمر' };
                 showBlockScreen('role', {
-                    message: `هذه الصفحة مخصصة لدور آخر. دورك الحالي: ${role === 'owner' ? 'مالك' : role === 'dept_manager' ? 'مدير إدارة' : role}`,
+                    message: `هذه الصفحة مخصصة لدور آخر. دورك الحالي: ${roleLabels[role] || role}`,
                     redirect
                 });
                 return;

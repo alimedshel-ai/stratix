@@ -39,6 +39,9 @@
     function getUserRole() {
         const user = getUser();
         if (user) {
+            if (user.userType === 'DEPT_MANAGER' && user.isProManager) {
+                return 'pro_manager';
+            }
             if (user.userType === 'DEPT_MANAGER' || user.userCategory?.startsWith('DEPT_')) {
                 return 'dept_manager';
             }
@@ -375,12 +378,11 @@
             window.location.href = '/ceo-dashboard.html';
             return;
         }
+        if (role === 'pro_manager') {
+            window.location.href = '/pro-dashboard.html';
+            return;
+        }
         if (role === 'dept_manager') {
-            const hasEntity = !!user?.entity || !!user?.companyId || !!user?.entityId;
-            if (!hasEntity) {
-                window.location.href = '/pro-dashboard.html';
-                return;
-            }
             const dept = getDept() || user?.department?.key || user?.deptCode;
             window.location.href = dept ? `/dept-dashboard.html?dept=${dept}` : '/dept-dashboard.html';
             return;

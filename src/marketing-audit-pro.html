@@ -15,6 +15,13 @@
 
     <!-- TOPBAR -->
     <div class="audit-topbar">
+        <a id="topbarBackBtn" href="#" onclick="goSmartHome(); return false;"
+            style="display:flex;align-items:center;gap:6px;color:#94a3b8;text-decoration:none;font-size:13px;font-weight:700;padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);transition:all 0.2s"
+            onmouseover="this.style.borderColor='#6366f1';this.style.color='#fff'"
+            onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.color='#94a3b8'">
+            <i class="bi bi-arrow-right"></i>
+            <span id="topbarBackLabel">الرئيسية</span>
+        </a>
         <div class="logo">
             <i class="bi bi-clipboard2-pulse"></i>
             <span>فحص التسويق الاحترافي</span>
@@ -44,9 +51,9 @@
 
             <!-- Step 0: Meta info -->
             <div id="metaSection">
-                <a href="/dept-dashboard.html" class="back-link">
+                <a id="metaBackBtn" href="#" onclick="goSmartHome(); return false;" class="back-link">
                     <i class="bi bi-arrow-right"></i>
-                    العودة للوحة الإدارات
+                    <span id="metaBackLabel">العودة للرئيسية</span>
                 </a>
             </div>
 
@@ -65,24 +72,90 @@
     </div>
 
     <!-- SCRIPTS -->
+    <script src="/js/api.js?v=4"></script>
+    <script src="/js/context-manager.js?v=4"></script>
+    <script src="/js/page-guard.js?v=5"></script>
+    <script src="/js/smart-nav.js?v=4"></script>
     <script src="/js/marketing-audit-config.js?v=1"></script>
     <script src="/js/marketing-audit-engine.js?v=1"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Override showAuditView to also show sidebar/progress
-            const originalShowAudit = MarketingAuditEngine.showSummary;
+        // === Smart Home Navigation ===
+        async function goSmartHome() {
+            let homeUrl = '/pro-dashboard.html';
+            let label = 'لوحة العملاء';
 
+            try {
+                let user = null;
+                if (window.api && window.api.getCurrentUser) {
+                    user = await window.api.getCurrentUser();
+                }
+                if (!user) {
+                    user = JSON.parse(localStorage.getItem('user') || '{}');
+                }
+
+                const uType = user.userType || '';
+                const role = user.role || '';
+                const dept = user.department?.key || localStorage.getItem('stratix_v10_dept') || '';
+                const deptParam = dept ? `?dept=${dept}` : '';
+
+                if (['SUPER_ADMIN', 'ADMIN'].includes(user.systemRole) || ['OWNER', 'ADMIN'].includes(role)) {
+                    if (uType === 'DEPT_MANAGER') {
+                        homeUrl = '/pro-dashboard.html';
+                        label = 'لوحة العملاء';
+                    } else {
+                        homeUrl = '/ceo-dashboard.html';
+                        label = 'مركز القيادة';
+                    }
+                } else if (uType === 'DEPT_MANAGER') {
+                    homeUrl = `/dept-dashboard.html${deptParam}`;
+                    label = 'لوحة إدارتي';
+                } else if (uType === 'COMPANY_MANAGER') {
+                    homeUrl = '/ceo-dashboard.html';
+                    label = 'مركز القيادة';
+                }
+            } catch (e) { /* use defaults */ }
+
+            ['topbarBackLabel', 'metaBackLabel'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = label;
+            });
+
+            window.location.href = homeUrl;
+        }
+
+        document.addEventListener('DOMContentLoaded', async function () {
             // Patch: show progress bar and sidebar when audit starts
-            const _origInit = MarketingAuditEngine.init;
-
-            // Listen for audit start
             const observer = new MutationObserver(() => {
                 const auditVisible = document.getElementById('auditSection').style.display !== 'none';
-                document.getElementById('progressWrap').style.display = auditVisible ? 'flex' : 'none';
-                document.getElementById('topbarScore').style.display = auditVisible ? 'flex' : 'none';
-                document.getElementById('auditSidebar').style.display = auditVisible ? '' : 'none';
+                const sidebar = document.getElementById('auditSidebar');
+                const progress = document.getElementById('progressWrap');
+                const score = document.getElementById('topbarScore');
+                if (auditVisible) {
+                    if (sidebar) sidebar.style.display = '';
+                    if (progress) progress.style.display = 'flex';
+                    if (score) score.style.display = 'flex';
+                }
             });
-            observer.observe(document.getElementById('auditSection'), { attributes: true, attributeFilter: ['style'] });
+            const auditEl = document.getElementById('auditSection');
+            if (auditEl) {
+                observer.observe(auditEl, { attributes: true, attributeFilter: ['style'] });
+            }
+
+            // تحديث نص زر الرجوع فوراً
+            try {
+                let user = null;
+                if (window.api && window.api.getCurrentUser) user = await window.api.getCurrentUser();
+                if (!user) user = JSON.parse(localStorage.getItem('user') || '{}');
+                const uType = user.userType || '';
+                const role = user.role || '';
+                let label = 'لوحة العملاء';
+                if (['OWNER', 'ADMIN'].includes(role) && uType !== 'DEPT_MANAGER') label = 'مركز القيادة';
+                else if (uType === 'DEPT_MANAGER' && !['OWNER', 'ADMIN'].includes(role)) label = 'لوحة إدارتي';
+                ['topbarBackLabel', 'metaBackLabel'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = label;
+                });
+            } catch (e) { }
 
             MarketingAuditEngine.init();
         });
