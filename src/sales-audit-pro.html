@@ -7,52 +7,67 @@
     <title>ستارتكس | فحص المبيعات الاحترافي</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="/css/sales-audit-pro.css?v=1">
 </head>
 
 <body>
+    <div class="stx-wrapper" style="display:flex;min-height:100vh">
+        <aside class="stx-sidebar-container" id="stx-sidebar"
+            style="width:260px;flex-shrink:0;border-left:1px solid rgba(255,255,255,0.08)"></aside>
+        <main class="stx-main-content" style="flex:1;overflow-y:auto">
 
-    <!-- TOPBAR -->
-    <div class="audit-topbar">
-        <div class="logo">
-            <i class="bi bi-graph-up-arrow"></i>
-            <span>فحص المبيعات الاحترافي</span>
-        </div>
-        <div class="progress-wrap" id="progressWrap" style="display:none">
-            <div class="progress-bar-track">
-                <div class="progress-bar-fill" id="progressBar"></div>
-            </div>
-            <div class="progress-pct" id="progressText">0%</div>
-        </div>
-        <div class="topbar-score" id="topbarScore" style="display:none">
-            <span class="score-num" id="totalScoreNum">0</span>
-            <span class="score-max" id="totalScoreMax">/ 60</span>
-        </div>
-    </div>
-
-    <!-- MAIN LAYOUT -->
-    <div class="audit-layout">
-
-        <!-- SIDEBAR (axes navigation) -->
-        <aside class="audit-sidebar" id="auditSidebar" style="display:none">
-            <div id="axesNav"></div>
-        </aside>
-
-        <!-- CONTENT -->
-        <main class="audit-main">
-
-            <!-- Step 0: Meta info -->
-            <div id="metaSection">
-                <a href="/dept-dashboard.html" class="back-link">
+            <!-- TOPBAR -->
+            <div class="audit-topbar">
+                <a id="topbarBackBtn" href="#" onclick="goSmartHome(); return false;"
+                    style="display:flex;align-items:center;gap:6px;color:#94a3b8;text-decoration:none;font-size:13px;font-weight:700;padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);transition:all 0.2s"
+                    onmouseover="this.style.borderColor='#6366f1';this.style.color='#fff'"
+                    onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.color='#94a3b8'">
                     <i class="bi bi-arrow-right"></i>
-                    العودة للوحة الإدارات
+                    <span id="topbarBackLabel">الرئيسية</span>
                 </a>
+                <div class="logo">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    <span>فحص المبيعات الاحترافي</span>
+                </div>
+                <div class="progress-wrap" id="progressWrap" style="display:none">
+                    <div class="progress-bar-track">
+                        <div class="progress-bar-fill" id="progressBar"></div>
+                    </div>
+                    <div class="progress-pct" id="progressText">0%</div>
+                </div>
+                <div class="topbar-score" id="topbarScore" style="display:none">
+                    <span class="score-num" id="totalScoreNum">0</span>
+                    <span class="score-max" id="totalScoreMax">/ 60</span>
+                </div>
             </div>
 
-            <!-- Audit content -->
-            <div id="auditSection" style="display:none">
-                <div id="axisContent"></div>
+            <!-- MAIN LAYOUT -->
+            <div class="audit-layout">
+
+                <!-- SIDEBAR (axes navigation) -->
+                <aside class="audit-sidebar" id="auditSidebar" style="display:none">
+                    <div id="axesNav"></div>
+                </aside>
+
+                <!-- CONTENT -->
+                <main class="audit-main">
+
+                    <!-- Step 0: Meta info -->
+                    <div id="metaSection">
+                        <a id="metaBackBtn" href="#" onclick="goSmartHome(); return false;" class="back-link">
+                            <i class="bi bi-arrow-right"></i>
+                            <span id="metaBackLabel">العودة للرئيسية</span>
+                        </a>
+                    </div>
+
+                    <!-- Audit content -->
+                    <div id="auditSection" style="display:none">
+                        <div id="axisContent"></div>
+                    </div>
+
+                </main>
             </div>
 
         </main>
@@ -69,10 +84,61 @@
     <script src="/js/context-manager.js?v=4"></script>
     <script src="/js/page-guard.js?v=5"></script>
     <script src="/js/smart-nav.js?v=4"></script>
+    <script src="/js/steps-config.js?v=4"></script>
+    <script src="/js/sidebar.js?v=4"></script>
     <script src="/js/sales-audit-config.js?v=1"></script>
     <script src="/js/sales-audit-engine.js?v=1"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        // === Smart Home Navigation ===
+        async function goSmartHome() {
+            let homeUrl = '/pro-dashboard.html'; // default
+            let label = 'لوحة العملاء';
+
+            try {
+                let user = null;
+                if (window.api && window.api.getCurrentUser) {
+                    user = await window.api.getCurrentUser();
+                }
+                if (!user) {
+                    user = JSON.parse(localStorage.getItem('user') || '{}');
+                }
+
+                const uType = user.userType || '';
+                const role = user.role || '';
+                const dept = user.department?.key || localStorage.getItem('stratix_v10_dept') || '';
+                const deptParam = dept ? `?dept=${dept}` : '';
+
+                if (['SUPER_ADMIN', 'ADMIN'].includes(user.systemRole) || ['OWNER', 'ADMIN'].includes(role)) {
+                    if (uType === 'DEPT_MANAGER') {
+                        // مدير مستقل
+                        homeUrl = '/pro-dashboard.html';
+                        label = 'لوحة العملاء';
+                    } else {
+                        // مالك / CEO
+                        homeUrl = '/ceo-dashboard.html';
+                        label = 'مركز القيادة';
+                    }
+                } else if (uType === 'DEPT_MANAGER') {
+                    // مدير داخلي
+                    homeUrl = `/dept-dashboard.html${deptParam}`;
+                    label = 'لوحة إدارتي';
+                } else if (uType === 'COMPANY_MANAGER') {
+                    homeUrl = '/ceo-dashboard.html';
+                    label = 'مركز القيادة';
+                }
+            } catch (e) { /* use defaults */ }
+
+            // تحديث نصوص الأزرار
+            ['topbarBackLabel', 'metaBackLabel'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = label;
+            });
+
+            window.location.href = homeUrl;
+        }
+
+        // تحديث نص الزرين عند تحميل الصفحة (بدون انتظار النقر)
+        document.addEventListener('DOMContentLoaded', async function () {
             // Patch: show progress bar and sidebar when audit starts
             const observer = new MutationObserver(() => {
                 const auditVisible = document.getElementById('auditSection').style.display !== 'none';
@@ -89,6 +155,22 @@
             if (auditEl) {
                 observer.observe(auditEl, { attributes: true, attributeFilter: ['style'] });
             }
+
+            // تحميل بيانات المستخدم لتحديث نص الزر فوراً
+            try {
+                let user = null;
+                if (window.api && window.api.getCurrentUser) user = await window.api.getCurrentUser();
+                if (!user) user = JSON.parse(localStorage.getItem('user') || '{}');
+                const uType = user.userType || '';
+                const role = user.role || '';
+                let label = 'لوحة العملاء';
+                if (['OWNER', 'ADMIN'].includes(role) && uType !== 'DEPT_MANAGER') label = 'مركز القيادة';
+                else if (uType === 'DEPT_MANAGER' && !['OWNER', 'ADMIN'].includes(role)) label = 'لوحة إدارتي';
+                ['topbarBackLabel', 'metaBackLabel'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = label;
+                });
+            } catch (e) { }
 
             // Init
             SalesAuditEngine.init();

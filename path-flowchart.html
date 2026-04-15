@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stratix | خريطة مسارات المستخدمين</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b0d12;
+            --glass: rgba(22, 27, 34, 0.8);
+            --border: rgba(255, 255, 255, 0.08);
+            --primary: #6366f1;
+            --owner: #6366f1;
+            --internal: #f59e0b;
+            --pro: #10b981;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: #f8fafc;
+            font-family: 'Tajawal', sans-serif;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            height: 100vh;
+        }
+
+        /* Sidebar Control */
+        .control-panel {
+            background: rgba(15, 23, 42, 0.95);
+            border-left: 1px solid var(--border);
+            padding: 40px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        .role-btn {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: right;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .role-btn:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateX(-5px);
+        }
+
+        .role-btn.active[data-role="owner"] {
+            border-color: var(--owner);
+            background: rgba(99, 102, 241, 0.1);
+            color: #fff;
+        }
+
+        .role-btn.active[data-role="internal"] {
+            border-color: var(--internal);
+            background: rgba(245, 158, 11, 0.1);
+            color: #fff;
+        }
+
+        .role-btn.active[data-role="pro"] {
+            border-color: var(--pro);
+            background: rgba(16, 185, 129, 0.1);
+            color: #fff;
+        }
+
+        .role-btn i {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .role-btn h3 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin: 0;
+        }
+
+        .role-btn p {
+            font-size: 0.8rem;
+            margin: 5px 0 0;
+            opacity: 0.7;
+        }
+
+        /* Flow Visualizer */
+        .visualizer {
+            position: relative;
+            background: radial-gradient(circle at center, #1e293b 0%, #0b0d12 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .flow-canvas {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            transition: all 0.5s ease;
+        }
+
+        .node {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            width: 320px;
+            position: relative;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s ease;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .node.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .node::after {
+            content: '↓';
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--border);
+            font-size: 20px;
+            font-weight: 900;
+        }
+
+        .node:last-child::after {
+            content: none;
+        }
+
+        .node-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .node-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #fff;
+        }
+
+        .node-title {
+            font-weight: 800;
+            font-size: 1rem;
+        }
+
+        .node-body {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+
+        .node-badge {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            margin-top: 10px;
+            display: inline-block;
+            color: #fff;
+        }
+
+        .highlight-pro {
+            color: var(--pro) !important;
+            font-weight: 800;
+        }
+
+        .highlight-owner {
+            color: var(--owner) !important;
+            font-weight: 800;
+        }
+
+        .highlight-internal {
+            color: var(--internal) !important;
+            font-weight: 800;
+        }
+
+        .desc-box {
+            position: absolute;
+            top: 40px;
+            right: 400px;
+            left: 40px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed var(--border);
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="main-container">
+        <!-- Controls -->
+        <div class="control-panel">
+            <div class="mb-4">
+                <h1 class="fw-900 fs-4 mb-2">Stratix Pathways</h1>
+                <p class="text-muted small">خارطة التدفق المنطقي للمسارات الذكية</p>
+            </div>
+
+            <div class="role-btn active" data-role="owner">
+                <i class="bi bi-person-badge-fill"></i>
+                <h3>مسار المالك (Owner)</h3>
+                <p>التحكم الكامل والمنظور الشمولي للمنظمة</p>
+            </div>
+
+            <div class="role-btn" data-role="internal">
+                <i class="bi bi-person-workspace"></i>
+                <h3>المدير الداخلي (Internal)</h3>
+                <p>تحليل تخصصي للقسم المحال إليه</p>
+            </div>
+
+            <div class="role-btn" data-role="pro">
+                <i class="bi bi-stars"></i>
+                <h3>المدير المستقل (Pro Manager)</h3>
+                <p>إدارة عدة شركات بذكاء وعزل تام</p>
+            </div>
+
+            <div class="mt-auto">
+                <div class="p-3 rounded-4 bg-white bg-opacity-5 border border-white border-opacity-10">
+                    <small class="text-muted d-block mb-1">Central logic source:</small>
+                    <code class="text-info small">getUserRole()</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Canvas -->
+        <div class="visualizer">
+            <div id="flowCanvas" class="flow-canvas">
+                <!-- Nodes will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CONTENT = {
+            owner: [
+                { title: 'نقطة الدخول', icon: 'bi-box-arrow-in-right', body: 'تسجيل دخول مباشر أو تفعيل اشتراك جديد.', badge: '/login.html' },
+                { title: 'كشف الهوية', icon: 'bi-fingerprint', body: 'النظام يتعرف على <span class="highlight-owner">userType: COMPANY_MANAGER</span> و <span class="highlight-owner">role: OWNER</span>.', badge: 'role -> owner' },
+                { title: 'التوجيه الذكي', icon: 'bi-signpost-split', body: 'يتم بناء السايدبار الكامل الذي يغطي 11 إدارة و16+ أداة استشارية.', badge: 'dest -> /ceo-dashboard.html' },
+                { title: 'المخرج النهائي', icon: 'bi-display', body: 'لوحة قيادة شمولية، إدارة الفريق، رؤية استراتيجية عبر الأقسام (Synthesis).' }
+            ],
+            internal: [
+                { title: 'نقطة الدخول', icon: 'bi-envelope-at', body: 'استقبال دعوة رسمية من المالك عبر البريد الإلكتروني.', badge: 'action -> join entity' },
+                { title: 'كشف الهوية', icon: 'bi-fingerprint', body: 'النظام يتعرف على <span class="highlight-internal">userType: DEPT_MANAGER</span> و <span class="highlight-internal">role: EDITOR</span>.', badge: 'role -> dept_manager' },
+                { title: 'التحصين والعزل', icon: 'bi-shield-lock', body: 'السايدبار يقتصر على قسم واحد (Sales مثلاً) مع 3 أدوات تشخيصية أساسية فقط.', badge: 'restricted -> ?dept=sales' },
+                { title: 'المخرج النهائي', icon: 'bi-display', body: 'حصر الفجوات داخل القسم ورفعها للمالك لاتخاذ القرار الاستراتيجي.' }
+            ],
+            pro: [
+                { title: 'نقطة الدخول', icon: 'bi-magic', body: 'بدء الرحلة عبر التشخيص المجاني وتجاوز حاجز الدفع الأولي.', badge: '/diagnostic.html' },
+                { title: 'كشف الهوية الاحترافي', icon: 'bi-stars', body: 'النظام يكتشف <span class="highlight-pro">isProManager: true</span> برغم أن النوع DEPT_MANAGER.', badge: 'role -> pro_manager ⭐' },
+                { title: 'تعدد الشركات', icon: 'bi-stack', body: 'ظهور محول الشركات (Entity Switcher) لإدارة محفظة العملاء.', badge: 'active -> /pro-dashboard.html' },
+                { title: 'المخرج النهائي', icon: 'bi-display', body: 'لوحة قيادة استشارية متكاملة (16 أداة تحت تصرفك) لكل عميل على حدة.' }
+            ]
+        };
+
+        const canvas = document.getElementById('flowCanvas');
+        const buttons = document.querySelectorAll('.role-btn');
+
+        function renderFlow(role) {
+            canvas.style.opacity = '0';
+            setTimeout(() => {
+                canvas.innerHTML = '';
+                CONTENT[role].forEach((data, index) => {
+                    const node = document.createElement('div');
+                    node.className = 'node';
+                    node.innerHTML = `
+                    <div class="node-header">
+                        <div class="node-icon" style="background:${getRoleColor(role)}">
+                            <i class="${data.icon}"></i>
+                        </div>
+                        <div class="node-title">${data.title}</div>
+                    </div>
+                    <div class="node-body">${data.body}</div>
+                    <div class="node-badge">${data.badge}</div>
+                `;
+                    canvas.appendChild(node);
+
+                    setTimeout(() => {
+                        node.classList.add('visible');
+                    }, index * 150);
+                });
+                canvas.style.opacity = '1';
+            }, 300);
+        }
+
+        function getRoleColor(role) {
+            if (role === 'owner') return 'var(--owner)';
+            if (role === 'internal') return 'var(--internal)';
+            return 'var(--pro)';
+        }
+
+        buttons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                buttons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderFlow(btn.dataset.role);
+            });
+        });
+
+        // Initial Render
+        renderFlow('owner');
+    </script>
+
+</body>
+
+</html>

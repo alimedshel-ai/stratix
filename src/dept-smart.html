@@ -316,18 +316,23 @@
                 document.getElementById('navBackLabel').textContent = 'لوحة الإدارة';
             }
 
-            // رابط التالي — القسم التالي (مو نفس القسم)
+            // رابط التالي
             if (dept) {
-                var idx = DEPT_ORDER.indexOf(dept);
-                var nextDept = idx >= 0 && idx < DEPT_ORDER.length - 1 ? DEPT_ORDER[idx + 1] : null;
-
-                if (nextDept) {
-                    next.href = '/dept-smart.html?dept=' + nextDept;
-                    document.getElementById('navNextLabel').textContent = 'التالي: تقييم ' + (DEPT_NAMES[nextDept] || nextDept);
+                if (isOwner) {
+                    // المالك: ينتقل للقسم التالي، وآخر قسم يروح PESTEL
+                    var idx = DEPT_ORDER.indexOf(dept);
+                    var nextDept = idx >= 0 && idx < DEPT_ORDER.length - 1 ? DEPT_ORDER[idx + 1] : null;
+                    if (nextDept) {
+                        next.href = '/dept-smart.html?dept=' + nextDept;
+                        document.getElementById('navNextLabel').textContent = 'التالي: تقييم ' + (DEPT_NAMES[nextDept] || nextDept);
+                    } else {
+                        next.href = '/pestel.html?dept=' + dept;
+                        document.getElementById('navNextLabel').textContent = 'التالي: تحليل PESTEL';
+                    }
                 } else {
-                    // آخر قسم — يروح لصحة الشركة
-                    next.href = '/company-health.html';
-                    document.getElementById('navNextLabel').textContent = 'التالي: صحة الشركة';
+                    // المدير المستقل: بعد التقييم يروح PESTEL لقسمه مباشرة
+                    next.href = '/pestel.html?dept=' + dept;
+                    document.getElementById('navNextLabel').textContent = 'التالي: تحليل PESTEL';
                 }
             }
         })();
@@ -360,6 +365,7 @@
             };
         })();
     </script>
+    <script src="/js/data-bridge.js?v=1"></script>
     <script src="/js/api.js?v=4"></script>
     <script src="/js/context-manager.js?v=4"></script>
     <script src="/js/page-guard.js?v=5"></script>
@@ -368,11 +374,11 @@
     <script src="/js/dept-smart-engine.js?v=4"></script>
     <script>
         const { renderKpis, renderAxes, renderProblems, restoreState, updateProgress, updateReport, saveAll, loadAndRenderFines } = window.DeptSmartEngine;
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             renderKpis();
             renderAxes();
             renderProblems();
-            restoreState();
+            await restoreState();
             updateProgress();
             if (loadAndRenderFines) loadAndRenderFines();
         });

@@ -555,13 +555,22 @@
             background: var(--stx-border);
             border-radius: 10px;
         }
+
+        /* ── Sidebar hover (transform-based) ── */
+        .stx-sidebar-container {
+            transform: translateX(100%) !important;
+            transition: transform 0.3s cubic-bezier(.4,0,.2,1) !important;
+        }
+        .stx-sidebar-container.sidebar-visible {
+            transform: translateX(0) !important;
+        }
     </style>
 </head>
 
 <body>
 
     <div class="stx-wrapper">
-        <aside class="stx-sidebar-container"></aside>
+        <aside class="stx-sidebar-container" id="stx-sidebar"></aside>
 
         <main class="stx-main-content">
             <!-- Header -->
@@ -613,13 +622,14 @@
     </div>
 
     <!-- Scripts -->
-    <script src="/js/api.js?v=4"></script>
-    <script src="/js/context-manager.js?v=4"></script>
-    <script src="/js/dept-page.js?v=4"></script>
-    <script src="/js/steps-config.js?v=4"></script>
-    <script src="/js/sidebar.js?v=4"></script>
-    <script src="/js/smart-guide.js?v=4"></script>
-    <script src="/js/dept-deep.js?v=4"></script>
+    <script src="/js/data-bridge.js?v=9"></script>
+    <script src="/js/api.js?v=9"></script>
+    <script src="/js/context-manager.js?v=9"></script>
+    <script src="/js/dept-page.js?v=9"></script>
+    <script src="/js/steps-config.js?v=9"></script>
+    <script src="/js/sidebar.js?v=9"></script>
+    <script src="/js/smart-guide.js?v=9"></script>
+    <script src="/js/dept-deep.js?v=9"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -635,6 +645,31 @@
         });
 
         // Bridge to dept-deep.js logic if needed (it already handles most things)
+    </script>
+
+    <!-- Sidebar Hover Trigger -->
+    <script>
+    (function(){
+        const sb = document.getElementById('stx-sidebar');
+        if (!sb) return;
+        sb.style.right = '';
+        const EDGE = 18;
+        let pinned = false;
+        document.addEventListener('mousemove', function(e){
+            if (pinned) return;
+            const nearEdge = (window.innerWidth - e.clientX) < EDGE;
+            const overSb = sb.contains(e.target) || sb === e.target;
+            if (nearEdge || overSb) { sb.classList.add('sidebar-visible'); }
+            else { sb.classList.remove('sidebar-visible'); }
+        });
+        sb.addEventListener('mouseenter', function(){ sb.classList.add('sidebar-visible'); });
+        sb.addEventListener('mouseleave', function(){ if(!pinned) sb.classList.remove('sidebar-visible'); });
+        // Toggle pin
+        window.toggleSidebar = function(){
+            pinned = !pinned;
+            if (pinned) sb.classList.add('sidebar-visible');
+        };
+    })();
     </script>
 
 </body>

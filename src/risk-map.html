@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ستارتكس - خريطة المخاطر</title>
     <meta name="description" content="خريطة حرارية تفاعلية للمخاطر الاستراتيجية">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
         rel="stylesheet">
@@ -48,11 +48,44 @@
             min-height: 100vh
         }
 
+        #sidebar {
+            width: 260px; background: #1a1d2e; border-left: 1px solid rgba(255,255,255,0.06);
+            flex-shrink: 0; overflow-y: auto; overflow-x: hidden;
+            position: fixed; top: 0; right: 0; height: 100vh; z-index: 1100;
+            transform: translateX(220px);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #sidebar:hover { transform: translateX(0); }
+        #sidebar::before {
+            content: '\F285'; font-family: 'bootstrap-icons';
+            position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+            background: rgba(26,29,46,0.95); color: #667eea;
+            padding: 12px 6px; border-radius: 0 8px 8px 0; font-size: 1rem; z-index: 1;
+            transition: opacity 0.3s;
+        }
+        #sidebar:hover::before { opacity: 0; }
+
         .main-content {
             flex: 1;
             min-width: 0;
-            padding: 28px 32px
+            padding: 28px 32px 140px 32px
         }
+
+        /* Bottom Navigation */
+        .action-bar {
+            position: fixed; bottom: 0; right: 0; left: 0;
+            background: rgba(10,11,16,0.95); backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255,255,255,0.06);
+            padding: 20px 48px; display: flex; justify-content: space-between; align-items: center; z-index: 1000;
+        }
+        .btn-stx-success {
+            background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;
+            padding: 14px 40px; border-radius: 14px; font-weight: 800; font-size: 1.1rem;
+            box-shadow: 0 8px 25px rgba(16,185,129,0.3); transition: 0.3s; text-decoration: none;
+        }
+        .btn-stx-success:hover { transform: translateY(-3px); box-shadow: 0 12px 35px rgba(16,185,129,0.5); color: white; }
+        .nav-link-btn { color: #94a3b8; text-decoration: none; font-weight: 800; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .nav-link-btn:hover { color: #fff; }
 
         .risk-header {
             display: flex;
@@ -671,22 +704,21 @@
         }
 
         @media(max-width:900px) {
-            .risk-layout {
-                grid-template-columns: 1fr
-            }
+            .risk-layout { grid-template-columns: 1fr }
+            #sidebar { transform: translateX(260px); }
+            #sidebar:hover { transform: translateX(0); }
+            .action-bar { padding: 16px; }
         }
 
         @media(max-width:600px) {
-            .main-content {
-                padding: 16px
-            }
+            .main-content { padding: 16px 16px 140px }
         }
     </style>
 </head>
 
-<body>
+<body class="dir-rtl">
     <div class="page-wrapper">
-        <div id="sidebar-container"></div>
+        <nav id="sidebar"></nav>
         <div class="main-content">
             <div class="risk-header">
                 <div>
@@ -720,10 +752,32 @@
                 <select class="risk-filter-select" id="filterOwner" onchange="applyFilters()">
                     <option value="">👤 كل المسؤولين</option>
                 </select>
-                <button class="btn-add-risk" id="btnAddRisk" onclick="openAddRisk()">
-                    <i class="bi bi-plus-circle"></i> إضافة خطر جديد
+                <button class="btn-add-risk" style="background:linear-gradient(135deg, var(--primary), var(--secondary))" id="btnAutoGen" onclick="autoGenerateRisks()">
+                    <i class="bi bi-stars"></i> تحليل ذكي للمخاطر
                 </button>
-                <span id="riskMaxWarning" class="max-warning" style="display:none">⚠️ وصلت للحد الأقصى (20 خطر)</span>
+                <button class="btn-add-risk" id="btnAddRisk" onclick="openAddRisk()">
+                    <i class="bi bi-plus-circle"></i> إضافة يدوي
+                </button>
+                <span id="riskMaxWarning" class="max-warning" style="display:none;color:var(--yellow);font-size:12px;font-weight:700">وصلت للحد الأقصى (20 خطر)</span>
+            </div>
+
+            <!-- Auto-generated risks banner -->
+            <div id="autoGenBanner" style="display:none; background:linear-gradient(135deg, rgba(102,126,234,0.08), rgba(118,75,162,0.08)); border:1px solid rgba(102,126,234,0.2); border-radius:16px; padding:20px 24px; margin-bottom:20px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                    <h3 style="font-size:15px;font-weight:900;margin:0;display:flex;align-items:center;gap:8px">
+                        <i class="bi bi-cpu" style="color:var(--primary)"></i> مخاطر مكتشفة من تحليل الخطة الاستراتيجية
+                    </h3>
+                    <span id="autoGenCount" style="font-size:12px;color:var(--primary);font-weight:800"></span>
+                </div>
+                <div id="autoGenList"></div>
+                <div style="display:flex;gap:10px;margin-top:14px">
+                    <button onclick="acceptAllAutoRisks()" style="padding:8px 20px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--primary),var(--secondary));color:white;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit">
+                        <i class="bi bi-check-all"></i> اعتماد الكل
+                    </button>
+                    <button onclick="document.getElementById('autoGenBanner').style.display='none'" style="padding:8px 20px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);font-weight:600;font-size:13px;cursor:pointer;font-family:inherit">
+                        تجاهل
+                    </button>
+                </div>
             </div>
 
             <!-- Main Layout -->
@@ -756,6 +810,19 @@
                             الفئة</div>
                         <div id="riskCategories"></div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Bottom Navigation -->
+            <div class="action-bar">
+                <a id="prevLink" href="/reports.html" class="nav-link-btn">
+                    <i class="bi bi-arrow-right"></i> السابق: التقارير
+                </a>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-muted small fw-700" id="saveStatus"></span>
+                    <button type="button" id="btnSave" class="btn-stx-success" onclick="saveAndFinish()">
+                        حفظ وإنهاء المتابعة <i class="bi bi-check-circle ms-2"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -834,17 +901,27 @@
         </div>
     </div>
 
-    <script src="/js/api.js?v=4"></script>
-    <script src="/js/steps-config.js?v=4"></script>
-    <script src="/js/sidebar.js?v=4"></script>
-    <script src="/js/ai-advisor.js?v=4"></script>
-    <script src="/js/achievements.js?v=4"></script>
-    <script src="/js/notifications.js?v=4"></script>
+    <script src="/js/smart-nav.js?v=5"></script>
+    <script src="/js/api.js?v=5"></script>
+    <script src="/js/utils.js?v=5"></script>
+    <script src="/js/context-manager.js?v=5"></script>
+    <script src="/js/page-guard.js?v=5"></script>
+    <script src="/js/steps-config.js?v=5"></script>
+    <script src="/js/dept-page.js?v=5"></script>
+    <script src="/js/sidebar.js?v=5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // ============================================================
-        // === خريطة المخاطر — مربوطة بالـ API (/api/risks) ===
+        // === خريطة المخاطر — مربوطة بالـ API + DeptPage fallback ===
         // ============================================================
-        if (!StartixAPI.requireAuth()) throw new Error('not logged in');
+        const _urlDept = new URLSearchParams(location.search).get('dept') || 'company';
+        const _deptKey = _urlDept.toUpperCase();
+        const _qs = _urlDept !== 'company' ? '?dept=' + _urlDept : '';
+        const _DEPT_LABELS = {
+            hr:'الموارد البشرية', finance:'المالية', sales:'المبيعات', marketing:'التسويق',
+            operations:'العمليات', it:'تقنية المعلومات', quality:'الجودة', cs:'خدمة العملاء',
+            projects:'المشاريع', compliance:'الامتثال', governance:'الحوكمة', support:'الخدمات المساندة'
+        };
 
         let risks = [];
         let filteredRisks = [];
@@ -896,23 +973,62 @@
             };
         }
 
-        // === جلب البيانات من API ===
+        // === جلب البيانات من API مع fallback إلى DeptPage ===
         async function loadRisks() {
             try {
-                currentVersionId = await StartixAPI.ensureVersionId();
-                const data = await StartixAPI.apiGet('/api/risks?limit=200');
-                risks = (data.risks || []).map(normalizeRisk);
+                // Try API first
+                if (window.StartixAPI && StartixAPI.ensureVersionId) {
+                    try {
+                        currentVersionId = await StartixAPI.ensureVersionId();
+                    } catch (e) {
+                        console.warn('[RiskMap] No version yet:', e.message);
+                    }
+                }
+
+                let apiRisks = [];
+                try {
+                    const data = await window.api.get('/api/risks?limit=200');
+                    apiRisks = (data.risks || []).map(normalizeRisk);
+                } catch (e) {
+                    console.warn('[RiskMap] API risks failed:', e.message);
+                }
+
+                // Fallback: load local risks from DeptPage
+                let localRisks = [];
+                if (window.DeptPage) {
+                    try {
+                        const saved = await DeptPage.loadFromAPI('RISKS_' + _deptKey);
+                        if (saved && Array.isArray(saved.risks)) {
+                            localRisks = saved.risks;
+                        }
+                    } catch (e) { /* ignore */ }
+                }
+
+                // Merge: API risks + local-only risks (avoid duplicates by title)
+                const apiTitles = new Set(apiRisks.map(r => r.name));
+                const merged = [...apiRisks, ...localRisks.filter(r => !apiTitles.has(r.name))];
+
+                risks = merged;
                 filteredRisks = [...risks];
                 document.getElementById('riskCountBadge').textContent = `${risks.length} خطر`;
                 populateOwnerFilter();
                 renderAll();
+
+                if (risks.length === 0) {
+                    document.getElementById('riskStats').innerHTML = `
+                        <div class="risk-stat" style="grid-column:1/-1;text-align:center;padding:30px">
+                            <div style="font-size:2.5rem;margin-bottom:8px">🛡️</div>
+                            <div style="color:var(--text);font-size:16px;font-weight:800">لا توجد مخاطر مسجلة بعد</div>
+                            <div style="color:var(--muted);font-size:13px;margin-top:6px">اضغط على "إضافة خطر جديد" لبدء رسم خريطة المخاطر</div>
+                        </div>`;
+                }
             } catch (err) {
                 console.error('Error loading risks:', err);
                 document.getElementById('riskStats').innerHTML = `
                     <div class="risk-stat" style="grid-column:1/-1;text-align:center;padding:20px">
                         <div style="color:var(--red);font-size:14px"><i class="bi bi-exclamation-triangle"></i> فشل تحميل المخاطر</div>
-                        <div style="color:var(--muted);font-size:12px;margin-top:4px">${err.message}</div>
-                        <button onclick="loadRisks()" style="margin-top:10px;padding:6px 16px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-family:inherit">🔄 إعادة المحاولة</button>
+                        <div style="color:var(--muted);font-size:12px;margin-top:4px">${escapeHtml(err.message)}</div>
+                        <button onclick="loadRisks()" style="margin-top:10px;padding:6px 16px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-family:inherit">إعادة المحاولة</button>
                     </div>`;
             }
         }
@@ -1127,7 +1243,7 @@
             if (risks.length >= MAX_RISKS) {
                 const warn = document.getElementById('riskMaxWarning');
                 if (warn) { warn.style.display = 'inline'; }
-                StartixAPI.showToast(`الحد الأقصى هو ${MAX_RISKS} خطراً — يرجى حذف أو أرشفة مخاطر أولاً ⚠️`);
+                if (window.DeptPage?.showMessage) DeptPage.showMessage(`الحد الأقصى هو ${MAX_RISKS} خطراً — يرجى حذف أو أرشفة مخاطر أولاً`);
                 return;
             }
             document.getElementById('addRiskOverlay').classList.add('open');
@@ -1140,28 +1256,54 @@
             const name = document.getElementById('newRiskName').value.trim();
             if (!name) { alert('أدخل اسم الخطر'); return; }
 
-            const versionId = currentVersionId || await StartixAPI.ensureVersionId();
-            if (!versionId) { alert('لم يتم العثور على نسخة استراتيجية. أنشئ واحدة أولاً.'); return; }
-
-            const btn = event.target;
+            const btn = document.querySelector('#addRiskOverlay .btn-form.primary');
             btn.disabled = true;
             btn.innerHTML = '<i class="bi bi-hourglass-split"></i> جاري الحفظ...';
 
-            try {
-                const payload = {
-                    title: name,
-                    category: document.getElementById('newRiskCategory').value,
-                    probabilityScore: parseInt(document.getElementById('newRiskProb').value),
-                    impactScore: parseInt(document.getElementById('newRiskImpact').value),
-                    owner: document.getElementById('newRiskOwner').value.trim() || null,
-                    description: document.getElementById('newRiskDesc').value || null,
-                    mitigation: document.getElementById('newRiskMitigation').value || null,
-                    versionId,
-                    status: 'OPEN',
-                };
+            const prob = parseInt(document.getElementById('newRiskProb').value);
+            const impact = parseInt(document.getElementById('newRiskImpact').value);
 
-                await StartixAPI.apiPost('/api/risks', payload);
-                StartixAPI.showToast('✅ تم حفظ الخطر بنجاح');
+            try {
+                // Try API save first
+                let savedViaAPI = false;
+                const versionId = currentVersionId || (window.StartixAPI?.ensureVersionId ? await StartixAPI.ensureVersionId().catch(() => null) : null);
+
+                if (versionId) {
+                    try {
+                        const payload = {
+                            title: name,
+                            category: document.getElementById('newRiskCategory').value,
+                            probabilityScore: prob,
+                            impactScore: impact,
+                            owner: document.getElementById('newRiskOwner').value.trim() || null,
+                            description: document.getElementById('newRiskDesc').value || null,
+                            mitigation: document.getElementById('newRiskMitigation').value || null,
+                            versionId,
+                            status: 'OPEN',
+                        };
+                        await window.api.post('/api/risks', payload);
+                        savedViaAPI = true;
+                    } catch (apiErr) {
+                        console.warn('[RiskMap] API save failed, falling back to DeptPage:', apiErr.message);
+                    }
+                }
+
+                // Fallback: save locally via DeptPage
+                if (!savedViaAPI) {
+                    const localRisk = {
+                        id: 'local_' + Date.now(),
+                        name, category: document.getElementById('newRiskCategory').value,
+                        probability: prob, impact, score: prob * impact,
+                        owner: document.getElementById('newRiskOwner').value.trim() || '—',
+                        desc: document.getElementById('newRiskDesc').value || '',
+                        mitigation: (document.getElementById('newRiskMitigation').value || '').split('\n').filter(s => s.trim()),
+                        contingency: '', status: 'OPEN', stakeholders: [], stakeholderCount: 0, corrections: []
+                    };
+                    risks.push(localRisk);
+                    await persistLocal();
+                }
+
+                if (window.DeptPage?.showMessage) DeptPage.showMessage('تم حفظ الخطر بنجاح');
 
                 // Reset form
                 document.getElementById('newRiskName').value = '';
@@ -1170,7 +1312,6 @@
                 document.getElementById('newRiskMitigation').value = '';
                 closeAddRisk();
 
-                // Reload from API
                 await loadRisks();
             } catch (err) {
                 console.error('Error saving risk:', err);
@@ -1180,6 +1321,36 @@
                 btn.innerHTML = '<i class="bi bi-check-lg"></i> حفظ الخطر';
             }
         };
+
+        // === حفظ محلي عبر DeptPage ===
+        async function persistLocal() {
+            if (!window.DeptPage) return;
+            const localOnly = risks.filter(r => String(r.id).startsWith('local_'));
+            await DeptPage.saveToAPI('RISKS_' + _deptKey, { risks: localOnly, timestamp: new Date().toISOString() });
+        }
+
+        // === حفظ وإنهاء ===
+        async function saveAndFinish() {
+            const btn = document.getElementById('btnSave');
+            const orig = btn.innerHTML;
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري الحفظ...';
+                await persistLocal();
+                if (window.Context && Context.markStepCompleted) await Context.markStepCompleted('risk-map');
+                document.getElementById('saveStatus').textContent = 'تم الحفظ';
+                if (window.DeptPage?.showMessage) DeptPage.showMessage('تم إنهاء مرحلة المتابعة بنجاح!');
+                // risk-map is last in monitoring — go to dashboard
+                setTimeout(() => {
+                    window.location.href = _urlDept !== 'company' ? '/dept-dashboard.html?dept=' + _urlDept : '/dashboard.html';
+                }, 1500);
+            } catch (err) {
+                console.error('[RiskMap] Save error:', err);
+                alert('فشل الحفظ: ' + (err.message || ''));
+                btn.disabled = false;
+                btn.innerHTML = orig;
+            }
+        }
 
         function renderAll() {
             renderStats();
@@ -1191,8 +1362,338 @@
             if (warn) warn.style.display = risks.length >= MAX_RISKS ? 'inline' : 'none';
         }
 
-        // === تشغيل ===
-        loadRisks();
+        // ══════════════════════════════════════════════════════════════
+        // محرك تحليل المخاطر الذكي — يحلل الخطة ويكتشف المخاطر تلقائياً
+        // ══════════════════════════════════════════════════════════════
+        let autoGeneratedRisks = [];
+
+        async function autoGenerateRisks() {
+            const btn = document.getElementById('btnAutoGen');
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> جاري التحليل...';
+
+            autoGeneratedRisks = [];
+            const existingNames = new Set(risks.map(r => r.name));
+
+            try {
+                // ─── 1. تحليل KPIs المتعثرة → مخاطر أداء ───
+                let rawKpis = [];
+                try {
+                    rawKpis = await DeptPage.loadFromAPI('KPIS_' + _deptKey) || [];
+                    if (!Array.isArray(rawKpis)) rawKpis = rawKpis.kpis || [];
+                } catch(e) {}
+
+                rawKpis.forEach(k => {
+                    const target = parseFloat(k.target) || 0;
+                    const actual = parseFloat(k.actual) || 0;
+                    const name = k.title || k.name || '';
+                    if (!name || target <= 0) return;
+                    const ratio = actual / target;
+
+                    if (ratio < 0.5) {
+                        const riskName = `خطر أداء: تعثر مؤشر "${name}" (${Math.round(ratio*100)}% من المستهدف)`;
+                        if (!existingNames.has(riskName)) {
+                            autoGeneratedRisks.push({
+                                name: riskName, category: 'تشغيلي', probability: 4, impact: 4, score: 16,
+                                source: 'KPI', severity: 'critical',
+                                desc: `المؤشر "${name}" يحقق ${actual} من أصل ${target} (${Math.round(ratio*100)}%). فجوة حرجة تستوجب تدخلاً عاجلاً.`,
+                                mitigation: [`مراجعة خطة تحسين "${name}"`, 'تخصيص موارد إضافية', 'عقد اجتماع طوارئ مع الفريق المسؤول']
+                            });
+                        }
+                    } else if (ratio < 0.7) {
+                        const riskName = `خطر أداء: انحراف مؤشر "${name}" (${Math.round(ratio*100)}% من المستهدف)`;
+                        if (!existingNames.has(riskName)) {
+                            autoGeneratedRisks.push({
+                                name: riskName, category: 'تشغيلي', probability: 3, impact: 3, score: 9,
+                                source: 'KPI', severity: 'medium',
+                                desc: `المؤشر "${name}" يحقق ${actual} من أصل ${target}. انحراف متوسط يحتاج متابعة.`,
+                                mitigation: [`تحليل أسباب انحراف "${name}"`, 'وضع خطة تصحيحية شهرية']
+                            });
+                        }
+                    }
+                });
+
+                // ─── 2. تحليل المبادرات المتأخرة → مخاطر تنفيذ ───
+                let rawInits = [];
+                try {
+                    rawInits = await DeptPage.loadFromAPI('INITIATIVES_' + _deptKey) || [];
+                    if (!Array.isArray(rawInits)) rawInits = rawInits.initiatives || [];
+                } catch(e) {}
+
+                rawInits.forEach(init => {
+                    const status = (init.status || '').toLowerCase();
+                    const name = init.title || init.name || '';
+                    if (!name) return;
+
+                    if (status === 'متعثر' || status === 'delayed' || status === 'at_risk') {
+                        const riskName = `خطر تنفيذ: تأخر مبادرة "${name}"`;
+                        if (!existingNames.has(riskName)) {
+                            autoGeneratedRisks.push({
+                                name: riskName, category: 'تشغيلي', probability: 4, impact: 3, score: 12,
+                                source: 'مبادرة', severity: 'high',
+                                desc: `المبادرة "${name}" في حالة تأخر مما قد يؤثر على تحقيق الأهداف الاستراتيجية.`,
+                                mitigation: ['مراجعة الجدول الزمني وإعادة تخصيص الموارد', 'تحديد المعوقات الرئيسية ومعالجتها', 'تقسيم المبادرة إلى مراحل أصغر']
+                            });
+                        }
+                    }
+                });
+
+                // ─── 3. تحليل SWOT — نقاط الضعف → مخاطر داخلية ───
+                let swotData = null;
+                try {
+                    swotData = await DeptPage.loadFromAPI('SWOT_' + _deptKey);
+                } catch(e) {}
+
+                if (swotData) {
+                    // تحويل البيانات لمصفوفة — قد تكون string (textarea) أو array
+                    function toLines(val) {
+                        if (!val) return [];
+                        if (Array.isArray(val)) return val;
+                        if (typeof val === 'string') return val.split('\n').map(l => l.replace(/^[-•*\s]+/, '').trim()).filter(l => l.length > 3);
+                        return [];
+                    }
+
+                    // نقاط الضعف (Weaknesses)
+                    const weaknesses = toLines(swotData.weaknesses || swotData.W);
+                    weaknesses.forEach((w, i) => {
+                        const text = typeof w === 'string' ? w : (w.text || w.title || '');
+                        if (!text || text.length < 5) return;
+                        const riskName = `خطر داخلي: ${text.substring(0, 60)}`;
+                        if (!existingNames.has(riskName) && i < 3) {
+                            autoGeneratedRisks.push({
+                                name: riskName, category: 'بشري', probability: 3, impact: 3, score: 9,
+                                source: 'SWOT', severity: 'medium',
+                                desc: `نقطة ضعف مكتشفة من تحليل SWOT: "${text}". قد تتحول لخطر حقيقي إذا لم تُعالج.`,
+                                mitigation: ['وضع خطة لمعالجة نقطة الضعف', 'تطوير القدرات المرتبطة', 'مراقبة التأثير دورياً']
+                            });
+                        }
+                    });
+
+                    // التهديدات (Threats)
+                    const threats = toLines(swotData.threats || swotData.T);
+                    threats.forEach((t, i) => {
+                        const text = typeof t === 'string' ? t : (t.text || t.title || '');
+                        if (!text || text.length < 5) return;
+                        const riskName = `تهديد خارجي: ${text.substring(0, 60)}`;
+                        if (!existingNames.has(riskName) && i < 3) {
+                            autoGeneratedRisks.push({
+                                name: riskName, category: 'سوق', probability: 3, impact: 4, score: 12,
+                                source: 'SWOT', severity: 'high',
+                                desc: `تهديد مكتشف من تحليل SWOT: "${text}". يتطلب خطة استباقية للتعامل معه.`,
+                                mitigation: ['رصد التهديد بشكل دوري', 'وضع خطة طوارئ', 'استثمار نقاط القوة لمواجهة التهديد']
+                            });
+                        }
+                    });
+                }
+
+                // ─── 4. تحليل الأهداف بدون KPIs → مخاطر قياس ───
+                let rawObjs = [];
+                try {
+                    rawObjs = await DeptPage.loadFromAPI('OBJECTIVES_' + _deptKey) || [];
+                    if (!Array.isArray(rawObjs)) rawObjs = rawObjs.objectives || [];
+                } catch(e) {}
+
+                if (rawObjs.length > 0 && rawKpis.length === 0) {
+                    const riskName = 'خطر قياس: أهداف استراتيجية بدون مؤشرات أداء';
+                    if (!existingNames.has(riskName)) {
+                        autoGeneratedRisks.push({
+                            name: riskName, category: 'تشغيلي', probability: 4, impact: 3, score: 12,
+                            source: 'تحليل', severity: 'high',
+                            desc: `يوجد ${rawObjs.length} هدف استراتيجي بدون مؤشرات أداء مرتبطة. لا يمكن قياس التقدم أو كشف الانحرافات.`,
+                            mitigation: ['ربط كل هدف بمؤشر أداء واحد على الأقل', 'تحديد مستهدفات واقعية لكل مؤشر', 'مراجعة شهرية للتقدم']
+                        });
+                    }
+                }
+
+                // ─── 5. فجوات التخطيط → مخاطر استراتيجية ───
+                if (!swotData) {
+                    const riskName = 'خطر تخطيط: لم يُجرَ تحليل SWOT للإدارة';
+                    if (!existingNames.has(riskName)) {
+                        autoGeneratedRisks.push({
+                            name: riskName, category: 'تشغيلي', probability: 3, impact: 4, score: 12,
+                            source: 'تحليل', severity: 'high',
+                            desc: 'لا يوجد تحليل SWOT مُكتمل. بدون تحليل بيئي شامل، قد تُفاجأ الإدارة بتهديدات غير متوقعة.',
+                            mitigation: ['إجراء تحليل SWOT فوراً', 'إشراك الفريق في تحديد نقاط القوة والضعف', 'مراجعة البيئة الخارجية']
+                        });
+                    }
+                }
+
+                if (rawObjs.length === 0) {
+                    const riskName = 'خطر تخطيط: لا توجد أهداف استراتيجية محددة';
+                    if (!existingNames.has(riskName)) {
+                        autoGeneratedRisks.push({
+                            name: riskName, category: 'تشغيلي', probability: 4, impact: 5, score: 20,
+                            source: 'تحليل', severity: 'critical',
+                            desc: 'لا توجد أهداف استراتيجية للإدارة. العمل بدون أهداف واضحة يعني عدم وجود اتجاه استراتيجي.',
+                            mitigation: ['تحديد 3-5 أهداف استراتيجية رئيسية', 'ربط الأهداف برؤية المنظمة', 'اعتماد الأهداف وبدء التنفيذ']
+                        });
+                    }
+                }
+
+                // ─── 6. تحليل الإجراءات التصحيحية غير المنفذة ───
+                let corrections = null;
+                try {
+                    corrections = await DeptPage.loadFromAPI('CORRECTIONS_' + _deptKey);
+                } catch(e) {}
+
+                if (corrections && corrections.actions) {
+                    const pending = corrections.actions.filter(a => a.status === 'pending' && a.priority === 'high');
+                    if (pending.length >= 2) {
+                        const riskName = `خطر تراكم: ${pending.length} إجراءات تصحيحية عاجلة معلقة`;
+                        if (!existingNames.has(riskName)) {
+                            autoGeneratedRisks.push({
+                                name: riskName, category: 'تشغيلي', probability: 4, impact: 3, score: 12,
+                                source: 'تصحيحية', severity: 'high',
+                                desc: `يوجد ${pending.length} إجراء تصحيحي بأولوية عالية لم يُنفَّذ بعد. التراكم يزيد احتمالية تفاقم المشاكل.`,
+                                mitigation: ['مراجعة أولويات الإجراءات التصحيحية', 'تعيين مسؤول ومتابعة أسبوعية', 'تصعيد العاجل منها للإدارة العليا']
+                            });
+                        }
+                    }
+                }
+
+                // ── عرض النتائج ──
+                displayAutoGeneratedRisks();
+
+            } catch (err) {
+                console.error('[RiskMap] Auto-generate error:', err);
+                if (window.DeptPage?.showMessage) DeptPage.showMessage('حدث خطأ أثناء التحليل: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+            }
+        }
+
+        function displayAutoGeneratedRisks() {
+            const banner = document.getElementById('autoGenBanner');
+            if (autoGeneratedRisks.length === 0) {
+                banner.style.display = 'none';
+                if (window.DeptPage?.showMessage) DeptPage.showMessage('لم يتم اكتشاف مخاطر جديدة — الخطة في وضع جيد');
+                return;
+            }
+
+            banner.style.display = 'block';
+            document.getElementById('autoGenCount').textContent = `${autoGeneratedRisks.length} مخاطر مكتشفة`;
+
+            const sourceIcons = { KPI: 'bi-speedometer2', 'مبادرة': 'bi-rocket-takeoff', SWOT: 'bi-grid-3x3-gap-fill', 'تحليل': 'bi-cpu', 'تصحيحية': 'bi-tools' };
+            const sevColors = { critical: 'var(--red)', high: 'var(--orange)', medium: 'var(--yellow)', low: 'var(--green)' };
+
+            document.getElementById('autoGenList').innerHTML = autoGeneratedRisks.map((r, idx) => `
+                <div style="background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.04);border-radius:12px;padding:14px 18px;margin-bottom:8px;display:flex;align-items:center;gap:14px">
+                    <div style="width:40px;height:40px;border-radius:10px;background:${sevColors[r.severity]}15;color:${sevColors[r.severity]};display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">
+                        <i class="bi ${sourceIcons[r.source] || 'bi-exclamation-triangle'}"></i>
+                    </div>
+                    <div style="flex:1;min-width:0">
+                        <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:2px">${escapeHtml(r.name)}</div>
+                        <div style="font-size:11px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap">
+                            <span><i class="bi bi-tag"></i> ${escapeHtml(r.category)}</span>
+                            <span>الاحتمال: ${r.probability}/5</span>
+                            <span>التأثير: ${r.impact}/5</span>
+                            <span style="color:${sevColors[r.severity]};font-weight:800">الدرجة: ${r.score}</span>
+                            <span style="opacity:0.6">المصدر: ${r.source}</span>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:6px;flex-shrink:0">
+                        <button onclick="acceptAutoRisk(${idx})" style="padding:5px 14px;border-radius:8px;border:none;background:rgba(34,197,94,0.15);color:var(--green);font-weight:700;font-size:12px;cursor:pointer;font-family:inherit">
+                            <i class="bi bi-check-lg"></i> اعتماد
+                        </button>
+                        <button onclick="dismissAutoRisk(${idx})" style="padding:5px 10px;border-radius:8px;border:none;background:rgba(255,255,255,0.05);color:var(--muted);cursor:pointer;font-family:inherit;font-size:12px">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Scroll to banner
+            banner.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        async function acceptAutoRisk(idx) {
+            const r = autoGeneratedRisks[idx];
+            if (!r) return;
+
+            const localRisk = {
+                id: 'auto_' + Date.now() + '_' + idx,
+                name: r.name, category: r.category,
+                probability: r.probability, impact: r.impact, score: r.score,
+                owner: 'مدير القسم', desc: r.desc,
+                mitigation: r.mitigation || [],
+                contingency: '', status: 'OPEN',
+                stakeholders: [], stakeholderCount: 0, corrections: [],
+                _autoGenerated: true, _source: r.source
+            };
+
+            // Try API first
+            let savedViaAPI = false;
+            const versionId = currentVersionId || (window.StartixAPI?.ensureVersionId ? await StartixAPI.ensureVersionId().catch(() => null) : null);
+            if (versionId) {
+                try {
+                    await window.api.post('/api/risks', {
+                        title: r.name, category: r.category,
+                        probabilityScore: r.probability, impactScore: r.impact,
+                        owner: 'مدير القسم', description: r.desc,
+                        mitigation: (r.mitigation || []).join('\n'),
+                        versionId, status: 'OPEN'
+                    });
+                    savedViaAPI = true;
+                } catch(e) { console.warn('[RiskMap] API save failed:', e.message); }
+            }
+
+            if (!savedViaAPI) {
+                risks.push(localRisk);
+                await persistLocal();
+            }
+
+            // Remove from auto list
+            autoGeneratedRisks.splice(idx, 1);
+            displayAutoGeneratedRisks();
+            await loadRisks();
+        }
+
+        function dismissAutoRisk(idx) {
+            autoGeneratedRisks.splice(idx, 1);
+            displayAutoGeneratedRisks();
+        }
+
+        async function acceptAllAutoRisks() {
+            const btn = document.querySelector('#autoGenBanner button');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> جاري الاعتماد...';
+
+            // Accept all remaining
+            while (autoGeneratedRisks.length > 0) {
+                await acceptAutoRisk(0);
+            }
+
+            if (window.DeptPage?.showMessage) DeptPage.showMessage('تم اعتماد جميع المخاطر المكتشفة');
+        }
+
+        // === التهيئة ===
+        (async function init() {
+            // تهيئة DeptPage
+            if (window.initDeptPage) await window.initDeptPage();
+            if (window.DeptPage) { DeptPage.dept = _urlDept; await DeptPage.init(_urlDept); }
+
+            // عنوان السياق
+            const deptLabel = _DEPT_LABELS[_urlDept] || _urlDept;
+            const subtitle = document.querySelector('.risk-count-badge');
+            if (subtitle) subtitle.closest('div').innerHTML =
+                `خريطة حرارية تفاعلية للمخاطر — ${_urlDept !== 'company' ? deptLabel : 'المنظمة'} <span class="risk-count-badge" id="riskCountBadge">0 خطر</span>`;
+
+            // تحديث روابط التنقل
+            document.getElementById('prevLink').href = '/reports.html' + _qs;
+
+            // السايدبار
+            if (typeof window.initSidebar === 'function') window.initSidebar();
+
+            // جلب المخاطر
+            await loadRisks();
+
+            // تحليل ذكي تلقائي إذا لم توجد مخاطر
+            if (risks.length === 0 && window.DeptPage) {
+                await autoGenerateRisks();
+            }
+        })();
     </script>
 </body>
 

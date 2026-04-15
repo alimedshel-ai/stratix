@@ -40,7 +40,8 @@ const STEPS_CONFIG = {
         projects: 'المشاريع', compliance: 'الامتثال', support: 'الدعم', governance: 'الحوكمة'
     },
     deepOverrides: { hr: '/hr-deep.html', finance: '/finance-deep.html' },
-    auditOverrides: { hr: '/hr-audit.html', finance: '/finance-audit.html' }
+    auditOverrides: { hr: '/hr-audit.html', finance: '/finance-audit.html' },
+    DEPT_EXCLUSIONS: {}
 };
 
 /** جلب اسم القسم بالعربي */

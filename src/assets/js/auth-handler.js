@@ -32,7 +32,10 @@ function getRoutingDestination(user) {
     if (!hasEntity || !onboardingDone) {
         // المدير المستقل: جاي من التشخيص المجاني → pro-dashboard مباشرة
         const diagCat = sessionStorage.getItem('diagnosticCategory');
-        if (diagCat === 'manager') return '/pro-dashboard.html';
+        const hasMgrDiag = !!localStorage.getItem('stratix_manager_diagnostic');
+        let hasMgrResult = false;
+        try { const dr = JSON.parse(sessionStorage.getItem('diagnosticResult') || '{}'); hasMgrResult = dr.type === 'manager'; } catch(e) {}
+        if (diagCat === 'manager' || hasMgrDiag || hasMgrResult) return '/pro-dashboard.html';
 
         if (uType === 'COMPANY_MANAGER' || uType === 'DEPT_MANAGER' || uType === 'BOARD_VIEWER' || (uCategory && uCategory !== 'EXPLORER')) {
             return '/onboarding.html';

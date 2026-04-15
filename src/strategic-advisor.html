@@ -583,7 +583,7 @@
     <script src="/js/sidebar.js?v=4"></script>
     <script>
         const token = localStorage.getItem('token');
-        const entityId = localStorage.getItem('entityId');
+        let entityId = ''; // يُعبّأ في loadAnalysis من JWT
 
         const SEVERITY_STYLES = {
             CRITICAL: { bg: 'rgba(239,68,68,0.1)', color: '#ef4444', label: 'حرج' },
@@ -605,6 +605,9 @@
         };
 
         async function loadAnalysis() {
+            // جلب entityId من JWT (آمن بعد switch-entity)
+            try { const u = await window.api?.getCurrentUser(); entityId = u?.activeEntityId || ''; } catch(e) {}
+            if (!entityId) entityId = localStorage.getItem('entityId') || '';
             if (!token || !entityId) {
                 showReadyState();
                 return;

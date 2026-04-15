@@ -127,7 +127,13 @@ window.api = {
     request: _apiInternal,
     getCurrentUser: getCurrentUser,
     getUserData: getUserData,
-    getCachedUser: () => _cachedUser
+    getCachedUser: () => _cachedUser,
+    // 🔄 مسح كاش المستخدم — يجب استدعاؤه بعد switch-entity
+    clearUserCache: function() {
+        _cachedUser = null;
+        _userFetchPromise = null;
+        window._cachedUser = null;
+    }
 };
 
 // تعريف الاسم البديل لضمان التوافق مع الكود الجديد

@@ -130,7 +130,7 @@
             if (!this.dept || !window.STEPS_CONFIG) return false;
             const currentPath = window.location.pathname;
             const dept = this.dept.toLowerCase();
-            const exclusions = STEPS_CONFIG.DEPT_EXCLUSIONS[dept] || [];
+            const exclusions = (STEPS_CONFIG.DEPT_EXCLUSIONS && STEPS_CONFIG.DEPT_EXCLUSIONS[dept]) || [];
 
             if (exclusions.length === 0) return false;
 
@@ -252,6 +252,11 @@
                 } else if (typeof window.callApiWithTimeout === 'function') {
                     const response = await window.callApiWithTimeout(`/api/dept/analysis?dept=${currentDept}&type=${type}${versionQuery}`);
                     rData = response?.success ? (response.data?.data || response.data) : null;
+                }
+
+                // 🛡️ Guard: كائن فارغ {} يُعامل كـ null (بعض APIs ترجع {} بدل null)
+                if (rData && typeof rData === 'object' && !Array.isArray(rData) && Object.keys(rData).length === 0) {
+                    rData = null;
                 }
 
                 if (rData) {

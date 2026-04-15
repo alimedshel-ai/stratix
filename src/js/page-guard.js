@@ -38,79 +38,77 @@
         // لوحات القيادة
         'ceo-dashboard': { roles: ['owner', 'system_admin', 'supervisor', 'exec_manager'], phase: null },
         'company-health': { roles: ['owner', 'system_admin', 'supervisor', 'exec_manager'], phase: null },
-        'dept-dashboard': { roles: ['dept_manager'], phase: null },
+        'dept-dashboard': { roles: ['dept_manager', 'pro_manager'], phase: null },
         'investor-dashboard': { roles: ['investor'], phase: null },
         'admin-dashboard': { roles: ['system_admin'], phase: null },
 
         // مرحلة التشخيص — صفحات الأقسام: متاحة للمدير (مسار مستقل) وللمالك (للرقابة والتحليل)
-        'dept-diagnostic': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
-        'dept-deep': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
-        'dept-health': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
-        'dept-questionnaire': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
-        'dept-smart': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
-        // pestel مشترك: مدير الإدارة في مساره، والمالك في مسار strategy
-        'pestel': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: null },
-        'hr-audit': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
-        'hr-deep': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
-        'finance-audit': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
-        'finance-deep': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
-        'marketing-audit': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
-        'marketing-deep': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
-        'operations-audit': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
-        'operations-deep': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
-        'sales-audit': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
-        'sales-deep': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
-        // باقي صفحات الأقسام (غير مذكورة سابقاً)
-        'compliance-audit': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
-        'cs-audit': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
-        'governance-audit': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
-        'it-audit': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
-        'projects-audit': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
-        'quality-audit': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
-        'support-audit': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
+        'dept-diagnostic': { roles: ['dept_manager', 'pro_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
+        'dept-deep': { roles: ['dept_manager', 'pro_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
+        'dept-health': { roles: ['dept_manager', 'pro_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
+        'dept-questionnaire': { roles: ['dept_manager', 'pro_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
+        'dept-smart': { roles: ['dept_manager', 'pro_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
+        'pestel': { roles: ['dept_manager', 'pro_manager', 'owner', 'system_admin', 'exec_manager'], phase: null },
+        'hr-audit': { roles: ['dept_manager', 'pro_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
+        'hr-deep': { roles: ['dept_manager', 'pro_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
+        'finance-audit': { roles: ['dept_manager', 'pro_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
+        'finance-deep': { roles: ['dept_manager', 'pro_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
+        'marketing-audit': { roles: ['dept_manager', 'pro_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
+        'marketing-deep': { roles: ['dept_manager', 'pro_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
+        'operations-audit': { roles: ['dept_manager', 'pro_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
+        'operations-deep': { roles: ['dept_manager', 'pro_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
+        'sales-audit': { roles: ['dept_manager', 'pro_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
+        'sales-deep': { roles: ['dept_manager', 'pro_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
+        'compliance-audit': { roles: ['dept_manager', 'pro_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
+        'cs-audit': { roles: ['dept_manager', 'pro_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
+        'governance-audit': { roles: ['dept_manager', 'pro_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
+        'it-audit': { roles: ['dept_manager', 'pro_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
+        'projects-audit': { roles: ['dept_manager', 'pro_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
+        'quality-audit': { roles: ['dept_manager', 'pro_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
+        'support-audit': { roles: ['dept_manager', 'pro_manager', 'owner', 'system_admin', 'exec_manager'], phase: 'diagnostic' },
 
         // تحليل الفجوات — مشترك بين المسارين
-        'gap-analysis': { roles: ['dept_manager', 'owner', 'exec_manager'], phase: null },
+        'gap-analysis': { roles: ['dept_manager', 'pro_manager', 'owner', 'exec_manager'], phase: null },
 
         // مرحلة الاكتشاف — مشترك (كل مسار بمستواه)
-        'swot': { roles: ['dept_manager', 'owner', 'exec_manager'], phase: 'discovery' },
-        'tows': { roles: ['dept_manager', 'owner', 'exec_manager'], phase: 'discovery' },
-        'scenarios': { roles: ['dept_manager', 'owner', 'exec_manager'], phase: 'discovery' },
+        'swot': { roles: ['dept_manager', 'pro_manager', 'owner', 'exec_manager'], phase: 'discovery' },
+        'tows': { roles: ['dept_manager', 'pro_manager', 'owner', 'exec_manager'], phase: 'discovery' },
+        'scenarios': { roles: ['dept_manager', 'pro_manager', 'owner', 'exec_manager'], phase: 'discovery' },
 
         // مرحلة التخطيط — مشترك
-        'directions': { roles: ['dept_manager', 'owner', 'exec_manager'], phase: 'planning' },
-        'objectives': { roles: ['dept_manager', 'owner', 'exec_manager'], phase: 'planning' },
-        'okrs': { roles: ['dept_manager', 'owner', 'exec_manager'], phase: 'planning' },
-        'kpis': { roles: ['dept_manager', 'owner', 'exec_manager'], phase: 'planning' },
-        'hr-kpis': { roles: ['dept_manager'], phase: 'planning' },
+        'directions': { roles: ['dept_manager', 'pro_manager', 'owner', 'exec_manager'], phase: 'planning' },
+        'objectives': { roles: ['dept_manager', 'pro_manager', 'owner', 'exec_manager'], phase: 'planning' },
+        'okrs': { roles: ['dept_manager', 'pro_manager', 'owner', 'exec_manager'], phase: 'planning' },
+        'kpis': { roles: ['dept_manager', 'pro_manager', 'owner', 'exec_manager'], phase: 'planning' },
+        'hr-kpis': { roles: ['dept_manager', 'pro_manager'], phase: 'planning' },
 
         // مرحلة التنفيذ — مشترك
-        'initiatives': { roles: ['dept_manager', 'owner', 'exec_manager'], phase: 'execution' },
-        'projects': { roles: ['dept_manager', 'owner', 'exec_manager'], phase: 'execution' },
-        'reviews': { roles: ['dept_manager', 'owner', 'exec_manager'], phase: 'execution' },
-        'reports': { roles: ['dept_manager', 'owner', 'exec_manager'], phase: 'execution' },
-        'risk-map': { roles: ['dept_manager', 'owner', 'exec_manager'], phase: 'execution' },
+        'initiatives': { roles: ['dept_manager', 'pro_manager', 'owner', 'exec_manager'], phase: 'execution' },
+        'projects': { roles: ['dept_manager', 'pro_manager', 'owner', 'exec_manager'], phase: 'execution' },
+        'reviews': { roles: ['dept_manager', 'pro_manager', 'owner', 'exec_manager'], phase: 'execution' },
+        'reports': { roles: ['dept_manager', 'pro_manager', 'owner', 'exec_manager'], phase: 'execution' },
+        'risk-map': { roles: ['dept_manager', 'pro_manager', 'owner', 'exec_manager'], phase: 'execution' },
         'change-management': { roles: ['owner', 'system_admin', 'exec_manager'], phase: 'execution' },
-        'annual-plan': { roles: ['owner', 'system_admin', 'exec_manager', 'dept_manager'], phase: 'execution' },
+        'annual-plan': { roles: ['owner', 'system_admin', 'exec_manager', 'dept_manager', 'pro_manager'], phase: 'execution' },
 
         // الأدوات الاستراتيجية المتقدمة ( discovery/planning )
         'space-matrix': { roles: ['owner', 'system_admin', 'exec_manager'], phase: 'discovery' },
         'grand-strategy': { roles: ['owner', 'system_admin', 'exec_manager'], phase: 'discovery' },
-        'bcg-matrix': { roles: ['owner', 'system_admin', 'exec_manager', 'dept_manager'], phase: 'discovery' },
-        'ansoff-matrix': { roles: ['owner', 'system_admin', 'exec_manager', 'dept_manager'], phase: 'discovery' },
+        'bcg-matrix': { roles: ['owner', 'system_admin', 'exec_manager', 'dept_manager', 'pro_manager'], phase: 'discovery' },
+        'ansoff-matrix': { roles: ['owner', 'system_admin', 'exec_manager', 'dept_manager', 'pro_manager'], phase: 'discovery' },
         'qspm': { roles: ['owner', 'system_admin', 'exec_manager'], phase: 'discovery' },
-        'three-horizons': { roles: ['owner', 'system_admin', 'exec_manager', 'dept_manager'], phase: 'discovery' },
-        'simulation-lab': { roles: ['owner', 'system_admin', 'exec_manager', 'dept_manager'], phase: 'discovery' },
-        'strategy-map': { roles: ['owner', 'system_admin', 'exec_manager', 'dept_manager'], phase: 'planning' },
-        'ogsm': { roles: ['owner', 'system_admin', 'exec_manager', 'dept_manager'], phase: 'planning' },
-        'stakeholders': { roles: ['owner', 'system_admin', 'exec_manager', 'dept_manager'], phase: 'diagnostic' },
+        'three-horizons': { roles: ['owner', 'system_admin', 'exec_manager', 'dept_manager', 'pro_manager'], phase: 'discovery' },
+        'simulation-lab': { roles: ['owner', 'system_admin', 'exec_manager', 'dept_manager', 'pro_manager'], phase: 'discovery' },
+        'strategy-map': { roles: ['owner', 'system_admin', 'exec_manager', 'dept_manager', 'pro_manager'], phase: 'planning' },
+        'ogsm': { roles: ['owner', 'system_admin', 'exec_manager', 'dept_manager', 'pro_manager'], phase: 'planning' },
+        'stakeholders': { roles: ['owner', 'system_admin', 'exec_manager', 'dept_manager', 'pro_manager'], phase: 'diagnostic' },
 
         // صفحات المالك والإدارة العليا
         'versions': { roles: ['owner', 'system_admin', 'exec_manager', 'supervisor'], phase: null },
         'entities': { roles: ['owner', 'system_admin', 'exec_manager'], phase: null },
         'team': { roles: ['owner', 'system_admin', 'exec_manager', 'supervisor'], phase: null },
         'intelligence': { roles: ['owner', 'system_admin', 'exec_manager', 'supervisor'], phase: null },
-        'strategic-advisor': { roles: ['dept_manager', 'owner', 'system_admin', 'exec_manager'], phase: null },
+        'strategic-advisor': { roles: ['dept_manager', 'pro_manager', 'owner', 'system_admin', 'exec_manager'], phase: null },
 
         // أدوات المدير المستقل (audit-pro) — بدون phase gating
         'sales-audit-pro': { roles: ['pro_manager', 'consultant', 'owner', 'system_admin'], phase: null },
@@ -121,7 +119,7 @@
         // صفحات عامة (بدون حماية)
         'login': { roles: null, phase: null },
         'select-type': { roles: null, phase: null },
-        'select-dept': { roles: ['dept_manager'], phase: null },
+        'select-dept': { roles: ['dept_manager', 'pro_manager'], phase: null },
         'diagnostic-owner': { roles: null, phase: null },
         'diagnostic-manager': { roles: null, phase: null },
         'diagnostic-investor': { roles: null, phase: null },
@@ -160,7 +158,8 @@
         const role = (user.role || '').toUpperCase();
 
         // مدير إدارة مستقل (pro) — يستخدم أدوات audit-pro
-        if (uType === 'DEPT_MANAGER' && user.isProManager) return 'pro_manager';
+        // fallback: isProManager + userCategory كافي حتى لو userType ناقص
+        if (user.isProManager && (uType === 'DEPT_MANAGER' || user.userCategory?.startsWith('DEPT_'))) return 'pro_manager';
 
         // مدير إدارة داخلي (تابع للمالك) — يستخدم dept-smart
         if (uType === 'DEPT_MANAGER' || user.userCategory?.startsWith('DEPT_')) return 'dept_manager';
@@ -519,6 +518,28 @@
         const role = getUserRole();
         const dept = getUserDept();
 
+        // ═══ فحص 0: إذا مدير إدارة بدون ?dept= في الرابط → نضيفه تلقائياً ═══
+        const urlHasDept = new URLSearchParams(window.location.search).has('dept');
+        if (role === 'dept_manager' && !urlHasDept) {
+            // نحاول نستخرج القسم من كل مصدر ممكن
+            let autoDept = user?.deptCode
+                || (user?.userCategory?.startsWith('DEPT_') ? user.userCategory.replace('DEPT_', '').toLowerCase() : null)
+                || user?.department?.key?.toLowerCase()
+                || (window._cachedUser?.deptCode)
+                || (window._cachedUser?.userCategory?.startsWith('DEPT_') ? window._cachedUser.userCategory.replace('DEPT_', '').toLowerCase() : null);
+
+            // fix mapped codes
+            const catMap = { 'ops': 'operations', 'service': 'cs', 'pmo': 'projects' };
+            if (autoDept && catMap[autoDept]) autoDept = catMap[autoDept];
+
+            if (autoDept) {
+                const url = new URL(window.location.href);
+                url.searchParams.set('dept', autoDept);
+                window.location.replace(url.toString());
+                return;
+            }
+        }
+
         // ═══ فحص 1: الدور ═══
         if (rule.roles && rule.roles.length > 0) {
             if (!user) {
@@ -568,8 +589,8 @@
                     if (phase?.requires) {
                         const asyncCompletion = await getPhaseCompletionAsync(phase.requires);
                         if (asyncCompletion >= phase.minCompletion) {
-                            // API أكد الاكتمال! نعيد تحميل الصفحة (الآن الـ sync سيمر)
-                            window.location.reload();
+                            // API أكد الاكتمال — نسمح بالعرض (بدون reload لمنع حلقة لا نهائية)
+                            console.log('[PageGuard] ✅ Async check passed for phase:', rule.phase);
                             return;
                         }
                     }
@@ -578,6 +599,7 @@
                 }
 
                 // فعلاً ناقص — نعرض شاشة المنع
+                console.error('[PageGuard] ❌ BLOCKING page:', pageKey, 'phase:', rule.phase);
                 const gateCheck = checkPhaseGate(rule.phase);
                 const redirectDept = dept ? `?dept=${dept}` : '';
                 showBlockScreen('phase', {

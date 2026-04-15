@@ -39,12 +39,15 @@
     function getUserRole() {
         const user = getUser();
         if (user) {
-            if (user.userType === 'DEPT_MANAGER' && user.isProManager) {
+            // مدير مستقل: isProManager + (userType أو userCategory)
+            if (user.isProManager && (user.userType === 'DEPT_MANAGER' || user.userCategory?.startsWith('DEPT_'))) {
                 return 'pro_manager';
             }
             if (user.userType === 'DEPT_MANAGER' || user.userCategory?.startsWith('DEPT_')) {
                 return 'dept_manager';
             }
+            // مدير تنفيذي
+            if (user.userType === 'EXEC_MANAGER') return 'exec_manager';
             const ownerRoles = ['OWNER', 'ADMIN', 'SUPER_ADMIN', 'CEO', 'COMPANY_MANAGER'];
             const role = (user.role || user.userType || '').toUpperCase();
             if (ownerRoles.includes(role)) return 'owner';
@@ -341,6 +344,16 @@
     // التوجيه بعد تسجيل الدخول (محسن)
     // ─────────────────────────────────────────────────────
     function redirectAfterLogin() {
+        // 🛡️ المدير المستقل: جاي من التشخيص المجاني → pro-dashboard مباشرة (قبل أي فحص آخر)
+        const _diagCat = sessionStorage.getItem('diagnosticCategory');
+        const _hasMgrDiag = !!localStorage.getItem('stratix_manager_diagnostic');
+        let _hasMgrResult = false;
+        try { const _dr = JSON.parse(sessionStorage.getItem('diagnosticResult') || '{}'); _hasMgrResult = _dr.type === 'manager'; } catch(e) {}
+        if (_diagCat === 'manager' || _hasMgrDiag || _hasMgrResult) {
+            window.location.href = '/pro-dashboard.html';
+            return;
+        }
+
         const role = getUserRole();
         const user = getUser();
 

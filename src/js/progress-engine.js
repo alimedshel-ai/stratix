@@ -39,12 +39,21 @@
     // ═══════════════════════════════════════════
     async function fetchFromAPI() {
         const token = localStorage.getItem('token');
-        const entityId = localStorage.getItem('entityId');
+        // entityId من JWT (آمن بعد switch-entity) — fallback لـ localStorage
+        let entityId = '';
+        try {
+            if (window.api?.getCurrentUser) {
+                const u = await window.api.getCurrentUser();
+                entityId = u?.activeEntityId || '';
+            }
+        } catch(e) {}
+        if (!entityId) entityId = localStorage.getItem('entityId') || '';
 
         if (!token || !entityId) return null;
 
         try {
             const res = await fetch(`/api/user-progress/entity/${entityId}`, {
+                credentials: 'include',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!res.ok) throw new Error(`API returned ${res.status}`);

@@ -20,7 +20,7 @@ router.get('/:dept', verifyToken, async (req, res) => {
             }
         });
 
-        if (!health) return res.json({});
+        if (!health) return res.json(null);
         res.json(health);
     } catch (error) {
         console.error('Error fetching Dept Health:', error);

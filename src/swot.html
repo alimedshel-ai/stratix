@@ -35,10 +35,38 @@
         }
 
         .stx-sidebar-container {
-            width: 260px;
+            position: fixed !important;
+            top: 0; right: -260px !important;
+            width: 260px; height: 100vh;
             background: #1a1d2e;
             border-left: 1px solid var(--stx-border);
+            z-index: 1050;
+            transition: right 0.3s ease !important;
+            display: block !important;
+            overflow-y: auto;
         }
+        .stx-sidebar-container.sidebar-visible { right: 0 !important; }
+        .sidebar-trigger {
+            position: fixed; top: 0; right: 0;
+            width: 18px; height: 100vh;
+            z-index: 1040; cursor: pointer;
+        }
+        .sidebar-hint {
+            position: fixed; top: 50%; right: 0;
+            transform: translateY(-50%);
+            width: 6px; height: 60px;
+            background: linear-gradient(180deg, #6366f1, #8b5cf6);
+            border-radius: 4px 0 0 4px;
+            opacity: 0.5; z-index: 1041;
+            transition: opacity 0.3s;
+        }
+        .sidebar-trigger:hover ~ .sidebar-hint,
+        .sidebar-hint:hover { opacity: 1; }
+        .sidebar-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.4); z-index: 1045;
+        }
+        .sidebar-overlay.active { display: block; }
 
         .stx-main-content {
             flex: 1;
@@ -355,12 +383,16 @@
 
     <script>
         window.exitToDashboard = function () {
-            window.location.href = '/ceo-dashboard.html';
+            const _d = new URLSearchParams(window.location.search).get('dept') || '';
+            window.location.href = window.SmartNav ? SmartNav.getHomeUrl(_d) : '/ceo-dashboard.html';
         };
     </script>
 
+    <div class="sidebar-trigger" id="sidebarTrigger"></div>
+    <div class="sidebar-hint"></div>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="stx-sidebar-container" id="stx-sidebar"></aside>
     <div class="stx-wrapper">
-        <aside class="stx-sidebar-container" id="stx-sidebar"></aside>
 
         <main class="stx-main-content">
             <div class="mb-5 d-flex justify-content-between align-items-start">
@@ -495,7 +527,7 @@
 
                 <div
                     class="action-bar d-flex justify-content-between p-4 bg-dark bg-opacity-25 rounded-4 mt-5 border border-white border-opacity-10">
-                    <a href="/ceo-dashboard.html"
+                    <a href="javascript:void(0)" onclick="window.exitToDashboard()"
                         class="btn btn-link text-muted text-decoration-none fw-800"><i class="bi bi-house-door me-1"></i> لوحة القيادة</a>
                     <button type="submit" id="btnSave" class="btn btn-primary px-5 btn-modern">حفظ ومتابعة لمصفوفة
                         TOWS</button>
@@ -507,20 +539,21 @@
     <!-- Scripts -->
     <script src="/js/strategic-score.js?v=2"></script>
     <script src="/js/report-engine.js?v=2"></script>
+    <script src="/js/data-bridge.js?v=1"></script>
     <script src="/js/api.js?v=4"></script>
     <script src="/js/strategic-synthesis.js?v=4"></script>
     <script src="/js/utils.js?v=4"></script>
     <script src="/js/context-manager.js?v=4"></script>
-    <script src="/js/page-guard.js?v=4"></script>
-    <script src="/js/steps-config.js?v=4"></script>
-    <script src="/js/sidebar.js?v=4"></script>
-    <script src="/js/dept-page.js?v=4"></script>
+    <script src="/js/page-guard.js?v=5"></script>
+    <script src="/js/steps-config.js?v=5"></script>
+    <script src="/js/sidebar.js?v=5"></script>
+    <script src="/js/dept-page.js?v=5"></script>
     <script src="/js/hr-deep-config.js?v=4"></script>
     <script src="/js/it-deep-config.js?v=4"></script>
     <script src="/js/finance-deep-config.js?v=2"></script>
     <script src="/assets/js/hr-handlers.js?v=4"></script>
     <script src="/assets/js/finance-handlers.js?v=4"></script>
-    <script src="/assets/js/sales-handlers.js?v=4"></script>
+    <script src="/assets/js/sales-handlers.js?v=5"></script>
     <script src="/assets/js/marketing-handlers.js?v=4"></script>
     <script src="/assets/js/it-handlers.js?v=4"></script>
     <script src="/assets/js/operations-handlers.js?v=4"></script>
@@ -530,20 +563,26 @@
 
     <script>
         (async function () {
-            const dept = 'company';
-            if (window.DeptPage) DeptPage.dept = 'company';
-            document.getElementById('dept-header').textContent = 'التوليف الاستراتيجي للمنشأة';
+            const urlDept = new URLSearchParams(window.location.search).get('dept');
+            const dept = urlDept || 'company';
+            if (window.DeptPage) DeptPage.dept = dept;
+            const DEPT_LABELS = { hr: 'الموارد البشرية', finance: 'المالية', sales: 'المبيعات', marketing: 'التسويق', it: 'تقنية المعلومات', operations: 'العمليات', company: 'المنشأة' };
+            document.getElementById('dept-header').textContent = urlDept ? `تحليل SWOT — ${DEPT_LABELS[dept] || dept}` : 'التوليف الاستراتيجي للمنشأة';
             window.exitToDashboard = () => {
-                window.location.href = '/ceo-dashboard.html';
+                if (urlDept && urlDept !== 'company') {
+                    window.location.href = `/dept-dashboard.html?dept=${urlDept}`;
+                } else {
+                    window.location.href = window.SmartNav ? SmartNav.getHomeUrl(dept) : '/ceo-dashboard.html';
+                }
             };
 
             // 🛡️ تهيئة DeptPage الذكية
             const config = {
                 formId: 'swot-form',
-                saveKey: `stratix_swot_company`,
-                dept: 'company',
+                saveKey: `stratix_swot_${dept}`,
+                dept: dept,
                 type: 'SWOT',
-                nextUrl: `/tows.html`,
+                nextUrl: `/tows.html${urlDept ? '?dept=' + urlDept : ''}`,
                 onLoad: async (data) => {
                     if (window.initSidebar) window.initSidebar();
                     // تحميل المقترحات والبيانات السابقة
@@ -853,10 +892,10 @@
                 ]);
 
                 // ═══ Fallback: localStorage إذا API فارغ ═══
-                let auditData = (auditRes?.success && auditRes.data?.length > 0) ? auditRes.data[0] : null;
-                let pestelData = (pestelRes?.success && pestelRes.data?.length > 0) ? pestelRes.data[0] : null;
-                let healthData = (healthRes?.success && healthRes.data?.length > 0) ? healthRes.data[0] : null;
-                let deepData = (deepRes?.success && deepRes.data?.length > 0) ? deepRes.data[0] : null;
+                let auditData = (auditRes?.success && auditRes.data) ? (Array.isArray(auditRes.data) ? auditRes.data[0] : auditRes.data) : null;
+                let pestelData = (pestelRes?.success && pestelRes.data) ? (Array.isArray(pestelRes.data) ? pestelRes.data[0] : pestelRes.data) : null;
+                let healthData = (healthRes?.success && healthRes.data) ? (Array.isArray(healthRes.data) ? healthRes.data[0] : healthRes.data) : null;
+                let deepData = (deepRes?.success && deepRes.data) ? (Array.isArray(deepRes.data) ? deepRes.data[0] : deepRes.data) : null;
 
                 if (!auditData) auditData = lsParse(`stratix_${dept}_audit_v2`);
                 if (!pestelData) pestelData = lsParse(`stratix_pestel_${dept}`);
@@ -870,33 +909,36 @@
 
                 // ═══ ١. تحليل التدقيق (S/W) ═══
                 if (auditData) {
-                    // قائمة أسئلة التدقيق لربط السؤال بالإجابة
-                    const AUDIT_Q = {
-                        management_style: 'نمط الإدارة والقيادة', org_chart: 'الهيكل التنظيمي', span_control: 'نطاق الإشراف',
-                        hr_planning: 'تخطيط الموارد البشرية', succession_plan: 'خطة التعاقب', job_descriptions: 'بطاقات الوصف الوظيفي',
-                        competency_framework: 'إطار الجدارات', recruitment_strategy: 'استراتيجية الاستقطاب', onboarding_process: 'تهيئة الموظفين الجدد',
-                        selection_criteria: 'معايير الاختيار', employment_contracts: 'توثيق العقود', mudad_compliance: 'حماية الأجور (مدد)',
-                        payroll_accuracy: 'دقة الرواتب', incentive_schemes: 'الحوافز والمكافآت', allowances_benchmarking: 'تنافسية البدلات',
-                        performance_management: 'تقييم الأداء', kpi_alignment: 'ربط الأهداف', feedback_culture: 'ثقافة التغذية الراجعة',
-                        training_needs_analysis: 'تحليل الاحتياجات التدريبية', training_roi: 'أثر التدريب', digital_learning: 'التعلم الإلكتروني',
-                        internal_promotion: 'سياسة الترقية', work_environment: 'بيئة العمل', employee_engagement: 'ارتباط الموظفين',
-                        labor_law_compliance: 'الالتزام بنظام العمل', medical_insurance: 'التغطية الطبية', gosi_status: 'سجلات التأمينات',
-                        safety_committee: 'الصحة والسلامة', grievance_policy: 'سياسة التظلم', disciplinary_code: 'لائحة الجزاءات',
-                        exit_interviews: 'مقابلات نهاية الخدمة', attendance_tracking: 'تتبع الحضور', overtime_policy: 'العمل الإضافي',
-                        vacation_management: 'إدارة الإجازات', hr_dashboard: 'لوحات البيانات', cost_per_employee: 'تكلفة الموظف',
-                        hiring_cost: 'تكلفة التوظيف', internal_communication: 'التواصل الداخلي', office_tools: 'الأدوات والبرمجيات',
-                        remote_work_readiness: 'العمل عن بعد', innovation_culture: 'دعم الابتكار', diversity_inclusion: 'التنوع والشمول',
-                        women_empowerment: 'تمكين المرأة', expats_management: 'شؤون الوافدين', employer_branding: 'هوية جهة العمل',
-                        hr_budget_control: 'رقابة الميزانية', employee_handbook: 'دليل الموظف', career_pathing: 'المسار الوظيفي',
-                        mental_health: 'الصحة النفسية', future_skills_gap: 'فجوة مهارات المستقبل'
+                    // ترجمة أسئلة التدقيق حسب القسم
+                    const AUDIT_LABELS = {
+                        sales: {
+                            q1_1:'عدد فريق المبيعات',q1_2:'هيكل الفريق',q1_3:'تقييم أداء الأفراد',q1_4:'رضا الفريق',q1_5:'تدريب مهارات البيع',
+                            q2_1:'تصنيف العملاء',q2_2:'رضا العملاء',q2_3:'برنامج ولاء',q2_4:'نسبة العملاء المتكررين',q2_5:'تغذية راجعة منهجية',
+                            q3_1:'عملية بيع موثقة',q3_2:'تتبع Pipeline',q3_3:'دورة البيع',q3_4:'سياسة تسعير',q3_5:'قنوات البيع',
+                            q4_1:'نظام CRM',q4_2:'تقارير مبيعات آلية',q4_3:'أتمتة البيع',q4_4:'جودة البيانات'
+                        }
                     };
+                    const labels = AUDIT_LABELS[dept] || {};
                     Object.entries(auditData).forEach(([key, q]) => {
-                        if (!q || typeof q !== 'object' || key === 'meta') return;
-                        const val = parseInt(q.val || q.score || q.value);
-                        const answer = q.label || q.text || '';
-                        const question = AUDIT_Q[key] || key;
-                        if (val >= 2) results.weaknesses.push(`[تدقيق] ${question}: ${answer}`);
-                        else if (val <= 0 && !isNaN(val)) results.strengths.push(`[تدقيق] ${question}: ${answer}`);
+                        if (key === 'meta' || key.startsWith('_')) return;
+                        const label = labels[key] || key;
+                        // Format 1: object with val/score
+                        if (q && typeof q === 'object' && (q.val !== undefined || q.score !== undefined)) {
+                            const val = parseInt(q.val || q.score || q.value);
+                            const answer = q.label || q.text || '';
+                            if (val >= 2) results.weaknesses.push(`[تدقيق] ${answer || label}`);
+                            else if (val <= 0 && !isNaN(val)) results.strengths.push(`[تدقيق] ${answer || label}`);
+                        }
+                        // Format 2: flat values (q1_1: 'yes/no/3')
+                        else if (typeof q === 'string') {
+                            if (q === 'yes') results.strengths.push(`[تدقيق] ${label}`);
+                            else if (q === 'no') results.weaknesses.push(`[تدقيق] ${label}`);
+                            else {
+                                const numVal = parseInt(q);
+                                if (!isNaN(numVal) && numVal >= 4) results.strengths.push(`[تدقيق] ${label}: ${numVal}/5`);
+                                else if (!isNaN(numVal) && numVal <= 2 && numVal > 0) results.weaknesses.push(`[تدقيق] ${label}: ${numVal}/5`);
+                            }
+                        }
                     });
                 }
 
@@ -931,33 +973,47 @@
                 if (deepData) {
                     // ترجمة مفاتيح الأسئلة التقنية لنصوص عربية واضحة
                     const DEEP_Q = {};
-                    const config = window[dept.toUpperCase() + '_DEEP_CONFIG'] || window.HR_DEEP_CONFIG;
-                    if (config) {
-                        const categories = config.CATEGORIES || config.categories || [];
+                    const deptConfig = window[dept.toUpperCase() + '_DEEP_CONFIG'] || window.HR_DEEP_CONFIG;
+                    if (deptConfig) {
+                        const categories = deptConfig.CATEGORIES || deptConfig.categories || [];
                         categories.forEach(cat => {
                             cat.questions.forEach(q => { DEEP_Q[q.id] = q.text; });
                         });
                     }
-                    // fallback: أسماء مختصرة
-                    const DEEP_FALLBACK = {
-                        sp_workforce: 'تحليل القوى العاملة', sp_alignment: 'ربط التوظيف بالاستراتيجية', sp_succession: 'التعاقب الوظيفي',
-                        ta_channels: 'قنوات الاستقطاب', ta_quality: 'جودة التوظيف', ta_onboarding: 'تهيئة الموظفين الجدد',
-                        op_compliance: 'الامتثال النظامي', op_records: 'توثيق السجلات', op_payroll: 'دقة الرواتب',
-                        pf_cycles: 'دورات تقييم الأداء', pf_goals: 'أهداف الموظفين', pf_feedback: 'التغذية الراجعة',
-                        tr_plan: 'خطة التدريب', tr_hours: 'ساعات التدريب', tr_roi: 'أثر التدريب',
-                        cm_structure: 'هيكل الرواتب', cm_external: 'تنافسية الرواتب', cm_benefits: 'المزايا والبدلات',
-                        lr_policy: 'سياسات العمل', lr_disputes: 'حل النزاعات', lr_safety: 'الصحة والسلامة',
-                        cu_survey: 'استبيان رضا الموظفين', cu_retention: 'الاحتفاظ بالمميزين', cu_turnover_vol: 'متابعة الاستقالات'
-                    };
+
+                    // yes/no questions → strengths/weaknesses
                     Object.entries(deepData).forEach(([key, val]) => {
-                        if (key === 'meta' || typeof val !== 'string') return;
-                        const qLabel = DEEP_Q[key] || DEEP_FALLBACK[key] || key;
-                        // اختصار السؤال إذا طويل
-                        const shortLabel = qLabel.length > 60 ? qLabel.substring(0, 57) + '...' : qLabel;
-                        if (val === 'yes') results.strengths.push(`[عميق] ${shortLabel}`);
-                        else if (val === 'no') results.weaknesses.push(`[عميق] ${shortLabel}`);
+                        if (key === 'meta' || key.startsWith('_')) return;
+                        if (val === 'yes' || val === 'no') {
+                            const qLabel = DEEP_Q[key] || key;
+                            const shortLabel = qLabel.length > 60 ? qLabel.substring(0, 57) + '...' : qLabel;
+                            if (val === 'yes') results.strengths.push(`[عميق] ${shortLabel}`);
+                            else results.weaknesses.push(`[عميق] ${shortLabel}`);
+                        }
                     });
-                    // KPI-based items
+
+                    // KPI-based items — sales dept
+                    const winRate = parseFloat(deepData.win_rate);
+                    if (!isNaN(winRate)) {
+                        if (winRate >= 40) results.strengths.push(`[عميق] معدل إغلاق مرتفع (${winRate}%)`);
+                        else if (winRate < 25) results.weaknesses.push(`[عميق] معدل إغلاق منخفض (${winRate}%) — يحتاج تحسين`);
+                    }
+                    const salesCycle = parseFloat(deepData.sales_cycle);
+                    if (!isNaN(salesCycle)) {
+                        if (salesCycle > 90) results.weaknesses.push(`[عميق] دورة مبيعات طويلة (${salesCycle} يوم)`);
+                        else if (salesCycle <= 30) results.strengths.push(`[عميق] دورة مبيعات سريعة (${salesCycle} يوم)`);
+                    }
+                    const activeCustomers = parseFloat(deepData.active_customers);
+                    if (!isNaN(activeCustomers)) {
+                        if (activeCustomers >= 50) results.strengths.push(`[عميق] قاعدة عملاء نشطة (${activeCustomers} عميل)`);
+                        else if (activeCustomers < 10) results.weaknesses.push(`[عميق] قاعدة عملاء محدودة (${activeCustomers} عميل)`);
+                    }
+                    const annualSales = parseFloat(deepData.annual_sales);
+                    if (!isNaN(annualSales) && annualSales > 0) {
+                        results.strengths.push(`[عميق] حجم مبيعات سنوي: ${(annualSales / 1000).toLocaleString('ar')} ألف ريال`);
+                    }
+
+                    // HR KPIs (legacy)
                     if (deepData.meta) {
                         const turnover = parseFloat(deepData.meta.turnover);
                         if (!isNaN(turnover)) {
@@ -1121,9 +1177,10 @@
             }
 
             // حفظ الدرجة مع البيانات للصفحات اللاحقة
-            const existing = JSON.parse(localStorage.getItem(`stratix_swot_company`) || '{}');
+            const _swotDept = new URLSearchParams(window.location.search).get('dept') || 'company';
+            const existing = JSON.parse(localStorage.getItem(`stratix_swot_${_swotDept}`) || '{}');
             existing._strategicScore = result;
-            localStorage.setItem(`stratix_swot_company`, JSON.stringify(existing));
+            localStorage.setItem(`stratix_swot_${_swotDept}`, JSON.stringify(existing));
         }
 
         // ربط التحديث الشامل
@@ -1146,6 +1203,20 @@
     </script>
     </main>
     </div>
+<script>
+(function() {
+    const trigger = document.getElementById('sidebarTrigger');
+    const sidebar = document.getElementById('stx-sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    let closeTimer = null;
+    function openSidebar() { clearTimeout(closeTimer); sidebar.classList.add('sidebar-visible'); if(window.innerWidth < 768) overlay.classList.add('active'); }
+    function closeSidebar() { closeTimer = setTimeout(() => { sidebar.classList.remove('sidebar-visible'); overlay.classList.remove('active'); }, 300); }
+    trigger.addEventListener('mouseenter', openSidebar);
+    sidebar.addEventListener('mouseenter', function() { clearTimeout(closeTimer); });
+    sidebar.addEventListener('mouseleave', closeSidebar);
+    overlay.addEventListener('click', function() { sidebar.classList.remove('sidebar-visible'); overlay.classList.remove('active'); });
+})();
+</script>
 </body>
 
 </html>

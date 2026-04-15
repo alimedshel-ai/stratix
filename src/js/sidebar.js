@@ -147,25 +147,61 @@ function isDeptStepDone(labelOrId, deptKey) {
 }
 
 async function initSidebar(sidebarContainer) {
+  if (window._stxSidebarInitializing) return;
+  window._stxSidebarInitializing = true;
   console.log('🚀 [Sidebar] Starting initialization...');
 
+
+  // ── انتظر api.js حتى ثانية واحدة فقط (أسرع) ──
   if (!window.api || !window.api.getCurrentUser) {
-    console.warn('⚠️ [Sidebar] api.js not found! Waiting for window.api...');
-    return;
+    await new Promise(resolve => {
+      let waited = 0;
+      const check = setInterval(() => {
+        waited += 100;
+        if (window.api && window.api.getCurrentUser || waited >= 1000) { clearInterval(check); resolve(); }
+      }, 100);
+    });
   }
 
+  // 🧱 اكتشاف الحاوية وحقن "جاري التحميل" فوراً
+  const target = sidebarContainer || document.getElementById('stx-sidebar') || document.getElementById('sidebar') || document.querySelector('.stx-sidebar-container, .stx-sidebar, .sidebar');
+  if (target) {
+    target.style.display = 'flex';
+    target.style.flexDirection = 'column';
+    target.style.zIndex = '50';
+    if (target.innerHTML.trim() === '') {
+      target.innerHTML = '<div id="stx-loading" style="padding:20px; color:#6366f1; font-size:12px; font-family:sans-serif; background:rgba(99,102,241,0.05); border-radius:10px; margin:10px;">⏳ جاري المزامنة...</div>';
+    }
+  }
+
+  // ── سباق المزامنة (API vs Local) ──
   let userData = null;
+  const getLocal = () => { try { return JSON.parse(localStorage.getItem('user')); } catch (e) { return null; } };
+
+  // حاول الجلب بسرعة من الـ API
   try {
-    userData = await window.api.getCurrentUser();
-    console.log('👤 [Sidebar] User detected:', userData?.role || 'null');
+    const apiPromise = (window.api && window.api.getCurrentUser) ? window.api.getCurrentUser() : Promise.resolve(null);
+    const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(null), 1500)); // لا ننتظر أكثر من ثانية ونصف
+
+    userData = await Promise.race([apiPromise, timeoutPromise]);
+    if (!userData) {
+      userData = getLocal();
+      console.log('👤 [Sidebar] Fallback to LocalStorage (Fast Mode)');
+    } else {
+      console.log('👤 [Sidebar] Data from API');
+    }
   } catch (err) {
-    console.error('⚠️ [Sidebar] Error fetching user:', err);
+    userData = getLocal();
+    console.warn('⚠️ [Sidebar] API Error, using LocalStorage:', err.message);
   }
 
+  // إذا لم نجد بيانات إطلاقاً، نستخدم بيانات وهمية لضمان ظهور الهيكل
   if (!userData) {
-    console.warn('⚠️ [Sidebar] User not logged in. Aborting build.');
-    return;
+    console.error('⚠️ [Sidebar] No user data found! Using Ghost Profile.');
+    userData = { name: 'ضيف', role: 'VIEWER', userType: 'COMPANY_MANAGER' };
   }
+
+
 
   const currentPath = window.location.pathname;
   const currentSearch = window.location.search;
@@ -177,10 +213,20 @@ async function initSidebar(sidebarContainer) {
   let userType = userData.userType || 'COMPANY_MANAGER';
   let isSuperAdmin = systemRole === 'SUPER_ADMIN';
 
-  // 🛡️ [CORE FIX] تصحيح رتبة مدير الإدارة إذا لم تكن مسجلة في userType
+  // 🛡️ [CORE FIX] تصحيح رتبة مدير الإدارة: 
   if (userData.userCategory && userData.userCategory.startsWith('DEPT_')) {
     userType = 'DEPT_MANAGER';
   }
+  // 🛡️ [FORCE PRO] إذا كنت في pro-dashboard فأنت حتماً مدير إدارة/مستشار
+  const _onProDash = window.location.pathname.includes('/pro-dashboard');
+  if (_onProDash) {
+    userType = 'DEPT_MANAGER';
+    if (userRole === 'VIEWER') userRole = 'ADMIN'; // ورفع الصلاحية لتجاوز فلاتر العرض
+  }
+  console.log('🛡️ [Sidebar] Final Profile:', { userRole, userType, _onProDash });
+
+
+
 
   // === ٢. تحديد القسم الاستراتيجي (_v10Dept) ===
   let _v10Dept = userData.department?.key || '';
@@ -204,8 +250,12 @@ async function initSidebar(sidebarContainer) {
   const _uCat = userData?.userCategory || '';
   const isInvestorUser = _diagRole === 'investor' || _uCat === 'INVESTOR' || _uCat.startsWith('INVESTOR_');
 
-  // 🛡️ المستقل (DEPT_MANAGER + role=OWNER) → pro-dashboard | الداخلي → dept-dashboard
-  const _isProMgr = userType === 'DEPT_MANAGER' && (userRole === 'OWNER' || userRole === 'ADMIN');
+  // 🛡️ المستقل: isProManager من API (أولاً) → أو role=OWNER مع DEPT_MANAGER → أو على صفحة pro-dashboard
+  const _isProMgr = (userData.isProManager === true)
+    || (userType === 'DEPT_MANAGER' && (userRole === 'OWNER' || userRole === 'ADMIN'))
+    || _onProDash;  // fallback: وجودك على pro-dashboard كافٍ
+
+
   const homeHref = isViewerOrDE ? '/viewer-hub.html'
     : (userType === 'BOARD_VIEWER' && isInvestorUser) ? '/investor-dashboard.html'
       : userType === 'BOARD_VIEWER' ? '/board-dashboard.html'
@@ -291,12 +341,14 @@ async function initSidebar(sidebarContainer) {
         overflow-y: auto;
         overflow-x: hidden;
         position: sticky;
-        top: 60px;
-        height: calc(100vh - 60px);
+        top: var(--topbar-height, 60px);
+        height: calc(100vh - var(--topbar-height, 60px));
         flex-shrink: 0;
         padding: 8px 0;
+        z-index: 50;
         scrollbar-width: thin;
       }
+
       .stx-sidebar.stx-fixed {
         position: fixed;
         right: 0;
@@ -903,19 +955,27 @@ async function initSidebar(sidebarContainer) {
 
   // === رحلتي الاستراتيجية: 4 مراحل (المنهجية المتكاملة الجديدة) ===
   // === كل الإدارات المتاحة ===
-  const ALL_DEPT_ITEMS = [
-    { label: 'الامتثال والحوكمة', href: '/dept-deep.html?dept=compliance', icon: 'bi-shield-fill-check', key: 'compliance' },
-    { label: 'المالية', href: '/finance-deep.html', icon: 'bi-cash-coin', key: 'finance' },
-    { label: 'المبيعات', href: '/dept-deep.html?dept=sales', icon: 'bi-graph-up-arrow', key: 'sales' },
-    { label: 'الموارد البشرية', href: '/hr-deep.html', icon: 'bi-people-fill', key: 'hr' },
-    { label: 'التسويق', href: '/dept-deep.html?dept=marketing', icon: 'bi-megaphone-fill', key: 'marketing' },
-    { label: 'العمليات', href: '/dept-deep.html?dept=operations', icon: 'bi-gear-wide-connected', key: 'operations' },
-    { label: 'الخدمات المساندة', href: '/dept-deep.html?dept=support', icon: 'bi-wrench-adjustable', key: 'support' },
-    { label: 'تقنية المعلومات', href: '/dept-deep.html?dept=it', icon: 'bi-laptop', key: 'it' },
-    { label: 'خدمة العملاء', href: '/dept-deep.html?dept=cs', icon: 'bi-headset', key: 'cs' },
-    { label: 'الجودة', href: '/dept-deep.html?dept=quality', icon: 'bi-patch-check-fill', key: 'quality' },
-    { label: 'المشاريع', href: '/dept-deep.html?dept=projects', icon: 'bi-kanban-fill', key: 'projects' },
-  ];
+  // بناء ديناميكي عبر getToolLink لضمان الروابط الصحيحة لكل قسم
+  const _deptMeta = {
+    compliance: { label: 'الامتثال والحوكمة', icon: 'bi-shield-fill-check' },
+    finance: { label: 'المالية', icon: 'bi-cash-coin' },
+    sales: { label: 'المبيعات', icon: 'bi-graph-up-arrow' },
+    hr: { label: 'الموارد البشرية', icon: 'bi-people-fill' },
+    marketing: { label: 'التسويق', icon: 'bi-megaphone-fill' },
+    operations: { label: 'العمليات', icon: 'bi-gear-wide-connected' },
+    support: { label: 'الخدمات المساندة', icon: 'bi-wrench-adjustable' },
+    it: { label: 'تقنية المعلومات', icon: 'bi-laptop' },
+    cs: { label: 'خدمة العملاء', icon: 'bi-headset' },
+    quality: { label: 'الجودة', icon: 'bi-patch-check-fill' },
+    projects: { label: 'المشاريع', icon: 'bi-kanban-fill' },
+  };
+  const _deepTool = (typeof STEPS_CONFIG !== 'undefined' && STEPS_CONFIG.DEPARTMENT_TOOLS || []).find(t => t.id === 'deep');
+  const ALL_DEPT_ITEMS = Object.entries(_deptMeta).map(([key, meta]) => ({
+    label: meta.label,
+    href: _deepTool && typeof getToolLink === 'function' ? getToolLink(_deepTool, key) : `/dept-deep.html?dept=${key}`,
+    icon: meta.icon,
+    key
+  }));
 
   // === فلترة: مدير الإدارة يشوف إدارته فقط + مسار مخصص ===
   let filteredDeptItems;
@@ -934,13 +994,17 @@ async function initSidebar(sidebarContainer) {
         id: phaseId.toUpperCase(),
         nameAr: phaseNames[phaseId] || phaseId,
         icon: phaseIcons[phaseId] || 'bi-grid-fill',
-        items: phaseTools.map(t => ({
-          label: t.name,
-          href: `${t.path}${t.path.includes('?') ? '&' : '?'}dept=${currentDept}&v=${Date.now()}`,
-          icon: t.icon,
-          id: t.id,
-          done: isDeptStepDone(t.id, currentDept)
-        }))
+        items: phaseTools.map(t => {
+          const link = typeof getToolLink === 'function' ? getToolLink(t, currentDept) : t.path.replace('{dept}', currentDept);
+          const sep = link.includes('?') ? '&' : '?';
+          return {
+            label: t.name,
+            href: `${link}${link.includes('dept=') ? '' : sep + 'dept=' + currentDept}&v=${Date.now()}`,
+            icon: t.icon,
+            id: t.id,
+            done: isDeptStepDone(t.id, currentDept)
+          };
+        })
       };
     });
   }
@@ -1128,29 +1192,24 @@ async function initSidebar(sidebarContainer) {
     { label: 'إعدادات النظام', href: '/admin-dashboard.html#settings', icon: 'bi-gear-wide-connected' },
   ];
 
-  // === بناء HTML السايدبار (Async 2.0) ===
-  async function buildSidebar(progressData) {
+  // === بناء HTML السايدبار (Sync) ===
+  function buildSidebar(progressData) {
+    console.log('🏗️ [Sidebar] buildSidebar started');
+
     // قراءة محرك المسارات في كل مرة يُبنى الـ sidebar
     const PE = window.PathEngine || null;
     const isSmartPath = PE ? PE.isPathMode() : false;
 
     let html = '';
 
-    // === قراءة الدور من السيرفر مباشرة ===
-    let userRole = userData.role || 'VIEWER';
-    let systemRole = userData.systemRole || 'USER';
-    let userType = userData.userType || 'COMPANY_MANAGER';
+    // === قراءة البيانات من النطاق الأعلى (تم تصحيحها سابقاً) ===
     let entityId = userData.entity?.id || '';
-    let isSuperAdmin = systemRole === 'SUPER_ADMIN';
-
-    // 🛡️ [CORE FIX] تصحيح رتبة مدير الإدارة إذا لم تكن مسجلة في userType
-    if (userData.userCategory && userData.userCategory.startsWith('DEPT_')) {
-      userType = 'DEPT_MANAGER';
-    }
     let userName = userData.name || '';
     let userEmail = userData.email || '';
     let entityLegalName = userData.entity?.legalName || userData.entity?.displayName || '';
     let companyNameAr = userData.entity?.company?.nameAr || userData.entity?.company?.nameEn || '';
+
+    console.log('🏗️ [Sidebar] Building for:', { userType, _isProMgr, _v10Dept });
 
     // استدعاء المسمى الوظيفي باستخدام الدالة النظيفة (حسب توجيه الـ 100/100)
     let userRoleLabel = getUserRoleLabel(userData);
@@ -1204,12 +1263,14 @@ async function initSidebar(sidebarContainer) {
     const homeHref = isViewerOrDE ? '/viewer-hub.html'
       : (userType === 'BOARD_VIEWER' && isInvestorUser) ? '/investor-dashboard.html'
         : userType === 'BOARD_VIEWER' ? '/board-dashboard.html'
-          : userType === 'DEPT_MANAGER' ? `/dept-dashboard.html${_v10Dept ? '?dept=' + _v10Dept : ''}`
-            : '/dashboard.html';
-    const isHomeActive = isActive('/dashboard.html') || isActive('/ceo-dashboard.html') || isActive('/viewer-hub.html') || isActive('/board-dashboard.html') || isActive('/dept-dashboard.html') || isActive('/investor-dashboard.html');
+          : (userType === 'DEPT_MANAGER' && _isProMgr && _v10Dept) ? `/dept-dashboard.html?dept=${_v10Dept}`
+            : (userType === 'DEPT_MANAGER' && _isProMgr) ? '/pro-dashboard.html'
+              : userType === 'DEPT_MANAGER' ? `/dept-dashboard.html${_v10Dept ? '?dept=' + _v10Dept : ''}`
+                : '/dashboard.html';
+    const isHomeActive = isActive('/dashboard.html') || isActive('/ceo-dashboard.html') || isActive('/viewer-hub.html') || isActive('/board-dashboard.html') || isActive('/dept-dashboard.html') || isActive('/investor-dashboard.html') || isActive('/pro-dashboard.html');
 
-    // لا تُظهر "الرئيسية" لمدير الإدارة وهو على نفس الصفحة (dept-dashboard) لتقليل الزحام
-    const isDeptMgrOnDash = userType === 'DEPT_MANAGER' && isActive('/dept-dashboard.html');
+    // لا تُظهر "الرئيسية" لمدير الإدارة وهو على نفس الصفحة
+    const isDeptMgrOnDash = userType === 'DEPT_MANAGER' && (isActive('/dept-dashboard.html') || isActive('/pro-dashboard.html'));
     if (!isDeptMgrOnDash) {
       html += `
         <a href="${homeHref}" class="stx-item stx-home-btn ${isHomeActive ? 'active' : ''}">
@@ -1230,15 +1291,17 @@ async function initSidebar(sidebarContainer) {
       const currentDept = _v10Dept || 'hr';
       const safeDept = encodeURIComponent(currentDept);
 
-      // 🛡️ التمييز: المستقل (role=OWNER, أنشأ entities بنفسه) vs الداخلي (مدعو من المالك)
-      const _isProManager = userRole === 'OWNER' || userRole === 'ADMIN';
-
-      if (_isProManager) {
-        // ═══ المدير المستقل: رابط pro-dashboard + 17 أداة كاملة ═══
+      // 🛡️ التمييز: يستخدم _isProMgr المحسوب في الأعلى (يشمل isProManager من API)
+      if (_isProMgr) {
+        // ═══ المدير المستقل: رابط pro-dashboard + dept-dashboard + 17 أداة كاملة ═══
         html += `
           <a href="/pro-dashboard.html" class="stx-item stx-home-btn ${isActive('/pro-dashboard.html') ? 'active' : ''}">
             <i class="bi bi-gem" style="color:#6366f1;font-size:16px"></i>
             <span>لوحة العملاء</span>
+          </a>
+          <a href="/dept-dashboard.html?dept=${safeDept}" class="stx-item ${isActive('/dept-dashboard.html') ? 'active' : ''}">
+            <i class="bi bi-speedometer2" style="color:#10b981;font-size:16px"></i>
+            <span>لوحة القيادة</span>
           </a>
         `;
 
@@ -1415,7 +1478,7 @@ async function initSidebar(sidebarContainer) {
         { label: 'مصفوفة TOWS', href: `/tows.html${_v10Dept ? '?dept=' + _v10Dept : ''}`, icon: 'bi-arrows-fullscreen' },
         { label: 'مؤشرات الأداء', href: `/kpis.html${_v10Dept ? '?dept=' + _v10Dept : ''}`, icon: 'bi-graph-up-arrow' },
         { label: 'إدخال المؤشرات', href: `/kpi-entries.html${_v10Dept ? '?dept=' + _v10Dept : ''}`, icon: 'bi-pencil-square' },
-        { label: 'المراجعات', href: '/reviews.html', icon: 'bi-journal-check' },
+        { label: 'المراجعات', href: `/reviews.html${_v10Dept ? '?dept=' + _v10Dept : ''}`, icon: 'bi-journal-check' },
         { label: `تقرير ${_myDeptName}`, href: `/reports.html${_v10Dept ? '?dept=' + _v10Dept : ''}`, icon: 'bi-file-earmark-bar-graph' },
       ];
       deptItems.forEach(item => {
@@ -1674,20 +1737,19 @@ async function initSidebar(sidebarContainer) {
     return html;
   }
 
-  // === كشف الثيم ===
-  const rootStyle = getComputedStyle(document.documentElement);
-  const bgValue = rootStyle.getPropertyValue('--bg').trim();
-  const isDark = bgValue && (bgValue.startsWith('#0') || bgValue.startsWith('#1') || bgValue.startsWith('#2'));
+  try {
+    // === كشف الثيم ===
+    const rootStyle = getComputedStyle(document.documentElement);
+    const bgValue = rootStyle.getPropertyValue('--bg').trim();
+    const isDark = bgValue && (bgValue.startsWith('#0') || bgValue.startsWith('#1') || bgValue.startsWith('#2'));
 
-  // 🧱 استخدام الحاوية التي تم اكتشافها
-  const target = mainTarget || sidebarContainer || document.getElementById('stx-sidebar') || document.getElementById('sidebar') || document.querySelector('.stx-sidebar-container, .stx-sidebar, .sidebar');
+    // 🏗️ استخدام الحاوية التي تم اكتشافها مسبقاً
+    if (!target || !(target instanceof HTMLElement)) {
+      console.warn('⚠️ [Sidebar] No valid HTML container found! target is:', target);
+    } else {
+      console.log('🏗️ [Sidebar] Target confirmed:', target.id || target.className);
 
-  if (!target || !(target instanceof HTMLElement)) {
-    console.warn('⚠️ [Sidebar] No valid HTML container found to inject sidebar! Aborting build.');
-  } else {
-    console.log('🏗️ [Sidebar] Active target confirmed:', target.id || target.className);
-    try {
-      // حقن التنسيقات فوراً
+      // 1. حقن التنسيقات
       if (!document.getElementById('stx-sidebar-styles')) {
         const style = document.createElement('style');
         style.id = 'stx-sidebar-styles';
@@ -1696,20 +1758,37 @@ async function initSidebar(sidebarContainer) {
         console.log('🎨 [Sidebar] CSS injected.');
       }
 
-      // بناء المحتوى النهائي (Async)
-      const sidebarHtml = await buildSidebar(null);
+      // 2. بناء المحتوى (Sync)
+      console.log('🛠️ [Sidebar] Calling buildSidebar...');
+      const sidebarHtml = buildSidebar(null);
+
+      // 3. الحقن النهائي
       target.innerHTML = sidebarHtml;
       target.classList.add('stx-sidebar');
-      if (!target.id) target.id = 'sidebar';
+      target.classList.add('stx-fixed'); // قوة التموضع الثابت
+      target.style.display = 'flex';
+      target.style.visibility = 'visible';
+      target.style.opacity = '1';
+      target.style.position = 'fixed';
+      target.style.right = '0';
+      target.style.top = '0';
+      target.style.width = '260px';
+      target.style.height = '100vh';
+      target.style.zIndex = '10000';
+      console.log('✅ [Sidebar] HTML injected successfully with FORCE FIXED position.');
 
-      // تفعيل السلوكيات (فتح الأقسام النشطة)
+
+      // 4. تفعيل السلوكيات
       attachSidebarBehaviors(target);
 
-    } catch (e) {
-      console.error('⚠️ [Sidebar] Failed to build:', e);
     }
-    return;
+  } catch (err) {
+    console.error('❌ [Sidebar] CRITICAL FAILURE:', err);
+    if (target) target.innerHTML = '<div style="padding:20px; color:#ef4444; font-size:11px;">⚠️ تعذر تحميل القائمة بالكامل.</div>';
+  } finally {
+    window._stxSidebarInitializing = false;
   }
+
 
   // --- Fallback for extremely legacy pages ---
   let oldSidebar = document.querySelector('.list-group.bg-white, nav.sidebar, aside.sidebar');
@@ -1872,15 +1951,9 @@ async function initSidebar(sidebarContainer) {
   });
 }
 
-// ════════ الـ Bootstrapper (التشغيل النهائي للسايدبار) ════════
+// ════════ الـ Bootstrapper ════════
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', async () => {
-    if (window.api && window.api.getCurrentUser) await window.api.getCurrentUser().catch(() => null);
-    initSidebar();
-  });
+  document.addEventListener('DOMContentLoaded', () => initSidebar());
 } else {
-  (async () => {
-    if (window.api && window.api.getCurrentUser) await window.api.getCurrentUser().catch(() => null);
-    initSidebar();
-  })();
+  initSidebar();
 }

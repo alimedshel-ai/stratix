@@ -519,7 +519,7 @@ router.get('/:dept', verifyToken, async (req, res) => {
             }
         });
 
-        if (!analysis) return res.json({});
+        if (!analysis) return res.json(null);
         res.json(JSON.parse(analysis.data));
     } catch (error) {
         console.error('Error fetching departmental corrections:', error);

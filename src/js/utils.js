@@ -54,13 +54,30 @@ window.initDeptPage = async function () {
             return null;
         }
     }
-    // 2. الآن المستخدم موجود، نستدعي getDept() من Context
-    const dept = window.Context?.getDept();
+    // 2. الحصول على القسم من عدة مصادر
+    let dept = window.Context?.getDept();
+
+    // 🛡️ Fallback: إذا لم نجد القسم في الرابط، نحاول استعادته من الجلسة (مهم جداً للمديرين المستقلين)
     if (!dept) {
-        // لا يوجد قسم – إعادة توجيه للوحة الإدارة
-        window.location.href = '/dept-dashboard.html';
+        dept = localStorage.getItem('stratix_v10_dept') ||
+            localStorage.getItem('stratix_current_dept') ||
+            sessionStorage.getItem('active_dept');
+    }
+
+    if (!dept) {
+        // إذا كان مديراً مستقلاً، نوجهه للوحة أعماله ليختار عميلاً
+        const role = window.Context?.getUserRole();
+        if (role === 'pro_manager') {
+            window.location.href = '/pro-dashboard.html?error=no_dept';
+        } else {
+            window.location.href = '/dept-dashboard.html';
+        }
         return null;
     }
+
+    // حفظ القسم في الجلسة لضمان الاستمرارية
+    if (dept) sessionStorage.setItem('active_dept', dept);
+
     return dept;
 };
 

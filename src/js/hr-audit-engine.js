@@ -245,8 +245,28 @@ window.HRAuditEngine = (function () {
 
     function esc(s) { if (!s) return ''; return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
+    function prefillFromDiagnostic() {
+        try {
+            const companies = JSON.parse(localStorage.getItem('startix_pro_companies') || '[]');
+            const activeId = localStorage.getItem('startix_pro_active');
+            const client = companies.find(c => c.id === activeId) || companies[0] || {};
+            const diag = JSON.parse(localStorage.getItem('stratix_manager_diagnostic') || '{}');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const entity = user.entity || {};
+            if (!state.meta.companyName) state.meta.companyName = entity.legalName || entity.displayName || client.name || diag.companyName || '';
+            if (!state.meta.sector) state.meta.sector = entity.sectorKey || client.sector || diag.sector || diag.activity || '';
+            if (!state.meta.companySize) {
+                const sizeMap = { '<3': 'small', '3-10': 'small', '10-30': 'medium', '30+': 'large' };
+                state.meta.companySize = entity.size || client.size || sizeMap[diag.teamSize] || '';
+            }
+            if (!state.meta.analystName) state.meta.analystName = diag.analystName || user.name || '';
+            if (!state.meta.auditDate) state.meta.auditDate = new Date().toISOString().split('T')[0];
+        } catch (e) {}
+    }
+
     function init() {
         const hasData = load();
+        prefillFromDiagnostic();
         if (hasData && state.startedAt && state.meta.sector && state.meta.companySize) { renderMetaForm(); showAuditView(); }
         else { renderMetaForm(); }
     }

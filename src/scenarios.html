@@ -170,6 +170,42 @@
             align-items: center;
         }
 
+        /* ── Hover Sidebar ── */
+        .stx-sidebar-container {
+            transform: translateX(100%) !important;
+            transition: transform 0.3s cubic-bezier(.4,0,.2,1) !important;
+            overflow-y: auto;
+        }
+        .stx-sidebar-container.sidebar-visible {
+            transform: translateX(0) !important;
+        }
+        .sidebar-trigger {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 18px;
+            height: 100vh;
+            z-index: 1049;
+            cursor: pointer;
+        }
+        .sidebar-hint {
+            position: fixed;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 6px;
+            height: 60px;
+            border-radius: 3px 0 0 3px;
+            background: linear-gradient(180deg, #6366f1, #a855f7);
+            z-index: 1048;
+            opacity: 0.5;
+            transition: opacity 0.3s;
+            animation: hintPulse 2s infinite;
+        }
+        @keyframes hintPulse {
+            0%,100% { opacity: 0.4; box-shadow: 0 0 6px #6366f1; }
+            50% { opacity: 0.8; box-shadow: 0 0 14px #a855f7; }
+        }
         .sidebar-overlay {
             display: none;
             position: fixed;
@@ -181,24 +217,15 @@
             backdrop-filter: blur(4px);
             z-index: 1000;
         }
-
         .sidebar-overlay.active {
             display: block;
         }
-
+        @media (min-width: 993px) {
+            .sidebar-overlay.active { display: none; }
+        }
         @media (max-width: 992px) {
-            .stx-sidebar-container {
-                position: fixed;
-                right: -240px;
-                top: 0;
-                bottom: 0;
-                height: 100vh;
-                z-index: 1001;
-                transition: transform 0.3s ease;
-            }
-
             .stx-sidebar-container.mobile-open {
-                transform: translateX(-240px);
+                right: 0;
             }
         }
     </style>
@@ -248,7 +275,12 @@
     <script>
         // دالة العودة الذكية حسب الدور
         window.exitToDashboard = function () {
-            window.location.href = '/ceo-dashboard.html';
+            const urlDept = new URLSearchParams(window.location.search).get('dept');
+            if (urlDept) {
+                window.location.href = '/dept-dashboard.html?dept=' + urlDept;
+            } else {
+                window.location.href = window.SmartNav ? SmartNav.getHomeUrl(urlDept || '') : '/ceo-dashboard.html';
+            }
         };
 
         window.toggleSidebar = function () {
@@ -264,6 +296,8 @@
         };
     </script>
 
+    <div class="sidebar-trigger" id="sidebar-trigger"></div>
+    <div class="sidebar-hint" id="sidebar-hint"></div>
     <div class="stx-wrapper">
         <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
         <aside class="stx-sidebar-container" id="stx-sidebar"></aside>
@@ -275,10 +309,15 @@
                     <p id="dept-context" class="text-muted fs-5 mt-2">توقع المسارات المستقبلية للإدارة بناءً على متغيرات
                         السوق والإمكانيات المتاحة.</p>
                 </div>
-                <button class="btn btn-magic-gradient rounded-pill px-4 py-3 fw-800 border-0 text-white"
-                    style="background: linear-gradient(135deg, #6366f1, #a855f7);" onclick="generateSmartScenarios()">
-                    <i class="bi bi-robot"></i> صياغة ذكية بالذكاء الاصطناعي
-                </button>
+                <div class="d-flex gap-2 align-items-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="clearScenarios()" title="مسح الكل">
+                        <i class="bi bi-trash3"></i> مسح
+                    </button>
+                    <button class="btn btn-magic-gradient rounded-pill px-4 py-3 fw-800 border-0 text-white"
+                        style="background: linear-gradient(135deg, #6366f1, #a855f7);" onclick="generateSmartScenarios(this)">
+                        <i class="bi bi-robot"></i> صياغة ذكية
+                    </button>
+                </div>
             </div>
 
             <!-- شريط الإرشاد -->
@@ -294,6 +333,14 @@
                 <div class="guide-item"><i class="bi bi-star text-primary"></i> الأهمية: <strong>مهم</strong> — يبني
                     جاهزية
                     للمستقبل</div>
+            </div>
+
+            <!-- ملخص البيانات التشخيصية المُغذية للسيناريوهات -->
+            <div id="diag-context-panel" class="glass-panel p-4 mb-4" style="border-radius:20px; display:none;">
+                <h6 class="fw-800 text-white mb-3"><i class="bi bi-database-check text-info me-2"></i>المصادر التشخيصية المُغذية للسيناريوهات</h6>
+                <div class="row g-3" id="diag-sources">
+                    <!-- يُملأ ديناميكياً -->
+                </div>
             </div>
 
             <div class="row g-4" id="scenarios-container">
@@ -329,53 +376,367 @@
             </div>
 
             <div class="action-bar mt-5">
-                <a href="/tows.html" class="nav-link-btn"><i class="bi bi-arrow-right"></i> العودة لمصفوفة TOWS</a>
-                <div class="d-flex gap-3">
-                    <button type="button" onclick="window.location.href=window.SmartNav?SmartNav.getHomeUrl(''):'/dashboard.html'"
-                        class="btn btn-outline-light rounded-pill px-4 fw-800">العودة للوحة القيادة</button>
+                <a href="#" class="nav-link-btn" onclick="event.preventDefault(); window.location.href='/tows.html'+window.location.search">
+                    <i class="bi bi-arrow-right"></i> تراجع: مصفوفة TOWS
+                </a>
+                <div class="d-flex gap-3 align-items-center">
+                    <button type="button" onclick="window.exitToDashboard()"
+                        class="btn btn-outline-light rounded-pill px-4 fw-800">لوحة القيادة</button>
                     <button type="button" onclick="saveJourney()"
                         class="btn btn-modern btn-primary px-5 py-3 rounded-pill fw-900 border-0 shadow-lg">
-                        حفظ ومتابعة للتوجهات <i class="bi bi-arrow-left ms-2"></i>
+                        حفظ وتقدم: التوجهات <i class="bi bi-arrow-left ms-2"></i>
                     </button>
                 </div>
             </div>
         </main>
 
-        <script src="/js/smart-nav.js?v=4"></script>
-        <script src="/js/report-engine.js?v=2"></script>
-        <script src="/js/api.js?v=4"></script>
-        <script src="/js/utils.js?v=4"></script>
-        <script src="/js/context-manager.js?v=4"></script>
-        <script src="/js/page-guard.js?v=4"></script>
-        <script src="/js/steps-config.js?v=4"></script>
-        <script src="/js/sidebar.js?v=4"></script>
-        <script src="/js/dept-page.js?v=4"></script>
-        <script src="/assets/js/hr-handlers.js?v=4"></script>
-        <script src="/assets/js/finance-handlers.js?v=4"></script>
-        <script src="/assets/js/sales-handlers.js?v=4"></script>
-        <script src="/assets/js/marketing-handlers.js?v=4"></script>
-        <script src="/assets/js/operations-handlers.js?v=4"></script>
-        <script src="/assets/js/it-handlers.js?v=4"></script>
-        <script src="/assets/js/compliance-handlers.js?v=4"></script>
+        <script src="/js/smart-nav.js?v=9"></script>
+        <script src="/js/report-engine.js?v=9"></script>
+        <script src="/js/api.js?v=9"></script>
+        <script src="/js/utils.js?v=9"></script>
+        <script src="/js/context-manager.js?v=9"></script>
+        <script src="/js/page-guard.js?v=9"></script>
+        <script src="/js/steps-config.js?v=9"></script>
+        <script src="/js/sidebar.js?v=9"></script>
+        <script src="/js/dept-page.js?v=9"></script>
+        <script src="/assets/js/hr-handlers.js?v=9"></script>
+        <script src="/assets/js/finance-handlers.js?v=9"></script>
+        <script src="/assets/js/sales-handlers.js?v=9"></script>
+        <script src="/assets/js/marketing-handlers.js?v=9"></script>
+        <script src="/assets/js/operations-handlers.js?v=9"></script>
+        <script src="/assets/js/it-handlers.js?v=9"></script>
+        <script src="/assets/js/compliance-handlers.js?v=9"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
         <script>
-            (async function () {
-                // 🛡️ تهيئة الصفحة (مستوى الشركة)
-                await window.initDeptPage(); // للتحقق من المستخدم فقط
-                const dept = 'company';
-                if (window.DeptPage) DeptPage.dept = 'company';
+            // ═══════════════════════════════════════════════════
+            // المتغيرات العامة
+            // ═══════════════════════════════════════════════════
+            const _pageDept = new URLSearchParams(window.location.search).get('dept') || 'company';
+            const FIELDS = ['sc-pessimistic', 'sc-realistic', 'sc-optimistic'];
+            const FIELD_MAP = { 'sc-pessimistic': 'pessimistic', 'sc-realistic': 'realistic', 'sc-optimistic': 'optimistic' };
 
-                document.getElementById('dept-context').textContent = 'السيناريوهات الاستراتيجية للمنظمة';
+            const _SCEN_LABELS = {
+                hr: 'الموارد البشرية', finance: 'المالية', sales: 'المبيعات',
+                marketing: 'التسويق', it: 'تقنية المعلومات', operations: 'العمليات',
+                compliance: 'الامتثال', governance: 'الحوكمة', support: 'الدعم الفني',
+                quality: 'الجودة', projects: 'المشاريع', cs: 'خدمة العملاء',
+                company: 'المنشأة'
+            };
 
-                window.exitToDashboard = () => {
-                    window.location.href = '/ceo-dashboard.html';
+            // ═══════════════════════════════════════════════════
+            // تخزين البيانات التشخيصية المحملة
+            // ═══════════════════════════════════════════════════
+            let _diagContext = { swot: null, tows: null, health: null, pestel: null, deep: null, audit: null };
+
+            // ═══════════════════════════════════════════════════
+            // localStorage مع تحقق من القسم
+            // ═══════════════════════════════════════════════════
+            const LS_KEY = () => `stratix_scenarios_${_pageDept}`;
+
+            function saveScenLocal() {
+                try {
+                    const payload = { _deptVer: _pageDept, _ts: Date.now() };
+                    FIELDS.forEach(id => { payload[FIELD_MAP[id]] = document.getElementById(id)?.value || ''; });
+                    localStorage.setItem(LS_KEY(), JSON.stringify(payload));
+                } catch (e) { }
+            }
+
+            // ربط الحفظ التلقائي
+            FIELDS.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('input', saveScenLocal);
+            });
+
+            // ═══════════════════════════════════════════════════
+            // جلب كل البيانات التشخيصية السابقة
+            // ═══════════════════════════════════════════════════
+            async function fetchDiagnosticContext() {
+                const deptUpper = _pageDept.toUpperCase();
+                const fetches = {
+                    swot:   DeptPage.loadFromAPI('SWOT_' + deptUpper).catch(() => null),
+                    tows:   DeptPage.loadFromAPI('TOWS_' + deptUpper).catch(() => null),
+                    health: DeptPage.loadFromAPI('HEALTH_' + deptUpper).catch(() => null),
+                    pestel: DeptPage.loadFromAPI('PESTEL_' + deptUpper).catch(() => null),
+                    deep:   DeptPage.loadFromAPI('DEEP_ANALYSIS_' + deptUpper).catch(() => null),
+                    audit:  DeptPage.loadFromAPI('AUDIT_' + deptUpper).catch(() => null)
                 };
 
-                // تهيئة DeptPage (مهم جداً للحفظ)
-                await DeptPage.init('company');
+                const results = await Promise.all(Object.values(fetches));
+                const keys = Object.keys(fetches);
+                keys.forEach((k, i) => { _diagContext[k] = results[i]; });
 
-                // dept switcher removed — company-level page
+                console.log('[Scenarios] Diagnostic context loaded:', Object.fromEntries(keys.map((k, i) => [k, !!results[i]])));
+                renderDiagPanel();
+                return _diagContext;
+            }
+
+            function renderDiagPanel() {
+                const panel = document.getElementById('diag-context-panel');
+                const container = document.getElementById('diag-sources');
+                if (!panel || !container) return;
+
+                const sources = [
+                    { key: 'pestel', label: 'PESTEL', icon: 'bi-globe2', color: '#8b5cf6' },
+                    { key: 'health', label: 'صحة الإدارة', icon: 'bi-heart-pulse', color: '#ef4444' },
+                    { key: 'swot', label: 'SWOT', icon: 'bi-grid-3x3', color: '#3b82f6' },
+                    { key: 'tows', label: 'TOWS', icon: 'bi-arrows-angle-expand', color: '#10b981' },
+                    { key: 'deep', label: 'تحليل عميق', icon: 'bi-search', color: '#f59e0b' },
+                    { key: 'audit', label: 'تدقيق', icon: 'bi-shield-check', color: '#06b6d4' }
+                ];
+
+                let html = '';
+                let anyFound = false;
+                sources.forEach(s => {
+                    const exists = !!_diagContext[s.key];
+                    if (exists) anyFound = true;
+                    html += `<div class="col-6 col-md-4 col-lg-2">
+                        <div class="text-center p-2 rounded-3" style="background:${exists ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.01)'}; border:1px solid ${exists ? s.color + '40' : 'rgba(255,255,255,0.05)'};">
+                            <i class="bi ${s.icon} fs-5" style="color:${exists ? s.color : '#555'}"></i>
+                            <div class="small mt-1 fw-700" style="color:${exists ? '#fff' : '#555'}">${s.label}</div>
+                            <div class="small" style="color:${exists ? '#10b981' : '#ef4444'}">${exists ? 'متوفر' : 'غير متوفر'}</div>
+                        </div>
+                    </div>`;
+                });
+
+                container.innerHTML = html;
+                if (anyFound) panel.style.display = 'block';
+            }
+
+            // ═══════════════════════════════════════════════════
+            // استخلاص نقاط مختصرة من البيانات التشخيصية
+            // ═══════════════════════════════════════════════════
+            function extractDiagInsights() {
+                const insights = { strengths: [], weaknesses: [], opportunities: [], threats: [], healthIssues: [], towsStrategies: [] };
+
+                // SWOT
+                if (_diagContext.swot) {
+                    const sw = _diagContext.swot;
+                    insights.strengths = (sw.strengths || '').split('\n').map(l => l.replace(/^[•-]\s*/, '').trim()).filter(l => l.length > 3).slice(0, 5);
+                    insights.weaknesses = (sw.weaknesses || '').split('\n').map(l => l.replace(/^[•-]\s*/, '').trim()).filter(l => l.length > 3).slice(0, 5);
+                    insights.opportunities = (sw.opportunities || '').split('\n').map(l => l.replace(/^[•-]\s*/, '').trim()).filter(l => l.length > 3).slice(0, 5);
+                    insights.threats = (sw.threats || '').split('\n').map(l => l.replace(/^[•-]\s*/, '').trim()).filter(l => l.length > 3).slice(0, 5);
+                }
+
+                // TOWS strategies
+                if (_diagContext.tows) {
+                    ['so', 'wo', 'st', 'wt'].forEach(k => {
+                        const val = _diagContext.tows[k] || '';
+                        val.split('\n').map(l => l.replace(/^[-•]\s*/, '').trim()).filter(l => l.length > 5).slice(0, 2).forEach(s => {
+                            insights.towsStrategies.push(s);
+                        });
+                    });
+                }
+
+                // Health issues
+                if (_diagContext.health) {
+                    const h = _diagContext.health;
+                    ['skills', 'processes', 'satisfaction', 'tech', 'leadership'].forEach(dim => {
+                        if (h[dim] && h[dim].trim()) insights.healthIssues.push(h[dim].trim().split('\n')[0]);
+                    });
+                }
+
+                return insights;
+            }
+
+            // ═══════════════════════════════════════════════════
+            // بناء السيناريوهات الديناميكية من البيانات الفعلية
+            // ═══════════════════════════════════════════════════
+            function buildContextualScenarios() {
+                const ins = extractDiagInsights();
+                const hasData = ins.strengths.length > 0 || ins.weaknesses.length > 0;
+                const deptName = _SCEN_LABELS[_pageDept] || _pageDept;
+
+                // إذا لا توجد بيانات تشخيصية — fallback للمعالج الثابت
+                if (!hasData) {
+                    const handlerName = `generate${_pageDept.charAt(0).toUpperCase() + _pageDept.slice(1)}Scenarios`;
+                    if (window[handlerName]) return window[handlerName]();
+                    if (_pageDept === 'company' && window.StrategicSynthesis) return StrategicSynthesis.generateCorporateScenarios();
+                    return null;
+                }
+
+                // ── بناء السيناريو المتشائم (من نقاط الضعف + التهديدات) ──
+                const pessLines = [];
+                pessLines.push(`سيناريو التحديات لإدارة ${deptName}:`);
+                if (ins.threats.length > 0) {
+                    pessLines.push(`\nتهديدات خارجية تؤثر على الأداء:`);
+                    ins.threats.slice(0, 3).forEach(t => pessLines.push(`- ${t}`));
+                }
+                if (ins.weaknesses.length > 0) {
+                    pessLines.push(`\nنقاط ضعف داخلية تتفاقم:`);
+                    ins.weaknesses.slice(0, 3).forEach(w => pessLines.push(`- ${w}`));
+                }
+                if (ins.healthIssues.length > 0) {
+                    pessLines.push(`\nمؤشرات صحة الإدارة المقلقة:`);
+                    ins.healthIssues.slice(0, 2).forEach(h => pessLines.push(`- ${h}`));
+                }
+                pessLines.push(`\nالنتيجة المتوقعة: تراجع الأداء وضغط على الموارد يتطلب خطة طوارئ فورية.`);
+
+                // ── بناء السيناريو الواقعي (توازن بين القوة والضعف) ──
+                const realLines = [];
+                realLines.push(`المسار الواقعي لإدارة ${deptName}:`);
+                if (ins.strengths.length > 0) {
+                    realLines.push(`\nنقاط قوة يُبنى عليها:`);
+                    ins.strengths.slice(0, 3).forEach(s => realLines.push(`- ${s}`));
+                }
+                if (ins.weaknesses.length > 0) {
+                    realLines.push(`\nتحديات تحتاج معالجة تدريجية:`);
+                    ins.weaknesses.slice(0, 2).forEach(w => realLines.push(`- ${w}`));
+                }
+                if (ins.towsStrategies.length > 0) {
+                    realLines.push(`\nاستراتيجيات TOWS المقترحة للتنفيذ:`);
+                    ins.towsStrategies.slice(0, 3).forEach(s => realLines.push(`- ${s}`));
+                }
+                realLines.push(`\nالنتيجة المتوقعة: نمو مستقر عبر تنفيذ الاستراتيجيات المحددة ومعالجة الفجوات.`);
+
+                // ── بناء السيناريو المتفائل (من نقاط القوة + الفرص) ──
+                const optLines = [];
+                optLines.push(`سيناريو الريادة لإدارة ${deptName}:`);
+                if (ins.strengths.length > 0) {
+                    optLines.push(`\nاستثمار كامل لنقاط القوة:`);
+                    ins.strengths.slice(0, 3).forEach(s => optLines.push(`- ${s}`));
+                }
+                if (ins.opportunities.length > 0) {
+                    optLines.push(`\nفرص سوقية وخارجية يتم اغتنامها:`);
+                    ins.opportunities.slice(0, 3).forEach(o => optLines.push(`- ${o}`));
+                }
+                if (ins.towsStrategies.length > 0) {
+                    optLines.push(`\nاستراتيجيات هجومية (SO) للتوسع:`);
+                    ins.towsStrategies.filter(s => !s.includes('طوارئ') && !s.includes('معالجة')).slice(0, 2).forEach(s => optLines.push(`- ${s}`));
+                }
+                optLines.push(`\nالنتيجة المتوقعة: قفزة نوعية في الأداء وتحقيق تميز تنافسي واضح.`);
+
+                return {
+                    pessimistic: pessLines.join('\n'),
+                    realistic: realLines.join('\n'),
+                    optimistic: optLines.join('\n')
+                };
+            }
+
+            // ═══════════════════════════════════════════════════
+            // تحميل البيانات (API أولاً ثم localStorage)
+            // ═══════════════════════════════════════════════════
+            async function loadData() {
+                try {
+                    const data = await DeptPage.loadFromAPI('SCENARIOS_' + _pageDept.toUpperCase());
+                    if (data && (data.pessimistic || data.realistic || data.optimistic)) {
+                        FIELDS.forEach(id => { document.getElementById(id).value = data[FIELD_MAP[id]] || ''; });
+                        saveScenLocal();
+                        return true;
+                    }
+                } catch (e) { }
+
+                // fallback: localStorage مع تحقق _deptVer
+                try {
+                    const local = JSON.parse(localStorage.getItem(LS_KEY()));
+                    if (local && local._deptVer === _pageDept && (local.pessimistic || local.realistic || local.optimistic)) {
+                        FIELDS.forEach(id => { document.getElementById(id).value = local[FIELD_MAP[id]] || ''; });
+                        return true;
+                    } else if (local && local._deptVer !== _pageDept) {
+                        localStorage.removeItem(LS_KEY());
+                    }
+                } catch (e) { }
+                return false;
+            }
+
+            // ═══════════════════════════════════════════════════
+            // مسح الكل
+            // ═══════════════════════════════════════════════════
+            function clearScenarios() {
+                if (!confirm('سيتم مسح جميع السيناريوهات. متأكد؟')) return;
+                FIELDS.forEach(id => { document.getElementById(id).value = ''; });
+                localStorage.removeItem(LS_KEY());
+                DeptPage.saveToAPI('SCENARIOS_' + _pageDept.toUpperCase(), { pessimistic: '', realistic: '', optimistic: '' });
+            }
+
+            // ═══════════════════════════════════════════════════
+            // توليد ذكي — يجلب التشخيص ويبني سيناريوهات سياقية
+            // ═══════════════════════════════════════════════════
+            async function generateSmartScenarios(btn) {
+                if (!btn) btn = document.querySelector('[onclick*="generateSmartScenarios"]');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري تحليل بيانات التشخيص...';
+
+                try {
+                    // جلب البيانات التشخيصية إذا لم تُحمل بعد
+                    if (!_diagContext.swot && !_diagContext.pestel) {
+                        await fetchDiagnosticContext();
+                    }
+
+                    // بناء السيناريوهات من البيانات الحقيقية
+                    let s = buildContextualScenarios();
+
+                    if (!s || (!s.pessimistic && !s.realistic && !s.optimistic)) {
+                        console.warn('[Scenarios] No data available for contextual scenarios');
+                        // fallback نهائي: handler ثابت
+                        const handlerName = `generate${_pageDept.charAt(0).toUpperCase() + _pageDept.slice(1)}Scenarios`;
+                        if (window[handlerName]) s = window[handlerName]();
+                        else s = { pessimistic: '', realistic: '', optimistic: '' };
+                    }
+
+                    const formatVal = (val) => Array.isArray(val) ? val.join('\n') : (val || '');
+
+                    document.getElementById('sc-pessimistic').value = formatVal(s.pessimistic);
+                    document.getElementById('sc-realistic').value = formatVal(s.realistic);
+                    document.getElementById('sc-optimistic').value = formatVal(s.optimistic);
+
+                    saveScenLocal();
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-check2 me-1"></i> تم التوليد من بيانات التشخيص';
+                    setTimeout(() => { btn.innerHTML = '<i class="bi bi-robot"></i> صياغة ذكية'; }, 3000);
+                } catch (err) {
+                    console.error('[Scenarios] Generation error:', err);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-robot"></i> صياغة ذكية';
+                }
+            }
+
+            // ═══════════════════════════════════════════════════
+            // حفظ ومتابعة
+            // ═══════════════════════════════════════════════════
+            async function saveJourney() {
+                const saveBtn = document.querySelector('[onclick*="saveJourney"]');
+                if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري الحفظ...'; }
+
+                const data = {};
+                FIELDS.forEach(id => { data[FIELD_MAP[id]] = document.getElementById(id).value; });
+                saveScenLocal();
+
+                const success = await DeptPage.saveToAPI('SCENARIOS_' + _pageDept.toUpperCase(), data);
+                if (success) {
+                    if (window.Context && Context.markStepCompleted) await Context.markStepCompleted('scenarios');
+                    const qs = window.location.search || '';
+                    window.location.href = `/directions.html${qs}`;
+                } else {
+                    if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = 'حفظ وتقدم: التوجهات <i class="bi bi-arrow-left ms-2"></i>'; }
+                    alert('فشل الحفظ — تحقق من الاتصال وحاول مرة أخرى.');
+                }
+            }
+
+            // ═══════════════════════════════════════════════════
+            // تهيئة الصفحة
+            // ═══════════════════════════════════════════════════
+            (async function () {
+                await window.initDeptPage();
+                if (window.DeptPage) DeptPage.dept = _pageDept;
+
+                document.getElementById('dept-context').textContent = _pageDept !== 'company'
+                    ? `السيناريوهات الاستراتيجية — ${_SCEN_LABELS[_pageDept] || _pageDept}`
+                    : 'السيناريوهات الاستراتيجية للمنظمة';
+
+                window.exitToDashboard = () => {
+                    window.location.href = _pageDept !== 'company'
+                        ? '/dept-dashboard.html?dept=' + _pageDept
+                        : (window.SmartNav ? SmartNav.getHomeUrl(_pageDept) : '/ceo-dashboard.html');
+                };
+
+                await DeptPage.init(_pageDept);
+
+                // جلب البيانات التشخيصية (بالتوازي مع تحميل السيناريوهات)
+                const [, diagLoaded] = await Promise.all([
+                    loadData(),
+                    fetchDiagnosticContext()
+                ]);
 
                 if (window.ReportEngine) {
                     ReportEngine.init({
@@ -390,8 +751,7 @@
                             ];
                             const counts = {};
                             const sections = scens.map(s => {
-                                const el = document.getElementById(s.id);
-                                const val = el?.value || '';
+                                const val = document.getElementById(s.id)?.value || '';
                                 counts[s.id] = val.trim() ? val.split('\n').filter(l => l.trim().length > 2).length : 0;
                                 return { title: `${s.label} (${counts[s.id]})`, icon: s.icon, color: s.color, content: ReportEngine.textToList(val, s.color) };
                             });
@@ -400,128 +760,86 @@
                             const emptyScens = scens.filter(s => counts[s.id] === 0);
                             const score = Math.round((filledScens.length / 3) * 60 + Math.min(total / 9, 1) * 40);
 
-                            const kpis = [
-                                { label: 'متشائم', value: counts['sc-pessimistic'], color: '#dc2626', bg: '#fef2f2' },
-                                { label: 'واقعي', value: counts['sc-realistic'], color: '#2563eb', bg: '#eff6ff' },
-                                { label: 'متفائل', value: counts['sc-optimistic'], color: '#16a34a', bg: '#f0fdf4' },
-                                { label: 'إجمالي النقاط', value: total, color: '#6366f1', bg: '#f5f3ff' }
-                            ];
-
-                            const highlights = [];
-                            highlights.push({ icon: '🔮', text: `${filledScens.length} من 3 سيناريوهات مكتملة بإجمالي ${total} نقطة`, color: '#6366f1' });
-                            if (emptyScens.length > 0) highlights.push({ icon: '⚠️', text: `سيناريوهات فارغة: ${emptyScens.map(s => s.label).join('، ')}`, color: '#ca8a04' });
-                            if (filledScens.length === 3) highlights.push({ icon: '✅', text: 'تغطية كاملة — المنظمة مستعدة لجميع الاحتمالات', color: '#16a34a' });
-
-                            const recommendations = [];
-                            emptyScens.forEach(s => recommendations.push(`أكمل "${s.label}" للاستعداد لكل الاحتمالات`));
-                            if (counts['sc-realistic'] === 0) recommendations.push('السيناريو الواقعي أهم سيناريو — ابدأ به أولاً');
-                            if (total > 0 && total < 6) recommendations.push('أضف تفاصيل أكثر (يُنصح بـ 3+ نقاط لكل سيناريو)');
-                            if (recommendations.length === 0) recommendations.push('سيناريوهات جيدة — استخدمها لبناء خطط الطوارئ');
-
                             return {
                                 sections,
                                 meta: {
-                                    dept, deptName: dept.toUpperCase(),
-                                    kpis, highlights, recommendations,
+                                    dept: _pageDept, deptName: _SCEN_LABELS[_pageDept] || _pageDept,
+                                    kpis: [
+                                        { label: 'متشائم', value: counts['sc-pessimistic'], color: '#dc2626', bg: '#fef2f2' },
+                                        { label: 'واقعي', value: counts['sc-realistic'], color: '#2563eb', bg: '#eff6ff' },
+                                        { label: 'متفائل', value: counts['sc-optimistic'], color: '#16a34a', bg: '#f0fdf4' },
+                                        { label: 'إجمالي', value: total, color: '#6366f1', bg: '#f5f3ff' }
+                                    ],
+                                    highlights: [
+                                        { icon: '🔮', text: `${filledScens.length}/3 سيناريوهات — ${total} نقطة`, color: '#6366f1' },
+                                        ...(emptyScens.length > 0 ? [{ icon: '⚠️', text: `فارغة: ${emptyScens.map(s => s.label).join('، ')}`, color: '#ca8a04' }] : []),
+                                        ...(filledScens.length === 3 ? [{ icon: '✅', text: 'تغطية كاملة', color: '#16a34a' }] : [])
+                                    ],
+                                    recommendations: emptyScens.length > 0
+                                        ? emptyScens.map(s => `أكمل "${s.label}"`)
+                                        : ['سيناريوهات جيدة — استخدمها لبناء خطط الطوارئ'],
                                     qualityScore: score,
                                     qualityLabel: score >= 70 ? 'تغطية جيدة' : score >= 40 ? 'تحتاج إكمال' : 'غير مكتملة',
-                                    qualityAdvice: `${filledScens.length}/3 سيناريوهات — ${total} نقطة تفصيلية`
+                                    qualityAdvice: `${filledScens.length}/3 سيناريوهات — ${total} نقطة`
                                 }
                             };
                         }
                     });
                 }
 
-                await loadData(dept);
-            })();
+                // إذا الصفحة فاضية — توليد تلقائي من البيانات التشخيصية
+                const isEmpty = !document.getElementById('sc-pessimistic').value.trim()
+                             && !document.getElementById('sc-realistic').value.trim()
+                             && !document.getElementById('sc-optimistic').value.trim();
 
-            // ─── حفظ تلقائي محلي ───
-            const LS_SCEN = () => `stratix_scenarios_${(window.DeptPage && DeptPage.dept) || 'company'}`;
-            function saveScenLocal() {
-                try {
-                    localStorage.setItem(LS_SCEN(), JSON.stringify({
-                        pessimistic: document.getElementById('sc-pessimistic')?.value || '',
-                        realistic: document.getElementById('sc-realistic')?.value || '',
-                        optimistic: document.getElementById('sc-optimistic')?.value || '',
-                        _ts: Date.now()
-                    }));
-                } catch (e) { }
-            }
-            ['sc-pessimistic', 'sc-realistic', 'sc-optimistic'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.addEventListener('input', saveScenLocal);
-            });
-
-            async function loadData(dept) {
-                try {
-                    const data = await DeptPage.loadFromAPI('SCENARIOS_' + dept.toUpperCase());
-                    if (data && (data.pessimistic || data.realistic || data.optimistic)) {
-                        document.getElementById('sc-pessimistic').value = data.pessimistic || '';
-                        document.getElementById('sc-realistic').value = data.realistic || '';
-                        document.getElementById('sc-optimistic').value = data.optimistic || '';
-                        saveScenLocal();
-                        return;
-                    }
-                } catch (e) { }
-                // fallback: localStorage
-                try {
-                    const local = JSON.parse(localStorage.getItem(LS_SCEN()));
-                    if (local && (local.pessimistic || local.realistic || local.optimistic)) {
-                        document.getElementById('sc-pessimistic').value = local.pessimistic || '';
-                        document.getElementById('sc-realistic').value = local.realistic || '';
-                        document.getElementById('sc-optimistic').value = local.optimistic || '';
-                    }
-                } catch (e) { }
-            }
-
-            async function generateSmartScenarios() {
-                const btn = event.currentTarget;
-                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري المحاكاة...';
-
-                setTimeout(() => {
-                    let s = null;
-                    const dept = (window.DeptPage && DeptPage.dept) || 'company';
-
-                    if (dept === 'strategy' && window.StrategicSynthesis) s = StrategicSynthesis.generateCorporateScenarios();
-                    // 🧠 الديناميكية الذكية: استدعاء المعالج بناءً على اسم القسم
-                    const handlerName = `generate${dept.charAt(0).toUpperCase() + dept.slice(1)}Scenarios`;
-                    if (window[handlerName]) {
-                        s = window[handlerName]();
-                    } else if (window.generateHRScenarios) {
-                        s = generateHRScenarios();
-                    }
-
-                    if (!s) s = { pessimistic: '', realistic: '', optimistic: '' };
-
-                    const formatVal = (val) => Array.isArray(val) ? val.join('\n') : (val || '');
-
-                    document.getElementById('sc-pessimistic').value = formatVal(s.pessimistic);
-                    document.getElementById('sc-realistic').value = formatVal(s.realistic);
-                    document.getElementById('sc-optimistic').value = formatVal(s.optimistic);
-
-                    saveScenLocal(); // حفظ فوري
-                    btn.innerHTML = '<i class="bi bi-check2"></i> تم التوليد والحفظ';
-                    setTimeout(() => btn.innerHTML = '<i class="bi bi-robot"></i> صياغة ذكية بالذكاء الاصطناعي', 3000);
-                }, 1000);
-            }
-
-            async function saveJourney() {
-                const data = {
-                    pessimistic: document.getElementById('sc-pessimistic').value,
-                    realistic: document.getElementById('sc-realistic').value,
-                    optimistic: document.getElementById('sc-optimistic').value
-                };
-                saveScenLocal();
-                const dept = (window.DeptPage && DeptPage.dept) || 'company';
-                const success = await DeptPage.saveToAPI('SCENARIOS_' + dept.toUpperCase(), data);
-                if (success) {
-                    if (window.Context && Context.markStepCompleted) await Context.markStepCompleted('scenarios');
-                    window.location.href = `/directions.html`;
+                if (isEmpty) {
+                    console.log('[Scenarios] Auto-generating from diagnostic context, dept:', _pageDept);
+                    await generateSmartScenarios();
                 }
-            }
+            })();
         </script>
-        </main>
     </div>
+
+    <!-- ── Hover Sidebar Logic ── -->
+    <script>
+    (function() {
+        let closeTimer = null;
+        const trigger = document.getElementById('sidebar-trigger');
+        const hint = document.getElementById('sidebar-hint');
+        const sidebar = document.getElementById('stx-sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+
+        if (!sidebar) { console.warn('[Sidebar Hover] #stx-sidebar not found'); return; }
+
+        // sidebar.js يضع right:0 inline — نزيله ونعتمد على transform
+        sidebar.style.right = '';
+
+        function openSidebar() {
+            clearTimeout(closeTimer);
+            sidebar.classList.add('sidebar-visible');
+            if (hint) hint.style.opacity = '0';
+            if (window.innerWidth < 768 && overlay) overlay.classList.add('active');
+        }
+        function schedulClose() {
+            closeTimer = setTimeout(() => {
+                sidebar.classList.remove('sidebar-visible');
+                if (hint) hint.style.opacity = '';
+                if (overlay) overlay.classList.remove('active');
+            }, 400);
+        }
+        if (trigger) {
+            trigger.addEventListener('mouseenter', openSidebar);
+            trigger.addEventListener('mouseleave', schedulClose);
+        }
+        if (hint) hint.addEventListener('mouseenter', openSidebar);
+        sidebar.addEventListener('mouseenter', function() { clearTimeout(closeTimer); });
+        sidebar.addEventListener('mouseleave', schedulClose);
+        if (overlay) overlay.addEventListener('click', function() {
+            sidebar.classList.remove('sidebar-visible');
+            overlay.classList.remove('active');
+        });
+    })();
+    </script>
 </body>
 
 </html>

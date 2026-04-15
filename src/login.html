@@ -663,16 +663,33 @@
                             showToast('خطأ في الاتصال بالسيرفر', 'error');
                         }
                     } else {
-                        // التقليدي
+                        // التقليدي — مع كشف نوع المستخدم من التشخيص المجاني
                         let diagnosticData = null;
                         try {
                             const sd = sessionStorage.getItem('diagnosticResult');
                             if (sd) diagnosticData = JSON.parse(sd);
                         } catch (e) { }
 
+                        // تحديد userCategory و userType من التشخيص
+                        let _userCategory = 'EXPLORER';
+                        let _userType = 'COMPANY_MANAGER';
+                        try {
+                            const _diagCat = sessionStorage.getItem('diagnosticCategory');
+                            const _diagResult = diagnosticData || {};
+                            if (_diagCat === 'manager' || _diagResult.type === 'manager') {
+                                _userCategory = 'DEPT_' + (_diagResult.department || 'SALES').toUpperCase();
+                                _userType = 'DEPT_MANAGER';
+                                // حفظ بيانات التسجيل + التشخيص للأدوات اللاحقة
+                                const existing = JSON.parse(localStorage.getItem('stratix_manager_diagnostic') || '{}');
+                                existing.companyName = companyName || existing.companyName || '';
+                                existing.analystName = name || existing.analystName || '';
+                                localStorage.setItem('stratix_manager_diagnostic', JSON.stringify(existing));
+                            }
+                        } catch (e) { }
+
                         await handleSignup({
                             name, email, password, companyName,
-                            userCategory: 'EXPLORER', userType: 'COMPANY_MANAGER',
+                            userCategory: _userCategory, userType: _userType,
                             diagnosticData
                         });
                     }

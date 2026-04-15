@@ -32,12 +32,38 @@
         }
 
         .stx-sidebar-container {
-            width: 260px;
-            flex-shrink: 0;
+            position: fixed !important;
+            top: 0; right: -260px !important;
+            width: 260px; height: 100vh;
             background: #1a1d2e;
             border-left: 1px solid var(--border);
-            z-index: 100;
+            z-index: 1050;
+            transition: right 0.3s ease !important;
+            display: block !important;
+            overflow-y: auto;
         }
+        .stx-sidebar-container.sidebar-visible { right: 0 !important; }
+        .sidebar-trigger {
+            position: fixed; top: 0; right: 0;
+            width: 18px; height: 100vh;
+            z-index: 1040; cursor: pointer;
+        }
+        .sidebar-hint {
+            position: fixed; top: 50%; right: 0;
+            transform: translateY(-50%);
+            width: 6px; height: 60px;
+            background: linear-gradient(180deg, #6366f1, #8b5cf6);
+            border-radius: 4px 0 0 4px;
+            opacity: 0.5; z-index: 1041;
+            transition: opacity 0.3s;
+        }
+        .sidebar-trigger:hover ~ .sidebar-hint,
+        .sidebar-hint:hover { opacity: 1; }
+        .sidebar-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.4); z-index: 1045;
+        }
+        .sidebar-overlay.active { display: block; }
 
         .stx-main-content {
             flex: 1;
@@ -117,8 +143,11 @@
 </head>
 
 <body>
+    <div class="sidebar-trigger" id="sidebarTrigger"></div>
+    <div class="sidebar-hint"></div>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="stx-sidebar-container" id="sidebar"></aside>
     <div class="stx-wrapper">
-        <aside class="stx-sidebar-container" id="sidebar"></aside>
 
         <main class="stx-main-content">
             <div class="mb-5 d-flex justify-content-between align-items-center">
@@ -222,12 +251,13 @@
     </div>
 
     <!-- Scripts -->
-    <script src="/js/api.js?v=4"></script>
-    <script src="/js/utils.js?v=4"></script>
-    <script src="/js/context-manager.js?v=4"></script>
-    <script src="/js/steps-config.js?v=4"></script>
-    <script src="/js/sidebar.js?v=4"></script>
-    <script src="/js/dept-page.js?v=4"></script>
+    <script src="/js/api.js?v=7"></script>
+    <script src="/js/utils.js?v=7"></script>
+    <script src="/js/context-manager.js?v=7"></script>
+    <script src="/js/page-guard.js?v=5"></script>
+    <script src="/js/steps-config.js?v=7"></script>
+    <script src="/js/sidebar.js?v=7"></script>
+    <script src="/js/dept-page.js?v=7"></script>
 
     <script>
         const SUGGESTIONS = {
@@ -246,6 +276,94 @@
                 technological: ["التقنيات المالية (FinTech)", "الأمن السيبراني المالي", "الفواتير الإلكترونية"],
                 environmental: ["التمويل الأخضر", "تقارير الاستدامة المالية", "كفاءة الطاقة في المنشآت"],
                 legal: ["معايير المحاسبة الدولية (IFRS)", "نظام الإفلاس الجديد", "تعديلات ضريبة القيمة المضافة"]
+            },
+            sales: {
+                political: ["سياسات دعم الصادرات", "اتفاقيات التجارة الحرة", "تنظيمات حماية المستهلك"],
+                economic: ["القوة الشرائية للعملاء", "المنافسة السعرية في السوق", "تكلفة اكتساب العميل (CAC)"],
+                social: ["تغير سلوك الشراء الرقمي", "تأثير وسائل التواصل على قرار الشراء", "تفضيلات الجيل الجديد"],
+                technological: ["أنظمة CRM السحابية", "الذكاء الاصطناعي في التسعير", "التجارة الإلكترونية والبيع عن بعد"],
+                environmental: ["الطلب على المنتجات المستدامة", "التغليف الصديق للبيئة", "البصمة الكربونية للتوزيع"],
+                legal: ["أنظمة التجارة الإلكترونية", "حماية بيانات العملاء (PDPL)", "قوانين الإعلان والتسويق"]
+            },
+            marketing: {
+                political: ["تنظيمات الإعلان الحكومية", "دعم المحتوى المحلي", "سياسات الرعايات"],
+                economic: ["ميزانيات التسويق في السوق", "تكلفة الإعلانات الرقمية", "العائد على الاستثمار التسويقي"],
+                social: ["اتجاهات المحتوى القصير (TikTok/Reels)", "تأثير المؤثرين", "الثقافة المحلية في الرسائل التسويقية"],
+                technological: ["أدوات التسويق الآلي (Marketing Automation)", "تحليلات البيانات الضخمة", "الواقع المعزز في التسويق"],
+                environmental: ["التسويق الأخضر", "مسؤولية العلامة التجارية البيئية", "تأثير الاستدامة على سمعة العلامة"],
+                legal: ["حماية العلامات التجارية", "أنظمة مكافحة الإعلانات المضللة", "خصوصية البيانات التسويقية"]
+            },
+            operations: {
+                political: ["معايير السلامة الحكومية", "تراخيص التشغيل", "سياسات المحتوى المحلي الصناعي"],
+                economic: ["تكاليف سلسلة التوريد", "أسعار المواد الخام", "كفاءة التشغيل مقابل التكلفة"],
+                social: ["توقعات العملاء لسرعة التسليم", "بيئة العمل في المستودعات", "التحول للعمل الآلي"],
+                technological: ["إنترنت الأشياء (IoT) في التصنيع", "أنظمة ERP المتكاملة", "الأتمتة والروبوتات"],
+                environmental: ["إدارة النفايات الصناعية", "كفاءة استهلاك الطاقة", "شهادات الجودة البيئية (ISO 14001)"],
+                legal: ["أنظمة السلامة المهنية", "لوائح الجمارك والاستيراد", "معايير الجودة الإلزامية"]
+            },
+            it: {
+                political: ["استراتيجية التحول الرقمي الوطنية", "سياسات السيادة على البيانات", "التعاون الحكومي الرقمي"],
+                economic: ["تكلفة البنية التحتية السحابية", "الاستثمار في الأمن السيبراني", "ميزانيات التقنية"],
+                social: ["المهارات الرقمية للموظفين", "مقاومة التغيير التقني", "توقعات المستخدم النهائي"],
+                technological: ["الذكاء الاصطناعي التوليدي", "الحوسبة السحابية المتعددة", "أمن الثقة المعدومة (Zero Trust)"],
+                environmental: ["مراكز البيانات الخضراء", "إعادة تدوير الأجهزة الإلكترونية", "كفاءة الطاقة الرقمية"],
+                legal: ["نظام حماية البيانات الشخصية", "تراخيص البرمجيات والامتثال", "أنظمة الأمن السيبراني (NCA)"]
+            },
+            quality: {
+                political: ["معايير الجودة الحكومية (SASO)", "اشتراطات الاعتماد", "سياسات التفتيش"],
+                economic: ["تكلفة الجودة مقابل تكلفة عدم الجودة", "العائد من شهادات ISO", "خفض معدل المرتجعات"],
+                social: ["توقعات العملاء المتزايدة", "ثقافة الجودة الشاملة", "التغذية الراجعة المستمرة"],
+                technological: ["أنظمة إدارة الجودة الرقمية (QMS)", "التحليل الإحصائي (Six Sigma)", "الفحص الآلي"],
+                environmental: ["معايير الجودة البيئية", "إدارة المواد الخطرة", "الامتثال البيئي في الإنتاج"],
+                legal: ["متطلبات ISO 9001", "لوائح سلامة المنتجات", "المسؤولية القانونية عن العيوب"]
+            },
+            compliance: {
+                political: ["التغييرات التنظيمية المتسارعة", "متطلبات الحوكمة الجديدة", "العقوبات الدولية"],
+                economic: ["تكلفة عدم الامتثال", "غرامات المخالفات", "ميزانية إدارة الامتثال"],
+                social: ["الوعي المجتمعي بالشفافية", "توقعات أصحاب المصلحة", "النزاهة المؤسسية"],
+                technological: ["أنظمة GRC الآلية", "مراقبة الامتثال بالذكاء الاصطناعي", "إدارة السجلات الرقمية"],
+                environmental: ["لوائح الاستدامة البيئية", "تقارير ESG", "الامتثال الكربوني"],
+                legal: ["نظام مكافحة غسل الأموال", "نظام حماية المنافسة", "التزامات الإفصاح"]
+            },
+            governance: {
+                political: ["متطلبات هيئة السوق المالية", "إصلاحات الحوكمة الوطنية", "الشفافية الحكومية"],
+                economic: ["أثر الحوكمة على التقييم المؤسسي", "جذب المستثمرين", "كفاءة اتخاذ القرار"],
+                social: ["التنوع في مجلس الإدارة", "مشاركة أصحاب المصلحة", "المسؤولية الاجتماعية"],
+                technological: ["منصات إدارة الحوكمة الرقمية", "التصويت الإلكتروني", "لوحات المتابعة الذكية"],
+                environmental: ["تقارير الاستدامة المؤسسية", "سياسات ESG", "الحوكمة البيئية"],
+                legal: ["نظام الشركات الجديد", "دليل حوكمة الشركات", "حقوق المساهمين"]
+            },
+            support: {
+                political: ["معايير خدمة العملاء الحكومية", "تنظيمات الشكاوى", "حقوق المستهلك"],
+                economic: ["تكلفة الدعم مقابل الاحتفاظ بالعملاء", "أثر NPS على الإيرادات", "كفاءة مركز الاتصال"],
+                social: ["توقعات الدعم الفوري (24/7)", "تفضيل الخدمة الذاتية", "التواصل عبر القنوات المتعددة"],
+                technological: ["روبوتات المحادثة (Chatbots)", "أنظمة التذاكر السحابية", "تحليل مشاعر العملاء بالذكاء الاصطناعي"],
+                environmental: ["تقليل المراسلات الورقية", "الدعم عن بعد", "خفض البصمة الكربونية للخدمات"],
+                legal: ["اتفاقيات مستوى الخدمة (SLA)", "حماية بيانات العملاء", "سياسات الاسترجاع والتعويض"]
+            },
+            cs: {
+                political: ["معايير خدمة العملاء الحكومية", "تنظيمات الشكاوى", "حقوق المستهلك"],
+                economic: ["تكلفة الدعم مقابل الاحتفاظ بالعملاء", "أثر NPS على الإيرادات", "كفاءة مركز الاتصال"],
+                social: ["توقعات الدعم الفوري (24/7)", "تفضيل الخدمة الذاتية", "التواصل عبر القنوات المتعددة"],
+                technological: ["روبوتات المحادثة (Chatbots)", "أنظمة التذاكر السحابية", "تحليل مشاعر العملاء بالذكاء الاصطناعي"],
+                environmental: ["تقليل المراسلات الورقية", "الدعم عن بعد", "خفض البصمة الكربونية للخدمات"],
+                legal: ["اتفاقيات مستوى الخدمة (SLA)", "حماية بيانات العملاء", "سياسات الاسترجاع والتعويض"]
+            },
+            projects: {
+                political: ["أنظمة المشتريات الحكومية", "شروط المناقصات", "سياسات المحتوى المحلي"],
+                economic: ["تجاوز ميزانيات المشاريع", "تكلفة التأخير", "العائد على الاستثمار في المشاريع"],
+                social: ["إدارة فرق العمل المتنوعة", "ثقافة إدارة المشاريع", "التواصل مع أصحاب المصلحة"],
+                technological: ["أدوات إدارة المشاريع (Jira/Asana)", "منهجيات Agile", "التخطيط بالذكاء الاصطناعي"],
+                environmental: ["مشاريع الاستدامة", "التقييم البيئي للمشاريع", "إدارة النفايات في المشاريع"],
+                legal: ["العقود والمقاولات", "ضمانات التنفيذ", "شروط التسليم والجزاءات"]
+            },
+            company: {
+                political: ["رؤية 2030 وبرامجها التنفيذية", "الاستقرار السياسي الإقليمي", "سياسات الاستثمار الأجنبي"],
+                economic: ["أسعار النفط والتنويع الاقتصادي", "معدل التضخم المحلي", "نمو الناتج المحلي الإجمالي"],
+                social: ["التحولات الديموغرافية", "التوسع الحضري", "نمط الحياة الرقمي"],
+                technological: ["التحول الرقمي الوطني", "البنية التحتية للاتصالات", "الابتكار المفتوح"],
+                environmental: ["مبادرة السعودية الخضراء", "الطاقة المتجددة", "الاقتصاد الدائري"],
+                legal: ["نظام الشركات الجديد", "نظام المنافسة", "أنظمة حماية الملكية الفكرية"]
             }
         };
 
@@ -254,7 +372,13 @@
             const dept = await window.initDeptPage();
             if (!dept) return;
 
-            document.getElementById('dept-name').textContent = dept.toUpperCase();
+            const DEPT_LABELS = {
+                company: 'المنظمة', sales: 'المبيعات', marketing: 'التسويق',
+                finance: 'المالية', hr: 'الموارد البشرية', it: 'تقنية المعلومات',
+                operations: 'العمليات', quality: 'الجودة', support: 'الدعم',
+                projects: 'المشاريع', governance: 'الحوكمة', compliance: 'الامتثال', cs: 'خدمة العملاء'
+            };
+            document.getElementById('dept-name').textContent = DEPT_LABELS[dept.toLowerCase()] || dept.toUpperCase();
 
             // تهيئة DeptPage (مهم جداً للحفظ)
             await DeptPage.init(dept);
@@ -294,7 +418,10 @@
                 if (success) {
                     DeptPage.showMessage('✅ تم حفظ تحليل PESTEL بنجاح.');
                     if (Context.markStepCompleted) await Context.markStepCompleted('pestel');
-                    setTimeout(() => window.location.href = `/dept-health.html?dept=${dept}`, 1500);
+
+                    // 🔗 Smart Redirect: التوجيه للمرحلة التالية مع الحفاظ على القسم
+                    const targetUrl = `/dept-health.html?dept=${dept}`;
+                    setTimeout(() => window.location.replace(targetUrl), 1500);
                 } else {
                     btn.disabled = false;
                     btn.innerHTML = 'حفظ ومتابعة لصحة الإدارة <i class="bi bi-arrow-left ms-2"></i>';
@@ -330,6 +457,21 @@
                 });
             }
         }
+    </script>
+    <script>
+    // ── Sidebar Hover System ──
+    (function() {
+        const trigger = document.getElementById('sidebarTrigger');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        let closeTimer = null;
+        function openSidebar() { clearTimeout(closeTimer); sidebar.classList.add('sidebar-visible'); if(window.innerWidth < 768) overlay.classList.add('active'); }
+        function closeSidebar() { closeTimer = setTimeout(() => { sidebar.classList.remove('sidebar-visible'); overlay.classList.remove('active'); }, 300); }
+        trigger.addEventListener('mouseenter', openSidebar);
+        sidebar.addEventListener('mouseenter', function() { clearTimeout(closeTimer); });
+        sidebar.addEventListener('mouseleave', closeSidebar);
+        overlay.addEventListener('click', function() { sidebar.classList.remove('sidebar-visible'); overlay.classList.remove('active'); });
+    })();
     </script>
 </body>
 

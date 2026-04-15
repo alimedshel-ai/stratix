@@ -153,6 +153,7 @@ router.post('/register', async (req, res) => {
         systemRole: 'USER',
         userCategory: userCategory || null,
         diagnosticData: diagnosticData ? JSON.stringify(diagnosticData) : null,
+        isProManager: detectedUserType === 'DEPT_MANAGER',  // مدير مستقل من التشخيص المجاني
         onboardingCompleted: false,
       },
     });
@@ -399,11 +400,18 @@ router.post('/login', (req, res, next) => {
 
     // 🛡️ تحديد userType بأولوية صحيحة:
     // 1. OWNER/ADMIN → دائماً COMPANY_MANAGER (بغض النظر عن userCategory)
+    //    🛡️ استثناء: المدير المستقل (pro_manager) يبقى DEPT_MANAGER حتى لو role=OWNER
     // 2. membership.userType موجود → استخدمه
     // 3. استنتاج من userCategory كـ fallback فقط
     let primaryUserType;
-    if (['OWNER', 'ADMIN'].includes(primaryRole) || isSA) {
-      // المالك والمسؤول لا يكونون مدراء إدارة أبداً
+    const _loginMeta = (() => { try { return JSON.parse(primaryMembership?.entity?.metadata || '{}'); } catch(e) { return {}; } })();
+    const _isProLogin = (_loginMeta.createdBy === 'pro_manager' && primaryMembership?.userType === 'DEPT_MANAGER')
+      || (user.isProManager && (primaryMembership?.userType === 'DEPT_MANAGER' || (user.userCategory || '').startsWith('DEPT_')));
+
+    if (_isProLogin) {
+      // المدير المستقل يحتفظ بنوعه حتى لو role=OWNER
+      primaryUserType = 'DEPT_MANAGER';
+    } else if (['OWNER', 'ADMIN'].includes(primaryRole) || isSA) {
       primaryUserType = 'COMPANY_MANAGER';
     } else if (primaryMembership?.userType) {
       primaryUserType = primaryMembership.userType;
@@ -466,6 +474,7 @@ router.post('/login', (req, res, next) => {
         userType: primaryUserType,
         deptCode,
         userCategory: user.userCategory || null,
+        isProManager: user.isProManager || false,
         onboardingCompleted: user.onboardingCompleted || false,
         entity: primaryEntity,
         diagnosticData: user.diagnosticData ? JSON.parse(user.diagnosticData) : null,
@@ -502,9 +511,15 @@ router.get('/profile', verifyToken, async (req, res) => {
     const primaryRole = user.memberships[0]?.role || (isSA2 ? 'OWNER' : 'VIEWER');
     const primaryMem = user.memberships[0] || null;
 
-    // 🛡️ نفس منطق تحديد userType المُعدَّل (OWNER/ADMIN → COMPANY_MANAGER دائماً)
+    // 🛡️ نفس منطق تحديد userType المُعدَّل (مع استثناء المدير المستقل)
     let primaryUserType;
-    if (['OWNER', 'ADMIN'].includes(primaryRole) || isSA2) {
+    const _profMeta = (() => { try { return JSON.parse(primaryMem?.entity?.metadata || '{}'); } catch(e) { return {}; } })();
+    const _isProProf = (_profMeta.createdBy === 'pro_manager' && primaryMem?.userType === 'DEPT_MANAGER')
+      || (user.isProManager && (primaryMem?.userType === 'DEPT_MANAGER' || (user.userCategory || '').startsWith('DEPT_')));
+
+    if (_isProProf) {
+      primaryUserType = 'DEPT_MANAGER'; // المدير المستقل يحتفظ بنوعه
+    } else if (['OWNER', 'ADMIN'].includes(primaryRole) || isSA2) {
       primaryUserType = 'COMPANY_MANAGER';
     } else if (primaryMem?.userType) {
       primaryUserType = primaryMem.userType;
@@ -520,7 +535,10 @@ router.get('/profile', verifyToken, async (req, res) => {
 
     let deptCode = null;
     if (primaryUserType === 'DEPT_MANAGER') {
-      const roleToCode = { CHRO: 'hr', CFO: 'finance', CMO: 'marketing', COO: 'operations', CTO: 'tech', CSO: 'sales', CCO: 'cs', CLO: 'legal' };
+      const roleToCode = {
+        CHRO: 'hr', CFO: 'finance', CMO: 'marketing', COO: 'operations', CTO: 'tech', CSO: 'sales', CCO: 'cs', CLO: 'legal',
+        HR: 'hr', FINANCE: 'finance', MARKETING: 'marketing', OPERATIONS: 'operations', IT: 'it', SALES: 'sales', CS: 'cs', COMPLIANCE: 'compliance', QUALITY: 'quality', PROJECTS: 'projects', SUPPORT: 'support', GOVERNANCE: 'governance'
+      };
       if (primaryMem?.departmentRole && roleToCode[primaryMem.departmentRole]) {
         deptCode = roleToCode[primaryMem.departmentRole];
       } else if (user.userCategory && user.userCategory.startsWith('DEPT_')) {
@@ -538,6 +556,8 @@ router.get('/profile', verifyToken, async (req, res) => {
         role: primaryRole,
         userType: primaryUserType,
         deptCode,
+        userCategory: user.userCategory || null,
+        isProManager: user.isProManager || false,
         onboardingCompleted: user.onboardingCompleted || false,
         entity: primaryEntity,
         diagnosticData: user.diagnosticData ? JSON.parse(user.diagnosticData) : null,

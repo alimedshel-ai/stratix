@@ -3,54 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <title>ستارتكس | التحليل الرقمي</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/dept-pages.css">
+    <style>
+        body { background: #0b0d12; color: #f1f5f9; font-family: 'Tajawal', sans-serif; margin: 0; overflow: hidden; }
+        .stx-wrapper { display: flex; height: 100vh; overflow: hidden; }
+        .stx-sidebar-container { width: 260px; flex-shrink: 0; border-left: 1px solid rgba(255,255,255,0.08); background: #11141d; }
+        .stx-main-content { flex: 1; overflow-y: auto; height: 100vh; padding: 40px; }
+        .container-box { max-width: 800px; margin: 0 auto; background: rgba(22, 27, 34, 0.5); padding: 40px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(10px); }
+        h1 { font-weight: 900; margin-bottom: 8px; font-size: 2rem; }
+        .sub { color: #94a3b8; margin-bottom: 32px; font-size: 1.1rem; }
+        .question { margin-bottom: 24px; }
+        .question label { display: block; margin-bottom: 8px; font-weight: 700; color: #cbd5e1; font-size: 0.95rem; }
+        .question input { width: 100%; padding: 14px 18px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; font-size: 1.1rem; font-weight: 700; transition: all 0.2s; }
+        .question input:focus { outline: none; border-color: #6366f1; background: rgba(99, 102, 241, 0.05); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+        button[type="submit"] { width: 100%; padding: 16px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; border: none; border-radius: 14px; font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: all 0.3s; margin-top: 12px; }
+        button[type="submit"]:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4); }
+        button[type="submit"]:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        #prefillAlert { display:none; padding:12px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.2); border-radius:10px; color:#10b981; font-size:12px; margin-bottom:20px; }
+    </style>
+    <script src="/js/api.js?v=4"></script>
     <script src="/js/context-manager.js?v=4"></script>
+    <script src="/js/data-bridge.js?v=4"></script>
     <script src="/js/dept-page.js?v=4"></script>
     <script src="/js/dept-deep-config.js?v=4"></script>
+    <script src="/js/sidebar.js?v=4"></script>
 </head>
 <body>
-    <div class="container">
-        <h1 id="pageTitle">📊 التحليل الرقمي</h1>
-        <div class="sub" id="pageSub">أدخل الأرقام والمؤشرات الرئيسية</div>
-        <form id="deepForm"></form>
+    <div class="stx-wrapper">
+        <aside id="stx-sidebar" class="stx-sidebar-container"></aside>
+        <main class="stx-main-content">
+            <div class="container-box">
+                <h1 id="pageTitle">📊 التحليل الرقمي</h1>
+                <div class="sub" id="pageSub">أدخل الأرقام والمؤشرات الرئيسية</div>
+                <div id="prefillAlert"><i class="bi bi-magic me-2"></i> تم جلب بعض البيانات تلقائياً لتفادي التكرار</div>
+                <form id="deepForm"></form>
+            </div>
+        </main>
     </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const DEPT_KEY = 'cs';
             const config = window.DEPT_DEEP_CONFIG[DEPT_KEY];
-            if (!config) { document.querySelector('.container').innerHTML = '<h1>قسم غير معروف</h1>'; return; }
+            if (!config) { document.querySelector('.stx-main-content').innerHTML = '<h1>قسم غير معروف</h1>'; return; }
 
-            // set title
+            // 1. Sidebar Init
+            if (typeof initSidebar === 'function') initSidebar();
+
+            // 2. Page UI
             document.getElementById('pageTitle').textContent = (config.emoji || '📊') + ' ' + config.title;
             document.getElementById('pageSub').textContent = 'أدخل الأرقام والمؤشرات الرئيسية لـ' + config.title.split('–')[1];
             document.title = 'ستارتكس | ' + config.title;
 
-            // build form
+            // 3. Build Form
             const form = document.getElementById('deepForm');
             config.fields.forEach(f => {
                 const div = document.createElement('div');
                 div.className = 'question';
-                div.innerHTML = `<label>${f.label}</label><input type="number" name="${f.name}" placeholder="${f.placeholder}" ${f.step ? 'step="'+f.step+'"' : ''} required>`;
+                div.innerHTML = '<label>' + f.label + '</label><input type="number" name="' + f.name + '" id="f_' + f.name + '" placeholder="' + f.placeholder + '" ' + (f.step ? 'step="' + f.step + '"' : '') + ' required>';
                 form.appendChild(div);
             });
             const btn = document.createElement('button');
             btn.type = 'submit';
-            btn.textContent = 'حفظ ومتابعة للتقييم الوصفي';
+            btn.innerHTML = 'حفظ ومتابعة للتقييم الوصفي <i class="bi bi-arrow-left-circle ms-2"></i>';
             form.appendChild(btn);
 
-            // init dept page
+            // 4. Data Loading & Redundancy Bridge
             const ok = await DeptPage.init(DEPT_KEY);
             if (!ok) return;
-            let saved = await DeptPage.loadFromAPI('DEEP') || Context.getTemp('deep_results') || DeptPage.migrateFromLocalStorage('stratix_' + DEPT_KEY + '_deep_results');
+
+            let saved = await DeptPage.loadFromAPI('DEEP') || Context.getTemp('deep_results') || DeptPage.migrateFromLocalStorage('stratix_' + DEPT_KEY + '_deep_results') || {};
+            
+            // Sync with DataBridge (Redundancy Fix)
+            if (window.DataBridge) {
+                const dbData = DataBridge.getPrefillData(DEPT_KEY, 'dept-smart');
+                if (dbData && dbData.kpis) {
+                    let prefilledAny = false;
+                    // Reverse map DataBridge keys to form keys
+                    const MAPS = {
+                        sales: { k_revenue: 'annual_sales', k_conversion: 'win_rate', k_customers: 'active_customers', k_sales_cycle: 'sales_cycle', k_deal_size: 'avg_deal_size' },
+                        finance: { k_revenue: 'revenue', k_profit: 'net_profit' },
+                        hr: { k_headcount: 'headcount', k_turnover: 'turnover_rate' }
+                    };
+                    const dMap = MAPS[DEPT_KEY] || {};
+                    Object.entries(dMap).forEach(([dbKey, formKey]) => {
+                        if (dbData.kpis[dbKey] != null && (saved[formKey] === undefined || saved[formKey] === '')) {
+                            saved[formKey] = dbData.kpis[dbKey];
+                            prefilledAny = true;
+                        }
+                    });
+                    if (prefilledAny) document.getElementById('prefillAlert').style.display = 'block';
+                }
+            }
             DeptPage.fillForm(saved);
 
+            // 5. Submit Handling
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                const btn = e.target.querySelector('button');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري الحفظ...';
+
                 const results = Object.fromEntries(new FormData(e.target));
                 Context.setTemp('deep_results', results);
-                const ok = await DeptPage.saveToAPI('DEEP', results);
-                DeptPage.showMessage(ok ? 'تم حفظ التحليل الرقمي بنجاح' : 'تم حفظ التحليل محلياً', !ok);
-                setTimeout(() => window.location.href = config.redirect, 1500);
+                
+                try {
+                    const saveOk = await DeptPage.saveToAPI('DEEP', results);
+                    if (window.DataBridge) DataBridge.saveDeptDeep(DEPT_KEY, results);
+                    DeptPage.showMessage(saveOk ? 'تم حفظ التحليل الرقمي بنجاح' : 'تم حفظ التحليل محلياً', !saveOk);
+                    
+                    const nextUrl = new URL(config.redirect, window.location.origin);
+                    const currentParams = new URLSearchParams(window.location.search);
+                    currentParams.forEach((val, key) => {
+                        if (key !== 'dept') nextUrl.searchParams.set(key, val);
+                    });
+                    if (!nextUrl.searchParams.has('dept')) nextUrl.searchParams.set('dept', DEPT_KEY);
+                    setTimeout(() => window.location.href = nextUrl.pathname + nextUrl.search, 1500);
+                } catch (err) {
+                    console.error('Save failed:', err);
+                    DeptPage.showMessage('فشل الحفظ، يرجى التحقق من الاتصال', true);
+                    btn.disabled = false;
+                }
             });
         });
     </script>

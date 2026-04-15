@@ -186,8 +186,14 @@
             </div>
 
             <div class="d-flex gap-3 align-items-center">
+                <button type="button" onclick="pullFromPestel()" class="btn btn-outline-info btn-sm rounded-3 px-3">
+                    <i class="bi bi-download me-1"></i> سحب من PESTEL
+                </button>
                 <button type="button" onclick="fillAll()" class="btn btn-outline-light btn-sm rounded-3 px-3">
                     <i class="bi bi-magic me-1"></i> ملء تلقائي ذكي
+                </button>
+                <button type="button" onclick="clearAll()" class="btn btn-outline-danger btn-sm rounded-3 px-3">
+                    <i class="bi bi-trash me-1"></i> مسح الكل
                 </button>
                 <div class="vr mx-2 text-white opacity-10" style="height: 30px;"></div>
                 <button type="submit" form="healthForm" class="stx-nav-btn" title="التالي" id="saveBtnTop">
@@ -294,12 +300,13 @@
     </div>
 
     <!-- Scripts -->
-    <script src="/js/api.js?v=4"></script>
-    <script src="/js/utils.js?v=4"></script>
-    <script src="/js/context-manager.js?v=4"></script>
-    <script src="/js/steps-config.js?v=4"></script>
-    <script src="/js/sidebar.js?v=4"></script>
-    <script src="/js/dept-page.js?v=4"></script>
+    <script src="/js/api.js?v=8"></script>
+    <script src="/js/utils.js?v=8"></script>
+    <script src="/js/context-manager.js?v=8"></script>
+    <script src="/js/page-guard.js?v=8"></script>
+    <script src="/js/steps-config.js?v=8"></script>
+    <script src="/js/sidebar.js?v=8"></script>
+    <script src="/js/dept-page.js?v=8"></script>
 
     <script>
         const HEALTH_SUGGESTIONS = {
@@ -316,26 +323,110 @@
                 satisfaction: ["ولاء وظيفي مرتفع واستقرار", "ضغط عمل في فترات الإغلاق", "الحاجة لبرامج تقدير مالية"],
                 tech: ["نظام فوترة إلكتروني متكامل", "ربط آلي مع منصة اعتماد", "ضعف أدوات التقارير الفورية"],
                 leadership: ["قيادة تركز على التفاصيل والأرقام", "مناقشات ميزانية شفافة", "تفويض صلاحيات محدود"]
+            },
+            sales: {
+                skills: ["خبرة في إدارة علاقات العملاء (CRM)", "مهارات التفاوض والإغلاق", "الحاجة لتدريب على البيع الاستشاري"],
+                processes: ["دورة مبيعات واضحة من التأهيل للإغلاق", "تتبع الفرص عبر Pipeline منظم", "ضعف في متابعة ما بعد البيع"],
+                satisfaction: ["حوافز مرتبطة بالأداء تحفز الفريق", "ضغط مستمر لتحقيق المستهدفات", "الحاجة لمسار وظيفي واضح"],
+                tech: ["نظام CRM مفعّل وفعّال", "أدوات تحليل بيانات المبيعات", "الحاجة لأتمتة التقارير اليومية"],
+                leadership: ["قيادة مبنية على الأرقام والنتائج", "اجتماعات أسبوعية لمراجعة Pipeline", "تواصل مستمر مع فرق التسويق"]
+            },
+            marketing: {
+                skills: ["خبرة في التسويق الرقمي والمحتوى", "مهارات تحليل بيانات الحملات", "الحاجة لتدريب على SEO/SEM"],
+                processes: ["تقويم محتوى شهري منظم", "آلية واضحة لقياس ROI الحملات", "تنسيق ضعيف مع فريق المبيعات"],
+                satisfaction: ["بيئة إبداعية محفزة", "ضغط المواعيد النهائية للحملات", "الحاجة لميزانية تطوير مهني"],
+                tech: ["أدوات إدارة وسائل التواصل الاجتماعي", "منصة أتمتة التسويق (Marketing Automation)", "ضعف في أدوات تحليل المنافسين"],
+                leadership: ["رؤية واضحة للعلامة التجارية", "دعم للابتكار والتجريب", "الحاجة لتفويض أكبر في الحملات"]
+            },
+            operations: {
+                skills: ["خبرة في إدارة سلاسل الإمداد", "مهارات Lean و Six Sigma", "الحاجة لتدريب على أنظمة ERP"],
+                processes: ["إجراءات تشغيل قياسية (SOPs) موثقة", "نظام مراقبة جودة فعّال", "تأخر في تحديث الإجراءات"],
+                satisfaction: ["استقرار وظيفي عالي", "ضغط العمل في فترات الذروة", "تقدير محدود للإنجازات التشغيلية"],
+                tech: ["نظام ERP متكامل للعمليات", "أجهزة IoT لمراقبة الأداء", "الحاجة لأدوات التنبؤ بالطلب"],
+                leadership: ["تركيز على الكفاءة والإنتاجية", "قرارات مبنية على البيانات", "تواصل منتظم مع الأقسام الأخرى"]
+            },
+            it: {
+                skills: ["خبرة في الأمن السيبراني والشبكات", "مهارات الحوسبة السحابية (AWS/Azure)", "الحاجة لتدريب على DevOps"],
+                processes: ["نظام تذاكر دعم فني منظم", "إجراءات استجابة للحوادث الأمنية", "بطء في عمليات الموافقة على التغييرات"],
+                satisfaction: ["بيئة تقنية محفزة للتعلم", "ضغط طلبات الدعم المتزايدة", "الحاجة لشهادات مهنية مدعومة"],
+                tech: ["بنية تحتية سحابية حديثة", "أنظمة مراقبة الأداء (APM)", "الحاجة لأدوات الأتمتة (CI/CD)"],
+                leadership: ["قيادة تقنية متمكنة", "استراتيجية تحول رقمي واضحة", "تفويض صلاحيات تقنية مناسب"]
+            },
+            quality: {
+                skills: ["مدققون معتمدون (ISO Lead Auditor)", "خبرة في التحليل الإحصائي", "الحاجة لتدريب على Six Sigma"],
+                processes: ["نظام إدارة جودة شامل (QMS)", "تدقيق داخلي دوري منتظم", "بطء في معالجة حالات عدم المطابقة"],
+                satisfaction: ["فخر بدور ضمان الجودة", "ضغط التدقيقات الخارجية", "الحاجة لتقدير من الأقسام الأخرى"],
+                tech: ["نظام إدارة الوثائق الرقمي", "أدوات الفحص والقياس الآلي", "الحاجة لمنصة تحليل بيانات الجودة"],
+                leadership: ["التزام بمعايير الجودة العالمية", "شفافية في نتائج التدقيق", "دعم لثقافة التحسين المستمر"]
+            },
+            compliance: {
+                skills: ["خبرة في الأنظمة واللوائح المحلية", "مهارات تحليل المخاطر التنظيمية", "الحاجة لتدريب على مكافحة غسل الأموال"],
+                processes: ["مصفوفة امتثال شاملة ومحدثة", "آلية رصد التغييرات التنظيمية", "تأخر في تحديث السياسات الداخلية"],
+                satisfaction: ["شعور بأهمية الدور المؤسسي", "ضغط التغييرات التنظيمية المتسارعة", "الحاجة لدعم من الإدارة العليا"],
+                tech: ["منصة GRC لإدارة الامتثال", "أدوات مراقبة آلية للانتهاكات", "الحاجة لنظام تقارير امتثال ذكي"],
+                leadership: ["التزام واضح بالنزاهة المؤسسية", "تقارير دورية لمجلس الإدارة", "تعاون وثيق مع الإدارة القانونية"]
+            },
+            governance: {
+                skills: ["خبرة في حوكمة الشركات", "مهارات إعداد تقارير مجلس الإدارة", "الحاجة لتدريب على معايير ESG"],
+                processes: ["ميثاق حوكمة معتمد ومنشور", "اجتماعات مجلس دورية موثقة", "ضعف في آليات التقييم الذاتي"],
+                satisfaction: ["إحساس بالمسؤولية تجاه المساهمين", "تعقيد الإجراءات التنظيمية", "الحاجة لتبسيط عمليات الإفصاح"],
+                tech: ["منصة إدارة اجتماعات المجلس", "نظام إفصاح إلكتروني", "الحاجة للوحات متابعة حوكمة ذكية"],
+                leadership: ["شفافية عالية في اتخاذ القرار", "فصل واضح بين الملكية والإدارة", "دعم لاستقلالية لجان المجلس"]
+            },
+            support: {
+                skills: ["مهارات تواصل وخدمة عملاء متميزة", "خبرة في أنظمة التذاكر والدعم", "الحاجة لتدريب على حل المشكلات المعقدة"],
+                processes: ["اتفاقيات مستوى خدمة (SLA) واضحة", "نظام تصعيد فعّال متعدد المستويات", "ضعف في قاعدة المعرفة الداخلية"],
+                satisfaction: ["فريق متعاون ومتحمس", "إرهاق من حجم الطلبات المتزايد", "الحاجة لنظام مكافآت مبني على CSAT"],
+                tech: ["نظام تذاكر سحابي متكامل", "روبوت محادثة للاستفسارات الشائعة", "الحاجة لتحليل مشاعر العملاء بالذكاء الاصطناعي"],
+                leadership: ["تركيز على رضا العميل أولاً", "مراجعة أسبوعية لمؤشرات الأداء", "دعم للتطوير المهني لفريق الدعم"]
+            },
+            cs: {
+                skills: ["مهارات تواصل وخدمة عملاء متميزة", "خبرة في أنظمة التذاكر والدعم", "الحاجة لتدريب على حل المشكلات المعقدة"],
+                processes: ["اتفاقيات مستوى خدمة (SLA) واضحة", "نظام تصعيد فعّال متعدد المستويات", "ضعف في قاعدة المعرفة الداخلية"],
+                satisfaction: ["فريق متعاون ومتحمس", "إرهاق من حجم الطلبات المتزايد", "الحاجة لنظام مكافآت مبني على CSAT"],
+                tech: ["نظام تذاكر سحابي متكامل", "روبوت محادثة للاستفسارات الشائعة", "الحاجة لتحليل مشاعر العملاء بالذكاء الاصطناعي"],
+                leadership: ["تركيز على رضا العميل أولاً", "مراجعة أسبوعية لمؤشرات الأداء", "دعم للتطوير المهني لفريق الدعم"]
+            },
+            projects: {
+                skills: ["شهادة PMP/PRINCE2 لدى المديرين", "مهارات إدارة المخاطر والميزانيات", "الحاجة لتدريب على منهجيات Agile"],
+                processes: ["منهجية إدارة مشاريع موحدة (PMO)", "تقارير حالة أسبوعية للمشاريع", "تأخر في إغلاق المشاريع المنتهية"],
+                satisfaction: ["رضا عن تنوع المشاريع", "ضغط الالتزام بالمواعيد النهائية", "الحاجة لتوازن أفضل في توزيع المهام"],
+                tech: ["أدوات إدارة مشاريع (Jira/MS Project)", "لوحات Kanban رقمية", "الحاجة لأدوات تنبؤ بالمخاطر"],
+                leadership: ["قيادة مبنية على المعالم والنتائج", "شفافية في تحديثات المشاريع", "دعم لمبادرات التحسين المستمر"]
+            },
+            company: {
+                skills: ["فريق قيادي متنوع الخبرات", "قدرات تخطيط استراتيجي عالية", "الحاجة لتطوير الصف الثاني من القيادات"],
+                processes: ["هيكل تنظيمي واضح ومعتمد", "عمليات صنع قرار منظمة", "الحاجة لتحسين التواصل بين الأقسام"],
+                satisfaction: ["ثقافة مؤسسية إيجابية", "التحديات في إدارة التغيير", "الحاجة لبرامج ولاء مؤسسية"],
+                tech: ["بنية تحتية رقمية متكاملة", "أنظمة ERP مركزية", "الحاجة لتكامل أفضل بين الأنظمة"],
+                leadership: ["رؤية مؤسسية واضحة ومشتركة", "دعم للابتكار والتحول", "التزام بالشفافية والحوكمة"]
             }
         };
 
+        // متغير عام للقسم — كل الدوال تستخدمه
+        let _pageDept = new URLSearchParams(window.location.search).get('dept') || 'company';
+
+        const DEPT_AR = {
+            hr: 'الموارد البشرية', finance: 'المالية', sales: 'المبيعات', marketing: 'التسويق',
+            operations: 'العمليات', compliance: 'الامتثال', it: 'تقنية المعلومات', quality: 'الجودة',
+            governance: 'الحوكمة', support: 'الدعم', cs: 'خدمة العملاء', projects: 'المشاريع', company: 'المنظمة'
+        };
+
+        const FIELDS = ['skills', 'processes', 'satisfaction', 'tech', 'leadership'];
+
         (async function () {
-            // 🛡️ تهيئة الصفحة (تضمن تحميل المستخدم والقسم)
-            const dept = await window.initDeptPage();
-            if (!dept) return;
+            const dept = await window.initDeptPage() || _pageDept;
+            _pageDept = dept.toLowerCase();
 
-            const DEPT_AR = { hr: 'الموارد البشرية', finance: 'المالية', sales: 'المبيعات', marketing: 'التسويق', operations: 'العمليات', compliance: 'الامتثال' };
-
-            document.getElementById('dept-name').textContent = dept.toUpperCase();
+            document.getElementById('dept-name').textContent = DEPT_AR[_pageDept] || _pageDept;
             const titleEl = document.getElementById('dept-title');
-            if (titleEl) titleEl.textContent = DEPT_AR[dept.toLowerCase()] || dept.toUpperCase();
+            if (titleEl) titleEl.textContent = DEPT_AR[_pageDept] || _pageDept;
 
-            // تهيئة DeptPage (مهم جداً للحفظ)
-            await DeptPage.init(dept);
-
+            await DeptPage.init(_pageDept);
             if (window.initSidebar) window.initSidebar();
 
-            const pool = HEALTH_SUGGESTIONS[dept.toLowerCase()] || HEALTH_SUGGESTIONS.hr;
+            // عرض الاقتراحات حسب القسم الصحيح
+            const pool = HEALTH_SUGGESTIONS[_pageDept] || HEALTH_SUGGESTIONS.company;
             Object.keys(pool).forEach(key => {
                 const container = document.getElementById(`${key}-suggestions`);
                 if (container) {
@@ -345,7 +436,8 @@
                 }
             });
 
-            const data = await DeptPage.loadFromAPI('HEALTH_' + dept.toUpperCase()) || {};
+            // تحميل البيانات المحفوظة
+            const data = await DeptPage.loadFromAPI('HEALTH_' + _pageDept.toUpperCase()) || {};
             DeptPage.fillForm(data);
 
             // هندلة النموذج
@@ -355,19 +447,14 @@
                 btn.disabled = true;
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> جاري الحفظ...';
 
-                const healthData = {
-                    skills: document.getElementById('skills').value,
-                    processes: document.getElementById('processes').value,
-                    satisfaction: document.getElementById('satisfaction').value,
-                    tech: document.getElementById('tech').value,
-                    leadership: document.getElementById('leadership').value
-                };
+                const healthData = {};
+                FIELDS.forEach(id => { healthData[id] = document.getElementById(id).value; });
 
-                const success = await DeptPage.saveToAPI('HEALTH_' + dept.toUpperCase(), healthData);
+                const success = await DeptPage.saveToAPI('HEALTH_' + _pageDept.toUpperCase(), healthData);
                 if (success) {
                     DeptPage.showMessage('✅ تم حفظ تقييم صحة الإدارة بنجاح.');
                     if (Context.markStepCompleted) await Context.markStepCompleted('dept-health');
-                    setTimeout(() => window.location.href = `/swot.html?dept=${dept}`, 1500);
+                    setTimeout(() => window.location.replace(`/swot.html?dept=${_pageDept}`), 1500);
                 } else {
                     btn.disabled = false;
                     btn.innerHTML = 'حفظ ومتابعة للـ SWOT <i class="bi bi-arrow-left ms-2"></i>';
@@ -380,9 +467,80 @@
             area.value = area.value.trim() ? area.value + '\n- ' + text : '- ' + text;
         }
 
+        async function clearAll() {
+            if (!confirm('هل تريد مسح جميع الحقول وحذف البيانات المحفوظة؟')) return;
+            FIELDS.forEach(id => {
+                const area = document.getElementById(id);
+                if (area) area.value = '';
+            });
+            // مسح من قاعدة البيانات مباشرة عبر API
+            try {
+                const emptyData = {};
+                FIELDS.forEach(id => { emptyData[id] = ''; });
+                await api.post('/api/dept/analysis', {
+                    type: 'HEALTH_' + _pageDept.toUpperCase(),
+                    dept: _pageDept,
+                    data: emptyData
+                });
+                if (DeptPage.showMessage) DeptPage.showMessage('✅ تم مسح البيانات بنجاح');
+            } catch (e) {
+                console.error('clearAll error:', e);
+            }
+        }
+
+        async function pullFromPestel() {
+            const btn = event.target.closest('button');
+            const origHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> جاري السحب...';
+
+            try {
+                const res = await api.get(`/api/dept/analysis?dept=${_pageDept}&type=PESTEL`);
+                if (!res?.success || !res.data) {
+                    alert('لا توجد بيانات PESTEL محفوظة لهذا القسم. أكمل تحليل PESTEL أولاً.');
+                    return;
+                }
+
+                const p = res.data;
+                const PESTEL_LABELS = {
+                    political: 'سياسي', economic: 'اقتصادي', social: 'اجتماعي',
+                    technological: 'تقني', environmental: 'بيئي', legal: 'قانوني'
+                };
+
+                const fieldMap = {
+                    skills: ['social', 'technological'],
+                    processes: ['political', 'legal'],
+                    satisfaction: ['social', 'economic'],
+                    tech: ['technological', 'environmental'],
+                    leadership: ['political', 'economic']
+                };
+
+                Object.keys(fieldMap).forEach(field => {
+                    const area = document.getElementById(field);
+                    if (!area) return;
+                    const lines = [];
+                    fieldMap[field].forEach(pKey => {
+                        if (p[pKey] && p[pKey].trim()) {
+                            lines.push(`[${PESTEL_LABELS[pKey]}] ${p[pKey].trim()}`);
+                        }
+                    });
+                    if (lines.length > 0) {
+                        area.value = lines.join('\n');
+                    }
+                });
+
+                if (DeptPage.showMessage) DeptPage.showMessage('✅ تم سحب بيانات PESTEL بنجاح');
+            } catch (e) {
+                console.error('pullFromPestel error:', e);
+                alert('حدث خطأ أثناء سحب بيانات PESTEL');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = origHTML;
+            }
+        }
+
         function fillAll() {
-            const dept = Context.getDept() || 'hr';
-            const pool = HEALTH_SUGGESTIONS[dept.toLowerCase()] || HEALTH_SUGGESTIONS.hr;
+            const pool = HEALTH_SUGGESTIONS[_pageDept] || HEALTH_SUGGESTIONS.company;
             Object.keys(pool).forEach(key => {
                 const area = document.getElementById(key);
                 if (area && !area.value.trim()) {

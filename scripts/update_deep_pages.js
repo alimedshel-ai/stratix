@@ -1,4 +1,12 @@
-<!DOCTYPE html>
+const fs = require('fs');
+const path = require('path');
+
+const depts = [
+    'hr', 'finance', 'marketing', 'operations', 'compliance',
+    'it', 'support', 'governance', 'quality', 'cs', 'projects'
+];
+
+const templateBase = `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -46,7 +54,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            const DEPT_KEY = 'marketing';
+            const DEPT_KEY = '{{DEPT_KEY}}';
             const config = window.DEPT_DEEP_CONFIG[DEPT_KEY];
             if (!config) { document.querySelector('.stx-main-content').innerHTML = '<h1>قسم غير معروف</h1>'; return; }
 
@@ -131,4 +139,14 @@
         });
     </script>
 </body>
-</html>
+</html>`;
+
+const srcDir = path.join(__dirname, '..', 'src');
+
+for (const dept of depts) {
+    const filePath = path.join(srcDir, dept + '-deep.html');
+    console.log('Updating ' + filePath + ' with DataBridge logic...');
+    const content = templateBase.replace('{{DEPT_KEY}}', dept);
+    fs.writeFileSync(filePath, content);
+}
+console.log('All 11 deep pages updated!');

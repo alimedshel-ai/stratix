@@ -240,14 +240,58 @@
             justify-content: space-between;
             align-items: center;
         }
+
+        /* ─── Sidebar: desktop hover ─── */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .stx-sidebar-container {
+            transform: translateX(100%) !important;
+            transition: transform 0.3s cubic-bezier(.4, 0, .2, 1) !important;
+        }
+
+        .stx-sidebar-container.sidebar-visible {
+            transform: translateX(0) !important;
+        }
+
+        @media (max-width: 992px) {
+            .stx-sidebar-container {
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                height: 100vh;
+                z-index: 1001;
+            }
+
+            .stx-sidebar-container.mobile-open {
+                transform: translateX(0) !important;
+            }
+        }
     </style>
 </head>
 
 <body>
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+    <aside class="stx-sidebar-container" id="stx-sidebar"></aside>
+
     <!-- Top Navigation -->
     <nav class="top-nav d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center gap-4">
-            <a href="/okrs.html" class="nav-link-btn"><i class="bi bi-arrow-right"></i> السابق: نظام OKRs</a>
+            <a href="#" onclick="event.preventDefault(); window.location.href='/okrs.html'+window.location.search"
+                class="nav-link-btn"><i class="bi bi-arrow-right"></i> السابق: نظام OKRs</a>
             <div class="mx-2 opacity-10">|</div>
             <div id="dept-switcher-placeholder"></div>
             <div class="mx-2 opacity-10">|</div>
@@ -280,6 +324,15 @@
     </nav>
 
     <main>
+        <!-- شريط حالة المتطلبات السابقة -->
+        <div id="prereq-bar"
+            style="display:none; background:rgba(255,255,255,0.03); border:1px solid var(--stx-border); border-radius:14px; padding:14px 20px; margin-bottom:20px;">
+            <div style="font-size:0.82rem; font-weight:800; color:#94a3b8; margin-bottom:10px;">
+                <i class="bi bi-signpost-split me-1"></i> حالة المراحل السابقة — اضغط على أي مرحلة للانتقال إليها
+            </div>
+            <div id="prereq-items" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+        </div>
+
         <div class="d-flex justify-content-between align-items-start mb-4">
             <div>
                 <h1 class="fw-900 m-0"><i class="bi bi-stack text-success me-2"></i> خارطة طريق المبادرات (Initiatives
@@ -357,7 +410,8 @@
         </div>
 
         <div class="action-bar mt-5">
-            <a href="/okrs.html" class="nav-link-btn"><i class="bi bi-arrow-right"></i> العودة لنظام OKRs</a>
+            <a href="#" onclick="event.preventDefault(); window.location.href='/okrs.html'+window.location.search"
+                class="nav-link-btn"><i class="bi bi-arrow-right"></i> العودة لنظام OKRs</a>
             <button type="button" onclick="saveJourney()"
                 class="btn btn-modern btn-success px-5 py-3 rounded-pill fw-900 border-0 shadow-lg">
                 اعتماد الخطة التنفيذية بالكامل <i class="bi bi-flag-fill ms-2"></i>
@@ -402,11 +456,15 @@
                         <option value="">-- مبادرة مستقلة (غير مرتبطة) --</option>
                     </select>
                 </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-link text-muted text-decoration-none"
-                        data-bs-dismiss="modal">إلغاء</button>
-                    <button type="button" class="btn btn-success px-4 rounded-pill fw-800" onclick="saveInit()">حفظ
-                        المبادرة</button>
+                <div class="modal-footer border-0 d-flex justify-content-between">
+                    <button type="button" id="deleteInitBtn" class="btn btn-outline-danger rounded-pill px-3 fw-800"
+                        style="display:none;" onclick="deleteInit()"><i class="bi bi-trash me-1"></i> حذف</button>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-link text-muted text-decoration-none"
+                            data-bs-dismiss="modal">إلغاء</button>
+                        <button type="button" class="btn btn-success px-4 rounded-pill fw-800" onclick="saveInit()">حفظ
+                            المبادرة</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -421,8 +479,7 @@
                     <h1 class="fw-900 mb-3 text-white">مبارك! خطتك جاهزة</h1>
                     <p class="text-muted mb-5 fs-5">لقد أنجزت خارطة المبادرات بنجاح. الخطوة التالية هي تحويل هذه
                         المبادرات إلى مشاريع تفصيلية لتجهيزها للمتابعة عبر منصة **dPower**.</p>
-                    <button type="button"
-                        onclick="window.location.href='/projects.html'"
+                    <button type="button" onclick="window.location.href='/projects.html'+window.location.search"
                         class="btn btn-modern btn-primary w-100 py-4 border-0 fw-900 rounded-pill fs-4 shadow-lg">الانتقال
                         لتفصيل المشاريع <i class="bi bi-folder2-open ms-2"></i></button>
                 </div>
@@ -430,40 +487,129 @@
         </div>
     </div>
 
-    <script src="/js/report-engine.js?v=2"></script>
-    <script src="/js/api.js?v=3"></script>
-    <script src="/js/utils.js?v=3"></script>
-    <script src="/js/context-manager.js?v=3"></script>
-    <script src="/js/page-guard.js?v=3"></script>
-    <script src="/js/steps-config.js?v=3"></script>
-    <script src="/js/path-engine.js?v=3"></script>
-    <script src="/js/journey-ui.js?v=3"></script>
-    <script src="/js/sidebar.js?v=3"></script>
-    <script src="/js/dept-page.js?v=3"></script>
-    <script src="/js/synthesis-engine.js?v=4"></script>
-    <script src="/assets/js/hr-handlers.js?v=4"></script>
-    <script src="/assets/js/finance-handlers.js?v=4"></script>
+    <script src="/js/smart-nav.js?v=9"></script>
+    <script src="/js/report-engine.js?v=9"></script>
+    <script src="/js/api.js?v=9"></script>
+    <script src="/js/utils.js?v=9"></script>
+    <script src="/js/context-manager.js?v=9"></script>
+    <script src="/js/page-guard.js?v=9"></script>
+    <script src="/js/steps-config.js?v=9"></script>
+    <script src="/js/path-engine.js?v=9"></script>
+    <script src="/js/journey-ui.js?v=9"></script>
+    <script src="/js/sidebar.js?v=9"></script>
+    <script src="/js/dept-page.js?v=9"></script>
+    <script src="/js/synthesis-engine.js?v=9"></script>
+    <script src="/assets/js/hr-handlers.js?v=9"></script>
+    <script src="/assets/js/finance-handlers.js?v=9"></script>
+    <script src="/assets/js/sales-handlers.js?v=9"></script>
+    <script src="/assets/js/marketing-handlers.js?v=9"></script>
+    <script src="/assets/js/operations-handlers.js?v=9"></script>
+    <script src="/assets/js/it-handlers.js?v=9"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         let allInitiatives = [];
         let editingIndex = -1;
 
-        (async function () {
-            // 🛡️ تهيئة الصفحة (مستوى الشركة)
-            await window.initDeptPage(); // للتحقق من المستخدم فقط
-            const dept = 'company';
-            if (window.DeptPage) DeptPage.dept = 'company';
+        const _INIT_LABELS = {
+            company: 'المنظمة', sales: 'المبيعات', marketing: 'التسويق',
+            finance: 'المالية', hr: 'الموارد البشرية', it: 'تقنية المعلومات',
+            operations: 'العمليات', quality: 'الجودة', support: 'الدعم',
+            projects: 'المشاريع', governance: 'الحوكمة', compliance: 'الامتثال', cs: 'خدمة العملاء'
+        };
 
-            document.getElementById('dept-context').textContent = 'المبادرات الاستراتيجية (المنظمة)';
+        (async function () {
+            const urlDept = new URLSearchParams(window.location.search).get('dept');
+            const dept = urlDept || 'company';
+
+            // تهيئة DeptPage أولاً
+            if (window.DeptPage) {
+                DeptPage.dept = dept;
+                await DeptPage.init(dept);
+            }
+
+            document.getElementById('dept-context').textContent = 'المبادرات الاستراتيجية (' + (_INIT_LABELS[dept] || dept) + ')';
+
+            // ═══ شريط حالة المتطلبات السابقة ═══
+            (async function checkPrereqs() {
+                // بناء PREREQS ديناميكياً عبر STEPS_CONFIG + getToolLink
+                const _prereqMap = [
+                    { toolId: 'deep', apiKey: 'DEEP_ANALYSIS', label: 'التشخيص العميق', icon: 'bi-search', group: 'diag' },
+                    { toolId: 'audit', apiKey: 'AUDIT', label: 'التدقيق', icon: 'bi-shield-check', group: 'diag' },
+                    { toolId: 'pestel', apiKey: 'PESTEL', label: 'PESTEL', icon: 'bi-globe2', group: 'diag' },
+                    { toolId: 'dept-health', apiKey: 'HEALTH', label: 'صحة الإدارة', icon: 'bi-heart-pulse', group: 'diag' },
+                    { toolId: 'swot', apiKey: 'SWOT', label: 'SWOT', icon: 'bi-grid-3x3-gap', group: 'plan' },
+                    { toolId: 'tows', apiKey: 'TOWS', label: 'TOWS', icon: 'bi-shuffle', group: 'plan' },
+                    { toolId: 'scenarios', apiKey: 'SCENARIOS', label: 'السيناريوهات', icon: 'bi-diagram-3', group: 'plan' },
+                    { toolId: 'directions', apiKey: 'DIRECTIONS', label: 'التوجهات', icon: 'bi-compass', group: 'plan' },
+                    { toolId: 'strategic-objectives', apiKey: 'OBJECTIVES', label: 'الأهداف', icon: 'bi-bullseye', group: 'plan' },
+                    { toolId: 'kpis', apiKey: 'KPIS', label: 'المؤشرات', icon: 'bi-speedometer2', group: 'exec' },
+                    { toolId: 'okrs', apiKey: 'OKRS', label: 'OKRs', icon: 'bi-trophy', group: 'exec' },
+                ];
+                const PREREQS = _prereqMap.map(p => {
+                    const tool = (typeof STEPS_CONFIG !== 'undefined' && STEPS_CONFIG.DEPARTMENT_TOOLS || []).find(t => t.id === p.toolId);
+                    const href = tool && typeof getToolLink === 'function' ? getToolLink(tool, dept) : `/${p.toolId}.html?dept=${dept}`;
+                    return { id: p.apiKey, label: p.label, icon: p.icon, href, group: p.group };
+                });
+                const bar = document.getElementById('prereq-bar');
+                const container = document.getElementById('prereq-items');
+                if (!bar || !container) return;
+
+                let hasMissing = false;
+                let completedCount = 0;
+                const groups = { diag: [], plan: [], exec: [] };
+                const groupLabels = { diag: '🔍 التشخيص', plan: '🧭 التخطيط', exec: '🚀 التنفيذ' };
+
+
+                for (const p of PREREQS) {
+                    let hasData = false;
+                    try {
+                        const res = await DeptPage.loadFromAPI(p.id + '_' + dept.toUpperCase());
+                        const d = Array.isArray(res) ? res : (res ? Object.keys(res) : []);
+                        hasData = d.length > 0;
+                    } catch (e) { }
+
+                    if (hasData) {
+                        completedCount++;
+                        groups[p.group].push(`<a href="${p.href}" style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:10px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);font-size:0.78rem;font-weight:700;color:#22c55e;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.background='rgba(34,197,94,0.15)'" onmouseout="this.style.background='rgba(34,197,94,0.08)'">
+                            <i class="bi ${p.icon}"></i> ${p.label} <i class="bi bi-check-circle-fill"></i>
+                        </a>`);
+                    } else {
+                        hasMissing = true;
+                        groups[p.group].push(`<a href="${p.href}" style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:10px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);font-size:0.78rem;font-weight:700;color:#f59e0b;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.background='rgba(245,158,11,0.15)'" onmouseout="this.style.background='rgba(245,158,11,0.08)'">
+                            <i class="bi ${p.icon}"></i> ${p.label} <span style="font-size:0.65rem;padding:1px 6px;border-radius:6px;background:rgba(245,158,11,0.15);">ناقص</span>
+                        </a>`);
+                    }
+                }
+
+                const pct = Math.round((completedCount / PREREQS.length) * 100);
+                let html = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                    <div style="flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,0.05);overflow:hidden;">
+                        <div style="width:${pct}%;height:100%;border-radius:3px;background:${pct === 100 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444'};transition:width 0.5s;"></div>
+                    </div>
+                    <span style="font-size:0.75rem;font-weight:800;color:${pct === 100 ? '#22c55e' : '#f59e0b'};">${completedCount}/${PREREQS.length} (${pct}%)</span>
+                </div>`;
+
+                for (const [key, label] of Object.entries(groupLabels)) {
+                    if (groups[key].length > 0) {
+                        html += `<div style="margin-bottom:10px;">
+                            <div style="font-size:0.72rem;font-weight:800;color:#64748b;margin-bottom:6px;">${label}</div>
+                            <div style="display:flex;flex-wrap:wrap;gap:6px;">${groups[key].join('')}</div>
+                        </div>`;
+                    }
+                }
+                container.innerHTML = html;
+                bar.style.display = 'block';
+            })();
 
             // Define exit logic
             window.exitToDashboard = () => {
-                window.location.href = '/ceo-dashboard.html';
+                if (dept !== 'company') {
+                    window.location.href = '/dept-dashboard.html?dept=' + dept;
+                } else {
+                    window.location.href = '/ceo-dashboard.html';
+                }
             };
-
-            // تهيئة DeptPage (مهم جداً للحفظ)
-            await DeptPage.init('company');
 
             // dept switcher removed — company-level page
 
@@ -559,24 +705,22 @@
         async function loadData(dept) {
             const res = await DeptPage.loadFromAPI('INITIATIVES_' + dept.toUpperCase()) || [];
 
-            // 🛡️ فحص قسري للتداخل: منع تسرب بيانات الموارد البشرية للمسار المالي
-            const isFinance = (dept || '').toLowerCase() === 'finance';
+            // 🛡️ فحص قسري للتداخل: منع تسرب بيانات الموارد البشرية لأقسام أخرى
+            const isNonHR = (dept || '').toLowerCase() !== 'hr' && (dept || '').toLowerCase() !== 'company';
             const hrKeywords = ['توظيف', 'بشرية', 'موظف', 'توطين', 'دوران', 'تعيين', 'التعيين', 'قيادات', 'القيادات', 'استبقاء', 'إداري'];
-            const hasHRLeak = (str) => isFinance && hrKeywords.some(key => (str || '').includes(key));
+            const hasHRLeak = (str) => isNonHR && hrKeywords.some(key => (str || '').includes(key));
 
             let loaded = [];
             if (Array.isArray(res)) loaded = res;
             else if (res && Array.isArray(res.initiatives)) loaded = res.initiatives;
 
             // تصفية البيانات في حال وجود تسريب
-            if (loaded.length > 0 && isFinance) {
+            if (loaded.length > 0 && isNonHR) {
                 const leaked = loaded.some(i => hasHRLeak(i.title));
                 if (leaked) {
-                    console.warn('[Initiatives] Filtering HR leaked initiatives in Finance...');
-                    allInitiatives = loaded.filter(i => !hasHRLeak(i.title));
-                } else {
-                    allInitiatives = loaded;
+                    console.warn(`[Initiatives] Potential sensitive HR keywords detected in ${dept.toUpperCase()}. Proceeding with caution.`);
                 }
+                allInitiatives = loaded;
             } else {
                 allInitiatives = loaded;
             }
@@ -592,7 +736,8 @@
 
         async function purgeInitiativeData() {
             if (!confirm('سيتم مسح كافة المبادرات الحالية للبدء ببيانات نظيفة. هل أنت متأكد؟')) return;
-            await DeptPage.saveToAPI('INITIATIVES_COMPANY', []);
+            const urlDept = new URLSearchParams(window.location.search).get('dept') || 'company';
+            await DeptPage.saveToAPI('INITIATIVES_' + urlDept.toUpperCase(), []);
             window.location.reload();
         }
 
@@ -603,18 +748,20 @@
                 if (el) el.innerHTML = '';
             });
 
+            const esc = (str) => (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
             allInitiatives.forEach((init, idx) => {
                 const list = document.getElementById('list-' + (init.quarter || 'Q1'));
                 if (!list) return;
                 const card = document.createElement('div');
                 card.className = 'init-card';
+                const statusClass = (init.status || 'planned').replace(/[^a-z]/g, '');
                 card.innerHTML = `
-                    <span class="init-status-pill status-${init.status || 'planned'}">${getStatusLabel(init.status)}</span>
-                    <span class="init-title">${init.title}</span>
+                    <span class="init-status-pill status-${statusClass}">${esc(getStatusLabel(init.status))}</span>
+                    <span class="init-title">${esc(init.title)}</span>
                     <div class="init-meta">
-                        <span><i class="bi bi-cash me-1"></i> ${init.budget || '0 ر.س'}</span>
+                        <span><i class="bi bi-cash me-1"></i> ${esc(init.budget || '0 ر.س')}</span>
                     </div>
-                    ${init.parent ? `<div class="init-parent"><i class="bi bi-link-45deg"></i> دعم: ${init.parent}</div>` : ''}
+                    ${init.parent ? `<div class="init-parent"><i class="bi bi-link-45deg"></i> دعم: ${esc(init.parent)}</div>` : ''}
                 `;
                 card.onclick = () => openEditModal(idx);
                 list.appendChild(card);
@@ -634,12 +781,14 @@
             document.getElementById('initQuarter').value = q;
             document.getElementById('initStatus').value = 'planned';
             document.getElementById('initParentLink').value = '';
+            document.getElementById('deleteInitBtn').style.display = 'none';
             new bootstrap.Modal(document.getElementById('initModal')).show();
         }
 
         function openEditModal(idx) {
             editingIndex = idx;
             const i = allInitiatives[idx];
+            document.getElementById('deleteInitBtn').style.display = 'inline-block';
             document.getElementById('modalTitle').textContent = 'تعديل مبادرة';
             document.getElementById('initTitle').value = i.title;
             document.getElementById('initBudget').value = i.budget;
@@ -652,11 +801,20 @@
         function estimateBudget(kpiName) {
             const name = (kpiName || '').toLowerCase();
 
-            // 💰 المالية والنمو والرقابة (أولوية للمدير المالي)
-            if (name.includes('مالي') || name.includes('تدقيق') || name.includes('تحصيل') || name.includes('تكاليف') || name.includes('أرباح') || name.includes('نمو')) return '20,000 - 55,000 ر.س';
-            if (name.includes('إيراد') || name.includes('تحصيلات') || name.includes('فوترة') || name.includes('ميزانية')) return '15,000 - 40,000 ر.س';
+            // 📊 المبيعات
+            if (name.includes('مبيعات') || name.includes('إغلاق') || name.includes('صفقات') || name.includes('قمع') || name.includes('pipeline')) return '25,000 - 60,000 ر.س';
+            if (name.includes('عملاء') || name.includes('عميل') || name.includes('crm') || name.includes('احتفاظ') || name.includes('ولاء')) return '20,000 - 50,000 ر.س';
+            if (name.includes('إيراد') || name.includes('revenue') || name.includes('تحويل') || name.includes('conversion')) return '30,000 - 70,000 ر.س';
 
-            // 💻 التقنية والتحول الرقمي (ERP / Systems)
+            // 💰 المالية والنمو والرقابة
+            if (name.includes('مالي') || name.includes('تدقيق') || name.includes('تحصيل') || name.includes('تكاليف') || name.includes('أرباح') || name.includes('نمو')) return '20,000 - 55,000 ر.س';
+            if (name.includes('تحصيلات') || name.includes('فوترة') || name.includes('ميزانية')) return '15,000 - 40,000 ر.س';
+
+            // 📢 التسويق
+            if (name.includes('تسويق') || name.includes('حملة') || name.includes('علامة') || name.includes('brand')) return '30,000 - 80,000 ر.س';
+            if (name.includes('محتوى') || name.includes('سوشيال') || name.includes('ديجيتال') || name.includes('seo')) return '15,000 - 40,000 ر.س';
+
+            // 💻 التقنية والتحول الرقمي
             if (name.includes('نظام') || name.includes('أتمتة') || name.includes('تقني') || name.includes('تطبيق') || name.includes('erp')) return '60,000 - 150,000 ر.س';
             if (name.includes('تكنولوجيا') || name.includes('سحابة') || name.includes('تحديث بيانات')) return '40,000 - 95,000 ر.س';
 
@@ -664,7 +822,7 @@
             if (name.includes('عمليات') || name.includes('تشغيل') || name.includes('جودة') || name.includes('كفاءة')) return '35,000 - 80,000 ر.س';
             if (name.includes('تحسين') || name.includes('هيكلة') || name.includes('سياسات') || name.includes('إجراءات')) return '20,000 - 45,000 ر.س';
 
-            // 🏢 الموارد البشرية (أولوية أقل هنا)
+            // 🏢 الموارد البشرية
             if (name.includes('تدريب') || name.includes('تطوير') || name.includes('مهارات فريق')) return '15,000 - 35,000 ر.س';
             if (name.includes('توظيف') || name.includes('استقطاب') || name.includes('توطين')) return '25,000 - 50,000 ر.س';
 
@@ -675,19 +833,27 @@
         }
 
         async function syncInitiativesWithKpis(event, silent = false) {
-            const btn = event?.target.closest('button');
+            const btn = event?.target?.closest('button');
             if (btn) btn.disabled = true;
 
             try {
-                const dept = 'company';
-                const isFinance = false;
-                const kpis = await DeptPage.loadFromAPI('KPIS_COMPANY') || [];
+                const dept = new URLSearchParams(window.location.search).get('dept') || 'company';
+                const kpis = await DeptPage.loadFromAPI('KPIS_' + dept.toUpperCase()) || [];
 
-                // الحصول على العناوين الموجودة حالياً لمنع التكرار
+                // fallback: if no KPIs, try loading from objectives + key results
+                let kpiList = Array.isArray(kpis) ? kpis : (kpis?.kpis || []);
+                if (kpiList.length === 0) {
+                    const objs = await DeptPage.loadFromAPI('OBJECTIVES_' + dept.toUpperCase()) || [];
+                    const objectives = Array.isArray(objs) ? objs : (objs?.objectives || []);
+                    objectives.forEach(obj => {
+                        kpiList.push({ name: obj.title || obj.name, quarter: 'Q1' });
+                    });
+                }
+
                 const existingTitles = new Set(allInitiatives.map(i => (i.title || i.name || i.text || '').trim()));
                 const newInits = [];
 
-                kpis.forEach(k => {
+                kpiList.forEach(k => {
                     const title = 'مبادرة تحقيق: ' + (k.name || k.title);
                     if (!existingTitles.has(title.trim())) {
                         newInits.push({
@@ -701,54 +867,13 @@
                     }
                 });
 
-                // 🎯 "حزمة التأسيس" لـ HR - إضافة مبادرات حتمية للربع الأول إذا كان خالياً
-                if (dept === 'hr') {
-                    const foundationalPack = [
-                        { title: 'مبادرة تحقيق: أتمتة 5 عمليات يدوية رئيسية في شؤون الموظفين', quarter: 'Q1', budget: '60,000 - 150,000 ر.س' },
-                        { title: 'مبادرة تحقيق: نشر دليل سياسات وإجراءات التوظيف المحدث بنسبة 100%', quarter: 'Q1', budget: '20,000 - 45,000 ر.س' }
-                    ];
-                    foundationalPack.forEach(p => {
-                        if (!existingTitles.has(p.title.trim())) {
-                            newInits.push({
-                                title: p.title,
-                                budget: p.budget,
-                                quarter: p.quarter,
-                                status: 'planned',
-                                parent: 'التأسيس والحوكمة'
-                            });
-                            existingTitles.add(p.title.trim());
-                        }
-                    });
-                }
-
-                // 🎯 "حزمة الغلق السنوي" لـ Finance - إضافة مبادرات مالية حتمية للربع الرابع
-                if (isFinance) {
-                    const yearEndPack = [
-                        { title: 'إتمام التدقيق المالي السنوي والإقفال الختامي', quarter: 'Q4', budget: '45,000 ر.س' },
-                        { title: 'إعداد ميزانية العام القادم (Budgeting 2027)', quarter: 'Q4', budget: '25,000 ر.س' },
-                        { title: 'إصدار التقرير السنوي للأثر المالي والاستدامة', quarter: 'Q4', budget: '15,000 ر.س' }
-                    ];
-                    yearEndPack.forEach(p => {
-                        if (!existingTitles.has(p.title.trim())) {
-                            newInits.push({
-                                title: p.title,
-                                budget: p.budget,
-                                quarter: p.quarter,
-                                status: 'planned',
-                                parent: 'الأداء السنوي الحتمي'
-                            });
-                            existingTitles.add(p.title.trim());
-                        }
-                    });
-                }
-
                 if (newInits.length > 0) {
                     allInitiatives = [...allInitiatives, ...newInits];
                     renderRoadmap();
                     await persist();
-                    if (!silent && window.DeptPage?.showMessage) DeptPage.showMessage(`✅ تمت إضافة ${newInits.length} مبادرة جديدة (بما فيها عمليات الغلق والتأسيس)!`);
+                    if (!silent && window.DeptPage?.showMessage) DeptPage.showMessage(`✅ تمت إضافة ${newInits.length} مبادرة جديدة!`);
                 } else {
-                    if (!silent && window.DeptPage?.showMessage) DeptPage.showMessage('جميع المبادرات متزامنة مع المؤشرات والعمليات السنوية حالياً.');
+                    if (!silent && window.DeptPage?.showMessage) DeptPage.showMessage('جميع المبادرات متزامنة مع المؤشرات حالياً.');
                 }
             } catch (err) {
                 console.error('Sync failed', err);
@@ -772,14 +897,29 @@
         }
 
         async function persist() {
-            await DeptPage.saveToAPI('INITIATIVES_COMPANY', allInitiatives);
+            const d = new URLSearchParams(window.location.search).get('dept') || 'company';
+            try {
+                await DeptPage.saveToAPI('INITIATIVES_' + d.toUpperCase(), allInitiatives);
+            } catch (e) {
+                console.error('[Initiatives] Save failed:', e);
+                alert('⚠️ فشل حفظ البيانات — تحقق من الاتصال وحاول مجدداً');
+            }
             renderRoadmap();
         }
 
+        async function deleteInit() {
+            if (editingIndex < 0) return;
+            if (!confirm('هل تريد حذف هذه المبادرة؟')) return;
+            allInitiatives.splice(editingIndex, 1);
+            editingIndex = -1;
+            bootstrap.Modal.getInstance(document.getElementById('initModal')).hide();
+            await persist();
+        }
+
         async function saveJourney() {
-            const btn = event?.target.closest('button');
+            const btn = event?.target?.closest('button');
             const originalText = btn ? btn.innerHTML : '';
-            const dept = 'company';
+            const dept = new URLSearchParams(window.location.search).get('dept') || 'company';
 
             try {
                 if (btn) {
@@ -787,34 +927,38 @@
                     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري الحفظ وتوليد المشاريع...';
                 }
 
-                // 0. فحص التناغم قبل الحفظ النهائي (Synthesis Check)
-                const deptCode = dept;
-                const analysis = await window.SynthesisEngine.analyzeAlignment(deptCode);
-                if (analysis && analysis.score < 60) {
-                    const confirmProceed = confirm(`تنبيه: مؤشر جودة التخطيط لديك هو ${analysis.score}% فقط بسبب وجود فجوات ارتباط. هل تريد الاستمرار رغم ذلك؟`);
-                    if (!confirmProceed) {
-                        window.SynthesisEngine.renderSynthesisModal(analysis);
-                        if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
-                        return;
+                // 0. فحص التناغم قبل الحفظ النهائي
+                if (window.SynthesisEngine) {
+                    const analysis = await window.SynthesisEngine.analyzeAlignment(dept);
+                    if (analysis && analysis.score < 60) {
+                        const confirmProceed = confirm(`تنبيه: مؤشر جودة التخطيط لديك هو ${analysis.score}% فقط بسبب وجود فجوات ارتباط. هل تريد الاستمرار رغم ذلك؟`);
+                        if (!confirmProceed) {
+                            window.SynthesisEngine.renderSynthesisModal(analysis);
+                            if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
+                            return;
+                        }
                     }
                 }
 
-                // 1. حفظ المسودة (Persist JSON)
+                // 1. حفظ المسودة
                 await persist();
 
-                // 2. اعتماد المبادرات وتحويلها لمشاريع (Approval & Sync)
-                const result = await window.api.post(`/api/initiatives/approve/${dept}`);
-                if (result.error) throw new Error(result.error);
+                // 2. اعتماد المبادرات وتحويلها لمشاريع (optional — dept managers may not have active version)
+                try {
+                    const result = await window.api.post(`/api/initiatives/approve/${dept}`);
+                    if (result && !result.error) {
+                        if (window.DeptPage?.showMessage) {
+                            DeptPage.showMessage(`✅ تم اعتماد ${result.initiativesCount || 0} مبادرة وتوليد ${result.projectsCount || 0} مشروع تنفيذي بنجاح!`);
+                        }
+                    }
+                } catch (approveErr) {
+                    console.warn('[Initiatives] Approve skipped (no active version):', approveErr.message);
+                }
 
                 // 3. تحديث شريط التقدم
                 if (window.Context && Context.markStepCompleted) await Context.markStepCompleted('initiatives');
 
-                // 4. إشعار النجاح
-                if (window.DeptPage?.showMessage) {
-                    DeptPage.showMessage(`✅ تم اعتماد ${result.initiativesCount} مبادرة وتوليد ${result.projectsCount} مشروع تنفيذي بنجاح!`);
-                }
-
-                // 5. عرض المودال النهائي
+                // 4. عرض المودال النهائي
                 setTimeout(() => {
                     new bootstrap.Modal(document.getElementById('finalSuccessModal')).show();
                 }, 1000);
@@ -848,9 +992,43 @@
         }
 
         async function showIntegrityReport() {
-            const analysis = await window.SynthesisEngine.analyzeAlignment('company');
+            const dept = new URLSearchParams(window.location.search).get('dept') || 'company';
+            const analysis = await window.SynthesisEngine.analyzeAlignment(dept);
             window.SynthesisEngine.renderSynthesisModal(analysis);
         }
+    </script>
+    <!-- Sidebar hover trigger (must be AFTER all DOM + sidebar.js) -->
+    <script>
+        window.toggleSidebar = function () {
+            const sidebar = document.getElementById('stx-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            if (sidebar) sidebar.classList.toggle('mobile-open');
+            if (overlay) overlay.classList.toggle('active');
+            if (sidebar && sidebar.classList.contains('mobile-open')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
+        };
+        (function () {
+            const sb = document.getElementById('stx-sidebar');
+            if (!sb) return;
+            sb.style.right = '';
+            const EDGE = 18;
+            let pinned = false;
+            document.addEventListener('mousemove', function (e) {
+                if (pinned) return;
+                const nearEdge = (window.innerWidth - e.clientX) < EDGE;
+                const overSb = sb.contains(e.target) || sb === e.target;
+                if (nearEdge || overSb) {
+                    sb.classList.add('sidebar-visible');
+                } else {
+                    sb.classList.remove('sidebar-visible');
+                }
+            });
+            sb.addEventListener('mouseenter', function () { sb.classList.add('sidebar-visible'); });
+            sb.addEventListener('mouseleave', function () { if (!pinned) sb.classList.remove('sidebar-visible'); });
+        })();
     </script>
 </body>
 

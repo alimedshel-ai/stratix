@@ -83,4 +83,140 @@ router.post('/auto-generate', verifyToken, async (req, res) => {
     }
 });
 
+// ============================================================
+// POST /api/strategic/objectives/approve/:dept
+// ✅ اعتماد مسودة الأهداف وتحويلها لأهداف استراتيجية حقيقية
+// ============================================================
+const PERSPECTIVE_MAP = {
+    financial: 'FINANCIAL',
+    customer: 'CUSTOMER',
+    internal: 'INTERNAL_PROCESS',
+    learning: 'LEARNING_GROWTH'
+};
+
+router.post('/approve/:dept', verifyToken, async (req, res) => {
+    try {
+        const dept = req.params.dept.toUpperCase();
+        const entityId = req.user.activeEntityId || req.user.entityId;
+
+        if (!entityId) {
+            return res.status(400).json({ error: 'لم يتم تحديد الكيان' });
+        }
+
+        // 1. العثور على النسخة النشطة — أو إنشاء واحدة تلقائياً
+        let activeVersion = await prisma.strategyVersion.findFirst({
+            where: { entityId, isActive: true },
+            select: { id: true }
+        });
+        if (!activeVersion) {
+            // إنشاء نسخة استراتيجية أولية تلقائياً (للمدير المستقل وغيره)
+            activeVersion = await prisma.strategyVersion.create({
+                data: {
+                    entityId,
+                    versionNumber: 1,
+                    name: 'الخطة الاستراتيجية الأولى',
+                    status: 'ACTIVE',
+                    isActive: true,
+                    createdBy: req.user.id,
+                    activatedAt: new Date()
+                },
+                select: { id: true }
+            });
+        }
+        const versionId = activeVersion.id;
+
+        // 2. جلب المسودة من DepartmentAnalysis
+        const draftRec = await prisma.departmentAnalysis.findUnique({
+            where: {
+                entityId_department_type: { entityId, department: dept, type: 'OBJECTIVES' }
+            }
+        });
+
+        if (!draftRec || !draftRec.data) {
+            return res.status(404).json({ error: 'لا توجد مسودة أهداف لهذا القسم' });
+        }
+
+        let drafts = [];
+        try {
+            drafts = JSON.parse(draftRec.data);
+            if (!Array.isArray(drafts)) drafts = [];
+        } catch {
+            return res.status(400).json({ error: 'بيانات المسودة تالفة' });
+        }
+        if (drafts.length === 0) {
+            return res.status(400).json({ error: 'مسودة الأهداف فارغة' });
+        }
+
+        // 3. حذف الأهداف القديمة المولّدة تلقائياً لهذا القسم (منع التكرار)
+        await prisma.strategicObjective.deleteMany({
+            where: {
+                versionId,
+                status: 'DRAFT',
+                description: { contains: dept }
+            }
+        });
+
+        // 4. إنشاء الأهداف الجديدة (upsert بالعنوان)
+        const results = [];
+        const processedTitles = new Set();
+
+        for (const obj of drafts) {
+            const title = (obj.title || 'هدف غير مسمى').trim();
+            if (processedTitles.has(title)) continue;
+            processedTitles.add(title);
+
+            const perspective = PERSPECTIVE_MAP[obj.perspective] || obj.perspective || 'INTERNAL_PROCESS';
+
+            const existing = await prisma.strategicObjective.findFirst({
+                where: { versionId, title }
+            });
+
+            let record;
+            if (existing) {
+                record = await prisma.strategicObjective.update({
+                    where: { id: existing.id },
+                    data: {
+                        perspective,
+                        description: obj.description || `معتمد من قسم ${dept}`,
+                        status: 'APPROVED',
+                        weight: obj.weight ? parseFloat(obj.weight) : 1.0,
+                        progress: 0
+                    }
+                });
+            } else {
+                record = await prisma.strategicObjective.create({
+                    data: {
+                        versionId,
+                        title,
+                        perspective,
+                        description: obj.description || `معتمد من قسم ${dept}`,
+                        status: 'APPROVED',
+                        weight: obj.weight ? parseFloat(obj.weight) : 1.0,
+                        progress: 0
+                    }
+                });
+            }
+            results.push(record);
+        }
+
+        // 5. تحديث المسودة بعلامة الاعتماد
+        await prisma.departmentAnalysis.update({
+            where: { id: draftRec.id },
+            data: {
+                data: JSON.stringify(drafts.map(o => ({ ...o, _approved: true, _approvedAt: new Date().toISOString() })))
+            }
+        });
+
+        res.json({
+            success: true,
+            count: results.length,
+            message: `تم اعتماد ${results.length} هدف استراتيجي بنجاح`
+        });
+
+    } catch (error) {
+        console.error('Error approving objectives:', error);
+        res.status(500).json({ error: 'فشل اعتماد الأهداف', details: error.message });
+    }
+});
+
 module.exports = router;

@@ -524,12 +524,54 @@ window.SalesAuditEngine = (function () {
         return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
+    // ── تعبئة تلقائية من كل المصادر المتاحة ──
+    function prefillFromDiagnostic() {
+        try {
+            // المصادر الثلاثة
+            const companies = JSON.parse(localStorage.getItem('startix_pro_companies') || '[]');
+            const activeId = localStorage.getItem('startix_pro_active');
+            const client = companies.find(c => c.id === activeId) || companies[0] || {};
+            const diag = JSON.parse(localStorage.getItem('stratix_manager_diagnostic') || '{}');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const entity = user.entity || {};
+
+            // URL params
+            const params = new URLSearchParams(window.location.search);
+
+            // اسم الشركة: entity من API > عميل pro-dashboard > تشخيص > URL
+            if (!state.meta.companyName) {
+                state.meta.companyName = entity.legalName || entity.displayName || client.name || diag.companyName || params.get('company') || '';
+            }
+
+            // القطاع
+            if (!state.meta.sector) {
+                state.meta.sector = entity.sectorKey || client.sector || diag.sector || diag.activity || '';
+            }
+
+            // حجم الشركة
+            if (!state.meta.companySize) {
+                const sizeMap = { '<3': 'small', '3-10': 'small', '10-30': 'medium', '30+': 'large' };
+                state.meta.companySize = entity.size || client.size || sizeMap[diag.teamSize] || '';
+            }
+
+            // اسم المحلل
+            if (!state.meta.analystName) {
+                state.meta.analystName = diag.analystName || user.name || '';
+            }
+
+            // تاريخ الفحص
+            if (!state.meta.auditDate) {
+                state.meta.auditDate = new Date().toISOString().split('T')[0];
+            }
+        } catch (e) { console.warn('Prefill failed:', e); }
+    }
+
     // ── INIT ──
     function init() {
         const hasData = load();
+        prefillFromDiagnostic();
 
         if (hasData && state.startedAt && state.meta.sector && state.meta.companySize) {
-            // Restore previous session
             renderMetaForm();
             showAuditView();
         } else {

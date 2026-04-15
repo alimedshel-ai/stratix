@@ -280,12 +280,23 @@ router.post('/approve/:dept', verifyToken, async (req, res) => {
         // 1. العثور على النسخة النشطة للاستراتيجية
         let versionId = getVersionId(req);
         if (!versionId) {
-            const activeVersion = await prisma.strategyVersion.findFirst({
+            let activeVersion = await prisma.strategyVersion.findFirst({
                 where: { entityId, isActive: true },
                 select: { id: true }
             });
             if (!activeVersion) {
-                return res.status(400).json({ error: 'لم يتم العثور على نسخة استراتيجية نشطة. يرجى تفعيل نسخة أولاً.' });
+                activeVersion = await prisma.strategyVersion.create({
+                    data: {
+                        entityId,
+                        versionNumber: 1,
+                        name: 'الخطة الاستراتيجية الأولى',
+                        status: 'ACTIVE',
+                        isActive: true,
+                        createdBy: req.user.id,
+                        activatedAt: new Date()
+                    },
+                    select: { id: true }
+                });
             }
             versionId = activeVersion.id;
         }

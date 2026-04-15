@@ -186,7 +186,7 @@
     <!-- Top Navigation -->
     <nav class="top-nav d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center gap-4">
-            <a href="/initiatives.html" class="nav-link-btn"><i class="bi bi-arrow-right"></i> السابق: المبادرات</a>
+            <a id="prevLink" href="/initiatives.html" class="nav-link-btn"><i class="bi bi-arrow-right"></i> السابق: المبادرات</a>
             <div class="mx-2 opacity-10">|</div>
             <div id="dept-switcher-placeholder"></div>
             <div class="mx-2 opacity-10">|</div>
@@ -235,7 +235,7 @@
         </div>
 
         <div class="action-bar mt-5">
-            <a href="/initiatives.html" class="nav-link-btn"><i class="bi bi-arrow-right"></i> العودة للمبادرات
+            <a id="bottomPrevLink" href="/initiatives.html" class="nav-link-btn"><i class="bi bi-arrow-right"></i> العودة للمبادرات
                 الاستراتيجية</a>
             <div class="d-flex gap-3 align-items-center">
                 <span class="sync-badge"><i class="bi bi-shield-check"></i> بيانات جاهزة للنقل إلى منصة dPower</span>
@@ -280,22 +280,7 @@
         </div>
     </div>
 
-    <!-- Success Modal -->
-    <div class="modal fade" id="successModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content text-center p-5 glass-panel border-0 shadow-2xl">
-                <div class="modal-body p-0 text-white">
-                    <div class="mb-4"><i class="bi bi-check-all text-success" style="font-size: 5rem;"></i></div>
-                    <h2 class="fw-900 mb-3">رائع! انتهى التنفيذ</h2>
-                    <p class="text-muted mb-5 fs-5">خلفنا التشخيص والتخطيط والآن التنفيذ. خطتك جاهزة للترحيل لمنصة
-                        **dPower** لتبدأ رحلة المتابعة والتقارير.</p>
-                    <button type="button" onclick="window.location.href='/reviews.html'"
-                        class="btn btn-modern btn-primary w-100 py-4 border-0 fw-900 rounded-pill fs-4 shadow-lg">تفعيل
-                        أدوات المتابعة <i class="bi bi-graph-up-arrow ms-2"></i></button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Success Modal — removed; saveJourney() now navigates directly -->
 
     <script src="/js/smart-nav.js?v=4"></script>
     <script src="/js/api.js?v=4"></script>
@@ -312,34 +297,45 @@
     <script src="/assets/js/operations-handlers.js?v=4"></script>
     <script src="/assets/js/it-handlers.js?v=4"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>if(window.SmartNav){var l=document.getElementById('homeLink');l.href=SmartNav.getHomeUrl('');}</script>
+    <script>{var _d=new URLSearchParams(location.search).get('dept')||'';if(window.SmartNav){document.getElementById('homeLink').href=SmartNav.getHomeUrl(_d);}}</script>
 
     <script>
         let allProjects = [];
         let editingIndex = -1;
+        const _urlDept = new URLSearchParams(window.location.search).get('dept') || 'company';
+        const _deptKey = _urlDept.toUpperCase();
+        const _qs = _urlDept !== 'company' ? '?dept=' + _urlDept : '';
+        const _DEPT_LABELS = {
+            hr:'الموارد البشرية', finance:'المالية', sales:'المبيعات', marketing:'التسويق',
+            operations:'العمليات', it:'تقنية المعلومات', quality:'الجودة', cs:'خدمة العملاء',
+            projects:'المشاريع', compliance:'الامتثال', governance:'الحوكمة', support:'الخدمات المساندة'
+        };
 
         (async function () {
-            // 🛡️ تهيئة الصفحة (مستوى الشركة)
-            await window.initDeptPage(); // للتحقق من المستخدم فقط
-            const dept = 'company';
-            if (window.DeptPage) DeptPage.dept = 'company';
+            await window.initDeptPage();
+            if (window.DeptPage) DeptPage.dept = _urlDept;
+            await DeptPage.init(_urlDept);
 
-            document.getElementById('dept-context').textContent = 'التنفيذ التنظيمي للمشاريع (المنظمة)';
+            // عنوان السياق
+            const deptLabel = _DEPT_LABELS[_urlDept] || _urlDept;
+            document.getElementById('dept-context').textContent = _urlDept === 'company'
+                ? 'التنفيذ التنظيمي للمشاريع (المنظمة)'
+                : 'المشاريع التنفيذية (' + deptLabel + ')';
 
-            // تهيئة DeptPage (مهم جداً للحفظ)
-            await DeptPage.init('company');
+            // تحديث روابط التنقل (السابق: المبادرات)
+            const prevUrl = '/initiatives.html' + _qs;
+            document.getElementById('prevLink').href = prevUrl;
+            document.getElementById('bottomPrevLink').href = prevUrl;
 
-            // dept switcher removed — company-level page
-
-            await loadData(dept);
-            await populateInits(dept);
+            await loadData();
+            await populateInits();
         })();
 
-        async function loadData(dept) {
-            allProjects = await DeptPage.loadFromAPI('PROJECTS_' + dept.toUpperCase()) || [];
+        async function loadData() {
+            allProjects = await DeptPage.loadFromAPI('PROJECTS_' + _deptKey) || [];
             if (allProjects.length === 0) {
-                // Ingest from Initiatives
-                const inits = await DeptPage.loadFromAPI('INITIATIVES_' + dept.toUpperCase()) || [];
+                // استيراد تلقائي من المبادرات
+                const inits = await DeptPage.loadFromAPI('INITIATIVES_' + _deptKey) || [];
                 allProjects = inits.map(i => ({
                     title: i.title.replace('مبادرة', 'مشروع'),
                     init: i.title,
@@ -350,8 +346,8 @@
             renderProjects();
         }
 
-        async function populateInits(dept) {
-            const inits = await DeptPage.loadFromAPI('INITIATIVES_' + dept.toUpperCase()) || [];
+        async function populateInits() {
+            const inits = await DeptPage.loadFromAPI('INITIATIVES_' + _deptKey) || [];
             const select = document.getElementById('pInit');
             select.innerHTML = inits.map(i => `<option value="${i.title}">${i.title}</option>`).join('');
         }
@@ -359,6 +355,14 @@
         function renderProjects() {
             const area = document.getElementById('projects-area');
             area.innerHTML = '';
+            if (allProjects.length === 0) {
+                area.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <i class="bi bi-folder2-open text-muted" style="font-size:3rem;opacity:0.3"></i>
+                        <p class="text-muted mt-3 fw-700">لا توجد مشاريع بعد — أضف مشروع أو أكمل المبادرات أولاً</p>
+                    </div>`;
+                return;
+            }
             allProjects.forEach((p, idx) => {
                 const card = document.createElement('div');
                 card.className = 'col-lg-4';
@@ -411,7 +415,7 @@
         }
 
         async function persist() {
-            await DeptPage.saveToAPI('PROJECTS_COMPANY', allProjects);
+            await DeptPage.saveToAPI('PROJECTS_' + _deptKey, allProjects);
             renderProjects();
         }
 
@@ -427,10 +431,9 @@
         async function saveJourney() {
             await persist();
             if (window.Context && Context.markStepCompleted) await Context.markStepCompleted('projects');
-            new bootstrap.Modal(document.getElementById('successModal')).show();
+            // التالي: مراجعات الأداء
+            window.location.href = '/reviews.html' + _qs;
         }
-
-
     </script>
 </body>
 

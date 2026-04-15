@@ -1,58 +1,1266 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
-    <title>ستارتكس | التحليل الرقمي</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس | التشخيص العميق للمبيعات</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/css/shared.css">
     <link rel="stylesheet" href="/css/dept-pages.css">
-    <script src="/js/context-manager.js?v=4"></script>
-    <script src="/js/dept-page.js?v=4"></script>
-    <script src="/js/dept-deep-config.js?v=4"></script>
+    <style>
+        :root {
+            --stx-bg: #0b0d12;
+            --stx-card: rgba(22, 27, 34, 0.7);
+            --stx-border: rgba(255, 255, 255, 0.08);
+            --stx-primary: #818cf8;
+            --stx-green: #10b981;
+            --stx-accent: #6366f1;
+        }
+
+        body {
+            background: var(--stx-bg);
+            color: #f1f5f9;
+            font-family: 'Tajawal', sans-serif;
+            margin: 0;
+        }
+
+        .stx-main-content {
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        /* ── Top Bar ── */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 32px;
+            background: rgba(22, 27, 34, 0.6);
+            border-bottom: 1px solid var(--stx-border);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 40;
+        }
+        .top-bar .back-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.88rem;
+            padding: 6px 14px;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+        .top-bar .back-link:hover {
+            color: #e2e8f0;
+            background: rgba(255,255,255,0.06);
+        }
+        .top-bar .page-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.78rem;
+            color: #64748b;
+            font-weight: 600;
+        }
+        .top-bar .page-badge i { color: var(--stx-primary); }
+
+        /* ── Header ── */
+        .deep-header {
+            padding: 28px 40px 0;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .deep-header h1 {
+            font-weight: 900;
+            font-size: 1.8rem;
+            margin-bottom: 4px;
+        }
+        .deep-header .sub {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            margin-bottom: 0;
+        }
+
+        /* ── Stepper ── */
+        .wizard-stepper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 20px 40px 0;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .wz-step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--stx-border);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #64748b;
+            white-space: nowrap;
+        }
+        .wz-step.active {
+            background: rgba(99,102,241,0.1);
+            border-color: rgba(99,102,241,0.3);
+            color: #818cf8;
+        }
+        .wz-step.done {
+            background: rgba(16,185,129,0.08);
+            border-color: rgba(16,185,129,0.25);
+            color: #10b981;
+        }
+        .wz-step-num {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.8rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            flex-shrink: 0;
+        }
+        .wz-step.active .wz-step-num {
+            background: rgba(99,102,241,0.2);
+            border-color: rgba(99,102,241,0.4);
+        }
+        .wz-step.done .wz-step-num {
+            background: rgba(16,185,129,0.2);
+            border-color: rgba(16,185,129,0.4);
+        }
+        .wz-connector {
+            width: 24px;
+            height: 2px;
+            background: var(--stx-border);
+            flex-shrink: 0;
+        }
+
+        /* ── Progress Bar ── */
+        .progress-wrap {
+            max-width: 900px;
+            margin: 16px auto 0;
+            padding: 0 40px;
+        }
+        .progress-bar-outer {
+            height: 6px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-bar-inner {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1, #818cf8);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        .progress-label {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        /* ── Section Container ── */
+        .section-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 24px 40px 120px;
+        }
+        .section-card {
+            background: var(--stx-card);
+            border: 1px solid var(--stx-border);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(12px);
+        }
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-title i {
+            font-size: 1.3rem;
+            color: var(--stx-primary);
+        }
+
+        /* ── Numeric Fields ── */
+        .num-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .num-field {
+            position: relative;
+        }
+        .num-field label {
+            display: block;
+            font-weight: 700;
+            font-size: 0.88rem;
+            color: #cbd5e1;
+            margin-bottom: 6px;
+        }
+        .num-field .unit {
+            font-size: 0.75rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+        .num-field input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1.05rem;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+        .num-field input:focus {
+            outline: none;
+            border-color: var(--stx-accent);
+            background: rgba(99,102,241,0.05);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+        }
+        .num-field .idk-btn {
+            position: absolute;
+            left: 4px;
+            top: 30px;
+            font-size: 0.7rem;
+            color: #64748b;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .num-field .idk-btn:hover {
+            background: rgba(255,255,255,0.05);
+            color: #94a3b8;
+        }
+        .num-field .idk-opts {
+            display: none;
+            position: absolute;
+            left: 0;
+            top: 56px;
+            background: #1e2330;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 6px;
+            z-index: 10;
+            min-width: 160px;
+        }
+        .num-field .idk-opts.show { display: block; }
+        .num-field .idk-opt {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            color: #cbd5e1;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .num-field .idk-opt:hover {
+            background: rgba(99,102,241,0.15);
+        }
+        .num-field.golden label::after {
+            content: '\u2B50';
+            margin-right: 6px;
+            font-size: 0.7rem;
+        }
+
+        /* ── Maturity Questions ── */
+        .maturity-q {
+            margin-bottom: 28px;
+        }
+        .maturity-q:last-child { margin-bottom: 0; }
+        .maturity-q .q-label {
+            font-weight: 700;
+            font-size: 0.92rem;
+            color: #e2e8f0;
+            margin-bottom: 10px;
+        }
+        .maturity-q .q-desc {
+            font-size: 0.78rem;
+            color: #64748b;
+            margin-bottom: 12px;
+        }
+        .maturity-levels {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .mat-opt {
+            padding: 12px 14px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .mat-opt:hover {
+            background: rgba(99,102,241,0.06);
+            border-color: rgba(99,102,241,0.15);
+        }
+        .mat-opt.selected {
+            background: rgba(99,102,241,0.12);
+            border-color: rgba(99,102,241,0.35);
+        }
+        .mat-opt.selected .mat-level {
+            background: var(--stx-accent);
+            color: #fff;
+        }
+        .mat-level {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.72rem;
+            font-weight: 800;
+            background: rgba(255,255,255,0.06);
+            color: #64748b;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .mat-label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #cbd5e1;
+            line-height: 1.4;
+        }
+        .mat-label .mat-tag {
+            display: inline-block;
+            font-size: 0.65rem;
+            padding: 1px 6px;
+            border-radius: 4px;
+            margin-right: 4px;
+            font-weight: 700;
+        }
+        .mat-tag.t0 { background: rgba(239,68,68,0.15); color: #f87171; }
+        .mat-tag.t1 { background: rgba(245,158,11,0.15); color: #fbbf24; }
+        .mat-tag.t2 { background: rgba(59,130,246,0.15); color: #60a5fa; }
+        .mat-tag.t3 { background: rgba(16,185,129,0.15); color: #34d399; }
+
+        /* ── Radio Strategic Questions ── */
+        .strat-q {
+            margin-bottom: 28px;
+        }
+        .strat-q:last-child { margin-bottom: 0; }
+        .strat-q .q-label {
+            font-weight: 700;
+            font-size: 0.92rem;
+            color: #e2e8f0;
+            margin-bottom: 10px;
+        }
+        .strat-opts {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .strat-opt {
+            padding: 10px 14px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .strat-opt:hover {
+            background: rgba(99,102,241,0.06);
+            border-color: rgba(99,102,241,0.15);
+        }
+        .strat-opt.selected {
+            background: rgba(99,102,241,0.12);
+            border-color: rgba(99,102,241,0.35);
+            color: #a5b4fc;
+        }
+        .strat-opt .radio-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .strat-opt.selected .radio-dot {
+            border-color: var(--stx-accent);
+            background: var(--stx-accent);
+        }
+        .strat-opt.selected .radio-dot::after {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: #fff;
+            border-radius: 50%;
+        }
+
+        /* ── Textarea Questions ── */
+        .open-q {
+            margin-bottom: 24px;
+        }
+        .open-q:last-child { margin-bottom: 0; }
+        .open-q .q-label {
+            font-weight: 700;
+            font-size: 0.92rem;
+            color: #e2e8f0;
+            margin-bottom: 6px;
+        }
+        .open-q .q-hint {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+        .open-q .optional-tag {
+            font-size: 0.65rem;
+            background: rgba(245,158,11,0.12);
+            color: #fbbf24;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+            margin-right: 6px;
+        }
+        .open-q textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 14px 16px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 500;
+            font-family: 'Tajawal', sans-serif;
+            resize: vertical;
+            transition: all 0.2s;
+        }
+        .open-q textarea:focus {
+            outline: none;
+            border-color: var(--stx-accent);
+            background: rgba(99,102,241,0.05);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+        }
+        .open-q .char-count {
+            text-align: left;
+            font-size: 0.7rem;
+            color: #475569;
+            margin-top: 4px;
+        }
+
+        /* ── Bottom Nav ── */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(11,13,18,0.95);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid var(--stx-border);
+            padding: 14px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            z-index: 50;
+        }
+        .bottom-nav .btn-nav {
+            padding: 10px 28px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        .btn-prev {
+            background: rgba(255,255,255,0.06);
+            color: #94a3b8;
+        }
+        .btn-prev:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .btn-next {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: #fff;
+        }
+        .btn-next:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99,102,241,0.35);
+        }
+        .btn-next:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-save-later {
+            background: transparent;
+            color: #64748b;
+            font-size: 0.8rem;
+        }
+        .btn-save-later:hover { color: #94a3b8; }
+
+        /* ── Auto-save indicator ── */
+        .autosave-badge {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            font-size: 0.72rem;
+            color: #10b981;
+            background: rgba(16,185,129,0.08);
+            border: 1px solid rgba(16,185,129,0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 60;
+            font-weight: 600;
+        }
+        .autosave-badge.show { opacity: 1; }
+
+        /* ── Prefill Alert ── */
+        .prefill-alert {
+            padding: 10px 16px;
+            background: rgba(16,185,129,0.08);
+            border: 1px solid rgba(16,185,129,0.15);
+            border-radius: 10px;
+            color: #10b981;
+            font-size: 0.8rem;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        /* ── Feeds Info ── */
+        .feeds-tag {
+            display: inline-block;
+            font-size: 0.62rem;
+            padding: 1px 6px;
+            border-radius: 4px;
+            background: rgba(99,102,241,0.1);
+            color: #818cf8;
+            font-weight: 600;
+            margin-right: 4px;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .num-grid { grid-template-columns: 1fr; }
+            .maturity-levels { grid-template-columns: 1fr; }
+            .section-container { padding: 16px 16px 120px; }
+            .deep-header { padding: 20px 16px 0; }
+            .wizard-stepper { padding: 16px 16px 0; overflow-x: auto; }
+            .wz-step { padding: 8px 10px; font-size: 0.75rem; }
+            .top-bar { padding: 10px 16px; }
+        }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: var(--stx-border); border-radius: 10px; }
+    </style>
 </head>
+
 <body>
-    <div class="container">
-        <h1 id="pageTitle">📊 التحليل الرقمي</h1>
-        <div class="sub" id="pageSub">أدخل الأرقام والمؤشرات الرئيسية</div>
-        <form id="deepForm"></form>
-    </div>
+    <main class="stx-main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <a href="#" class="back-link" id="backLink">
+                    <i class="bi bi-arrow-right"></i>
+                    <span>لوحة القيادة</span>
+                </a>
+                <div class="page-badge">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    <span>التشخيص العميق</span>
+                </div>
+            </div>
+
+            <!-- Header -->
+            <div class="deep-header">
+                <h1><i class="bi bi-graph-up-arrow text-primary me-2"></i>التشخيص العميق للمبيعات</h1>
+                <div class="sub">21 سؤالاً مركّزاً تُغذّي جميع أدواتك الاستراتيجية — الوقت المقدر: 8-12 دقيقة</div>
+            </div>
+
+            <!-- Stepper -->
+            <div class="wizard-stepper" id="wizStepper"></div>
+
+            <!-- Progress -->
+            <div class="progress-wrap">
+                <div class="progress-bar-outer">
+                    <div class="progress-bar-inner" id="progressBar" style="width:0%"></div>
+                </div>
+                <div class="progress-label" id="progressLabel">0 من 21</div>
+            </div>
+
+            <!-- Prefill Alert -->
+            <div class="section-container" style="padding-bottom:0">
+                <div class="prefill-alert" id="prefillAlert">
+                    <i class="bi bi-magic me-2"></i> تم جلب بعض البيانات تلقائياً من مراحل سابقة
+                </div>
+            </div>
+
+            <!-- Dynamic Content -->
+            <div class="section-container" id="wizContent"></div>
+        </main>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav" id="bottomNav"></div>
+
+    <!-- Auto-save Badge -->
+    <div class="autosave-badge" id="autosaveBadge"><i class="bi bi-check-circle me-1"></i> تم الحفظ تلقائياً</div>
+
+    <!-- Scripts -->
+    <script src="/js/api.js?v=9"></script>
+    <script src="/js/context-manager.js?v=9"></script>
+    <script src="/js/data-bridge.js?v=9"></script>
+    <script src="/js/dept-page.js?v=9"></script>
+    <script src="/js/smart-nav.js?v=6"></script>
+    <script src="/js/steps-config.js?v=6"></script>
+
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            const DEPT_KEY = 'sales';
-            const config = window.DEPT_DEEP_CONFIG[DEPT_KEY];
-            if (!config) { document.querySelector('.container').innerHTML = '<h1>قسم غير معروف</h1>'; return; }
+    /* ═══════════════════════════════════════════════════════
+       SALES DEEP DIAGNOSIS — 4-Step Wizard
+       21 Questions | Auto-save | Maturity Levels
+    ═══════════════════════════════════════════════════════ */
+    (function () {
+        'use strict';
 
-            // set title
-            document.getElementById('pageTitle').textContent = (config.emoji || '📊') + ' ' + config.title;
-            document.getElementById('pageSub').textContent = 'أدخل الأرقام والمؤشرات الرئيسية لـ' + config.title.split('–')[1];
-            document.title = 'ستارتكس | ' + config.title;
+        const DEPT_KEY = 'sales';
+        let currentStep = 0;
+        let DATA = {};
 
-            // build form
-            const form = document.getElementById('deepForm');
-            config.fields.forEach(f => {
-                const div = document.createElement('div');
-                div.className = 'question';
-                div.innerHTML = `<label>${f.label}</label><input type="number" name="${f.name}" placeholder="${f.placeholder}" ${f.step ? 'step="'+f.step+'"' : ''} required>`;
-                form.appendChild(div);
+        /* ── STEPS DEFINITION ── */
+        const STEPS = [
+            { id: 'numbers', label: 'الأرقام الأساسية', icon: 'bi-calculator' },
+            { id: 'maturity', label: 'نضج العمليات', icon: 'bi-bar-chart-steps' },
+            { id: 'strategy', label: 'التموضع والمخاطر', icon: 'bi-bullseye' },
+            { id: 'open', label: 'الرؤى المفتوحة', icon: 'bi-chat-square-text' },
+        ];
+
+        /* ── QUESTIONS ── */
+        const Q_NUMBERS = [
+            { id: 'annual_sales', label: 'إجمالي المبيعات السنوية', unit: 'ريال', placeholder: '3,000,000', golden: false,
+              idk: ['أقل من 500 ألف', '500 ألف - 2 مليون', '2 - 10 مليون', 'أكثر من 10 مليون'] },
+            { id: 'active_customers', label: 'عدد العملاء النشطين', unit: 'عميل', placeholder: '500', golden: false,
+              idk: ['أقل من 20', '20-100', '100-500', 'أكثر من 500'] },
+            { id: 'avg_deal_size', label: 'متوسط قيمة الصفقة', unit: 'ريال', placeholder: '6,000', golden: false,
+              idk: ['أقل من 5,000', '5,000-50,000', '50,000-200,000', 'أكثر من 200,000'] },
+            { id: 'sales_cycle', label: 'متوسط دورة البيع', unit: 'يوم', placeholder: '30', golden: false,
+              idk: ['أيام', '1-4 أسابيع', '1-3 أشهر', 'أكثر من 3 أشهر'] },
+            { id: 'win_rate', label: 'نسبة نجاح الصفقات (Win Rate)', unit: '%', placeholder: '25', golden: false,
+              idk: ['أقل من 10%', '10-25%', '25-50%', 'أكثر من 50%'] },
+            { id: 'team_size', label: 'عدد فريق المبيعات', unit: 'شخص', placeholder: '5', golden: false,
+              idk: ['شخص واحد (المالك)', '2-4', '5-10', 'أكثر من 10'] },
+            { id: 'top3_concentration', label: 'نسبة إيرادات أكبر 3 عملاء', unit: '% من الإيراد', placeholder: '45', golden: true,
+              idk: ['أقل من 30% (صحي)', '30-50%', '50-70%', 'أكثر من 70% (خطر)'] },
+            { id: 'annual_churn', label: 'نسبة العملاء المفقودين سنوياً (Churn)', unit: '%', placeholder: '15', golden: true,
+              idk: ['أقل من 5%', '5-15%', '15-30%', 'أكثر من 30%'] },
+        ];
+
+        const Q_MATURITY = [
+            {
+                id: 'crm_maturity', label: 'نظام إدارة العملاء (CRM)',
+                desc: 'كيف تدير بيانات عملائك وصفقاتك حالياً؟',
+                feeds: ['SWOT', 'المخاطر', 'المبادرات'],
+                levels: [
+                    { v: 0, tag: 'غائب', text: 'إكسل أو دفاتر ورقية أو ذاكرة المندوبين' },
+                    { v: 1, tag: 'مرتجل', text: 'CRM موجود لكن غير مستخدم بانتظام / بيانات ناقصة' },
+                    { v: 2, tag: 'منظم', text: 'CRM مستخدم لتتبع كل الصفقات والعملاء' },
+                    { v: 3, tag: 'مُحسَّن', text: 'CRM متكامل مع أتمتة + تقارير + تكامل مع باقي الأنظمة' },
+                ]
+            },
+            {
+                id: 'process_maturity', label: 'عمليات البيع وسير العمل',
+                desc: 'كيف يتم بيع منتجاتك/خدماتك من الاتصال الأول إلى الإغلاق؟',
+                feeds: ['SWOT', 'المبادرات', 'صحة الإدارة'],
+                levels: [
+                    { v: 0, tag: 'غائب', text: 'كل مندوب يبيع بطريقته الخاصة' },
+                    { v: 1, tag: 'مرتجل', text: 'توجد ممارسات شفهية لكن غير موثقة' },
+                    { v: 2, tag: 'منظم', text: 'يوجد Sales Playbook موثّق ومُتّبع غالباً' },
+                    { v: 3, tag: 'مُحسَّن', text: 'Playbook + تدريب دوري + قياس الالتزام' },
+                ]
+            },
+            {
+                id: 'forecast_maturity', label: 'التنبؤ بالمبيعات (Forecasting)',
+                desc: 'كيف تتوقع مبيعات الشهر/الربع القادم؟',
+                feeds: ['KPIs', 'صحة الإدارة', 'AI Advisor'],
+                levels: [
+                    { v: 0, tag: 'غائب', text: 'لا أتوقع — أعرف عند نهاية الفترة' },
+                    { v: 1, tag: 'مرتجل', text: 'تقدير شخصي بناءً على الحس' },
+                    { v: 2, tag: 'منظم', text: 'بناءً على بيانات CRM ومسار الصفقات' },
+                    { v: 3, tag: 'مُحسَّن', text: 'نموذج تنبؤ مدعوم بالبيانات التاريخية والاتجاهات' },
+                ]
+            },
+            {
+                id: 'strategy_maturity', label: 'استراتيجية المبيعات والاستهداف',
+                desc: 'هل لديك استراتيجية مبيعات مكتوبة تحدد مَن تستهدف وكيف؟',
+                feeds: ['SWOT', 'TOWS', 'المبادرات'],
+                levels: [
+                    { v: 0, tag: 'غائب', text: 'نبيع لأي عميل يأتي' },
+                    { v: 1, tag: 'مرتجل', text: 'فكرة عامة عن العميل المثالي لكن غير مكتوبة' },
+                    { v: 2, tag: 'منظم', text: 'استراتيجية مكتوبة تحدد ICP (الملف المثالي للعميل)' },
+                    { v: 3, tag: 'مُحسَّن', text: 'استراتيجية + تقسيم سوقي + رسائل مخصصة لكل segment' },
+                ]
+            },
+            {
+                id: 'targets_maturity', label: 'مستهدفات الفريق وقياس الأداء',
+                desc: 'كيف تحدد مستهدفات فريق المبيعات وتقيس أداءهم؟',
+                feeds: ['KPIs', 'صحة الإدارة', 'المبادرات'],
+                levels: [
+                    { v: 0, tag: 'غائب', text: 'لا توجد مستهدفات محددة' },
+                    { v: 1, tag: 'مرتجل', text: 'مستهدف إجمالي للفريق فقط' },
+                    { v: 2, tag: 'منظم', text: 'مستهدفات فردية شهرية لكل مندوب' },
+                    { v: 3, tag: 'مُحسَّن', text: 'مستهدفات فردية + KPIs قيادية + مراجعات أسبوعية' },
+                ]
+            },
+        ];
+
+        const Q_STRATEGY = [
+            {
+                id: 'channels', label: 'ما أهم 3 قنوات تجلب لك عملاء حالياً؟',
+                type: 'multi3',
+                feeds: ['SWOT', 'المخاطر', 'المبادرات'],
+                opts: ['توصيات وعلاقات شخصية', 'وسائل التواصل (organic)', 'إعلانات مدفوعة', 'المعارض والفعاليات', 'اتصال بارد (Cold Outreach)', 'شراكات وموزعين', 'تسويق محتوى وSEO', 'موقع إلكتروني مباشر']
+            },
+            {
+                id: 'pricing', label: 'كيف تحدد أسعار منتجاتك/خدماتك؟',
+                type: 'radio',
+                feeds: ['SWOT', 'التحليل المالي'],
+                opts: [
+                    { v: 'cost_plus', text: 'التكلفة + هامش ثابت' },
+                    { v: 'competitor', text: 'مقارنة بأسعار المنافسين' },
+                    { v: 'value', text: 'حسب القيمة المُدركة عند العميل' },
+                    { v: 'negotiate', text: 'تفاوض مع كل عميل على حدة' },
+                ]
+            },
+            {
+                id: 'cac_clv', label: 'هل تعرف تكلفة اكتساب العميل (CAC) والقيمة الدائمة (CLV)؟',
+                type: 'radio',
+                feeds: ['KPIs', 'المبادرات', 'AI Advisor'],
+                opts: [
+                    { v: 'unknown', text: 'لا أعرف ما هما' },
+                    { v: 'aware', text: 'سمعت عنهما لكن لا أحسبهما' },
+                    { v: 'partial', text: 'أعرف أحدهما تقريباً' },
+                    { v: 'precise', text: 'أحسب الاثنين بدقة دورياً' },
+                ]
+            },
+            {
+                id: 'competitor_analysis', label: 'كم مرة تحلل المنافسين بشكل منهجي؟',
+                type: 'radio',
+                feeds: ['SWOT', 'PESTEL'],
+                opts: [
+                    { v: 'never', text: 'لا أحلل المنافسين' },
+                    { v: 'adhoc', text: 'عشوائياً عند الحاجة' },
+                    { v: 'annual', text: 'دورياً (سنوياً أو نصف سنوي)' },
+                    { v: 'quarterly', text: 'دورياً (ربعياً أو شهرياً) + أداة متخصصة' },
+                ]
+            },
+            {
+                id: 'sales_marketing', label: 'كيف تصف العلاقة بين المبيعات والتسويق؟',
+                type: 'radio',
+                feeds: ['SWOT', 'المبادرات', 'صحة الإدارة'],
+                opts: [
+                    { v: 'no_marketing', text: 'لا يوجد فريق تسويق منفصل' },
+                    { v: 'silos', text: 'يعملان منفصلين تماماً (Silos)' },
+                    { v: 'informal', text: 'يتواصلان لكن بدون اتفاقيات واضحة' },
+                    { v: 'aligned', text: 'اتفاقية SLA وأهداف مشتركة' },
+                ]
+            },
+        ];
+
+        const Q_OPEN = [
+            {
+                id: 'biggest_challenge',
+                label: 'صف بأسلوبك أكبر تحدي يواجه فريق المبيعات حالياً',
+                hint: 'مثال: دورة البيع طويلة جداً ونخسر العملاء قبل الإغلاق',
+                maxLen: 300,
+                feeds: ['AI Advisor', 'المبادرات', 'المخاطر'],
+            },
+            {
+                id: 'differentiator',
+                label: 'ما الذي يميز عرضك عن أقرب منافس يعرفه عميلك؟',
+                hint: 'مثال: سرعة التوصيل خلال 24 ساعة بينما المنافسون يحتاجون 3-5 أيام',
+                maxLen: 200,
+                feeds: ['SWOT (قوة)', 'استراتيجية التسويق'],
+            },
+            {
+                id: 'loss_reason',
+                label: 'ما السبب الأكثر تكراراً لخسارة الصفقات في رأيك؟',
+                hint: 'مثال: السعر مرتفع مقارنة بالمنافسين، تأخر في إرسال العرض',
+                maxLen: 200,
+                feeds: ['SWOT (ضعف)', 'المبادرات', 'Win/Loss'],
+            },
+        ];
+
+        const TOTAL_Q = Q_NUMBERS.length + Q_MATURITY.length + Q_STRATEGY.length + Q_OPEN.length; // 21
+
+        /* ═══════════════════════════════════
+           RENDER ENGINE
+        ═══════════════════════════════════ */
+
+        function renderStepper() {
+            const el = document.getElementById('wizStepper');
+            el.innerHTML = STEPS.map((s, i) => {
+                const cls = i === currentStep ? 'active' : (isStepDone(i) ? 'done' : '');
+                return (i > 0 ? '<div class="wz-connector"></div>' : '') +
+                    `<div class="wz-step ${cls}" onclick="WIZ.goStep(${i})">
+                        <div class="wz-step-num">${isStepDone(i) && i !== currentStep ? '<i class="bi bi-check"></i>' : (i + 1)}</div>
+                        <i class="bi ${s.icon}"></i> ${s.label}
+                    </div>`;
+            }).join('');
+        }
+
+        function renderProgress() {
+            let answered = 0;
+            Q_NUMBERS.forEach(q => { if (DATA[q.id] !== undefined && DATA[q.id] !== '') answered++; });
+            Q_MATURITY.forEach(q => { if (DATA[q.id] !== undefined) answered++; });
+            Q_STRATEGY.forEach(q => { if (DATA[q.id] !== undefined && DATA[q.id] !== '') answered++; });
+            Q_OPEN.forEach(q => { if (DATA[q.id] && DATA[q.id].trim()) answered++; });
+            const pct = Math.round((answered / TOTAL_Q) * 100);
+            document.getElementById('progressBar').style.width = pct + '%';
+            document.getElementById('progressLabel').textContent = `${answered} من ${TOTAL_Q} — ${pct}%`;
+        }
+
+        function isStepDone(idx) {
+            if (idx === 0) return Q_NUMBERS.every(q => DATA[q.id] !== undefined && DATA[q.id] !== '');
+            if (idx === 1) return Q_MATURITY.every(q => DATA[q.id] !== undefined);
+            if (idx === 2) return Q_STRATEGY.every(q => DATA[q.id] !== undefined && DATA[q.id] !== '');
+            if (idx === 3) return Q_OPEN.some(q => DATA[q.id] && DATA[q.id].trim()); // at least 1
+            return false;
+        }
+
+        function renderContent() {
+            const el = document.getElementById('wizContent');
+            if (currentStep === 0) el.innerHTML = renderNumbers();
+            else if (currentStep === 1) el.innerHTML = renderMaturity();
+            else if (currentStep === 2) el.innerHTML = renderStrategy();
+            else if (currentStep === 3) el.innerHTML = renderOpen();
+            renderBottomNav();
+            renderStepper();
+            renderProgress();
+            attachListeners();
+        }
+
+        /* ── Section 1: Numbers ── */
+        function renderNumbers() {
+            return `<div class="section-card">
+                <div class="section-title"><i class="bi bi-calculator"></i> لقطة الأرقام الأساسية</div>
+                <div class="num-grid">
+                    ${Q_NUMBERS.map(q => {
+                        const val = DATA[q.id] !== undefined ? DATA[q.id] : '';
+                        const isEstimate = typeof val === 'string' && val.startsWith('~');
+                        return `<div class="num-field ${q.golden ? 'golden' : ''}" data-qid="${q.id}">
+                            <label>${q.label} <span class="unit">(${q.unit})</span></label>
+                            <input type="number" name="${q.id}" value="${isEstimate ? '' : val}" placeholder="${q.placeholder}"
+                                   ${isEstimate ? 'disabled' : ''}>
+                            <div class="idk-btn" onclick="WIZ.toggleIdk('${q.id}')">
+                                ${isEstimate ? '✓ ' + val.slice(1) : 'لا أعرف بدقة ▾'}
+                            </div>
+                            <div class="idk-opts" id="idk_${q.id}">
+                                ${q.idk.map(opt => `<div class="idk-opt" onclick="WIZ.selectIdk('${q.id}','${opt}')">${opt}</div>`).join('')}
+                                ${isEstimate ? `<div class="idk-opt" style="color:#f87171" onclick="WIZ.clearIdk('${q.id}')">✕ مسح التقدير — أدخل رقم</div>` : ''}
+                            </div>
+                        </div>`;
+                    }).join('')}
+                </div>
+            </div>`;
+        }
+
+        /* ── Section 2: Maturity ── */
+        function renderMaturity() {
+            return `<div class="section-card">
+                <div class="section-title"><i class="bi bi-bar-chart-steps"></i> نضج البنية والعمليات</div>
+                ${Q_MATURITY.map(q => {
+                    const selVal = DATA[q.id];
+                    return `<div class="maturity-q" data-qid="${q.id}">
+                        <div class="q-label">${q.label}
+                            ${q.feeds.map(f => `<span class="feeds-tag">${f}</span>`).join('')}
+                        </div>
+                        <div class="q-desc">${q.desc}</div>
+                        <div class="maturity-levels">
+                            ${q.levels.map(l => `
+                                <div class="mat-opt ${selVal === l.v ? 'selected' : ''}" onclick="WIZ.selectMat('${q.id}',${l.v})">
+                                    <div class="mat-level">${l.v}</div>
+                                    <div class="mat-label">
+                                        <span class="mat-tag t${l.v}">${l.tag}</span>
+                                        ${l.text}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>`;
+                }).join('')}
+            </div>`;
+        }
+
+        /* ── Section 3: Strategy ── */
+        function renderStrategy() {
+            return `<div class="section-card">
+                <div class="section-title"><i class="bi bi-bullseye"></i> التموضع والمخاطر</div>
+                ${Q_STRATEGY.map(q => {
+                    if (q.type === 'multi3') return renderMulti3(q);
+                    return renderRadio(q);
+                }).join('')}
+            </div>`;
+        }
+
+        function renderMulti3(q) {
+            const sel = DATA[q.id] || [];
+            return `<div class="strat-q" data-qid="${q.id}">
+                <div class="q-label">${q.label} <span style="font-size:0.72rem;color:#64748b">(اختر 3 كحد أقصى)</span>
+                    ${q.feeds.map(f => `<span class="feeds-tag">${f}</span>`).join('')}
+                </div>
+                <div class="strat-opts">
+                    ${q.opts.map((opt, i) => `
+                        <div class="strat-opt ${sel.includes(opt) ? 'selected' : ''}" onclick="WIZ.toggleMulti('${q.id}',${i})">
+                            <div class="radio-dot" style="border-radius:4px">${sel.includes(opt) ? '✓' : ''}</div>
+                            ${opt}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>`;
+        }
+
+        function renderRadio(q) {
+            const sel = DATA[q.id];
+            return `<div class="strat-q" data-qid="${q.id}">
+                <div class="q-label">${q.label}
+                    ${q.feeds.map(f => `<span class="feeds-tag">${f}</span>`).join('')}
+                </div>
+                <div class="strat-opts">
+                    ${q.opts.map(o => `
+                        <div class="strat-opt ${sel === o.v ? 'selected' : ''}" onclick="WIZ.selectRadio('${q.id}','${o.v}')">
+                            <div class="radio-dot"></div>
+                            ${o.text}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>`;
+        }
+
+        /* ── Section 4: Open ── */
+        function renderOpen() {
+            return `<div class="section-card">
+                <div class="section-title"><i class="bi bi-chat-square-text"></i> الرؤى المفتوحة — وقود الذكاء الاصطناعي</div>
+                ${Q_OPEN.map(q => {
+                    const val = DATA[q.id] || '';
+                    return `<div class="open-q" data-qid="${q.id}">
+                        <div class="q-label">${q.label}
+                            <span class="optional-tag">اختياري</span>
+                            ${q.feeds.map(f => `<span class="feeds-tag">${f}</span>`).join('')}
+                        </div>
+                        <div class="q-hint">${q.hint}</div>
+                        <textarea maxlength="${q.maxLen}" placeholder="اكتب هنا..." oninput="WIZ.onTextarea('${q.id}',this)">${val}</textarea>
+                        <div class="char-count"><span id="cc_${q.id}">${val.length}</span> / ${q.maxLen}</div>
+                    </div>`;
+                }).join('')}
+            </div>`;
+        }
+
+        /* ── Bottom Nav ── */
+        function renderBottomNav() {
+            const el = document.getElementById('bottomNav');
+            const isFirst = currentStep === 0;
+            const isLast = currentStep === STEPS.length - 1;
+            el.innerHTML = `
+                ${!isFirst ? '<button class="btn-nav btn-prev" onclick="WIZ.prev()"><i class="bi bi-arrow-right me-1"></i> السابق</button>' : ''}
+                <button class="btn-nav btn-save-later" onclick="WIZ.saveLater()"><i class="bi bi-clock me-1"></i> حفظ ومتابعة لاحقاً</button>
+                <button class="btn-nav btn-next" onclick="WIZ.${isLast ? 'finish' : 'next'}()">
+                    ${isLast ? '<i class="bi bi-check-circle me-1"></i> إنهاء وحفظ' : 'التالي <i class="bi bi-arrow-left ms-1"></i>'}
+                </button>
+            `;
+        }
+
+        /* ═══════════════════════════════════
+           EVENT HANDLERS
+        ═══════════════════════════════════ */
+
+        function attachListeners() {
+            // Number inputs — auto-save on change
+            document.querySelectorAll('.num-field input').forEach(inp => {
+                inp.addEventListener('input', function () {
+                    const qid = this.closest('.num-field').dataset.qid;
+                    DATA[qid] = this.value ? parseFloat(this.value) : '';
+                    debounceSave();
+                    renderProgress();
+                });
             });
-            const btn = document.createElement('button');
-            btn.type = 'submit';
-            btn.textContent = 'حفظ ومتابعة للتقييم الوصفي';
-            form.appendChild(btn);
+        }
 
-            // init dept page
+        /* ── IDK (Don't Know) Fallback ── */
+        window.WIZ = {};
+
+        WIZ.toggleIdk = function (qid) {
+            document.querySelectorAll('.idk-opts.show').forEach(el => {
+                if (el.id !== 'idk_' + qid) el.classList.remove('show');
+            });
+            document.getElementById('idk_' + qid).classList.toggle('show');
+        };
+
+        WIZ.selectIdk = function (qid, val) {
+            DATA[qid] = '~' + val; // prefix ~ = estimate
+            document.getElementById('idk_' + qid).classList.remove('show');
+            debounceSave();
+            renderContent();
+        };
+
+        WIZ.clearIdk = function (qid) {
+            delete DATA[qid];
+            document.getElementById('idk_' + qid).classList.remove('show');
+            renderContent();
+        };
+
+        /* ── Maturity Select ── */
+        WIZ.selectMat = function (qid, val) {
+            DATA[qid] = val;
+            debounceSave();
+            renderContent();
+        };
+
+        /* ── Radio Select ── */
+        WIZ.selectRadio = function (qid, val) {
+            DATA[qid] = val;
+            debounceSave();
+            renderContent();
+        };
+
+        /* ── Multi Select (max 3) ── */
+        WIZ.toggleMulti = function (qid, idx) {
+            const q = Q_STRATEGY.find(q => q.id === qid);
+            if (!q) return;
+            const opt = q.opts[idx];
+            if (!DATA[qid]) DATA[qid] = [];
+            const arr = DATA[qid];
+            const i = arr.indexOf(opt);
+            if (i > -1) { arr.splice(i, 1); }
+            else if (arr.length < 3) { arr.push(opt); }
+            debounceSave();
+            renderContent();
+        };
+
+        /* ── Textarea ── */
+        WIZ.onTextarea = function (qid, el) {
+            DATA[qid] = el.value;
+            const cc = document.getElementById('cc_' + qid);
+            if (cc) cc.textContent = el.value.length;
+            debounceSave();
+            renderProgress();
+        };
+
+        /* ── Navigation ── */
+        WIZ.goStep = function (idx) {
+            collectCurrentStep();
+            currentStep = idx;
+            renderContent();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        WIZ.next = function () {
+            collectCurrentStep();
+            if (currentStep < STEPS.length - 1) {
+                currentStep++;
+                renderContent();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        };
+
+        WIZ.prev = function () {
+            collectCurrentStep();
+            if (currentStep > 0) {
+                currentStep--;
+                renderContent();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        };
+
+        WIZ.saveLater = async function () {
+            collectCurrentStep();
+            await saveToServer();
+            DeptPage.showMessage('تم حفظ التقدم — يمكنك المتابعة لاحقاً', false);
+        };
+
+        WIZ.finish = async function () {
+            collectCurrentStep();
+            const btn = document.querySelector('.btn-next');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري الحفظ...';
+
+            try {
+                await saveToServer();
+                // Sync to DataBridge
+                if (window.DataBridge) DataBridge.saveDeptDeep(DEPT_KEY, DATA);
+
+                DeptPage.showMessage('تم حفظ التشخيص العميق بنجاح', false);
+
+                // Navigate to next step (sales-audit)
+                const params = new URLSearchParams(window.location.search);
+                params.set('dept', DEPT_KEY);
+                setTimeout(() => {
+                    window.location.href = '/sales-audit.html?' + params.toString();
+                }, 1200);
+            } catch (err) {
+                console.error('Save failed:', err);
+                DeptPage.showMessage('فشل الحفظ — يرجى المحاولة مرة أخرى', true);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check-circle me-1"></i> إنهاء وحفظ';
+            }
+        };
+
+        /* ═══════════════════════════════════
+           DATA LAYER
+        ═══════════════════════════════════ */
+
+        function collectCurrentStep() {
+            // Numbers are collected via input listeners — just ensure they're in DATA
+            if (currentStep === 0) {
+                document.querySelectorAll('.num-field input:not([disabled])').forEach(inp => {
+                    const qid = inp.closest('.num-field').dataset.qid;
+                    if (inp.value) DATA[qid] = parseFloat(inp.value);
+                });
+            }
+        }
+
+        let _saveTimer = null;
+        function debounceSave() {
+            if (_saveTimer) clearTimeout(_saveTimer);
+            _saveTimer = setTimeout(() => saveToServer(), 3000);
+        }
+
+        async function saveToServer() {
+            // 1. Local save (instant)
+            Context.setTemp('sales_deep_data', DATA);
+            try {
+                localStorage.setItem('stratix_sales_deep_wizard', JSON.stringify(DATA));
+            } catch (e) { }
+
+            // 2. API save
+            try {
+                const ok = await DeptPage.saveToAPI('DEEP', DATA);
+                showAutosave();
+                return ok;
+            } catch (e) {
+                console.warn('API save failed, local backup active:', e.message);
+                showAutosave();
+            }
+        }
+
+        function showAutosave() {
+            const badge = document.getElementById('autosaveBadge');
+            badge.classList.add('show');
+            setTimeout(() => badge.classList.remove('show'), 2000);
+        }
+
+        async function loadData() {
+            // 1. From API
+            let saved = await DeptPage.loadFromAPI('DEEP');
+
+            // 2. Fallbacks
+            if (!saved || Object.keys(saved).length === 0) {
+                saved = Context.getTemp('sales_deep_data');
+            }
+            if (!saved || Object.keys(saved).length === 0) {
+                try {
+                    const ls = localStorage.getItem('stratix_sales_deep_wizard');
+                    if (ls) saved = JSON.parse(ls);
+                } catch (e) { }
+            }
+            if (!saved || Object.keys(saved).length === 0) {
+                // Legacy: try old sales-deep format
+                saved = await DeptPage.loadFromAPI('DEEP') || {};
+                if (!saved || Object.keys(saved).length === 0) {
+                    try {
+                        saved = DeptPage.migrateFromLocalStorage('stratix_sales_deep_results') || {};
+                    } catch (e) { saved = {}; }
+                }
+            }
+
+            // 3. DataBridge prefill
+            let prefilledAny = false;
+            if (window.DataBridge) {
+                const dbData = DataBridge.getPrefillData(DEPT_KEY, 'dept-smart');
+                if (dbData && dbData.kpis) {
+                    const MAP = { k_revenue: 'annual_sales', k_conversion: 'win_rate', k_team_size: 'team_size', k_customers: 'active_customers' };
+                    Object.entries(MAP).forEach(([dbKey, formKey]) => {
+                        if (!saved[formKey] && dbData.kpis[dbKey]) {
+                            saved[formKey] = dbData.kpis[dbKey];
+                            prefilledAny = true;
+                        }
+                    });
+                }
+            }
+
+            if (saved && typeof saved === 'object') {
+                DATA = saved;
+            }
+            if (prefilledAny) {
+                document.getElementById('prefillAlert').style.display = 'block';
+            }
+        }
+
+        /* ═══════════════════════════════════
+           INIT
+        ═══════════════════════════════════ */
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Sidebar
+            if (window.Sidebar && Sidebar.init) Sidebar.init();
+            else if (typeof initSidebar === 'function') initSidebar();
+
+            // DeptPage
             const ok = await DeptPage.init(DEPT_KEY);
             if (!ok) return;
-            let saved = await DeptPage.loadFromAPI('DEEP') || Context.getTemp('deep_results') || DeptPage.migrateFromLocalStorage('stratix_' + DEPT_KEY + '_deep_results');
-            DeptPage.fillForm(saved);
 
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const results = Object.fromEntries(new FormData(e.target));
-                Context.setTemp('deep_results', results);
-                const ok = await DeptPage.saveToAPI('DEEP', results);
-                DeptPage.showMessage(ok ? 'تم حفظ التحليل الرقمي بنجاح' : 'تم حفظ التحليل محلياً', !ok);
-                setTimeout(() => window.location.href = config.redirect, 1500);
+            // Load saved data
+            await loadData();
+
+            // Render
+            renderContent();
+
+            // Close idk dropdowns on outside click
+            document.addEventListener('click', function (e) {
+                if (!e.target.closest('.idk-btn') && !e.target.closest('.idk-opts')) {
+                    document.querySelectorAll('.idk-opts.show').forEach(el => el.classList.remove('show'));
+                }
             });
         });
+
+    })();
     </script>
+
+    <!-- Back link setup -->
+    <script>
+    (function(){
+        const dept = new URLSearchParams(window.location.search).get('dept') || '';
+        const backLink = document.getElementById('backLink');
+        if (backLink && window.SmartNav) {
+            backLink.href = SmartNav.getBackUrl(dept);
+        } else if (backLink && dept) {
+            backLink.href = '/dept-dashboard.html?dept=' + dept;
+        }
+    })();
+    </script>
+
 </body>
 </html>

@@ -158,6 +158,47 @@ function generateSalesKeyResults(obj) {
     ];
 }
 
+// ═══════════════════════════════════════════════════
+// 6. توليد استراتيجيات TOWS للمبيعات
+// ═══════════════════════════════════════════════════
+function generateSalesStrategies(strengths, weaknesses, opportunities, threats) {
+    const strats = { so: [], wo: [], st: [], wt: [] };
+
+    if (strengths.length && opportunities.length) {
+        strats.so.push('استثمار قاعدة العملاء النشطة لفتح قنوات بيع جديدة وزيادة الحصة السوقية');
+        strats.so.push('توظيف نظام CRM والأتمتة لتسريع دورة المبيعات وتحسين معدل الإغلاق');
+        strats.so.push('استغلال سمعة الفريق القوية لاختراق شرائح عملاء جديدة (B2B / B2C)');
+        strats.so.push('تعزيز التسعير التنافسي المبني على بيانات السوق لاغتنام فرص النمو');
+        if (strengths.some(s => s.includes('CRM') || s.includes('أتمتة')))
+            strats.so.push('توسيع أتمتة المبيعات لتشمل التنبؤ الذكي وتوزيع العملاء المحتملين تلقائياً');
+    }
+
+    if (weaknesses.length && opportunities.length) {
+        strats.wo.push('معالجة ضعف تتبع Pipeline عبر أدوات تحليل البيانات البيعية');
+        strats.wo.push('سد فجوة التدريب على مهارات البيع والتفاوض لرفع معدل التحويل');
+        strats.wo.push('إنشاء برنامج ولاء عملاء لتحويل نقطة الضعف في الاحتفاظ إلى فرصة نمو');
+        strats.wo.push('بناء هيكل فريق مبيعات واضح (SDR → AE → AM) لتحسين الكفاءة التشغيلية');
+        if (weaknesses.some(w => w.includes('Pipeline') || w.includes('تتبع')))
+            strats.wo.push('اعتماد منهجية Pipeline Management لتقليل الصفقات الضائعة بنسبة 30%');
+    }
+
+    if (strengths.length && threats.length) {
+        strats.st.push('استخدام العلاقات القوية مع العملاء كحاجز ضد دخول منافسين جدد');
+        strats.st.push('تنويع قنوات البيع (رقمي + ميداني) لتقليل مخاطر الاعتماد على قناة واحدة');
+        strats.st.push('تعزيز خدمة ما بعد البيع لحماية قاعدة العملاء من عروض المنافسين');
+        strats.st.push('استثمار بيانات المبيعات في التنبؤ بتقلبات السوق والاستعداد المبكر');
+    }
+
+    if (weaknesses.length && threats.length) {
+        strats.wt.push('خطة طوارئ لتعويض ضعف أداء المبيعات في حالات الانكماش الاقتصادي');
+        strats.wt.push('إعادة هيكلة حوافز الفريق لمواجهة مخاطر فقدان الكفاءات البيعية');
+        strats.wt.push('تقليص دورة البيع الطويلة لتجنب خسارة الصفقات أمام منافسين أسرع');
+        strats.wt.push('معالجة فجوات التقييم والمتابعة لمنع تسرب الإيرادات المتكررة');
+    }
+
+    return strats;
+}
+
 // تصدير للنافذة العامة
 if (typeof window !== 'undefined') {
     window.SALES_KEYS = SALES_KEYS;
@@ -167,4 +208,5 @@ if (typeof window !== 'undefined') {
     window.generateSalesScenarios = generateSalesScenarios;
     window.generateSalesVisionMission = generateSalesVisionMission;
     window.generateSalesKeyResults = generateSalesKeyResults;
+    window.generateSalesStrategies = generateSalesStrategies;
 }

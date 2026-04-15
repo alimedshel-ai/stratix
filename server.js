@@ -231,6 +231,7 @@ app.get('/api/user/me', verifyToken, async (req, res) => {
         systemRole: true,
         userCategory: true,
         onboardingCompleted: true,
+        isProManager: true,
         disabled: true,
         memberships: {
           select: {
@@ -243,6 +244,7 @@ app.get('/api/user/me', verifyToken, async (req, res) => {
                 legalName: true,
                 displayName: true,
                 size: true,
+                metadata: true,
                 company: { select: { id: true, nameAr: true, nameEn: true } }
               }
             }
@@ -264,12 +266,20 @@ app.get('/api/user/me', verifyToken, async (req, res) => {
     const isSA = user.systemRole === 'SUPER_ADMIN';
     const primaryRole = primaryMembership?.role || (isSA ? 'OWNER' : 'VIEWER');
 
-    // 🛡️ تحديد userType بأولوية صحيحة (نفس المنطق في auth.js):
-    // 1. OWNER/ADMIN/SUPER_ADMIN → دائماً COMPANY_MANAGER (بغض النظر عن userCategory)
-    // 2. membership.userType موجود → استخدمه
-    // 3. استنتاج من userCategory كـ fallback فقط لغير OWNER/ADMIN
+    // 🛡️ تحديد userType بأولوية صحيحة:
+    // 0. المدير المستقل (pro_manager) يبقى DEPT_MANAGER حتى لو role=OWNER
+    // 1. OWNER/ADMIN/SUPER_ADMIN → COMPANY_MANAGER (لغير المستقل)
+    // 2. membership.userType → استخدمه
+    // 3. استنتاج من userCategory كـ fallback
+    let _entityMeta = {};
+    try { _entityMeta = JSON.parse(primaryMembership?.entity?.metadata || '{}'); } catch(e) {}
+    const _isProEntity = _entityMeta.createdBy === 'pro_manager' && primaryMembership?.userType === 'DEPT_MANAGER';
+
     let uType;
-    if (['OWNER', 'ADMIN'].includes(primaryRole) || isSA) {
+    // المستقل: isProManager + (عضوية DEPT_MANAGER أو userCategory يبدأ بـ DEPT_)
+    if (_isProEntity || (user.isProManager && (primaryMembership?.userType === 'DEPT_MANAGER' || (user.userCategory || '').startsWith('DEPT_')))) {
+      uType = 'DEPT_MANAGER'; // المستقل يبقى DEPT_MANAGER
+    } else if (['OWNER', 'ADMIN'].includes(primaryRole) || isSA) {
       uType = 'COMPANY_MANAGER';
     } else if (primaryMembership?.userType) {
       uType = primaryMembership.userType;
@@ -287,6 +297,10 @@ app.get('/api/user/me', verifyToken, async (req, res) => {
       ? user.userCategory.replace('DEPT_', '').toLowerCase()
       : user.diagnosticData?.department || null;
 
+    // حساب isProManager النهائي
+    const isProManager = !!user.isProManager || _isProEntity
+      || (!primaryMembership && (user.userCategory || '').startsWith('DEPT_'));
+
     res.json({
       id: user.id,
       email: user.email,
@@ -298,6 +312,7 @@ app.get('/api/user/me', verifyToken, async (req, res) => {
       deptCode,
       userCategory: user.userCategory || null,
       onboardingCompleted: user.onboardingCompleted || false,
+      isProManager,
       entity: primaryMembership?.entity || null,
       memberships: user.memberships,
       authenticated: true

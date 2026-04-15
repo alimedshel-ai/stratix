@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-bs-theme="dark">
 
 <head>
     <meta charset="UTF-8">
@@ -9,11 +9,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="/css/shared.css">
-    <link rel="stylesheet" href="/css/dept-pages.css">
+    <link rel="stylesheet" href="/css/shared.css?v=6">
+    <link rel="stylesheet" href="/css/dept-pages.css?v=6">
 
     <style>
-        /* تنسيقات إضافية للوحة التنفيذية */
         :root {
             --stx-bg: #0b0d12;
             --stx-card: rgba(22, 27, 34, 0.7);
@@ -22,6 +21,9 @@
             --stx-success: #10b981;
             --stx-warning: #f59e0b;
             --stx-danger: #ef4444;
+            --bs-body-color: #f8fafc;
+            --bs-body-color-rgb: 248, 250, 252;
+            --bs-card-color: #f8fafc;
         }
 
         body {
@@ -102,7 +104,7 @@
             content: 'AI';
             position: absolute;
             top: -10px;
-            left: -10px;
+            right: -10px;
             font-size: 5rem;
             font-weight: 900;
             color: rgba(255, 255, 255, 0.03);
@@ -134,6 +136,7 @@
             border-right: 3px solid var(--stx-success);
         }
 
+        /* ═══ Phase Track ═══ */
         .phase-track {
             display: flex;
             justify-content: space-between;
@@ -144,9 +147,21 @@
         .phase-item {
             flex: 1;
             text-align: center;
-            padding: 12px;
+            padding: 16px 12px;
             background: rgba(255, 255, 255, 0.03);
             border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .phase-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .phase-item.phase-active {
+            border: 1px solid var(--stx-primary);
+            background: rgba(99, 102, 241, 0.08);
         }
 
         .phase-progress {
@@ -160,7 +175,7 @@
         .phase-progress-fill {
             height: 100%;
             border-radius: 3px;
-            transition: width 0.6s ease;
+            transition: width 0.8s ease;
         }
 
         .phase-name {
@@ -173,19 +188,274 @@
             color: #94a3b8;
         }
 
+        .phase-icon {
+            font-size: 1.2rem;
+            margin-bottom: 6px;
+            opacity: 0.7;
+        }
+
+        /* ═══ Monitoring Cards ═══ */
+        .monitor-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--stx-border);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .monitor-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: var(--stx-primary);
+            color: inherit;
+            transform: translateY(-3px);
+        }
+
+        .monitor-count {
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+
+        .monitor-label {
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+
+        /* ═══ Quick Links Grid ═══ */
+        .quick-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--stx-border);
+            border-radius: 12px;
+            text-decoration: none;
+            color: #f8fafc;
+            transition: all 0.2s;
+        }
+
+        .quick-link:hover {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: var(--stx-primary);
+            color: #f8fafc;
+        }
+
+        .quick-link .ql-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .quick-link .ql-status {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-right: auto;
+        }
+
+        .ql-done {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--stx-success);
+        }
+
+        .ql-pending {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--stx-warning);
+        }
+
+        .ql-locked {
+            background: rgba(255, 255, 255, 0.05);
+            color: #64748b;
+        }
+
         .main-scroll {
             height: calc(100vh - 100px);
             overflow-y: auto;
-            padding: 30px 40px;
+            padding: 30px 40px 160px 40px;
+        }
+
+        /* ═══ Bottom Action Bar ═══ */
+        .action-bar {
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            left: 0;
+            background: rgba(10, 11, 16, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            gap: 12px;
+        }
+
+        .action-bar .nav-link-btn {
+            color: #94a3b8;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 16px;
+            border-radius: 12px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .action-bar .nav-link-btn:hover {
+            color: #f8fafc;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .action-bar .nav-shortcuts {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .action-bar .shortcut-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--stx-border);
+            color: #e2e8f0;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .action-bar .shortcut-btn:hover {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: var(--stx-primary);
+            color: #f8fafc;
+            transform: translateY(-2px);
+        }
+
+        .action-bar .shortcut-btn i {
+            font-size: 0.9rem;
+        }
+
+        /* ═══ Sidebar — Auto Hover ═══ */
+        #sidebar {
+            width: 260px;
+            background: #1a1d2e;
+            border-left: 1px solid var(--stx-border);
+            flex-shrink: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100vh;
+            z-index: 1100;
+            transform: translateX(220px);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #sidebar:hover,
+        #sidebar.sidebar-open {
+            transform: translateX(0);
+        }
+
+        #sidebar::before {
+            content: '\F285';
+            font-family: 'bootstrap-icons';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(26, 29, 46, 0.95);
+            color: #667eea;
+            padding: 12px 6px;
+            border-radius: 0 8px 8px 0;
+            font-size: 1rem;
+            z-index: 1;
+            transition: opacity 0.3s;
+        }
+
+        #sidebar:hover::before {
+            opacity: 0;
+        }
+
+        /* ═══ Hamburger — Mobile ═══ */
+        .dept-hamburger {
+            display: none;
+            background: rgba(22, 27, 34, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #f8fafc;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            font-size: 20px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 1200;
         }
 
         @media (max-width: 768px) {
+            #sidebar {
+                transform: translateX(260px);
+            }
+
+            #sidebar.sidebar-open {
+                transform: translateX(0);
+            }
+
+            #sidebar:hover {
+                transform: translateX(260px);
+            }
+
+            #sidebar.sidebar-open:hover {
+                transform: translateX(0);
+            }
+
+            #sidebar::before {
+                display: none;
+            }
+
+            .dept-hamburger {
+                display: flex;
+            }
+
             .main-scroll {
-                padding: 20px;
+                padding: 20px 20px 160px 20px;
+            }
+
+            .action-bar {
+                padding: 12px 16px;
+                flex-wrap: wrap;
+            }
+
+            .action-bar .nav-shortcuts {
+                display: none;
             }
 
             .dashboard-header {
                 padding: 20px;
+                padding-top: 60px;
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 12px;
@@ -194,306 +464,702 @@
             .pulse-number {
                 font-size: 1.8rem;
             }
+
+            .phase-track {
+                flex-wrap: wrap;
+            }
+
+            .phase-item {
+                flex: 1 1 45%;
+            }
         }
     </style>
 </head>
 
-<body>
-    <div class="stx-wrapper">
-        <aside class="stx-sidebar-container" id="stx-sidebar"></aside>
-        <main class="stx-main-content">
-            <header class="dashboard-header">
-                <div>
-                    <h1 id="dept-title" style="font-size: 1.8rem; font-weight: 900; margin: 0;">لوحة القيادة التنفيذية
-                    </h1>
-                    <p class="text-muted mb-0" id="welcome-msg">مرحباً بك، جار تحميل بيانات الإدارة...</p>
-                </div>
-                <div class="d-flex align-items-center gap-4">
-                    <div class="text-end d-none d-md-block">
-                        <div class="small text-muted mb-1">آخر تحديث</div>
-                        <div
-                            class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">
-                            <i class="bi bi-cloud-check-fill me-1"></i> <span id="last-updated">اليوم</span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+<body class="dir-rtl">
+    <nav id="sidebar"></nav>
+    <button class="dept-hamburger" id="mobileMenuBtn"><i class="bi bi-list"></i></button>
 
-            <div class="main-scroll">
-                <!-- منطقة نبض الإدارة -->
-                <div class="row g-4 mb-5">
-                    <div class="col-md-4">
-                        <div class="exec-card h-100 d-flex flex-column justify-content-between">
-                            <div class="pulse-label"><i class="bi bi-lightbulb"></i> الجاهزية الاستراتيجية</div>
-                            <div class="pulse-number" id="strategic-readiness">0%</div>
-                            <div class="mt-2">
-                                <div class="progress" style="height: 8px;">
-                                    <div id="readiness-bar" class="progress-bar bg-primary" style="width:0%"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="exec-card h-100 d-flex flex-column justify-content-between">
-                            <div class="pulse-label"><i class="bi bi-coin"></i> الميزانية التقديرية الكلية</div>
-                            <div class="pulse-number" id="total-budget">0 ر.س</div>
-                            <div class="text-muted small mt-2">مبنية على مبادراتك الحالية</div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="exec-card h-100 d-flex flex-column justify-content-between">
-                            <div class="pulse-label"><i class="bi bi-shield-exclamation"></i> مستوى المخاطر</div>
-                            <div id="risk-level" class="risk-badge risk-low">منخفض</div>
-                            <div class="text-muted small mt-2">بناءً على المبادرات المعرضة للخطر</div>
-                        </div>
+    <main>
+        <!-- 🏢 بانر العميل النشط — يظهر للمدير المستقل فقط -->
+        <div id="activeClientBanner" style="display:none;background:linear-gradient(135deg,rgba(16,185,129,0.1),rgba(99,102,241,0.08));border:1px solid rgba(16,185,129,0.2);border-radius:12px;padding:10px 20px;margin-bottom:16px;align-items:center;gap:12px;font-size:0.9rem;">
+            <i class="bi bi-building" style="font-size:18px;color:#10b981"></i>
+            <span style="font-weight:700;color:#e2e8f0" id="bannerClientName">—</span>
+            <a href="/pro-dashboard.html" style="margin-right:auto;font-size:0.8rem;color:#6366f1;text-decoration:none;font-weight:600">
+                <i class="bi bi-arrow-repeat"></i> تبديل العميل
+            </a>
+        </div>
+
+        <header class="dashboard-header">
+            <div>
+                <h1 id="dept-title" style="font-size: 1.8rem; font-weight: 900; margin: 0;">لوحة القيادة التنفيذية</h1>
+                <p class="text-muted mb-0" id="welcome-msg">مرحباً بك، جار تحميل بيانات الإدارة...</p>
+            </div>
+            <div class="d-flex align-items-center gap-4">
+                <div class="text-end d-none d-md-block">
+                    <div class="small text-muted mb-1">الجاهزية الكلية</div>
+                    <div id="overall-badge"
+                        class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3"
+                        style="font-size: 1rem; font-weight: 800;">
+                        <i class="bi bi-speedometer2 me-1"></i> <span id="overall-percent">0%</span>
                     </div>
                 </div>
+            </div>
+        </header>
 
-                <!-- منطقة ذكاء ستارتكس الاستراتيجي -->
-                <div class="row g-4 mb-5">
-                    <div class="col-12">
-                        <div class="exec-card ai-insight-card">
-                            <div class="d-flex align-items-center gap-3 mb-3">
-                                <div class="pulse-icon bg-white text-dark rounded-circle d-flex align-items-center justify-content-center"
-                                    style="width:40px; height:40px">
-                                    <i class="bi bi-stars"></i>
-                                </div>
-                                <h3 class="h5 fw-bold m-0" style="color: #fff">ذكاء ستارتكس الاستراتيجي</h3>
-                            </div>
-                            <p id="ai-insight-text" class="mb-3 text-white-50">تحليل مخرجاتك جارٍ...</p>
-                            <div id="ai-action-btn"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- منطقة أهم المبادرات -->
-                <div class="row g-4 mb-5">
-                    <div class="col-12">
-                        <div class="exec-card">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h3 class="h5 fw-bold m-0"><i class="bi bi-rocket-takeoff"></i> أهم المبادرات (أولوية
-                                    قصوى)</h3>
-                                <a href="/initiatives.html" class="small text-primary">عرض الكل <i
-                                        class="bi bi-arrow-left"></i></a>
-                            </div>
-                            <div id="top-initiatives-list">
-                                <div class="text-center py-3">جاري تحميل المبادرات...</div>
+        <div class="main-scroll">
+            <!-- ═══ 1. Pulse Metrics ═══ -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="exec-card h-100 d-flex flex-column justify-content-between">
+                        <div class="pulse-label"><i class="bi bi-lightbulb"></i> الجاهزية الاستراتيجية</div>
+                        <div class="pulse-number" id="strategic-readiness">0%</div>
+                        <div class="mt-2">
+                            <div class="progress" style="height: 8px;">
+                                <div id="readiness-bar" class="progress-bar bg-primary" style="width:0%"></div>
                             </div>
                         </div>
                     </div>
                 </div>
+                <div class="col-md-4">
+                    <div class="exec-card h-100 d-flex flex-column justify-content-between">
+                        <div class="pulse-label"><i class="bi bi-coin"></i> الميزانية التقديرية الكلية</div>
+                        <div class="pulse-number" id="total-budget">0 ر.س</div>
+                        <div class="text-muted small mt-2">مبنية على مبادراتك الحالية</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="exec-card h-100 d-flex flex-column justify-content-between">
+                        <div class="pulse-label"><i class="bi bi-shield-exclamation"></i> مستوى المخاطر</div>
+                        <div id="risk-level" class="risk-badge risk-low">منخفض</div>
+                        <div class="text-muted small mt-2">بناءً على المبادرات المعرضة للخطر</div>
+                    </div>
+                </div>
+            </div>
 
-                <!-- تعقب مراحل الرحلة -->
-                <div class="row g-4">
-                    <div class="col-12">
-                        <div class="exec-card">
-                            <h3 class="h5 fw-bold mb-3"><i class="bi bi-compass"></i> تقدم مراحل الرحلة الاستراتيجية
-                            </h3>
-                            <div class="phase-track" id="phase-track">
-                                <!-- سيتم تعبئتها ديناميكياً -->
-                                <div class="phase-item">
-                                    <div class="phase-name">التشخيص</div>
-                                    <div class="phase-progress">
-                                        <div id="phase-diagnostic-fill" class="phase-progress-fill bg-primary"
-                                            style="width:0%"></div>
-                                    </div>
-                                    <div class="phase-percent" id="phase-diagnostic-percent">0%</div>
-                                </div>
-                                <div class="phase-item">
-                                    <div class="phase-name">الاكتشاف</div>
-                                    <div class="phase-progress">
-                                        <div id="phase-discovery-fill" class="phase-progress-fill bg-info"
-                                            style="width:0%"></div>
-                                    </div>
-                                    <div class="phase-percent" id="phase-discovery-percent">0%</div>
-                                </div>
-                                <div class="phase-item">
-                                    <div class="phase-name">التخطيط</div>
-                                    <div class="phase-progress">
-                                        <div id="phase-planning-fill" class="phase-progress-fill bg-warning"
-                                            style="width:0%"></div>
-                                    </div>
-                                    <div class="phase-percent" id="phase-planning-percent">0%</div>
-                                </div>
-                                <div class="phase-item">
-                                    <div class="phase-name">التنفيذ</div>
-                                    <div class="phase-progress">
-                                        <div id="phase-execution-fill" class="phase-progress-fill bg-success"
-                                            style="width:0%"></div>
-                                    </div>
-                                    <div class="phase-percent" id="phase-execution-percent">0%</div>
-                                </div>
+            <!-- ═══ 2. Phase Progress ═══ -->
+            <div class="row g-4 mb-4">
+                <div class="col-12">
+                    <div class="exec-card">
+                        <h3 class="h5 fw-bold mb-3"><i class="bi bi-compass"></i> تقدم مراحل الرحلة الاستراتيجية</h3>
+                        <div class="phase-track" id="phase-track"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══ 3. Monitoring Cards ═══ -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <a id="link-corrections" href="#" class="monitor-card">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-tools text-warning" style="font-size:1.2rem"></i>
+                            <span class="monitor-label">التصحيحات المعلقة</span>
+                        </div>
+                        <div class="monitor-count text-warning" id="corrections-count">—</div>
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a id="link-risks" href="#" class="monitor-card">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-exclamation-triangle text-danger" style="font-size:1.2rem"></i>
+                            <span class="monitor-label">المخاطر النشطة</span>
+                        </div>
+                        <div class="monitor-count text-danger" id="risks-count">—</div>
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a id="link-initiatives" href="#" class="monitor-card">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-rocket-takeoff text-info" style="font-size:1.2rem"></i>
+                            <span class="monitor-label">المبادرات الفعّالة</span>
+                        </div>
+                        <div class="monitor-count text-info" id="initiatives-count">—</div>
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a id="link-kpis" href="#" class="monitor-card">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-speedometer2 text-success" style="font-size:1.2rem"></i>
+                            <span class="monitor-label">مؤشرات الأداء</span>
+                        </div>
+                        <div class="monitor-count text-success" id="kpis-count">—</div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- ═══ 4. AI Insight ═══ -->
+            <div class="row g-4 mb-4">
+                <div class="col-12">
+                    <div class="exec-card ai-insight-card">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="pulse-icon bg-white text-dark rounded-circle d-flex align-items-center justify-content-center"
+                                style="width:40px; height:40px">
+                                <i class="bi bi-stars"></i>
                             </div>
+                            <h3 class="h5 fw-bold m-0" style="color: #fff">ذكاء ستارتكس الاستراتيجي</h3>
+                        </div>
+                        <div id="ai-insights-container">
+                            <p class="mb-0 text-white-50">تحليل مخرجاتك جارٍ...</p>
                         </div>
                     </div>
                 </div>
             </div>
-        </main>
-    </div>
+
+            <!-- ═══ 5. Top Initiatives ═══ -->
+            <div class="row g-4 mb-4">
+                <div class="col-12">
+                    <div class="exec-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3 class="h5 fw-bold m-0"><i class="bi bi-rocket-takeoff"></i> أهم المبادرات (أولوية قصوى)
+                            </h3>
+                            <a id="initiatives-link" href="/initiatives.html" class="small text-primary">عرض الكل <i
+                                    class="bi bi-arrow-left"></i></a>
+                        </div>
+                        <div id="top-initiatives-list">
+                            <div class="text-center py-3">جاري تحميل المبادرات...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══ 6. Quick Links — All Journey Tools ═══ -->
+            <div class="row g-4 mb-5">
+                <div class="col-12">
+                    <div class="exec-card">
+                        <h3 class="h5 fw-bold mb-3"><i class="bi bi-grid-3x3-gap"></i> أدوات الرحلة الاستراتيجية</h3>
+                        <div class="row g-3" id="quick-links-grid"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Bottom Action Bar ═══ -->
+        <div class="action-bar">
+            <a id="bar-home" href="/dashboard.html" class="nav-link-btn">
+                <i class="bi bi-house-door"></i> الرئيسية
+            </a>
+            <div class="nav-shortcuts" id="bar-shortcuts"></div>
+            <a id="bar-journey" href="/journey.html" class="nav-link-btn">
+                الرحلة الاستراتيجية <i class="bi bi-arrow-left"></i>
+            </a>
+        </div>
+    </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/js/api.js?v=4"></script>
-    <script src="/js/utils.js?v=4"></script>
-    <script src="/js/context-manager.js?v=4"></script>
-    <script src="/js/steps-config.js?v=4"></script>
-    <script src="/js/sidebar.js?v=4"></script>
+    <script src="/js/api.js?v=6"></script>
+    <script src="/js/utils.js?v=6"></script>
+    <script src="/js/context-manager.js?v=6"></script>
+    <script src="/js/steps-config.js?v=6"></script>
+    <script src="/js/progress-engine.js?v=6"></script>
+    <script src="/js/smart-nav.js?v=6"></script>
+    <script src="/js/page-guard.js?v=6"></script>
+    <script src="/js/dept-page.js?v=6"></script>
+    <script src="/js/sidebar.js?v=6"></script>
 
     <script>
         (async function () {
-            try {
-                // 1. تهيئة الصفحة والحصول على القسم
-                const user = await window.api.getCurrentUser();
-                if (!user) {
-                    window.location.href = '/login.html';
-                    return;
-                }
+            const _qs = new URLSearchParams(window.location.search);
+            const _urlDept = (_qs.get('dept') || '').toLowerCase();
 
-                // المالك ما المفروض يكون هنا — يتوجّه للوحة القيادة
-                if (user.role === 'OWNER' || user.userType === 'COMPANY_MANAGER') {
+            try {
+                /* ═══ 1. Auth & Role Guard ═══ */
+                const user = await window.api.getCurrentUser();
+                if (!user) { window.location.href = '/login.html'; return; }
+
+                if ((user.role === 'OWNER' || user.userType === 'COMPANY_MANAGER') && !user.isProManager) {
                     window.location.replace('/ceo-dashboard.html');
                     return;
                 }
 
-                const dept = await window.initDeptPage().catch(() => null) ||
-                    Context.getDept() ||
-                    new URLSearchParams(window.location.search).get('dept');
+                const dept = _urlDept || Context.getDept() || '';
+                if (!dept) { window.location.href = '/dashboard.html'; return; }
 
-                if (!dept) {
-                    window.location.href = '/dashboard.html';
-                    return;
-                }
-
-                // 2. Display department name
-                const DEPT_NAMES = {
+                const DEPT_NAMES = window.STEPS_CONFIG?.deptNames || {
                     hr: 'الموارد البشرية', finance: 'المالية', marketing: 'التسويق',
                     operations: 'العمليات', sales: 'المبيعات', it: 'تقنية المعلومات',
                     cs: 'خدمة العملاء', compliance: 'الامتثال', quality: 'الجودة',
                     projects: 'المشاريع', support: 'الخدمات المساندة'
                 };
-                document.getElementById('dept-title').textContent = `إدارة ${DEPT_NAMES[dept.toLowerCase()] || dept.toUpperCase()}`;
+                const deptNameAr = DEPT_NAMES[dept] || dept.toUpperCase();
+                const deptKey = dept.toUpperCase();
+
+                document.getElementById('dept-title').textContent = `إدارة ${deptNameAr}`;
                 document.getElementById('welcome-msg').textContent = `مرحباً ${user.name || 'بك'}، إليك ملخص الحالة الاستراتيجية لقسمك.`;
 
-                // 3. Fetch Data from APIs
-                const [swotData, initiativesData, kpisData] = await Promise.all([
-                    window.api.get(`/api/swot/${dept}`).catch(() => ({})),
+                // 🏢 بانر العميل النشط — للمدير المستقل فقط
+                if (user.isProManager) {
+                    const banner = document.getElementById('activeClientBanner');
+                    if (banner) {
+                        // جلب اسم العميل من الـ API
+                        try {
+                            const entRes = await window.api.get('/api/pro/entities').catch(() => null);
+                            const activeEid = user.activeEntityId || '';
+                            const activeClient = entRes?.clients?.find(c => c.id === activeEid);
+                            if (activeClient) {
+                                document.getElementById('bannerClientName').textContent = activeClient.name;
+                                banner.style.display = 'flex';
+                            }
+                        } catch(e) { /* silent */ }
+                    }
+                }
+
+                /* ═══ 2. Fix all navigation links ═══ */
+                const qs = `?dept=${dept}`;
+                document.getElementById('initiatives-link').href = `/initiatives.html${qs}`;
+                document.getElementById('link-corrections').href = `/corrections.html${qs}`;
+                document.getElementById('link-risks').href = `/risk-map.html${qs}`;
+                document.getElementById('link-initiatives').href = `/initiatives.html${qs}`;
+                document.getElementById('link-kpis').href = `/kpis.html${qs}`;
+
+                /* ═══ 3. Fetch all data in parallel ═══ */
+                const entityId = user.activeEntityId || '';
+
+                // Initialize DeptPage for local data access
+                if (window.initDeptPage) await window.initDeptPage();
+                if (window.DeptPage) { DeptPage.dept = dept; await DeptPage.init(dept); }
+
+                const dpLoad = (type) => window.DeptPage ? DeptPage.loadFromAPI(type + '_' + deptKey).catch(() => null) : Promise.resolve(null);
+
+                const [swotData, towsData, objectivesData, initiativesData, kpisData, okrsData, correctionsData, risksData, reviewsData, reportsData, progressData] = await Promise.all([
+                    window.api.get(`/api/swot/${dept}`).catch(() => null),
+                    dpLoad('TOWS'),
+                    dpLoad('OBJECTIVES'),
                     window.api.get(`/api/initiatives/${dept}`).catch(() => ({ initiatives: [] })),
-                    window.api.get(`/api/kpis/${dept}`).catch(() => ({ kpis: [] }))
+                    window.api.get(`/api/kpis?entityId=${entityId}`).catch(() => ({ kpis: [] })),
+                    window.api.get(`/api/okrs/${dept}`).catch(() => []),
+                    window.api.get(`/api/corrections/${dept}`).catch(() => null),
+                    window.api.get('/api/risks').catch(() => []),
+                    dpLoad('REVIEWS'),
+                    dpLoad('REPORTS'),
+                    window.StartixProgress ? window.StartixProgress.fetch() : Promise.resolve(null)
                 ]);
 
                 const swot = swotData || {};
-                const initiatives = initiativesData.initiatives || [];
-                const kpis = kpisData.kpis || [];
+                const tows = towsData || {};
+                const objectives = Array.isArray(objectivesData) ? objectivesData : (objectivesData?.objectives || objectivesData?.items || []);
+                // initiatives from /api/initiatives/:dept returns DeptPage data or {initiatives:[]}
+                const initiatives = Array.isArray(initiativesData) ? initiativesData : (initiativesData?.initiatives || []);
+                const kpis = Array.isArray(kpisData) ? kpisData : (kpisData?.kpis || []);
+                // okrs from /api/okrs/:dept returns DeptPage data (array or object with okrs)
+                const okrs = Array.isArray(okrsData) ? okrsData : (okrsData?.okrs || okrsData?.objectives || []);
+                // corrections from /api/corrections/:dept returns DeptPage data {actions:[...]} or {}
+                const deptCorrections = correctionsData || {};
+                const corrections = deptCorrections.actions || deptCorrections.corrections || [];
+                const risks = Array.isArray(risksData) ? risksData : (risksData?.risks || []);
+                const reviews = reviewsData || null;
+                const reports = reportsData || null;
 
-                // 4. Calculate Strategic Readiness (Basic logic: if data exists in 4 major areas)
-                const requiredTools = ['swot', 'objectives', 'initiatives', 'kpis'];
-                let completedCount = 0;
+                // ═══ Real Data-Based Phase Progress ═══
+                // Check actual data presence for each tool in each phase
+                const hasSWOT = !!(swot.strengths || swot.weaknesses || swot.opportunities || swot.threats);
+                const hasTOWS = !!(tows && (tows.so || tows.st || tows.wo || tows.wt || (typeof tows === 'object' && Object.keys(tows).length > 2)));
+                const hasObjectives = objectives.length > 0;
+                const hasKPIs = kpis.length > 0;
+                const hasOKRs = okrs.length > 0;
+                let hasInitiatives = initiatives.length > 0;
+                const hasReviews = !!(reviews && (reviews.gaps || reviews.summary || reviews.rating));
+                const hasCorrections = corrections.length > 0;
+                const hasReports = !!reports;
 
-                // Live data checks
-                if (swot.strengths?.length || swot.weaknesses?.length) completedCount++;
-                if (kpis.length > 0) completedCount++;
-                if (initiatives.length > 0) completedCount++;
+                // Check DeptPage for deep/audit/pestel/dept-health/scenarios/directions/projects/risk-map
+                const [deepData, auditData, pestelData, deptHealthData, scenariosData, directionsData, projectsData, riskMapData] = await Promise.all([
+                    window.DeptPage ? DeptPage.loadFromAPI('DEEP_' + deptKey).catch(() => null) : Promise.resolve(null),
+                    window.DeptPage ? DeptPage.loadFromAPI('AUDIT_' + deptKey).catch(() => null) : Promise.resolve(null),
+                    window.DeptPage ? DeptPage.loadFromAPI('PESTEL_' + deptKey).catch(() => null) : Promise.resolve(null),
+                    window.api.get(`/api/dept-health/${dept}`).catch(() => null),
+                    window.DeptPage ? DeptPage.loadFromAPI('SCENARIOS_' + deptKey).catch(() => null) : Promise.resolve(null),
+                    window.DeptPage ? DeptPage.loadFromAPI('DIRECTIONS_' + deptKey).catch(() => null) : Promise.resolve(null),
+                    dpLoad('PROJECTS'),
+                    window.DeptPage ? DeptPage.loadFromAPI('RISK_MAP_' + deptKey).catch(() => null) : Promise.resolve(null),
+                ]);
 
-                // Fallback check for "objectives" if kpis are not yet drafted
-                const objectivesDone = await Context.isStepCompleted('objectives').catch(() => false);
-                if (objectivesDone && kpis.length === 0) completedCount++;
-                else if (kpis.length > 0) { /* already counted above */ }
+                const hasDeep = !!deepData;
+                const hasAudit = !!auditData;
+                const hasPestel = !!pestelData;
+                const hasDeptHealth = !!(deptHealthData && Object.keys(deptHealthData).length > 1);
+                const hasScenarios = !!scenariosData;
+                const hasDirections = !!directionsData;
+                const projectsList = Array.isArray(projectsData) ? projectsData : (projectsData?.projects || projectsData?.items || []);
+                const hasProjects = projectsList.length > 0;
+                const hasRiskMap = !!riskMapData;
 
-                const readinessPerc = Math.round((completedCount / requiredTools.length) * 100);
+                // Map each tool to its data check
+                const TOOL_DATA_CHECK = {
+                    'deep': hasDeep, 'audit': hasAudit, 'pestel': hasPestel,
+                    'dept-health': hasDeptHealth, 'swot': hasSWOT, 'tows': hasTOWS,
+                    'scenarios': hasScenarios, 'directions': hasDirections, 'strategic-objectives': hasObjectives,
+                    'okrs': hasOKRs, 'kpis': hasKPIs, 'initiatives': hasInitiatives, 'projects': hasProjects,
+                    'reviews': hasReviews, 'corrections': hasCorrections, 'reports': hasReports, 'risk-map': hasRiskMap
+                };
 
-                // Update Pulse Metrics
-                const readinessEl = document.getElementById('strategic-readiness');
-                if (readinessEl) readinessEl.textContent = `${readinessPerc}%`;
+                /* ═══ 4. Data from corrected API endpoints ═══ */
+                const mergedInitiatives = initiatives;
+                hasInitiatives = mergedInitiatives.length > 0;
 
-                const barEl = document.getElementById('readiness-bar');
-                if (barEl) barEl.style.width = `${readinessPerc}%`;
+                // عدد التصحيحات المعلقة
+                let correctionsCount = corrections.filter(c => c.status !== 'completed' && c.status !== 'مكتمل' && c.status !== 'COMPLETED').length;
 
-                // Calculate Total Budget from Initiatives
+                // المخاطر: API + DeptPage
+                let risksCount = risks.filter(r => r.severity === 'HIGH' || r.severity === 'CRITICAL' || r.impact === 'عالي').length || risks.length;
+                if (risksCount === 0 && riskMapData) {
+                    const riskArr = Array.isArray(riskMapData) ? riskMapData : (riskMapData.risks || []);
+                    risksCount = riskArr.length;
+                }
+
+                /* ═══ 5. Pulse Metrics ═══ */
+
+                // Strategic Readiness — based on real data presence
+                const allTools = STEPS_CONFIG.DEPARTMENT_TOOLS;
+                let toolsDone = 0;
+                for (const tool of allTools) {
+                    if (TOOL_DATA_CHECK[tool.id]) toolsDone++;
+                }
+                let readinessPerc = Math.round((toolsDone / allTools.length) * 100);
+
+                // If progress engine has higher value, use that instead
+                // ⚠️ تجاهل progressData لو مصدره localStorage (غير معزول بـ entityId)
+                if (progressData && progressData.source !== 'localStorage' && progressData.overall > readinessPerc) {
+                    readinessPerc = progressData.overall;
+                }
+
+                document.getElementById('strategic-readiness').textContent = `${readinessPerc}%`;
+                document.getElementById('readiness-bar').style.width = `${readinessPerc}%`;
+                document.getElementById('overall-percent').textContent = `${readinessPerc}%`;
+
+                // Total Budget
                 let totalBudget = 0;
-                initiatives.forEach(init => {
-                    const match = (init.budget || '').match(/(\d[\d,]+)/);
+                mergedInitiatives.forEach(init => {
+                    const match = (init.budget || '').toString().match(/(\d[\d,]*)/);
                     if (match) totalBudget += parseInt(match[0].replace(/,/g, ''));
                 });
-                const budgetEl = document.getElementById('total-budget');
-                if (budgetEl) budgetEl.textContent = totalBudget.toLocaleString() + ' ر.س';
+                document.getElementById('total-budget').textContent = totalBudget.toLocaleString() + ' ر.س';
 
-                // Risk Level Calculation
+                // Risk Level
                 const now = new Date();
-                const atRisk = initiatives.filter(init => {
-                    if (init.status === 'AT_RISK') return true;
+                const atRisk = mergedInitiatives.filter(init => {
+                    if (init.status === 'AT_RISK' || init.status === 'متعثر' || init.status === 'at_risk') return true;
                     if (init.end_date && new Date(init.end_date) < now && init.status !== 'COMPLETED') return true;
                     return false;
                 }).length;
 
                 let riskText = 'منخفض', riskClass = 'risk-low';
-                if (atRisk > initiatives.length * 0.3) { riskText = 'عالي'; riskClass = 'risk-high'; }
+                if (atRisk > mergedInitiatives.length * 0.3) { riskText = 'عالي'; riskClass = 'risk-high'; }
                 else if (atRisk > 0) { riskText = 'متوسط'; riskClass = 'risk-medium'; }
 
                 const riskBadge = document.getElementById('risk-level');
-                if (riskBadge) {
-                    riskBadge.textContent = riskText;
-                    riskBadge.className = `risk-badge ${riskClass}`;
+                riskBadge.textContent = riskText;
+                riskBadge.className = `risk-badge ${riskClass}`;
+
+                /* ═══ 6. Monitoring Counts ═══ */
+                document.getElementById('corrections-count').textContent = correctionsCount;
+                document.getElementById('risks-count').textContent = risksCount;
+                document.getElementById('initiatives-count').textContent = mergedInitiatives.length;
+                document.getElementById('kpis-count').textContent = kpis.length;
+
+                /* ═══ 6. Phase Track — from STEPS_CONFIG ═══ */
+                const phaseTrack = document.getElementById('phase-track');
+                const PHASE_META = {
+                    diagnostic: { name: 'التشخيص', icon: 'bi-search-heart', color: '#6f42c1', progressColor: 'bg-purple' },
+                    planning: { name: 'التخطيط', icon: 'bi-compass-fill', color: '#0dcaf0', progressColor: 'bg-info' },
+                    execution: { name: 'التنفيذ', icon: 'bi-rocket-takeoff', color: '#198754', progressColor: 'bg-success' },
+                    monitoring: { name: 'المتابعة', icon: 'bi-bar-chart-line', color: '#ffc107', progressColor: 'bg-warning' }
+                };
+
+                // Map progress engine stages to our phases
+                const STAGE_MAP = {
+                    diagnostic: 'DIAGNOSIS',
+                    planning: 'PLANNING',
+                    execution: 'EXECUTION',
+                    monitoring: 'ADAPTATION'
+                };
+
+                for (const phaseId of STEPS_CONFIG.PHASE_ORDER) {
+                    const meta = PHASE_META[phaseId];
+                    const phaseTools = STEPS_CONFIG.DEPARTMENT_TOOLS.filter(t => t.phase === phaseId);
+
+                    // Calculate phase progress from REAL DATA
+                    let done = 0;
+                    for (const t of phaseTools) {
+                        if (TOOL_DATA_CHECK[t.id]) done++;
+                    }
+                    let pct = phaseTools.length > 0 ? Math.round((done / phaseTools.length) * 100) : 0;
+
+                    // If progress engine has higher value for this phase, use it
+                    // ⚠️ تجاهل لو مصدره localStorage (غير معزول بـ entityId)
+                    if (progressData && progressData.source !== 'localStorage' && progressData.phases) {
+                        const stageId = STAGE_MAP[phaseId];
+                        const enginePct = progressData.phases[stageId]?.percent || 0;
+                        if (enginePct > pct) pct = enginePct;
+                    }
+
+                    // Determine active phase (first phase not at 100%)
+                    const isActive = pct > 0 && pct < 100;
+
+                    const el = document.createElement('div');
+                    el.className = `phase-item${isActive ? ' phase-active' : ''}`;
+                    el.innerHTML = `
+                        <div class="phase-icon"><i class="bi ${meta.icon}" style="color:${meta.color}"></i></div>
+                        <div class="phase-name">${meta.name}</div>
+                        <div class="phase-progress">
+                            <div class="phase-progress-fill" style="width:${pct}%; background:${meta.color}"></div>
+                        </div>
+                        <div class="phase-percent">${pct}% <span class="text-muted">(${phaseTools.length} أدوات)</span></div>
+                    `;
+
+                    // Click to expand tools list
+                    el.title = phaseTools.map(t => t.name).join('، ');
+                    phaseTrack.appendChild(el);
                 }
 
-                // 5. Top Initiatives List
+                /* ═══ 7. Top Initiatives ═══ */
                 const container = document.getElementById('top-initiatives-list');
-                const topInits = initiatives.filter(i => i.priority === 'HIGH' || i.priority === 'عالية').slice(0, 3);
+                let topInits = mergedInitiatives.filter(i => i.priority === 'HIGH' || i.priority === 'عالية').slice(0, 3);
+                if (topInits.length === 0) topInits = mergedInitiatives.slice(0, 3);
 
                 if (topInits.length === 0) {
-                    container.innerHTML = '<div class="text-center py-3 text-muted small">لا توجد مبادرات بـ "أولوية قصوى" حالياً</div>';
+                    container.innerHTML = `<div class="text-center py-3 text-muted small">لا توجد مبادرات بعد. <a href="/initiatives.html${qs}" class="text-primary">أضف مبادراتك الآن</a></div>`;
                 } else {
-                    container.innerHTML = topInits.map(init => `
+                    container.innerHTML = topInits.map(init => {
+                        const statusBadge = init.status === 'AT_RISK' || init.status === 'متعثر'
+                            ? '<span class="badge bg-danger-subtle text-danger ms-2">متعثرة</span>'
+                            : init.status === 'COMPLETED' || init.status === 'مكتمل'
+                                ? '<span class="badge bg-success-subtle text-success ms-2">مكتملة</span>'
+                                : '';
+                        return `
                         <div class="initiative-item priority-high">
                             <div class="d-flex justify-content-between align-items-center">
-                                <div><strong>${escapeHtml(init.title || init.name)}</strong></div>
+                                <div><strong>${escapeHtml(init.title || init.name)}</strong>${statusBadge}</div>
                                 <div class="text-muted small">${init.budget || '—'}</div>
                             </div>
-                            <div class="text-muted small mt-1">${escapeHtml((init.description || '').substring(0, 80))}...</div>
+                            <div class="text-muted small mt-1">${escapeHtml((init.description || '').substring(0, 100))}</div>
+                        </div>
+                    `;
+                    }).join('');
+                }
+
+                /* ═══ 8. AI Strategic Insights — Multi-source Analysis ═══ */
+                const insights = [];
+
+                // Helper
+                function toLines(val) {
+                    if (!val) return [];
+                    if (Array.isArray(val)) return val;
+                    if (typeof val === 'string') return val.split('\n').map(l => l.replace(/^[-•*\s]+/, '').trim()).filter(l => l.length > 3);
+                    return [];
+                }
+
+                // 8a. Readiness alerts
+                if (readinessPerc < 25) {
+                    insights.push({ type: 'danger', icon: 'bi-exclamation-octagon', text: 'الجاهزية الاستراتيجية منخفضة جداً. ابدأ بإكمال مرحلة التشخيص أولاً.', action: `/swot.html${qs}`, actionText: 'ابدأ التشخيص' });
+                } else if (readinessPerc < 50) {
+                    insights.push({ type: 'warning', icon: 'bi-exclamation-triangle', text: 'التقدم جيد لكن لا يزال هناك أدوات مهمة لم تُكمل. ركّز على التخطيط.', action: `/objectives.html${qs}`, actionText: 'الأهداف الاستراتيجية' });
+                }
+
+                // 8b. SWOT analysis
+                const weaknesses = toLines(swot.weaknesses);
+                const threats = toLines(swot.threats);
+                const strengths = toLines(swot.strengths);
+                const opportunities = toLines(swot.opportunities);
+
+                if (!swot.strengths && !swot.weaknesses) {
+                    insights.push({ type: 'warning', icon: 'bi-grid-3x3-gap', text: 'لم يتم إعداد تحليل SWOT بعد — وهو أساس التخطيط الاستراتيجي.', action: `/swot.html${qs}`, actionText: 'إعداد SWOT' });
+                } else {
+                    if (weaknesses.length > strengths.length) {
+                        insights.push({ type: 'info', icon: 'bi-shield-check', text: `نقاط الضعف (${weaknesses.length}) أكثر من نقاط القوة (${strengths.length}). راجع خطتك للتعامل مع نقاط الضعف.`, action: `/tows.html${qs}`, actionText: 'مصفوفة TOWS' });
+                    }
+                    if (threats.length > 0 && !hasTOWS) {
+                        insights.push({ type: 'warning', icon: 'bi-shield-exclamation', text: `لديك ${threats.length} تهديد${threats.length > 1 ? 'ات' : ''} محددة ولم تُبنى مصفوفة TOWS بعد لمواجهتها.`, action: `/tows.html${qs}`, actionText: 'بناء مصفوفة TOWS' });
+                    }
+                    if (strengths.length > 0 && opportunities.length > 0 && hasTOWS && !hasObjectives) {
+                        insights.push({ type: 'info', icon: 'bi-bullseye', text: `لديك ${strengths.length} نقاط قوة و ${opportunities.length} فرص — حوّلها لأهداف استراتيجية واضحة.`, action: `/objectives.html${qs}`, actionText: 'تحديد الأهداف' });
+                    }
+                }
+
+                // 8c. KPI performance alerts
+                const underperformingKPIs = kpis.filter(k => {
+                    const target = parseFloat(k.target || k.targetValue || 0);
+                    const actual = parseFloat(k.actual || k.currentValue || (k.entries && k.entries[0]?.value) || 0);
+                    if (!target) return false;
+                    return (actual / target) < 0.5;
+                });
+                if (underperformingKPIs.length > 0) {
+                    insights.push({ type: 'danger', icon: 'bi-speedometer', text: `${underperformingKPIs.length} مؤشر${underperformingKPIs.length > 1 ? 'ات' : ''} أداء أقل من 50% من المستهدف! تحتاج إجراءات تصحيحية عاجلة.`, action: `/corrections.html${qs}`, actionText: 'الإجراءات التصحيحية' });
+                }
+
+                // 8d. At-risk initiatives
+                if (atRisk > 0) {
+                    insights.push({ type: 'warning', icon: 'bi-rocket-takeoff', text: `${atRisk} مبادر${atRisk > 1 ? 'ات' : 'ة'} متعثر${atRisk > 1 ? 'ة' : ''} أو متأخرة عن الجدول.`, action: `/initiatives.html${qs}`, actionText: 'مراجعة المبادرات' });
+                }
+
+                // 8e. Pending corrections
+                if (correctionsCount > 0) {
+                    insights.push({ type: correctionsCount >= 3 ? 'warning' : 'info', icon: 'bi-tools', text: `${correctionsCount} إجراء تصحيحي معلق${correctionsCount >= 3 ? '. تراكم التصحيحات يؤثر على جودة التنفيذ' : '. تابع تنفيذ الإجراءات التصحيحية'}.`, action: `/corrections.html${qs}`, actionText: 'معالجة التصحيحات' });
+                }
+
+                // 8f. No initiatives yet
+                if (mergedInitiatives.length === 0 && readinessPerc >= 30) {
+                    insights.push({ type: 'info', icon: 'bi-lightbulb', text: 'التشخيص يتقدم بشكل جيد — حان وقت تحويل النتائج إلى مبادرات تنفيذية.', action: `/initiatives.html${qs}`, actionText: 'إنشاء المبادرات' });
+                }
+
+                // 8g. Phase-specific gaps — suggest next uncompleted tool
+                const missingTools = STEPS_CONFIG.DEPARTMENT_TOOLS.filter(t => !TOOL_DATA_CHECK[t.id]);
+                if (missingTools.length > 0 && missingTools.length <= 10) {
+                    const nextTool = missingTools[0];
+                    const phaseNames = { diagnostic: 'التشخيص', planning: 'التخطيط', execution: 'التنفيذ', monitoring: 'المتابعة' };
+                    const phaseName = phaseNames[nextTool.phase] || nextTool.phase;
+                    const toolLink = window.getToolLink ? window.getToolLink(nextTool, dept) : `/${nextTool.id}.html${qs}`;
+                    insights.push({ type: 'info', icon: 'bi-arrow-right-circle', text: `الخطوة التالية في مرحلة ${phaseName}: ${nextTool.name}. أكمل ${missingTools.length} أداة متبقية للوصول لجاهزية 100%.`, action: toolLink, actionText: nextTool.name });
+                }
+
+                // 8h. OKRs missing
+                if (hasObjectives && !hasOKRs) {
+                    insights.push({ type: 'info', icon: 'bi-bullseye', text: 'لديك أهداف استراتيجية محددة — حوّلها إلى OKRs لقياس التقدم بشكل دقيق.', action: `/okrs.html${qs}`, actionText: 'إعداد OKRs' });
+                }
+
+                // 8i. Reviews missing
+                if (hasInitiatives && !hasReviews) {
+                    insights.push({ type: 'info', icon: 'bi-journal-check', text: 'لديك مبادرات قيد التنفيذ — أنشئ مراجعة دورية لتتبع الأداء وتحديد الفجوات.', action: `/reviews.html${qs}`, actionText: 'إنشاء مراجعة' });
+                }
+
+                // 8j. Initiative status summary
+                if (mergedInitiatives.length > 0) {
+                    const planned = mergedInitiatives.filter(i => i.status === 'planned' || i.status === 'مخطط').length;
+                    const inProgress = mergedInitiatives.filter(i => i.status === 'progress' || i.status === 'IN_PROGRESS' || i.status === 'قيد التنفيذ').length;
+                    const done = mergedInitiatives.filter(i => i.status === 'done' || i.status === 'COMPLETED' || i.status === 'مكتمل').length;
+                    if (planned > 0 && inProgress === 0 && done === 0) {
+                        insights.push({ type: 'warning', icon: 'bi-play-circle', text: `لديك ${planned} مبادرة مخططة ولم تبدأ أي منها بعد. ابدأ التنفيذ الآن!`, action: `/initiatives.html${qs}`, actionText: 'بدء التنفيذ' });
+                    } else if (done > 0) {
+                        insights.push({ type: 'success', icon: 'bi-check2-all', text: `تم إنجاز ${done} من ${mergedInitiatives.length} مبادرة. ${inProgress > 0 ? inProgress + ' قيد التنفيذ.' : ''}` });
+                    }
+                }
+
+                // 8k. Good performance
+                if (readinessPerc >= 70 && atRisk === 0 && correctionsCount < 2) {
+                    insights.push({ type: 'success', icon: 'bi-trophy', text: 'أداء ممتاز! الخطة الاستراتيجية تسير بشكل رائع. حافظ على المتابعة الدورية.' });
+                }
+
+                // 8l. Budget insight
+                if (totalBudget > 0) {
+                    insights.push({ type: 'info', icon: 'bi-cash-coin', text: `الميزانية التقديرية: ${totalBudget.toLocaleString()} ر.س موزعة على ${mergedInitiatives.length} مبادرة. متوسط ${Math.round(totalBudget / mergedInitiatives.length).toLocaleString()} ر.س/مبادرة.` });
+                }
+
+                // Render insights
+                const aiContainer = document.getElementById('ai-insights-container');
+                if (insights.length === 0) {
+                    aiContainer.innerHTML = '<p class="mb-0 text-white-50">لا توجد توصيات حالياً. أكمل المزيد من أدوات الرحلة للحصول على تحليل أعمق.</p>';
+                } else {
+                    aiContainer.innerHTML = insights.map(ins => `
+                        <div class="d-flex align-items-start gap-3 mb-3 p-3 rounded-3" style="background:rgba(255,255,255,0.04)">
+                            <i class="bi ${ins.icon} text-${ins.type}" style="font-size:1.3rem; margin-top:2px"></i>
+                            <div class="flex-grow-1">
+                                <div class="mb-1" style="line-height:1.6">${ins.text}</div>
+                                ${ins.action ? `<a href="${ins.action}" class="btn btn-sm btn-outline-light rounded-pill px-3 mt-1">${ins.actionText} <i class="bi bi-arrow-left"></i></a>` : ''}
+                            </div>
                         </div>
                     `).join('');
                 }
 
-                // 6. Journey Progress (Phase-gate Navigation)
-                const phases = {
-                    diagnostic: ['swot', 'pestel', 'dept-health', 'risk-map'],
-                    discovery: ['scenarios', 'directions'],
-                    planning: ['objectives', 'okrs', 'kpis'],
-                    execution: ['initiatives', 'reviews']
-                };
+                /* ═══ 9. Quick Links Grid — All Journey Tools ═══ */
+                const grid = document.getElementById('quick-links-grid');
+                const completedIds = [];
 
-                for (const [phaseId, tools] of Object.entries(phases)) {
-                    const results = await Promise.all(tools.map(t => Context.isStepCompleted(t).catch(() => false)));
-                    const done = results.filter(Boolean).length;
-                    const pct = Math.round((done / tools.length) * 100);
-
-                    const fill = document.getElementById(`phase-${phaseId}-fill`);
-                    const txt = document.getElementById(`phase-${phaseId}-percent`);
-                    if (fill) fill.style.width = `${pct}%`;
-                    if (txt) txt.textContent = `${pct}%`;
+                // Gather completed step IDs from real data checks
+                for (const tool of STEPS_CONFIG.DEPARTMENT_TOOLS) {
+                    if (TOOL_DATA_CHECK[tool.id]) completedIds.push(tool.id);
                 }
 
-                // 7. AI Strategic Recommendation
-                const aiText = document.getElementById('ai-insight-text');
-                const aiBtn = document.getElementById('ai-action-btn');
+                const PHASE_COLORS = { diagnostic: '#6f42c1', planning: '#0dcaf0', execution: '#198754', monitoring: '#ffc107' };
 
-                if (readinessPerc < 40) {
-                    aiText.innerHTML = "تحذير: الجاهزية الاستراتيجية منخفضة. يركز ذكاء ستارتكس حالياً على اكتمال التشخيص أولاً.";
-                    aiBtn.innerHTML = `<a href="/swot?dept=${dept}" class="btn btn-sm btn-light rounded-pill px-4 fw-bold shadow">إكمال مصفوفة SWOT <i class="bi bi-arrow-left"></i></a>`;
-                } else {
-                    aiText.innerHTML = "أداء واعد! القسم يظهر تقدماً ملحوظاً في التخطيط. نوصي بمراجعة المبادرات لضمان ربطها بـ OKRs المعتمدة.";
-                    aiBtn.innerHTML = `<a href="/okrs?dept=${dept}" class="btn btn-sm btn-light rounded-pill px-4 fw-bold shadow">مراجعة الأهداف والنتائج <i class="bi bi-arrow-left"></i></a>`;
+                for (const phaseId of STEPS_CONFIG.PHASE_ORDER) {
+                    const phaseTools = STEPS_CONFIG.DEPARTMENT_TOOLS.filter(t => t.phase === phaseId);
+                    for (const tool of phaseTools) {
+                        const link = window.getToolLink(tool, dept);
+                        const isDone = completedIds.includes(tool.id);
+                        const isLocked = window.isToolLocked(tool, completedIds);
+
+                        let statusHTML = '', statusClass = '';
+                        if (isDone) {
+                            statusHTML = '<span class="ql-status ql-done">مكتمل ✓</span>';
+                        } else if (isLocked) {
+                            statusHTML = '<span class="ql-status ql-locked">مقفل 🔒</span>';
+                            statusClass = 'opacity-50';
+                        } else {
+                            statusHTML = '<span class="ql-status ql-pending">لم يبدأ</span>';
+                        }
+
+                        const col = document.createElement('div');
+                        col.className = 'col-md-4 col-sm-6';
+                        col.innerHTML = `
+                            <a href="${isLocked ? '#' : link}" class="quick-link ${statusClass}" ${isLocked ? 'onclick="return false"' : ''}>
+                                <div class="ql-icon" style="background:${PHASE_COLORS[phaseId]}20; color:${PHASE_COLORS[phaseId]}">
+                                    <i class="bi ${tool.icon}"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold" style="font-size:0.9rem">${tool.name}</div>
+                                    <div class="text-muted" style="font-size:0.7rem">${PHASE_META[phaseId].name}</div>
+                                </div>
+                                ${statusHTML}
+                            </a>
+                        `;
+                        grid.appendChild(col);
+                    }
                 }
 
-                function escapeHtml(str) {
-                    if (!str) return '';
-                    return String(str).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+                /* ═══ 10. Bottom Action Bar — Smart Shortcuts ═══ */
+                // Home link
+                const barHome = document.getElementById('bar-home');
+                if (window.SmartNav) {
+                    barHome.href = SmartNav.getHomeUrl(dept);
                 }
 
-                // Init Sidebar
+                // Journey link
+                const barJourney = document.getElementById('bar-journey');
+                barJourney.href = `/journey.html${qs}`;
+
+                // Find next incomplete tool as primary shortcut
+                const barShortcuts = document.getElementById('bar-shortcuts');
+                const nextTool = STEPS_CONFIG.DEPARTMENT_TOOLS.find(t => {
+                    return !completedIds.includes(t.id) && !window.isToolLocked(t, completedIds);
+                });
+
+                // Shortcut buttons for key pages
+                const deepTool = STEPS_CONFIG.DEPARTMENT_TOOLS.find(t => t.id === 'deep');
+                const shortcuts = [
+                    { icon: 'bi-search-heart', label: 'التشخيص العميق', href: deepTool ? window.getToolLink(deepTool, dept) : `/${dept}-deep.html?dept=${dept}` },
+                    { icon: 'bi-grid-3x3-gap-fill', label: 'SWOT', href: `/swot.html${qs}` },
+                    { icon: 'bi-bullseye', label: 'الأهداف', href: `/objectives.html${qs}` },
+                    { icon: 'bi-rocket-takeoff', label: 'المبادرات', href: `/initiatives.html${qs}` },
+                    { icon: 'bi-card-checklist', label: 'المراجعات', href: `/reviews.html${qs}` }
+                ];
+
+                // If there's a "next step", highlight it
+                if (nextTool) {
+                    const nextLink = window.getToolLink(nextTool, dept);
+                    barShortcuts.innerHTML = `<a href="${nextLink}" class="shortcut-btn" style="background:rgba(99,102,241,0.2); border-color:var(--stx-primary)">
+                        <i class="bi bi-play-circle-fill" style="color:var(--stx-primary)"></i> التالي: ${nextTool.name}
+                    </a>`;
+                }
+
+                shortcuts.forEach(s => {
+                    barShortcuts.innerHTML += `<a href="${s.href}" class="shortcut-btn"><i class="bi ${s.icon}"></i> ${s.label}</a>`;
+                });
+
+                /* ═══ 11. Init Sidebar ═══ */
                 if (window.initSidebar) window.initSidebar();
+
+                /* ═══ 11. Mobile hamburger ═══ */
+                const menuBtn = document.getElementById('mobileMenuBtn');
+                if (menuBtn) {
+                    menuBtn.addEventListener('click', function () {
+                        const sb = document.getElementById('sidebar');
+                        if (sb) sb.classList.toggle('sidebar-open');
+                    });
+                }
 
             } catch (err) {
                 console.error('[dept-dashboard] فشل تحميل الصفحة:', err);
-                document.getElementById('ai-recom-text').innerHTML = `<span class="text-danger">حدث خطأ أثناء تحميل البيانات. يرجى تحديث الصفحة أو الاتصال بالدعم.</span>`;
+                const aiC = document.getElementById('ai-insights-container');
+                if (aiC) aiC.innerHTML = `<span class="text-danger"><i class="bi bi-exclamation-circle"></i> حدث خطأ أثناء تحميل البيانات: ${escapeHtml(err.message)}. يرجى تحديث الصفحة.</span>`;
             }
         })();
     </script>
