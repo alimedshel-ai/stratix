@@ -81,6 +81,7 @@
         'okrs': { roles: ['dept_manager', 'pro_manager', 'owner', 'exec_manager'], phase: 'planning' },
         'kpis': { roles: ['dept_manager', 'pro_manager', 'owner', 'exec_manager'], phase: 'planning' },
         'hr-kpis': { roles: ['dept_manager', 'pro_manager'], phase: 'planning' },
+        'compliance-kpis': { roles: ['dept_manager', 'pro_manager', 'owner', 'system_admin'], phase: 'planning' },
 
         // مرحلة التنفيذ — مشترك
         'initiatives': { roles: ['dept_manager', 'pro_manager', 'owner', 'exec_manager'], phase: 'execution' },
@@ -114,6 +115,7 @@
         'sales-audit-pro': { roles: ['pro_manager', 'consultant', 'owner', 'system_admin'], phase: null },
         'marketing-audit-pro': { roles: ['pro_manager', 'consultant', 'owner', 'system_admin'], phase: null },
         'hr-audit-pro': { roles: ['pro_manager', 'consultant', 'owner', 'system_admin'], phase: null },
+        'compliance-audit-pro': { roles: ['pro_manager', 'consultant', 'owner', 'system_admin'], phase: null },
         'pro-dashboard': { roles: ['pro_manager', 'consultant', 'owner', 'system_admin', 'dept_manager'], phase: null },
 
         // صفحات عامة (بدون حماية)

@@ -48,8 +48,9 @@ const DEPT_LABELS = {
   it: 'تقنية المعلومات',
   cs: 'خدمة العملاء',
   service: 'خدمة العملاء',
-  compliance: 'الامتثال والحوكمة',
-  legal: 'الامتثال والحوكمة',
+  compliance: 'الامتثال',
+  legal: 'الامتثال',
+  governance: 'الحوكمة',
   quality: 'الجودة',
   projects: 'المشاريع',
   pmo: 'المشاريع',
@@ -170,7 +171,7 @@ async function initSidebar(sidebarContainer) {
     target.style.flexDirection = 'column';
     target.style.zIndex = '50';
     if (target.innerHTML.trim() === '') {
-      target.innerHTML = '<div id="stx-loading" style="padding:20px; color:#6366f1; font-size:12px; font-family:sans-serif; background:rgba(99,102,241,0.05); border-radius:10px; margin:10px;">⏳ جاري المزامنة...</div>';
+      target.innerHTML = '';
     }
   }
 
@@ -957,7 +958,8 @@ async function initSidebar(sidebarContainer) {
   // === كل الإدارات المتاحة ===
   // بناء ديناميكي عبر getToolLink لضمان الروابط الصحيحة لكل قسم
   const _deptMeta = {
-    compliance: { label: 'الامتثال والحوكمة', icon: 'bi-shield-fill-check' },
+    compliance: { label: 'الامتثال', icon: 'bi-shield-fill-check' },
+    governance: { label: 'الحوكمة', icon: 'bi-diagram-3-fill' },
     finance: { label: 'المالية', icon: 'bi-cash-coin' },
     sales: { label: 'المبيعات', icon: 'bi-graph-up-arrow' },
     hr: { label: 'الموارد البشرية', icon: 'bi-people-fill' },
@@ -1088,6 +1090,9 @@ async function initSidebar(sidebarContainer) {
       { label: 'خريطة الاستراتيجية', href: '/strategy-map.html', icon: 'bi-map-fill', roles: [] },
       { label: 'التقويم الاستراتيجي', href: '/strategic-calendar.html', icon: 'bi-calendar-range-fill', roles: [] },
       { label: 'الهيكل الديناميكي', href: '/dynamic-structure.html', icon: 'bi-diagram-3-fill', roles: ['OWNER', 'ADMIN'] },
+      { type: 'header', label: '⚖️ الامتثال والحوكمة' },
+      { label: 'مسار الامتثال', href: '/compliance-hub.html', icon: 'bi-shield-check', roles: [] },
+      { label: 'مسار الحوكمة', href: '/governance-hub.html', icon: 'bi-diagram-3-fill', roles: [] },
       { type: 'header', label: '🔍 التحليل والتعمق' },
       { label: 'تقاريري', href: '/reports.html', icon: 'bi-file-earmark-bar-graph', roles: [] },
       { label: 'التوترات الاستراتيجية', href: '/strategic-tensions.html', icon: 'bi-lightning-charge-fill', roles: ['OWNER', 'ADMIN'] },
@@ -1267,7 +1272,7 @@ async function initSidebar(sidebarContainer) {
             : (userType === 'DEPT_MANAGER' && _isProMgr) ? '/pro-dashboard.html'
               : userType === 'DEPT_MANAGER' ? `/dept-dashboard.html${_v10Dept ? '?dept=' + _v10Dept : ''}`
                 : '/dashboard.html';
-    const isHomeActive = isActive('/dashboard.html') || isActive('/ceo-dashboard.html') || isActive('/viewer-hub.html') || isActive('/board-dashboard.html') || isActive('/dept-dashboard.html') || isActive('/investor-dashboard.html') || isActive('/pro-dashboard.html');
+    const isHomeActive = isActive('/dashboard.html') || isActive('/ceo-dashboard.html') || isActive('/viewer-hub.html') || isActive('/board-dashboard.html') || isActive('/dept-dashboard.html') || isActive('/investor-dashboard.html') || isActive('/pro-dashboard.html') || isActive('/compliance-hub.html') || isActive('/governance-hub.html');
 
     // لا تُظهر "الرئيسية" لمدير الإدارة وهو على نفس الصفحة
     const isDeptMgrOnDash = userType === 'DEPT_MANAGER' && (isActive('/dept-dashboard.html') || isActive('/pro-dashboard.html'));
@@ -1466,7 +1471,7 @@ async function initSidebar(sidebarContainer) {
 
     // === رحلة مدير الإدارة (مسار ٣) ===
     if (!isViewerOrDE && userType === 'DEPT_MANAGER' && !isSmartPath) {
-      const _dn2 = { hr: 'الموارد البشرية', finance: 'المالية', operations: 'العمليات', marketing: 'التسويق', sales: 'المبيعات', compliance: 'الامتثال والحوكمة', support: 'الخدمات المساندة' };
+      const _dn2 = { hr: 'الموارد البشرية', finance: 'المالية', operations: 'العمليات', marketing: 'التسويق', sales: 'المبيعات', compliance: 'الامتثال', governance: 'الحوكمة', support: 'الخدمات المساندة' };
       const _myDeptName = _dn2[_v10Dept] || _v10Dept || 'إدارتي';
 
       html += '<div class="stx-divider"></div>';
@@ -1500,7 +1505,7 @@ async function initSidebar(sidebarContainer) {
 
       // مدير الإدارة: عنوان مخصص
       if (currentRules.limitedJourney && _v10Dept) {
-        const _dn = { hr: 'الموارد البشرية', finance: 'المالية', operations: 'العمليات', marketing: 'التسويق', sales: 'المبيعات', compliance: 'الامتثال والحوكمة', support: 'الخدمات المساندة' };
+        const _dn = { hr: 'الموارد البشرية', finance: 'المالية', operations: 'العمليات', marketing: 'التسويق', sales: 'المبيعات', compliance: 'الامتثال', governance: 'الحوكمة', support: 'الخدمات المساندة' };
         html += `<div class="stx-section-label"><i class="bi bi-building-fill-gear" style="color:#3b82f6;margin-left:4px"></i> أدوات إدارة ${_dn[_v10Dept] || _v10Dept}</div>`;
       } else {
         html += '<div class="stx-section-label"><i class="bi bi-grid-3x3-gap-fill" style="color:#667eea;margin-left:4px"></i> مكتبة الأدوات</div>';
@@ -1780,6 +1785,55 @@ async function initSidebar(sidebarContainer) {
 
       // 4. تفعيل السلوكيات
       attachSidebarBehaviors(target);
+
+      // 5. السايدبار المتحرك — يظهر مع قرب الماوس ويختفي لما يبتعد
+      (function setupAutoHide(sb) {
+        // تحويل السايدبار لوضع مخفي بالتحريك
+        sb.style.transform = 'translateX(100%)';
+        sb.style.transition = 'transform 0.3s ease';
+        sb.style.willChange = 'transform';
+
+        // شريط التفعيل — منطقة ضيقة على الحافة اليمنى
+        const trigger = document.createElement('div');
+        trigger.id = 'sidebar-trigger';
+        trigger.style.cssText = 'position:fixed;top:0;right:0;width:18px;height:100vh;z-index:9999;cursor:pointer;';
+        // مؤشر بصري صغير
+        const indicator = document.createElement('div');
+        indicator.style.cssText = 'position:absolute;top:50%;right:4px;transform:translateY(-50%);width:4px;height:40px;background:rgba(99,102,241,0.3);border-radius:4px;transition:all 0.2s;';
+        trigger.appendChild(indicator);
+        document.body.appendChild(trigger);
+
+        let closeTimer = null;
+        function showSidebar() {
+          if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; }
+          sb.style.transform = 'translateX(0)';
+          indicator.style.background = 'rgba(99,102,241,0.6)';
+          indicator.style.height = '60px';
+        }
+        function hideSidebar() {
+          closeTimer = setTimeout(() => {
+            sb.style.transform = 'translateX(100%)';
+            indicator.style.background = 'rgba(99,102,241,0.3)';
+            indicator.style.height = '40px';
+          }, 400);
+        }
+
+        trigger.addEventListener('mouseenter', showSidebar);
+        trigger.addEventListener('mouseleave', hideSidebar);
+        sb.addEventListener('mouseenter', () => { if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; } });
+        sb.addEventListener('mouseleave', hideSidebar);
+
+        // إضاءة المؤشر عند الاقتراب
+        trigger.addEventListener('mouseenter', () => { indicator.style.background = 'rgba(99,102,241,0.8)'; });
+        trigger.addEventListener('mouseleave', () => { if (sb.style.transform !== 'translateX(0)' && sb.style.transform !== 'translateX(0px)') indicator.style.background = 'rgba(99,102,241,0.3)'; });
+
+        // تعديل الـ main content — لا يحتاج مساحة للسايدبار
+        const mainEl = document.querySelector('.stx-main-content, main, .main-content');
+        if (mainEl) { mainEl.style.marginRight = '0'; mainEl.style.width = '100%'; }
+        // الـ wrapper لا يحتاج flex gap
+        const wrapper = document.querySelector('.stx-wrapper');
+        if (wrapper) { wrapper.style.gap = '0'; }
+      })(target);
 
     }
   } catch (err) {

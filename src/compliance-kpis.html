@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس | لوحة مؤشرات الامتثال</title>
+    <!-- Frameworks -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="/css/shared.css">
+    <link rel="stylesheet" href="/css/dept-pages.css">
+
+    <style>
+        :root {
+            --stx-bg: #0b0d12;
+            --stx-card: rgba(22, 27, 34, 0.7);
+            --stx-border: rgba(255, 255, 255, 0.08);
+            --stx-primary: #6366f1;
+            --stx-success: #10b981;
+            --stx-warn: #f59e0b;
+            --stx-danger: #ef4444;
+            --stx-sidebar-top: 0px;
+            --bs-body-color: #e2e8f0;
+            --bs-body-color-rgb: 226, 232, 240;
+            --bs-card-color: #e2e8f0;
+        }
+
+        body {
+            background-color: var(--stx-bg);
+            color: #f8fafc;
+            font-family: 'Tajawal', sans-serif;
+            overflow: hidden;
+        }
+
+        .stx-wrapper {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .stx-sidebar-container {
+            width: 260px;
+            flex-shrink: 0;
+            border-left: 1px solid var(--stx-border);
+            position: relative;
+            z-index: 101;
+        }
+
+        .stx-main-content {
+            flex: 1;
+            overflow-y: auto;
+            height: 100vh;
+            padding-bottom: 100px;
+            min-width: 0;
+        }
+
+        .kpi-header {
+            background: rgba(11, 13, 18, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--stx-border);
+            padding: 20px 30px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 30px;
+        }
+
+        .kpi-card {
+            background: var(--stx-card);
+            border: 1px solid var(--stx-border);
+            border-radius: 20px;
+            padding: 24px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--stx-primary);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--stx-primary);
+            opacity: 0.5;
+        }
+
+        .kpi-label {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .kpi-value-container {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .kpi-value {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #fff;
+        }
+
+        .kpi-unit {
+            font-size: 1rem;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .kpi-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--stx-border);
+            border-radius: 12px;
+            padding: 8px 12px;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .chart-container {
+            background: var(--stx-card);
+            border: 1px solid var(--stx-border);
+            border-radius: 24px;
+            margin: 0 30px 30px;
+            padding: 30px;
+            height: 400px;
+        }
+
+        .btn-update {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--stx-primary);
+            border: 1px solid var(--stx-primary);
+            border-radius: 10px;
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+
+        .btn-update:hover {
+            background: var(--stx-primary);
+            color: white;
+        }
+
+        .modal-content {
+            background: #161b22;
+            border: 1px solid var(--stx-border);
+            border-radius: 20px;
+            color: #fff;
+        }
+
+        .modal-header { border-bottom-color: var(--stx-border); }
+        .modal-footer { border-top-color: var(--stx-border); }
+
+        .form-control {
+            background: #0b0d12;
+            border: 1px solid var(--stx-border);
+            color: #fff;
+        }
+
+        .form-control:focus {
+            background: #0b0d12;
+            color: #fff;
+            border-color: var(--stx-primary);
+            box-shadow: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="stx-wrapper">
+        <aside class="stx-sidebar-container"></aside>
+
+        <main class="stx-main-content">
+            <header class="kpi-header">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:rgba(99,102,241,0.15); border-radius:12px; color:#6366f1;">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <div>
+                        <h1 class="h5 fw-bold m-0 text-white">إدارة الامتثال | لوحة المؤشرات</h1>
+                        <p class="small text-muted m-0">متابعة حية لمؤشرات الامتثال والالتزام التنظيمي</p>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-light btn-sm rounded-pill px-3" data-bs-toggle="modal"
+                        data-bs-target="#addHistoryModal">
+                        <i class="bi bi-plus-circle me-1"></i> إضافة شهر جديد
+                    </button>
+                    <a href="/compliance-audit.html?dept=compliance" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                        <i class="bi bi-arrow-right me-1"></i> العودة للتقييم
+                    </a>
+                </div>
+            </header>
+
+            <div class="kpi-grid">
+                <!-- Violations Count -->
+                <div class="kpi-card" style="--stx-primary: #ef4444;">
+                    <span class="kpi-label">عدد المخالفات التنظيمية (آخر 12 شهراً)</span>
+                    <div class="kpi-value-container" id="container-violations">
+                        <span class="kpi-value" id="val-violations">3</span>
+                        <span class="kpi-unit">مخالفة</span>
+                        <button class="btn-update ms-auto" onclick="toggleEdit('violations')">تعديل</button>
+                    </div>
+                    <input type="number" id="input-violations" class="kpi-input" step="1"
+                        onblur="saveQuickEdit('violations')">
+                </div>
+
+                <!-- Policy Compliance Rate -->
+                <div class="kpi-card" style="--stx-primary: #10b981;">
+                    <span class="kpi-label">نسبة الالتزام بالسياسات الداخلية</span>
+                    <div class="kpi-value-container" id="container-policyRate">
+                        <span class="kpi-value" id="val-policyRate">78</span>
+                        <span class="kpi-unit">%</span>
+                        <button class="btn-update ms-auto" onclick="toggleEdit('policyRate')">تعديل</button>
+                    </div>
+                    <input type="number" id="input-policyRate" class="kpi-input" step="1"
+                        onblur="saveQuickEdit('policyRate')">
+                </div>
+
+                <!-- Training Completion -->
+                <div class="kpi-card" style="--stx-primary: #f59e0b;">
+                    <span class="kpi-label">نسبة إتمام التدريب الإلزامي على الامتثال</span>
+                    <div class="kpi-value-container" id="container-trainingRate">
+                        <span class="kpi-value" id="val-trainingRate">65</span>
+                        <span class="kpi-unit">%</span>
+                        <button class="btn-update ms-auto" onclick="toggleEdit('trainingRate')">تعديل</button>
+                    </div>
+                    <input type="number" id="input-trainingRate" class="kpi-input" step="1"
+                        onblur="saveQuickEdit('trainingRate')">
+                </div>
+
+                <!-- Resolution Time -->
+                <div class="kpi-card">
+                    <span class="kpi-label">متوسط مدة حل المخالفات</span>
+                    <div class="kpi-value-container" id="container-resolutionDays">
+                        <span class="kpi-value" id="val-resolutionDays">14</span>
+                        <span class="kpi-unit">يوم</span>
+                        <button class="btn-update ms-auto" onclick="toggleEdit('resolutionDays')">تعديل</button>
+                    </div>
+                    <input type="number" id="input-resolutionDays" class="kpi-input" step="1"
+                        onblur="saveQuickEdit('resolutionDays')">
+                </div>
+
+                <!-- Compliance Cost -->
+                <div class="kpi-card" style="--stx-primary: #8b5cf6;">
+                    <span class="kpi-label">تكلفة الامتثال السنوية</span>
+                    <div class="kpi-value-container" id="container-complianceCost">
+                        <span class="kpi-value" id="val-complianceCost">120,000</span>
+                        <span class="kpi-unit">SAR</span>
+                        <button class="btn-update ms-auto" onclick="toggleEdit('complianceCost')">تعديل</button>
+                    </div>
+                    <input type="number" id="input-complianceCost" class="kpi-input" step="1000"
+                        onblur="saveQuickEdit('complianceCost')">
+                </div>
+
+                <!-- Whistleblower Reports -->
+                <div class="kpi-card" style="--stx-primary: #06b6d4;">
+                    <span class="kpi-label">عدد البلاغات المستلمة (Whistleblowing)</span>
+                    <div class="kpi-value-container" id="container-reports">
+                        <span class="kpi-value" id="val-reports">5</span>
+                        <span class="kpi-unit">بلاغ</span>
+                        <button class="btn-update ms-auto" onclick="toggleEdit('reports')">تعديل</button>
+                    </div>
+                    <input type="number" id="input-reports" class="kpi-input" step="1"
+                        onblur="saveQuickEdit('reports')">
+                </div>
+            </div>
+
+            <!-- Historical Chart -->
+            <div class="chart-container">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold m-0"><i class="bi bi-calendar3 me-2"></i> التحليل الزمني لمؤشرات الامتثال</h5>
+                    <div class="small text-muted">بيانات الـ 6 أشهر الماضية</div>
+                </div>
+                <canvas id="complianceChart"></canvas>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for Adding History -->
+    <div class="modal fade" id="addHistoryModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">إضافة بيانات شهر جديد</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">الشهر / السنة</label>
+                        <input type="month" id="hist-date" class="form-control">
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label small text-muted">عدد المخالفات</label>
+                            <input type="number" id="hist-violations" class="form-control" step="1">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-muted">نسبة الالتزام بالسياسات (%)</label>
+                            <input type="number" id="hist-policyRate" class="form-control">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-muted">نسبة إتمام التدريب (%)</label>
+                            <input type="number" id="hist-trainingRate" class="form-control">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-muted">مدة حل المخالفات (يوم)</label>
+                            <input type="number" id="hist-resolutionDays" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-dark rounded-pill" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4" onclick="addHistoricalEntry()">حفظ التاريخ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/js/api.js?v=4"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/context-manager.js?v=4"></script>
+    <script src="/js/page-guard.js?v=5"></script>
+    <script src="/js/steps-config.js?v=4"></script>
+    <script src="/js/dept-page.js?v=4"></script>
+    <script src="/js/sidebar.js?v=4"></script>
+
+    <script>
+        let currentKpisValues = {
+            violations: 3,
+            policyRate: 78,
+            trainingRate: 65,
+            resolutionDays: 14,
+            complianceCost: 120000,
+            reports: 5
+        };
+
+        let historicalData = [
+            { date: '2025-10', violations: 5, policyRate: 70, trainingRate: 55, resolutionDays: 21 },
+            { date: '2025-11', violations: 4, policyRate: 72, trainingRate: 58, resolutionDays: 18 },
+            { date: '2025-12', violations: 4, policyRate: 74, trainingRate: 60, resolutionDays: 16 },
+            { date: '2026-01', violations: 3, policyRate: 75, trainingRate: 62, resolutionDays: 15 },
+            { date: '2026-02', violations: 3, policyRate: 77, trainingRate: 64, resolutionDays: 14 },
+            { date: '2026-03', violations: 3, policyRate: 78, trainingRate: 65, resolutionDays: 14 }
+        ];
+
+        let chartInstance = null;
+
+        async function initPage() {
+            if (window.DeptPage) DeptPage.dept = 'compliance';
+
+            const savedValues = JSON.parse(localStorage.getItem('stratix_compliance_kpis_values') || 'null');
+            const savedHistory = JSON.parse(localStorage.getItem('stratix_compliance_kpis_history') || 'null');
+
+            if (!savedValues) {
+                const apiValues = await DeptPage.loadFromAPI('COMPLIANCE_KPIS_VALUES').catch(() => null);
+                if (apiValues) currentKpisValues = apiValues;
+            } else {
+                currentKpisValues = savedValues;
+            }
+
+            if (!savedHistory) {
+                const apiHistory = await DeptPage.loadFromAPI('COMPLIANCE_KPIS_HISTORY').catch(() => null);
+                if (apiHistory) historicalData = apiHistory;
+            } else {
+                historicalData = savedHistory;
+            }
+
+            updateKpiCards();
+            renderChart();
+        }
+
+        function updateKpiCards() {
+            Object.keys(currentKpisValues).forEach(key => {
+                const valEl = document.getElementById(`val-${key}`);
+                if (valEl) {
+                    let formatted = currentKpisValues[key];
+                    if (key === 'complianceCost') formatted = new Intl.NumberFormat().format(formatted);
+                    valEl.textContent = formatted;
+                }
+            });
+        }
+
+        function toggleEdit(key) {
+            const container = document.getElementById(`container-${key}`);
+            const input = document.getElementById(`input-${key}`);
+            container.style.display = 'none';
+            input.style.display = 'block';
+            input.value = currentKpisValues[key];
+            input.focus();
+        }
+
+        async function saveQuickEdit(key) {
+            const container = document.getElementById(`container-${key}`);
+            const input = document.getElementById(`input-${key}`);
+            const newVal = parseFloat(input.value);
+
+            if (!isNaN(newVal)) {
+                currentKpisValues[key] = newVal;
+                updateKpiCards();
+                await saveKpisValues();
+            }
+
+            container.style.display = 'flex';
+            input.style.display = 'none';
+        }
+
+        async function saveKpisValues() {
+            localStorage.setItem('stratix_compliance_kpis_values', JSON.stringify(currentKpisValues));
+            if (typeof DeptPage !== 'undefined' && DeptPage.saveToAPI) {
+                await DeptPage.saveToAPI('COMPLIANCE_KPIS_VALUES', currentKpisValues).catch(console.warn);
+            }
+        }
+
+        async function addHistoricalEntry() {
+            const date = document.getElementById('hist-date').value;
+            const violations = parseFloat(document.getElementById('hist-violations').value);
+            const policyRate = parseFloat(document.getElementById('hist-policyRate').value);
+            const trainingRate = parseFloat(document.getElementById('hist-trainingRate').value);
+            const resolutionDays = parseFloat(document.getElementById('hist-resolutionDays').value);
+
+            if (!date || isNaN(violations)) {
+                alert('يرجى إكمال البيانات الأساسية');
+                return;
+            }
+
+            const entry = { date, violations, policyRate, trainingRate, resolutionDays };
+            historicalData.push(entry);
+            historicalData.sort((a, b) => a.date.localeCompare(b.date));
+
+            if (date >= historicalData[historicalData.length - 1].date) {
+                Object.assign(currentKpisValues, { violations, policyRate, trainingRate, resolutionDays });
+                updateKpiCards();
+                await saveKpisValues();
+            }
+
+            localStorage.setItem('stratix_compliance_kpis_history', JSON.stringify(historicalData));
+            if (typeof DeptPage !== 'undefined' && DeptPage.saveToAPI) {
+                await DeptPage.saveToAPI('COMPLIANCE_KPIS_HISTORY', historicalData).catch(console.warn);
+            }
+
+            renderChart();
+            bootstrap.Modal.getInstance(document.getElementById('addHistoryModal')).hide();
+        }
+
+        function renderChart() {
+            const ctx = document.getElementById('complianceChart').getContext('2d');
+            const labels = historicalData.map(d => d.date);
+
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'عدد المخالفات',
+                            data: historicalData.map(d => d.violations),
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            yAxisID: 'y1'
+                        },
+                        {
+                            label: 'نسبة الالتزام بالسياسات (%)',
+                            data: historicalData.map(d => d.policyRate),
+                            borderColor: '#10b981',
+                            fill: false,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'نسبة إتمام التدريب (%)',
+                            data: historicalData.map(d => d.trainingRate),
+                            borderColor: '#f59e0b',
+                            fill: false,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'مدة حل المخالفات (يوم)',
+                            data: historicalData.map(d => d.resolutionDays),
+                            borderColor: '#6366f1',
+                            fill: false,
+                            tension: 0.4,
+                            hidden: true,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#94a3b8', font: { family: 'Tajawal' } } }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#94a3b8', callback: v => v + '%' },
+                            title: { display: true, text: 'النسبة المئوية', color: '#64748b' }
+                        },
+                        y1: {
+                            beginAtZero: true,
+                            position: 'left',
+                            grid: { drawOnChartArea: false },
+                            ticks: { color: '#94a3b8' },
+                            title: { display: true, text: 'العدد / الأيام', color: '#64748b' }
+                        },
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+
+</html>

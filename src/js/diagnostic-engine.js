@@ -149,10 +149,14 @@ export const DiagnosticEngine = (function () {
             finance: { name: 'المالية', emoji: '💰', color: '#10b981', icon: 'bi-cash-coin' },
             marketing: { name: 'التسويق', emoji: '📢', color: '#f59e0b', icon: 'bi-megaphone-fill' },
             operations: { name: 'العمليات', emoji: '⚙️', color: '#6b7280', icon: 'bi-gear-wide-connected' },
-            it: { name: 'التقنية', emoji: '💻', color: '#3b82f6', icon: 'bi-cpu' },
+            it: { name: 'تقنية المعلومات', emoji: '💻', color: '#3b82f6', icon: 'bi-cpu' },
             sales: { name: 'المبيعات', emoji: '🎯', color: '#f59e0b', icon: 'bi-bullseye' },
             logistics: { name: 'اللوجستيات', emoji: '🚚', color: '#6b7280', icon: 'bi-truck' },
-            governance: { name: 'الحوكمة والامتثال', emoji: '🏛️', color: '#ef4444', icon: 'bi-shield-check' }
+            cs: { name: 'خدمة العملاء', emoji: '🎧', color: '#06b6d4', icon: 'bi-headset' },
+            quality: { name: 'الجودة', emoji: '✅', color: '#14b8a6', icon: 'bi-patch-check-fill' },
+            projects: { name: 'إدارة المشاريع', emoji: '📋', color: '#8b5cf6', icon: 'bi-kanban-fill' },
+            compliance: { name: 'الامتثال', emoji: '⚖️', color: '#ef4444', icon: 'bi-shield-check' },
+            governance: { name: 'الحوكمة', emoji: '🏛️', color: '#0ea5e9', icon: 'bi-diagram-3-fill' }
         };
 
         let dept = DEPT_MAP[department] || DEPT_MAP.hr;

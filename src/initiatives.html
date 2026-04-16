@@ -169,6 +169,17 @@
             text-transform: uppercase;
         }
 
+        .init-source-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.62rem;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 8px;
+            width: fit-content;
+        }
+
         .status-planned {
             background: rgba(148, 163, 184, 0.1);
             color: #94a3b8;
@@ -290,8 +301,8 @@
     <!-- Top Navigation -->
     <nav class="top-nav d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center gap-4">
-            <a href="#" onclick="event.preventDefault(); window.location.href='/okrs.html'+window.location.search"
-                class="nav-link-btn"><i class="bi bi-arrow-right"></i> السابق: نظام OKRs</a>
+            <a href="#" onclick="event.preventDefault(); window.location.href='/kpis.html'+window.location.search"
+                class="nav-link-btn"><i class="bi bi-arrow-right"></i> السابق: مؤشرات الأداء (KPIs)</a>
             <div class="mx-2 opacity-10">|</div>
             <div id="dept-switcher-placeholder"></div>
             <div class="mx-2 opacity-10">|</div>
@@ -410,8 +421,8 @@
         </div>
 
         <div class="action-bar mt-5">
-            <a href="#" onclick="event.preventDefault(); window.location.href='/okrs.html'+window.location.search"
-                class="nav-link-btn"><i class="bi bi-arrow-right"></i> العودة لنظام OKRs</a>
+            <a href="#" onclick="event.preventDefault(); window.location.href='/kpis.html'+window.location.search"
+                class="nav-link-btn"><i class="bi bi-arrow-right"></i> العودة لمؤشرات الأداء (KPIs)</a>
             <button type="button" onclick="saveJourney()"
                 class="btn btn-modern btn-success px-5 py-3 rounded-pill fw-900 border-0 shadow-lg">
                 اعتماد الخطة التنفيذية بالكامل <i class="bi bi-flag-fill ms-2"></i>
@@ -505,6 +516,7 @@
     <script src="/assets/js/marketing-handlers.js?v=9"></script>
     <script src="/assets/js/operations-handlers.js?v=9"></script>
     <script src="/assets/js/it-handlers.js?v=9"></script>
+    <script src="/assets/js/compliance-handlers.js?v=11"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
@@ -561,6 +573,11 @@
                 const groupLabels = { diag: '🔍 التشخيص', plan: '🧭 التخطيط', exec: '🚀 التنفيذ' };
 
 
+                // مفاتيح بديلة متخصصة لكل خطوة (يُكتشفها بدل الإصرار على المفتاح العام)
+                const ALT_KEYS = {
+                    KPIS: [`${dept.toUpperCase()}_KPIS_VALUES`, 'KPIS_VALUES']
+                };
+
                 for (const p of PREREQS) {
                     let hasData = false;
                     try {
@@ -568,6 +585,17 @@
                         const d = Array.isArray(res) ? res : (res ? Object.keys(res) : []);
                         hasData = d.length > 0;
                     } catch (e) { }
+
+                    // فحص المفاتيح البديلة المتخصصة
+                    if (!hasData && ALT_KEYS[p.id]) {
+                        for (const altKey of ALT_KEYS[p.id]) {
+                            try {
+                                const altRes = await DeptPage.loadFromAPI(altKey);
+                                const altD = Array.isArray(altRes) ? altRes : (altRes ? Object.keys(altRes) : []);
+                                if (altD.length > 0) { hasData = true; break; }
+                            } catch (e) { }
+                        }
+                    }
 
                     if (hasData) {
                         completedCount++;
@@ -732,6 +760,47 @@
             }
 
             renderRoadmap();
+            // بعد الرسم: لو لا تزال فارغة، أظهر توجيهات واضحة للمستخدم
+            renderEmptyStateIfNeeded(dept);
+        }
+
+        function renderEmptyStateIfNeeded(dept) {
+            if (allInitiatives.length > 0) {
+                const existing = document.getElementById('initiatives-empty-state');
+                if (existing) existing.remove();
+                return;
+            }
+            if (document.getElementById('initiatives-empty-state')) return;
+
+            const kpisHref = `/kpis.html?dept=${dept}`;
+            const objHref = `/objectives.html?dept=${dept}`;
+            const banner = document.createElement('div');
+            banner.id = 'initiatives-empty-state';
+            banner.style.cssText = 'margin:0 0 20px 0;padding:18px 22px;border:1px dashed rgba(245,158,11,0.45);background:rgba(245,158,11,0.06);border-radius:14px;color:#fde68a;';
+            banner.innerHTML = `
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                    <i class="bi bi-info-circle-fill" style="color:#f59e0b;font-size:1.1rem;"></i>
+                    <strong style="color:#fbbf24;">لا توجد مبادرات بعد</strong>
+                </div>
+                <div style="font-size:0.88rem;line-height:1.7;color:#e2e8f0;">
+                    خارطة المبادرات تعتمد على <b>الأهداف الاستراتيجية</b> و<b>مؤشرات الأداء (KPIs)</b> للقسم.
+                    الرجاء إكمال هذه الخطوات ثم العودة هنا لتُبنى المبادرات تلقائياً.
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">
+                    <a href="${objHref}" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:10px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.35);color:#a5b4fc;text-decoration:none;font-weight:800;font-size:0.82rem;">
+                        <i class="bi bi-bullseye"></i> إضافة الأهداف أولاً
+                    </a>
+                    <a href="${kpisHref}" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:10px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.35);color:#6ee7b7;text-decoration:none;font-weight:800;font-size:0.82rem;">
+                        <i class="bi bi-speedometer2"></i> تعريف المؤشرات (KPIs)
+                    </a>
+                    <button onclick="syncInitiativesWithKpis(event)" style="padding:7px 14px;border-radius:10px;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.35);color:#fbbf24;font-weight:800;font-size:0.82rem;cursor:pointer;">
+                        <i class="bi bi-arrow-repeat"></i> إعادة محاولة المزامنة الذكية
+                    </button>
+                </div>
+            `;
+            const main = document.querySelector('main');
+            const grid = document.querySelector('.quarter-grid');
+            if (main && grid) main.insertBefore(banner, grid);
         }
 
         async function purgeInitiativeData() {
@@ -755,17 +824,63 @@
                 const card = document.createElement('div');
                 card.className = 'init-card';
                 const statusClass = (init.status || 'planned').replace(/[^a-z]/g, '');
+                const srcKey = init.source || 'manual';
+                const srcMeta = SOURCE_META[srcKey] || SOURCE_META.manual;
+                const srcPill = `<span class="init-source-pill" style="background:${srcMeta.color}22;color:${srcMeta.color};border:1px solid ${srcMeta.color}55;">
+                    <i class="bi ${srcMeta.icon}"></i> ${esc(srcMeta.label)}
+                </span>`;
+                card.style.borderTop = `4px solid ${srcMeta.color}`;
                 card.innerHTML = `
-                    <span class="init-status-pill status-${statusClass}">${esc(getStatusLabel(init.status))}</span>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                        <span class="init-status-pill status-${statusClass}">${esc(getStatusLabel(init.status))}</span>
+                        ${srcPill}
+                    </div>
                     <span class="init-title">${esc(init.title)}</span>
                     <div class="init-meta">
                         <span><i class="bi bi-cash me-1"></i> ${esc(init.budget || '0 ر.س')}</span>
                     </div>
-                    ${init.parent ? `<div class="init-parent"><i class="bi bi-link-45deg"></i> دعم: ${esc(init.parent)}</div>` : ''}
+                    ${init.parent ? `<div class="init-parent"><i class="bi bi-link-45deg"></i> مرتبطة بـ: ${esc(init.parent)}</div>` : ''}
                 `;
                 card.onclick = () => openEditModal(idx);
                 list.appendChild(card);
             });
+
+            renderFlowSummary();
+        }
+
+        // ملخّص التدفق — يعرض عدد المبادرات من كل مصدر (شريط علوي)
+        function renderFlowSummary() {
+            let box = document.getElementById('flow-summary');
+            if (allInitiatives.length === 0) {
+                if (box) box.remove();
+                return;
+            }
+            if (!box) {
+                box = document.createElement('div');
+                box.id = 'flow-summary';
+                box.style.cssText = 'margin:0 0 16px 0;padding:14px 18px;border:1px solid var(--stx-border);background:rgba(255,255,255,0.02);border-radius:14px;';
+                const main = document.querySelector('main');
+                const grid = document.querySelector('.quarter-grid');
+                if (main && grid) main.insertBefore(box, grid);
+            }
+            const counts = {};
+            allInitiatives.forEach(i => {
+                const k = i.source || 'manual';
+                counts[k] = (counts[k] || 0) + 1;
+            });
+            const esc = (s) => (s || '').replace(/</g, '&lt;');
+            const chips = Object.entries(counts).map(([k, v]) => {
+                const m = SOURCE_META[k] || SOURCE_META.manual;
+                return `<span style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:10px;background:${m.color}15;color:${m.color};border:1px solid ${m.color}40;font-size:0.78rem;font-weight:800;">
+                    <i class="bi ${m.icon}"></i> ${esc(m.label)} <b>(${v})</b>
+                </span>`;
+            }).join('');
+            box.innerHTML = `
+                <div style="font-size:0.78rem;font-weight:800;color:#94a3b8;margin-bottom:8px;">
+                    <i class="bi bi-diagram-3 me-1"></i> تدفق البيانات — مصادر المبادرات الحالية
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">${chips}</div>
+            `;
         }
 
         function getStatusLabel(s) {
@@ -832,36 +947,125 @@
             return '15,000 - 30,000 ر.س';
         }
 
+        // عدسات المصدر — تحدد التصميم البصري لكل منبع
+        const SOURCE_META = {
+            kpi:       { label: 'مؤشر أداء (KPI)', color: '#10b981', icon: 'bi-speedometer2' },
+            objective: { label: 'هدف استراتيجي',  color: '#6366f1', icon: 'bi-bullseye' },
+            okr:       { label: 'نتيجة رئيسية (KR)', color: '#f59e0b', icon: 'bi-trophy' },
+            tows:      { label: 'استراتيجية TOWS', color: '#06b6d4', icon: 'bi-shuffle' },
+            specialized: { label: 'مؤشر متخصص', color: '#22c55e', icon: 'bi-shield-check' },
+            generator: { label: 'اقتراح ذكي',     color: '#94a3b8', icon: 'bi-magic' },
+            manual:    { label: 'مُضافة يدوياً',   color: '#a78bfa', icon: 'bi-person-gear' }
+        };
+
         async function syncInitiativesWithKpis(event, silent = false) {
             const btn = event?.target?.closest('button');
             if (btn) btn.disabled = true;
 
             try {
                 const dept = new URLSearchParams(window.location.search).get('dept') || 'company';
-                const kpis = await DeptPage.loadFromAPI('KPIS_' + dept.toUpperCase()) || [];
+                const deptUp = dept.toUpperCase();
+                const sources = []; // [{name, quarter, source, parent}]
+                const pushSource = (obj) => sources.push(obj);
+                const qRobin = (idx) => ['Q1', 'Q2', 'Q3', 'Q4'][idx % 4];
 
-                // fallback: if no KPIs, try loading from objectives + key results
-                let kpiList = Array.isArray(kpis) ? kpis : (kpis?.kpis || []);
-                if (kpiList.length === 0) {
-                    const objs = await DeptPage.loadFromAPI('OBJECTIVES_' + dept.toUpperCase()) || [];
-                    const objectives = Array.isArray(objs) ? objs : (objs?.objectives || []);
-                    objectives.forEach(obj => {
-                        kpiList.push({ name: obj.title || obj.name, quarter: 'Q1' });
+                // ═══ المصدر 1: KPIs (عام) ═══
+                const kpisGeneric = await DeptPage.loadFromAPI('KPIS_' + deptUp) || [];
+                const kpiListG = Array.isArray(kpisGeneric) ? kpisGeneric : (kpisGeneric?.kpis || []);
+                kpiListG.forEach((k, i) => pushSource({
+                    name: k.name || k.title,
+                    quarter: k.quarter || qRobin(i),
+                    source: 'kpi'
+                }));
+
+                // ═══ المصدر 2: KPIs (متخصص) — COMPLIANCE_KPIS_VALUES / HR_KPIS_VALUES / KPIS_VALUES ═══
+                const specKeys = [`${deptUp}_KPIS_VALUES`, 'KPIS_VALUES'];
+                for (const k of specKeys) {
+                    const spec = await DeptPage.loadFromAPI(k).catch(() => null);
+                    if (spec && typeof spec === 'object') {
+                        const entries = Object.keys(spec).filter(key => spec[key] !== null && spec[key] !== undefined);
+                        entries.forEach((key, i) => {
+                            const label = translateSpecKey(dept, key);
+                            if (label) pushSource({ name: label, quarter: qRobin(i), source: 'specialized' });
+                        });
+                        break; // اكتفِ بأول مصدر متخصص متاح
+                    }
+                }
+
+                // ═══ المصدر 3: الأهداف الاستراتيجية ═══
+                const objsRaw = await DeptPage.loadFromAPI('OBJECTIVES_' + deptUp) || [];
+                const objectives = Array.isArray(objsRaw) ? objsRaw : (objsRaw?.objectives || []);
+                objectives.forEach((obj, i) => pushSource({
+                    name: obj.title || obj.name,
+                    quarter: obj.quarter || qRobin(i),
+                    source: 'objective'
+                }));
+
+                // ═══ المصدر 4: OKRs — كل key result مبادرة مستقلة ═══
+                const okrsRaw = await DeptPage.loadFromAPI('OKRS_' + deptUp) || [];
+                const okrs = Array.isArray(okrsRaw) ? okrsRaw : (okrsRaw?.okrs || []);
+                okrs.forEach((okr, i) => {
+                    const krList = okr.keyResults || okr.key_results || okr.krs || [];
+                    krList.forEach((kr, j) => {
+                        const krText = kr.title || kr.text || kr.name || kr;
+                        if (krText) pushSource({
+                            name: krText,
+                            quarter: kr.quarter || okr.quarter || qRobin(i + j),
+                            source: 'okr',
+                            parent: okr.title || okr.objective
+                        });
                     });
+                });
+
+                // ═══ المصدر 5: TOWS — استراتيجيات SO/WO/ST/WT ═══
+                const towsRaw = await DeptPage.loadFromAPI('TOWS_' + deptUp).catch(() => null);
+                if (towsRaw && typeof towsRaw === 'object') {
+                    ['so', 'wo', 'st', 'wt'].forEach((key, kidx) => {
+                        const val = towsRaw[key];
+                        const list = Array.isArray(val) ? val : (typeof val === 'string' ? val.split(/\n+/).filter(Boolean) : []);
+                        list.forEach((s, i) => {
+                            const text = (typeof s === 'string' ? s : s.text || s.title || '').trim();
+                            if (text) pushSource({
+                                name: text.replace(/^[\-•*]\s*/, '').slice(0, 120),
+                                quarter: qRobin(kidx),
+                                source: 'tows'
+                            });
+                        });
+                    });
+                }
+
+                // ═══ Fallback: مُولّد القسم لو كل المصادر فارغة ═══
+                if (sources.length === 0) {
+                    const handlerName = `generate${dept.charAt(0).toUpperCase() + dept.slice(1)}Objectives`;
+                    if (typeof window[handlerName] === 'function') {
+                        try {
+                            const gen = window[handlerName]();
+                            const suggested = (gen && gen.objectives) || gen || [];
+                            suggested.forEach((obj, i) => pushSource({
+                                name: obj.title || obj.name || obj,
+                                quarter: qRobin(i),
+                                source: 'generator'
+                            }));
+                        } catch (e) {
+                            console.warn(`[Initiatives] ${handlerName} generator failed:`, e);
+                        }
+                    }
                 }
 
                 const existingTitles = new Set(allInitiatives.map(i => (i.title || i.name || i.text || '').trim()));
                 const newInits = [];
 
-                kpiList.forEach(k => {
-                    const title = 'مبادرة تحقيق: ' + (k.name || k.title);
+                sources.forEach(s => {
+                    if (!s.name) return;
+                    const title = 'مبادرة تحقيق: ' + s.name;
                     if (!existingTitles.has(title.trim())) {
                         newInits.push({
                             title: title,
-                            budget: estimateBudget(k.name || k.title),
-                            quarter: k.quarter || 'Q1',
+                            budget: estimateBudget(s.name),
+                            quarter: s.quarter || 'Q1',
                             status: 'planned',
-                            parent: k.name || k.title
+                            parent: s.parent || s.name,
+                            source: s.source
                         });
                         existingTitles.add(title.trim());
                     }
@@ -871,15 +1075,45 @@
                     allInitiatives = [...allInitiatives, ...newInits];
                     renderRoadmap();
                     await persist();
-                    if (!silent && window.DeptPage?.showMessage) DeptPage.showMessage(`✅ تمت إضافة ${newInits.length} مبادرة جديدة!`);
+                    const es = document.getElementById('initiatives-empty-state');
+                    if (es) es.remove();
+
+                    // ملخص حسب المصدر — يوضح التدفق للمستخدم
+                    const summary = {};
+                    newInits.forEach(i => { summary[i.source] = (summary[i.source] || 0) + 1; });
+                    const summaryText = Object.entries(summary).map(([k, v]) => `${v} ${SOURCE_META[k]?.label || k}`).join(' • ');
+                    if (!silent && window.DeptPage?.showMessage) {
+                        DeptPage.showMessage(`✅ أُضيفت ${newInits.length} مبادرة (${summaryText})`);
+                    }
                 } else {
-                    if (!silent && window.DeptPage?.showMessage) DeptPage.showMessage('جميع المبادرات متزامنة مع المؤشرات حالياً.');
+                    if (!silent && window.DeptPage?.showMessage) DeptPage.showMessage('جميع المبادرات متزامنة مع المصادر حالياً.');
                 }
             } catch (err) {
                 console.error('Sync failed', err);
             } finally {
                 if (btn) btn.disabled = false;
             }
+        }
+
+        // ترجمة مفاتيح الـ KPIs المتخصصة إلى عناوين عربية قابلة للقراءة
+        function translateSpecKey(dept, key) {
+            const maps = {
+                compliance: {
+                    violations: 'عدد المخالفات التنظيمية',
+                    policyRate: 'نسبة الالتزام بالسياسات',
+                    trainingRate: 'نسبة تدريب الموظفين على الامتثال',
+                    resolutionDays: 'متوسط أيام معالجة المخالفة',
+                    complianceCost: 'تكلفة عدم الامتثال (ر.س)'
+                },
+                hr: {
+                    turnoverRate: 'معدل دوران الموظفين',
+                    saudizationRate: 'نسبة التوطين',
+                    trainingHours: 'ساعات التدريب لكل موظف',
+                    satisfaction: 'مؤشر رضا الموظفين',
+                    vacancyRate: 'نسبة الشواغر'
+                }
+            };
+            return maps[dept]?.[key] || null;
         }
 
         async function saveInit() {
@@ -976,11 +1210,27 @@
         async function loadObjectivesForLinking(dept) {
             try {
                 const res = await DeptPage.loadFromAPI('OBJECTIVES_' + dept.toUpperCase()) || [];
-                const objectives = Array.isArray(res) ? res : (res?.objectives || []);
+                let objectives = Array.isArray(res) ? res : (res?.objectives || []);
+
+                // fallback: لو الأهداف غير محفوظة، استخدم المولّد الخاص بالقسم (compliance, hr, ...)
+                if (objectives.length === 0) {
+                    const handlerName = `generate${dept.charAt(0).toUpperCase() + dept.slice(1)}Objectives`;
+                    if (typeof window[handlerName] === 'function') {
+                        try {
+                            const gen = window[handlerName]();
+                            const suggested = (gen && gen.objectives) || gen || [];
+                            objectives = suggested.map(o => ({ title: o.title || o.name || o }));
+                        } catch (e) {
+                            console.warn(`[Initiatives] ${handlerName} fallback failed:`, e);
+                        }
+                    }
+                }
+
                 const select = document.getElementById('initParentLink');
                 if (!select) return;
 
                 objectives.forEach(obj => {
+                    if (!obj || !obj.title) return;
                     const opt = document.createElement('option');
                     opt.value = obj.title;
                     opt.textContent = obj.title;

@@ -186,13 +186,16 @@
             </div>
 
             <div class="d-flex gap-3 align-items-center">
-                <button type="button" onclick="pullFromPestel()" class="btn btn-outline-info btn-sm rounded-3 px-3">
-                    <i class="bi bi-download me-1"></i> سحب من PESTEL
+                <button type="button" id="syncAllBtn" onclick="syncFromAllSources(this); return false;" class="btn btn-outline-info btn-sm rounded-3 px-3">
+                    <i class="bi bi-diagram-3 me-1"></i> سحب من كل المراحل السابقة
+                </button>
+                <button type="button" onclick="pullFromPestel(this); return false;" class="btn btn-outline-secondary btn-sm rounded-3 px-3">
+                    <i class="bi bi-download me-1"></i> PESTEL فقط
                 </button>
                 <button type="button" onclick="fillAll()" class="btn btn-outline-light btn-sm rounded-3 px-3">
                     <i class="bi bi-magic me-1"></i> ملء تلقائي ذكي
                 </button>
-                <button type="button" onclick="clearAll()" class="btn btn-outline-danger btn-sm rounded-3 px-3">
+                <button type="button" id="clearAllBtn" class="btn btn-outline-danger btn-sm rounded-3 px-3">
                     <i class="bi bi-trash me-1"></i> مسح الكل
                 </button>
                 <div class="vr mx-2 text-white opacity-10" style="height: 30px;"></div>
@@ -203,6 +206,9 @@
         </header>
 
         <main class="stx-main-content">
+            <!-- شريط تدفق البيانات — يظهر المصادر المتاحة من المراحل السابقة -->
+            <div id="data-flow-bar" style="margin:0 0 16px 0;padding:14px 18px;border:1px solid var(--stx-border);background:rgba(255,255,255,0.02);border-radius:14px;display:none;"></div>
+
             <div class="hero-section">
                 <div class="row align-items-center">
                     <div class="col-lg-8">
@@ -300,13 +306,13 @@
     </div>
 
     <!-- Scripts -->
-    <script src="/js/api.js?v=8"></script>
-    <script src="/js/utils.js?v=8"></script>
-    <script src="/js/context-manager.js?v=8"></script>
-    <script src="/js/page-guard.js?v=8"></script>
-    <script src="/js/steps-config.js?v=8"></script>
-    <script src="/js/sidebar.js?v=8"></script>
-    <script src="/js/dept-page.js?v=8"></script>
+    <script src="/js/api.js?v=9"></script>
+    <script src="/js/utils.js?v=9"></script>
+    <script src="/js/context-manager.js?v=9"></script>
+    <script src="/js/page-guard.js?v=9"></script>
+    <script src="/js/steps-config.js?v=9"></script>
+    <script src="/js/sidebar.js?v=9"></script>
+    <script src="/js/dept-page.js?v=9"></script>
 
     <script>
         const HEALTH_SUGGESTIONS = {
@@ -360,11 +366,11 @@
                 leadership: ["التزام بمعايير الجودة العالمية", "شفافية في نتائج التدقيق", "دعم لثقافة التحسين المستمر"]
             },
             compliance: {
-                skills: ["خبرة في الأنظمة واللوائح المحلية", "مهارات تحليل المخاطر التنظيمية", "الحاجة لتدريب على مكافحة غسل الأموال"],
-                processes: ["مصفوفة امتثال شاملة ومحدثة", "آلية رصد التغييرات التنظيمية", "تأخر في تحديث السياسات الداخلية"],
-                satisfaction: ["شعور بأهمية الدور المؤسسي", "ضغط التغييرات التنظيمية المتسارعة", "الحاجة لدعم من الإدارة العليا"],
-                tech: ["منصة GRC لإدارة الامتثال", "أدوات مراقبة آلية للانتهاكات", "الحاجة لنظام تقارير امتثال ذكي"],
-                leadership: ["التزام واضح بالنزاهة المؤسسية", "تقارير دورية لمجلس الإدارة", "تعاون وثيق مع الإدارة القانونية"]
+                skills: ["خبرة في الأنظمة واللوائح المحلية", "مهارات تحليل المخاطر التنظيمية", "الحاجة لتدريب على مكافحة غسل الأموال (AML)"],
+                processes: ["مصفوفة امتثال شاملة ومحدثة", "آلية رصد التغييرات التنظيمية الفورية", "تأخر في تحديث السياسات الداخلية"],
+                satisfaction: ["شعور بأهمية الدور التنظيمي", "ضغط التغييرات التنظيمية المتسارعة", "الحاجة لدعم في ميزانية فريق الامتثال"],
+                tech: ["منصة GRC لإدارة الامتثال", "أدوات مراقبة آلية للانتهاكات التنظيمية", "الحاجة لنظام تقارير امتثال ذكي"],
+                leadership: ["متابعة حثيثة لإغلاق ملاحظات التدقيق", "تعاون وثيق مع الإدارة القانونية والجهات الرقابية", "نشر ثقافة الامتثال في كافة الإدارات"]
             },
             governance: {
                 skills: ["خبرة في حوكمة الشركات", "مهارات إعداد تقارير مجلس الإدارة", "الحاجة لتدريب على معايير ESG"],
@@ -414,9 +420,21 @@
 
         const FIELDS = ['skills', 'processes', 'satisfaction', 'tech', 'leadership'];
 
+        // ─── ربط زر المسح كـ fallback إن فشل inline onclick ───
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('clearAllBtn');
+            if (btn && !btn.dataset.bound) {
+                btn.dataset.bound = '1';
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (typeof clearAll === 'function') clearAll(btn);
+                });
+            }
+        });
+
         (async function () {
             const dept = await window.initDeptPage() || _pageDept;
-            _pageDept = dept.toLowerCase();
+            _pageDept = (dept || 'company').toLowerCase().trim();
 
             document.getElementById('dept-name').textContent = DEPT_AR[_pageDept] || _pageDept;
             const titleEl = document.getElementById('dept-title');
@@ -439,6 +457,9 @@
             // تحميل البيانات المحفوظة
             const data = await DeptPage.loadFromAPI('HEALTH_' + _pageDept.toUpperCase()) || {};
             DeptPage.fillForm(data);
+
+            // رسم شريط تدفق البيانات — يظهر حالة المراحل السابقة
+            try { await renderDataFlowBar(); } catch (e) { console.warn('[health] flow bar failed', e); }
 
             // هندلة النموذج
             document.getElementById('healthForm').onsubmit = async (e) => {
@@ -467,41 +488,112 @@
             area.value = area.value.trim() ? area.value + '\n- ' + text : '- ' + text;
         }
 
-        async function clearAll() {
-            if (!confirm('هل تريد مسح جميع الحقول وحذف البيانات المحفوظة؟')) return;
-            FIELDS.forEach(id => {
-                const area = document.getElementById(id);
-                if (area) area.value = '';
-            });
-            // مسح من قاعدة البيانات مباشرة عبر API
-            try {
-                const emptyData = {};
-                FIELDS.forEach(id => { emptyData[id] = ''; });
-                await api.post('/api/dept/analysis', {
-                    type: 'HEALTH_' + _pageDept.toUpperCase(),
-                    dept: _pageDept,
-                    data: emptyData
-                });
-                if (DeptPage.showMessage) DeptPage.showMessage('✅ تم مسح البيانات بنجاح');
-            } catch (e) {
-                console.error('clearAll error:', e);
-            }
+        // ─── وظيفة المسح الشامل (النسخة المعززة) ───
+        async function clearAll(btnEl) {
+            console.log('[clearAll] Starting process for dept:', _pageDept);
+            const btn = btnEl || document.getElementById('clearAllBtn');
+            const origHTML = btn ? btn.innerHTML : '';
+
+            // 1) إنشاء واجهة تأكيد مخصصة (تجنباً لمشاكل confirm المتصفح)
+            const overlayId = 'stx-clear-overlay';
+            if (document.getElementById(overlayId)) return;
+
+            const overlay = document.createElement('div');
+            overlay.id = overlayId;
+            overlay.style.cssText = `
+                position:fixed; inset:0; z-index:99999;
+                background:rgba(11, 13, 18, 0.9); backdrop-filter:blur(8px);
+                display:flex; align-items:center; justify-content:center;
+                font-family:'Tajawal',sans-serif; direction:rtl;
+            `;
+            overlay.innerHTML = `
+                <div style="background:#1a1d2e; border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:40px; max-width:400px; text-align:center; box-shadow:0 25px 50px rgba(0,0,0,0.5)">
+                    <div style="font-size:3.5rem; margin-bottom:1.5rem">⚠️</div>
+                    <h3 style="color:#fff; font-weight:800; margin-bottom:1rem">تأكيد مسح البيانات</h3>
+                    <p style="color:#94a3b8; margin-bottom:2rem; font-size:0.95rem; line-height:1.6">هل أنت متأكد من رغبتك في حذف كافة الحقول والبيانات المحفوظة لهذا القسم؟ لا يمكن التراجع عن هذه العملية.</p>
+                    <div style="display:flex; gap:12px; justify-content:center">
+                        <button id="cancelClear" style="flex:1; padding:14px; border-radius:12px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:#fff; font-weight:700">تراجع</button>
+                        <button id="confirmClear" style="flex:1; padding:14px; border-radius:12px; border:none; background:#ef4444; color:#fff; font-weight:700">نعم، امسح الكل</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            // هندلة الأزرار داخل الواجهة
+            const close = () => overlay.remove();
+            document.getElementById('cancelClear').onclick = close;
+            document.getElementById('confirmClear').onclick = async () => {
+                close();
+                console.log('[clearAll] User confirmed. Executing...');
+
+                try {
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> جاري الحفظ...';
+                    }
+
+                    // 1. تصفير الحقول في الواجهة
+                    const fields = ['skills', 'processes', 'satisfaction', 'tech', 'leadership'];
+                    fields.forEach(f => {
+                        const el = document.getElementById(f);
+                        if (el) el.value = '';
+                    });
+
+                    const deptUpper = (_pageDept || 'company').toUpperCase();
+                    const type = 'HEALTH_' + deptUpper;
+                    const emptyData = { skills: '', processes: '', satisfaction: '', tech: '', leadership: '' };
+
+                    // 2. تصفير Context & LocalStorage
+                    if (window.Context?.setItem) {
+                        const cKey = type + '_' + deptUpper;
+                        Context.setItem(cKey, emptyData);
+                        if (window.Context.removeItem) Context.removeItem(cKey);
+                    }
+
+                    const uid = window._cachedUser?.id || window.__currentUser?.id || 'local';
+                    localStorage.removeItem(`stratix_${uid}_${_pageDept}_${type}`);
+                    localStorage.removeItem(`stratix_${_pageDept}_${type}`);
+
+                    // 3. تصفير API
+                    let apiOk = false;
+                    if (window.DeptPage?.saveToAPI) {
+                        apiOk = await DeptPage.saveToAPI(type, emptyData);
+                    } else if (window.api?.post) {
+                        const res = await api.post('/api/dept/analysis', { type, dept: _pageDept, data: emptyData });
+                        apiOk = !!res?.success;
+                    }
+
+                    // 4. رسالة نجاح
+                    if (window.DeptPage?.showMessage) {
+                        DeptPage.showMessage(apiOk ? '✅ تم تصفير البيانات بنجاح' : '⚠️ تم التصفير محلياً (حدث خطأ في المزامنة)');
+                    } else {
+                        alert('تم مسح البيانات');
+                    }
+
+                } catch (err) {
+                    console.error('[clearAll] Logic failure:', err);
+                    alert('عذراً، حدث خطأ أثناء محاولة المسح');
+                } finally {
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = origHTML;
+                    }
+                }
+            };
         }
 
-        async function pullFromPestel() {
-            const btn = event.target.closest('button');
-            const origHTML = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> جاري السحب...';
+        async function pullFromPestel(btnEl) {
+            const btn = btnEl || event?.target?.closest('button');
+            const origHTML = btn ? btn.innerHTML : '';
+            if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> جاري السحب...'; }
 
             try {
-                const res = await api.get(`/api/dept/analysis?dept=${_pageDept}&type=PESTEL`);
-                if (!res?.success || !res.data) {
+                const p = await DeptPage.loadFromAPI('PESTEL');
+                if (!p || typeof p !== 'object') {
                     alert('لا توجد بيانات PESTEL محفوظة لهذا القسم. أكمل تحليل PESTEL أولاً.');
                     return;
                 }
 
-                const p = res.data;
                 const PESTEL_LABELS = {
                     political: 'سياسي', economic: 'اقتصادي', social: 'اجتماعي',
                     technological: 'تقني', environmental: 'بيئي', legal: 'قانوني'
@@ -520,12 +612,12 @@
                     if (!area) return;
                     const lines = [];
                     fieldMap[field].forEach(pKey => {
-                        if (p[pKey] && p[pKey].trim()) {
-                            lines.push(`[${PESTEL_LABELS[pKey]}] ${p[pKey].trim()}`);
+                        if (p[pKey] && String(p[pKey]).trim()) {
+                            lines.push(`[PESTEL/${PESTEL_LABELS[pKey]}] ${String(p[pKey]).trim()}`);
                         }
                     });
                     if (lines.length > 0) {
-                        area.value = lines.join('\n');
+                        area.value = area.value.trim() ? area.value + '\n' + lines.join('\n') : lines.join('\n');
                     }
                 });
 
@@ -534,9 +626,189 @@
                 console.error('pullFromPestel error:', e);
                 alert('حدث خطأ أثناء سحب بيانات PESTEL');
             } finally {
-                btn.disabled = false;
-                btn.innerHTML = origHTML;
+                if (btn) { btn.disabled = false; btn.innerHTML = origHTML; }
             }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // 🔗 سحب من كل المراحل السابقة: DEEP + AUDIT + PESTEL
+        // ═══════════════════════════════════════════════════════════════
+        async function syncFromAllSources(btnEl) {
+            const btn = btnEl || document.getElementById('syncAllBtn');
+            const origHTML = btn ? btn.innerHTML : '';
+            if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> جاري السحب...'; }
+
+            const deptUp = _pageDept.toUpperCase();
+            const summary = { deep: 0, audit: 0, pestel: 0 };
+            const collected = { skills: [], processes: [], satisfaction: [], tech: [], leadership: [] };
+
+            // فلترة الحوكمة من نتائج الامتثال — بنود تخص الحوكمة الصرفة فقط
+            const isComplianceDept = _pageDept === 'compliance';
+            const governanceOnlyKeywords = ['مجلس الإدارة', 'صلاحيات المجلس', 'تضارب المصالح', 'لائحة حوكمة', 'أعضاء المجلس', 'لجنة التدقيق'];
+            const shouldSkip = (txt) => isComplianceDept && governanceOnlyKeywords.some(k => (txt || '').includes(k));
+
+            // ─── 1) DEEP (التشخيص العميق) ───
+            try {
+                const deep = await DeptPage.loadFromAPI('DEEP');
+                if (deep && typeof deep === 'object') {
+                    // استخراج النصوص من كل فئات التشخيص العميق
+                    const extractTexts = (obj, depth = 0) => {
+                        if (depth > 4 || !obj) return [];
+                        if (typeof obj === 'string') return obj.trim() ? [obj.trim()] : [];
+                        if (Array.isArray(obj)) return obj.flatMap(x => extractTexts(x, depth + 1));
+                        if (typeof obj === 'object') {
+                            const pref = ['answer', 'text', 'value', 'note', 'description', 'finding'];
+                            for (const k of pref) {
+                                if (obj[k] && typeof obj[k] === 'string') return [obj[k].trim()].filter(Boolean);
+                            }
+                            return Object.values(obj).flatMap(v => extractTexts(v, depth + 1));
+                        }
+                        return [];
+                    };
+                    const allTexts = extractTexts(deep).filter(t => t.length > 10 && !shouldSkip(t));
+                    // توزيع على الحقول وفق الكلمات المفتاحية
+                    allTexts.slice(0, 30).forEach(t => {
+                        const low = t.toLowerCase();
+                        let target = 'processes';
+                        if (/مهار|كفاء|تدريب|خبر|فريق|قدرات/.test(t)) target = 'skills';
+                        else if (/نظام|GRC|grc|تقني|أتمتة|منصة|رقمي|software/.test(t)) target = 'tech';
+                        else if (/رضا|ثقاف|تواصل|بيئة|ولاء|ضغط/.test(t)) target = 'satisfaction';
+                        else if (/قياد|إدار|توجه|رؤي|قرار|دعم الإدارة/.test(t)) target = 'leadership';
+                        collected[target].push(`[DEEP] ${t}`);
+                        summary.deep++;
+                    });
+                }
+            } catch (e) { console.warn('[syncAll] DEEP failed', e); }
+
+            // ─── 2) AUDIT (التقييم الوصفي) ───
+            try {
+                const auditKeys = [`AUDIT_${deptUp}`, 'AUDIT'];
+                let audit = null;
+                for (const k of auditKeys) {
+                    audit = await DeptPage.loadFromAPI(k).catch(() => null);
+                    if (audit && typeof audit === 'object' && Object.keys(audit).length > 0) break;
+                }
+                if (audit && typeof audit === 'object') {
+                    // AUDIT typically contains scored criteria or notes
+                    const pushAudit = (label, val, target) => {
+                        if (!val) return;
+                        const txt = typeof val === 'string' ? val : (val.note || val.comment || val.description || '');
+                        if (txt && !shouldSkip(txt)) {
+                            collected[target].push(`[AUDIT/${label}] ${txt.trim()}`);
+                            summary.audit++;
+                        }
+                    };
+                    Object.entries(audit).forEach(([key, val]) => {
+                        const low = key.toLowerCase();
+                        let target = 'processes';
+                        if (/skill|مهار|training|تدريب/.test(low)) target = 'skills';
+                        else if (/tech|نظام|grc|أتمت/.test(low)) target = 'tech';
+                        else if (/satisf|رضا|culture|ثقاف/.test(low)) target = 'satisfaction';
+                        else if (/leader|قياد|manage/.test(low)) target = 'leadership';
+                        if (typeof val === 'object' && val !== null && !Array.isArray(val)) {
+                            Object.entries(val).forEach(([k2, v2]) => pushAudit(key + '/' + k2, v2, target));
+                        } else {
+                            pushAudit(key, val, target);
+                        }
+                    });
+                }
+            } catch (e) { console.warn('[syncAll] AUDIT failed', e); }
+
+            // ─── 3) PESTEL ───
+            try {
+                const p = await DeptPage.loadFromAPI('PESTEL');
+                if (p && typeof p === 'object') {
+                    const PL = { political: 'سياسي', economic: 'اقتصادي', social: 'اجتماعي', technological: 'تقني', environmental: 'بيئي', legal: 'قانوني' };
+                    const fieldMap = {
+                        skills: ['social', 'technological'],
+                        processes: ['political', 'legal'],
+                        satisfaction: ['social', 'economic'],
+                        tech: ['technological', 'environmental'],
+                        leadership: ['political', 'economic']
+                    };
+                    Object.entries(fieldMap).forEach(([field, keys]) => {
+                        keys.forEach(k => {
+                            const val = p[k];
+                            if (val && String(val).trim() && !shouldSkip(String(val))) {
+                                collected[field].push(`[PESTEL/${PL[k]}] ${String(val).trim()}`);
+                                summary.pestel++;
+                            }
+                        });
+                    });
+                }
+            } catch (e) { console.warn('[syncAll] PESTEL failed', e); }
+
+            // ─── كتابة البيانات المدمجة في الحقول ───
+            let totalInjected = 0;
+            FIELDS.forEach(f => {
+                const area = document.getElementById(f);
+                if (!area || !collected[f].length) return;
+                const existing = (area.value || '').trim();
+                const newBlock = collected[f].map(s => '- ' + s).join('\n');
+                area.value = existing ? existing + '\n' + newBlock : newBlock;
+                totalInjected += collected[f].length;
+            });
+
+            const total = summary.deep + summary.audit + summary.pestel;
+            const msg = total === 0
+                ? '⚠️ لا توجد بيانات في المراحل السابقة — أكمل التشخيص العميق / التقييم / PESTEL أولاً'
+                : `✅ تم سحب ${total} عنصر — DEEP(${summary.deep}) • AUDIT(${summary.audit}) • PESTEL(${summary.pestel})`;
+            if (DeptPage.showMessage) DeptPage.showMessage(msg);
+
+            // تحديث شريط تدفق البيانات
+            await renderDataFlowBar(summary);
+
+            if (btn) { btn.disabled = false; btn.innerHTML = origHTML; }
+        }
+
+        // شريط تدفق البيانات — يظهر حالة كل مرحلة سابقة (متوفرة / غير مكتملة)
+        async function renderDataFlowBar(liveCounts) {
+            const box = document.getElementById('data-flow-bar');
+            if (!box) return;
+
+            const deptUp = _pageDept.toUpperCase();
+            const checks = {
+                deep: { label: 'التشخيص العميق', key: 'DEEP', icon: 'bi-search-heart', color: '#6f42c1', tool: 'compliance-deep.html' },
+                audit: { label: 'التقييم الوصفي', key: `AUDIT_${deptUp}`, icon: 'bi-clipboard2-pulse-fill', color: '#0dcaf0', tool: `${_pageDept}-audit.html` },
+                pestel: { label: 'تحليل PESTEL', key: 'PESTEL', icon: 'bi-globe2', color: '#22c55e', tool: 'pestel.html' }
+            };
+
+            const status = {};
+            await Promise.all(Object.entries(checks).map(async ([k, c]) => {
+                try {
+                    const d = await DeptPage.loadFromAPI(c.key).catch(() => null);
+                    status[k] = !!(d && typeof d === 'object' && Object.keys(d).length > 0);
+                } catch (e) { status[k] = false; }
+            }));
+            // audit fallback بدون suffix
+            if (!status.audit) {
+                try {
+                    const d = await DeptPage.loadFromAPI('AUDIT').catch(() => null);
+                    status.audit = !!(d && typeof d === 'object' && Object.keys(d).length > 0);
+                } catch (e) { }
+            }
+
+            const chips = Object.entries(checks).map(([k, c]) => {
+                const ok = status[k];
+                const count = liveCounts?.[k];
+                const bg = ok ? `${c.color}15` : 'rgba(239,68,68,0.08)';
+                const fg = ok ? c.color : '#ef4444';
+                const bd = ok ? `${c.color}55` : 'rgba(239,68,68,0.35)';
+                const statusText = ok ? (count != null ? `${count} بند` : 'متوفرة') : 'غير مكتملة';
+                const linkAttr = ok ? '' : ` onclick="window.location.href='/${c.tool}?dept=${_pageDept}'" style="cursor:pointer"`;
+                return `<span${linkAttr} style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:10px;background:${bg};color:${fg};border:1px solid ${bd};font-size:0.78rem;font-weight:800;">
+                    <i class="bi ${ok ? c.icon : 'bi-exclamation-triangle'}"></i> ${c.label} · ${statusText}
+                </span>`;
+            }).join('');
+
+            const deptName = DEPT_AR[_pageDept] || _pageDept;
+            box.innerHTML = `
+                <div style="font-size:0.78rem;font-weight:800;color:#94a3b8;margin-bottom:8px;">
+                    <i class="bi bi-diagram-3 me-1"></i> تسلسل البيانات الواصلة من مراحل مسار ${deptName}
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">${chips}</div>
+            `;
+            box.style.display = 'block';
         }
 
         function fillAll() {

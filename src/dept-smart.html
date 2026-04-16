@@ -266,9 +266,10 @@
 
     <script src="/js/smart-nav.js?v=4"></script>
     <script>
-        // Smart navigation — بعد الحفظ يروح للقسم التالي
+        // Smart navigation — بعد الحفظ يروح للخطوة التالية حسب الدور
         (function() {
             var dept = new URLSearchParams(location.search).get('dept') || '';
+            var entityId = new URLSearchParams(location.search).get('entityId') || '';
             var back = document.getElementById('navBack');
             var next = document.getElementById('navNext');
 
@@ -276,28 +277,27 @@
             var DEPT_ORDER = ['compliance','hr','finance','sales','marketing','operations','it','quality','cs','projects','governance','support'];
             var DEPT_NAMES = {compliance:'الامتثال',hr:'الموارد البشرية',finance:'المالية',sales:'المبيعات',marketing:'التسويق',operations:'العمليات',it:'تقنية المعلومات',quality:'الجودة',cs:'خدمة العملاء',projects:'المشاريع',governance:'الحوكمة',support:'الخدمات المساندة'};
 
-            // رابط الرجوع — حسب الدور (فحص شامل)
+            // كشف الدور
             var isOwner = false;
+            var isPro = false;
             try {
-                // 1. من SmartNav (الأدق)
-                if (window.SmartNav && SmartNav.isOwner()) { isOwner = true; }
-                // 2. من التشخيص
-                if (!isOwner) {
+                if (window.SmartNav) {
+                    isOwner = SmartNav.isOwner();
+                    isPro = SmartNav.isProManager();
+                }
+                if (!isOwner && !isPro) {
                     var diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || '{}');
                     isOwner = diag.category === 'owner' || diag.userType === 'OWNER';
                 }
-                // 3. من painAmbition
-                if (!isOwner) {
+                if (!isOwner && !isPro) {
                     var pa = JSON.parse(localStorage.getItem('painAmbition') || '{}');
                     isOwner = pa.category === 'owner';
                 }
-                // 4. من user type المخزّن
-                if (!isOwner) {
+                if (!isOwner && !isPro) {
                     var ut = localStorage.getItem('stratix_user_type');
                     isOwner = ut === 'BUSINESS';
                 }
-                // 5. من token (JWT role)
-                if (!isOwner) {
+                if (!isOwner && !isPro) {
                     var token = localStorage.getItem('token');
                     if (token) {
                         try {
@@ -306,13 +306,30 @@
                         } catch(e2) {}
                     }
                 }
+                // فحص المدير المستقل (إذا ما انكشف من SmartNav)
+                if (!isOwner && !isPro) {
+                    if (localStorage.getItem('stratix_manager_diagnostic')) isPro = true;
+                    var u = JSON.parse(localStorage.getItem('user') || '{}');
+                    if (u.isProManager === true) isPro = true;
+                }
             } catch(e) {}
 
+            // بناء query string مع entityId
+            function qs(base) {
+                var url = base;
+                if (entityId) url += (url.includes('?') ? '&' : '?') + 'entityId=' + entityId;
+                return url;
+            }
+
+            // رابط الرجوع
             if (isOwner) {
                 back.href = '/company-health.html';
                 document.getElementById('navBackLabel').textContent = 'صحة الشركة';
+            } else if (isPro) {
+                back.href = '/pro-dashboard.html';
+                document.getElementById('navBackLabel').textContent = 'لوحة العملاء';
             } else if (dept) {
-                back.href = window.SmartNav ? SmartNav.getHomeUrl(dept) : '/dept-dashboard.html?dept=' + dept;
+                back.href = qs('/dept-dashboard.html?dept=' + dept);
                 document.getElementById('navBackLabel').textContent = 'لوحة الإدارة';
             }
 
@@ -329,9 +346,13 @@
                         next.href = '/pestel.html?dept=' + dept;
                         document.getElementById('navNextLabel').textContent = 'التالي: تحليل PESTEL';
                     }
+                } else if (isPro) {
+                    // المدير المستقل: بعد التشخيص الذكي يروح PESTEL
+                    next.href = qs('/pestel.html?dept=' + dept);
+                    document.getElementById('navNextLabel').textContent = 'التالي: تحليل PESTEL';
                 } else {
-                    // المدير المستقل: بعد التقييم يروح PESTEL لقسمه مباشرة
-                    next.href = '/pestel.html?dept=' + dept;
+                    // مدير داخلي: بعد التشخيص الذكي يروح PESTEL
+                    next.href = qs('/pestel.html?dept=' + dept);
                     document.getElementById('navNextLabel').textContent = 'التالي: تحليل PESTEL';
                 }
             }

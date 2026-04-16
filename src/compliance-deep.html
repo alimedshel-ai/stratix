@@ -1,46 +1,542 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
-    <title>ستارتكس | التحليل الرقمي</title>
+    <title>ستارتكس | التحليل العميق للامتثال</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="/css/dept-pages.css">
     <style>
-        body { background: #0b0d12; color: #f1f5f9; font-family: 'Tajawal', sans-serif; margin: 0; overflow: hidden; }
-        .stx-wrapper { display: flex; height: 100vh; overflow: hidden; }
-        .stx-sidebar-container { width: 260px; flex-shrink: 0; border-left: 1px solid rgba(255,255,255,0.08); background: #11141d; }
-        .stx-main-content { flex: 1; overflow-y: auto; height: 100vh; padding: 40px; }
-        .container-box { max-width: 800px; margin: 0 auto; background: rgba(22, 27, 34, 0.5); padding: 40px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(10px); }
-        h1 { font-weight: 900; margin-bottom: 8px; font-size: 2rem; }
-        .sub { color: #94a3b8; margin-bottom: 32px; font-size: 1.1rem; }
-        .question { margin-bottom: 24px; }
-        .question label { display: block; margin-bottom: 8px; font-weight: 700; color: #cbd5e1; font-size: 0.95rem; }
-        .question input { width: 100%; padding: 14px 18px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; font-size: 1.1rem; font-weight: 700; transition: all 0.2s; }
-        .question input:focus { outline: none; border-color: #6366f1; background: rgba(99, 102, 241, 0.05); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
-        button[type="submit"] { width: 100%; padding: 16px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; border: none; border-radius: 14px; font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: all 0.3s; margin-top: 12px; }
-        button[type="submit"]:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4); }
-        button[type="submit"]:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-        #prefillAlert { display:none; padding:12px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.2); border-radius:10px; color:#10b981; font-size:12px; margin-bottom:20px; }
+        body {
+            background: #0b0d12;
+            color: #f1f5f9;
+            font-family: 'Tajawal', sans-serif;
+            margin: 0;
+        }
+
+        .stx-wrapper {
+            min-height: 100vh;
+        }
+
+        .stx-main-content {
+            width: 100%;
+            min-height: 100vh;
+            overflow-y: auto;
+            padding: 32px 40px 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stx-main-content>* {
+            width: 100%;
+        }
+
+        /* ── Page Header ── */
+        .page-header {
+            max-width: 860px;
+            margin: 0 auto 28px;
+        }
+
+        .page-header h1 {
+            font-weight: 900;
+            font-size: 1.8rem;
+            margin: 0 0 6px;
+        }
+
+        .page-header .sub {
+            color: #94a3b8;
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        /* ── Section Cards ── */
+        .section-card {
+            max-width: 860px;
+            margin: 0 auto 24px;
+            background: rgba(22, 27, 34, 0.6);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            overflow: hidden;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 18px 24px;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .section-header i {
+            font-size: 1.2rem;
+        }
+
+        .section-header .s-icon-num {
+            color: #ef4444;
+        }
+
+        .section-header .s-icon-check {
+            color: #6366f1;
+        }
+
+        .section-header h2 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin: 0;
+        }
+
+        .section-header .badge-count {
+            margin-right: auto;
+            /* RTL: pushes to left */
+            background: rgba(255, 255, 255, 0.06);
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+
+        .section-body {
+            padding: 24px;
+        }
+
+        /* ── Numeric Form ── */
+        .fields-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 700px) {
+            .fields-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .field-item label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 700;
+            color: #cbd5e1;
+            font-size: 0.88rem;
+        }
+
+        .field-item input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+
+        .field-item input:focus {
+            outline: none;
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.04);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+
+        .field-item input::placeholder {
+            color: #475569;
+            font-weight: 400;
+        }
+
+        /* ── Checklist ── */
+        .checklist-category {
+            margin-bottom: 20px;
+        }
+
+        .checklist-category:last-child {
+            margin-bottom: 0;
+        }
+
+        .cat-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .cat-header i {
+            color: #6366f1;
+            font-size: 1rem;
+        }
+
+        .cat-header strong {
+            font-size: 0.92rem;
+            color: #e2e8f0;
+        }
+
+        .cat-header .cat-count {
+            color: #64748b;
+            font-size: 0.78rem;
+            margin-right: auto;
+        }
+
+        .q-card {
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            margin-bottom: 8px;
+            transition: border-color 0.2s;
+        }
+
+        .q-card.answered-yes {
+            border-color: rgba(16, 185, 129, 0.25);
+            background: rgba(16, 185, 129, 0.03);
+        }
+
+        .q-card.answered-no {
+            border-color: rgba(239, 68, 68, 0.2);
+            background: rgba(239, 68, 68, 0.02);
+        }
+
+        .q-card.answered-pct {
+            border-color: rgba(99, 102, 241, 0.25);
+            background: rgba(99, 102, 241, 0.03);
+        }
+
+        .q-card .q-text {
+            font-size: 0.88rem;
+            color: #e2e8f0;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .q-card .q-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .yn-btn {
+            padding: 6px 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            color: #94a3b8;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .yn-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .yn-btn.active-yes {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: #10b981;
+            color: #10b981;
+        }
+
+        .yn-btn.active-no {
+            background: rgba(239, 68, 68, 0.12);
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        .q-note {
+            flex: 1;
+            min-width: 180px;
+            padding: 7px 12px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #cbd5e1;
+            font-size: 0.8rem;
+            font-family: 'Tajawal', sans-serif;
+            transition: border-color 0.2s;
+        }
+
+        .q-note:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+
+        .q-note::placeholder {
+            color: #475569;
+        }
+
+        /* ── Percentage Input ── */
+        .pct-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .pct-label {
+            font-size: 0.78rem;
+            color: #64748b;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .pct-slider {
+            flex: 1;
+            min-width: 120px;
+            height: 6px;
+            accent-color: #6366f1;
+            cursor: pointer;
+        }
+
+        .pct-val {
+            min-width: 52px;
+            text-align: center;
+            padding: 5px 8px;
+            border-radius: 8px;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            color: #a5b4fc;
+            font-size: 0.85rem;
+            font-weight: 800;
+        }
+
+        .pct-val.high {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+        }
+
+        .pct-val.mid {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        .pct-val.low {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        /* ── Count Input (total/valid) ── */
+        .count-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .count-field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .count-field label {
+            font-size: 0.72rem;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .count-field input {
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-align: center;
+            width: 100%;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .count-field input:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+
+        .count-field input::placeholder {
+            color: #475569;
+            font-weight: 400;
+        }
+
+        .count-auto-pct {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 70px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-align: center;
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            color: #a5b4fc;
+            align-self: flex-end;
+            height: 38px;
+        }
+
+        .count-auto-pct.high {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+        }
+
+        .count-auto-pct.mid {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        .count-auto-pct.low {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .q-card.answered-count {
+            border-color: rgba(99, 102, 241, 0.25);
+            background: rgba(99, 102, 241, 0.03);
+        }
+
+        /* ── Progress Bar ── */
+        .progress-wrap {
+            max-width: 860px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .progress-bar-bg {
+            flex: 1;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ef4444, #6366f1);
+            border-radius: 3px;
+            transition: width 0.4s;
+            width: 0%;
+        }
+
+        .progress-text {
+            font-size: 0.8rem;
+            color: #64748b;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* ── Submit Button ── */
+        .submit-wrap {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            font-size: 1.05rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.35);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
     </style>
     <script src="/js/api.js?v=4"></script>
     <script src="/js/context-manager.js?v=4"></script>
-    <script src="/js/data-bridge.js?v=4"></script>
     <script src="/js/dept-page.js?v=4"></script>
     <script src="/js/dept-deep-config.js?v=4"></script>
-    <script src="/js/sidebar.js?v=4"></script>
+    <script src="/js/compliance-deep-config.js?v=7"></script>
+    <script src="/js/compliance-severity-engine.js?v=1"></script>
+    <!-- sidebar removed from this page -->
 </head>
+
 <body>
     <div class="stx-wrapper">
-        <aside id="stx-sidebar" class="stx-sidebar-container"></aside>
         <main class="stx-main-content">
-            <div class="container-box">
-                <h1 id="pageTitle">📊 التحليل الرقمي</h1>
-                <div class="sub" id="pageSub">أدخل الأرقام والمؤشرات الرئيسية</div>
-                <div id="prefillAlert"><i class="bi bi-magic me-2"></i> تم جلب بعض البيانات تلقائياً لتفادي التكرار</div>
-                <form id="deepForm"></form>
+
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>⚖️ التحليل العميق للامتثال</h1>
+                <p class="sub">المؤشرات الرقمية + الفحص الاستراتيجي لتقييم نضج منظومة الامتثال</p>
             </div>
+
+            <!-- Progress -->
+            <div class="progress-wrap">
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progressFill"></div>
+                </div>
+                <span class="progress-text" id="progressText">0%</span>
+            </div>
+
+            <!-- Section 1: Numeric Indicators -->
+            <div class="section-card" id="numericSection">
+                <div class="section-header">
+                    <i class="bi bi-graph-up-arrow s-icon-num"></i>
+                    <h2>المؤشرات الرقمية</h2>
+                    <span class="badge-count" id="numBadge">0 حقل</span>
+                </div>
+                <div class="section-body">
+                    <form id="deepForm">
+                        <div class="fields-grid" id="fieldsGrid"></div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Section 2: Strategic Checklist -->
+            <div class="section-card" id="checklistSection" style="display:none">
+                <div class="section-header">
+                    <i class="bi bi-shield-check s-icon-check"></i>
+                    <h2>الفحص الاستراتيجي</h2>
+                    <span class="badge-count" id="checkBadge">0 سؤال</span>
+                </div>
+                <div class="section-body" id="checklistBody"></div>
+            </div>
+
+            <!-- Submit -->
+            <div class="submit-wrap">
+                <button class="btn-submit" id="submitBtn" type="button">
+                    حفظ ومتابعة للتقييم الوصفي <i class="bi bi-arrow-left-circle ms-2"></i>
+                </button>
+            </div>
+
+            <!-- ══ تقرير الخطورة ══ -->
+            <div id="dangerReportSection" style="display:none;margin-top:1.5rem">
+                <h4 class="text-center mb-3" style="color:#dc2626"><i class="bi bi-shield-exclamation me-2"></i>تقرير خطورة الامتثال</h4>
+                <div id="dangerSummaryContainer"></div>
+            </div>
+
         </main>
     </div>
 
@@ -50,71 +546,352 @@
             const config = window.DEPT_DEEP_CONFIG[DEPT_KEY];
             if (!config) { document.querySelector('.stx-main-content').innerHTML = '<h1>قسم غير معروف</h1>'; return; }
 
-            // 1. Sidebar Init
-            if (typeof initSidebar === 'function') initSidebar();
+            // sidebar removed from this page
+            document.title = 'ستارتكس | التحليل العميق للامتثال';
 
-            // 2. Page UI
-            document.getElementById('pageTitle').textContent = (config.emoji || '📊') + ' ' + config.title;
-            document.getElementById('pageSub').textContent = 'أدخل الأرقام والمؤشرات الرئيسية لـ' + config.title.split('–')[1];
-            document.title = 'ستارتكس | ' + config.title;
-
-            // 3. Build Form
+            // ═══════════════════════════════════
+            // 1) Build Numeric Fields
+            // ═══════════════════════════════════
+            const grid = document.getElementById('fieldsGrid');
             const form = document.getElementById('deepForm');
-            config.fields.forEach(f => {
-                const div = document.createElement('div');
-                div.className = 'question';
-                div.innerHTML = '<label>' + f.label + '</label><input type="number" name="' + f.name + '" id="f_' + f.name + '" placeholder="' + f.placeholder + '" ' + (f.step ? 'step="' + f.step + '"' : '') + ' required>';
-                form.appendChild(div);
-            });
-            const btn = document.createElement('button');
-            btn.type = 'submit';
-            btn.innerHTML = 'حفظ ومتابعة للتقييم الوصفي <i class="bi bi-arrow-left-circle ms-2"></i>';
-            form.appendChild(btn);
 
-            // 4. Data Loading & Redundancy Bridge
+            if (config && Array.isArray(config.fields)) {
+                grid.innerHTML = ''; // Clear any existing placeholders
+                config.fields.forEach(f => {
+                    const div = document.createElement('div');
+                    div.className = 'field-item';
+
+                    const label = document.createElement('label');
+                    label.textContent = f.label;
+
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.name = f.name;
+                    input.id = `f_${f.name}`;
+                    input.placeholder = f.placeholder || '';
+                    if (f.step) input.step = f.step;
+                    input.required = true;
+
+                    div.appendChild(label);
+                    div.appendChild(input);
+                    grid.appendChild(div);
+                });
+                document.getElementById('numBadge').textContent = config.fields.length + ' حقل';
+            } else {
+                console.error('[ComplianceDeep] Missing fields in config', config);
+                grid.innerHTML = '<p class="text-danger">فشل تحميل إعدادات الحقول الرقمية</p>';
+            }
+
+            // ═══════════════════════════════════
+            // 2) Load Saved Data
+            // ═══════════════════════════════════
             const ok = await DeptPage.init(DEPT_KEY);
             if (!ok) return;
 
-            let saved = await DeptPage.loadFromAPI('DEEP') || Context.getTemp('deep_results') || DeptPage.migrateFromLocalStorage('stratix_' + DEPT_KEY + '_deep_results') || {};
-            
-            // Sync with DataBridge (Redundancy Fix)
-            if (window.DataBridge) {
-                const dbData = DataBridge.getPrefillData(DEPT_KEY, 'dept-smart');
-                if (dbData && dbData.kpis) {
-                    let prefilledAny = false;
-                    // Reverse map DataBridge keys to form keys
-                    const MAPS = {
-                        sales: { k_revenue: 'annual_sales', k_conversion: 'win_rate', k_customers: 'active_customers', k_sales_cycle: 'sales_cycle', k_deal_size: 'avg_deal_size' },
-                        finance: { k_revenue: 'revenue', k_profit: 'net_profit' },
-                        hr: { k_headcount: 'headcount', k_turnover: 'turnover_rate' }
-                    };
-                    const dMap = MAPS[DEPT_KEY] || {};
-                    Object.entries(dMap).forEach(([dbKey, formKey]) => {
-                        if (dbData.kpis[dbKey] != null && (saved[formKey] === undefined || saved[formKey] === '')) {
-                            saved[formKey] = dbData.kpis[dbKey];
-                            prefilledAny = true;
-                        }
-                    });
-                    if (prefilledAny) document.getElementById('prefillAlert').style.display = 'block';
-                }
-            }
+            const saved = await DeptPage.loadFromAPI('DEEP') || DeptPage.migrateFromLocalStorage('stratix_' + DEPT_KEY + '_deep_results') || {};
             DeptPage.fillForm(saved);
 
-            // 5. Submit Handling
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const btn = e.target.querySelector('button');
+            // ═══════════════════════════════════
+            // 3) Build Strategic Checklist
+            // ═══════════════════════════════════
+            let totalCheckItems = 0;
+            let savedChecklist = {};
+            let currentActivity = 'service';
+            let companySize = 'small';
+
+            if (window.COMPLIANCE_DEEP_CONFIG) {
+                const CDC = window.COMPLIANCE_DEEP_CONFIG;
+                const teamSize = Context.getItem?.('team_size') || 'small';
+                companySize = CDC.sizeFromTeam(teamSize);
+                const body = document.getElementById('checklistBody');
+
+                // ── تحديد نوع النشاط من التشخيص أو السماح بالاختيار ──
+                let activityType = currentActivity; // افتراضي
+                try {
+                    const diagPayload = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || '{}');
+                    if (diagPayload.sector) activityType = diagPayload.sector;
+                } catch(e) {}
+                // fallback: قراءة من API user
+                if (activityType === 'service') {
+                    try {
+                        const user = await window.api?.getCurrentUser?.();
+                        const diag = user?.diagnosticData;
+                        if (diag?.sector) activityType = diag.sector;
+                    } catch(e) {}
+                }
+                currentActivity = activityType; // sync to outer scope
+
+                // إظهار نوع النشاط الحالي مع خيار التغيير
+                const activityLabels = { service: 'خدمي', commercial: 'تجاري', industrial: 'صناعي' };
+                const activityBar = document.createElement('div');
+                activityBar.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:10px 16px;border-radius:12px;background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.15);';
+                activityBar.innerHTML = `
+                    <i class="bi bi-building" style="color:#6366f1"></i>
+                    <span style="font-size:0.85rem;font-weight:700;color:#e2e8f0;">نوع النشاط:</span>
+                    <select id="activitySelector" style="background:rgba(15,23,42,0.5);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;padding:5px 12px;font-size:0.82rem;font-weight:700;font-family:Tajawal,sans-serif;">
+                        <option value="service" ${activityType === 'service' ? 'selected' : ''}>خدمي 💼</option>
+                        <option value="commercial" ${activityType === 'commercial' ? 'selected' : ''}>تجاري 🏪</option>
+                        <option value="industrial" ${activityType === 'industrial' ? 'selected' : ''}>صناعي 🏭</option>
+                    </select>
+                    <span style="font-size:0.72rem;color:#64748b;">يحدد الأسئلة الإضافية الخاصة بقطاعك</span>
+                `;
+                body.before(activityBar);
+
+                function buildChecklist(activity) {
+                    body.innerHTML = '';
+                    totalCheckItems = 0;
+                    const categories = CDC.getCategoriesFor(activity, companySize);
+
+                    categories.forEach(cat => {
+                    const visible = cat.questions.filter(q => {
+                        const p = q.priority[companySize];
+                        return p === 'essential' || p === 'important';
+                    });
+                    if (visible.length === 0) return;
+
+                    const section = document.createElement('div');
+                    section.className = 'checklist-category';
+                    section.innerHTML = `<div class="cat-header"><i class="bi ${cat.icon}"></i><strong>${cat.name}</strong><span class="cat-count">${visible.length} سؤال</span></div>`;
+
+                    visible.forEach(q => {
+                        totalCheckItems++;
+                        const data = savedChecklist[q.id] || {};
+                        const val = (typeof data === 'string') ? data : (data.answer || '');
+                        const note = (typeof data === 'object') ? (data.note || '') : '';
+                        const pctVal = (typeof data === 'object') ? (data.pct ?? '') : '';
+
+                        const card = document.createElement('div');
+
+                        function persistQ() {
+                            try { localStorage.setItem('stratix_compliance_deep_checklist', JSON.stringify(savedChecklist)); } catch (e) { }
+                            // حفظ أيضاً في deep_data للتوافق مع SWOT
+                            try {
+                                const numData = Object.fromEntries(new FormData(form));
+                                const merged = { ...numData, ...savedChecklist };
+                                localStorage.setItem('stratix_compliance_deep_data', JSON.stringify(merged));
+                            } catch (e) { }
+                            if (DeptPage.saveToAPI) DeptPage.saveToAPI('DEEP_CHECKLIST', savedChecklist).catch(() => { });
+                            updateProgress();
+                        }
+
+                        if (q.type === 'count') {
+                            // ── Count question (total / valid → auto %) ──
+                            const sTotal = (typeof data === 'object') ? (data.total ?? '') : '';
+                            const sValid = (typeof data === 'object') ? (data.valid ?? '') : '';
+                            const labels = q.countLabels || ['الإجمالي', 'الساري'];
+                            const hasVal = sTotal !== '' && sValid !== '';
+                            const autoPct = hasVal ? Math.round((Number(sValid) / Math.max(Number(sTotal), 1)) * 100) : '';
+
+                            card.className = 'q-card' + (hasVal ? ' answered-count' : '');
+                            card.innerHTML = `
+                                <div class="q-text">${q.text}</div>
+                                <div class="count-row">
+                                    <div class="count-field">
+                                        <label>${labels[0]}</label>
+                                        <input type="number" class="cnt-total" min="0" placeholder="0" value="${sTotal}">
+                                    </div>
+                                    <div class="count-field">
+                                        <label>${labels[1]}</label>
+                                        <input type="number" class="cnt-valid" min="0" placeholder="0" value="${sValid}">
+                                    </div>
+                                    <span class="count-auto-pct ${hasVal ? (autoPct >= 75 ? 'high' : autoPct >= 40 ? 'mid' : 'low') : ''}">${hasVal ? autoPct + '%' : '—'}</span>
+                                </div>
+                                <div class="q-row" style="margin-top:8px">
+                                    <input type="text" class="q-note" placeholder="ملاحظات إضافية..." value="${note.replace(/"/g, '&quot;')}">
+                                </div>`;
+
+                            const inpTotal = card.querySelector('.cnt-total');
+                            const inpValid = card.querySelector('.cnt-valid');
+                            const pctDisplay = card.querySelector('.count-auto-pct');
+                            const noteInput = card.querySelector('.q-note');
+
+                            function recalc() {
+                                const t = Number(inpTotal.value) || 0;
+                                const v = Number(inpValid.value) || 0;
+                                if (t > 0 && inpTotal.value !== '' && inpValid.value !== '') {
+                                    const p = Math.round((v / t) * 100);
+                                    pctDisplay.textContent = p + '%';
+                                    pctDisplay.className = 'count-auto-pct ' + (p >= 75 ? 'high' : p >= 40 ? 'mid' : 'low');
+                                    card.className = 'q-card answered-count';
+                                    savedChecklist[q.id] = { answer: 'count', total: t, valid: v, pct: p, note: noteInput.value.trim() };
+                                } else {
+                                    pctDisplay.textContent = '—';
+                                    pctDisplay.className = 'count-auto-pct';
+                                    card.className = 'q-card';
+                                    savedChecklist[q.id] = { answer: '', total: inpTotal.value, valid: inpValid.value, note: noteInput.value.trim() };
+                                }
+                                persistQ();
+                            }
+
+                            inpTotal.addEventListener('input', recalc);
+                            inpValid.addEventListener('input', recalc);
+                            noteInput.addEventListener('change', () => {
+                                const cur = savedChecklist[q.id] || {};
+                                cur.note = noteInput.value.trim();
+                                savedChecklist[q.id] = cur;
+                                persistQ();
+                            });
+
+                        } else if (q.type === 'pct') {
+                            // ── Percentage question ──
+                            const cur = pctVal !== '' ? Number(pctVal) : (val !== '' && !isNaN(val) ? Number(val) : '');
+                            const hasVal = cur !== '';
+                            card.className = 'q-card' + (hasVal ? ' answered-pct' : '');
+                            card.innerHTML = `
+                                <div class="q-text">${q.text}</div>
+                                <div class="pct-row">
+                                    <span class="pct-label">${q.pctLabel || 'نسبة الامتثال'}</span>
+                                    <input type="range" class="pct-slider" min="0" max="100" step="5" value="${hasVal ? cur : 0}">
+                                    <span class="pct-val ${hasVal ? (cur >= 75 ? 'high' : cur >= 40 ? 'mid' : 'low') : ''}">${hasVal ? cur + '%' : '—'}</span>
+                                </div>
+                                <div class="q-row" style="margin-top:8px">
+                                    <input type="text" class="q-note" placeholder="ملاحظات إضافية..." value="${note.replace(/"/g, '&quot;')}">
+                                </div>`;
+
+                            const slider = card.querySelector('.pct-slider');
+                            const display = card.querySelector('.pct-val');
+                            const noteInput = card.querySelector('.q-note');
+
+                            slider.addEventListener('input', () => {
+                                const v = Number(slider.value);
+                                display.textContent = v + '%';
+                                display.className = 'pct-val ' + (v >= 75 ? 'high' : v >= 40 ? 'mid' : 'low');
+                                card.className = 'q-card answered-pct';
+                                savedChecklist[q.id] = { answer: 'pct', pct: v, note: noteInput.value.trim() };
+                                persistQ();
+                            });
+                            noteInput.addEventListener('change', () => {
+                                const cur = savedChecklist[q.id] || {};
+                                cur.note = noteInput.value.trim();
+                                savedChecklist[q.id] = cur;
+                                persistQ();
+                            });
+
+                        } else {
+                            // ── Yes/No question ──
+                            card.className = 'q-card' + (val === 'yes' ? ' answered-yes' : val === 'no' ? ' answered-no' : '');
+                            card.innerHTML = `
+                                <div class="q-text">${q.text}</div>
+                                <div class="q-row">
+                                    <button type="button" class="yn-btn btn-yes ${val === 'yes' ? 'active-yes' : ''}">نعم</button>
+                                    <button type="button" class="yn-btn btn-no ${val === 'no' ? 'active-no' : ''}">لا</button>
+                                    <input type="text" class="q-note" placeholder="ملاحظات إضافية..." value="${note.replace(/"/g, '&quot;')}">
+                                </div>`;
+
+                            const btnYes = card.querySelector('.btn-yes');
+                            const btnNo = card.querySelector('.btn-no');
+                            const noteInput = card.querySelector('.q-note');
+
+                            btnYes.addEventListener('click', () => {
+                                savedChecklist[q.id] = { answer: 'yes', note: noteInput.value.trim() };
+                                btnYes.classList.add('active-yes'); btnNo.classList.remove('active-no');
+                                card.className = 'q-card answered-yes';
+                                persistQ();
+                            });
+                            btnNo.addEventListener('click', () => {
+                                savedChecklist[q.id] = { answer: 'no', note: noteInput.value.trim() };
+                                btnNo.classList.add('active-no'); btnYes.classList.remove('active-yes');
+                                card.className = 'q-card answered-no';
+                                persistQ();
+                            });
+                            noteInput.addEventListener('change', () => {
+                                const cur = savedChecklist[q.id] || {};
+                                cur.note = noteInput.value.trim();
+                                savedChecklist[q.id] = cur;
+                                persistQ();
+                            });
+                        }
+
+                        section.appendChild(card);
+                    });
+
+                    body.appendChild(section);
+                });
+
+                if (totalCheckItems > 0) {
+                    document.getElementById('checklistSection').style.display = '';
+                    document.getElementById('checkBadge').textContent = totalCheckItems + ' سؤال';
+                }
+                } // end buildChecklist
+
+                // تحميل البيانات المحفوظة أولاً
+                savedChecklist = await DeptPage.loadFromAPI('DEEP_CHECKLIST').catch(() => null) || JSON.parse(localStorage.getItem('stratix_compliance_deep_checklist') || '{}');
+
+                // بناء الـ checklist بالنشاط المكتشف
+                buildChecklist(activityType);
+
+                // تغيير النشاط يعيد بناء الأسئلة
+                document.getElementById('activitySelector').addEventListener('change', (e) => {
+                    currentActivity = e.target.value;
+                    buildChecklist(currentActivity);
+                    updateProgress();
+                    if (typeof updateDangerReport === 'function') updateDangerReport();
+                });
+            }
+
+            // ═══════════════════════════════════
+            // 4) Progress Tracker
+            // ═══════════════════════════════════
+            function updateProgress() {
+                const inputs = form.querySelectorAll('input[type="number"]');
+                let filledFields = 0;
+                inputs.forEach(inp => { if (inp.value.trim() !== '') filledFields++; });
+
+                const checkedBoxes = document.querySelectorAll('.q-card.answered-yes, .q-card.answered-no, .q-card.answered-pct, .q-card.answered-count').length;
+                const totalItems = inputs.length + totalCheckItems;
+                const doneItems = filledFields + checkedBoxes;
+                const pct = totalItems > 0 ? Math.round((doneItems / totalItems) * 100) : 0;
+
+                document.getElementById('progressFill').style.width = pct + '%';
+                document.getElementById('progressText').textContent = pct + '%';
+            }
+
+            form.addEventListener('input', updateProgress);
+            updateProgress();
+
+            // ═══════════════════════════════════
+            // 4b) تحديث تقرير الخطورة (يعمل بعد كل تغيير)
+            // ═══════════════════════════════════
+            function updateDangerReport() {
+                if (!window.COMPLIANCE_SEVERITY_ENGINE) return;
+                var CSE = window.COMPLIANCE_SEVERITY_ENGINE;
+                var report = CSE.calculateDangerReport(savedChecklist, currentActivity, companySize);
+                if (report && report.overall.totalAnswered > 0) {
+                    document.getElementById('dangerReportSection').style.display = '';
+                    document.getElementById('dangerSummaryContainer').innerHTML = CSE.renderDangerSummary(report);
+                    CSE.saveReport(report);
+                } else {
+                    document.getElementById('dangerReportSection').style.display = 'none';
+                }
+            }
+
+            // تحديث التقرير عند كل تغيير في الإجابات
+            form.addEventListener('change', function() { setTimeout(updateDangerReport, 200); });
+            // تحديث أولي إذا في إجابات محفوظة
+            updateDangerReport();
+
+            // ═══════════════════════════════════
+            // 5) Submit
+            // ═══════════════════════════════════
+            document.getElementById('submitBtn').addEventListener('click', async () => {
+                if (!form.reportValidity()) return;
+
+                const btn = document.getElementById('submitBtn');
                 btn.disabled = true;
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري الحفظ...';
 
-                const results = Object.fromEntries(new FormData(e.target));
-                Context.setTemp('deep_results', results);
-                
+                const results = Object.fromEntries(new FormData(form));
+
+                // دمج الحقول الرقمية + الـ Checklist في كائن واحد
+                const combined = { ...results, ...savedChecklist, meta: { savedAt: new Date().toISOString() } };
+
                 try {
-                    const saveOk = await DeptPage.saveToAPI('DEEP', results);
-                    if (window.DataBridge) DataBridge.saveDeptDeep(DEPT_KEY, results);
-                    DeptPage.showMessage(saveOk ? 'تم حفظ التحليل الرقمي بنجاح' : 'تم حفظ التحليل محلياً', !saveOk);
-                    
+                    // حفظ مدمج في DEEP (يقرأه SWOT)
+                    const saveOk = await DeptPage.saveToAPI('DEEP', combined);
+                    // حفظ نسخة باسم deep_data في localStorage للتوافق مع SWOT fallback
+                    try { localStorage.setItem('stratix_compliance_deep_data', JSON.stringify(combined)); } catch(e) {}
+                    DeptPage.showMessage(saveOk ? 'تم حفظ التحليل العميق بنجاح' : 'تم حفظ التحليل محلياً', !saveOk);
+
                     const nextUrl = new URL(config.redirect, window.location.origin);
                     const currentParams = new URLSearchParams(window.location.search);
                     currentParams.forEach((val, key) => {
@@ -126,9 +903,11 @@
                     console.error('Save failed:', err);
                     DeptPage.showMessage('فشل الحفظ، يرجى التحقق من الاتصال', true);
                     btn.disabled = false;
+                    btn.innerHTML = 'حفظ ومتابعة للتقييم الوصفي <i class="bi bi-arrow-left-circle ms-2"></i>';
                 }
             });
         });
     </script>
 </body>
+
 </html>

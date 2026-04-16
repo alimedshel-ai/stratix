@@ -36,8 +36,10 @@
 
         .stx-sidebar-container {
             position: fixed !important;
-            top: 0; right: -260px !important;
-            width: 260px; height: 100vh;
+            top: 0;
+            right: -260px !important;
+            width: 260px;
+            height: 100vh;
             background: #1a1d2e;
             border-left: 1px solid var(--stx-border);
             z-index: 1050;
@@ -45,28 +47,51 @@
             display: block !important;
             overflow-y: auto;
         }
-        .stx-sidebar-container.sidebar-visible { right: 0 !important; }
-        .sidebar-trigger {
-            position: fixed; top: 0; right: 0;
-            width: 18px; height: 100vh;
-            z-index: 1040; cursor: pointer;
+
+        .stx-sidebar-container.sidebar-visible {
+            right: 0 !important;
         }
+
+        .sidebar-trigger {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 18px;
+            height: 100vh;
+            z-index: 1040;
+            cursor: pointer;
+        }
+
         .sidebar-hint {
-            position: fixed; top: 50%; right: 0;
+            position: fixed;
+            top: 50%;
+            right: 0;
             transform: translateY(-50%);
-            width: 6px; height: 60px;
+            width: 6px;
+            height: 60px;
             background: linear-gradient(180deg, #6366f1, #8b5cf6);
             border-radius: 4px 0 0 4px;
-            opacity: 0.5; z-index: 1041;
+            opacity: 0.5;
+            z-index: 1041;
             transition: opacity 0.3s;
         }
-        .sidebar-trigger:hover ~ .sidebar-hint,
-        .sidebar-hint:hover { opacity: 1; }
-        .sidebar-overlay {
-            display: none; position: fixed; inset: 0;
-            background: rgba(0,0,0,0.4); z-index: 1045;
+
+        .sidebar-trigger:hover~.sidebar-hint,
+        .sidebar-hint:hover {
+            opacity: 1;
         }
-        .sidebar-overlay.active { display: block; }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1045;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
 
         .stx-main-content {
             flex: 1;
@@ -360,6 +385,11 @@
                 <i class="bi bi-arrow-right-circle fs-5"></i>
                 <span class="ms-2">لوحة القيادة</span>
             </button>
+            <button onclick="window.goBackToPrevStep()" class="btn btn-outline-secondary btn-sm rounded-pill fw-700"
+                title="الرجوع للمرحلة السابقة: صحة الإدارة">
+                <i class="bi bi-arrow-right"></i>
+                <span class="ms-1">السابق: صحة الإدارة</span>
+            </button>
             <div id="dept-switcher-placeholder"></div>
         </div>
 
@@ -385,6 +415,11 @@
         window.exitToDashboard = function () {
             const _d = new URLSearchParams(window.location.search).get('dept') || '';
             window.location.href = window.SmartNav ? SmartNav.getHomeUrl(_d) : '/ceo-dashboard.html';
+        };
+        window.goBackToPrevStep = function () {
+            const _d = new URLSearchParams(window.location.search).get('dept') || '';
+            // المرحلة السابقة لـ SWOT هي صحة الإدارة
+            window.location.href = '/dept-health.html' + (_d ? '?dept=' + _d : '');
         };
     </script>
 
@@ -528,7 +563,8 @@
                 <div
                     class="action-bar d-flex justify-content-between p-4 bg-dark bg-opacity-25 rounded-4 mt-5 border border-white border-opacity-10">
                     <a href="javascript:void(0)" onclick="window.exitToDashboard()"
-                        class="btn btn-link text-muted text-decoration-none fw-800"><i class="bi bi-house-door me-1"></i> لوحة القيادة</a>
+                        class="btn btn-link text-muted text-decoration-none fw-800"><i
+                            class="bi bi-house-door me-1"></i> لوحة القيادة</a>
                     <button type="submit" id="btnSave" class="btn btn-primary px-5 btn-modern">حفظ ومتابعة لمصفوفة
                         TOWS</button>
                 </div>
@@ -551,6 +587,7 @@
     <script src="/js/hr-deep-config.js?v=4"></script>
     <script src="/js/it-deep-config.js?v=4"></script>
     <script src="/js/finance-deep-config.js?v=2"></script>
+    <script src="/js/compliance-deep-config.js?v=7"></script>
     <script src="/assets/js/hr-handlers.js?v=4"></script>
     <script src="/assets/js/finance-handlers.js?v=4"></script>
     <script src="/assets/js/sales-handlers.js?v=5"></script>
@@ -558,7 +595,7 @@
     <script src="/assets/js/it-handlers.js?v=4"></script>
     <script src="/assets/js/operations-handlers.js?v=4"></script>
     <script src="/assets/js/projects-handlers.js?v=4"></script>
-    <script src="/assets/js/compliance-handlers.js?v=4"></script>
+    <script src="/assets/js/compliance-handlers.js?v=11"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
@@ -566,7 +603,7 @@
             const urlDept = new URLSearchParams(window.location.search).get('dept');
             const dept = urlDept || 'company';
             if (window.DeptPage) DeptPage.dept = dept;
-            const DEPT_LABELS = { hr: 'الموارد البشرية', finance: 'المالية', sales: 'المبيعات', marketing: 'التسويق', it: 'تقنية المعلومات', operations: 'العمليات', company: 'المنشأة' };
+            const DEPT_LABELS = { hr: 'الموارد البشرية', finance: 'المالية', sales: 'المبيعات', marketing: 'التسويق', it: 'تقنية المعلومات', operations: 'العمليات', compliance: 'الامتثال', company: 'المنشأة' };
             document.getElementById('dept-header').textContent = urlDept ? `تحليل SWOT — ${DEPT_LABELS[dept] || dept}` : 'التوليف الاستراتيجي للمنشأة';
             window.exitToDashboard = () => {
                 if (urlDept && urlDept !== 'company') {
@@ -842,8 +879,11 @@
                 }
 
                 if (diagData) {
+                    // 🔒 فصل الحوكمة عن الامتثال: لا نُدرج بنود الحوكمة ضمن إدارة الامتثال
+                    const isComplianceDept = dept === 'compliance';
+
                     // نقاط القوة من التشخيص
-                    if (diagData.gov === 'advanced' || diagData.gov === 'moderate')
+                    if (!isComplianceDept && (diagData.gov === 'advanced' || diagData.gov === 'moderate'))
                         results.strengths.push('[تشخيص] حوكمة جيدة — ' + (diagData.gov === 'advanced' ? 'متقدمة' : 'متوسطة'));
                     if (diagData.digital === 'high')
                         results.strengths.push('[تشخيص] تحول رقمي متقدم');
@@ -855,7 +895,7 @@
                         results.strengths.push('[تشخيص] تخطيط تعاقب وظيفي قوي');
 
                     // نقاط الضعف من التشخيص
-                    if (diagData.gov === 'none' || diagData.gov === 'basic')
+                    if (!isComplianceDept && (diagData.gov === 'none' || diagData.gov === 'basic'))
                         results.weaknesses.push('[تشخيص] ضعف في الحوكمة — ' + (diagData.gov === 'none' ? 'غير موجودة' : 'أساسية'));
                     if (diagData.digital === 'low' || diagData.digital === 'none')
                         results.weaknesses.push('[تشخيص] ضعف في التحول الرقمي');
@@ -912,10 +952,30 @@
                     // ترجمة أسئلة التدقيق حسب القسم
                     const AUDIT_LABELS = {
                         sales: {
-                            q1_1:'عدد فريق المبيعات',q1_2:'هيكل الفريق',q1_3:'تقييم أداء الأفراد',q1_4:'رضا الفريق',q1_5:'تدريب مهارات البيع',
-                            q2_1:'تصنيف العملاء',q2_2:'رضا العملاء',q2_3:'برنامج ولاء',q2_4:'نسبة العملاء المتكررين',q2_5:'تغذية راجعة منهجية',
-                            q3_1:'عملية بيع موثقة',q3_2:'تتبع Pipeline',q3_3:'دورة البيع',q3_4:'سياسة تسعير',q3_5:'قنوات البيع',
-                            q4_1:'نظام CRM',q4_2:'تقارير مبيعات آلية',q4_3:'أتمتة البيع',q4_4:'جودة البيانات'
+                            q1_1: 'عدد فريق المبيعات', q1_2: 'هيكل الفريق', q1_3: 'تقييم أداء الأفراد', q1_4: 'رضا الفريق', q1_5: 'تدريب مهارات البيع',
+                            q2_1: 'تصنيف العملاء', q2_2: 'رضا العملاء', q2_3: 'برنامج ولاء', q2_4: 'نسبة العملاء المتكررين', q2_5: 'تغذية راجعة منهجية',
+                            q3_1: 'عملية بيع موثقة', q3_2: 'تتبع Pipeline', q3_3: 'دورة البيع', q3_4: 'سياسة تسعير', q3_5: 'قنوات البيع',
+                            q4_1: 'نظام CRM', q4_2: 'تقارير مبيعات آلية', q4_3: 'أتمتة البيع', q4_4: 'جودة البيانات'
+                        },
+                        compliance: {
+                            compliance_effectiveness: 'فعالية نظام الامتثال الداخلي',
+                            regulatory_awareness: 'الوعي باللوائح والأنظمة',
+                            policy_documentation: 'توثيق سياسات الامتثال',
+                            risk_monitoring: 'مراقبة المخاطر النظامية',
+                            reporting_quality: 'دقة التقارير الرقابية',
+                            violations_mgmt: 'إدارة المخالفات',
+                            digital_compliance: 'الأتمتة في الامتثال',
+                            culture_integrity: 'ثقافة النزاهة والالتزام'
+                        },
+                        governance: {
+                            gov_board_meetings: 'اجتماعات مجلس الإدارة', gov_board_competence: 'كفاءة أعضاء المجلس', gov_strategic_oversight: 'الرقابة الاستراتيجية', gov_ceo_eval: 'تقييم أداء الرئيس التنفيذي',
+                            gov_financial_transparency: 'الشفافية المالية', gov_disclosure_policy: 'سياسة الإفصاح', gov_website_governance: 'قسم الحوكمة بالموقع', gov_annual_report: 'التقرير السنوي الشامل',
+                            gov_conflict_policy: 'سياسة تعارض المصالح', gov_ethics_code: 'ميثاق السلوك الأخلاقي', gov_related_party: 'سجل الأطراف ذات العلاقة', gov_anti_bribery: 'مكافحة الرشوة والفساد',
+                            gov_doa: 'مصفوفة الصلاحيات (DOA)', gov_role_separation: 'الفصل بين رئاسة المجلس والتنفيذ', gov_articles_assoc: 'تحديث النظام الأساسي', gov_secretary: 'أمين سر المجلس',
+                            gov_audit_committee: 'لجنة التدقيق', gov_risk_committee: 'لجنة المخاطر', gov_nomination_remuneration: 'لجنة الترشيحات والمكافآت', gov_committee_charters: 'لوائح اللجان',
+                            gov_risk_register: 'سجل المخاطر المؤسسية', gov_bcp_plan: 'خطة استمرارية الأعمال', gov_risk_appetite: 'شهية المخاطر', gov_crisis_mgmt: 'إدارة الأزمات',
+                            gov_shareholder_rights: 'حقوق المساهمين', gov_esg_aspects: 'الأبعاد الاجتماعية والبيئية (ESG)', gov_labor_rights: 'حقوق الموظفين النظامية', gov_reputation_risk: 'إدارة مخاطر السمعة',
+                            gov_accountability_system: 'نظام المساءلة ومحاسبة الأهداف', gov_awareness_training: 'التدريب التوعوي بالحوكمة', gov_internal_control: 'كفاءة الرقابة الداخلية', gov_continuous_improvement: 'التحسين المستمر للوائح'
                         }
                     };
                     const labels = AUDIT_LABELS[dept] || {};
@@ -944,7 +1004,7 @@
 
                 // ═══ ٢. تحليل PESTEL (O/T) ═══
                 if (pestelData) {
-                    const threatsKws = ['خطر', 'مخاطر', 'ضريبة', 'ضرائب', 'تضخم', 'انخفاض', 'إفلاس', 'سايبر', 'عقبات', 'تحدي', 'تراجع', 'قيود'];
+                    const threatsKws = ['خطر', 'مخاطر', 'ضريبة', 'ضرائب', 'تضخم', 'انخفاض', 'إفلاس', 'سايبر', 'عقبات', 'تحدي', 'تراجع', 'قيود', 'تشدد', 'عقوبات', 'غرامات', 'تعديلات نظامية', 'متطلبات', 'صرامة'];
                     Object.entries(pestelData).forEach(([key, text]) => {
                         if (typeof text === 'string' && text.length > 3 && key !== 'meta') {
                             text.split('\n').forEach(line => {
@@ -959,13 +1019,21 @@
 
                 // ═══ ٣. الصحة الإدارية (S/W) ═══
                 if (healthData) {
+                    // 🔒 فلتر الحوكمة عن الامتثال
+                    const govKws = ['مجلس الإدارة', 'صلاحيات المجلس', 'تضارب المصالح', 'لائحة حوكمة', 'أعضاء المجلس', 'لجنة التدقيق'];
+                    const isComplianceDept = dept === 'compliance';
                     Object.entries(healthData).forEach(([key, txt]) => {
-                        if (typeof txt === 'string' && txt.length > 5 && key !== 'meta') {
-                            if (txt.includes('ضعف') || txt.includes('نقص') || txt.includes('فجوة'))
-                                results.weaknesses.push(`[صحة] ${txt.trim()}`);
+                        if (typeof txt !== 'string' || key === 'meta' || key.startsWith('_')) return;
+                        // تقسيم كل حقل إلى أسطر منفصلة (حقول صحة الإدارة متعددة الأسطر)
+                        txt.split('\n').forEach(line => {
+                            const clean = line.replace(/^[\s\-\*\d\.]+/g, '').trim();
+                            if (clean.length < 5) return;
+                            if (isComplianceDept && govKws.some(k => clean.includes(k))) return; // تخطي بنود الحوكمة في الامتثال
+                            if (clean.includes('ضعف') || clean.includes('نقص') || clean.includes('فجوة'))
+                                results.weaknesses.push(`[صحة] ${clean}`);
                             else
-                                results.strengths.push(`[صحة] ${txt.trim()}`);
-                        }
+                                results.strengths.push(`[صحة] ${clean}`);
+                        });
                     });
                 }
 
@@ -984,10 +1052,12 @@
                     // yes/no questions → strengths/weaknesses
                     Object.entries(deepData).forEach(([key, val]) => {
                         if (key === 'meta' || key.startsWith('_')) return;
-                        if (val === 'yes' || val === 'no') {
+                        // دعم الصيغة المباشرة 'yes'/'no' والصيغة المركبة {answer: 'yes', note: '...'}
+                        const answer = (typeof val === 'object' && val !== null) ? val.answer : val;
+                        if (answer === 'yes' || answer === 'no') {
                             const qLabel = DEEP_Q[key] || key;
                             const shortLabel = qLabel.length > 60 ? qLabel.substring(0, 57) + '...' : qLabel;
-                            if (val === 'yes') results.strengths.push(`[عميق] ${shortLabel}`);
+                            if (answer === 'yes') results.strengths.push(`[عميق] ${shortLabel}`);
                             else results.weaknesses.push(`[عميق] ${shortLabel}`);
                         }
                     });
@@ -1026,6 +1096,120 @@
                             else if (saud < 15) results.threats.push(`[عميق] نسبة توطين منخفضة (${saud}%) — خطر نطاقات`);
                         }
                     }
+
+                    // ── Compliance dept: تحليل نسب الامتثال (pct) وعدد التراخيص (count) ──
+                    if (dept === 'compliance') {
+                        const compConfig = window.COMPLIANCE_DEEP_CONFIG;
+                        const compCategories = compConfig?.CATEGORIES || compConfig?.categories || [];
+                        const qMap = {};
+                        compCategories.forEach(cat => {
+                            (cat.questions || []).forEach(q => { qMap[q.id] = { ...q, axis: cat.id }; });
+                        });
+
+                        Object.entries(deepData).forEach(([key, val]) => {
+                            if (key === 'meta' || key.startsWith('_')) return;
+                            const qDef = qMap[key];
+                            if (!qDef) return;
+
+                            // ── نسبة امتثال (pct mode) ──
+                            if (qDef.type === 'pct' || qDef.mode === 'pct') {
+                                const pct = parseFloat((typeof val === 'object' && val !== null) ? val.pct : val);
+                                if (isNaN(pct)) return;
+                                const label = qDef.text || qDef.q || key;
+                                const short = label.length > 50 ? label.substring(0, 47) + '...' : label;
+                                if (pct >= 80) results.strengths.push(`[امتثال] ${short} (${pct}%)`);
+                                else if (pct < 50) {
+                                    results.weaknesses.push(`[امتثال] ${short} (${pct}%) — نسبة منخفضة`);
+                                    // تهديد مرتبط من RISKS_BY_AXIS
+                                    const axis = qDef.axis;
+                                    if (axis && window.RISKS_BY_AXIS && window.RISKS_BY_AXIS[axis]) {
+                                        const risk = window.RISKS_BY_AXIS[axis];
+                                        results.threats.push(`[مخاطر] ${risk.name}`);
+                                    }
+                                }
+                            }
+
+                            // ── عدد تراخيص (count mode) ──
+                            if (qDef.type === 'count' || qDef.mode === 'count') {
+                                let total, valid;
+                                if (typeof val === 'object') { total = parseFloat(val.total); valid = parseFloat(val.valid); }
+                                else if (typeof val === 'string' && val.includes('/')) { const parts = val.split('/'); valid = parseFloat(parts[0]); total = parseFloat(parts[1]); }
+                                if (!isNaN(total) && total > 0 && !isNaN(valid)) {
+                                    const pct = Math.round((valid / total) * 100);
+                                    const label = qDef.text || qDef.q || key;
+                                    const short = label.length > 50 ? label.substring(0, 47) + '...' : label;
+                                    if (pct >= 90) results.strengths.push(`[امتثال] ${short}: ${valid}/${total} ساري (${pct}%)`);
+                                    else if (pct < 70) {
+                                        results.weaknesses.push(`[امتثال] ${short}: ${valid}/${total} فقط ساري (${pct}%)`);
+                                        if (window.RISKS_BY_AXIS?.licenses) {
+                                            results.threats.push(`[مخاطر] ${window.RISKS_BY_AXIS.licenses.name}`);
+                                        }
+                                    }
+                                }
+                            }
+                        });
+
+                        // إزالة التهديدات المكررة
+                        results.threats = [...new Set(results.threats)];
+                    }
+                }
+
+                // ═══ ٥. الامتثال: مقترحات أساسية من قاعدة المخاطر ═══
+                if (dept === 'compliance' && window.RISKS_BY_AXIS) {
+                    // 🔒 محاور الامتثال فقط — الحوكمة مفصولة في إدارتها المستقلة
+                    const CORE_AXES = ['hr_labor', 'finance_zakat', 'data_privacy', 'cybersecurity', 'licenses', 'contracts', 'reporting', 'insurance'];
+                    const hasDeep = !!deepData && Object.keys(deepData).filter(k => k !== 'meta' && !k.startsWith('_')).length > 0;
+                    const hasAudit = !!auditData && Object.keys(auditData).filter(k => k !== 'meta' && !k.startsWith('_')).length > 0;
+
+                    CORE_AXES.forEach(axis => {
+                        const risk = RISKS_BY_AXIS[axis];
+                        if (!risk) return;
+
+                        // تهديدات: دائماً تظهر المخاطر الأساسية (المنشأة معرضة لها)
+                        const threatText = `[مخاطر امتثال] ${risk.name} — ${risk.desc.substring(0, 80)}`;
+                        if (!results.threats.some(t => t.includes(risk.name))) {
+                            results.threats.push(threatText);
+                        }
+
+                        // نقاط ضعف: إذا ما في بيانات deep أو audit، نعتبر المحاور غير مقيّمة = ضعف
+                        if (!hasDeep && !hasAudit) {
+                            results.weaknesses.push(`[امتثال] محور "${risk.category}" غير مقيّم — ${risk.name}`);
+                        }
+                    });
+
+                    // إذا ما في بيانات إطلاقاً، إضافة نقاط ضعف عامة
+                    if (!hasDeep && !hasAudit) {
+                        results.weaknesses.push('[امتثال] لم يتم إجراء التحليل العميق للامتثال بعد');
+                        results.weaknesses.push('[امتثال] لم يتم إجراء التقييم الوصفي (التدقيق) بعد');
+                        results.opportunities.push('[امتثال] فرصة لبناء منظومة امتثال شاملة تقلل المخاطر النظامية');
+                        results.opportunities.push('[امتثال] التحول الرقمي في إدارة التراخيص والعقود يقلل التكاليف');
+                    }
+
+                    // إذا في بيانات deep بس بعض المحاور ضعيفة، إضافة تهديدات سياقية
+                    if (hasDeep && window.COMPLIANCE_DEEP_CONFIG) {
+                        // تحقق من المحاور السياقية حسب النشاط (صناعي/تجاري/خدمي)
+                        const contextAxes = {
+                            industrial: ['occupational_safety', 'environment', 'hazmat', 'product_quality'],
+                            commercial: ['consumer_protection', 'pricing_practices', 'trademarks_ip', 'ecommerce'],
+                            service: ['service_quality', 'customer_data', 'professional_licensing']
+                        };
+                        // إضافة التهديدات السياقية إذا وُجدت أسئلة منها في البيانات
+                        Object.values(contextAxes).flat().forEach(axis => {
+                            if (RISKS_BY_AXIS[axis]) {
+                                const hasAxisQ = Object.keys(deepData).some(k => {
+                                    const d = deepData[k];
+                                    return typeof d === 'object' && d !== null;
+                                });
+                                if (hasAxisQ && !results.threats.some(t => t.includes(RISKS_BY_AXIS[axis].name))) {
+                                    results.threats.push(`[مخاطر سياقية] ${RISKS_BY_AXIS[axis].name}`);
+                                }
+                            }
+                        });
+                    }
+
+                    // إزالة المكررات النهائية
+                    results.threats = [...new Set(results.threats)];
+                    results.weaknesses = [...new Set(results.weaknesses)];
                 }
 
                 return results;
@@ -1203,20 +1387,20 @@
     </script>
     </main>
     </div>
-<script>
-(function() {
-    const trigger = document.getElementById('sidebarTrigger');
-    const sidebar = document.getElementById('stx-sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    let closeTimer = null;
-    function openSidebar() { clearTimeout(closeTimer); sidebar.classList.add('sidebar-visible'); if(window.innerWidth < 768) overlay.classList.add('active'); }
-    function closeSidebar() { closeTimer = setTimeout(() => { sidebar.classList.remove('sidebar-visible'); overlay.classList.remove('active'); }, 300); }
-    trigger.addEventListener('mouseenter', openSidebar);
-    sidebar.addEventListener('mouseenter', function() { clearTimeout(closeTimer); });
-    sidebar.addEventListener('mouseleave', closeSidebar);
-    overlay.addEventListener('click', function() { sidebar.classList.remove('sidebar-visible'); overlay.classList.remove('active'); });
-})();
-</script>
+    <script>
+        (function () {
+            const trigger = document.getElementById('sidebarTrigger');
+            const sidebar = document.getElementById('stx-sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            let closeTimer = null;
+            function openSidebar() { clearTimeout(closeTimer); sidebar.classList.add('sidebar-visible'); if (window.innerWidth < 768) overlay.classList.add('active'); }
+            function closeSidebar() { closeTimer = setTimeout(() => { sidebar.classList.remove('sidebar-visible'); overlay.classList.remove('active'); }, 300); }
+            trigger.addEventListener('mouseenter', openSidebar);
+            sidebar.addEventListener('mouseenter', function () { clearTimeout(closeTimer); });
+            sidebar.addEventListener('mouseleave', closeSidebar);
+            overlay.addEventListener('click', function () { sidebar.classList.remove('sidebar-visible'); overlay.classList.remove('active'); });
+        })();
+    </script>
 </body>
 
 </html>

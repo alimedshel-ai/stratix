@@ -207,6 +207,17 @@
       padding-top: 8px;
     }
 
+    .kpi-source-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 9px;
+      font-size: 0.68rem;
+      font-weight: 800;
+      width: fit-content;
+    }
+
     .btn-smart {
       background: linear-gradient(135deg, var(--stx-primary), #4f46e5);
       color: #fff;
@@ -425,6 +436,7 @@
   <script src="/assets/js/marketing-handlers.js?v=5"></script>
   <script src="/assets/js/operations-handlers.js?v=5"></script>
   <script src="/assets/js/it-handlers.js?v=5"></script>
+  <script src="/assets/js/compliance-handlers.js?v=11"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
@@ -437,7 +449,7 @@
       const dept = urlDept || 'company';
       if (window.DeptPage) DeptPage.dept = dept;
 
-      const DEPT_LABELS_MAP = { hr: 'الموارد البشرية', finance: 'المالية', sales: 'المبيعات', marketing: 'التسويق', it: 'تقنية المعلومات', operations: 'العمليات', company: 'المنظمة' };
+      const DEPT_LABELS_MAP = { hr: 'الموارد البشرية', finance: 'المالية', sales: 'المبيعات', marketing: 'التسويق', it: 'تقنية المعلومات', operations: 'العمليات', compliance: 'الامتثال والحوكمة', governance: 'الحوكمة', cs: 'خدمة العملاء', quality: 'الجودة', projects: 'المشاريع', support: 'الدعم', company: 'المنظمة' };
       document.getElementById('dept-context').textContent = urlDept
         ? `خارطة طريق المؤشرات — ${DEPT_LABELS_MAP[dept] || dept}`
         : 'خارطة الطريق الاستراتيجية (المنظمة)';
@@ -538,9 +550,41 @@
       try { localStorage.setItem(LS_KPIS(), JSON.stringify(allKpis)); } catch (e) { }
     }
 
+    // ─── ميتا مصادر البيانات ─── (يُستخدم في المؤشرات وشريط التدفق)
+    const SOURCE_META = {
+      okr:         { label: 'نتيجة رئيسية (KR)', color: '#f59e0b', icon: 'bi-trophy' },
+      objective:   { label: 'هدف استراتيجي',   color: '#6366f1', icon: 'bi-bullseye' },
+      specialized: { label: 'مؤشر متخصص',      color: '#22c55e', icon: 'bi-shield-check' },
+      tows:        { label: 'استراتيجية TOWS', color: '#06b6d4', icon: 'bi-shuffle' },
+      generator:   { label: 'اقتراح ذكي',      color: '#94a3b8', icon: 'bi-magic' },
+      manual:      { label: 'مُضاف يدوياً',    color: '#a78bfa', icon: 'bi-person-gear' }
+    };
+
+    // ترجمة مفاتيح KPIs المتخصصة (compliance-kpis / hr-kpis) إلى عربي
+    function translateSpecKey(dept, key) {
+      const maps = {
+        compliance: {
+          violations: { name: 'عدد المخالفات التنظيمية', target: '0 مخالفة' },
+          policyRate: { name: 'نسبة الالتزام بالسياسات', target: '≥ 95%' },
+          trainingRate: { name: 'نسبة تدريب الموظفين على الامتثال', target: '≥ 90%' },
+          resolutionDays: { name: 'متوسط أيام معالجة المخالفة', target: '≤ 7 أيام' },
+          complianceCost: { name: 'تكلفة عدم الامتثال (ر.س)', target: '≤ 10K ر.س' }
+        },
+        hr: {
+          turnoverRate: { name: 'معدل دوران الموظفين', target: '≤ 10%' },
+          saudizationRate: { name: 'نسبة التوطين', target: '≥ 50%' },
+          trainingHours: { name: 'ساعات التدريب لكل موظف', target: '≥ 30 س/سنة' },
+          satisfaction: { name: 'مؤشر رضا الموظفين', target: '≥ 85%' },
+          vacancyRate: { name: 'نسبة الشواغر', target: '≤ 5%' }
+        }
+      };
+      return maps[dept]?.[key] || null;
+    }
+
     async function loadData(dept) {
+      const deptUp = dept.toUpperCase();
       let saved = null;
-      try { saved = await DeptPage.loadFromAPI('KPIS_' + dept.toUpperCase()) || []; } catch (e) { saved = []; }
+      try { saved = await DeptPage.loadFromAPI('KPIS_' + deptUp) || []; } catch (e) { saved = []; }
 
       // fallback: localStorage
       if (!saved || saved.length === 0) {
@@ -558,55 +602,122 @@
       if (saved.length > 0) {
         const leaked = saved.some(k => hasHRLeak(k.name));
         if (leaked) {
-          console.warn('[KPIs] Detected HR leak in Finance KPIs. Filtering...');
+          console.warn('[KPIs] Detected HR leak. Filtering...');
           allKpis = cleanData(saved);
         } else {
           allKpis = saved;
         }
       }
 
+      // ═══ توليد متعدد المصادر عند عدم وجود مؤشرات محفوظة ═══
       if (allKpis.length === 0) {
-        // 1) Ingest from OKRs
+        const qRobin = (i) => ['Q1', 'Q2', 'Q3', 'Q4'][i % 4];
+        const pushed = new Set(); // dedupe by name
+
+        const pushKpi = (kpi) => {
+          const k = (kpi.name || '').trim();
+          if (!k) return;
+          if (hasHRLeak(k) || hasHRLeak(kpi.parent || '')) return;
+          const norm = k.toLowerCase();
+          if (pushed.has(norm)) return;
+          pushed.add(norm);
+          allKpis.push(kpi);
+        };
+
+        // ─── 1) OKRs → Key Results (أولوية عليا) ───
         try {
-          const okrs = await DeptPage.loadFromAPI('OKRS_' + dept.toUpperCase()) || [];
-          okrs.forEach(o => {
-            if (!hasHRLeak(o.objective)) {
-              (o.krs || []).forEach(kr => {
-                if (!hasHRLeak(kr.text)) {
-                  allKpis.push({ name: kr.text, target: kr.target || '100%', parent: o.objective, quarter: 'Q1' });
-                }
+          const okrs = await DeptPage.loadFromAPI('OKRS_' + deptUp) || [];
+          (okrs || []).forEach(o => {
+            (o.krs || []).forEach((kr, i) => {
+              pushKpi({
+                name: kr.text, target: kr.target || '100%',
+                parent: o.objective || '', quarter: qRobin(allKpis.length),
+                source: 'okr'
               });
-            }
+            });
           });
         } catch (e) { console.warn('[KPIs] OKRs load failed', e); }
-      }
 
-      if (allKpis.length === 0) {
-        // 2) Ingest from Objectives + dept-specific KeyResults generator
+        // ─── 2) Objectives + مولّد الإدارة ───
         try {
-          const objs = await DeptPage.loadFromAPI('OBJECTIVES_' + dept.toUpperCase()) || [];
+          const objs = await DeptPage.loadFromAPI('OBJECTIVES_' + deptUp) || [];
           const objectives = Array.isArray(objs) ? objs : [];
-          const handlerName = `generate${dept.charAt(0).toUpperCase() + dept.slice(1)}KeyResults`;
-          const generator = window[handlerName];
+          const cap = dept.charAt(0).toUpperCase() + dept.slice(1);
+          const generator = window[`generate${cap}KeyResults`];
 
           objectives.forEach(obj => {
             const title = obj.title || '';
-            if (hasHRLeak(title)) return;
+            if (!title) return;
             if (generator) {
-              const krs = generator(title);
-              (krs || []).forEach(kr => {
-                allKpis.push({ name: kr.text, target: kr.target || '100%', parent: title, quarter: 'Q1' });
+              const krs = generator(title) || [];
+              krs.forEach(kr => {
+                pushKpi({
+                  name: kr.text, target: kr.target || '100%',
+                  parent: title, quarter: qRobin(allKpis.length),
+                  source: 'generator'
+                });
               });
             } else {
-              // fallback: use the objective itself as a KPI
-              allKpis.push({ name: title, target: obj.budget || '100%', parent: obj.perspective || '', quarter: 'Q1' });
+              pushKpi({
+                name: title, target: obj.budget || '100%',
+                parent: obj.perspective || '', quarter: qRobin(allKpis.length),
+                source: 'objective'
+              });
             }
           });
         } catch (e) { console.warn('[KPIs] Objectives ingest failed', e); }
+
+        // ─── 3) KPIs متخصصة (compliance-kpis, hr-kpis, ...) ───
+        try {
+          const specKeys = [`${deptUp}_KPIS_VALUES`, 'KPIS_VALUES'];
+          for (const sk of specKeys) {
+            const spec = await DeptPage.loadFromAPI(sk).catch(() => null);
+            if (spec && typeof spec === 'object' && !Array.isArray(spec)) {
+              const entries = Object.keys(spec).filter(k => spec[k] !== null && spec[k] !== undefined && spec[k] !== '');
+              entries.forEach(key => {
+                const meta = translateSpecKey(deptLower, key);
+                if (!meta) return;
+                const val = spec[key];
+                pushKpi({
+                  name: meta.name,
+                  target: meta.target,
+                  parent: `مؤشرات ${getDeptName ? getDeptName(deptLower) : deptLower} المتخصصة (قياس حالي: ${val})`,
+                  quarter: qRobin(allKpis.length),
+                  source: 'specialized'
+                });
+              });
+              if (entries.length > 0) break;
+            }
+          }
+        } catch (e) { console.warn('[KPIs] Specialized load failed', e); }
+
+        // ─── 4) TOWS — استراتيجيات SO/WO/ST/WT كمؤشرات تنفيذ ───
+        try {
+          const tows = await DeptPage.loadFromAPI('TOWS_' + deptUp).catch(() => null);
+          if (tows && typeof tows === 'object') {
+            const towsLabel = { so: 'SO (قوة×فرص)', wo: 'WO (ضعف×فرص)', st: 'ST (قوة×تهديد)', wt: 'WT (ضعف×تهديد)' };
+            ['so', 'wo', 'st', 'wt'].forEach(key => {
+              const val = tows[key];
+              if (Array.isArray(val)) {
+                val.slice(0, 2).forEach(text => {
+                  if (!text) return;
+                  pushKpi({
+                    name: typeof text === 'string' ? text : (text.text || text.title || ''),
+                    target: '≥ 80%',
+                    parent: `استراتيجية ${towsLabel[key] || key.toUpperCase()}`,
+                    quarter: qRobin(allKpis.length),
+                    source: 'tows'
+                  });
+                });
+              }
+            });
+          }
+        } catch (e) { console.warn('[KPIs] TOWS load failed', e); }
       }
+
       if (allKpis.length > 0) {
         saveKpisLocal();
-        // توزيع تلقائي عند التوليد الأولي
+        // توزيع تلقائي عند التوليد الأولي فقط
         if (!saved || saved.length === 0) {
           distributeKPIsSmartly();
           return; // distributeKPIsSmartly calls renderRoadmap
@@ -704,22 +815,65 @@
           <i class="bi bi-inbox h2 d-block mb-2"></i>
           <p class="small m-0">لا توجد مؤشرات — استخدم "توليد من الأهداف" أو "إضافة مؤشر"</p>
         </div>`;
+        renderFlowSummary();
         return;
       }
 
+      const esc = (s) => (s || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
       allKpis.forEach((kpi, idx) => {
         const list = document.getElementById(columns[kpi.quarter] || 'list-Q1');
         if (!list) return;
+        const src = kpi.source || 'manual';
+        const meta = SOURCE_META[src] || SOURCE_META.manual;
         const item = document.createElement('div');
         item.className = 'kpi-item';
+        item.style.borderRight = `4px solid ${meta.color}`;
         item.innerHTML = `
-          <span class="kpi-target-badge">${kpi.target}</span>
-          <span class="kpi-name">${kpi.name}</span>
-          <span class="kpi-parent"><i class="bi bi-link-45deg"></i> ${kpi.parent || 'مؤشر مستقل'}</span>
+          <span class="kpi-target-badge">${esc(kpi.target)}</span>
+          <span class="kpi-source-pill" style="background:${meta.color}22;color:${meta.color};border:1px solid ${meta.color}55;">
+            <i class="bi ${meta.icon}"></i> ${esc(meta.label)}
+          </span>
+          <span class="kpi-name">${esc(kpi.name)}</span>
+          <span class="kpi-parent"><i class="bi bi-link-45deg"></i> ${esc(kpi.parent || 'مؤشر مستقل')}</span>
         `;
         item.onclick = () => openEditModal(idx);
         list.appendChild(item);
       });
+
+      renderFlowSummary();
+    }
+
+    // شريط تدفق — عدد المؤشرات من كل مصدر فوق شبكة الأرباع
+    function renderFlowSummary() {
+      let box = document.getElementById('kpi-flow-summary');
+      if (!allKpis || allKpis.length === 0) { if (box) box.remove(); return; }
+
+      if (!box) {
+        box = document.createElement('div');
+        box.id = 'kpi-flow-summary';
+        box.style.cssText = 'margin:0 0 16px 0;padding:14px 18px;border:1px solid var(--stx-border);background:rgba(255,255,255,0.02);border-radius:14px;';
+        const grid = document.querySelector('.quarter-grid');
+        if (grid && grid.parentNode) grid.parentNode.insertBefore(box, grid);
+      }
+
+      const counts = {};
+      allKpis.forEach(k => {
+        const s = k.source || 'manual';
+        counts[s] = (counts[s] || 0) + 1;
+      });
+      const esc = (s) => (s || '').toString().replace(/</g, '&lt;');
+      const chips = Object.entries(counts).map(([k, v]) => {
+        const m = SOURCE_META[k] || SOURCE_META.manual;
+        return `<span style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:10px;background:${m.color}15;color:${m.color};border:1px solid ${m.color}40;font-size:0.78rem;font-weight:800;">
+          <i class="bi ${m.icon}"></i> ${esc(m.label)} <b>(${v})</b>
+        </span>`;
+      }).join('');
+      box.innerHTML = `
+        <div style="font-size:0.78rem;font-weight:800;color:#94a3b8;margin-bottom:8px;">
+          <i class="bi bi-diagram-3 me-1"></i> تدفق البيانات — مصادر المؤشرات الحالية (${allKpis.length} مؤشر)
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">${chips}</div>
+      `;
     }
 
     function openEditModal(idx) {
@@ -770,6 +924,18 @@
           Q3: ['تحليل', 'لوحة', 'بيانات', 'تدريب', 'مهارة', 'تطوير', 'تنبؤ'],
           Q4: ['أرباح', 'عائد', 'أثر', 'تدقيق', 'إقفال', 'ختامي', 'ميزانية العام']
         },
+        compliance: {
+          Q1: ['سياسة', 'سياسات', 'حوكمة', 'تأسيس', 'لائحة', 'مخالف', 'امتثال أولي', 'تقييم المخاطر'],
+          Q2: ['تدريب', 'توعية', 'ورش', 'نشر', 'دليل', 'رفع الوعي', 'تثقيف'],
+          Q3: ['تدقيق', 'مراجعة', 'تفتيش', 'فحص', 'تقييم الالتزام', 'أتمتة', 'نظام امتثال', 'grc'],
+          Q4: ['أثر', 'نتائج', 'تقرير سنوي', 'تكلفة عدم الامتثال', 'حوادث', 'قياس شامل', 'عائد']
+        },
+        hr: {
+          Q1: ['هيكل', 'توصيف', 'سياسات موارد', 'تقييم أولي', 'قواعد'],
+          Q2: ['توظيف', 'استقطاب', 'توطين', 'إحلال', 'تعيين'],
+          Q3: ['تدريب', 'تطوير', 'أداء', 'مهارة', 'قدرات', 'مسار وظيفي'],
+          Q4: ['استبقاء', 'رضا', 'دوران', 'مكافآت', 'ولاء الموظف', 'احتفاظ']
+        },
         default: {
           Q1: ['تأسيس', 'حوكمة', 'سياسات', 'هيكل', 'قواعد', 'تقييم أولي'],
           Q2: ['تنفيذ', 'أتمتة', 'نظام', 'تحسين', 'عملية'],
@@ -779,6 +945,7 @@
       };
 
       const rules = RULES[currentDept] || RULES.default;
+      let fallbackIdx = 0;
 
       allKpis.forEach(k => {
         const name = (k.name || '').toLowerCase();
@@ -791,12 +958,20 @@
           }
         }
         if (!assigned) {
-          k.quarter = ['Q1', 'Q2', 'Q3', 'Q4'][Math.floor(Math.random() * 4)];
+          // توزيع round-robin بدل العشوائي لضمان تغطية متوازنة
+          k.quarter = ['Q1', 'Q2', 'Q3', 'Q4'][fallbackIdx % 4];
+          fallbackIdx++;
         }
       });
       renderRoadmap();
       persist();
-      const phases = { sales: 'تأهيل → إغلاق → ولاء → إيرادات', finance: 'تأسيس → رقمنة → تطوير → أثر', default: 'تأسيس → تنفيذ → تطوير → نتائج' };
+      const phases = {
+        sales: 'تأهيل → إغلاق → ولاء → إيرادات',
+        finance: 'تأسيس → رقمنة → تطوير → أثر',
+        compliance: 'تأسيس الحوكمة → توعية → تدقيق/أتمتة → قياس الأثر',
+        hr: 'هيكلة → استقطاب → تطوير → استبقاء',
+        default: 'تأسيس → تنفيذ → تطوير → نتائج'
+      };
       if (window.DeptPage?.showMessage) DeptPage.showMessage('تمت إعادة الجدولة بناءً على: ' + (phases[currentDept] || phases.default));
     }
 

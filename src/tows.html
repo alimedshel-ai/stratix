@@ -42,8 +42,10 @@
 
         .stx-sidebar-container {
             position: fixed !important;
-            top: 0; right: -260px !important;
-            width: 260px; height: 100vh;
+            top: 0;
+            right: -260px !important;
+            width: 260px;
+            height: 100vh;
             background: #1a1d2e;
             border-left: 1px solid var(--stx-border);
             z-index: 1050;
@@ -51,28 +53,51 @@
             display: block !important;
             overflow-y: auto;
         }
-        .stx-sidebar-container.sidebar-visible { right: 0 !important; }
-        .sidebar-trigger {
-            position: fixed; top: 0; right: 0;
-            width: 18px; height: 100vh;
-            z-index: 1040; cursor: pointer;
+
+        .stx-sidebar-container.sidebar-visible {
+            right: 0 !important;
         }
+
+        .sidebar-trigger {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 18px;
+            height: 100vh;
+            z-index: 1040;
+            cursor: pointer;
+        }
+
         .sidebar-hint {
-            position: fixed; top: 50%; right: 0;
+            position: fixed;
+            top: 50%;
+            right: 0;
             transform: translateY(-50%);
-            width: 6px; height: 60px;
+            width: 6px;
+            height: 60px;
             background: linear-gradient(180deg, #6366f1, #8b5cf6);
             border-radius: 4px 0 0 4px;
-            opacity: 0.5; z-index: 1041;
+            opacity: 0.5;
+            z-index: 1041;
             transition: opacity 0.3s;
         }
-        .sidebar-trigger:hover ~ .sidebar-hint,
-        .sidebar-hint:hover { opacity: 1; }
-        .sidebar-overlay {
-            display: none; position: fixed; inset: 0;
-            background: rgba(0,0,0,0.4); z-index: 1045;
+
+        .sidebar-trigger:hover~.sidebar-hint,
+        .sidebar-hint:hover {
+            opacity: 1;
         }
-        .sidebar-overlay.active { display: block; }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1045;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
 
         .stx-main-content {
             flex-grow: 1;
@@ -259,6 +284,11 @@
                 <i class="bi bi-arrow-right-circle fs-5"></i>
                 <span class="ms-2">لوحة القيادة</span>
             </button>
+            <button onclick="window.goBackToPrevStep()" class="btn btn-outline-secondary btn-sm rounded-pill fw-700"
+                title="الرجوع للمرحلة السابقة: تحليل SWOT">
+                <i class="bi bi-arrow-right"></i>
+                <span class="ms-1">السابق: SWOT</span>
+            </button>
             <div id="dept-switcher-placeholder"></div>
         </div>
 
@@ -289,6 +319,11 @@
                 window.location.href = '/ceo-dashboard.html';
             }
         };
+        window.goBackToPrevStep = function () {
+            const _d = new URLSearchParams(window.location.search).get('dept') || '';
+            // المرحلة السابقة لـ TOWS هي تحليل SWOT
+            window.location.href = '/swot.html' + (_d ? '?dept=' + _d : '');
+        };
     </script>
 
     <div class="sidebar-trigger" id="sidebarTrigger"></div>
@@ -304,7 +339,8 @@
                     <p class="text-muted small m-0">استخدم نقاط القوة والضعف لتوليد خيارات استراتيجية مقترحة.</p>
                 </div>
                 <div class="d-flex gap-2">
-                    <button type="button" onclick="clearAndRegenerate()" class="btn btn-sm btn-outline-danger" title="مسح الكل وإعادة التوليد">
+                    <button type="button" onclick="clearAndRegenerate()" class="btn btn-sm btn-outline-danger"
+                        title="مسح الكل وإعادة التوليد">
                         <i class="bi bi-arrow-counterclockwise"></i> مسح وإعادة توليد
                     </button>
                     <button type="button" onclick="generateAllSuggestions()" class="btn-magic" id="btnMagic">
@@ -428,6 +464,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/strategic-synthesis.js?v=2"></script>
     <script src="/js/strategic-score.js?v=2"></script>
     <script src="/js/report-engine.js?v=2"></script>
     <script src="/js/data-bridge.js?v=1"></script>
@@ -445,7 +482,7 @@
     <script src="/assets/js/it-handlers.js?v=8"></script>
     <script src="/assets/js/operations-handlers.js?v=8"></script>
     <script src="/assets/js/projects-handlers.js?v=8"></script>
-    <script src="/assets/js/compliance-handlers.js?v=8"></script>
+    <script src="/assets/js/compliance-handlers.js?v=11"></script>
 
     <script>
         let swotData = { s: [], w: [], o: [], t: [] };
@@ -930,6 +967,10 @@
                     results = generateFinanceStrategies(swotData.s, swotData.w, swotData.o, swotData.t);
                 } else if (currentDept === 'sales' && window.generateSalesStrategies) {
                     results = generateSalesStrategies(swotData.s, swotData.w, swotData.o, swotData.t);
+                } else if (currentDept === 'compliance' && window.generateComplianceStrategies) {
+                    results = generateComplianceStrategies(swotData.s, swotData.w, swotData.o, swotData.t);
+                } else if (currentDept === 'governance' && window.generateGovernanceStrategies) {
+                    results = generateGovernanceStrategies(swotData.s, swotData.w, swotData.o, swotData.t);
                 } else if (window.StrategicSynthesis) {
                     console.log('[TOWS] Generating Strategic Synthesis for:', currentDept);
                     results = StrategicSynthesis.generateCorporateStrategies(swotData.s, swotData.w, swotData.o, swotData.t);
@@ -1042,20 +1083,20 @@
     </script>
     </main>
     </div>
-<script>
-(function() {
-    const trigger = document.getElementById('sidebarTrigger');
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    let closeTimer = null;
-    function openSidebar() { clearTimeout(closeTimer); sidebar.classList.add('sidebar-visible'); if(window.innerWidth < 768) overlay.classList.add('active'); }
-    function closeSidebar() { closeTimer = setTimeout(() => { sidebar.classList.remove('sidebar-visible'); overlay.classList.remove('active'); }, 300); }
-    trigger.addEventListener('mouseenter', openSidebar);
-    sidebar.addEventListener('mouseenter', function() { clearTimeout(closeTimer); });
-    sidebar.addEventListener('mouseleave', closeSidebar);
-    overlay.addEventListener('click', function() { sidebar.classList.remove('sidebar-visible'); overlay.classList.remove('active'); });
-})();
-</script>
+    <script>
+        (function () {
+            const trigger = document.getElementById('sidebarTrigger');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            let closeTimer = null;
+            function openSidebar() { clearTimeout(closeTimer); sidebar.classList.add('sidebar-visible'); if (window.innerWidth < 768) overlay.classList.add('active'); }
+            function closeSidebar() { closeTimer = setTimeout(() => { sidebar.classList.remove('sidebar-visible'); overlay.classList.remove('active'); }, 300); }
+            trigger.addEventListener('mouseenter', openSidebar);
+            sidebar.addEventListener('mouseenter', function () { clearTimeout(closeTimer); });
+            sidebar.addEventListener('mouseleave', closeSidebar);
+            overlay.addEventListener('click', function () { sidebar.classList.remove('sidebar-visible'); overlay.classList.remove('active'); });
+        })();
+    </script>
 </body>
 
 </html>

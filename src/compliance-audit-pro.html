@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ستارتكس | فحص الامتثال الاحترافي</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/css/sales-audit-pro.css?v=1">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warn: #f59e0b;
+            --danger: #ef4444;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="stx-wrapper" style="display:flex;min-height:100vh">
+        <aside class="stx-sidebar-container" id="stx-sidebar"
+            style="width:260px;flex-shrink:0;border-left:1px solid rgba(255,255,255,0.08)"></aside>
+        <main class="stx-main-content" style="flex:1;overflow-y:auto">
+
+            <!-- TOPBAR -->
+            <div class="audit-topbar">
+                <a id="topbarBackBtn" href="#" onclick="goSmartHome(); return false;"
+                    style="display:flex;align-items:center;gap:6px;color:#94a3b8;text-decoration:none;font-size:13px;font-weight:700;padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);transition:all 0.2s"
+                    onmouseover="this.style.borderColor='#6366f1';this.style.color='#fff'"
+                    onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.color='#94a3b8'">
+                    <i class="bi bi-arrow-right"></i>
+                    <span id="topbarBackLabel">الرئيسية</span>
+                </a>
+                <div class="logo">
+                    <i class="bi bi-shield-lock-fill" style="color:#6366f1"></i>
+                    <span>فحص الامتثال الاحترافي</span>
+                </div>
+                <div class="progress-wrap" id="progressWrap" style="display:none">
+                    <div class="progress-bar-track">
+                        <div class="progress-bar-fill" id="progressBar" style="background:linear-gradient(90deg,#6366f1,#8b5cf6)"></div>
+                    </div>
+                    <div class="progress-pct" id="progressText" style="color:#6366f1">0%</div>
+                </div>
+                <div class="topbar-score" id="topbarScore" style="display:none">
+                    <span class="score-num" id="totalScoreNum" style="color:#6366f1">0</span>
+                    <span class="score-max" id="totalScoreMax">/ 60</span>
+                </div>
+            </div>
+
+            <!-- MAIN LAYOUT -->
+            <div class="audit-layout">
+
+                <!-- SIDEBAR (axes navigation) -->
+                <aside class="audit-sidebar" id="auditSidebar" style="display:none">
+                    <div id="axesNav"></div>
+                </aside>
+
+                <!-- CONTENT -->
+                <main class="audit-main">
+
+                    <!-- Step 0: Meta info -->
+                    <div id="metaSection">
+                        <a id="metaBackBtn" href="#" onclick="goSmartHome(); return false;" class="back-link">
+                            <i class="bi bi-arrow-right"></i>
+                            <span id="metaBackLabel">العودة للرئيسية</span>
+                        </a>
+                    </div>
+
+                    <!-- Audit content -->
+                    <div id="auditSection" style="display:none">
+                        <div id="axisContent"></div>
+                    </div>
+
+                </main>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- SAVE INDICATOR -->
+    <div class="save-indicator" id="saveIndicator">
+        <i class="bi bi-check-circle-fill"></i>
+        تم الحفظ تلقائياً
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="/js/api.js?v=4"></script>
+    <script src="/js/context-manager.js?v=4"></script>
+    <script src="/js/page-guard.js?v=5"></script>
+    <script src="/js/smart-nav.js?v=4"></script>
+    <script src="/js/steps-config.js?v=4"></script>
+    <script src="/js/sidebar.js?v=4"></script>
+    <script src="/js/compliance-audit-config.js?v=2"></script>
+    <script src="/js/compliance-audit-engine.js?v=2"></script>
+    <script>
+        // === Smart Home Navigation ===
+        async function goSmartHome() {
+            let homeUrl = '/pro-dashboard.html';
+            let label = 'لوحة العملاء';
+
+            try {
+                let user = null;
+                if (window.api && window.api.getCurrentUser) {
+                    user = await window.api.getCurrentUser();
+                }
+                if (!user) {
+                    user = JSON.parse(localStorage.getItem('user') || '{}');
+                }
+
+                const uType = user.userType || '';
+                const role = user.role || '';
+                const dept = user.department?.key || localStorage.getItem('stratix_v10_dept') || '';
+                const deptParam = dept ? `?dept=${dept}` : '';
+
+                if (['SUPER_ADMIN', 'ADMIN'].includes(user.systemRole) || ['OWNER', 'ADMIN'].includes(role)) {
+                    if (uType === 'DEPT_MANAGER') {
+                        homeUrl = '/pro-dashboard.html';
+                        label = 'لوحة العملاء';
+                    } else {
+                        homeUrl = '/ceo-dashboard.html';
+                        label = 'مركز القيادة';
+                    }
+                } else if (uType === 'DEPT_MANAGER') {
+                    homeUrl = `/dept-dashboard.html${deptParam}`;
+                    label = 'لوحة إدارتي';
+                } else if (uType === 'COMPANY_MANAGER') {
+                    homeUrl = '/ceo-dashboard.html';
+                    label = 'مركز القيادة';
+                }
+            } catch (e) { /* use defaults */ }
+
+            ['topbarBackLabel', 'metaBackLabel'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = label;
+            });
+
+            window.location.href = homeUrl;
+        }
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            const observer = new MutationObserver(() => {
+                const auditVisible = document.getElementById('auditSection').style.display !== 'none';
+                const sidebar = document.getElementById('auditSidebar');
+                const progress = document.getElementById('progressWrap');
+                const score = document.getElementById('topbarScore');
+                if (auditVisible) {
+                    if (sidebar) sidebar.style.display = '';
+                    if (progress) progress.style.display = '';
+                    if (score) score.style.display = '';
+                }
+            });
+            const auditEl = document.getElementById('auditSection');
+            if (auditEl) {
+                observer.observe(auditEl, { attributes: true, attributeFilter: ['style'] });
+            }
+
+            try {
+                let user = null;
+                if (window.api && window.api.getCurrentUser) user = await window.api.getCurrentUser();
+                if (!user) user = JSON.parse(localStorage.getItem('user') || '{}');
+                const uType = user.userType || '';
+                const role = user.role || '';
+                let label = 'لوحة العملاء';
+                if (['OWNER', 'ADMIN'].includes(role) && uType !== 'DEPT_MANAGER') label = 'مركز القيادة';
+                else if (uType === 'DEPT_MANAGER' && !['OWNER', 'ADMIN'].includes(role)) label = 'لوحة إدارتي';
+                ['topbarBackLabel', 'metaBackLabel'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = label;
+                });
+            } catch (e) { }
+
+            ComplianceAuditEngine.init();
+        });
+    </script>
+</body>
+
+</html>

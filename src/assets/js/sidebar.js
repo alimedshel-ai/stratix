@@ -167,7 +167,7 @@ async function initSidebar(sidebarContainer) {
     target.style.flexDirection = 'column';
     target.style.zIndex = '50';
     if (target.innerHTML.trim() === '') {
-      target.innerHTML = '<div id="stx-loading" style="padding:20px; color:#6366f1; font-size:12px; font-family:sans-serif; background:rgba(99,102,241,0.05); border-radius:10px; margin:10px;">⏳ جاري المزامنة...</div>';
+      target.innerHTML = '';
     }
   }
 
@@ -1743,6 +1743,40 @@ async function initSidebar(sidebarContainer) {
 
       // تفعيل السلوكيات (فتح الأقسام النشطة)
       attachSidebarBehaviors(target);
+
+      // السايدبار المتحرك — يظهر مع قرب الماوس ويختفي لما يبتعد
+      (function setupAutoHide(sb) {
+        sb.style.transform = 'translateX(100%)';
+        sb.style.transition = 'transform 0.3s ease';
+        sb.style.willChange = 'transform';
+        sb.style.position = 'fixed';
+        sb.style.right = '0';
+        sb.style.top = '0';
+        sb.style.height = '100vh';
+        sb.style.zIndex = '10000';
+
+        var trigger = document.createElement('div');
+        trigger.id = 'sidebar-trigger';
+        trigger.style.cssText = 'position:fixed;top:0;right:0;width:18px;height:100vh;z-index:9999;cursor:pointer;';
+        var indicator = document.createElement('div');
+        indicator.style.cssText = 'position:absolute;top:50%;right:4px;transform:translateY(-50%);width:4px;height:40px;background:rgba(99,102,241,0.3);border-radius:4px;transition:all 0.2s;';
+        trigger.appendChild(indicator);
+        document.body.appendChild(trigger);
+
+        var closeTimer = null;
+        function showSb() { if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; } sb.style.transform = 'translateX(0)'; indicator.style.background = 'rgba(99,102,241,0.6)'; indicator.style.height = '60px'; }
+        function hideSb() { closeTimer = setTimeout(function () { sb.style.transform = 'translateX(100%)'; indicator.style.background = 'rgba(99,102,241,0.3)'; indicator.style.height = '40px'; }, 400); }
+
+        trigger.addEventListener('mouseenter', showSb);
+        trigger.addEventListener('mouseleave', hideSb);
+        sb.addEventListener('mouseenter', function () { if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; } });
+        sb.addEventListener('mouseleave', hideSb);
+
+        var mainEl = document.querySelector('.stx-main-content, main, .main-content');
+        if (mainEl) { mainEl.style.marginRight = '0'; mainEl.style.width = '100%'; }
+        var wrapper = document.querySelector('.stx-wrapper');
+        if (wrapper) { wrapper.style.gap = '0'; }
+      })(target);
 
     } catch (e) {
       console.error('⚠️ [Sidebar] Failed to build:', e);
