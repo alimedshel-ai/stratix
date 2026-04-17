@@ -43,7 +43,7 @@ window.ComplianceAuditEngine = (function () {
         try {
             var diag = JSON.parse(localStorage.getItem('stratix_diagnostic_payload') || '{}');
             return diag.sector || diag.answers?.sector || 'service';
-        } catch(e) { return 'service'; }
+        } catch (e) { return 'service'; }
     }
 
     /** الحصول على كل المحاور (هجين أو legacy) */
@@ -56,7 +56,7 @@ window.ComplianceAuditEngine = (function () {
     /** البحث عن محور بأي نوع من المعرّف */
     function findAxis(id) {
         if (_hybridAxes) {
-            return _hybridAxes.allAxes.find(function(a) {
+            return _hybridAxes.allAxes.find(function (a) {
                 return a.numId === id || a.id === id;
             });
         }
@@ -115,20 +115,69 @@ window.ComplianceAuditEngine = (function () {
     }
 
     // ── SCORING ──
+    // Smart KO: إذا البند من نوع 'date' وعنده expiryDate، نطبّق التدرج الزمني
+    const KO_LEVELS = {
+        valid:   { score: 1,    label: 'ساري',        color: '#22c55e', penalty: 0 },
+        warn90:  { score: 0.75, label: 'ينتهي خلال 90 يوم', color: '#f59e0b', penalty: 0 },
+        warn30:  { score: 0.5,  label: 'ينتهي خلال 30 يوم', color: '#ef4444', penalty: 0 },
+        expired: { score: 0,    label: 'منتهي',       color: '#dc2626', penalty: -10 },
+        overdue: { score: 0,    label: 'منتهي + عقوبة', color: '#7f1d1d', penalty: -20 }
+    };
+
+    function getSmartKOLevel(expiryDateStr) {
+        if (!expiryDateStr) return null;
+        try {
+            const expiry = new Date(expiryDateStr);
+            const now = new Date();
+            const diffDays = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+            if (diffDays > 90) return KO_LEVELS.valid;
+            if (diffDays > 30) return KO_LEVELS.warn90;
+            if (diffDays > 0)  return KO_LEVELS.warn30;
+            if (diffDays > -90) return KO_LEVELS.expired;
+            return KO_LEVELS.overdue; // منتهي بأكثر من 90 يوم
+        } catch (e) { return null; }
+    }
+
     function getItemScore(itemId) {
         const r = state.responses[itemId];
         if (!r) return 0;
+
+        // Smart KO: إذا البند فيه expiryDate نستخدم التدرج الزمني
+        if (r.expiryDate) {
+            const koLevel = getSmartKOLevel(r.expiryDate);
+            if (koLevel) return koLevel.score;
+        }
+
+        // المنطق الأصلي (backward compatible)
         if (r.status === 'yes') return 1;
         if (r.status === 'partial') return 0.5;
         return 0;
     }
 
+    /** الحصول على مستوى KO لبند (للعرض في الواجهة) */
+    function getItemKOLevel(itemId) {
+        const r = state.responses[itemId];
+        if (!r || !r.expiryDate) return null;
+        return getSmartKOLevel(r.expiryDate);
+    }
+
     function getAxisScore(axisId) {
         const axis = findAxis(axisId);
         if (!axis || axis.items.length === 0) return { score: 0, max: 0, pct: 0 };
-        const max = axis.items.length;
-        const score = axis.items.reduce((sum, item) => sum + getItemScore(item.id), 0);
-        return { score, max, pct: max > 0 ? Math.round((score / max) * 100) : 0 };
+        const itemsCount = axis.items.length;
+        const rawScore = axis.items.reduce((sum, item) => sum + getItemScore(item.id), 0);
+
+        // تطبيق الوزن: النقاط = (النقاط الفعلية / عدد العناصر) * وزن المحور
+        const weight = axis.weight || 1.0;
+        const weightedScore = (rawScore / itemsCount) * weight;
+
+        return {
+            score: weightedScore,
+            max: weight,
+            pct: itemsCount > 0 ? Math.round((rawScore / itemsCount) * 100) : 0,
+            raw: rawScore,
+            itemsCount: itemsCount
+        };
     }
 
     function getTotalScore() {
@@ -402,12 +451,39 @@ window.ComplianceAuditEngine = (function () {
 
     function renderItem(item, color) {
         const r = state.responses[item.id] || { status: 'none', note: '' };
+        const hasDateKO = item.koType === 'date';
+        const koLevel = hasDateKO && r.expiryDate ? getSmartKOLevel(r.expiryDate) : null;
+        const hasIncentive = !!item.incentive;
+
+        let koHTML = '';
+        if (hasDateKO) {
+            koHTML = `
+                <div class="item-expiry" style="margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                    <label style="font-size:11px;color:#64748b;font-weight:700"><i class="bi bi-calendar-event"></i> تاريخ الانتهاء:</label>
+                    <input type="date" class="expiry-input" data-item="${item.id}" value="${r.expiryDate || ''}"
+                        style="background:#1e293b;border:1px solid #334155;color:#f1f5f9;border-radius:6px;padding:3px 8px;font-size:12px;font-family:inherit">
+                    ${koLevel ? `<span style="font-size:11px;font-weight:800;color:${koLevel.color};background:${koLevel.color}15;padding:2px 8px;border-radius:6px">${koLevel.label}</span>` : ''}
+                </div>
+            `;
+        }
+
+        let incentiveHTML = '';
+        if (hasIncentive && r.status !== 'yes') {
+            incentiveHTML = `
+                <div style="margin-top:5px;font-size:11px;color:#22c55e;background:rgba(34,197,94,0.08);padding:4px 8px;border-radius:6px;display:inline-flex;align-items:center;gap:4px">
+                    <i class="bi bi-piggy-bank"></i> فرصة توفير: ${esc(item.incentive.amount)}
+                </div>
+            `;
+        }
+
         return `
             <div class="audit-item" data-item="${item.id}">
                 <div class="item-main">
                     <div class="item-label">${item.label}</div>
                     <div class="item-question">${item.question}</div>
                     <div class="item-evidence"><i class="bi bi-file-earmark-text"></i> ${item.evidence}</div>
+                    ${koHTML}
+                    ${incentiveHTML}
                 </div>
                 <div class="item-choices">
                     <button class="choice-btn choice-yes ${r.status === 'yes' ? 'active' : ''}" data-item="${item.id}" data-status="yes" title="متوفر بالكامل">
@@ -462,6 +538,19 @@ window.ComplianceAuditEngine = (function () {
                 const noteContainer = document.getElementById('note_' + itemId);
                 if (noteContainer) noteContainer.classList.toggle('has-note', !!noteArea.value);
                 autoSave();
+            });
+        }
+
+        // Smart KO: ربط حقل تاريخ الانتهاء
+        const expiryInput = document.querySelector(`.expiry-input[data-item="${itemId}"]`);
+        if (expiryInput) {
+            expiryInput.addEventListener('change', () => {
+                if (!state.responses[itemId]) state.responses[itemId] = { status: 'none', note: '' };
+                state.responses[itemId].expiryDate = expiryInput.value;
+                autoSave();
+                updateProgress();
+                updateAxisScoreBadge(axis);
+                renderAxesNav();
             });
         }
     }
@@ -534,8 +623,8 @@ window.ComplianceAuditEngine = (function () {
 
                 <div class="summary-axes-grid">
                     ${axes.filter(a => a.items.length > 0).map(a => {
-                        const s = getAxisScore(a.numId || a.id);
-                        return `
+            const s = getAxisScore(a.numId || a.id);
+            return `
                             <div class="summary-axis-row">
                                 <div class="sa-icon" style="color:${a.color}"><i class="bi ${a.icon}"></i></div>
                                 <div class="sa-name">${a.name}${a.layer && a.layer !== 'core' ? ' <small style="color:#6366f1">(سياقي)</small>' : ''}</div>
@@ -545,7 +634,7 @@ window.ComplianceAuditEngine = (function () {
                                 <div class="sa-score">${s.score}/${s.max}</div>
                             </div>
                         `;
-                    }).join('')}
+        }).join('')}
                 </div>
 
                 <div class="summary-meta">
@@ -556,10 +645,10 @@ window.ComplianceAuditEngine = (function () {
 
                 <div class="summary-actions">
                     <button class="btn-audit-secondary" onclick="ComplianceAuditEngine.goToAxis(${typeof firstAxisKey === 'number' ? firstAxisKey : "'" + firstAxisKey + "'"})">
-                        <i class="bi bi-arrow-right"></i> العودة للمحاور
+                        <i class="bi bi-arrow-right"></i> مراجعة المحاور
                     </button>
-                    <button class="btn-audit-primary btn-disabled" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)" title="سيتوفر في التحديث القادم">
-                        <i class="bi bi-file-pdf"></i> تصدير PDF (قريباً)
+                    <button class="btn-audit-primary" onclick="localStorage.setItem('stratix_step_done_compliance_compliance-audit-pro','true'); window.location.href='/compliance-deep.html?dept=compliance'" style="background:linear-gradient(135deg,#8b5cf6,#6366f1)">
+                        التالي: التحليل العميق <i class="bi bi-arrow-left"></i>
                     </button>
                 </div>
             </div>
@@ -650,7 +739,16 @@ window.ComplianceAuditEngine = (function () {
         showSummary,
         clearData,
         getState: () => state,
-        save
+        save,
+        // Smart KO API (v2.1)
+        getItemKOLevel,
+        getSmartKOLevel,
+        KO_LEVELS,
+        getAllAxes,
+        findAxis,
+        getItemScore,
+        getAxisScore,
+        getTotalScore
     };
 
 })();

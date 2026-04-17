@@ -51,12 +51,21 @@ var RISKS_BY_AXIS = {
     },
     data_privacy: {
         name: 'انتهاك نظام حماية البيانات الشخصية (PDPL)',
-        category: 'قانوني',
-        probability: 3, impact: 5,
+        category: 'تقني (Q3)',
+        probability: 2, impact: 5,
         owner: 'مسؤول حماية البيانات (DPO)',
-        desc: 'انتهاك سياسات حماية البيانات الشخصية للعملاء والموظفين.',
-        mitigation: ['تعيين DPO', 'تقييم أثر الخصوصية (DPIA)', 'تدريب الموظفين على PDPL'],
-        contingency: 'تفعيل خطة الاستجابة للخرقات وإبلاغ سدايا فوراً.'
+        desc: 'انتهاك سياسات حماية البيانات الشخصية. العقوبة تصل لـ 5 مليون ريال وسجن في حالات التسريب العمد.',
+        mitigation: ['تعيين DPO قانوني', 'تقييم أثر الخصوصية (DPIA)', 'تشفير قواعد البيانات الحساسة'],
+        contingency: 'تفعيل خطة الاستجابة للخرقات وتعيين مستشار قانوني متخصص للبلاغ.'
+    },
+    anti_concealment: {
+        name: 'شبهة التستر التجاري (Anti-Concealment)',
+        category: 'قانوني (Q4)',
+        probability: 2, impact: 5,
+        owner: 'مجلس الإدارة / المالك',
+        desc: 'مخالفة نظام مكافحة التستر. العقوبة تصل لـ 5 مليون ريال وسجن 5 سنوات ومصادرة الأموال.',
+        mitigation: ['حوكمة العمليات المالية', 'تجنب الحسابات البنكية الشخصية', 'التدقيق في الشركاء الفعليين'],
+        contingency: 'الدخول في برنامج التصحيح الوطني فوراً أو تصحيح وضع الملكية.'
     },
     cybersecurity: {
         name: 'هجمات سيبرانية وتسرّب بيانات',
@@ -516,10 +525,10 @@ if (typeof window !== 'undefined') {
     window.generateGovernanceStrategies = function (s, w, o, t) {
         var templates = {
             so: [
-                { sKey: 'حوكمة', oKey: 'استثمار', text: 'استثمار قوة الحوكمة الحالية لجذب شركاء استراتيجيين ومستثمرين جدد' },
-                { sKey: 'رقابة', oKey: 'تقنية', text: 'توظيف أنظمة الرقابة القوية في تبني تقنيات رقابية حديثة (RegTech)' },
-                { sKey: 'شفافية', oKey: 'سمعة', text: 'استغلال الشفافية العالية لتعزيز مكانة المنشأة في السوق وكسب ثقة الجهات التنظيمية' },
-                { sKey: 'مجلس', oKey: 'توسع', text: 'استثمار فعالية المجلس في قيادة خطط التوسع والاندماج' }
+                { sKey: 'حوكمة', oKey: 'استثمار', text: 'استثمار قوة الحوكمة (Q4) الحالية لجذب شركاء استراتيجيين ومستثمرين جدد' },
+                { sKey: 'رقابة', oKey: 'تقنية', text: 'توظيف أنظمة الرقابة التقنية (Q3) في تبني تقنيات رقابية حديثة (RegTech)' },
+                { sKey: 'شفافية', oKey: 'سمعة', text: 'استغلال الشفافية الإدارية (Q2) لتعزيز مكانة المنشأة في السوق وكسب ثقة الجهات التنظيمية' },
+                { sKey: 'مالي', oKey: 'توسع', text: 'استثمار المتانة المالية (Q1) في تمويل خطط التوسع والنمو السريع' }
             ],
             wo: [
                 { wKey: 'تضارب', oKey: 'أتمتة', text: 'استخدام أدوات الأتمتة لمعالجة ثغرات تضارب المصالح وضمان استقلالية القرار' },
@@ -713,5 +722,132 @@ if (typeof window !== 'undefined') {
             var r = RISKS_BY_AXIS[id];
             return r ? Object.assign({}, r, { id: 'G' + String(i + 1).padStart(3, '0') }) : null;
         }).filter(Boolean);
+    };
+
+    /**
+     * 🏁 Step 5: Strategic Reform Plan — مولّد خطة الإصلاح الاستراتيجي
+     * يحوّل نتائج الفحص (الثغرات) إلى خريطة طريق زمنية (Roadmap)
+     */
+    window.generateStrategicReformPlan = function (auditState) {
+        if (!auditState || !auditState.responses) return null;
+
+        var plan = {
+            metadata: auditState.meta || {},
+            summary: { critical: 0, high: 0, medium: 0, total: 0 },
+            timeline: [] // array of { week, category, task, owner, impact, action }
+        };
+
+        var responses = auditState.responses;
+        var axes = [];
+        if (window.ComplianceAuditConfig) {
+            // استخدام النشاط والقطاع من الحالة
+            var activity = auditState.meta.activityType || 'service';
+            var sector = auditState.meta.sectorType || 'private';
+            axes = window.ComplianceAuditConfig.buildAuditAxes(activity, sector).allAxes;
+        }
+
+        // KB + Smart KO references
+        var KB = window.ComplianceRemediationKB || null;
+        var ENGINE = window.ComplianceAuditEngine || null;
+
+        // 1) جمع الفجوات (Gaps) مع إثراء بيانات KB و Smart KO
+        var gaps = [];
+        axes.forEach(function (axis) {
+            axis.items.forEach(function (item) {
+                var res = responses[item.id];
+                // نعتبر الـ no والـ partial فجوات تحتاج إصلاح
+                // + نعتبر البنود المنتهية (expired/overdue) فجوات حتى لو status=yes
+                var isGap = res && (res.status === 'no' || res.status === 'partial');
+                var koLevel = null;
+                if (res && res.expiryDate && ENGINE && ENGINE.getSmartKOLevel) {
+                    koLevel = ENGINE.getSmartKOLevel(res.expiryDate);
+                    if (koLevel && (koLevel.score === 0)) isGap = true; // expired/overdue = gap
+                }
+                if (isGap) {
+                    var kbEntry = KB && KB.getRemediation ? KB.getRemediation(item.id) : null;
+                    gaps.push({
+                        id: item.id,
+                        label: item.label,
+                        question: item.question,
+                        axisId: axis.id,
+                        axisName: axis.name,
+                        status: res.status,
+                        priority: _calculatePriority(item, axis),
+                        koLevel: koLevel,
+                        expiryDate: res.expiryDate || null,
+                        kb: kbEntry,
+                        incentive: item.incentive || (kbEntry && kbEntry.incentive) || null
+                    });
+                }
+            });
+        });
+
+        // 2) ترتيب الفجوات حسب الأولوية وتوزيعها زمنياً
+        gaps.sort(function (a, b) { return a.priority - b.priority; });
+
+        gaps.forEach(function (gap, index) {
+            var week = 1;
+            if (gap.priority === 0) {
+                // الأولوية القصوى (KO) في أول أسبوعين
+                week = index < 4 ? 1 : 2;
+                plan.summary.critical++;
+            } else if (gap.priority === 1) {
+                // أولوية عالية (High) من الأسبوع 3 إلى 6
+                week = 3 + Math.floor(index / 5);
+                plan.summary.high++;
+            } else {
+                // أولوية متوسطة (Medium) من الأسبوع 7 إلى 12
+                week = Math.min(12, 7 + Math.floor(index / 3));
+                plan.summary.medium++;
+            }
+
+            var axisRisk = RISKS_BY_AXIS[gap.axisId] || {};
+            var kb = gap.kb || {};
+            plan.timeline.push({
+                week: week,
+                priority: gap.priority === 0 ? 'KO' : (gap.priority === 1 ? 'عالية' : 'متوسطة'),
+                task: gap.label,
+                axis: gap.axisName,
+                desc: gap.question,
+                owner: axisRisk.owner || 'مدير الإدارة',
+                impact: axisRisk.name || 'مخاطرة تنظيمية',
+                action: kb.action || (axisRisk.mitigation && axisRisk.mitigation[0]) || 'مراجعة وتوثيق المتطلبات',
+                // بيانات KB المُثرية
+                platform: kb.platform || null,
+                docs: kb.docs || null,
+                costRange: kb.costRange || null,
+                duration: kb.duration || null,
+                // Smart KO
+                koLevel: gap.koLevel || null,
+                expiryDate: gap.expiryDate || null,
+                // حوافز
+                incentive: gap.incentive || null
+            });
+        });
+
+        // ترتيب التايملاين حسب الأسبوع
+        plan.timeline.sort(function (a, b) { return a.week - b.week; });
+
+        plan.summary.total = gaps.length;
+        return plan;
+
+        function _calculatePriority(item, axis) {
+            // الموازين الاستراتيجية:
+            // 0: بنود KO (تراخيص، أجور، نطاقات، سعودة)
+            // 1: بنود قانونية وتقنية حرجة (PDPL, ZATCA, Cyber)
+            // 2: بنود تنظيمية وإجرائية (عقود، إفصاحات)
+
+            var koAxes = ['licenses', 'hr_labor', 'finance_zakat'];
+            var criticalKeywords = ['سجل', 'رخصة', 'زكاة', 'نطاقات', 'أجور', 'تأمين', 'مقيم', 'قوى'];
+
+            var isKO = koAxes.indexOf(axis.id) !== -1;
+            var isCritical = criticalKeywords.some(function (k) {
+                return item.label.toLowerCase().includes(k) || item.question.toLowerCase().includes(k);
+            });
+
+            if (isKO && isCritical) return 0;
+            if (axis.id === 'data_privacy' || axis.id === 'cybersecurity' || isKO) return 1;
+            return 2;
+        }
     };
 }

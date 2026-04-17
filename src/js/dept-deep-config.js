@@ -15,7 +15,7 @@ window.DEPT_DEEP_CONFIG = {
             { name: 'resolution_time', label: 'متوسط مدة حل المخالفات (أيام)', placeholder: 'مثال: 10' },
             { name: 'compliance_cost', label: 'تكلفة الامتثال السنوية (ريال)', placeholder: 'مثال: 80000' },
         ],
-        redirect: '/compliance-audit.html?dept=compliance'
+        redirect: '/dept-smart.html?dept=compliance'
     },
     cs: {
         title: 'التحليل الرقمي – خدمة العملاء',
